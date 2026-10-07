@@ -170,6 +170,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             textPart = textPart.replace(/\\newpage/g, '<div style="page-break-after: always" class="w-full h-8 border-b-2 border-dashed border-slate-300 my-4 print:border-0 print:h-0"></div>');
           }
           
+          // Preserve spaces if user typed multiple spaces (e.g. Tab or multiple Space presses)
+          textPart = textPart.replace(/ {2,}/g, (match) => ' ' + '&nbsp;'.repeat(match.length - 1));
           return textPart.replace(/\n/g, '<br/>');
         }).join('');
       }).join('');
@@ -181,7 +183,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const parseTextToBlocks = (text: string, subject: string, elements: JSX.Element[]) => {
     if (!text || text.trim() === '') return;
-    const rawBlocks = text.split(/(\n\n+)/);
+    // Normalize text blocks so that empty lines between a question and its options don't detach the options
+    const normalizedText = text.replace(/(\n\s*)\n+(\s*\(A\))/g, '$1$2');
+    const rawBlocks = normalizedText.split(/(\n\n+)/);
     
     for (let i = 0; i < rawBlocks.length; i += 2) {
       const block = rawBlocks[i];
@@ -204,13 +208,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               return (
                 <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-10 text-left">{numStr}.</strong>
-                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
               );
             }
             return (
               <div 
-                className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}
+                className={`break-inside-avoid whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
               />
             );
@@ -236,11 +240,46 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const optB = matchB ? matchB[1].trim() : '';
             const optC = matchC ? matchC[1].trim() : '';
             const optD = matchD ? matchD[1].trim() : '';
-            const estimateVisualLength = (text: string) => {
-              let s = text.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, ''); // Remove math delimiters
-              s = s.replace(/\\mathbb|\\mathbf|\\text|\\mathrm/g, ''); // Remove formatting commands
-              s = s.replace(/\\[a-zA-Z]+/g, 'X'); // Replace math commands (\subset, \cup, etc) with a single character 'X'
-              s = s.replace(/[{}_^]/g, ''); // Remove brackets and sub/superscripts
+            const estimateVisualLength = (text: string): number => {
+              if (!text) return 0;
+              let s = text.trim();
+              // Remove math delimiters \(, \), \[, \], $
+              s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
+              
+              // Remove non-rendering LaTeX formatting macros
+              s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
+
+              // CRITICAL: Normalize superscripts and subscripts FIRST so braces inside exponents like ^{2} or _{1} don't break fraction regex!
+              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
+              s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
+
+              // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
+              // In visual rendering, a fraction is stacked vertically.
+              // Its horizontal width is simply Math.max(width(num), width(den)).
+              const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
+              let iterations = 0;
+              while (fracRegex.test(s) && iterations < 5) {
+                s = s.replace(fracRegex, (_, num, den) => {
+                  const lenN = estimateVisualLength(num);
+                  const lenD = estimateVisualLength(den);
+                  return 'X'.repeat(Math.max(lenN, lenD));
+                });
+                iterations++;
+              }
+
+              // \sqrt{x} is visually roughly width of x + 1 (radical sign)
+              s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
+
+              // Replace other LaTeX commands (\sin, \cos, \tan, \cot, \sec, \csc, \pm, \circ, etc.) with a single character 'X'
+              s = s.replace(/\\[a-zA-Z]+/g, 'X');
+
+              // Remove remaining braces
+              s = s.replace(/[{}]/g, '');
+
+              // Math binary operators like +, -, = have standard visual padding around them
+              // Note: Do NOT expand '/' as that artificially bloats simple divisions like (A/2) or 1/2
+              s = s.replace(/([+\-=])/g, ' $1 ');
+
               return s.replace(/\s+/g, ' ').trim().length;
             };
 
@@ -251,12 +290,22 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
+            // Calibrated thresholds for A4 layout:
+            // Single line (4 columns): simple numbers, values, short/medium fractions up to 17 chars (fits Q1-Q5).
+            // 2*2 (2 columns): wide formulas, expressions, phrases 18 to 38 chars.
+            // One by one (1 column): long polynomials, wide sentences > 38 chars.
+            const singleLineLimit = isDoubleColumn ? 8 : 17;
+            const twoByTwoLimit = isDoubleColumn ? 18 : 38;
+
             let optionsLayout = '';
-            if (maxLen < 10) {
+            if (maxLen <= singleLineLimit) {
+              // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
               optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-            } else if (maxLen < 85) {
+            } else if (maxLen <= twoByTwoLimit) {
+              // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
               optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
             } else {
+              // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
               optionsLayout = 'flex flex-col w-full gap-0.5';
             }
 
@@ -273,13 +322,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                   ) : (
                     <div className="flex-shrink-0 w-10"></div>
                   )}
-                  <div className="flex-1" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
                 <div className={`ml-10 pr-4 ${optionsLayout}`}>
-                  <div className="flex"><span className="mr-1.5 font-medium">(A)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(B)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(C)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="flex"><span className="mr-1.5 font-medium">(D)</span> <span dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );

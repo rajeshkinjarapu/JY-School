@@ -1,0 +1,105 @@
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import { PageHeader } from "../../components/UI/PageHeader";
+import { CheckCircle, XCircle, Clock, Award, BarChart3, ChevronLeft, AlertTriangle } from "lucide-react";
+
+export const CompetitiveExamResultPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [result, setResult] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get(`/api/competitive-exams/${id}/result`)
+      .then(res => {
+        setResult(res.data.data);
+        setLoading(false);
+      })
+      .catch(err => {
+        setLoading(false);
+      });
+  }, [id]);
+
+  if (loading) return <div className="p-8 flex justify-center">Loading Result...</div>;
+  if (!result) return <div className="p-8 text-center text-red-500">Result not found. Did you submit the exam?</div>;
+
+  const exam = result.exam;
+  const responses = result.responses || [];
+  const totalQuestions = exam.questions?.length || responses.length;
+  const correct = responses.filter((r: any) => r.isCorrect).length;
+  const incorrect = responses.filter((r: any) => !r.isCorrect && r.selectedOption).length;
+  const unattempted = totalQuestions - (correct + incorrect);
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}m ${s}s`;
+  };
+
+  return (
+    <div className="p-4 md:p-8 space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate("/competitive-exams")} className="p-2 bg-white rounded-full shadow hover:bg-slate-50">
+          <ChevronLeft />
+        </button>
+        <PageHeader title={`${exam.title} - Scorecard`} icon={<Award />} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg flex flex-col items-center justify-center text-center">
+          <p className="text-indigo-200 text-sm font-bold uppercase">Total Score</p>
+          <h2 className="text-4xl font-black">{result.marksObtained} <span className="text-xl text-indigo-300">/ {exam.totalMarks}</span></h2>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow border border-slate-100 flex flex-col items-center">
+          <CheckCircle className="w-8 h-8 text-emerald-500 mb-2" />
+          <p className="text-slate-500 text-sm font-bold uppercase">Correct</p>
+          <h3 className="text-2xl font-black text-slate-800">{correct}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow border border-slate-100 flex flex-col items-center">
+          <XCircle className="w-8 h-8 text-rose-500 mb-2" />
+          <p className="text-slate-500 text-sm font-bold uppercase">Incorrect</p>
+          <h3 className="text-2xl font-black text-slate-800">{incorrect}</h3>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow border border-slate-100 flex flex-col items-center">
+          <Clock className="w-8 h-8 text-amber-500 mb-2" />
+          <p className="text-slate-500 text-sm font-bold uppercase">Time Taken</p>
+          <h3 className="text-2xl font-black text-slate-800">{formatTime(result.totalTimeTaken)}</h3>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-3xl p-6 shadow border border-slate-100">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><BarChart3 /> Detailed Question Analysis</h3>
+        <div className="space-y-4">
+          {responses.map((r: any, idx: number) => (
+            <div key={r.id} className={`p-4 rounded-xl border-l-4 ${r.isCorrect ? "border-emerald-500 bg-emerald-50" : (r.selectedOption ? "border-rose-500 bg-rose-50" : "border-slate-400 bg-slate-50")}`}>
+              <div className="flex justify-between items-start mb-2">
+                <p className="font-semibold text-slate-800">Q{idx + 1}. {r.question?.questionText || "Question text unavailable"}</p>
+                <span className="text-xs font-bold px-2 py-1 bg-white rounded shadow-sm text-slate-500 flex items-center gap-1">
+                  <Clock size={12}/> {formatTime(r.timeTakenSeconds)}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm mt-3">
+                <div>
+                  <span className="text-slate-500 block text-xs uppercase font-bold">Your Answer</span>
+                  <span className={`font-semibold ${r.isCorrect ? "text-emerald-700" : "text-rose-700"}`}>{r.selectedOption || "Not Attempted"}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block text-xs uppercase font-bold">Correct Answer</span>
+                  <span className="font-semibold text-emerald-700">{r.question?.correctAnswer}</span>
+                </div>
+              </div>
+              {!r.isCorrect && r.question?.explanation && (
+                <div className="mt-3 p-3 bg-white/60 rounded text-sm text-slate-700 border border-slate-200">
+                  <strong className="text-indigo-600 block mb-1">Explanation:</strong>
+                  {r.question.explanation}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+

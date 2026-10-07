@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard
+  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -21,6 +21,7 @@ const roleLabels: Record<string, string> = {
 // Each nav item gets a specific vivid color
 const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Dashboard:     { text: '#a5b4fc', bg: 'rgba(99,102,241,0.18)',  glow: '0 0 12px rgba(99,102,241,.5)'  },
+  Admissions:    { text: '#38bdf8', bg: 'rgba(56,189,248,0.18)',  glow: '0 0 12px rgba(56,189,248,.5)'  },
   Forms:         { text: '#93c5fd', bg: 'rgba(59,130,246,0.18)',  glow: '0 0 12px rgba(59,130,246,.5)'  },
   Students:      { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
   Teachers:      { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)',  glow: '0 0 12px rgba(16,185,129,.5)'  },
@@ -58,6 +59,7 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Homework:      { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
   'HR Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   'Staff Attendance': { text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)' },
+  'Address Data': { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)', glow: '0 0 12px rgba(16,185,129,.5)' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -93,8 +95,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'SUPER_ADMIN' || role === 'ADMIN') return [...base,
       { to: '/students',      label: 'Students',      icon: Users         },
+      { to: '/admissions',    label: 'Admissions',    icon: UserPlus      },
       { to: '/teachers',      label: 'Teachers',      icon: GraduationCap },
       { to: '/classes',       label: 'Classes',       icon: School        },
+      { to: '/address-collection/admin', label: 'Address Data', icon: Users },
       { to: '/subjects',      label: 'Subjects',      icon: BookOpen      },
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
@@ -123,8 +127,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/settings',      label: 'Settings',      icon: Settings      },
     ];
     if (role === 'TEACHER') return [...base, 
+      { to: '/admissions/register', label: 'Admissions', icon: UserPlus },
       { to: '/students',          label: 'Total Students', icon: Users         },
       { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
+      { to: '/address-collection/teacher', label: 'Address Data', icon: Users },
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },

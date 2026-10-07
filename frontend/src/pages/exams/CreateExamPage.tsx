@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { sortClasses, getClassOrderIndex } from '../../utils/sortClasses';
+import { getSubjectSortWeight, getCanonicalSubjectName } from './ResultsTab';
 
 interface ClassSubjectConfig {
   classId: string;
@@ -16,12 +17,13 @@ export const CreateExamPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const editExam = location.state?.exam;
+  const isDuplicate = location.state?.isDuplicate;
 
   const [classes, setClasses] = useState<any[]>([]);
   const [allDbSubjects, setAllDbSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [examName, setExamName] = useState(editExam?.name || '');
+  const [examName, setExamName] = useState(editExam ? (isDuplicate ? `${editExam.name} (Copy)` : editExam.name) : '');
   const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
   const [boardExamType, setBoardExamType] = useState('');
   const [examClassIds, setExamClassIds] = useState<string[]>(editExam?.classes?.map((c: any) => c.id) || []);
@@ -40,17 +42,20 @@ export const CreateExamPage: React.FC = () => {
   const [signatureUrl, setSignatureUrl] = useState('');
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState('');
   const [fullExamSettings, setFullExamSettings] = useState<any>({});
+  const [fullExamMarks, setFullExamMarks] = useState<any[]>([]);
 
   useEffect(() => {
     fetchInitialData();
     if (editExam) {
-      // Fetch full exam details and global settings together
+      // Fetch full exam details, global settings, and master subjects together
       Promise.all([
         api.get(`/api/exams/${editExam.id}`),
-        api.get('/api/settings').catch(() => ({ data: {} }))
-      ]).then(([res, settingsRes]: any) => {
+        api.get('/api/settings').catch(() => ({ data: {} })),
+        api.get('/api/subjects?limit=5000').catch(() => ({ data: [] }))
+      ]).then(([res, settingsRes, dbSubRes]: any) => {
         const fullExam = res.data;
         const globalSettings = settingsRes.data?.data || settingsRes.data || {};
+        const masterDbSubjects = dbSubRes.data?.data || dbSubRes.data || [];
         
         if (fullExam?.admitCardSettings) {
           setFullExamSettings(fullExam.admitCardSettings);
@@ -58,43 +63,126 @@ export const CreateExamPage: React.FC = () => {
           setSignatureUrl(fullExam.admitCardSettings.signatureUrl || fullExam.admitCardSettings.principalSignatureUrl || globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
           setTeacherSignatureUrl(fullExam.admitCardSettings.teacherSignatureUrl || globalSettings.teacherSignatureUrl || '');
         } else {
-          // If no admit card settings exist for the exam, use global
           setLogoUrl(globalSettings.logoUrl || '');
           setSignatureUrl(globalSettings.principalSignatureUrl || globalSettings.signatureUrl || '');
           setTeacherSignatureUrl(globalSettings.teacherSignatureUrl || '');
         }
+
+        if (Array.isArray(fullExam?.marks)) {
+          setFullExamMarks(fullExam.marks);
+        }
+
+        // Group existing marks by student's classId (Ground truth of what was actually examined!)
+        // Group existing marks by student's classId (Ground truth of what was actually examined!)
+        const marksByClass: { [classId: string]: Map<string, { id: string; name: string; maxMarks: number; date?: string }> } = {};
+        if (Array.isArray(fullExam?.marks) && fullExam.marks.length > 0) {
+          fullExam.marks.forEach((m: any) => {
+            const cId = m.student?.classId;
+            if (!cId || !m.subject?.name) return;
+            if (!marksByClass[cId]) marksByClass[cId] = new Map();
+            const sName = m.subject.name.trim();
+            const sKey = getCanonicalSubjectName(sName);
+            if (!marksByClass[cId].has(sKey)) {
+              marksByClass[cId].set(sKey, {
+                id: m.subject.id || m.subjectId,
+                name: sKey,
+                maxMarks: Number(m.maxMarks) || Number(fullExam.maxMarks) || 50,
+                date: fullExam.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+              });
+            }
+          });
+        }
+
+        // Parse saved subjects
+        let parsedSubjects: any = fullExam?.subjects || editExam.subjects;
+        if (typeof parsedSubjects === 'string') {
+          try { parsedSubjects = JSON.parse(parsedSubjects); } catch (e) {}
+        }
+
+        const cfgMap: any = {};
+        const examClasses = fullExam?.classes || editExam.classes || [];
+        
+        examClasses.forEach((cls: any) => {
+          const cId = cls.id;
+          const clsName = `${cls.name} - ${cls.section}`;
+          
+          // Load base config from saved classConfigs if they exist
+          let loadedSubjects: any[] = [];
+          if (parsedSubjects?.classConfigs && Array.isArray(parsedSubjects.classConfigs)) {
+            const savedCfg = parsedSubjects.classConfigs.find((c: any) => c.classId === cId);
+            if (savedCfg && Array.isArray(savedCfg.subjects) && savedCfg.subjects.length > 0) {
+              const masterClassSubs = masterDbSubjects.filter((s: any) => s.classId === cId);
+              const isCorruptedDefaultFour = savedCfg.subjects.length === 4 && 
+                savedCfg.subjects.some((s: any) => s.name === 'ENGLISH') &&
+                savedCfg.subjects.some((s: any) => s.name === 'MATHEMATICS') &&
+                savedCfg.subjects.some((s: any) => s.name === 'SCIENCE') &&
+                savedCfg.subjects.some((s: any) => s.name === 'SOCIAL');
+              
+              if (!isCorruptedDefaultFour || masterClassSubs.length === 0) {
+                loadedSubjects = [...savedCfg.subjects];
+              }
+            }
+          }
+
+          // Fallback to DB master subjects or legacy flat array if not loaded
+          if (loadedSubjects.length === 0) {
+            const dbSubsForClass = masterDbSubjects.filter((s: any) => s.classId === cId);
+            if (dbSubsForClass.length > 0) {
+              loadedSubjects = dbSubsForClass.map((s: any) => ({
+                id: s.id,
+                name: s.name,
+                maxMarks: Number(fullExam?.maxMarks) || 50,
+                date: fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate
+              }));
+            } else if (Array.isArray(parsedSubjects) && parsedSubjects.length > 0) {
+              loadedSubjects = [...parsedSubjects];
+            }
+          }
+
+          // Merge loaded subjects with guaranteed protected marks
+          const dedupedSubs: any[] = [];
+          const seen = new Set<string>();
+
+          // First, add all subjects that have actual marks (PROTECTED)
+          if (marksByClass[cId] && marksByClass[cId].size > 0) {
+            marksByClass[cId].forEach((subVal, subKey) => {
+              seen.add(subKey);
+              dedupedSubs.push(subVal);
+            });
+          }
+
+          // Next, add the loaded subjects if they don't conflict
+          loadedSubjects.forEach((s: any) => {
+            const canon = getCanonicalSubjectName(s.name);
+            if (!seen.has(canon)) {
+              seen.add(canon);
+              dedupedSubs.push({
+                id: s.id || Date.now().toString() + Math.random(),
+                name: canon,
+                maxMarks: s.maxMarks || Number(fullExam?.maxMarks) || 50,
+                date: s.date || (fullExam?.examDate ? new Date(fullExam.examDate).toISOString().split('T')[0] : examDate)
+              });
+            }
+          });
+
+          if (dedupedSubs.length > 0) {
+            dedupedSubs.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
+            cfgMap[cId] = {
+              classId: cId,
+              className: clsName,
+              subjects: dedupedSubs
+            };
+          }
+        });
+
+        if (Object.keys(cfgMap).length > 0) {
+          setClassConfigs(cfgMap);
+        }
       }).catch(err => console.error('Failed to load full exam', err));
 
-      if (editExam.name.includes('JEE')) setExamCategory('JEE');
-      else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => editExam.name.includes(t))) setExamCategory('BOARD');
+      if (editExam.name?.includes('JEE')) setExamCategory('JEE');
+      else if (['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].some(t => editExam.name?.includes(t))) setExamCategory('BOARD');
       else setExamCategory('');
-
-      // Check if editExam has classConfigs inside subjects
-      if (editExam.subjects && typeof editExam.subjects === 'object' && !Array.isArray(editExam.subjects) && editExam.subjects.classConfigs) {
-        const cfgMap: any = {};
-        editExam.subjects.classConfigs.forEach((cfg: any) => {
-          cfgMap[cfg.classId] = cfg;
-        });
-        setClassConfigs(cfgMap);
-      } else if (Array.isArray(editExam.subjects) && editExam.subjects.length > 0) {
-        // Old exam saved with array of subjects - populate into classConfigs for each class
-        const initialSubs = editExam.subjects.map((s: any) => ({
-          id: s.id || Date.now().toString() + Math.random(),
-          name: s.name,
-          maxMarks: s.maxMarks || 100,
-          date: s.date || (editExam.examDate ? new Date(editExam.examDate).toISOString().split('T')[0] : examDate)
-        }));
-
-        const cfgMap: any = {};
-        (editExam.classes || []).forEach((cls: any) => {
-          cfgMap[cls.id] = {
-            classId: cls.id,
-            className: `${cls.name} - ${cls.section}`,
-            subjects: initialSubs
-          };
-        });
-        setClassConfigs(cfgMap);
-      }
     }
   }, [editExam]);
 
@@ -127,6 +215,7 @@ export const CreateExamPage: React.FC = () => {
   // Initialize class configs when class list or examClassIds change (MANUAL ENTRY ONLY)
   useEffect(() => {
     if (classes.length === 0) return;
+    if (editExam) return; // CRITICAL: Never overwrite existing exam subjects with defaults!
 
     setClassConfigs((prev) => {
       const updated = { ...prev };
@@ -136,34 +225,53 @@ export const CreateExamPage: React.FC = () => {
 
         const clsName = `${cls.name} - ${cls.section}`;
         
-        // If class config doesn't exist yet, initialize with standard manual subjects
+        // If class config doesn't exist yet, initialize with standard curriculum subjects
         if (!updated[cId]) {
           const dbSubsForClass = allDbSubjects.filter(s => s.classId === cId);
           let defaultSubs: any[] = [];
           
+          const isFa = examName.toUpperCase().includes('FA') || boardExamType.toUpperCase().includes('FA');
+          const defaultMax = isFa ? 50 : 100;
+
           if (dbSubsForClass.length > 0) {
-            defaultSubs = dbSubsForClass.map((s, idx) => ({
-              id: s.id,
-              name: s.name,
-              maxMarks: 100,
-              date: examDate
-            }));
+            defaultSubs = [...dbSubsForClass]
+              .sort((a, b) => {
+                const wA = getSubjectSortWeight(a.name);
+                const wB = getSubjectSortWeight(b.name);
+                if (wA !== wB) return wA - wB;
+                return a.name.localeCompare(b.name);
+              })
+              .map((s) => ({
+                id: s.id,
+                name: s.name,
+                maxMarks: defaultMax,
+                date: examDate
+              }));
           } else {
-            defaultSubs = [
-              { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_2', name: 'MATHEMATICS', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_3', name: 'SCIENCE', maxMarks: 100, date: examDate },
-              { id: Date.now().toString() + '_4', name: 'SOCIAL', maxMarks: 100, date: examDate }
-            ];
-  
-            // Nursery / PP1 / PP2 custom defaults if class name starts with NUR or PP
             const upperName = cls.name.toUpperCase();
             if (upperName.includes('NUR') || upperName.includes('PP') || upperName.includes('LKG') || upperName.includes('UKG')) {
               defaultSubs = [
-                { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: 100, date: examDate },
-                { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: 100, date: examDate }
+                { id: Date.now().toString() + '_1', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'MATHS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'GENERAL AWARENESS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'RHYMES, ART & CRAFT', maxMarks: defaultMax, date: examDate }
+              ];
+            } else if (['1', '2', '3', '4', '5', 'CLASS 1', 'CLASS 2', 'CLASS 3', 'CLASS 4', 'CLASS 5', 'IST', 'IIND', 'IIIRD', 'IVTH', 'VTH'].some(p => upperName.includes(p))) {
+              defaultSubs = [
+                { id: Date.now().toString() + '_1', name: 'TELUGU', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'HINDI', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'MATHEMATICS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_5', name: 'EVS', maxMarks: defaultMax, date: examDate }
+              ];
+            } else {
+              defaultSubs = [
+                { id: Date.now().toString() + '_1', name: 'TELUGU', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_2', name: 'HINDI', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_3', name: 'ENGLISH', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_4', name: 'MATHEMATICS', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_5', name: 'SCIENCE', maxMarks: defaultMax, date: examDate },
+                { id: Date.now().toString() + '_6', name: 'SOCIAL', maxMarks: defaultMax, date: examDate }
               ];
             }
           }
@@ -246,6 +354,19 @@ export const CreateExamPage: React.FC = () => {
   };
 
   const removeSubjectFromClass = (classId: string, subIndex: number) => {
+    const targetSub = classConfigs[classId]?.subjects[subIndex];
+    if (targetSub && fullExamMarks && fullExamMarks.length > 0) {
+      const hasMarks = fullExamMarks.some((m: any) => 
+        m.student?.classId === classId && 
+        (m.subject?.name?.toUpperCase().trim() === targetSub.name?.toUpperCase().trim() ||
+         m.subjectId === targetSub.id || m.subject?.id === targetSub.id)
+      );
+      if (hasMarks) {
+        toast.error(`"${targetSub.name}" subject already has marks entered! Cannot remove for data safety.`);
+        return;
+      }
+    }
+
     setClassConfigs((prev) => {
       const clsCfg = prev[classId];
       if (!clsCfg) return prev;
@@ -266,10 +387,17 @@ export const CreateExamPage: React.FC = () => {
       return;
     }
 
+    let protectedCount = 0;
     setClassConfigs((prev) => {
       const updated = { ...prev };
       examClassIds.forEach((cId) => {
         if (cId !== sourceClassId && updated[cId]) {
+          // If destination class has recorded student marks, do not overwrite its subjects!
+          const hasMarks = fullExamMarks && fullExamMarks.some((m: any) => m.student?.classId === cId);
+          if (hasMarks) {
+            protectedCount++;
+            return;
+          }
           updated[cId] = {
             ...updated[cId],
             subjects: sourceCfg.subjects.map((s, idx) => ({
@@ -283,10 +411,22 @@ export const CreateExamPage: React.FC = () => {
       });
       return updated;
     });
-    toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
+
+    if (protectedCount > 0) {
+      toast.success(`Subjects copied. (${protectedCount} classes skipped as they already have marks)`);
+    } else {
+      toast.success(`Copied ${sourceCfg.className} subjects to ALL selected classes!`);
+    }
   };
 
   const handleClearClassSubjects = (classId: string) => {
+    if (fullExamMarks && fullExamMarks.length > 0) {
+      const hasMarksForClass = fullExamMarks.some((m: any) => m.student?.classId === classId);
+      if (hasMarksForClass) {
+        toast.error('Students in this class already have marks! Cannot clear all subjects at once.');
+        return;
+      }
+    }
     setClassConfigs((prev) => {
       const clsCfg = prev[classId];
       if (!clsCfg) return prev;
@@ -311,19 +451,7 @@ export const CreateExamPage: React.FC = () => {
     toast.success(`Applied ${marks} Max Marks to all subjects in this class!`);
   };
 
-  const handleApplyBulkMarksToAllClasses = () => {
-    setClassConfigs((prev) => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach((cId) => {
-        updated[cId] = {
-          ...updated[cId],
-          subjects: updated[cId].subjects.map((s) => ({ ...s, maxMarks: bulkMarksInput }))
-        };
-      });
-      return updated;
-    });
-    toast.success(`Applied ${bulkMarksInput} Max Marks to ALL assigned classes!`);
-  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'signature' | 'teacherSignature' | 'logo') => {
     const file = e.target.files?.[0];
@@ -367,20 +495,39 @@ export const CreateExamPage: React.FC = () => {
       return;
     }
 
-    // Build payload
-    const classConfigsList = Object.values(classConfigs);
+    // Build payload with canonicalized and deduplicated subjects
+    const classConfigsList = Object.values(classConfigs).map((cfg: any) => {
+      const deduped: any[] = [];
+      const seen = new Set<string>();
+      (cfg.subjects || []).forEach((s: any) => {
+        if (!s.name) return;
+        const canon = getCanonicalSubjectName(s.name);
+        if (!seen.has(canon)) {
+          seen.add(canon);
+          deduped.push({ ...s, name: canon });
+        }
+      });
+      deduped.sort((a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name));
+      return {
+        ...cfg,
+        subjects: deduped
+      };
+    });
     
     // Flatten subjects for legacy fallback
     const mergedSubjectsMap = new Map<string, { id: string; name: string; maxMarks: number; date?: string }>();
     classConfigsList.forEach((cfg) => {
       cfg.subjects.forEach((s) => {
-        if (s.name && !mergedSubjectsMap.has(s.name.toUpperCase().trim())) {
-          mergedSubjectsMap.set(s.name.toUpperCase().trim(), s);
+        const can = getCanonicalSubjectName(s.name);
+        if (can && !mergedSubjectsMap.has(can)) {
+          mergedSubjectsMap.set(can, { ...s, name: can });
         }
       });
     });
 
-    const fallbackGlobalSubjects = Array.from(mergedSubjectsMap.values());
+    const fallbackGlobalSubjects = Array.from(mergedSubjectsMap.values()).sort(
+      (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
+    );
     const finalSubjectsPayload = {
       classConfigs: classConfigsList,
       globalSubjects: fallbackGlobalSubjects
@@ -396,7 +543,7 @@ export const CreateExamPage: React.FC = () => {
     };
 
     try {
-      if (editExam?.id) {
+      if (editExam?.id && !isDuplicate) {
         await api.put(`/api/exams/${editExam.id}`, {
           name: examName,
           classIds: examClassIds,
@@ -415,7 +562,7 @@ export const CreateExamPage: React.FC = () => {
           subjects: finalSubjectsPayload,
           admitCardSettings
         });
-        toast.success('Exam created successfully!');
+        toast.success(isDuplicate ? 'Exam duplicated successfully!' : 'Exam created successfully!');
       }
       navigate('/exams');
     } catch (err: any) {
@@ -602,30 +749,6 @@ export const CreateExamPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Bulk Apply Bar */}
-                    <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 text-xs font-black text-indigo-900">
-                        <Copy className="w-4 h-4 text-indigo-600" />
-                        <span>Bulk Apply Max Marks across ALL assigned classes:</span>
-                      </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <input
-                          type="number"
-                          min={1}
-                          value={bulkMarksInput}
-                          onChange={(e) => setBulkMarksInput(Number(e.target.value))}
-                          className="w-20 px-3 py-1.5 bg-white border border-indigo-200 rounded-xl text-xs font-black text-indigo-900 text-center outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleApplyBulkMarksToAllClasses}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-black shadow-sm transition-all whitespace-nowrap"
-                        >
-                          Apply To All Classes
-                        </button>
-                      </div>
-                    </div>
-
                     {/* Class Tabs */}
                     <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {[...examClassIds].sort((idA, idB) => {
@@ -681,6 +804,23 @@ export const CreateExamPage: React.FC = () => {
                             >
                               <Copy className="w-3.5 h-3.5" /> Copy to All Classes
                             </button>
+                            <div className="flex items-center gap-2 border-l border-slate-300 pl-2 ml-1">
+                              <input
+                                type="number"
+                                min={1}
+                                value={bulkMarksInput}
+                                onChange={(e) => setBulkMarksInput(Number(e.target.value))}
+                                placeholder="Marks"
+                                className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 text-center outline-none focus:border-indigo-400"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleApplyBulkMarksToClass(activeClassTab, bulkMarksInput)}
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              >
+                                Apply to Class
+                              </button>
+                            </div>
                             <button
                               type="button"
                               onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
@@ -713,48 +853,67 @@ export const CreateExamPage: React.FC = () => {
                         </div>
 
                         <div className="space-y-3">
-                          {activeClassConfig.subjects.map((sub, i) => (
-                            <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
-                              <div className="flex-1 w-full">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Subject Name</label>
-                                <input
-                                  type="text"
-                                  required
-                                  value={sub.name}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value)}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                />
+                          {activeClassConfig.subjects.map((sub, i) => {
+                            const hasMarks = fullExamMarks && fullExamMarks.some((m: any) => 
+                              m.student?.classId === activeClassTab && 
+                              (m.subject?.name?.toUpperCase().trim() === sub.name?.toUpperCase().trim() ||
+                               m.subjectId === sub.id || m.subject?.id === sub.id)
+                            );
+                            return (
+                              <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
+                                <div className="flex-1 w-full">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject Name</label>
+                                    {hasMarks && (
+                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                        🔒 Marks Entered (Protected)
+                                      </span>
+                                    )}
+                                  </div>
+                                  <input
+                                    type="text"
+                                    required
+                                    value={sub.name}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value.toUpperCase())}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white uppercase"
+                                  />
+                                </div>
+                                <div className="w-full sm:w-36">
+                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
+                                  <input
+                                    type="date"
+                                    value={sub.date || ''}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                  />
+                                </div>
+                                <div className="w-full sm:w-28">
+                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
+                                  <input
+                                    type="number"
+                                    required
+                                    min={1}
+                                    value={sub.maxMarks}
+                                    onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
+                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => removeSubjectFromClass(activeClassTab, i)}
+                                  disabled={hasMarks}
+                                  className={`p-1.5 rounded-lg transition-colors ${
+                                    hasMarks 
+                                      ? 'text-slate-300 cursor-not-allowed opacity-40' 
+                                      : 'text-red-400 hover:text-red-600 hover:bg-red-50'
+                                  }`}
+                                  title={hasMarks ? 'Cannot remove this subject as marks are entered' : 'Remove Subject'}
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
                               </div>
-                              <div className="w-full sm:w-36">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
-                                <input
-                                  type="date"
-                                  value={sub.date || ''}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
-                                />
-                              </div>
-                              <div className="w-full sm:w-28">
-                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
-                                <input
-                                  type="number"
-                                  required
-                                  min={1}
-                                  value={sub.maxMarks}
-                                  onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
-                                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
-                                />
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => removeSubjectFromClass(activeClassTab, i)}
-                                className="text-red-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                                title="Remove Subject"
-                              >
-                                <X className="w-4 h-4" />
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
 
                           {activeClassConfig.subjects.length === 0 && (
                             <div className="py-8 text-center text-xs font-bold text-slate-400">

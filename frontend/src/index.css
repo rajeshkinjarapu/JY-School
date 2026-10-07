@@ -377,3 +377,17 @@
   .space-y-6 > :not([hidden]) ~ :not([hidden]), .md\:space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
   .space-y-8 > :not([hidden]) ~ :not([hidden]), .md\:space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1.25rem !important; }
 }
+
+/* OMR Fullscreen Focus Mode */
+body.omr-fullscreen aside,
+body.omr-fullscreen nav,
+body.omr-fullscreen header {
+  display: none !important;
+}
+body.omr-fullscreen #root > div > div {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+

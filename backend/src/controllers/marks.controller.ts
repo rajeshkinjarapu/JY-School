@@ -5,6 +5,7 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { calculateGrade } from '../utils/helpers';
 import { createSystemNotification } from './notifications.controller';
+import { areSubjectsMatching, getCanonicalSubjectName } from './exams.controller';
 import PDFDocument from 'pdfkit';
 
 export const getByStudent = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -37,7 +38,14 @@ export const getByExam = async (req: AuthRequest, res: Response, next: NextFunct
   const marks = await prisma.mark.findMany({
     where: { examId },
     include: {
-      student: { include: { user: { select: { name: true } } } },
+      student: {
+        select: {
+          id: true,
+          classId: true,
+          rollNo: true,
+          user: { select: { name: true } }
+        }
+      },
       subject: { select: { name: true, code: true } },
     },
     orderBy: { createdAt: 'asc' },
@@ -147,31 +155,42 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
           resolvedFakeName = fakeSubject.name?.trim() || null;
           resolvedMaxMarks = fakeSubject.maxMarks ? Number(fakeSubject.maxMarks) : null;
           
-          // Level 3: Find real DB subject by name in same class
+          // Level 3: Find real DB subject by name in same class (smart alias matching)
+          const canonicalFakeName = getCanonicalSubjectName(resolvedFakeName || '');
           const matchingReal = realSubjects.find(
-            s => s.classId === classId && s.name.toLowerCase().trim() === (resolvedFakeName || '').toLowerCase().trim()
+            s => s.classId === classId && (areSubjectsMatching(s.name, canonicalFakeName) || getCanonicalSubjectName(s.name) === canonicalFakeName)
           );
           
           if (matchingReal) {
             realSubjectId = matchingReal.id;
-          } else if (classId && resolvedFakeName) {
-             // AUTO-CREATE SUBJECT: If the subject is not found in master list, auto-create it to prevent blocking marks entry
-             const newSubject = await prisma.subject.create({
-               data: {
-                 name: resolvedFakeName,
-                 code: resolvedFakeName.toUpperCase().replace(/\s/g, '_').substring(0, 10),
-                 classId: classId
-               }
-             });
-             realSubjects.push(newSubject);
-             realSubjectId = newSubject.id;
+          } else if (classId && canonicalFakeName) {
+             // Check if an alias already exists in this class in DB before creating duplicate
+             const allClassSubs = await prisma.subject.findMany({ where: { classId } });
+             const foundAlias = allClassSubs.find(s => areSubjectsMatching(s.name, canonicalFakeName) || getCanonicalSubjectName(s.name) === canonicalFakeName);
+
+             if (foundAlias) {
+               realSubjectId = foundAlias.id;
+               realSubjects.push(foundAlias);
+             } else {
+               // AUTO-CREATE SUBJECT: Strictly use canonical name (e.g. MATHEMATICS, TELUGU)
+               const newSubject = await prisma.subject.create({
+                 data: {
+                   name: canonicalFakeName,
+                   code: canonicalFakeName.substring(0, 3).toUpperCase(),
+                   classId: classId
+                 }
+               });
+               realSubjects.push(newSubject);
+               realSubjectId = newSubject.id;
+             }
           }
         } else {
           // Level 4b: sent ID not in exam subjects — check if it exists in any class
           const anyMatch = realSubjects.find(s => s.id === m.subjectId);
           if (anyMatch && classId) {
+            const canonicalAnyName = getCanonicalSubjectName(anyMatch.name);
             const sameNameSameClass = realSubjects.find(
-              s => s.classId === classId && s.name.toLowerCase().trim() === anyMatch.name.toLowerCase().trim()
+              s => s.classId === classId && (areSubjectsMatching(s.name, canonicalAnyName) || getCanonicalSubjectName(s.name) === canonicalAnyName)
             );
             if (sameNameSameClass) {
               realSubjectId = sameNameSameClass.id;
@@ -179,8 +198,8 @@ export const bulkCreate = async (req: AuthRequest, res: Response, next: NextFunc
             } else {
               const newSubject = await prisma.subject.create({
                 data: {
-                  name: anyMatch.name,
-                  code: anyMatch.name.toUpperCase().replace(/\s/g, '_').substring(0, 10),
+                  name: canonicalAnyName,
+                  code: canonicalAnyName.substring(0, 3).toUpperCase(),
                   classId: classId
                 }
               });

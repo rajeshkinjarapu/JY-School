@@ -37,11 +37,12 @@ import '../screens/office_tools_screen.dart';
 import '../screens/question_bank/question_bank_dashboard_screen.dart';
 import '../screens/answer_key_screen.dart';
 import '../screens/settings_screen.dart';
-import '../screens/teacher_profile_screen.dart';
-import '../screens/student_profile_screen.dart';
 import '../screens/admin_attendance_dashboard.dart';
 import '../screens/examination_dashboard_screen.dart';
 import '../screens/main_layout.dart';
+import '../screens/admissions_list_screen.dart';
+import '../screens/admission_registration_screen.dart';
+import '../screens/student_address_collection_screen.dart';
 
 class AppDrawer extends StatefulWidget {
   final String currentRoute;
@@ -196,13 +197,34 @@ class _AppDrawerState extends State<AppDrawer> {
                       isActive: widget.currentRoute == 'students',
                       onTap: () => _navigateTo(const StudentsScreen(), 'students'),
                     ),
-                      _buildDrawerItem(
-                        icon: Icons.school_outlined,
-                        title: 'Teachers',
-                        routeName: 'teachers',
-                        isActive: widget.currentRoute == 'teachers',
-                        onTap: () => _navigateTo(const TeachersScreen(), 'teachers'),
-                      ),
+                    _buildDrawerItem(
+                      icon: Icons.person_add_alt_1_rounded,
+                      title: 'Admissions List',
+                      routeName: 'admissions',
+                      isActive: widget.currentRoute == 'admissions',
+                      onTap: () => _navigateTo(const AdmissionsListScreen(), 'admissions'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.app_registration_rounded,
+                      title: 'New Registration',
+                      routeName: 'admissions_register',
+                      isActive: widget.currentRoute == 'admissions_register',
+                      onTap: () => _navigateTo(const AdmissionRegistrationScreen(), 'admissions_register'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.location_on_outlined,
+                      title: 'Address Data',
+                      routeName: 'address_collection',
+                      isActive: widget.currentRoute == 'address_collection',
+                      onTap: () => _navigateTo(StudentAddressCollectionScreen(), 'address_collection'),
+                    ),
+                    _buildDrawerItem(
+                      icon: Icons.school_outlined,
+                      title: 'Teachers',
+                      routeName: 'teachers',
+                      isActive: widget.currentRoute == 'teachers',
+                      onTap: () => _navigateTo(const TeachersScreen(), 'teachers'),
+                    ),
                       _buildDrawerItem(
                         icon: Icons.badge_outlined,
                         title: 'Staff HR',
@@ -339,6 +361,13 @@ class _AppDrawerState extends State<AppDrawer> {
                       onTap: () => _navigateTo(const SettingsScreen(), 'settings'),
                     ),
                   ] else if (role == 'TEACHER') ...[
+                    _buildDrawerItem(
+                      icon: Icons.person_add_alt_1_rounded,
+                      title: 'Admissions',
+                      routeName: 'admissions_register',
+                      isActive: widget.currentRoute == 'admissions_register',
+                      onTap: () => _navigateTo(const AdmissionRegistrationScreen(), 'admissions_register'),
+                    ),
                     _buildDrawerItem(
                       icon: Icons.people_outline_rounded,
                       title: 'Total Students',

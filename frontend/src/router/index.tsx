@@ -48,6 +48,8 @@ const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage')
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(routeImports['/dashboard']);
 const AppInstallsPage = lazy(routeImports['/app-installs']);
+const AddressCollectionAdminPage = lazy(() => import('../pages/address-collection/AddressCollectionAdminPage'));
+const AddressCollectionTeacherPage = lazy(() => import('../pages/address-collection/AddressCollectionTeacherPage'));
 const StudentListPage = lazy(routeImports['/students']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
@@ -95,7 +97,8 @@ const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
-const AdmissionsListPage = lazy(() => import('../pages/office-tools/AdmissionsListPage'));
+const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
+const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
 const QuestionBankDashboard = lazy(routeImports['/question-bank']);
 const QuestionPaperGeneratorPage = lazy(() => import('../pages/question-bank/QuestionPaperGeneratorPage'));
@@ -116,8 +119,16 @@ const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorP
 const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
 const OnlineExamsPage = lazy(() => import('../pages/exams/OnlineExamsPage'));
 const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestions'));
+const OMRScannerPage = lazy(() => import('../pages/exams/omr/OMRScannerPage').then(m => ({ default: m.OMRScannerPage })));
 const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
+const CreateCompetitiveExamPage = lazy(() => import('../pages/exams/CreateCompetitiveExamPage'));
+const CompetitiveQuestionBankDashboard = lazy(() => import('../pages/exams/CompetitiveQuestionBankDashboard'));
+const CreateCompetitiveQuestionPage = lazy(() => import('../pages/exams/CreateCompetitiveQuestionPage'));
+const LiveExamMonitorPage = lazy(() => import('../pages/exams/LiveExamMonitorPage'));
 const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiveExamPage'));
+const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
+const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
+const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -143,6 +154,14 @@ export const router = createBrowserRouter([
     element: withSuspense(<ResetPasswordPage />),
   },
   {
+    path: '/apply',
+    element: withSuspense(<AdmissionRegistrationPage />),
+  },
+  {
+    path: '/admissions/apply',
+    element: withSuspense(<AdmissionRegistrationPage />),
+  },
+  {
     path: '/app/progress-card/:examId/:studentId',
     element: withSuspense(<AppProgressCardView />),
   },
@@ -151,6 +170,30 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={['STUDENT']}>
         {withSuspense(<TakeCompetitiveExamPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/competitive-exam-result/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['STUDENT']}>
+        {withSuspense(<CompetitiveExamResultPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/competitive-exam-leaderboard/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+        {withSuspense(<CompetitiveExamLeaderboardPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/manage-competitive-questions/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+        {withSuspense(<ManageCompetitiveQuestions />)}
       </ProtectedRoute>
     ),
   },
@@ -169,6 +212,22 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: withSuspense(<DashboardPage />),
+      },
+      {
+        path: 'address-collection/admin',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <AddressCollectionAdminPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'address-collection/teacher',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AddressCollectionTeacherPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'app-installs',
@@ -211,6 +270,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT']}>
             <RecordFeePaymentPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admissions',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <AdmissionsManagementPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'admissions/register',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AdmissionRegistrationPage />
           </ProtectedRoute>
         ),
       },
@@ -339,6 +414,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'exams/omr-scanner',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <OMRScannerPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'exams/:examId/report-card/:studentId',
         element: withSuspense(<ReportCardPage />),
       },
@@ -363,6 +446,38 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
             <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'create-competitive-exam',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CreateCompetitiveExamPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-question-bank',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveQuestionBankDashboard />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-question-bank/new',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CreateCompetitiveQuestionPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'live-exam-monitor/:id',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <LiveExamMonitorPage />
           </ProtectedRoute>
         ),
       },
@@ -451,7 +566,7 @@ export const router = createBrowserRouter([
         path: 'office-tools/admissions',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
-            <AdmissionsListPage />
+            <AdmissionsManagementPage />
           </ProtectedRoute>
         ),
       },

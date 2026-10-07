@@ -1425,4 +1425,21 @@ class ApiService {
     return _performPost('/api/fees/admin/approve', {'paymentId': paymentId, 'approve': approve}, 'Failed to process fee approval');
   }
 
+  // Admissions API
+  static Future<Map<String, dynamic>> getAdmissions() async {
+    return _performGet('/api/admissions', 'Failed to load admissions');
+  }
+
+  static Future<Map<String, dynamic>> submitAdmission(Map<String, dynamic> payload) async {
+    return _performPost('/api/admissions/apply', payload, 'Failed to submit admission application');
+  }
+
+  static Future<Map<String, dynamic>> updateAdmissionStatus(String id, String status) async {
+    return _performPut('/api/admissions/$id', {'status': status}, 'Failed to update admission status');
+  }
+
+  static Future<Map<String, dynamic>> deleteAdmission(String id) async {
+    return _performDelete('/api/admissions/$id', 'Failed to delete admission');
+  }
+
 }

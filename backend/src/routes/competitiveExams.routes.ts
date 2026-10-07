@@ -1,5 +1,6 @@
-import { Router } from 'express';
-import { authenticate } from '../middlewares/auth';
+
+import { Router } from "express";
+import { authenticate } from "../middlewares/auth";
 import {
   createCompetitiveExam,
   getCompetitiveExamsByClass,
@@ -8,21 +9,36 @@ import {
   generateCompetitiveQuestionsAI,
   getStudentCompetitiveExams,
   getCompetitiveExamDetails,
-  submitCompetitiveExam
-} from '../controllers/competitiveExams.controller';
+  submitCompetitiveExam,
+  getExamLeaderboard,
+  getStudentResult,
+  deleteCompetitiveExam,
+  updateCompetitiveExam,
+  deleteCompetitiveQuestion,
+  updateCompetitiveQuestion
+} from "../controllers/competitiveExams.controller";
 
 const router = Router();
 
 // Student Routes
-router.get('/student', authenticate, getStudentCompetitiveExams);
-router.get('/:id/student', authenticate, getCompetitiveExamDetails);
-router.post('/:id/submit', authenticate, submitCompetitiveExam);
+router.get("/student", authenticate, getStudentCompetitiveExams);
+router.get("/:id/student", authenticate, getCompetitiveExamDetails);
+router.post("/:id/submit", authenticate, submitCompetitiveExam);
+router.get("/:id/result", authenticate, getStudentResult);
 
 // Admin/Teacher Routes
-router.get('/admin', authenticate, getAllCompetitiveExams);
-router.post('/', authenticate, createCompetitiveExam);
-router.get('/class/:classId', authenticate, getCompetitiveExamsByClass);
-router.post('/:examId/questions', authenticate, addCompetitiveQuestion);
-router.post('/:examId/questions/generate-ai', authenticate, generateCompetitiveQuestionsAI);
+router.get("/admin", authenticate, getAllCompetitiveExams);
+router.post("/", authenticate, createCompetitiveExam);
+router.put("/:id", authenticate, updateCompetitiveExam);
+router.delete("/:id", authenticate, deleteCompetitiveExam);
+
+router.get("/class/:classId", authenticate, getCompetitiveExamsByClass);
+router.get("/:id/leaderboard", authenticate, getExamLeaderboard);
+
+router.post("/:examId/questions", authenticate, addCompetitiveQuestion);
+router.post("/:examId/generate-ai", authenticate, generateCompetitiveQuestionsAI);
+router.put("/question/:questionId", authenticate, updateCompetitiveQuestion);
+router.delete("/question/:questionId", authenticate, deleteCompetitiveQuestion);
 
 export default router;
+

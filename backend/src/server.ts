@@ -52,6 +52,7 @@ import competitiveExamsRoutes from './routes/competitiveExams.routes';
 import masterQuestionsRoutes from './routes/masterQuestions.routes';
 import admissionsRoutes from './routes/admissions.routes';
 import websiteRoutes from './routes/website.routes';
+import addressCollectionRoutes from './routes/addressCollection.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -126,6 +127,7 @@ app.use('/api/competitive-exams', competitiveExamsRoutes);
 app.use('/api/master-questions', masterQuestionsRoutes);
 app.use('/api/admissions', admissionsRoutes);
 app.use('/api/website', websiteRoutes);
+app.use('/api/address-collection', addressCollectionRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {
@@ -140,11 +142,17 @@ app.use('*', (_req, res) => {
 // Global error handler
 app.use(errorHandler);
 
+import { autoCleanDuplicateSubjectsAndMarks } from './utils/cleanupDuplicateSubjects';
+
 const PORT = parseInt(process.env.PORT || '5000', 10);
 if (!process.env.VERCEL) {
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 JY School SMS Backend running on http://0.0.0.0:${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+    // Run subject and mark deduplication in background on boot
+    autoCleanDuplicateSubjectsAndMarks().catch(err => {
+      console.error('Failed autoCleanDuplicateSubjectsAndMarks:', err);
+    });
   });
 }
 

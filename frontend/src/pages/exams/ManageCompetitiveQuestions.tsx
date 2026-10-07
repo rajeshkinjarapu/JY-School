@@ -1,0 +1,101 @@
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import { PageHeader } from "../../components/UI/PageHeader";
+import { ChevronLeft, Plus, Edit2, Trash2, Upload, FileText } from "lucide-react";
+
+export const ManageCompetitiveQuestions = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [exam, setExam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    fetchExamDetails();
+  }, [id]);
+
+  const fetchExamDetails = () => {
+    api.get(`/api/competitive-exams/${id}/student`).then(res => {
+      setExam(res.data.data);
+      setLoading(false);
+    }).catch(err => {
+      setLoading(false);
+    });
+  };
+
+  const handleDeleteQuestion = async (qId: string) => {
+    if (!window.confirm("Are you sure you want to delete this question?")) return;
+    try {
+      await api.delete(`/api/competitive-exams/question/${qId}`);
+      fetchExamDetails();
+    } catch (e) {
+      alert("Failed to delete question");
+    }
+  };
+
+  const handleBulkUpload = async () => {
+    if (!csvFile) return alert("Please select a CSV file first");
+    // Currently no backend for bulk upload, we will simulate or implement backend later.
+    alert("Bulk upload API is pending implementation in backend. Stay tuned!");
+  };
+
+  if (loading) return <div className="p-8">Loading Exam Questions...</div>;
+
+  return (
+    <div className="p-4 md:p-8 space-y-6">
+      <div className="flex items-center gap-4">
+        <button onClick={() => navigate("/competitive-exams")} className="p-2 bg-white rounded-full shadow hover:bg-slate-50">
+          <ChevronLeft />
+        </button>
+        <PageHeader title={`${exam?.title} - Manage Questions`} icon={<FileText />} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2 space-y-4">
+          <div className="bg-white rounded-2xl p-6 shadow border border-slate-100">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold text-slate-800">Questions ({exam?.questions?.length || 0})</h3>
+              <button className="px-4 py-2 bg-indigo-600 text-white rounded-lg flex items-center gap-2 hover:bg-indigo-700">
+                <Plus size={16} /> Add Question
+              </button>
+            </div>
+            <div className="space-y-4">
+              {exam?.questions?.map((q: any, idx: number) => (
+                <div key={q.id} className="p-4 border rounded-xl hover:border-indigo-300">
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="font-semibold text-slate-800">Q{idx + 1}. {q.questionText}</p>
+                    <div className="flex items-center gap-2">
+                      <button className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"><Edit2 size={16}/></button>
+                      <button onClick={() => handleDeleteQuestion(q.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded"><Trash2 size={16}/></button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm mt-3">
+                    {q.options.map((opt: string, oIdx: number) => (
+                      <div key={oIdx} className={`px-3 py-1.5 rounded border ${opt === q.correctAnswer ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-medium" : "bg-slate-50 border-slate-200 text-slate-600"}`}>
+                        {opt}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-2xl shadow border border-slate-100">
+            <h3 className="font-bold text-lg text-slate-800 mb-4 flex items-center gap-2"><Upload size={18}/> Bulk Upload (CSV)</h3>
+            <p className="text-sm text-slate-500 mb-4">Upload a CSV file containing questions, options, and correct answers.</p>
+            <input type="file" accept=".csv" onChange={(e) => setCsvFile(e.target.files?.[0] || null)} className="w-full text-sm mb-4 border p-2 rounded" />
+            <button onClick={handleBulkUpload} className="w-full py-2 bg-indigo-600 text-white rounded shadow hover:bg-indigo-700 font-medium">Upload Questions</button>
+            <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-xs rounded border border-blue-200">
+              CSV Format should include columns: questionText, option1, option2, option3, option4, correctAnswer, marks, explanation
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+

@@ -40,6 +40,32 @@ class ApiService {
   }
 
   // Get active session token
+  static Future<dynamic> get(String endpoint) async {
+    final token = await getToken();
+    final res = await http.get(Uri.parse('\$baseUrl\$endpoint'), headers: _getHeaders(token: token));
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return jsonDecode(res.body);
+    }
+    return null;
+  }
+
+  static Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
+    final token = await getToken();
+    final res = await http.post(Uri.parse('\$baseUrl\$endpoint'), headers: _getHeaders(token: token), body: jsonEncode(body));
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      return jsonDecode(res.body);
+    }
+    return null;
+  }
+
+  static Future<http.StreamedResponse> uploadFile(String endpoint, dynamic file, {String fieldName = 'file'}) async {
+    final token = await getToken();
+    var request = http.MultipartRequest('POST', Uri.parse('\$baseUrl\$endpoint'));
+    request.headers.addAll(_getHeaders(token: token, isMultipart: true));
+    request.files.add(await http.MultipartFile.fromPath(fieldName, file.path));
+    return await request.send();
+  }
+
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('accessToken');
@@ -772,6 +798,7 @@ class ApiService {
         if (response.statusCode == 200 || response.statusCode == 201) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cache_$endpoint', response.body);
+          await prefs.setInt('cache_time_$endpoint', DateTime.now().millisecondsSinceEpoch);
           
           return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
         }
@@ -1472,4 +1499,24 @@ class ApiService {
     return _performPost('/api/fees/admin/approve', {'paymentId': paymentId, 'approve': approve}, 'Failed to process fee approval');
   }
 
+  // Admissions API
+  static Future<Map<String, dynamic>> getAdmissions() async {
+    return _performGet('/api/admissions', 'Failed to load admissions');
+  }
+
+  static Future<Map<String, dynamic>> submitAdmission(Map<String, dynamic> payload) async {
+    return _performPost('/api/admissions/apply', payload, 'Failed to submit admission application');
+  }
+
+  static Future<Map<String, dynamic>> updateAdmissionStatus(String id, String status) async {
+    return _performPut('/api/admissions/$id', {'status': status}, 'Failed to update admission status');
+  }
+
+  static Future<Map<String, dynamic>> deleteAdmission(String id) async {
+    return _performDelete('/api/admissions/$id', 'Failed to delete admission');
+  }
+
+  static Future<Map<String, dynamic>> getAdmissionConfig() async {
+    return _performGet('/api/admissions/config', 'Failed to load admission settings');
+  }
 }

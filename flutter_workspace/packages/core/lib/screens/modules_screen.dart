@@ -28,6 +28,8 @@ import 'timetable_screen.dart';
 import 'events_screen.dart';
 import 'live_tracking_screen.dart';
 import 'salary_screen.dart';
+import 'admissions_list_screen.dart';
+import 'admission_registration_screen.dart';
 
 class ModulesScreen extends StatefulWidget {
   const ModulesScreen({super.key});
@@ -70,6 +72,12 @@ class _ModulesScreenState extends State<ModulesScreen> {
 
     // A comprehensive list of modules for the More page
     final List<Map<String, dynamic>> adminModules = [
+      {
+        'title': 'Admissions',
+        'icon': Icons.person_add_alt_1_rounded,
+        'color': const Color(0xFF4F46E5),
+        'page': isTeacher ? const AdmissionRegistrationScreen() : const AdmissionsListScreen(),
+      },
       if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
       if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},

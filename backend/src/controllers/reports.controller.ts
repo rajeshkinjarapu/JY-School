@@ -640,3 +640,367 @@ export const getStudentsReportPdf = async (req: Request, res: Response, next: Ne
     next(error);
   }
 };
+
+// ══════════════════════════════════════════════════════════════
+// NEW REPORTS — Added
+// ══════════════════════════════════════════════════════════════
+
+// ── Fee Defaulters Report ─────────────────────────────────────
+export const getFeeDefaultersReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { classId } = req.query;
+    const students = await prisma.student.findMany({
+      where: classId ? { classId: classId as string } : {},
+      include: { user: { select: { name: true, phone: true } }, class: true, feePayments: true, feeStructures: true },
+      orderBy: [{ class: { name: 'asc' } }, { rollNo: 'asc' }],
+    });
+
+    const defaulters: any[] = [];
+    students.forEach(s => {
+      const totalDue = s.feeStructures.reduce((sum: number, fs: any) => sum + (fs.amount || 0), 0);
+      const totalPaid = s.feePayments.reduce((sum: number, fp: any) => sum + (fp.amountPaid || 0), 0);
+      const pending = totalDue - totalPaid;
+      if (pending > 0) {
+        defaulters.push({
+          'Roll No': s.rollNo,
+          'Student Name': s.user.name,
+          'Class': s.class ? `${s.class.name}-${s.class.section}` : 'N/A',
+          'Phone': s.user.phone || 'N/A',
+          'Father Name': s.fatherName || 'N/A',
+          'Total Fee Due (Rs)': totalDue,
+          'Amount Paid (Rs)': totalPaid,
+          'Pending Amount (Rs)': pending,
+        });
+      }
+    });
+    defaulters.sort((a, b) => b['Pending Amount (Rs)'] - a['Pending Amount (Rs)']);
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(defaulters), 'Fee Defaulters');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Fee_Defaulters.xlsx');
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+export const getFeeDefaultersReportPdf = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { classId } = req.query;
+    const students = await prisma.student.findMany({
+      where: classId ? { classId: classId as string } : {},
+      include: { user: { select: { name: true, phone: true } }, class: true, feePayments: true, feeStructures: true },
+      orderBy: [{ class: { name: 'asc' } }, { rollNo: 'asc' }],
+    });
+
+    const defaulters: any[] = [];
+    students.forEach(s => {
+      const totalDue = s.feeStructures.reduce((sum: number, fs: any) => sum + (fs.amount || 0), 0);
+      const totalPaid = s.feePayments.reduce((sum: number, fp: any) => sum + (fp.amountPaid || 0), 0);
+      const pending = totalDue - totalPaid;
+      if (pending > 0) defaulters.push({ name: s.user.name, rollNo: s.rollNo, cls: s.class ? `${s.class.name}-${s.class.section}` : 'N/A', phone: s.user.phone || 'N/A', father: s.fatherName || 'N/A', due: totalDue, paid: totalPaid, pending });
+    });
+    defaulters.sort((a, b) => b.pending - a.pending);
+
+    const settings = await prisma.schoolSettings.findFirst();
+    const schoolName = settings?.schoolName || 'JY School';
+    const schoolAddress = settings?.address || '';
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=Fee_Defaulters.pdf');
+    doc.pipe(res);
+
+    doc.rect(40, 30, 515, 60).fill('#7f1d1d');
+    doc.fillColor('#ffffff').fontSize(16).font('Helvetica-Bold').text(schoolName.toUpperCase(), 55, 45);
+    doc.fontSize(9).font('Helvetica').fillColor('#fca5a5').text('FEE MANAGEMENT REPORT', 55, 68);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('FEE DEFAULTERS LIST', 310, 48, { align: 'right', width: 230 });
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Total Defaulters: ${defaulters.length}  |  Print Date: ${new Date().toLocaleDateString()}`, 40, 110);
+    const totalPending = defaulters.reduce((sum, d) => sum + d.pending, 0);
+    doc.font('Helvetica').text(`Total Pending Amount: Rs. ${totalPending.toLocaleString()}`, 40, 125);
+
+    const tableY = 150;
+    doc.rect(40, tableY, 515, 20).fill('#fee2e2');
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#991b1b');
+    doc.text('ROLL NO', 45, tableY + 6, { width: 60 }); doc.text('STUDENT NAME', 110, tableY + 6, { width: 130 });
+    doc.text('CLASS', 245, tableY + 6, { width: 45 }); doc.text('FATHER NAME', 295, tableY + 6, { width: 100 });
+    doc.text('DUE', 400, tableY + 6, { width: 55, align: 'right' }); doc.text('PAID', 460, tableY + 6, { width: 45, align: 'right' });
+    doc.text('PENDING', 510, tableY + 6, { width: 45, align: 'right' });
+
+    let cy = tableY + 20;
+    defaulters.forEach((d, i) => {
+      if (cy > 750) { doc.addPage(); cy = 40; }
+      if (i % 2 === 0) doc.rect(40, cy, 515, 18).fill('#fff5f5');
+      doc.fontSize(8).font('Helvetica').fillColor('#334155');
+      doc.text(d.rollNo, 45, cy + 4, { width: 60 }); doc.font('Helvetica-Bold').text(d.name, 110, cy + 4, { width: 130 });
+      doc.font('Helvetica').text(d.cls, 245, cy + 4, { width: 45 }); doc.text(d.father, 295, cy + 4, { width: 100 });
+      doc.text(d.due.toLocaleString(), 400, cy + 4, { width: 55, align: 'right' }); doc.text(d.paid.toLocaleString(), 460, cy + 4, { width: 45, align: 'right' });
+      doc.font('Helvetica-Bold').fillColor('#b91c1c').text(d.pending.toLocaleString(), 510, cy + 4, { width: 45, align: 'right' });
+      cy += 18;
+    });
+
+    doc.fontSize(7).font('Helvetica').fillColor('#cbd5e1').text(schoolAddress, 40, 800, { align: 'center', width: 515 });
+    doc.end();
+  } catch (error) { next(error); }
+};
+
+// ── Staff Attendance Ledger ───────────────────────────────────
+export const getStaffAttendanceReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { month, year } = req.query;
+    const now = new Date();
+    const m = month ? parseInt(month as string) - 1 : now.getMonth();
+    const y = year ? parseInt(year as string) : now.getFullYear();
+    const start = new Date(y, m, 1);
+    const end = new Date(y, m + 1, 0, 23, 59, 59);
+
+    const records = await prisma.teacherAttendance.findMany({
+      where: { date: { gte: start, lte: end } },
+      include: { teacher: { include: { user: { select: { name: true } } } } },
+    });
+
+    const staffMap: { [tid: string]: any } = {};
+    records.forEach(r => {
+      if (!staffMap[r.teacherId]) staffMap[r.teacherId] = { name: r.teacher.user.name, present: 0, absent: 0, late: 0, halfDay: 0, total: 0 };
+      staffMap[r.teacherId].total++;
+      const s = r.status.toUpperCase();
+      if (s === 'PRESENT') staffMap[r.teacherId].present++;
+      else if (s === 'ABSENT') staffMap[r.teacherId].absent++;
+      else if (s === 'LATE') staffMap[r.teacherId].late++;
+      else if (s === 'HALF_DAY') staffMap[r.teacherId].halfDay++;
+    });
+
+    const reportData = Object.values(staffMap).map((s: any) => ({
+      'Staff Name': s.name,
+      'Total Working Days': s.total,
+      'Present': s.present,
+      'Absent': s.absent,
+      'Late': s.late,
+      'Half Day': s.halfDay,
+      'Attendance %': s.total > 0 ? `${Math.round(((s.present + s.late * 0.5 + s.halfDay * 0.5) / s.total) * 100)}%` : '0%',
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), 'Staff Attendance');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=Staff_Attendance_${y}_${m + 1}.xlsx`);
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+export const getStaffAttendanceReportPdf = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { month, year } = req.query;
+    const now = new Date();
+    const m = month ? parseInt(month as string) - 1 : now.getMonth();
+    const y = year ? parseInt(year as string) : now.getFullYear();
+    const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0, 23, 59, 59);
+    const monthName = start.toLocaleString('default', { month: 'long' });
+
+    const records = await prisma.teacherAttendance.findMany({
+      where: { date: { gte: start, lte: end } },
+      include: { teacher: { include: { user: { select: { name: true } } } } },
+    });
+
+    const staffMap: { [tid: string]: any } = {};
+    records.forEach(r => {
+      if (!staffMap[r.teacherId]) staffMap[r.teacherId] = { name: r.teacher.user.name, present: 0, absent: 0, late: 0, halfDay: 0, total: 0 };
+      staffMap[r.teacherId].total++;
+      const s = r.status.toUpperCase();
+      if (s === 'PRESENT') staffMap[r.teacherId].present++;
+      else if (s === 'ABSENT') staffMap[r.teacherId].absent++;
+      else if (s === 'LATE') staffMap[r.teacherId].late++;
+      else if (s === 'HALF_DAY') staffMap[r.teacherId].halfDay++;
+    });
+
+    const data = Object.values(staffMap);
+    const settings = await prisma.schoolSettings.findFirst();
+    const schoolName = settings?.schoolName || 'JY School';
+    const schoolAddress = settings?.address || '';
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Staff_Attendance_${y}_${m + 1}.pdf`);
+    doc.pipe(res);
+
+    doc.rect(40, 30, 515, 60).fill('#1e3a5f');
+    doc.fillColor('#ffffff').fontSize(16).font('Helvetica-Bold').text(schoolName.toUpperCase(), 55, 45);
+    doc.fontSize(9).font('Helvetica').fillColor('#93c5fd').text('HR MANAGEMENT REPORT', 55, 68);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('STAFF ATTENDANCE LEDGER', 290, 48, { align: 'right', width: 250 });
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Month: ${monthName} ${y}  |  Total Staff: ${data.length}`, 40, 110);
+    doc.font('Helvetica').text(`Print Date: ${new Date().toLocaleDateString()}`, 40, 125);
+
+    const tableY = 150;
+    doc.rect(40, tableY, 515, 20).fill('#dbeafe');
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#1e3a8a');
+    doc.text('STAFF NAME', 45, tableY + 6, { width: 170 }); doc.text('TOTAL', 220, tableY + 6, { width: 50, align: 'right' });
+    doc.text('PRESENT', 275, tableY + 6, { width: 55, align: 'right' }); doc.text('ABSENT', 335, tableY + 6, { width: 50, align: 'right' });
+    doc.text('LATE', 390, tableY + 6, { width: 45, align: 'right' }); doc.text('HALF DAY', 440, tableY + 6, { width: 55, align: 'right' });
+    doc.text('RATE %', 500, tableY + 6, { width: 50, align: 'right' });
+
+    let cy = tableY + 20;
+    data.forEach((s: any, i: number) => {
+      if (cy > 750) { doc.addPage(); cy = 40; }
+      if (i % 2 === 0) doc.rect(40, cy, 515, 18).fill('#eff6ff');
+      const rate = s.total > 0 ? Math.round(((s.present + s.late * 0.5 + s.halfDay * 0.5) / s.total) * 100) : 0;
+      doc.fontSize(8).font('Helvetica-Bold').fillColor('#334155').text(s.name, 45, cy + 4, { width: 170 });
+      doc.font('Helvetica').text(s.total.toString(), 220, cy + 4, { width: 50, align: 'right' });
+      doc.fillColor('#047857').text(s.present.toString(), 275, cy + 4, { width: 55, align: 'right' });
+      doc.fillColor('#b91c1c').text(s.absent.toString(), 335, cy + 4, { width: 50, align: 'right' });
+      doc.fillColor('#d97706').text(s.late.toString(), 390, cy + 4, { width: 45, align: 'right' });
+      doc.fillColor('#7c3aed').text(s.halfDay.toString(), 440, cy + 4, { width: 55, align: 'right' });
+      doc.font('Helvetica-Bold').fillColor(rate < 75 ? '#b91c1c' : '#047857').text(`${rate}%`, 500, cy + 4, { width: 50, align: 'right' });
+      cy += 18;
+    });
+
+    doc.fontSize(7).font('Helvetica').fillColor('#cbd5e1').text(schoolAddress, 40, 800, { align: 'center', width: 515 });
+    doc.end();
+  } catch (error) { next(error); }
+};
+
+// ── Admission Summary ─────────────────────────────────────────
+export const getAdmissionSummaryReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { academicYear } = req.query;
+    const where: any = {};
+    if (academicYear) where.academicYear = academicYear as string;
+    const admissions = await prisma.admissionInquiry.findMany({ where, orderBy: { createdAt: 'desc' } });
+
+    const reportData = admissions.map((a: any) => ({
+      'Adm No': a.regNo || a.id.slice(0, 8).toUpperCase(),
+      'Student Name': a.studentName || 'N/A',
+      'Class Applied': a.classApplied || 'N/A',
+      'Father Name': a.fatherName || 'N/A',
+      'Phone': a.fatherPhone || a.phone || 'N/A',
+      'Gender': a.gender || 'N/A',
+      'Caste': a.caste || 'N/A',
+      'Academic Year': a.academicYear || 'N/A',
+      'Annual Fee': a.admissionFee ? `Rs.${Number(a.admissionFee).toLocaleString()}` : 'N/A',
+      'Payment Status': a.paymentStatus || 'N/A',
+      'Date': a.createdAt ? new Date(a.createdAt).toLocaleDateString('en-IN') : 'N/A',
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), 'Admissions');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Admission_Summary.xlsx');
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+export const getAdmissionSummaryReportPdf = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { academicYear } = req.query;
+    const where: any = {};
+    if (academicYear) where.academicYear = academicYear as string;
+    const admissions = await prisma.admissionInquiry.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const settings = await prisma.schoolSettings.findFirst();
+    const schoolName = settings?.schoolName || 'JY School';
+    const schoolAddress = settings?.address || '';
+
+    const doc = new PDFDocument({ margin: 40, size: 'A4' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=Admission_Summary.pdf');
+    doc.pipe(res);
+
+    doc.rect(40, 30, 515, 60).fill('#14532d');
+    doc.fillColor('#ffffff').fontSize(16).font('Helvetica-Bold').text(schoolName.toUpperCase(), 55, 45);
+    doc.fontSize(9).font('Helvetica').fillColor('#86efac').text('ADMISSIONS MANAGEMENT REPORT', 55, 68);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('ADMISSION SUMMARY', 310, 48, { align: 'right', width: 230 });
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Academic Year: ${academicYear || 'All Years'}  |  Total: ${admissions.length}`, 40, 110);
+    doc.font('Helvetica').text(`Print Date: ${new Date().toLocaleDateString()}`, 40, 125);
+
+    const tableY = 150;
+    doc.rect(40, tableY, 515, 20).fill('#dcfce7');
+    doc.fontSize(8).font('Helvetica-Bold').fillColor('#14532d');
+    doc.text('ADM NO', 45, tableY + 6, { width: 70 }); doc.text('STUDENT NAME', 120, tableY + 6, { width: 130 });
+    doc.text('CLASS', 255, tableY + 6, { width: 40 }); doc.text('FATHER NAME', 300, tableY + 6, { width: 110 });
+    doc.text('PHONE', 415, tableY + 6, { width: 80 }); doc.text('GENDER', 500, tableY + 6, { width: 55 });
+
+    let cy = tableY + 20;
+    admissions.forEach((a: any, i: number) => {
+      if (cy > 750) { doc.addPage(); cy = 40; }
+      if (i % 2 === 0) doc.rect(40, cy, 515, 18).fill('#f0fdf4');
+      doc.fontSize(8).font('Helvetica').fillColor('#334155');
+      doc.text((a.regNo || a.id.slice(0, 8).toUpperCase()), 45, cy + 4, { width: 70 });
+      doc.font('Helvetica-Bold').text(a.studentName || 'N/A', 120, cy + 4, { width: 130 });
+      doc.font('Helvetica').text(a.classApplied || 'N/A', 255, cy + 4, { width: 40 });
+      doc.text(a.fatherName || 'N/A', 300, cy + 4, { width: 110 }); doc.text(a.fatherPhone || a.phone || 'N/A', 415, cy + 4, { width: 80 });
+      doc.text(a.gender || 'N/A', 500, cy + 4, { width: 55 }); cy += 18;
+    });
+
+    doc.fontSize(7).font('Helvetica').fillColor('#cbd5e1').text(schoolAddress, 40, 800, { align: 'center', width: 515 });
+    doc.end();
+  } catch (error) { next(error); }
+};
+
+// ── Class Toppers ─────────────────────────────────────────────
+export const getClassToppersReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { examId, topN } = req.query;
+    if (!examId) { res.status(400).json({ success: false, message: 'examId required' }); return; }
+    const limit = parseInt((topN as string) || '10');
+
+    const marks = await prisma.mark.findMany({
+      where: { examId: examId as string },
+      include: { student: { include: { user: { select: { name: true } }, class: true } } },
+    });
+
+    const studentMap: { [id: string]: any } = {};
+    marks.forEach(m => {
+      if (!studentMap[m.studentId]) studentMap[m.studentId] = { rollNo: m.student.rollNo, name: m.student.user.name, cls: m.student.class ? `${m.student.class.name}-${m.student.class.section}` : 'N/A', total: 0, max: 0 };
+      studentMap[m.studentId].total += m.marksObtained;
+      studentMap[m.studentId].max += m.maxMarks;
+    });
+
+    const sorted = Object.values(studentMap).sort((a: any, b: any) => b.total - a.total).slice(0, limit);
+    const reportData = sorted.map((s: any, i: number) => ({
+      'Rank': i + 1, 'Student Name': s.name, 'Roll No': s.rollNo, 'Class': s.cls,
+      'Total Marks': s.total, 'Max Marks': s.max,
+      'Percentage': s.max > 0 ? `${Math.round((s.total / s.max) * 100)}%` : '0%',
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), 'Class Toppers');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Class_Toppers.xlsx');
+    res.send(buffer);
+  } catch (error) { next(error); }
+};
+
+// ── Gate Pass Log ─────────────────────────────────────────────
+export const getGatePassReport = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { startDate, endDate, classId } = req.query;
+    const start = startDate ? new Date(startDate as string) : new Date(new Date().setDate(1));
+    const end = endDate ? new Date(endDate as string) : new Date();
+
+    const gatePasses = await prisma.gatePass.findMany({
+      where: { createdAt: { gte: start, lte: end }, ...(classId ? { student: { classId: classId as string } } : {}) },
+      include: { student: { include: { user: { select: { name: true } }, class: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const reportData = gatePasses.map((g: any) => ({
+      'Gate Pass No': g.id.slice(0, 8).toUpperCase(),
+      'Student Name': g.student?.user?.name || 'N/A',
+      'Roll No': g.student?.rollNo || 'N/A',
+      'Class': g.student?.class ? `${g.student.class.name}-${g.student.class.section}` : 'N/A',
+      'Reason': g.reason || 'N/A',
+      'Status': g.status || 'N/A',
+      'Date': g.createdAt ? new Date(g.createdAt).toLocaleDateString('en-IN') : 'N/A',
+      'Out Time': g.outTime ? new Date(g.outTime).toLocaleTimeString('en-IN') : 'N/A',
+      'In Time': g.inTime ? new Date(g.inTime).toLocaleTimeString('en-IN') : 'N/A',
+    }));
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(reportData), 'Gate Pass Log');
+    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=Gate_Pass_Log.xlsx');
+    res.send(buffer);
+  } catch (error) { next(error); }
+};

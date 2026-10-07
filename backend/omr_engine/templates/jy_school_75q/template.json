@@ -1,0 +1,100 @@
+{
+  "pageDimensions": [
+    1100,
+    1550
+  ],
+  "bubbleDimensions": [
+    20,
+    20
+  ],
+  "customLabels": {
+    "Roll": [
+      "roll1..4"
+    ]
+  },
+  "fieldBlocks": {
+    "Roll": {
+      "fieldType": "QTYPE_INT",
+      "origin": [
+        118,
+        410
+      ],
+      "fieldLabels": [
+        "roll1..4"
+      ],
+      "bubblesGap": 26,
+      "labelsGap": 34
+    },
+    "Block_Q1_15": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        110,
+        835
+      ],
+      "fieldLabels": [
+        "q1..15"
+      ],
+      "bubblesGap": 28,
+      "labelsGap": 36
+    },
+    "Block_Q16_30": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        300,
+        835
+      ],
+      "fieldLabels": [
+        "q16..30"
+      ],
+      "bubblesGap": 28,
+      "labelsGap": 36
+    },
+    "Block_Q31_45": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        490,
+        835
+      ],
+      "fieldLabels": [
+        "q31..45"
+      ],
+      "bubblesGap": 28,
+      "labelsGap": 36
+    },
+    "Block_Q46_60": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        680,
+        835
+      ],
+      "fieldLabels": [
+        "q46..60"
+      ],
+      "bubblesGap": 28,
+      "labelsGap": 36
+    },
+    "Block_Q61_75": {
+      "fieldType": "QTYPE_MCQ4",
+      "origin": [
+        870,
+        835
+      ],
+      "fieldLabels": [
+        "q61..75"
+      ],
+      "bubblesGap": 28,
+      "labelsGap": 36
+    }
+  },
+  "preProcessors": [
+    {
+      "name": "CropPage",
+      "options": {
+        "morphKernel": [
+          10,
+          10
+        ]
+      }
+    }
+  ]
+}

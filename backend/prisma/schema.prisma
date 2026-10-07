@@ -57,6 +57,7 @@ model User {
   transportStaff   TransportStaff?
   announcementReads AnnouncementRead[]
   leaveBalance     LeaveBalance?
+  addressCollectionsCreated StudentAddressCollection[] @relation("AddressCollectionCreatedBy")
 
   @@index([email])
   @@index([role])
@@ -120,11 +121,13 @@ model Teacher {
   teacherAttendances    TeacherAttendance[]
   salaries              Salary[]
   competitiveExams      CompetitiveExam[]
+  addressCollections    StudentAddressCollection[]
 
   @@index([employeeId])
 }
 
 model Class {
+  answerKeys    ExamAnswerKey[]
   id               String    @id @default(uuid())
   name             String    // e.g. "Grade 10"
   section          String    // e.g. "A"
@@ -208,6 +211,7 @@ model Attendance {
 }
 
 model Exam {
+  answerKeys    ExamAnswerKey[]
   id                 String     @id @default(uuid())
   name               String
   term               String     // "Term 1", "Term 2", "Final"
@@ -1127,6 +1131,67 @@ model AdmissionInquiry {
   paymentReceipt String?
   paymentStatus  String   @default("PENDING") // PENDING, COMPLETED
   
+  academicYear     String?
+  registeredByName String?
+  registeredById   String?
+  cashReceivedByName String?
+  cashReceivedById   String?
+  
+  // Extended Demographics & Parents Info
+  alternatePhone   String?
+  motherTongue     String?
+  fatherOccupation String?
+  fatherAadhar     String?
+  fatherPhone      String?
+  motherOccupation String?
+  motherAadhar     String?
+  motherPhone      String?
+  nationality      String?  @default("Indian")
+  state            String?
+  district         String?
+  mandal           String?
+  village          String?
+  doorNo           String?
+  religion         String?
+  caste            String?
+  subCaste         String?
+  previousSchool   String?
+  hasSiblings      Boolean  @default(false)
+  siblingsData     String?
+  termsAccepted    Boolean  @default(true)
+  
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
+
+model ExamAnswerKey {
+  id        String   @id @default(uuid())
+  examId    String
+  classId   String
+  answers   Json     // Stores { '1': 'A', '2': 'B', ... }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  exam      Exam     @relation(fields: [examId], references: [id], onDelete: Cascade)
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([examId, classId])
+}
+
+
+model StudentAddressCollection {
+  id                 String   @id @default(uuid())
+  studentName        String
+  fatherName         String
+  village            String
+  mandal             String
+  mobileNo           String
+  alternateMobileNo  String?
+  referenceTeacherId String?
+  referenceTeacher   Teacher? @relation(fields: [referenceTeacherId], references: [id], onDelete: SetNull)
+  createdById        String?
+  createdBy          User?    @relation("AddressCollectionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+

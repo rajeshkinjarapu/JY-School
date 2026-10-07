@@ -25,6 +25,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated || !user) {
+    if (location.pathname === '/admissions/register') {
+      return <Navigate to="/apply" replace />;
+    }
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

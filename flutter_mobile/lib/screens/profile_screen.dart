@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
+import '../services/cache_manager_service.dart';
 import '../widgets/app_drawer.dart';
 import 'change_password_screen.dart';
 import 'login_screen.dart';
@@ -20,11 +21,76 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic>? _user;
   bool _isLoading = true;
+  String _cacheSizeStr = 'Calculating...';
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadCacheSize();
+  }
+
+  Future<void> _loadCacheSize() async {
+    final mb = await CacheManagerService.getTotalCacheSizeMB();
+    if (mounted) {
+      setState(() {
+        _cacheSizeStr = '${mb.toStringAsFixed(1)} MB';
+      });
+    }
+  }
+
+  Future<void> _handleClearCache() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(color: Colors.amber.shade50, borderRadius: BorderRadius.circular(12)),
+              child: const Icon(Icons.cleaning_services_rounded, color: Colors.amber, size: 24),
+            ),
+            const SizedBox(width: 12),
+            Text('Clear Cache', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'This will safely clear temporary files, cached reports, and offline copies to free up storage.\n\nYour login session and account data will remain completely safe.',
+          style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF475569), height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF6366F1),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('Clear Now', style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && mounted) {
+      final freedMB = await CacheManagerService.clearAllCache();
+      await _loadCacheSize();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cache cleared successfully! (${freedMB.toStringAsFixed(1)} MB freed)'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -295,6 +361,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           icon: Icons.lock_rounded, iconBg: const Color(0xFFFFF7ED), iconColor: const Color(0xFFF97316),
                           label: 'Change Password', trailing: 'Update',
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChangePasswordScreen())),
+                        ),
+                        const Divider(height: 1, color: Color(0xFFF1F5F9), indent: 56),
+                        _settingTile(
+                          icon: Icons.cleaning_services_rounded, iconBg: const Color(0xFFFEF2F2), iconColor: const Color(0xFFEF4444),
+                          label: 'Clear App Cache', trailing: _cacheSizeStr,
+                          onTap: _handleClearCache,
                         ),
                       ],
                     ),

@@ -164,19 +164,21 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise(resolve => setTimeout(resolve, 300));
     
     try {
+      const rect = el.getBoundingClientRect();
       const imgData = await toJpeg(el, { 
         quality: 1.0,
         backgroundColor: '#ffffff',
-        pixelRatio: 2.5,
-        style: { margin: '0' },
+        pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
+        style: { display: 'flex', transform: 'none', margin: '0' },
         useCORS: true
       } as any);
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = 210; // Fixed A4 width in mm
-      const pdfHeight = (1123 / 794) * pdfWidth; // Fixed aspect ratio
+      const finalPdfWidth = 210;  // A4 width in mm
+      const finalPdfHeight = 297; // A4 height in mm — always fill full A4 page
       
-      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
       
       return pdf;
     } finally {
@@ -316,11 +318,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           useCORS: true
         } as any);
         
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = 210;
-        const pdfHeight = (1123 / 794) * pdfWidth;
+        const rect = el.getBoundingClientRect();
+        const finalPdfWidth = 210;
+        const finalPdfHeight = (rect.height * finalPdfWidth) / rect.width;
         
-        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
+        pdf.addImage(imgData, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
         zip.file(fileName, pdf.output('blob'));
         

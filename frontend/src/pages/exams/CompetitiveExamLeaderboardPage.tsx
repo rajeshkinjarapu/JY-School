@@ -1,0 +1,103 @@
+import React, { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../api/axios";
+import { PageHeader } from "../../components/UI/PageHeader";
+import { Trophy, Clock, Medal, ChevronLeft, Download } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+export const CompetitiveExamLeaderboardPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [exam, setExam] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get(`/api/competitive-exams/${id}/leaderboard`)
+      .then(res => {
+        setSubmissions(res.data.data);
+        // We can fetch exam details separately or assume it is handled, but let's just get basic exam info
+        api.get(`/api/competitive-exams/admin`).then(examRes => {
+          const ex = examRes.data.data.find((e: any) => e.id === id);
+          if (ex) setExam(ex);
+          setLoading(false);
+        });
+      })
+      .catch(err => setLoading(false));
+  }, [id]);
+
+  if (loading) return <div className="p-8 flex justify-center">Loading Leaderboard...</div>;
+
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}m ${s}s`;
+  };
+
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.text(`Leaderboard - ${exam?.title || "Exam"}`, 14, 15);
+    autoTable(doc, {
+      startY: 20,
+      head: [["Rank", "Student Name", "Class", "Score", "Time Taken"]],
+      body: submissions.map((s, index) => [
+        index + 1,
+        s.student?.user?.name || "Unknown",
+        `${s.student?.class?.name} - ${s.student?.class?.section}`,
+        s.marksObtained,
+        formatTime(s.totalTimeTaken)
+      ])
+    });
+    doc.save(`Leaderboard_${exam?.title || "Exam"}.pdf`);
+  };
+
+  return (
+    <div className="p-4 md:p-8 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate("/competitive-exams")} className="p-2 bg-white rounded-full shadow hover:bg-slate-50">
+            <ChevronLeft />
+          </button>
+          <PageHeader title={`${exam?.title || "Exam"} - Leaderboard`} icon={<Trophy />} />
+        </div>
+        <button onClick={downloadPDF} className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-indigo-700">
+          <Download size={18}/> Export PDF
+        </button>
+      </div>
+
+      <div className="bg-white rounded-3xl p-6 shadow border border-slate-100 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th className="py-4 px-6 font-bold text-slate-500 uppercase text-xs">Rank</th>
+                <th className="py-4 px-6 font-bold text-slate-500 uppercase text-xs">Student Name</th>
+                <th className="py-4 px-6 font-bold text-slate-500 uppercase text-xs">Class</th>
+                <th className="py-4 px-6 font-bold text-slate-500 uppercase text-xs">Score</th>
+                <th className="py-4 px-6 font-bold text-slate-500 uppercase text-xs">Time Taken</th>
+              </tr>
+            </thead>
+            <tbody>
+              {submissions.map((sub, idx) => (
+                <tr key={sub.id} className="border-b border-slate-50 hover:bg-slate-50/50 transition">
+                  <td className="py-4 px-6">
+                    {idx === 0 ? <Medal className="text-yellow-500" /> : idx === 1 ? <Medal className="text-gray-400" /> : idx === 2 ? <Medal className="text-amber-700" /> : <span className="font-bold text-slate-600 ml-2">{idx + 1}</span>}
+                  </td>
+                  <td className="py-4 px-6 font-semibold text-slate-800">{sub.student?.user?.name}</td>
+                  <td className="py-4 px-6 text-slate-600">{sub.student?.class?.name} - {sub.student?.class?.section}</td>
+                  <td className="py-4 px-6 font-black text-indigo-600">{sub.marksObtained}</td>
+                  <td className="py-4 px-6 text-slate-500 flex items-center gap-2"><Clock size={14}/> {formatTime(sub.totalTimeTaken)}</td>
+                </tr>
+              ))}
+              {submissions.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-8 text-slate-500">No submissions yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
+

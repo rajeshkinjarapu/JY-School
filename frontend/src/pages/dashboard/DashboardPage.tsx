@@ -14,7 +14,7 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -79,75 +79,70 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
   const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
   const emoji = h < 12 ? '🌅' : h < 17 ? '☀️' : '🌙';
   const today = new Date().toLocaleDateString('en-IN', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
   });
   const roleLabel: Record<string, string> = {
     TEACHER: 'Teacher', STUDENT: 'Student', ACCOUNTANT: 'Accountant',
   };
+  
+  const displayRole = roleLabel[role] || role;
+
   return (
-    <div className="relative overflow-hidden rounded-none sm:rounded-[2rem]" style={{
-      background: 'linear-gradient(120deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%)',
-      boxShadow: '0 25px 50px -12px rgba(49, 46, 129, 0.4)',
-    }}>
-      {/* Decorative Orbs */}
-      <div className="absolute -top-24 -right-10 w-72 h-72 rounded-full opacity-40 mix-blend-screen animate-pulse"
-        style={{ background: 'radial-gradient(circle, #818cf8 0%, transparent 70%)', animationDuration: '4s' }} />
-      <div className="absolute -bottom-24 -left-10 w-80 h-80 rounded-full opacity-30 mix-blend-screen animate-pulse"
-        style={{ background: 'radial-gradient(circle, #c084fc 0%, transparent 70%)', animationDuration: '6s' }} />
-      <div className="absolute inset-0 opacity-[0.03]" style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+    <div className="relative w-full overflow-hidden rounded-[1.2rem] sm:rounded-2xl bg-white border border-indigo-50 shadow-sm">
+      {/* Decorative Glows */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-400/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-10 w-64 h-64 bg-fuchsia-400/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute inset-0 opacity-[0.015]" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20.5V18H0v-2h20v-2.5L22.5 16 25 13.5V0h2v13.5L29.5 16 32 18.5V20h8v2h-8v1.5L29.5 26 27 28.5V40h-2V28.5L22.5 26 20 23.5V20.5z' fill='%234f46e5' fill-opacity='1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
       }} />
-      
-      {/* Glass Panel Content */}
-      <div className="relative z-10 p-4 sm:p-5 md:p-6 flex items-center justify-between gap-3 md:gap-6 h-full">
-        <div className="flex flex-col justify-center min-w-0 flex-1">
-          <p className="text-indigo-300/80 text-[9px] md:text-[11px] font-black uppercase tracking-[0.2em] md:tracking-[0.25em] mb-1 md:mb-2 flex items-center gap-1.5 md:gap-2">
-            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 animate-ping absolute" />
-            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-indigo-400 relative" />
-            {greeting}
-          </p>
-          <h1 className="text-[20px] sm:text-3xl md:text-5xl font-black text-white mb-1.5 md:mb-2 tracking-tight whitespace-nowrap truncate max-w-full">
-            {(() => {
-              if (!name) return '';
-              if (name.length <= 15) return name;
-              const parts = name.split(' ').filter(Boolean);
-              if (parts.length >= 3) {
-                const initials = parts.slice(0, -1).map(p => p.replace(/[^A-Za-z]/g, '')[0] || '').join('').toUpperCase();
-                return `${initials} ${parts[parts.length - 1]}`;
-              }
-              return name;
-            })()}
-          </h1>
-          <p className="text-indigo-100/90 text-[10px] sm:text-sm md:text-base font-semibold mb-3 md:mb-4 truncate">{roleLabel[role] || role} <span className="mx-1.5 md:mx-2 opacity-50">•</span> JY School</p>
-          
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2.5 rounded-[0.8rem] md:rounded-[1rem] bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/10 transition-colors shadow-inner">
-              <CalendarDays className="w-3.5 h-3.5 md:w-4 md:h-4 text-indigo-300" />
-              <span className="text-[10px] md:text-xs font-bold text-white tracking-wide">{today}</span>
+
+      <div className="relative z-10 p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        
+        {/* Left Side: Avatar and Info */}
+        <div className="flex items-center gap-3.5 w-full sm:w-auto">
+          {/* Avatar */}
+          <div className="shrink-0 relative">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl p-[2px] bg-gradient-to-tr from-indigo-400 to-purple-400 shadow-sm">
+              <div className="w-full h-full rounded-xl overflow-hidden bg-white flex items-center justify-center border-[2px] border-white">
+                {getPhotoUrl(photoUrl) ? (
+                  <img src={getPhotoUrl(photoUrl)} alt="Profile" className="w-full h-full object-cover" 
+                    onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.nextElementSibling?.classList.remove('hidden'); }} />
+                ) : null}
+                <span className={`text-sm sm:text-base font-black text-indigo-600 ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
+                  {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
+                </span>
+              </div>
             </div>
+            {/* Online Badge */}
+            <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-sm" />
+          </div>
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="text-indigo-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider mb-0.5 flex items-center gap-1.5">
+              {greeting} <span className="text-[12px]">{emoji}</span>
+            </p>
+            <h1 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight truncate leading-tight mb-1">
+              {name}
+            </h1>
+            <div className="flex items-center gap-1.5">
+              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 tracking-wide uppercase">
+                {displayRole}
+              </span>
+              <span className="text-slate-300 text-[10px] font-bold">•</span>
+              <span className="text-slate-500 text-[9px] sm:text-[10px] font-semibold tracking-wide">JY School</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Date Date Badge */}
+        <div className="flex w-full sm:w-auto items-center justify-end border-t border-slate-100 sm:border-0 pt-3 sm:pt-0 mt-1 sm:mt-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-100 shadow-sm">
+            <CalendarDays className="w-3.5 h-3.5 text-indigo-500" />
+            <span className="text-[10px] sm:text-[11px] font-bold text-slate-700 tracking-wide">{today}</span>
           </div>
         </div>
         
-        {/* Photo Box on Right Side */}
-        <div className="shrink-0 flex items-center justify-center">
-          <div className="w-[80px] h-[90px] sm:w-[110px] sm:h-[120px] md:w-[140px] md:h-[150px] rounded-[1rem] md:rounded-[1.5rem] flex items-center justify-center text-3xl md:text-5xl shadow-2xl relative overflow-hidden border-2 md:border-[3px] border-indigo-400/40"
-            style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(16px)' }}>
-            {getPhotoUrl(photoUrl) ? (
-              <img 
-                src={getPhotoUrl(photoUrl)} 
-                alt="Profile" 
-                className="w-full h-full object-cover" 
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-            ) : null}
-            <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-4xl shadow-sm ${getPhotoUrl(photoUrl) ? 'hidden' : ''}`}>
-              {name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : emoji}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -167,36 +162,36 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, gradient,
     : gradient.includes('#06b6d4') ? '#0891b2' : '#8b5cf6';
     
   const inner = (
-    <div className="group relative overflow-hidden rounded-[1.5rem] p-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-lg border border-white/20"
-      style={{ background: gradient, boxShadow: '0 10px 30px -10px rgba(0,0,0,0.15)' }}>
+    <div className="group relative overflow-hidden rounded-[1.2rem] p-3 sm:p-4 transition-all duration-500 hover:-translate-y-1 cursor-pointer shadow-md border border-white/20"
+      style={{ background: gradient, boxShadow: '0 8px 24px -8px rgba(0,0,0,0.12)' }}>
       {/* Background ambient glow */}
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
+      <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl opacity-10 group-hover:opacity-20 transition-opacity duration-500 rounded-bl-full"
         style={{ backgroundImage: `linear-gradient(to bottom left, ${iconColor}, transparent)` }} />
         
       {/* Top gradient border */}
-      <div className="absolute top-0 left-0 right-0 h-1.5 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
+      <div className="absolute top-0 left-0 right-0 h-1 opacity-80 group-hover:opacity-100 transition-opacity bg-white/30" />
       
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-2 md:mb-5">
-          <div className="p-2 md:p-3 rounded-xl md:rounded-[1rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
-            style={{ boxShadow: `0 8px 16px ${glow}` }}>
-            <Icon className="w-4 h-4 md:w-6 md:h-6 text-white drop-shadow-md" />
+        <div className="flex items-start justify-between mb-1.5 md:mb-3">
+          <div className="p-1.5 md:p-2.5 rounded-lg md:rounded-[0.8rem] bg-white/20 shadow-inner backdrop-blur-md border border-white/30"
+            style={{ boxShadow: `0 4px 12px ${glow}` }}>
+            <Icon className="w-3.5 h-3.5 md:w-5 md:h-5 text-white drop-shadow-md" />
           </div>
           {badge && (
-            <span className="text-[8px] sm:text-[9px] font-black px-2 py-0.5 rounded-full border shadow-sm"
+            <span className="text-[7px] sm:text-[8px] font-black px-1.5 py-0.5 rounded-full border shadow-sm"
               style={{ background: badgeColor ? badgeColor + '15' : '#ecfdf5', color: badgeColor || '#065f46', borderColor: badgeColor ? badgeColor + '30' : '#a7f3d0' }}>
               {badge}
             </span>
           )}
           {link && !badge && (
-            <div className="p-1.5 md:p-2 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors border border-white/20">
-              <ArrowUpRight className="w-3 h-3 md:w-4 md:h-4 text-white" />
+            <div className="p-1 md:p-1.5 rounded-full bg-white/20 group-hover:bg-white/30 transition-colors border border-white/20">
+              <ArrowUpRight className="w-2.5 h-2.5 md:w-3.5 md:h-3.5 text-white" />
             </div>
           )}
         </div>
-        <p className="text-[9px] sm:text-[10px] md:text-[11px] font-black text-white/80 uppercase tracking-wider mb-0.5 md:mb-1 truncate">{label}</p>
-        <p className="text-xl sm:text-2xl md:text-3xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
-        {sub && <p className="text-[8px] sm:text-[10px] md:text-[11px] text-white/90 mt-1 md:mt-2 font-bold flex items-center gap-1 sm:gap-1.5 opacity-90 truncate"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/80 shrink-0"/>{sub}</p>}
+        <p className="text-[8px] sm:text-[9px] md:text-[10px] font-black text-white/80 uppercase tracking-wider mb-0.5 md:mb-1 truncate">{label}</p>
+        <p className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight leading-none drop-shadow-md">{value}</p>
+        {sub && <p className="text-[7px] sm:text-[8px] md:text-[9px] text-white/90 mt-1 font-bold flex items-center gap-1 sm:gap-1.5 opacity-90 truncate"><span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/80 shrink-0"/>{sub}</p>}
       </div>
     </div>
   );
@@ -210,14 +205,14 @@ const SectionHeader: React.FC<{
   title: string; subtitle?: string; icon: React.ElementType;
   iconColor?: string; action?: React.ReactNode;
 }> = ({ title, subtitle, icon: Icon, iconColor = '#6366f1', action }) => (
-  <div className="flex items-center justify-between mb-5">
-    <div className="flex items-center gap-3">
-      <div className="p-2 rounded-xl" style={{ background: iconColor + '18' }}>
-        <Icon className="w-4 h-4" style={{ color: iconColor }} />
+  <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center gap-2.5">
+      <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl" style={{ background: iconColor + '18' }}>
+        <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: iconColor }} />
       </div>
       <div>
-        <h3 className="text-base font-black text-slate-900 leading-tight">{title}</h3>
-        {subtitle && <p className="text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>}
+        <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight">{title}</h3>
+        {subtitle && <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">{subtitle}</p>}
       </div>
     </div>
     {action}
@@ -225,9 +220,9 @@ const SectionHeader: React.FC<{
 );
 
 const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => (
-  <div className={`rounded-[2rem] p-6 relative overflow-hidden bg-white/70 backdrop-blur-xl border-[3px] border-indigo-200/50 ring-4 ring-white/60 transition-all duration-300 hover:shadow-2xl hover:bg-white/90 group ${className}`}
+  <div className={`rounded-[1.5rem] p-4 sm:p-5 relative overflow-hidden bg-white/70 backdrop-blur-xl border-[2px] border-indigo-200/50 ring-2 ring-white/60 transition-all duration-300 hover:shadow-xl hover:bg-white/90 group ${className}`}
     style={{ 
-      boxShadow: '0 20px 40px -5px rgba(99, 102, 241, 0.15)',
+      boxShadow: '0 10px 30px -5px rgba(99, 102, 241, 0.10)',
     }}>
     {/* Decorative colorful ambient glow */}
     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-400/20 to-purple-400/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
@@ -259,52 +254,21 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
     { label: 'Fee Details', value: 'Student Fees', icon: BookMarked, gradient: 'linear-gradient(90deg,#db2777,#f472b6)', glow: 'rgba(219,39,119,0.08)', link: '/finance?tab=student-fee-details', sub: 'Student balances & dues' },
     { label: 'Progress Cards', value: 'Reports', icon: Award, gradient: 'linear-gradient(90deg,#059669,#34d399)', glow: 'rgba(5,150,105,0.08)', link: '/exams?tab=progress-card', sub: 'Generate & View' },
     { label: 'App Installs', value: `${data.totalAppInstalls || 0} / ${data.totalStudents || 0}`, icon: Zap, gradient: 'linear-gradient(90deg,#14b8a6,#2dd4bf)', glow: 'rgba(20,184,166,0.08)', link: '/app-installs', sub: 'Mobile app usage' },
+    { label: 'Admissions', value: 'Manage', icon: UserPlus, gradient: 'linear-gradient(90deg,#3b82f6,#60a5fa)', glow: 'rgba(59,130,246,0.08)', link: '/admissions', sub: 'New Enrollments' },
   ];
 
-  const pieData = [
-    { name: 'Male',   value: data.genderDistribution?.male   || 0 },
-    { name: 'Female', value: data.genderDistribution?.female || 0 },
-    { name: 'Other',  value: data.genderDistribution?.other  || 0 },
-  ].filter(d => d.value > 0);
+
 
   const enrollmentData = (data.enrollmentByClass || []).slice(0, 8);
 
   return (
     <div className="space-y-7">
       {/* KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {stats.map((s, i) => <StatCard key={i} {...s} />)}
       </div>
 
-      {/* Attendance Ribbon */}
-      <div className="relative overflow-hidden rounded-2xl p-5" style={{
-        background: 'linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#1e293b 100%)',
-        boxShadow: '0 8px 32px rgba(15,23,42,0.2)',
-      }}>
-        <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full opacity-20 animate-float"
-          style={{ background: 'radial-gradient(circle,#818cf8,transparent)' }} />
-        <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {[
-            { label: "Today's Attendance", value: `${data.attendanceToday || 0}%`, icon: CheckCircle2, color: '#10b981' },
-            { label: '7-Day Avg', value: `${attendancePct}%`, icon: Activity, color: '#818cf8' },
-            { label: 'Present (7d)', value: totalPresent, icon: UserCheck, color: '#34d399' },
-            { label: 'Absent (7d)', value: totalAbsent, icon: XCircle, color: '#f87171' },
-          ].map((item, i) => {
-            const Icon = item.icon;
-            return (
-              <div key={i} className="flex items-center gap-2.5 md:gap-3">
-                <div className="p-2 md:p-2.5 rounded-[0.6rem] md:rounded-xl shrink-0" style={{ background: item.color + '22' }}>
-                  <Icon className="w-4 h-4 md:w-5 md:h-5" style={{ color: item.color }} />
-                </div>
-                <div>
-                  <p className="text-slate-400 text-[9px] sm:text-[10px] md:text-xs font-semibold leading-tight">{item.label}</p>
-                  <p className="text-white text-base sm:text-lg md:text-xl font-black mt-0.5">{item.value}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+
 
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
@@ -363,28 +327,45 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
           </div>
         </ChartCard>
 
-        <ChartCard className="lg:col-span-2">
-          <SectionHeader title="Demographics" subtitle="Student gender distribution" icon={PieChartIcon} iconColor="#8b5cf6" />
-          <div className="h-[200px]">
-            {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={pieData} cx="50%" cy="48%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
-                    {pieData.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
-                  </Pie>
-                  <RechartsTooltip contentStyle={TT} />
-                  <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700 }} />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <div className="flex items-center justify-center h-full text-slate-400 text-sm">No data yet.</div>}
-          </div>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {pieData.map((d, i) => (
-              <div key={i} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-                style={{ background: COLORS[i] + '18', color: COLORS[i] }}>
-                <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i] }} />{d.name}: {d.value}
+        <ChartCard className="lg:col-span-2 flex flex-col">
+          <SectionHeader title="Attendance Summary" subtitle="Daily presence & absence stats" icon={CheckCircle2} iconColor="#10b981" />
+          
+          <div className="flex-1 flex flex-col justify-center gap-4 mt-2">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-100 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-200/40 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+                <span className="text-[10px] sm:text-xs font-black uppercase text-emerald-600 mb-1 z-10 tracking-wider">Today's Avg</span>
+                <span className="text-2xl sm:text-3xl font-black text-emerald-700 z-10">{data.attendanceToday || 0}%</span>
               </div>
-            ))}
+              
+              <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-200/40 rounded-full blur-xl -translate-y-1/2 translate-x-1/2" />
+                <span className="text-[10px] sm:text-xs font-black uppercase text-indigo-600 mb-1 z-10 tracking-wider">7-Day Avg</span>
+                <span className="text-2xl sm:text-3xl font-black text-indigo-700 z-10">{attendancePct}%</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="bg-white rounded-xl p-3 border border-slate-200 flex items-center gap-3 shadow-sm hover:border-emerald-200 transition-colors">
+                <div className="p-2.5 bg-emerald-100 text-emerald-600 rounded-lg shrink-0">
+                  <UserCheck className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">Present (7d)</p>
+                  <p className="text-lg sm:text-xl font-black text-slate-800 leading-tight">{totalPresent}</p>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-xl p-3 border border-slate-200 flex items-center gap-3 shadow-sm hover:border-rose-200 transition-colors">
+                <div className="p-2.5 bg-rose-100 text-rose-600 rounded-lg shrink-0">
+                  <XCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-slate-400">Absent (7d)</p>
+                  <p className="text-lg sm:text-xl font-black text-slate-800 leading-tight">{totalAbsent}</p>
+                </div>
+              </div>
+            </div>
           </div>
         </ChartCard>
       </div>
@@ -501,7 +482,7 @@ const TeacherView: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="space-y-7">
       {/* Teacher Quick Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {[
           { label: 'Daily Attendance', value: 'Mark', icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Students Attendance', link: '/attendance' },
           { label: 'Total Students', value: data.totalStudents || 0, icon: Users, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Across all classes', link: '/students' },
@@ -661,7 +642,7 @@ const StudentView: React.FC<{ data: any }> = ({ data }) => {
   return (
     <div className="space-y-7">
       {/* Student Quick Stats Grid (Matching Teacher Style) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
         {[
           { label: 'Attendance', value: `${attPct}%`, icon: UserCheck, gradient: 'linear-gradient(135deg,#0ea5e9 0%,#2563eb 100%)', glow: 'rgba(255,255,255,0.2)', sub: 'Last 30 days', link: '/student/attendance' },
           { label: 'Latest Score', value: data.recentMarks?.length > 0 ? `${Math.round((data.recentMarks[0].marksObtained / data.recentMarks[0].maxMarks) * 100)}%` : 'N/A', icon: Award, gradient: 'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)', glow: 'rgba(255,255,255,0.2)', sub: data.recentMarks?.[0]?.examName || 'No results yet', link: '/exams' },

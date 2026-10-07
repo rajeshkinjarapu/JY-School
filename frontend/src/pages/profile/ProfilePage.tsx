@@ -3,6 +3,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { changePassword } from "../../api/auth";
 import { Avatar } from "../../components/UI/Avatar";
 import { Badge } from "../../components/UI/Badge";
+import { PageHeader } from "../../components/UI/PageHeader";
 import { Save, Lock, User as UserIcon, Key, Camera } from "lucide-react";
 import toast from "react-hot-toast";
 import api from "../../api/axios";

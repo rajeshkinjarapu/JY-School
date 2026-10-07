@@ -42,7 +42,14 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
 export const getAllCompetitiveExams = async (req: Request, res: Response) => {
   try {
     const exams = await prisma.competitiveExam.findMany({
-      include: { subject: true, class: true, _count: { select: { questions: true } } },
+      include: { 
+        subject: true, 
+        class: true, 
+        _count: { select: { questions: true, submissions: true } },
+        submissions: {
+          select: { marksObtained: true } // Fetch marks to calculate average/highest/lowest
+        }
+      },
       orderBy: { createdAt: 'desc' }
     });
     res.json({ success: true, data: exams });
@@ -225,4 +232,110 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
     console.error(error);
     res.status(500).json({ success: false, message: 'Failed to submit exam' });
   }
+};
+
+export const getExamLeaderboard = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const submissions = await prisma.competitiveExamSubmission.findMany({
+            where: { competitiveExamId: id },
+            include: {
+                student: {
+                    include: {
+                        user: true,
+                        class: true
+                    }
+                }
+            },
+            orderBy: [
+                { marksObtained: "desc" },
+                { totalTimeTaken: "asc" }
+            ]
+        });
+        res.json({ success: true, data: submissions });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to fetch leaderboard" });
+    }
+};
+
+export const getStudentResult = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const studentUserId = (req as any).user?.id;
+
+        const student = await prisma.student.findUnique({ where: { userId: studentUserId } });
+        if (!student) return res.status(404).json({ success: false, message: "Student not found" });
+
+        const submission = await prisma.competitiveExamSubmission.findUnique({
+            where: { competitiveExamId_studentId: { competitiveExamId: id, studentId: student.id } },
+            include: {
+                responses: {
+                    include: { question: true }
+                },
+                competitiveExam: true
+            }
+        });
+
+        if (!submission) return res.status(404).json({ success: false, message: "Result not found" });
+        res.json({ success: true, data: submission });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to fetch result" });
+    }
+};
+
+export const deleteCompetitiveExam = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        await prisma.competitiveExam.delete({ where: { id } });
+        res.json({ success: true, message: "Exam deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to delete exam" });
+    }
+};
+
+export const updateCompetitiveExam = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
+        
+        const exam = await prisma.competitiveExam.update({
+            where: { id },
+            data: { title, duration, totalMarks, passMarks, negativeMarks }
+        });
+
+
+        res.json({ success: true, data: exam });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to update exam" });
+    }
+};
+
+export const updateCompetitiveQuestion = async (req: Request, res: Response) => {
+    try {
+        const { questionId } = req.params;
+        const { questionText, options, correctAnswer, explanation, marks } = req.body;
+        
+        const q = await prisma.competitiveExamQuestion.update({
+            where: { id: questionId },
+            data: {
+                questionText,
+                options: JSON.stringify(options),
+                correctAnswer,
+                marks
+            }
+        });
+        res.json({ success: true, data: q });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to update question" });
+    }
+};
+
+export const deleteCompetitiveQuestion = async (req: Request, res: Response) => {
+    try {
+        const { questionId } = req.params;
+        await prisma.competitiveExamQuestion.delete({ where: { id: questionId } });
+        res.json({ success: true, message: "Question deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Failed to delete question" });
+    }
 };
