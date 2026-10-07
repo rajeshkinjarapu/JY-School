@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { User, MapPin, Phone, CheckCircle, Navigation } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -10,11 +10,32 @@ const AddressCollectionTeacherPage = () => {
     village: '',
     mandal: '',
     mobileNo: '',
-    alternateMobileNo: ''
+    alternateMobileNo: '',
+    referenceTeacherId: ''
   });
   const [loading, setLoading] = useState(false);
+  const [teachers, setTeachers] = useState<{id: string, name: string}[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const response = await axios.get('http://66.116.252.191:19998/api/teachers', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        if (response.data.success) {
+          setTeachers(response.data.data.map((t: any) => ({
+            id: t.id,
+            name: t.user?.name || 'Unknown'
+          })));
+        }
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+      }
+    };
+    fetchTeachers();
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -177,6 +198,25 @@ const AddressCollectionTeacherPage = () => {
                   maxLength={10}
                 />
               </div>
+            </div>
+            
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Reference Teacher <span className="text-gray-400 text-xs">(Defaults to you if empty)</span>
+              </label>
+              <select
+                name="referenceTeacherId"
+                value={formData.referenceTeacherId}
+                onChange={handleChange}
+                className="w-full pl-4 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 focus:bg-white transition"
+              >
+                <option value="">-- Self (Default) --</option>
+                {teachers.map(teacher => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name}
+                  </option>
+                ))}
+              </select>
             </div>
             
           </div>

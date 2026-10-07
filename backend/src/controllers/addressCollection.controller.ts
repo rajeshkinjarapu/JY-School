@@ -6,14 +6,14 @@ const prisma = new PrismaClient();
 // Add new address collection entry
 export const addAddressCollection = async (req: Request, res: Response) => {
   try {
-    const { studentName, fatherName, village, mandal, mobileNo, alternateMobileNo } = req.body;
+    const { studentName, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
     
     // Check if the user is a teacher
     // req.user is set by authentication middleware
     const user = (req as any).user;
     
-    let referenceTeacherId: string | undefined = undefined;
-    if (user && user.role === 'TEACHER') {
+    let referenceTeacherId: string | undefined = bodyTeacherId || undefined;
+    if (!referenceTeacherId && user && user.role === 'TEACHER') {
       const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } });
       if (teacher) {
         referenceTeacherId = teacher.id;

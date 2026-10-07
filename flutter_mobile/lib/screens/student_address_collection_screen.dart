@@ -340,7 +340,7 @@ class _StudentAddressCollectionScreenState
                           ),
                         ),
                         subtitle: Padding(
-                          padding: const EdgeInsets.top: 4.0),
+                          padding: const EdgeInsets.only(top: 4.0),
                           child: Row(
                             children: [
                               Icon(Icons.location_on, size: 14, color: Colors.grey.shade600),

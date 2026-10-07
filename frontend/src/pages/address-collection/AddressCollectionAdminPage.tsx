@@ -22,6 +22,7 @@ const AddressCollectionAdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+  const [teachers, setTeachers] = useState<{id: string, name: string}[]>([]);
   
   // Data Entry Modal States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -31,13 +32,31 @@ const AddressCollectionAdminPage = () => {
     village: '',
     mandal: '',
     mobileNo: '',
-    alternateMobileNo: ''
+    alternateMobileNo: '',
+    referenceTeacherId: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
+    fetchTeachers();
   }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const response = await axios.get('http://66.116.252.191:19998/api/teachers', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+      if (response.data.success) {
+        setTeachers(response.data.data.map((t: any) => ({
+          id: t.id,
+          name: t.user?.name || 'Unknown'
+        })));
+      }
+    } catch (error) {
+      console.error('Error fetching teachers:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -107,7 +126,8 @@ const AddressCollectionAdminPage = () => {
           village: '',
           mandal: '',
           mobileNo: '',
-          alternateMobileNo: ''
+          alternateMobileNo: '',
+          referenceTeacherId: ''
         });
         fetchData(); // Refresh the list
       }
@@ -270,41 +290,59 @@ const AddressCollectionAdminPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="p-4 text-sm font-medium text-gray-600">S.No</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Student Name</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Father Name</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Village</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Mandal</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Mobile No</th>
-                <th className="p-4 text-sm font-medium text-gray-600">Ref Teacher</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white text-xs uppercase tracking-wider">
+                <th className="px-6 py-4 font-semibold rounded-tl-xl">S.No</th>
+                <th className="px-6 py-4 font-semibold">Student Name</th>
+                <th className="px-6 py-4 font-semibold">Father Name</th>
+                <th className="px-6 py-4 font-semibold">Village</th>
+                <th className="px-6 py-4 font-semibold">Mandal</th>
+                <th className="px-6 py-4 font-semibold text-center">Mobile No</th>
+                <th className="px-6 py-4 font-semibold text-center rounded-tr-xl">Ref Teacher</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {filteredData.map((item, index) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition">
-                  <td className="p-4 text-sm text-gray-600">{index + 1}</td>
-                  <td className="p-4 text-sm font-medium text-gray-900">{item.studentName}</td>
-                  <td className="p-4 text-sm text-gray-600">{item.fatherName}</td>
-                  <td className="p-4 text-sm text-gray-600">{item.village}</td>
-                  <td className="p-4 text-sm text-gray-600">{item.mandal}</td>
-                  <td className="p-4 text-sm text-gray-600">
-                    <div>{item.mobileNo}</div>
+                <tr key={item.id} className="hover:bg-blue-50/50 transition-colors duration-200 group">
+                  <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
+                  <td className="px-6 py-4">
+                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{item.studentName}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{item.fatherName}</td>
+                  <td className="px-6 py-4">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                      {item.village}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{item.mandal}</td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="text-sm font-medium text-gray-800">{item.mobileNo}</div>
                     {item.alternateMobileNo && (
-                      <div className="text-xs text-gray-400 mt-1">{item.alternateMobileNo}</div>
+                      <div className="text-xs text-gray-500 mt-1">{item.alternateMobileNo}</div>
                     )}
                   </td>
-                  <td className="p-4 text-sm text-gray-600">{item.referenceTeacherName}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                      item.referenceTeacherName === 'Unknown' || !item.referenceTeacherName
+                        ? 'bg-gray-100 text-gray-600 border-gray-200' 
+                        : 'bg-purple-100 text-purple-800 border-purple-200'
+                    }`}>
+                      {item.referenceTeacherName || 'Unknown'}
+                    </span>
+                  </td>
                 </tr>
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-gray-500">
-                    No data found.
+                  <td colSpan={7} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center text-gray-400">
+                      <Search size={48} className="mb-4 text-gray-300" />
+                      <p className="text-lg font-medium text-gray-500">No data found</p>
+                      <p className="text-sm mt-1">Try adjusting your search filters or add new data.</p>
+                    </div>
                   </td>
                 </tr>
               )}
@@ -428,6 +466,24 @@ const AddressCollectionAdminPage = () => {
                       maxLength={10}
                     />
                   </div>
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reference Teacher <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <select
+                    name="referenceTeacherId"
+                    value={formData.referenceTeacherId}
+                    onChange={(e: any) => handleFormChange(e)}
+                    className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  >
+                    <option value="">-- Select Reference Teacher --</option>
+                    {teachers.map(teacher => (
+                      <option key={teacher.id} value={teacher.id}>
+                        {teacher.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
