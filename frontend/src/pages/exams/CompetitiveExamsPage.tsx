@@ -21,7 +21,7 @@ const CompetitiveExamsPage = () => {
 };
 
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'QUESTION_BANK' | 'RESULTS'>('DASHBOARD');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'RESULTS'>('DASHBOARD');
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
@@ -40,15 +40,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       <div className="flex overflow-x-auto gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100">
         <TabButton active={activeTab === 'DASHBOARD'} onClick={() => setActiveTab('DASHBOARD')} icon={<LayoutDashboard size={18} />} label="Dashboard Overview" />
         <TabButton active={activeTab === 'MANAGE_EXAMS'} onClick={() => setActiveTab('MANAGE_EXAMS')} icon={<List size={18} />} label="Manage Exams" />
-        <TabButton active={activeTab === 'QUESTION_BANK'} onClick={() => setActiveTab('QUESTION_BANK')} icon={<Database size={18} />} label="Question Bank" />
+        <TabButton active={false} onClick={() => navigate('/competitive-question-bank')} icon={<Database size={18} />} label="Question Bank" />
         <TabButton active={activeTab === 'RESULTS'} onClick={() => setActiveTab('RESULTS')} icon={<Award size={18} />} label="Results & Ranks" />
       </div>
 
       {/* Content */}
       <div className="mt-6">
         {activeTab === 'DASHBOARD' && <DashboardTab />}
-        {activeTab === 'MANAGE_EXAMS' && <ManageExamsTab />}
-        {activeTab === 'QUESTION_BANK' && <QuestionBankTab />}
+        {activeTab === 'MANAGE_EXAMS' && <ManageExamsTab navigate={navigate} />}
         {activeTab === 'RESULTS' && <ResultsTab />}
       </div>
     </div>
@@ -67,10 +66,21 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
 // --- TABS COMPONENTS ---
 
 const DashboardTab = () => {
+  const [stats, setStats] = useState({ totalExams: 0, totalQuestions: 0, activeStudents: 0 });
+  
+  useEffect(() => {
+    // We can add actual API call later for dashboard stats
+    api.get('/competitive-exams/admin').then(res => {
+      if(res.data.success) {
+        setStats(prev => ({ ...prev, totalExams: res.data.data.length }));
+      }
+    }).catch(console.error);
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <StatCard title="Total Exams" value="0" color="blue" />
+        <StatCard title="Total Exams" value={stats.totalExams} color="blue" />
         <StatCard title="Total Questions" value="0" color="emerald" />
         <StatCard title="Results Published" value="0" color="purple" />
         <StatCard title="Active Students" value="0" color="amber" />
@@ -99,75 +109,81 @@ const StatCard = ({ title, value, color }: any) => {
   );
 };
 
-const ManageExamsTab = () => {
-  const [showCreate, setShowCreate] = useState(false);
-  
-  if (showCreate) return <CreateExamForm onClose={() => setShowCreate(false)} />;
+const ManageExamsTab = ({ navigate }: { navigate: any }) => {
+  const [exams, setExams] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchExams = async () => {
+      try {
+        const response = await api.get('/competitive-exams/admin');
+        if (response.data.success) {
+          setExams(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching exams:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExams();
+  }, []);
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
         <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><List className="text-indigo-600" /> Exam List</h2>
-        <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-sm">
+        <button onClick={() => navigate('/create-competitive-exam')} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition shadow-sm">
           <Plus size={18} /> Create New Exam
         </button>
       </div>
-      <div className="p-12 flex flex-col items-center justify-center text-center">
-        <FileText size={48} className="text-slate-200 mb-4" />
-        <h3 className="text-lg font-bold text-slate-600">No Exams Found</h3>
-        <p className="text-slate-500">Click the 'Create New Exam' button to setup a JEE or NEET pattern exam.</p>
-      </div>
-    </div>
-  );
-};
-
-const CreateExamForm = ({ onClose }: { onClose: () => void }) => {
-  return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-        <h2 className="text-lg font-bold text-slate-800">Create Competitive Exam</h2>
-        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-full transition"><XCircle size={24} /></button>
-      </div>
-      <div className="p-8 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Exam Name (e.g. Grand Test - 1)</label>
-            <input type="text" className="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-indigo-500 outline-none transition" placeholder="Enter exam name" />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Exam Type</label>
-            <select className="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-indigo-500 outline-none transition bg-white">
-              <option value="JEE_MAINS">JEE Mains Pattern</option>
-              <option value="JEE_ADVANCED">JEE Advanced Pattern</option>
-              <option value="NEET">NEET Pattern</option>
-              <option value="EAMCET">EAPCET / EAMCET Pattern</option>
-              <option value="CUSTOM">Custom Pattern</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Total Marks</label>
-            <input type="number" className="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-indigo-500 outline-none transition" placeholder="300" />
-          </div>
-          <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Duration (Minutes)</label>
-            <input type="number" className="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-indigo-500 outline-none transition" placeholder="180" />
-          </div>
-          <div>
-             <label className="block text-sm font-bold text-slate-700 mb-2">Exam Date</label>
-             <input type="date" className="w-full border-2 border-slate-200 rounded-xl p-3 focus:border-indigo-500 outline-none transition" />
-          </div>
+      
+      {loading ? (
+        <div className="p-12 text-center text-slate-500 font-bold">Loading exams...</div>
+      ) : exams.length === 0 ? (
+        <div className="p-12 flex flex-col items-center justify-center text-center">
+          <FileText size={48} className="text-slate-200 mb-4" />
+          <h3 className="text-lg font-bold text-slate-600">No Exams Found</h3>
+          <p className="text-slate-500">Click the 'Create New Exam' button to setup a JEE or NEET pattern exam.</p>
         </div>
-        
-        <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl flex items-start gap-3">
-           <AlertTriangle className="text-blue-600 mt-0.5" size={20} />
-           <p className="text-sm text-blue-800 font-medium">After creating the exam, you can configure subject-wise negative marking and cutoffs in the Manage Exams tab.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-slate-50 border-b border-slate-100">
+              <tr>
+                <th className="px-6 py-4 font-bold text-slate-600 text-sm">Exam Name</th>
+                <th className="px-6 py-4 font-bold text-slate-600 text-sm">Class & Subject</th>
+                <th className="px-6 py-4 font-bold text-slate-600 text-sm text-center">Date & Time</th>
+                <th className="px-6 py-4 font-bold text-slate-600 text-sm text-center">Marks</th>
+                <th className="px-6 py-4 font-bold text-slate-600 text-sm text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {exams.map(exam => (
+                <tr key={exam.id} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 font-bold text-indigo-900">{exam.title}</td>
+                  <td className="px-6 py-4 text-sm font-medium text-slate-700">
+                    <div>Class: {exam.class?.name} {exam.class?.section}</div>
+                    <div className="text-slate-500">Subject: {exam.subject?.name}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-slate-700 text-center">
+                    <div>{format(new Date(exam.startTime), 'MMM dd, yyyy')}</div>
+                    <div className="text-slate-500">{format(new Date(exam.startTime), 'hh:mm a')}</div>
+                  </td>
+                  <td className="px-6 py-4 text-sm font-bold text-slate-700 text-center">
+                    {exam.totalMarks}
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <button onClick={() => navigate(`/manage-competitive-questions/${exam.id}`)} className="text-indigo-600 hover:text-indigo-800 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg">
+                      Manage Questions
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button onClick={onClose} className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">Cancel</button>
-          <button className="px-8 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md">Create Exam</button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };
