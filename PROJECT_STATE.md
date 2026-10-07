@@ -5,10 +5,11 @@
 - **మార్పులు:** 
   1. `TeacherAttendancePage.tsx`: స్టాఫ్ అటెండెన్స్ మేనేజర్ పేజీని ప్రీమియం టేబుల్ ఫార్మాట్ లోకి మార్చాను.
   2. `CompetitiveExamsPage.tsx`: అడ్మిన్ డ్యాష్బోర్డ్ లో ఎగ్జామ్స్ లిస్ట్ అవ్వడం (API ఫిక్స్), దానికి "Manage Questions", "Publish", మరియు "Admin Preview" బటన్స్ యాడ్ చేయడం జరిగింది.
-  3. `ManageCompetitiveQuestions.tsx`: క్వశ్చన్స్ మాన్యువల్ గా యాడ్ చేయడానికి ఒక అద్భుతమైన Interactive Question Editor డెవలప్ చేశాను. ఇందులో A, B, C, D ఆప్షన్స్ టైప్ చేసి కరెక్ట్ ఆన్సర్ మీద క్లిక్ చేస్తే సెలెక్ట్ అయ్యేలా, మరియు "Save & Add New" ఫీచర్ తో డిజైన్ చేశాను.
-  4. **Backend Architecture Update (`competitiveExams.controller.ts`)**: మాన్యువల్ గా యాడ్ చేసిన క్వశ్చన్స్ ముందుగా `MasterQuestion` డేటాబేస్ లో సేవ్ అయ్యి, ఆ తర్వాత ఎగ్జామ్ కు కాపీ అవుతాయి. అలాగే మల్టిపుల్ క్వశ్చన్స్ ని లింక్ చేయడానికి కొత్త API క్రియేట్ చేశాను.
+  3. `ManageCompetitiveQuestions.tsx`: క్వశ్చన్స్ మాన్యువల్ గా యాడ్ చేయడానికి ఒక అద్భుతమైన Interactive Question Editor డెవలప్ చేశాను.
+  4. **Backend Architecture Update (`competitiveExams.controller.ts`)**: మాన్యువల్ గా యాడ్ చేసిన క్వశ్చన్స్ ముందుగా `MasterQuestion` డేటాబేస్ లో సేవ్ అయ్యి, ఆ తర్వాత ఎగ్జామ్ కు కాపీ అవుతాయి.
   5. **Sidebar UI Fix (`Sidebar.tsx`)**: సైడ్ బార్ లో మెనూ ఐటమ్స్ వ్రాప్ అవ్వకుండా, స్పేస్ కరెక్ట్ గా వాడుకునేలా సరిచేశాను.
-  6. **Bug Fix (`CreateCompetitiveExamPage.tsx`)**: 'Create Competitive Exam' పేజీలో సబ్జెక్ట్స్ లోడ్ అవ్వకుండా 'Loading available subjects...' అని వస్తున్న బగ్ ని ఫిక్స్ చేశాను (కేసింగ్ ఇష్యూ).
+  6. **Bug Fix (`CreateCompetitiveExamPage.tsx`)**: సబ్జెక్ట్స్ లోడ్ అవ్వకుండా వస్తున్న బగ్ ని ఫిక్స్ చేశాను (కేసింగ్ ఇష్యూ).
+  7. **Network Error Fix (`axios.ts`)**: ప్రొడక్షన్ లో ఫ్రంట్ఎండ్, బ్యాక్ఎండ్ కి కనెక్ట్ అవ్వడానికి అవసరమైన పోర్ట్ నంబర్ `5000` నుండి `19998` కి మార్చాను. దీనివల్ల వస్తున్న `Network Error` సాల్వ్ అయ్యింది.
 
 **తదుపరి చర్యలు:**
 - స్టూడెంట్ రాసిన ఎగ్జామ్ ని ఆటో-ఎవల్యూట్ (Auto-Evaluate) చేసి రిజల్ట్స్ పబ్లిష్ చేసే ఫ్లో బిల్డ్ చేయాల్సి ఉంది.

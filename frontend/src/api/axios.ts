@@ -10,7 +10,7 @@ const getApiUrl = () => {
       return 'https://jy-school-production-f159.up.railway.app';
     }
     if (host !== 'localhost' && host !== '127.0.0.1') {
-      return `http://${host}:5000`;
+      return `http://${host}:19998`;
     }
   }
   return 'https://jy-school-production-f159.up.railway.app';
