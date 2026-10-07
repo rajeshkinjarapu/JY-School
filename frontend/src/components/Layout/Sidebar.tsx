@@ -103,8 +103,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
       { to: '/exams',         label: 'Examination',         icon: ClipboardList },
-      { to: '/online-exams',  label: 'Online Quizzes',      icon: PenTool       },
-      { to: '/competitive-exams',  label: 'Competitive Exams',  icon: PenTool   },
+      { to: '/competitive-exams',  label: 'Online Exams',  icon: PenTool   },
       { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
       { to: '/leave',    label: 'Leave',         icon: UserCheck     },
@@ -134,8 +133,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },
-      { to: '/online-exams',      label: 'Online Quizzes', icon: PenTool       },
-      { to: '/competitive-exams', label: 'Competitive Exams', icon: PenTool    },
+      { to: '/competitive-exams', label: 'Online Exams', icon: PenTool    },
       { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
       
       { to: '/leave', label: 'Leave',          icon: UserCheck     },
@@ -145,8 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'STUDENT') return [...base,
       { to: '/exams',     label: 'My Grades',     icon: ClipboardList },
-      { to: '/online-exams', label: 'Online Quizzes', icon: PenTool       },
-      { to: '/competitive-exams', label: 'Competitive Exams', icon: PenTool },
+      { to: '/competitive-exams', label: 'Online Exams', icon: PenTool },
       { to: '/attendance',label: 'Attendance',    icon: CalendarCheck },
       { to: '/timetable', label: 'Timetable',     icon: Calendar      },
       { to: '/homework',  label: 'Homework',      icon: BookOpen      },
@@ -221,7 +218,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               >
                 <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
               </span>
-              <span className="flex-1 truncate tracking-wide">{label}</span>
+              <span className="flex-1 whitespace-normal break-words tracking-wide">{label}</span>
               <span
                 className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 shadow-sm"
                 style={{ background: c.text, opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1)' : 'scale(0)' }}

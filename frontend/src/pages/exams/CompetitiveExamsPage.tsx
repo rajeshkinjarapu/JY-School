@@ -30,9 +30,9 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         <div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-indigo-900 tracking-tight flex items-center gap-3">
             <BookOpen className="h-8 w-8 text-blue-600" />
-            Competitive Exams (JEE / NEET)
+            Online Exams
           </h1>
-          <p className="text-slate-500 mt-1 font-medium">Complete Management for Objective Type Exams</p>
+          <p className="text-slate-500 mt-1 font-medium">Complete Management for Online Objective Exams</p>
         </div>
       </div>
 
