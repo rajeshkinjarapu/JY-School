@@ -149,7 +149,6 @@ const CreateCompetitiveExamPage = () => {
                     {classes.map(c => <option key={c.id} value={c.id}>{c.name} {c.section ? `- ${c.section}` : ''}</option>)}
                   </select>
                 </div>
-                </div>
               </div>
               <div>
                   <label className={labelClass}>

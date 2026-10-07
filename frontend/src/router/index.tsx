@@ -117,9 +117,9 @@ const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'))
 const IdCardDashboard = lazy(() => import('../pages/idcards/IdCardDashboard'));
 const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorPage'));
 const PendingFeeApprovalsPage = lazy(() => import('../pages/fees/PendingFeeApprovals').then(m => ({ default: m.PendingFeeApprovals })));
-const OnlineExamsPage = lazy(() => import('../pages/exams/OnlineExamsPage'));
+
 const ManageExamQuestions = lazy(() => import('../pages/exams/ManageExamQuestions'));
-const OMRScannerPage = lazy(() => import('../pages/exams/omr/OMRScannerPage').then(m => ({ default: m.OMRScannerPage })));
+
 const CompetitiveExamsPage = lazy(() => import('../pages/exams/CompetitiveExamsPage'));
 const CreateCompetitiveExamPage = lazy(() => import('../pages/exams/CreateCompetitiveExamPage'));
 const CompetitiveQuestionBankDashboard = lazy(() => import('../pages/exams/CompetitiveQuestionBankDashboard'));
@@ -413,34 +413,12 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-      {
-        path: 'exams/omr-scanner',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <OMRScannerPage />
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: 'exams/:examId/report-card/:studentId',
         element: withSuspense(<ReportCardPage />),
       },
-      {
-        path: 'online-exams',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <OnlineExamsPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: 'online-exams/:id/manage',
-        element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
-            <ManageExamQuestions />
-          </ProtectedRoute>
-        ),
-      },
+
       {
         path: 'competitive-exams',
         element: withSuspense(

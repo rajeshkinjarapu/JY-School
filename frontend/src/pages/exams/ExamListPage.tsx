@@ -2416,9 +2416,6 @@ export const ExamListPage: React.FC = () => {
             <h2 className="text-lg font-black text-slate-800 uppercase tracking-wider">Examinations List</h2>
             {isAdmin && (
               <div className="flex gap-2">
-                <Link to="/exams/omr-scanner" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md">
-                  <Scan className="w-4 h-4" /> OMR Scanner
-                </Link>
                 <button onClick={openCreateModal} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md">
                   <Plus className="w-4 h-4" /> Create Exam
                 </button>
