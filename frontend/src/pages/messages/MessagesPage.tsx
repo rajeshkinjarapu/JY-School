@@ -165,7 +165,11 @@ export const MessagesPage: React.FC = () => {
     try {
       const res: any = await api.get('/api/messages/users', { params: { search: userSearch } });
       const raw = Array.isArray(res.data) ? res.data : (res.data?.data || res.data?.users || []);
-      const list = Array.isArray(raw) ? raw.filter((u: any) => u.id !== user?.id) : [];
+      const list = Array.isArray(raw) ? raw.filter((u: any) => {
+        if (u.id === user?.id) return false;
+        if (user?.role === 'STUDENT' && u.role === 'STUDENT') return false;
+        return true;
+      }) : [];
       setUsersList(list);
     } catch (e) {
       console.error(e);
@@ -191,7 +195,7 @@ export const MessagesPage: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-full bg-[#0b141a] w-full overflow-hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-[#0f172a] w-full overflow-hidden" style={{ minHeight: 'calc(100vh - 64px)' }}>
       
       {/* Custom Signature Header (NO EXTRA PLUS BUTTON) */}
       <div className="bg-[#0f172a] text-white px-3.5 py-3 flex items-center justify-between shadow-md shrink-0 border-b border-slate-800">
@@ -213,20 +217,20 @@ export const MessagesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main WhatsApp Layout Container */}
+      {/* Main Messenger Layout Container */}
       <div className="flex-1 flex overflow-hidden w-full min-h-0">
         
-        {/* LEFT SIDEBAR: Conversations List (Official WhatsApp Dark Sidebar #111b21) */}
-        <div className={`${activePartner ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 flex-col border-r border-[#222d34] bg-[#111b21] shrink-0 h-full`}>
+        {/* LEFT SIDEBAR: Conversations List (Official Messenger Dark Sidebar #1e293b) */}
+        <div className={`${activePartner ? 'hidden md:flex' : 'flex'} w-full md:w-80 lg:w-96 flex-col border-r border-[#334155] bg-[#1e293b] shrink-0 h-full`}>
           
-          {/* Sidebar User Header Bar (#202c33) */}
-          <div className="p-3.5 border-b border-[#222d34] bg-[#202c33] flex items-center justify-between gap-2 shrink-0">
+          {/* Sidebar User Header Bar (#1e293b) */}
+          <div className="p-3.5 border-b border-[#334155] bg-[#1e293b] flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <Avatar name={user?.name || 'User'} src={getPhotoUrl(user?.photoUrl)} size="sm" />
               <div className="min-w-0">
-                <h3 className="font-bold text-sm text-[#e9edef] truncate">{user?.name}</h3>
-                <span className="text-[10px] text-[#00a884] font-extrabold uppercase tracking-wider flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#00a884] animate-pulse" /> Online
+                <h3 className="font-bold text-sm text-[#f8fafc] truncate">{user?.name}</h3>
+                <span className="text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse" /> Online
                 </span>
               </div>
             </div>
@@ -241,22 +245,22 @@ export const MessagesPage: React.FC = () => {
             </button>
           </div>
 
-          {/* WhatsApp Search Input */}
-          <div className="p-2.5 border-b border-[#222d34] bg-[#111b21] shrink-0">
+          {/* Messenger Search Input */}
+          <div className="p-2.5 border-b border-[#334155] bg-[#1e293b] shrink-0">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#8696a0]" />
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-[#94a3b8]" />
               <input
                 type="text"
                 placeholder="Search or start new chat..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-[#202c33] border border-[#222d34] rounded-xl text-xs text-[#e9edef] placeholder-[#8696a0] focus:outline-none focus:border-[#00a884] transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-[#1e293b] border border-[#334155] rounded-xl text-xs text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:border-indigo-600 transition-all"
               />
             </div>
           </div>
 
           {/* Conversation List */}
-          <div className="flex-1 overflow-y-auto divide-y divide-[#222d34]/60">
+          <div className="flex-1 overflow-y-auto divide-y divide-[#334155]/60">
             {filteredConversations.map((c) => {
               const partner = c.partner;
               if (!partner) return null;
@@ -268,31 +272,31 @@ export const MessagesPage: React.FC = () => {
                   onClick={() => handleSelectPartner(partner)}
                   className={`w-full flex items-center gap-3 p-3.5 text-left transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-[#2a3942] border-l-4 border-[#00a884] text-[#e9edef]'
-                      : 'hover:bg-[#202c33] text-[#8696a0]'
+                      ? 'bg-[#334155] border-l-4 border-indigo-600 text-[#f8fafc]'
+                      : 'hover:bg-[#1e293b] text-[#94a3b8]'
                   }`}
                 >
                   <div className="relative shrink-0">
                     <Avatar name={partner.name} src={getPhotoUrl(partner.photoUrl)} size="md" />
-                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#111b21] ${partner.isOnline ? 'bg-[#00a884]' : 'bg-[#8696a0]'}`}></span>
+                    <span className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#1e293b] ${partner.isOnline ? 'bg-indigo-600' : 'bg-[#94a3b8]'}`}></span>
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline mb-1">
-                      <h4 className="font-bold text-sm text-[#e9edef] truncate">
+                      <h4 className="font-bold text-sm text-[#f8fafc] truncate">
                         {partner.name}
                       </h4>
-                      <span className="text-[10px] text-[#8696a0] shrink-0">
+                      <span className="text-[10px] text-[#94a3b8] shrink-0">
                         {c.lastMessage?.sentAt && new Date(c.lastMessage.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-xs text-[#8696a0] truncate leading-snug">
+                      <p className="text-xs text-[#94a3b8] truncate leading-snug">
                         {c.lastMessage?.content || 'Tap to chat...'}
                       </p>
                       {c.unreadCount > 0 && (
-                        <span className="px-1.5 py-0.5 rounded-full bg-[#00a884] text-white text-[10px] font-black shrink-0 shadow-sm">
+                        <span className="px-1.5 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-black shrink-0 shadow-sm">
                           {c.unreadCount}
                         </span>
                       )}
@@ -304,13 +308,13 @@ export const MessagesPage: React.FC = () => {
 
             {filteredConversations.length === 0 && !loading && (
               <div className="text-center py-12 px-4 space-y-3">
-                <div className="w-12 h-12 rounded-full bg-[#202c33] text-[#00a884] flex items-center justify-center mx-auto shadow-inner">
+                <div className="w-12 h-12 rounded-full bg-[#1e293b] text-indigo-500 flex items-center justify-center mx-auto shadow-inner">
                   <MessageSquare className="w-6 h-6" />
                 </div>
-                <p className="text-xs font-semibold text-[#8696a0]">No active chats found.</p>
+                <p className="text-xs font-semibold text-[#94a3b8]">No active chats found.</p>
                 <button
                   onClick={() => setShowNewChatModal(true)}
-                  className="px-4 py-2 rounded-xl bg-[#00a884] hover:bg-[#029071] text-white font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-md active:scale-95 cursor-pointer"
                 >
                   + Start New Chat
                 </button>
@@ -319,22 +323,22 @@ export const MessagesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT CHAT WINDOW: WhatsApp Room (#0b141a) */}
-        <div className={`${!activePartner ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full bg-[#0b141a] relative`}>
+        {/* RIGHT CHAT WINDOW: Messenger Room (#0f172a) */}
+        <div className={`${!activePartner ? 'hidden md:flex' : 'flex'} flex-1 flex-col h-full bg-[#0f172a] relative`}>
           
-          {/* WhatsApp Wallpaper Doodle Pattern */}
+          {/* Messenger Wallpaper Doodle Pattern */}
           <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h80v80H0z' fill='none'/%3E%3Cpath d='M20 20h10v10H20zM50 50h10v10H50z' fill='%23ffffff'/%3E%3C/svg%3E")`
           }} />
 
           {activePartner ? (
             <>
-              {/* WhatsApp Active Contact Header (#202c33) */}
-              <div className="px-3.5 py-2.5 bg-[#202c33] border-b border-[#222d34] flex items-center justify-between gap-3 relative z-10 shrink-0 shadow-md">
+              {/* Messenger Active Contact Header (#1e293b) */}
+              <div className="px-3.5 py-2.5 bg-[#1e293b] border-b border-[#334155] flex items-center justify-between gap-3 relative z-10 shrink-0 shadow-md">
                 <div className="flex items-center gap-3 min-w-0">
                   <button 
                     onClick={() => setActivePartner(null)} 
-                    className="p-1.5 rounded-lg text-[#8696a0] hover:text-white hover:bg-[#2a3942] md:hidden shrink-0 cursor-pointer"
+                    className="p-1.5 rounded-lg text-[#94a3b8] hover:text-white hover:bg-[#334155] md:hidden shrink-0 cursor-pointer"
                     title="Back to Chats"
                   >
                     <ArrowLeft className="w-5 h-5" />
@@ -342,14 +346,14 @@ export const MessagesPage: React.FC = () => {
 
                   <div className="relative shrink-0">
                     <Avatar name={activePartner.name} src={getPhotoUrl(activePartner.photoUrl)} size="sm" />
-                    <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#202c33] ${activePartner.isOnline ? 'bg-[#00a884]' : 'bg-[#8696a0]'}`}></span>
+                    <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#1e293b] ${activePartner.isOnline ? 'bg-indigo-600' : 'bg-[#94a3b8]'}`}></span>
                   </div>
 
                   <div className="min-w-0">
-                    <h4 className="font-bold text-sm text-[#e9edef] truncate leading-tight">
+                    <h4 className="font-bold text-sm text-[#f8fafc] truncate leading-tight">
                       {activePartner.name}
                     </h4>
-                    <span className="text-[10px] text-[#00a884] font-extrabold uppercase tracking-wider block">
+                    <span className="text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider block">
                       {activePartner.role} • JY School
                     </span>
                   </div>
@@ -369,12 +373,12 @@ export const MessagesPage: React.FC = () => {
                       <div
                         className={`max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-md ${
                           isSelf
-                            ? 'bg-[#005c4b] text-[#e9edef] rounded-tr-none border border-[#00a884]/20 ml-auto'
-                            : 'bg-[#202c33] text-[#e9edef] rounded-tl-none border border-[#222d34] mr-auto'
+                            ? 'bg-indigo-700 text-[#f8fafc] rounded-tr-none border border-indigo-600/20 ml-auto'
+                            : 'bg-[#1e293b] text-[#f8fafc] rounded-tl-none border border-[#334155] mr-auto'
                         }`}
                       >
                         <p className="whitespace-pre-wrap break-words font-medium">{m.content}</p>
-                        <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#8696a0]">
+                        <div className="flex items-center justify-end gap-1 mt-1 text-[10px] text-[#94a3b8]">
                           <span>
                             {m.sentAt ? new Date(m.sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                           </span>
@@ -387,40 +391,40 @@ export const MessagesPage: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Bottom WhatsApp Message Input Box (#202c33) */}
-              <form onSubmit={handleSendMessage} className="p-3 bg-[#202c33] border-t border-[#222d34] flex items-center gap-2 relative z-10 shrink-0">
+              {/* Bottom Messenger Message Input Box (#1e293b) */}
+              <form onSubmit={handleSendMessage} className="p-3 bg-[#1e293b] border-t border-[#334155] flex items-center gap-2 relative z-10 shrink-0">
                 <input
                   type="text"
                   placeholder="Type a message..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  className="flex-1 bg-[#2a3942] border border-[#222d34] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-[#e9edef] placeholder-[#8696a0] focus:outline-none focus:border-[#00a884] transition-all"
+                  className="flex-1 bg-[#334155] border border-[#334155] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:border-indigo-600 transition-all"
                 />
 
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className="p-3 rounded-full bg-[#00a884] hover:bg-[#029071] disabled:opacity-40 disabled:hover:bg-[#00a884] text-white shadow-lg transition-all active:scale-95 shrink-0 cursor-pointer"
+                  className="p-3 rounded-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:hover:bg-indigo-600 text-white shadow-lg transition-all active:scale-95 shrink-0 cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                 </button>
               </form>
             </>
           ) : (
-            /* WhatsApp Web Placeholder */
+            /* Messenger Web Placeholder */
             <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-4 relative z-10">
-              <div className="w-20 h-20 rounded-full bg-[#202c33] border border-[#00a884]/30 text-[#00a884] flex items-center justify-center shadow-2xl animate-pulse">
+              <div className="w-20 h-20 rounded-full bg-[#1e293b] border border-indigo-600/30 text-indigo-500 flex items-center justify-center shadow-2xl animate-pulse">
                 <MessageSquare className="w-10 h-10" />
               </div>
               <div className="max-w-md">
-                <h3 className="text-xl font-black text-[#e9edef]">JY WhatsApp Messenger</h3>
-                <p className="text-xs font-semibold text-[#8696a0] mt-1">
+                <h3 className="text-xl font-black text-[#f8fafc]">JY Messenger</h3>
+                <p className="text-xs font-semibold text-[#94a3b8] mt-1">
                   Select a contact on the left to start instant 2-way messaging with teachers, staff, or students.
                 </p>
               </div>
               <button
                 onClick={() => setShowNewChatModal(true)}
-                className="px-5 py-2.5 rounded-xl bg-[#00a884] hover:bg-[#029071] text-white font-extrabold text-xs shadow-lg transition-all active:scale-95 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs shadow-lg transition-all active:scale-95 cursor-pointer"
               >
                 + Start New Chat
               </button>
@@ -432,51 +436,51 @@ export const MessagesPage: React.FC = () => {
       {/* New Chat Contacts Modal */}
       {showNewChatModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="bg-[#111b21] border border-[#222d34] w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
+          <div className="bg-[#1e293b] border border-[#334155] w-full max-w-md rounded-3xl p-6 shadow-2xl space-y-5">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black text-[#e9edef] flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-[#00a884]" /> Select Contact to Chat
+              <h3 className="text-lg font-black text-[#f8fafc] flex items-center gap-2">
+                <MessageSquare className="w-5 h-5 text-indigo-500" /> Select Contact to Chat
               </h3>
               <button 
                 onClick={() => setShowNewChatModal(false)} 
-                className="text-[#8696a0] hover:text-white text-xs font-bold px-2 py-1 rounded-lg hover:bg-[#202c33] transition-colors"
+                className="text-[#94a3b8] hover:text-white text-xs font-bold px-2 py-1 rounded-lg hover:bg-[#1e293b] transition-colors"
               >
                 Close
               </button>
             </div>
 
             <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-[#8696a0]" />
+              <Search className="absolute left-3 top-3 w-4 h-4 text-[#94a3b8]" />
               <input
                 type="text"
                 placeholder="Search staff, teachers, students..."
                 value={userSearch}
                 onChange={(e) => setUserSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-[#202c33] border border-[#222d34] rounded-xl text-xs text-[#e9edef] placeholder-[#8696a0] focus:outline-none focus:border-[#00a884]"
+                className="w-full pl-9 pr-4 py-2.5 bg-[#1e293b] border border-[#334155] rounded-xl text-xs text-[#f8fafc] placeholder-[#94a3b8] focus:outline-none focus:border-indigo-600"
               />
             </div>
 
-            <div className="max-h-64 overflow-y-auto space-y-2 divide-y divide-[#222d34]/60">
+            <div className="max-h-64 overflow-y-auto space-y-2 divide-y divide-[#334155]/60">
               {usersList.map((u) => (
                 <button
                   key={u.id}
                   onClick={() => handleStartChat(u)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-[#222d34] hover:bg-[#202c33] text-left transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-[#334155] hover:bg-[#1e293b] text-left transition-colors cursor-pointer"
                 >
                   <div className="relative shrink-0">
                     <Avatar name={u.name} src={getPhotoUrl(u.photoUrl)} size="sm" />
-                    <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#111b21] ${u.isOnline ? 'bg-[#00a884]' : 'bg-[#8696a0]'}`}></span>
+                    <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#1e293b] ${u.isOnline ? 'bg-indigo-600' : 'bg-[#94a3b8]'}`}></span>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h4 className="font-bold text-sm text-[#e9edef] truncate">{u.name}</h4>
-                    <span className="text-[10px] text-[#00a884] font-extrabold uppercase tracking-wider block mt-0.5">
+                    <h4 className="font-bold text-sm text-[#f8fafc] truncate">{u.name}</h4>
+                    <span className="text-[10px] text-indigo-500 font-extrabold uppercase tracking-wider block mt-0.5">
                       {u.role}
                     </span>
                   </div>
                 </button>
               ))}
               {usersList.length === 0 && (
-                <p className="text-center py-6 text-xs text-[#8696a0]">No users found.</p>
+                <p className="text-center py-6 text-xs text-[#94a3b8]">No users found.</p>
               )}
             </div>
           </div>

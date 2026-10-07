@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/api_service.dart';
 import '../widgets/app_drawer.dart';
 
@@ -13,10 +15,22 @@ class MessagesScreen extends StatefulWidget {
 class _MessagesScreenState extends State<MessagesScreen> {
   bool _isLoading = true;
   List<dynamic> _conversations = [];
+  Map<String, dynamic>? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _initUserAndFetch();
+  }
+
+  Future<void> _initUserAndFetch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      setState(() {
+        _currentUser = jsonDecode(userStr);
+      });
+    }
     _fetchConversations();
   }
 
@@ -31,6 +45,28 @@ class _MessagesScreenState extends State<MessagesScreen> {
         }
       });
     }
+  }
+
+  void _showNewChatModal() async {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return _NewChatSheet(currentUser: _currentUser, onUserSelected: (user) {
+          Navigator.pop(ctx);
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                userId: user['id'] ?? '',
+                userName: user['name'] ?? 'Chat',
+              ),
+            ),
+          ).then((_) => _fetchConversations());
+        });
+      },
+    );
   }
 
   @override
@@ -59,11 +95,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_square),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('New message functionality coming soon')),
-              );
-            },
+            onPressed: _showNewChatModal,
           )
         ],
       ),
@@ -142,7 +174,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
-                                '${convo['unreadCount']}',
+                                '\',
                                 style: GoogleFonts.poppins(
                                   color: const Color(0xFF1E293B),
                                   fontSize: 10,
@@ -169,6 +201,90 @@ class _MessagesScreenState extends State<MessagesScreen> {
   }
 }
 
+class _NewChatSheet extends StatefulWidget {
+  final Map<String, dynamic>? currentUser;
+  final Function(dynamic) onUserSelected;
+
+  const _NewChatSheet({required this.currentUser, required this.onUserSelected});
+
+  @override
+  State<_NewChatSheet> createState() => _NewChatSheetState();
+}
+
+class _NewChatSheetState extends State<_NewChatSheet> {
+  bool _isLoading = true;
+  List<dynamic> _users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  Future<void> _fetchUsers() async {
+    final res = await ApiService.performGet('/api/messages/users', 'Failed to fetch users');
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+        if (res['success']) {
+          final raw = res['data'] ?? [];
+          final list = (raw is List ? raw : (raw['data'] ?? raw['users'] ?? [])).toList();
+          
+          _users = list.where((u) {
+            if (u['id'] == widget.currentUser?['id']) return false;
+            if (widget.currentUser?['role'] == 'STUDENT' && u['role'] == 'STUDENT') return false;
+            return true;
+          }).toList();
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(4))),
+          const SizedBox(height: 12),
+          Text('New Chat', style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold)),
+          const Divider(),
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _users.isEmpty
+                    ? const Center(child: Text('No users found'))
+                    : ListView.builder(
+                        itemCount: _users.length,
+                        itemBuilder: (ctx, idx) {
+                          final u = _users[idx];
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: const Color(0xFF6366F1),
+                              child: Text(
+                                (u['name'] ?? 'U').toString().substring(0, 1).toUpperCase(),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                            title: Text(u['name'] ?? 'Unknown', style: GoogleFonts.outfit(fontWeight: FontWeight.w600)),
+                            subtitle: Text(u['role'] ?? '', style: GoogleFonts.poppins(fontSize: 12)),
+                            onTap: () => widget.onUserSelected(u),
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ChatScreen extends StatefulWidget {
   final String userId;
   final String userName;
@@ -183,20 +299,33 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _msgController = TextEditingController();
   bool _isLoading = true;
   List<dynamic> _messages = [];
+  Map<String, dynamic>? _currentUser;
 
   @override
   void initState() {
     super.initState();
+    _initUserAndFetch();
+  }
+
+  Future<void> _initUserAndFetch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userStr = prefs.getString('user');
+    if (userStr != null) {
+      setState(() {
+        _currentUser = jsonDecode(userStr);
+      });
+    }
     _fetchMessages();
   }
 
   Future<void> _fetchMessages() async {
-    final res = await ApiService.getConversation(widget.userId);
+    final res = await ApiService.performGet('/api/messages/conversation/\', 'Failed');
     if (mounted) {
       setState(() {
         _isLoading = false;
         if (res['success']) {
-          _messages = res['data'] ?? [];
+          final raw = res['data'] ?? [];
+          _messages = raw is List ? raw : (raw['messages'] ?? []);
         }
       });
     }
@@ -211,12 +340,15 @@ class _ChatScreenState extends State<ChatScreen> {
     setState(() {
       _messages.insert(0, {
         'content': text,
-        'senderId': 'me', // Mocking local sender for visual feedback
+        'senderId': _currentUser?['id'] ?? 'me',
         'createdAt': DateTime.now().toIso8601String(),
       });
     });
 
-    await ApiService.sendMessage(widget.userId, text);
+    await ApiService.performPost('/api/messages', {
+      'receiverId': widget.userId,
+      'content': text,
+    }, 'Failed to send message');
     _fetchMessages();
   }
 
@@ -253,9 +385,8 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final msg = _messages[index];
-                      // Note: In real app, we compare senderId with our user ID.
-                      // For now, if senderId == widget.userId, they sent it, otherwise we sent it.
-                      final isMe = msg['senderId'] != widget.userId;
+                      // If senderId == current user id, it's sent by me
+                      final isMe = msg['senderId'] == _currentUser?['id'] || msg['senderId'] == 'me';
 
                       return Align(
                         alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -335,5 +466,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
-
-
