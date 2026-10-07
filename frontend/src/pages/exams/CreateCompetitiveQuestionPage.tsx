@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, Save, Plus, Image as ImageIcon, CheckCircle2, FileEdit, Eye, AlertCircle } from 'lucide-react';
-import LiveLatexPreview from '../../components/QuestionBank/LiveLatexPreview';
+import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import ApiService from '../../api/axios';
 import toast from 'react-hot-toast';
 
