@@ -426,25 +426,32 @@ class _TransportScreenState extends State<TransportScreen> {
 
   Widget _buildStatCard(String title, String value, IconData icon, Color color) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 4))],
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
         border: Border.all(color: color.withOpacity(0.1)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 24),
+            decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+            child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 12),
-          Text(value, style: GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
-          const SizedBox(height: 4),
-          Text(title, style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w500, color: const Color(0xFF64748B))),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(value, style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: const Color(0xFF0F172A))),
+                Text(title, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.w500, color: const Color(0xFF64748B))),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -455,60 +462,71 @@ class _TransportScreenState extends State<TransportScreen> {
       crossAxisCount: 2,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 0.9,
+      mainAxisSpacing: 14,
+      crossAxisSpacing: 14,
+      childAspectRatio: 1.4, // Makes the cards perfectly proportioned
       children: [
-        _buildGridItem('Bus Routes', 'Manage routes & stops', Icons.map_rounded, const [Color(0xFF3B82F6), Color(0xFF2563EB)], const TransportRoutesScreen()),
-        _buildGridItem('Vehicles', 'Track fleet details', Icons.directions_bus_rounded, const [Color(0xFF8B5CF6), Color(0xFF7C3AED)], const TransportVehiclesScreen()),
-        _buildGridItem('Students', 'Allocation & Fees', Icons.people_rounded, const [Color(0xFFEC4899), Color(0xFFDB2777)], const TransportStudentsScreen()),
-        _buildGridItem('Active Trip', 'Driver tools', Icons.play_circle_fill_rounded, const [Color(0xFFF59E0B), Color(0xFFD97706)], const ActiveTripScreen(routeData: {'name': 'Route A', 'stops': [{'stopName': 'Stop 1'}, {'stopName': 'Stop 2'}]})),
-        _buildGridItem('Live Tracking', 'Track bus on map', Icons.location_on_rounded, const [Color(0xFF14B8A6), Color(0xFF0F766E)], const LiveTrackingScreen(routeData: {})),
-        _buildGridItem('Fuel Logs', 'Track diesel expenses', Icons.local_gas_station_rounded, const [Color(0xFFF43F5E), Color(0xFFE11D48)], const TransportFuelScreen()),
-        _buildGridItem('Maintenance', 'Repairs & Service', Icons.build_rounded, const [Color(0xFF10B981), Color(0xFF059669)], const TransportMaintenanceScreen()),
+        _buildGridItem('Bus Routes', 'Manage routes & stops', Icons.map_rounded, const Color(0xFF3B82F6), const TransportRoutesScreen()),
+        _buildGridItem('Vehicles', 'Track fleet details', Icons.directions_bus_rounded, const Color(0xFF8B5CF6), const TransportVehiclesScreen()),
+        _buildGridItem('Students', 'Allocation & Fees', Icons.people_rounded, const Color(0xFFEC4899), const TransportStudentsScreen()),
+        _buildGridItem('Active Trip', 'Driver tools', Icons.play_circle_fill_rounded, const Color(0xFFF59E0B), const ActiveTripScreen(routeData: {'name': 'Route A', 'stops': [{'stopName': 'Stop 1'}, {'stopName': 'Stop 2'}]})),
+        _buildGridItem('Live Tracking', 'Track bus on map', Icons.location_on_rounded, const Color(0xFF14B8A6), const LiveTrackingScreen(routeData: {})),
+        _buildGridItem('Fuel Logs', 'Track diesel expenses', Icons.local_gas_station_rounded, const Color(0xFFF43F5E), const TransportFuelScreen()),
+        _buildGridItem('Maintenance', 'Repairs & Service', Icons.build_rounded, const Color(0xFF10B981), const TransportMaintenanceScreen()),
       ],
     );
   }
 
-  Widget _buildGridItem(String title, String subtitle, IconData icon, List<Color> gradient, Widget screen) {
+  Widget _buildGridItem(String title, String subtitle, IconData icon, Color primaryColor, Widget screen) {
     return GestureDetector(
       onTap: () => _navigateTo(screen),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: gradient[1].withOpacity(0.3), blurRadius: 12, offset: const Offset(0, 6))],
-        ),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -15,
-              bottom: -15,
-              child: Icon(icon, size: 80, color: Colors.white.withOpacity(0.15)),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: primaryColor.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 6),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+          border: Border.all(color: primaryColor.withOpacity(0.1)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), borderRadius: BorderRadius.circular(16)),
-                    child: Icon(icon, color: Colors.white, size: 28),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: primaryColor, size: 22),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 4),
-                      Text(subtitle, style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-                    ],
-                  ),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.grey.withOpacity(0.3)),
                 ],
               ),
-            ),
-          ],
+              const Spacer(),
+              Text(
+                title,
+                style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
