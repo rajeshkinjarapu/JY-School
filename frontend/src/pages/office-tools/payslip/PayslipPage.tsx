@@ -12,6 +12,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useReactToPrint } from 'react-to-print';
 
 import api from '../../../api/axios';
 
@@ -36,6 +37,15 @@ export default function PayslipPage() {
   const [loading, setLoading] = React.useState(true);
   const [selectedStaffId, setSelectedStaffId] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  
+  // Manual Entry State
+  const [isManualMode, setIsManualMode] = useState<boolean>(false);
+  const [manualData, setManualData] = useState({
+    name: '',
+    employeeId: '',
+    role: '',
+    department: '',
+  });
   
   React.useEffect(() => {
     const fetchStaff = async () => {
@@ -90,16 +100,21 @@ export default function PayslipPage() {
   const totalDeductions = pf + esi + tax + unpaidLeaves;
   const netPayable = totalEarnings - totalDeductions;
 
-  const handlePrint = () => {
-    if (!selectedStaff) {
-      toast.error('Please select a staff member first');
-      return;
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `Payslip_${selectedMonth}`,
+    onBeforePrint: () => {
+      if (!isManualMode && !selectedStaff) {
+        toast.error('Please select a staff member first');
+        return Promise.reject('No staff selected');
+      }
+      if (isManualMode && !manualData.name) {
+        toast.error('Please enter employee name');
+        return Promise.reject('No manual name entered');
+      }
+      return Promise.resolve();
     }
-    
-    // In a real app, we might use react-to-print or window.print()
-    // For this mockup, we'll trigger browser print and use CSS media queries to only print the slip
-    window.print();
-  };
+  });
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -150,28 +165,64 @@ export default function PayslipPage() {
           
           {/* Selection Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-gray-500" />
-              Employee Details
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Select Staff</label>
-                <select 
-                  value={selectedStaffId}
-                  onChange={handleStaffChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
-                >
-                  <option value="">-- Choose Employee --</option>
-                  {loading ? (
-                    <option disabled>Loading...</option>
-                  ) : (
-                    staffList.map(staff => (
-                      <option key={staff.id} value={staff.id}>{staff.name} ({staff.role})</option>
-                    ))
-                  )}
-                </select>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <User className="w-5 h-5 text-gray-500" />
+                Employee Details
+              </h2>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="checkbox" 
+                  id="manual-mode"
+                  checked={isManualMode}
+                  onChange={(e) => setIsManualMode(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                />
+                <label htmlFor="manual-mode" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Manual Entry
+                </label>
               </div>
+            </div>
+            
+            <div className="space-y-4">
+              {!isManualMode ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Select Staff</label>
+                  <select 
+                    value={selectedStaffId}
+                    onChange={handleStaffChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
+                  >
+                    <option value="">-- Choose Employee --</option>
+                    {loading ? (
+                      <option disabled>Loading...</option>
+                    ) : (
+                      staffList.map(staff => (
+                        <option key={staff.id} value={staff.id}>{staff.name} ({staff.role})</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Employee Name *</label>
+                    <input type="text" value={manualData.name} onChange={e => setManualData({...manualData, name: e.target.value})} placeholder="E.g. Ramesh Kumar" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
+                    <input type="text" value={manualData.employeeId} onChange={e => setManualData({...manualData, employeeId: e.target.value})} placeholder="EMP-123" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Designation</label>
+                    <input type="text" value={manualData.role} onChange={e => setManualData({...manualData, role: e.target.value})} placeholder="Teacher" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                    <input type="text" value={manualData.department} onChange={e => setManualData({...manualData, department: e.target.value})} placeholder="Science" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
+                  </div>
+                </div>
+              )}
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Salary Month</label>
@@ -252,17 +303,17 @@ export default function PayslipPage() {
           
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-bold text-gray-900">Live Preview</h2>
-            {selectedStaff && (
+            {(selectedStaff || isManualMode) && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
                 Net Pay: {formatCurrency(netPayable)}
               </span>
             )}
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 min-h-[600px] print:shadow-none print:border-none print:p-0" id="printable-payslip">
+          <div ref={printRef} className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 min-h-[600px] print:shadow-none print:border-none print:p-0" id="printable-payslip">
             
             {/* The actual printable slip */}
-            {selectedStaff ? (
+            {(selectedStaff || (isManualMode && manualData.name)) ? (
               <div className="payslip-content">
                 
                 {/* Company Header */}
@@ -288,19 +339,27 @@ export default function PayslipPage() {
                 <div className="grid grid-cols-2 gap-x-8 gap-y-3 mb-8 text-sm">
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Employee Name:</span>
-                    <span className="font-bold text-gray-900 uppercase">{selectedStaff.name}</span>
+                    <span className="font-bold text-gray-900 uppercase">
+                      {isManualMode ? manualData.name : selectedStaff?.name}
+                    </span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Employee ID:</span>
-                    <span className="font-bold text-gray-900">{selectedStaff.employeeId || selectedStaff.teacher?.employeeId || selectedStaff.username || `EMP-${selectedStaff.id.substring(0, 4).toUpperCase()}`}</span>
+                    <span className="font-bold text-gray-900">
+                      {isManualMode ? manualData.employeeId || 'N/A' : (selectedStaff?.employeeId || selectedStaff?.teacher?.employeeId || selectedStaff?.username || `EMP-${selectedStaff?.id.substring(0, 4).toUpperCase()}`)}
+                    </span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Designation:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.role}</span>
+                    <span className="font-medium text-gray-900">
+                      {isManualMode ? manualData.role || 'N/A' : selectedStaff?.role}
+                    </span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Department:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.department || 'General'}</span>
+                    <span className="font-medium text-gray-900">
+                      {isManualMode ? manualData.department || 'General' : (selectedStaff?.department || 'General')}
+                    </span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Total Working Days:</span>

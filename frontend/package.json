@@ -13,6 +13,7 @@
     "mobile:sync": "npx cap sync android"
   },
   "dependencies": {
+    "react-to-print": "^2.15.1",
     "@capacitor/android": "^8.4.2",
     "@capacitor/app": "^8.1.1",
     "@capacitor/cli": "^8.4.2",
