@@ -583,6 +583,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           if (content.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text(
