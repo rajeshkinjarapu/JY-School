@@ -268,7 +268,7 @@ export default function PayslipPage() {
                     <Building2 className="w-8 h-8 text-indigo-800" />
                     <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">JY School</h1>
                   </div>
-                  <p className="text-gray-600 text-sm">123 Education Hub, Knowledge City, AP - 500001</p>
+                  <p className="text-gray-600 text-sm">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
                   <p className="text-gray-600 text-sm">Email: hr@jyschool.edu | Phone: +91 9876543210</p>
                   <h2 className="text-xl font-bold text-gray-800 mt-4 uppercase tracking-widest border border-gray-300 inline-block px-6 py-1 bg-gray-50 rounded">
                     Payslip for {new Date(selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
