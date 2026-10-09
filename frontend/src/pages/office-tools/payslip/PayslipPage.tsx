@@ -23,6 +23,9 @@ interface Staff {
   baseSalary?: number;
   bankAccount?: string;
   uan?: string;
+  employeeId?: string;
+  teacher?: { employeeId: string };
+  username?: string;
 }
 
 export default function PayslipPage() {
@@ -263,14 +266,20 @@ export default function PayslipPage() {
               <div className="payslip-content">
                 
                 {/* Company Header */}
-                <div className="text-center border-b-2 border-gray-800 pb-6 mb-6">
-                  <div className="flex justify-center items-center gap-3 mb-2">
-                    <Building2 className="w-8 h-8 text-indigo-800" />
-                    <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">JY School</h1>
+                <div className="border-b-2 border-gray-800 pb-6 mb-6 flex justify-between items-center">
+                  <div className="w-24 h-24 flex-shrink-0">
+                    <img src="/assets/images/logo.png" alt="JY School Logo" className="w-full h-full object-contain" />
                   </div>
-                  <p className="text-gray-600 text-sm">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
-                  <p className="text-gray-600 text-sm">Email: hr@jyschool.edu | Phone: +91 9876543210</p>
-                  <h2 className="text-xl font-bold text-gray-800 mt-4 uppercase tracking-widest border border-gray-300 inline-block px-6 py-1 bg-gray-50 rounded">
+                  <div className="text-center flex-1">
+                    <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">SRI VENKATESWARA JY SCHOOL</h1>
+                    <p className="text-gray-600 text-sm mt-1">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
+                    <p className="text-gray-600 text-sm">Email: hr@jyschool.edu | Phone: +91 9876543210</p>
+                  </div>
+                  <div className="w-24 h-24 flex-shrink-0"></div> {/* Spacer for balance */}
+                </div>
+                
+                <div className="text-center mb-8">
+                  <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest border border-gray-300 inline-block px-6 py-1 bg-gray-50 rounded">
                     Payslip for {new Date(selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h2>
                 </div>
@@ -283,7 +292,7 @@ export default function PayslipPage() {
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Employee ID:</span>
-                    <span className="font-bold text-gray-900">EMP-2026{selectedStaff.id.padStart(3, '0')}</span>
+                    <span className="font-bold text-gray-900">{selectedStaff.employeeId || selectedStaff.teacher?.employeeId || selectedStaff.username || `EMP-${selectedStaff.id.substring(0, 4).toUpperCase()}`}</span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Designation:</span>
@@ -294,12 +303,12 @@ export default function PayslipPage() {
                     <span className="font-medium text-gray-900">{selectedStaff.department || 'General'}</span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
-                    <span className="w-32 font-semibold text-gray-600">Bank A/C No:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.bankAccount || 'Not Available'}</span>
+                    <span className="w-32 font-semibold text-gray-600">Total Working Days:</span>
+                    <span className="font-medium text-gray-900">30</span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
-                    <span className="w-32 font-semibold text-gray-600">UAN No:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.uan || 'Not Available'}</span>
+                    <span className="w-32 font-semibold text-gray-600">Paid Days:</span>
+                    <span className="font-medium text-gray-900">{30 - (unpaidLeaves > 0 ? Math.floor(unpaidLeaves / (basicPay/30)) : 0)}</span>
                   </div>
                 </div>
 
@@ -348,12 +357,12 @@ export default function PayslipPage() {
                 </div>
 
                 {/* Net Pay Highlight Box */}
-                <div className="bg-gray-900 text-white rounded-xl p-6 mb-16 shadow-md flex justify-between items-center print:bg-gray-100 print:text-black print:border print:border-gray-800 print:shadow-none">
+                <div className="bg-white border-2 border-gray-800 rounded-xl p-6 mb-16 shadow-sm flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg text-gray-300 font-medium print:text-gray-700">Net Payable Salary</h3>
-                    <p className="text-sm text-gray-400 mt-1 print:text-gray-500">Amount transferred to bank account</p>
+                    <h3 className="text-xl text-gray-900 font-bold">Net Payable Salary</h3>
+                    <p className="text-sm text-gray-600 mt-1">Amount transferred to employee</p>
                   </div>
-                  <div className="text-4xl font-black tracking-tight">{formatCurrency(netPayable)}</div>
+                  <div className="text-4xl font-black text-gray-900 tracking-tight">{formatCurrency(netPayable)}</div>
                 </div>
 
                 {/* Signatures */}
