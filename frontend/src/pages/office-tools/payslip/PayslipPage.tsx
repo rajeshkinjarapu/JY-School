@@ -13,19 +13,44 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-// Mock data for staff selection
-const MOCK_STAFF = [
-  { id: '1', name: 'Ramesh Kumar', role: 'Teacher', department: 'Science', baseSalary: 25000, bankAccount: 'XXXX-XXXX-1234', uan: '100XXXXXXXX' },
-  { id: '2', name: 'Sujatha Reddy', role: 'Teacher', department: 'Maths', baseSalary: 28000, bankAccount: 'XXXX-XXXX-5678', uan: '100XXXXXXXX' },
-  { id: '3', name: 'Venkatesh Rao', role: 'Driver', department: 'Transport', baseSalary: 15000, bankAccount: 'XXXX-XXXX-9012', uan: '100XXXXXXXX' },
-];
+import api from '../../../api/axios';
+
+interface Staff {
+  id: string;
+  name: string;
+  role: string;
+  department?: string;
+  baseSalary?: number;
+  bankAccount?: string;
+  uan?: string;
+}
 
 export default function PayslipPage() {
   const navigate = useNavigate();
   const printRef = useRef<HTMLDivElement>(null);
   
+  const [staffList, setStaffList] = React.useState<Staff[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [selectedStaffId, setSelectedStaffId] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  
+  React.useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const res: any = await api.get('/api/users?limit=1000');
+        const users = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+        // Filter out non-staff roles
+        const staff = users.filter((u: any) => !['STUDENT', 'PARENT'].includes(u.role));
+        setStaffList(staff);
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to load staff data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStaff();
+  }, []);
   
   // Earnings state
   const [basicPay, setBasicPay] = useState<number>(0);
@@ -39,17 +64,18 @@ export default function PayslipPage() {
   const [tax, setTax] = useState<number>(0);
   const [unpaidLeaves, setUnpaidLeaves] = useState<number>(0);
 
-  const selectedStaff = MOCK_STAFF.find(s => s.id === selectedStaffId);
+  const selectedStaff = staffList.find(s => s.id === selectedStaffId);
 
   // Auto-fill basic pay when staff is selected
   const handleStaffChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
     setSelectedStaffId(id);
-    const staff = MOCK_STAFF.find(s => s.id === id);
+    const staff = staffList.find(s => s.id === id);
     if (staff) {
-      setBasicPay(staff.baseSalary);
-      setHra(Math.round(staff.baseSalary * 0.4)); // Example: 40% HRA
-      setPf(Math.round(staff.baseSalary * 0.12)); // Example: 12% PF
+      const basePay = staff.baseSalary || 15000; // Fallback if no salary defined
+      setBasicPay(basePay);
+      setHra(Math.round(basePay * 0.4)); // Example: 40% HRA
+      setPf(Math.round(basePay * 0.12)); // Example: 12% PF
     } else {
       setBasicPay(0);
       setHra(0);
@@ -134,9 +160,13 @@ export default function PayslipPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all"
                 >
                   <option value="">-- Choose Employee --</option>
-                  {MOCK_STAFF.map(staff => (
-                    <option key={staff.id} value={staff.id}>{staff.name} ({staff.role})</option>
-                  ))}
+                  {loading ? (
+                    <option disabled>Loading...</option>
+                  ) : (
+                    staffList.map(staff => (
+                      <option key={staff.id} value={staff.id}>{staff.name} ({staff.role})</option>
+                    ))
+                  )}
                 </select>
               </div>
               
@@ -261,15 +291,15 @@ export default function PayslipPage() {
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Department:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.department}</span>
+                    <span className="font-medium text-gray-900">{selectedStaff.department || 'General'}</span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">Bank A/C No:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.bankAccount}</span>
+                    <span className="font-medium text-gray-900">{selectedStaff.bankAccount || 'Not Available'}</span>
                   </div>
                   <div className="flex border-b border-gray-100 pb-1">
                     <span className="w-32 font-semibold text-gray-600">UAN No:</span>
-                    <span className="font-medium text-gray-900">{selectedStaff.uan}</span>
+                    <span className="font-medium text-gray-900">{selectedStaff.uan || 'Not Available'}</span>
                   </div>
                 </div>
 
