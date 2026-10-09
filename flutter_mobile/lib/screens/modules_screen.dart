@@ -83,7 +83,6 @@ class _ModulesScreenState extends State<ModulesScreen> {
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
       {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
       {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
-      {'title': 'OMR Scanner', 'icon': Icons.document_scanner_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
       {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
