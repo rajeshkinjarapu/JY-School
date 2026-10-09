@@ -97,6 +97,7 @@ const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
+const PayslipPage = lazy(() => import('../pages/office-tools/payslip/PayslipPage'));
 const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
 const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
@@ -561,6 +562,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
             <SlipTestManualPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/payslip',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <PayslipPage />
           </ProtectedRoute>
         ),
       },
