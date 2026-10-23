@@ -40,10 +40,35 @@ export const addAddressCollection = async (req: Request, res: Response) => {
   }
 };
 
-// Get all address collections (for Admin)
+// Get address collections (supports teacher filtering and admin all)
 export const getAddressCollections = async (req: Request, res: Response) => {
   try {
+    const user = (req as any).user;
+    let whereCondition: any = {};
+
+    // If teacher, only return addresses entered by this teacher
+    if (user && user.role === 'TEACHER') {
+      const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } });
+      whereCondition = {
+        OR: [
+          { createdById: user.id },
+          ...(teacher ? [{ referenceTeacherId: teacher.id }] : [])
+        ]
+      };
+    } else if (req.query.myOnly === 'true' && user) {
+      const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } });
+      whereCondition = {
+        OR: [
+          { createdById: user.id },
+          ...(teacher ? [{ referenceTeacherId: teacher.id }] : [])
+        ]
+      };
+    } else if (req.query.teacherId) {
+      whereCondition = { referenceTeacherId: String(req.query.teacherId) };
+    }
+
     const records = await prisma.studentAddressCollection.findMany({
+      where: whereCondition,
       orderBy: { createdAt: 'desc' },
       include: {
         referenceTeacher: {
@@ -76,12 +101,17 @@ export const getAddressCollections = async (req: Request, res: Response) => {
 export const deleteAddressCollection = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    
-    // Optional: add role check if only ADMIN/SUPER_ADMIN can delete
-    // const user = (req as any).user;
-    // if (user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN') {
-    //   return res.status(403).json({ success: false, message: 'Not authorized to delete' });
-    // }
+    const user = (req as any).user;
+
+    const record = await prisma.studentAddressCollection.findUnique({ where: { id } });
+    if (!record) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    // Role check: Teacher can only delete their own entries
+    if (user && user.role === 'TEACHER' && record.createdById && record.createdById !== user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this record' });
+    }
 
     await prisma.studentAddressCollection.delete({
       where: { id },
