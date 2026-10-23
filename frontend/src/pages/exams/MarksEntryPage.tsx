@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2, Unlock } from 'lucide-react';
+import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2, Unlock, Maximize2, Minimize2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { getCanonicalSubjectName, getSubjectSortWeight } from './ResultsTab';
@@ -25,6 +25,12 @@ export const MarksEntryPage: React.FC = () => {
   const [isClassFrozen, setIsClassFrozen] = useState(false);
   
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('ALL');
+  const [isWideView, setIsWideView] = useState(false);
+
+  const toggleWideView = () => {
+    setIsWideView(prev => !prev);
+    window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'));
+  };
 
   const fetchData = async () => {
     try {
@@ -312,49 +318,67 @@ export const MarksEntryPage: React.FC = () => {
 
       {/* Main Content Area */}
       <div className="flex-1 w-full p-0 space-y-0 pb-32 bg-transparent">
-      <div className="w-full border-0 bg-transparent p-2 md:p-6">
+      <div className="w-full border-0 bg-transparent p-2 sm:p-3 md:p-4 lg:p-5">
         
         {/* Toolbar */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-200/50 pb-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white p-3 rounded-2xl shadow-md shadow-indigo-200">
-              <BookOpen className="w-6 h-6" />
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-indigo-200/50 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white p-2.5 rounded-2xl shadow-md shadow-indigo-200">
+              <BookOpen className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-extrabold text-slate-800 text-xl tracking-tight">Marks Entry Panel</h3>
-              <p className="text-sm text-slate-500 font-medium mt-0.5">Select a subject and enter marks carefully.</p>
+              <h3 className="font-extrabold text-slate-800 text-lg sm:text-xl tracking-tight">Marks Entry Panel</h3>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">Select a subject and enter marks carefully.</p>
             </div>
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Filter className="absolute left-4 top-3.5 w-5 h-5 text-indigo-400" />
-            <select 
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border-2 border-indigo-100 rounded-2xl text-sm font-bold text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none shadow-sm cursor-pointer"
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={toggleWideView}
+              className="hidden lg:flex items-center gap-2 px-3.5 py-2.5 bg-white border-2 border-indigo-100 hover:border-indigo-300 text-indigo-700 rounded-2xl text-xs font-bold transition-all shadow-sm cursor-pointer hover:bg-indigo-50/50 shrink-0"
+              title={isWideView ? "Restore Sidebar" : "Full Width View"}
             >
-              <option value="ALL">All Subjects</option>
-              {subjects.map(sub => (
-                <option key={sub.id} value={sub.id}>{sub.name}</option>
-              ))}
-            </select>
-            <div className="absolute right-4 top-4 pointer-events-none">
-              <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              {isWideView ? <Minimize2 className="w-4 h-4 text-indigo-600" /> : <Maximize2 className="w-4 h-4 text-indigo-600" />}
+              <span>{isWideView ? "Standard View" : "Full Width"}</span>
+            </button>
+
+            <div className="relative w-full sm:w-72">
+              <Filter className="absolute left-4 top-3 w-4 h-4 text-indigo-400" />
+              <select 
+                value={selectedSubjectId}
+                onChange={(e) => setSelectedSubjectId(e.target.value)}
+                className="w-full pl-11 pr-4 py-2.5 bg-white border-2 border-indigo-100 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 outline-none focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all appearance-none shadow-sm cursor-pointer"
+              >
+                <option value="ALL">All Subjects</option>
+                {subjects.map(sub => (
+                  <option key={sub.id} value={sub.id}>{sub.name}</option>
+                ))}
+              </select>
+              <div className="absolute right-4 top-3.5 pointer-events-none">
+                <svg className="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Desktop Table View (Hidden on mobile) */}
         <div className="hidden lg:block overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-50/80 border-b border-slate-200">
+          <table className="w-full text-left border-collapse table-auto">
+            <thead className="bg-slate-50/95 border-b border-slate-200 sticky top-0 z-20 backdrop-blur-sm">
               <tr>
-                <th className="px-6 py-5 text-xs font-black text-slate-500 uppercase tracking-widest min-w-[250px]">Student Info</th>
+                <th className="px-4 py-3.5 text-left text-xs font-black text-slate-500 uppercase tracking-wider whitespace-nowrap sticky left-0 bg-slate-50 z-30 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] min-w-[200px]">
+                  Student Info
+                </th>
                 {filteredSubjects.map((sub) => (
-                  <th key={sub.id} className="px-6 py-5 text-xs font-black text-slate-500 uppercase tracking-widest min-w-[200px]">
-                    <div className="flex flex-col">
-                      <span className="text-indigo-900">{sub.name}</span>
-                      <span className="text-[10px] text-slate-400 font-bold mt-1 bg-slate-200/50 w-max px-2 py-0.5 rounded-full">MAX: {sub.maxMarks || 100}</span>
+                  <th key={sub.id} className="px-2 py-3 text-center text-xs font-black text-slate-500 uppercase tracking-tight whitespace-nowrap min-w-[76px]">
+                    <div className="flex flex-col items-center justify-center">
+                      <span className="text-indigo-950 font-extrabold text-[12px] whitespace-nowrap uppercase tracking-tight" title={sub.name}>
+                        {sub.name}
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-bold mt-0.5 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        MAX: {sub.maxMarks || 100}
+                      </span>
                     </div>
                   </th>
                 ))}
@@ -362,39 +386,55 @@ export const MarksEntryPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {students.map((student, index) => (
-                <tr key={student.id} className="hover:bg-indigo-50/40 transition-colors">
-                  <td className="px-6 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-sm shrink-0 shadow-inner">
+                <tr key={student.id} className="hover:bg-indigo-50/40 transition-colors group">
+                  <td className="px-4 py-2.5 whitespace-nowrap sticky left-0 bg-white group-hover:bg-[#f8f9ff] transition-colors z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] min-w-[200px]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
                         {index + 1}
                       </div>
-                      <div>
-                        <p className="font-extrabold text-slate-900 text-base">{student.user.name}</p>
-                        <p className="text-xs font-bold text-slate-400 mt-1 tracking-wider uppercase bg-slate-100 w-max px-2 py-0.5 rounded-md">{student.rollNo || 'N/A'}</p>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 text-sm whitespace-nowrap uppercase tracking-tight" title={student.user.name}>
+                          {student.user.name}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-400 tracking-wider uppercase bg-slate-100 w-max px-1.5 py-0.5 rounded whitespace-nowrap mt-0.5">
+                          {student.rollNo || 'N/A'}
+                        </p>
                       </div>
                     </div>
                   </td>
                   
                   {filteredSubjects.map((sub) => {
                     const key = `${student.id}_${sub.id}`;
+                    const markVal = marksData[key];
+                    const isAb = markVal === 'AB';
+                    const isFail = !isAb && markVal !== '' && markVal !== null && markVal !== undefined && Number(markVal) < (sub.passMarks || 35);
+
                     return (
-                      <td key={sub.id} className="px-6 py-5 align-top">
-                        <div className="flex flex-col gap-3">
-                          <div className="relative flex gap-2">
-                                  <input 
-                                    type="text" 
-                                    value={marksData[key] ?? ''}
-                                    onChange={(e) => {
-                                      const val = e.target.value.toUpperCase();
-                                      if (val === '' || val === 'A' || val === 'AB' || (!isNaN(Number(val)) && Number(val) >= 0)) {
-                                         handleMarkChange(student.id, sub.id, val);
-                                      }
-                                    }}
-                                    className={`w-[70px] text-center p-2 text-sm font-bold border-2 rounded-lg outline-none transition-all ${isClassFrozen ? 'bg-gray-100 cursor-not-allowed border-gray-200' : 'bg-white focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100'} ${(marksData[key] !== 'AB' && marksData[key] && Number(marksData[key]) < (sub.passMarks || 35)) ? 'border-red-300 text-red-600 bg-red-50' : 'border-slate-200 text-slate-800'}`}
-                                    placeholder="--"
-                                    disabled={isClassFrozen}
-                                  />
-                          </div>
+                      <td key={sub.id} className="px-1.5 py-2 text-center align-middle whitespace-nowrap">
+                        <div className="flex justify-center items-center">
+                          <input 
+                            type="text" 
+                            value={marksData[key] ?? ''}
+                            onChange={(e) => {
+                              const val = e.target.value.toUpperCase();
+                              if (val === '' || val === 'A' || val === 'AB' || (!isNaN(Number(val)) && Number(val) >= 0)) {
+                                 handleMarkChange(student.id, sub.id, val);
+                              }
+                            }}
+                            className={`w-14 h-9 text-center text-sm font-black border-2 rounded-lg outline-none transition-all ${
+                              isClassFrozen 
+                                ? 'bg-gray-100 cursor-not-allowed border-gray-200' 
+                                : 'bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 hover:border-slate-300'
+                            } ${
+                              isFail 
+                                ? 'border-red-300 text-red-600 bg-red-50' 
+                                : isAb 
+                                  ? 'border-amber-300 text-amber-700 bg-amber-50' 
+                                  : 'border-slate-200 text-slate-800'
+                            }`}
+                            placeholder="--"
+                            disabled={isClassFrozen}
+                          />
                         </div>
                       </td>
                     );
