@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   UserPlus, Search, Filter, Phone, Calendar, User, 
   Trash2, Printer, CheckCircle, Clock, XCircle, 
-  RefreshCw, BookOpen, CreditCard, ChevronRight, Eye, UserCheck
+  RefreshCw, BookOpen, CreditCard, ChevronRight, Eye, UserCheck,
+  MapPin, ChevronDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -230,36 +231,38 @@ export const AdmissionsManagementPage: React.FC = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
+              <table className="w-full min-w-[1250px] text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-slate-50/80 border-b border-slate-200 uppercase tracking-wider text-[11px] font-black text-slate-500">
-                    <th className="p-4 w-16">Photo</th>
-                    <th className="p-4">Student & Details</th>
-                    <th className="p-4">Class Applied</th>
-                    <th className="p-4">Parents & Contact</th>
-                    <th className="p-4">Registered By</th>
-                    <th className="p-4">App Fee / Mode</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Actions</th>
+                  <tr className="bg-slate-100/80 border-b border-slate-200 uppercase tracking-wider text-[11px] font-black text-slate-600">
+                    <th className="py-4 px-5 w-20">Photo</th>
+                    <th className="py-4 px-5 min-w-[260px]">Student & Details</th>
+                    <th className="py-4 px-5 min-w-[130px] text-center">Class Applied</th>
+                    <th className="py-4 px-5 min-w-[270px]">Parents & Contact</th>
+                    <th className="py-4 px-5 min-w-[240px]">Registered By</th>
+                    <th className="py-4 px-5 min-w-[170px]">App Fee / Mode</th>
+                    <th className="py-4 px-5 min-w-[170px]">Status</th>
+                    <th className="py-4 px-5 min-w-[140px] text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredList.map(adm => {
                     const regNo = `ADM-${adm.id?.slice(0, 6).toUpperCase()}`;
+                    const isMale = (adm.gender || '').toUpperCase() === 'MALE';
+                    const isFemale = (adm.gender || '').toUpperCase() === 'FEMALE';
                     return (
-                      <tr key={adm.id} className="hover:bg-slate-50/60 transition-colors">
+                      <tr key={adm.id} className="hover:bg-indigo-50/25 transition-all duration-150 group">
                         
                         {/* Student Photo */}
-                        <td className="p-4">
+                        <td className="py-6 px-5 align-middle">
                           <div 
                             onClick={() => adm.studentImage && setPreviewPhoto({ url: adm.studentImage, name: adm.studentName })}
-                            className={`w-12 h-12 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 flex items-center justify-center shrink-0 ${adm.studentImage ? 'cursor-pointer hover:ring-2 hover:ring-indigo-500 transition-all' : ''}`}
+                            className={`w-14 h-14 rounded-2xl overflow-hidden border-2 border-slate-200/90 bg-gradient-to-br from-slate-100 to-slate-200 shadow-sm flex items-center justify-center shrink-0 transition-all group-hover:scale-105 group-hover:border-indigo-300 ${adm.studentImage ? 'cursor-pointer hover:ring-2 hover:ring-indigo-500' : ''}`}
                             title={adm.studentImage ? 'Click to view photo' : 'No photo uploaded'}
                           >
                             {adm.studentImage ? (
                               <img src={adm.studentImage} alt={adm.studentName} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="font-black text-slate-400 text-sm uppercase">
+                              <span className="font-black text-slate-400 text-sm tracking-wider uppercase">
                                 {adm.studentName?.slice(0, 2) || 'ST'}
                               </span>
                             )}
@@ -267,139 +270,218 @@ export const AdmissionsManagementPage: React.FC = () => {
                         </td>
 
                         {/* Student Details */}
-                        <td className="p-4">
-                          <div className="font-black text-slate-900 text-sm">{adm.studentName}</div>
-                          <div className="flex items-center gap-2 mt-1 text-slate-500 font-medium text-[11px]">
-                            <span className="font-bold text-slate-700">{adm.gender || '-'}</span>
-                            {adm.dob && (
-                              <span>• DOB: {new Date(adm.dob).toLocaleDateString('en-IN')}</span>
-                            )}
-                          </div>
-                          <div className="text-[10px] text-slate-400 mt-1 font-mono">
-                            App No: <span className="font-bold text-indigo-700">{regNo}</span> • Registered {new Date(adm.createdAt).toLocaleDateString('en-IN')}
+                        <td className="py-6 px-5 align-middle">
+                          <div className="space-y-2">
+                            <div className="font-black text-slate-900 text-base leading-tight group-hover:text-indigo-600 transition-colors">
+                              {adm.studentName}
+                            </div>
+                            
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {/* Gender Badge */}
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                                isMale 
+                                  ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                                  : isFemale 
+                                  ? 'bg-pink-50 text-pink-700 border border-pink-200' 
+                                  : 'bg-slate-100 text-slate-600 border border-slate-200'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isMale ? 'bg-blue-500' : isFemale ? 'bg-pink-500' : 'bg-slate-400'}`} />
+                                {adm.gender || 'Not specified'}
+                              </span>
+
+                              {/* DOB Badge */}
+                              {adm.dob && (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                  <Calendar className="w-3 h-3 text-slate-400" />
+                                  DOB: {new Date(adm.dob).toLocaleDateString('en-IN')}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* App No & Reg Date */}
+                            <div className="flex items-center gap-2 pt-0.5 text-[11px] text-slate-500 font-medium">
+                              <span className="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded-md">
+                                {regNo}
+                              </span>
+                              <span>•</span>
+                              <span className="text-slate-400">
+                                Registered {new Date(adm.createdAt).toLocaleDateString('en-IN')}
+                              </span>
+                            </div>
                           </div>
                         </td>
 
                         {/* Class Applied */}
-                        <td className="p-4">
-                          <span className="px-2.5 py-1 bg-indigo-50 text-indigo-800 rounded-lg font-black text-xs border border-indigo-100">
+                        <td className="py-6 px-5 align-middle text-center">
+                          <span className="inline-block px-4 py-2 bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-800 rounded-xl font-black text-xs border border-indigo-200 shadow-xs whitespace-nowrap">
                             {adm.classApplied || 'N/A'}
                           </span>
                         </td>
 
-                        {/* Parents & Phone */}
-                        <td className="p-4">
-                          <div className="font-bold text-slate-800">
-                            {adm.fatherName ? `Father: ${adm.fatherName}` : adm.motherName ? `Mother: ${adm.motherName}` : '-'}
-                          </div>
-                          <div className="mt-1">
-                            <a 
-                              href={`tel:${adm.phone}`} 
-                              className="text-indigo-600 hover:text-indigo-800 font-mono font-bold flex items-center gap-1.5"
-                            >
-                              <Phone className="w-3 h-3" /> {adm.phone}
-                            </a>
-                          </div>
-                          {adm.address && (
-                            <div className="text-[10px] text-slate-400 truncate max-w-[180px] mt-0.5" title={adm.address}>
-                              {adm.address}
+                        {/* Parents & Contact */}
+                        <td className="py-6 px-5 align-middle">
+                          <div className="space-y-2">
+                            {/* Parent Name */}
+                            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                              <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate max-w-[230px]">
+                                {adm.fatherName ? `Father: ${adm.fatherName}` : adm.motherName ? `Mother: ${adm.motherName}` : '-'}
+                              </span>
                             </div>
-                          )}
+
+                            {/* Phone with Call */}
+                            <div className="flex items-center gap-2">
+                              {adm.phone ? (
+                                <a 
+                                  href={`tel:${adm.phone}`} 
+                                  title="Click to call parent"
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-mono font-bold text-xs transition shadow-xs"
+                                >
+                                  <Phone className="w-3.5 h-3.5" />
+                                  {adm.phone}
+                                </a>
+                              ) : (
+                                <span className="text-[11px] text-slate-400 italic">No phone</span>
+                              )}
+                            </div>
+
+                            {/* Address */}
+                            {adm.address && (
+                              <div className="flex items-start gap-1.5 text-[11px] text-slate-500 pt-0.5" title={adm.address}>
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                                <span className="line-clamp-2 max-w-[240px] leading-relaxed font-medium">
+                                  {adm.address}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </td>
 
                         {/* Registered By & Cash Collector */}
-                        <td className="p-4">
-                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                            <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                            <span className="truncate max-w-[130px] font-bold text-slate-800">{adm.registeredByName || 'Direct / Online'}</span>
+                        <td className="py-6 px-5 align-middle">
+                          <div className="space-y-2">
+                            {/* Staff Name */}
+                            <div className="flex items-center gap-1.5 font-bold text-slate-800 text-xs">
+                              <UserCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                              <span className="truncate max-w-[190px]">
+                                {adm.registeredByName || 'Direct / Online'}
+                              </span>
+                            </div>
+
+                            {/* Cash Collector Badge */}
+                            {adm.cashReceivedByName && (
+                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-200 shadow-xs">
+                                <span className="text-amber-600">💵 Cash Recvd:</span>
+                                <span className="underline decoration-amber-400 font-black">
+                                  {adm.cashReceivedByName}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Academic Year */}
+                            {adm.academicYear && (
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium pt-0.5">
+                                <span className="font-semibold text-slate-400">Academic Year:</span>
+                                <span className="font-black text-purple-700 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-md">
+                                  {adm.academicYear}
+                                </span>
+                              </div>
+                            )}
                           </div>
-                          {adm.cashReceivedByName && (
-                            <div className="text-[10px] text-amber-700 mt-0.5 font-bold flex items-center gap-1">
-                              <span>Cash Recvd:</span> <span className="underline">{adm.cashReceivedByName}</span>
-                            </div>
-                          )}
-                          {adm.academicYear && (
-                            <div className="text-[10px] text-slate-500 mt-0.5 font-medium">
-                              AY: <span className="font-bold text-indigo-600">{adm.academicYear}</span>
-                            </div>
-                          )}
                         </td>
 
                         {/* Fee & Mode */}
-                        <td className="p-4">
-                          {adm.admissionFee ? (
-                            <div className="font-black text-emerald-700 text-xs">
-                              ₹ {adm.admissionFee}
+                        <td className="py-6 px-5 align-middle">
+                          <div className="space-y-1.5">
+                            {/* Amount */}
+                            <div className="flex items-baseline gap-1">
+                              {adm.admissionFee ? (
+                                <span className="font-black text-slate-900 text-base leading-none">
+                                  ₹{Number(adm.admissionFee).toLocaleString('en-IN')}
+                                </span>
+                              ) : (
+                                <span className="text-slate-400 font-bold text-xs">Standard Fee</span>
+                              )}
                             </div>
-                          ) : (
-                            <span className="text-slate-400 font-medium">Standard</span>
-                          )}
-                          <div className="mt-0.5 flex flex-col gap-1 items-start">
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${adm.paymentStatus === 'COMPLETED' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
-                              {adm.paymentMethod || 'CASH'} • {adm.paymentStatus || 'PENDING'}
-                            </span>
+
+                            {/* Payment Status Pill */}
+                            <div>
+                              <span className={`inline-flex items-center gap-1 text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                                adm.paymentStatus === 'COMPLETED' 
+                                  ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                                  : 'bg-amber-100 text-amber-800 border border-amber-200'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${adm.paymentStatus === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                                {adm.paymentMethod || 'CASH'} • {adm.paymentStatus || 'PENDING'}
+                              </span>
+                            </div>
+
+                            {/* View Receipt */}
                             {adm.paymentReceipt && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const receipt = adm.paymentReceipt;
-                                  if (!receipt) return;
-                                  // Handle base64 data URL (old records stored as base64)
-                                  if (receipt.startsWith('data:')) {
-                                    const win = window.open('', '_blank');
-                                    if (win) {
-                                      const isImage = receipt.startsWith('data:image');
-                                      win.document.write(
-                                        isImage
-                                          ? `<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${receipt}" style="max-width:100%;max-height:100vh;object-fit:contain;" /></body></html>`
-                                          : `<html><body style="margin:0;"><embed src="${receipt}" width="100%" height="100%" style="position:fixed;top:0;left:0;width:100%;height:100%;" /></body></html>`
-                                      );
-                                      win.document.close();
+                              <div className="pt-0.5">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const receipt = adm.paymentReceipt;
+                                    if (!receipt) return;
+                                    if (receipt.startsWith('data:')) {
+                                      const win = window.open('', '_blank');
+                                      if (win) {
+                                        const isImage = receipt.startsWith('data:image');
+                                        win.document.write(
+                                          isImage
+                                            ? `<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${receipt}" style="max-width:100%;max-height:100vh;object-fit:contain;" /></body></html>`
+                                            : `<html><body style="margin:0;"><embed src="${receipt}" width="100%" height="100%" style="position:fixed;top:0;left:0;width:100%;height:100%;" /></body></html>`
+                                        );
+                                        win.document.close();
+                                      }
+                                      return;
                                     }
-                                    return;
-                                  }
-                                  // Handle /uploads/filename path (new records)
-                                  const url = receipt.startsWith('http')
-                                    ? receipt
-                                    : `http://66.116.252.191:19998/${receipt.replace(/^\/+/, '')}`;
-                                  window.open(url, '_blank', 'noreferrer');
-                                }}
-                                className="text-[10px] text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1 hover:underline cursor-pointer bg-transparent border-0 p-0"
-                              >
-                                <Eye className="w-3 h-3" /> View Receipt
-                              </button>
+                                    const url = receipt.startsWith('http')
+                                      ? receipt
+                                      : `http://66.116.252.191:19998/${receipt.replace(/^\/+/, '')}`;
+                                    window.open(url, '_blank', 'noreferrer');
+                                  }}
+                                  className="inline-flex items-center gap-1.5 text-[11px] text-indigo-600 hover:text-indigo-800 font-black hover:underline cursor-pointer bg-indigo-50/70 hover:bg-indigo-100/70 px-2.5 py-1 rounded-lg border border-indigo-100 transition"
+                                >
+                                  <Eye className="w-3 h-3 text-indigo-600" /> View Receipt
+                                </button>
+                              </div>
                             )}
                           </div>
                         </td>
 
                         {/* Status with quick changer */}
-                        <td className="p-4">
-                          <select
-                            value={adm.status || 'PENDING'}
-                            onChange={e => handleUpdateStatus(adm.id, e.target.value)}
-                            className={`text-xs font-black px-2 py-1 rounded-lg border cursor-pointer outline-none ${
-                              adm.status === 'ENROLLED' 
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                                : adm.status === 'REJECTED'
-                                ? 'bg-rose-50 text-rose-800 border-rose-200'
-                                : 'bg-amber-50 text-amber-800 border-amber-200'
-                            }`}
-                          >
-                            <option value="PENDING">Pending Review</option>
-                            <option value="ENROLLED">Enrolled / Admitted</option>
-                            <option value="REJECTED">Rejected</option>
-                          </select>
+                        <td className="py-6 px-5 align-middle">
+                          <div className="relative inline-block w-full max-w-[155px]">
+                            <select
+                              value={adm.status || 'PENDING'}
+                              onChange={e => handleUpdateStatus(adm.id, e.target.value)}
+                              className={`w-full text-xs font-black px-3 py-2 pr-7 rounded-xl border-2 cursor-pointer outline-none transition-all shadow-xs appearance-none ${
+                                adm.status === 'ENROLLED' 
+                                  ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:border-emerald-400' 
+                                  : adm.status === 'REJECTED'
+                                  ? 'bg-rose-50 text-rose-800 border-rose-300 hover:border-rose-400'
+                                  : 'bg-amber-50 text-amber-800 border-amber-300 hover:border-amber-400'
+                              }`}
+                            >
+                              <option value="PENDING">Pending Review</option>
+                              <option value="ENROLLED">Enrolled / Admitted</option>
+                              <option value="REJECTED">Rejected</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          </div>
                         </td>
 
                         {/* Action Buttons */}
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                        <td className="py-6 px-5 align-middle text-right">
+                          <div className="flex items-center justify-end gap-2">
                             
                             {/* PRINT OFFICIAL FORM BUTTON */}
                             <button
                               type="button"
                               onClick={() => setSelectedForPrint(adm)}
-                              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white rounded-xl font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+                              className="px-3.5 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-xl font-black text-xs flex items-center gap-1.5 transition-all shadow-sm hover:shadow-indigo-200 active:scale-95 cursor-pointer whitespace-nowrap"
                               title="Print Official A4 Registration Form"
                             >
                               <Printer className="w-3.5 h-3.5" /> Print PDF
@@ -409,7 +491,7 @@ export const AdmissionsManagementPage: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleDelete(adm.id, adm.studentName)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer"
+                              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer border border-transparent hover:border-rose-200"
                               title="Delete application"
                             >
                               <Trash2 className="w-4 h-4" />
