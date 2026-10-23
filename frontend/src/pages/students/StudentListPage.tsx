@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu } from "lucide-react";
+import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Info } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { DataCache } from '../../services/dataCache';
 import { getPhotoUrl } from "../../utils/photo";
 import { StudentListExportModal } from "./StudentListExportModal";
+import JSZip from "jszip";
 
 const LIMIT = 50;
 
@@ -71,6 +72,14 @@ export const StudentListPage: React.FC = () => {
   const [importLoading, setImportLoading] = useState(false);
   const [importResult, setImportResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
+
+  // Bulk photo upload states
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoProgressText, setPhotoProgressText] = useState('');
+  const [photoResult, setPhotoResult] = useState<{ success: number; failed: any[] } | null>(null);
+  const [photoDragOver, setPhotoDragOver] = useState(false);
 
   const fetchClasses = useCallback(async () => {
     try {
@@ -170,6 +179,63 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
+  const handleBulkPhotosUpload = async () => {
+    if (photoFiles.length === 0) {
+      toast.error('దయచేసి ముందుగా ఫోటోలు లేదా ZIP ఫైల్‌ను సెలెక్ట్ చేయండి.');
+      return;
+    }
+    setPhotoLoading(true);
+    setPhotoProgressText('ఫోటోలను సిద్ధం చేస్తోంది...');
+    const t = toast.loading('Student photos upload అవుతున్నాయి...');
+    try {
+      let fileToSend: File;
+      
+      // If single ZIP file was uploaded directly
+      if (photoFiles.length === 1 && photoFiles[0].name.toLowerCase().endsWith('.zip')) {
+        fileToSend = photoFiles[0];
+      } else {
+        // Multiple images: bundle them into a ZIP in browser using JSZip!
+        setPhotoProgressText(`ఫోటోలను ZIP ఫార్మాట్‌లోకి మార్చుతోంది (${photoFiles.length} photos)...`);
+        const zip = new JSZip();
+        for (const file of photoFiles) {
+          zip.file(file.name, file);
+        }
+        const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
+          setPhotoProgressText(`జిప్ ప్రాసెసింగ్: ${Math.round(metadata.percent)}%`);
+        });
+        fileToSend = new File([zipBlob], 'student_photos.zip', { type: 'application/zip' });
+      }
+
+      setPhotoProgressText('సర్వర్‌కు అప్‌లోడ్ చేస్తోంది...');
+      const formData = new FormData();
+      formData.append('file', fileToSend);
+
+      const res: any = await api.post('/api/students/bulk-photos', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      const data = res.data?.data || res.data;
+      setPhotoResult(data);
+      
+      // Invalidate student caches so new photos appear everywhere
+      await DataCache.del('students');
+      try {
+        localStorage.removeItem('sl_students_cache');
+      } catch (_) {}
+
+      toast.success(
+        res.data?.message || `ఫోటోలు విజయవంతంగా అప్‌లోడ్ అయ్యాయి! (${data.success || 0} విజయం, ${data.failed?.length || 0} విఫలం)`,
+        { id: t, duration: 6000 }
+      );
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'ఫోటోల అప్‌లోడ్ విఫలమైంది', { id: t });
+    } finally {
+      setPhotoLoading(false);
+      setPhotoProgressText('');
+    }
+  };
+
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
@@ -192,6 +258,11 @@ export const StudentListPage: React.FC = () => {
                   <Upload className="w-4 h-4" /> Upload Students
                 </button>
                 <button
+                  onClick={() => {
+                    setPhotoFiles([]);
+                    setPhotoResult(null);
+                    setShowPhotoModal(true);
+                  }}
                   className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
                   title="Upload Photos"
                 >
@@ -261,6 +332,20 @@ export const StudentListPage: React.FC = () => {
               ))}
             </select>
           </div>
+          {isSuperAdmin && (
+            <button
+              onClick={() => {
+                setPhotoFiles([]);
+                setPhotoResult(null);
+                setShowPhotoModal(true);
+              }}
+              className="p-2.5 md:hidden bg-white/15 hover:bg-white/25 text-white rounded-xl transition-colors cursor-pointer border border-white/25 shadow-sm"
+              title="Upload Photos"
+              aria-label="Upload Photos"
+            >
+              <ImageIcon className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -601,6 +686,246 @@ export const StudentListPage: React.FC = () => {
         </div>,
         document.body
       )}
+
+      {/* ── Bulk Photo Upload Modal ── */}
+      {showPhotoModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="absolute inset-0" onClick={() => !photoLoading && setShowPhotoModal(false)} />
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden animate-scale-in max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-violet-700 p-5 sm:p-6 flex justify-between items-center text-white shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/15 rounded-2xl backdrop-blur-md">
+                  <ImageIcon className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-lg sm:text-xl font-black">Upload Student Photos</h3>
+                  <p className="text-white/80 text-xs sm:text-sm font-medium mt-0.5">
+                    విద్యార్థి ప్రొఫైల్ ఫోటోల బల్క్ అప్‌లోడ్
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => !photoLoading && setShowPhotoModal(false)}
+                className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors cursor-pointer"
+                disabled={photoLoading}
+                aria-label="Close"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-5">
+              {!photoResult ? (
+                <>
+                  {/* Instructions Box */}
+                  <div className="p-4 bg-indigo-50/70 rounded-2xl border border-indigo-100/80 space-y-2">
+                    <div className="flex items-center gap-2 text-indigo-900 font-bold text-sm">
+                      <Info className="w-4 h-4 text-indigo-600 shrink-0" />
+                      <span>ముఖ్యమైన సూచనలు (Naming Instructions):</span>
+                    </div>
+                    <ul className="text-xs text-indigo-800/90 space-y-1.5 pl-6 list-disc font-medium leading-relaxed">
+                      <li>
+                        ప్రతి ఫోటో ఫైల్ పేరు విద్యార్థి <strong>Roll No / ID</strong> తో ఉండాలి.
+                        <br />
+                        <span className="font-mono bg-white/80 px-2 py-0.5 rounded text-indigo-900 border border-indigo-200 mt-1 inline-block">
+                          ఉదాహరణ: JY26-0001.jpg, JY26-0002.png లేదా JY26-0001 Charan.jpg
+                        </span>
+                      </li>
+                      <li>
+                        మీరు ఒకేసారి ఫోల్డర్ నుండి <strong>బహుళ ఫోటోలను (Multiple Photos)</strong> సెలెక్ట్ చేసుకోవచ్చు లేదా ఫోటోలు ఉన్న <strong>.ZIP ఫైల్</strong> ని అప్‌లోడ్ చేయవచ్చు.
+                      </li>
+                      <li>
+                        సపోర్ట్ చేసే ఫార్మాట్లు: <strong>.JPG, .JPEG, .PNG, .WEBP, .ZIP</strong>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Dropzone */}
+                  <div 
+                    className={`border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center transition-all cursor-pointer relative ${
+                      photoDragOver 
+                        ? 'border-indigo-500 bg-indigo-50/60 scale-[0.99]' 
+                        : 'border-slate-200 bg-slate-50/50 hover:border-indigo-400 hover:bg-indigo-50/20'
+                    }`}
+                    onDragOver={(e) => { e.preventDefault(); setPhotoDragOver(true); }}
+                    onDragLeave={() => setPhotoDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setPhotoDragOver(false);
+                      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                        setPhotoFiles(Array.from(e.dataTransfer.files));
+                      }
+                    }}
+                    onClick={() => document.getElementById('bulk-photo-file-input')?.click()}
+                  >
+                    <input 
+                      id="bulk-photo-file-input" 
+                      type="file" 
+                      accept=".zip,image/jpeg,image/png,image/webp,image/jpg"
+                      multiple
+                      className="hidden" 
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          setPhotoFiles(Array.from(e.target.files));
+                        }
+                      }}
+                    />
+
+                    {photoFiles.length > 0 ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="p-3.5 bg-emerald-100 text-emerald-600 rounded-2xl shadow-sm">
+                          <CheckCircle2 className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <p className="font-black text-slate-800 text-base">
+                            {photoFiles.length === 1 
+                              ? photoFiles[0].name 
+                              : `${photoFiles.length} Photos Selected`}
+                          </p>
+                          <p className="text-xs font-bold text-slate-400 mt-1">
+                            {photoFiles.length === 1 
+                              ? `${(photoFiles[0].size / 1024).toFixed(1)} KB` 
+                              : `Total: ${(photoFiles.reduce((acc, f) => acc + f.size, 0) / (1024 * 1024)).toFixed(2)} MB`}
+                          </p>
+                        </div>
+
+                        {/* File preview thumbnails if multiple images selected */}
+                        {photoFiles.length > 1 && !photoFiles[0].name.toLowerCase().endsWith('.zip') && (
+                          <div className="flex flex-wrap gap-1.5 justify-center max-h-28 overflow-y-auto p-2 bg-white rounded-xl border border-slate-200 w-full mt-2">
+                            {photoFiles.slice(0, 15).map((f, i) => (
+                              <span key={i} className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 truncate max-w-[140px]" title={f.name}>
+                                {f.name}
+                              </span>
+                            ))}
+                            {photoFiles.length > 15 && (
+                              <span className="text-[10px] font-bold text-indigo-600 px-2 py-0.5">
+                                +{photoFiles.length - 15} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        <span className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline mt-1">
+                          Click to select different files
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2.5 text-slate-400">
+                        <div className="p-4 bg-indigo-50 text-indigo-500 rounded-3xl">
+                          <Upload className="w-8 h-8" />
+                        </div>
+                        <div>
+                          <p className="font-extrabold text-slate-700 text-base">
+                            ఫోటోలను ఇక్కడ డ్రాగ్ చేయండి లేదా క్లిక్ చేసి సెలెక్ట్ చేయండి
+                          </p>
+                          <p className="text-xs font-medium text-slate-500 mt-1">
+                            Click or Drag .ZIP or Multiple Image Files (.jpg, .png)
+                          </p>
+                        </div>
+                        <span className="text-[11px] font-black uppercase tracking-wider text-indigo-500 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded-full mt-2">
+                          .ZIP / MULTIPLE IMAGES
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoModal(false)}
+                      disabled={photoLoading}
+                      className="px-5 py-2.5 text-slate-600 hover:bg-slate-100 font-bold text-sm rounded-xl transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleBulkPhotosUpload}
+                      disabled={photoFiles.length === 0 || photoLoading}
+                      className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-indigo-200 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                    >
+                      {photoLoading ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>{photoProgressText || 'Uploading...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          <span>Upload Photos</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                /* Result View */
+                <div className="space-y-6 text-center py-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 mb-1 shadow-inner">
+                    <CheckCircle2 className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-800">Photo Upload Complete</h3>
+                    <p className="text-slate-500 font-medium text-xs sm:text-sm mt-1">
+                      ఫోటోల ప్రాసెసింగ్ విజయవంతంగా పూర్తయింది.
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto">
+                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center">
+                      <span className="text-3xl font-black text-emerald-600">{photoResult.success || 0}</span>
+                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-600/70 mt-1">Photos Updated</span>
+                    </div>
+                    <div className={`${(photoResult.failed?.length || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-4 rounded-2xl flex flex-col items-center`}>
+                      <span className={`text-3xl font-black ${(photoResult.failed?.length || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>
+                        {photoResult.failed?.length || 0}
+                      </span>
+                      <span className={`text-xs font-bold uppercase tracking-wider mt-1 ${(photoResult.failed?.length || 0) > 0 ? 'text-rose-600/70' : 'text-slate-400'}`}>
+                        Failed / Skipped
+                      </span>
+                    </div>
+                  </div>
+
+                  {photoResult.failed && photoResult.failed.length > 0 && (
+                    <div className="text-left max-h-44 overflow-y-auto bg-rose-50/50 border border-rose-100 p-3.5 rounded-2xl text-sm">
+                      <div className="flex items-center gap-2 text-rose-700 font-bold mb-2 text-xs">
+                        <AlertCircle className="w-4 h-4" /> విఫలమైన ఫైల్స్ వివరాలు:
+                      </div>
+                      <ul className="space-y-1.5 text-rose-600 text-xs">
+                        {photoResult.failed.map((e: any, idx: number) => (
+                          <li key={idx} className="flex items-center justify-between gap-2 bg-white/70 p-2 rounded-lg border border-rose-100">
+                            <span className="font-mono font-bold text-slate-700 truncate max-w-[200px]">{e.file}</span>
+                            <span className="text-rose-600 font-medium shrink-0">{e.reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex justify-center pt-4 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPhotoResult(null);
+                        setPhotoFiles([]);
+                        setShowPhotoModal(false);
+                      }}
+                      className="px-8 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-md transition-all cursor-pointer"
+                    >
+                      Done / పూర్తయింది
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       <StudentListExportModal 
         isOpen={exportDialog.open}
         onClose={() => setExportDialog(f => ({ ...f, open: false }))}
