@@ -167,28 +167,27 @@ const TeacherAttendancePage: React.FC = () => {
       <PageHeader 
         title={isAdmin ? "Staff Attendance Manager" : "My Attendance"}
         icon={<CalendarCheck className="w-5 h-5 text-indigo-600" />}
+        action={
+          <div className="flex items-center gap-1 bg-white/10 backdrop-blur-md px-1 py-1 rounded-xl border border-white/20 shadow-inner">
+            <button onClick={() => navigateMonth(-1)}
+              className="p-1.5 rounded-lg text-white hover:bg-white/20 transition-all cursor-pointer">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <div className="flex flex-col items-center min-w-[110px]">
+              <span className="text-sm font-bold text-white tracking-wide">{MONTHS[selectedMonth]}</span>
+              <span className="text-[10px] font-semibold text-indigo-200">{selectedYear}</span>
+            </div>
+            <button onClick={() => navigateMonth(1)}
+              className="p-1.5 rounded-lg text-white hover:bg-white/20 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+              disabled={selectedMonth === today.getMonth() && selectedYear === today.getFullYear()}>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        }
       />
 
       <div className="flex-1 overflow-auto p-4 sm:p-6 md:p-8">
         <div className="w-full max-w-[1600px] mx-auto space-y-6">
-          <div className="flex justify-end">
-        {/* Month Navigator */}
-        <div className="flex items-center gap-3 bg-white p-2 rounded-xl shadow-sm border border-slate-100">
-          <button onClick={() => navigateMonth(-1)}
-            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all cursor-pointer">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="flex flex-col items-center min-w-[120px]">
-            <span className="text-sm font-black text-slate-900">{MONTHS[selectedMonth]}</span>
-            <span className="text-xs font-bold text-slate-500">{selectedYear}</span>
-          </div>
-          <button onClick={() => navigateMonth(1)}
-            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-all cursor-pointer"
-            disabled={selectedMonth === today.getMonth() && selectedYear === today.getFullYear()}>
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
 
       {/* ADMIN VIEW */}
       {isAdmin && (
