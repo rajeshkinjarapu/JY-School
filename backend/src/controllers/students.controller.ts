@@ -134,14 +134,18 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
       // Restrict personal, contact and family details for non-class teachers (subject teachers)
       student.aadharNo = null;
       student.address = null;
-      student.fatherPhone = null;
-      student.motherPhone = null;
-      student.guardianPhone = null;
       student.fatherName = null;
       student.motherName = null;
       student.dob = null;
-      student.religion = null;
-      student.casteCategory = null;
+      student.bloodGroup = null;
+      student.medicalInfo = null;
+      student.penNumber = null;
+      const masked: any = student;
+      masked.fatherPhone = null;
+      masked.motherPhone = null;
+      masked.guardianPhone = null;
+      masked.religion = null;
+      masked.casteCategory = null;
       if (student.user) {
         student.user.phone = null;
         student.user.email = null;
