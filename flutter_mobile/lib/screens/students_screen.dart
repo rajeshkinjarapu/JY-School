@@ -37,6 +37,7 @@ class _StudentsScreenState extends State<StudentsScreen> {
   ];
 
   String _userRole = '';
+  Map<String, dynamic>? _teacherData;
 
   @override
   void initState() {
@@ -50,14 +51,70 @@ class _StudentsScreenState extends State<StudentsScreen> {
     final prefs = await SharedPreferences.getInstance();
     final userStr = prefs.getString('user');
     if (userStr != null) {
-      if (mounted) {
-        setState(() {
-          _userRole = jsonDecode(userStr)['role'] ?? '';
-        });
-      } else {
-        _userRole = jsonDecode(userStr)['role'] ?? '';
+      try {
+        final userObj = jsonDecode(userStr);
+        final role = userObj['role'] ?? '';
+        Map<String, dynamic>? teacher = userObj['teacher'] != null ? Map<String, dynamic>.from(userObj['teacher'] as Map) : null;
+        if (mounted) {
+          setState(() {
+            _userRole = role;
+            _teacherData = teacher;
+          });
+        } else {
+          _userRole = role;
+          _teacherData = teacher;
+        }
+
+        // Refresh homeroom class data if teacher logged in
+        if (role == 'TEACHER' && (teacher == null || teacher['homeRoomClass'] == null)) {
+          ApiService.getMe().then((meRes) {
+            if (meRes['success'] == true && meRes['data'] != null) {
+              final meTeacher = meRes['data']['teacher'];
+              if (meTeacher != null && mounted) {
+                setState(() {
+                  _teacherData = Map<String, dynamic>.from(meTeacher as Map);
+                });
+                userObj['teacher'] = meTeacher;
+                prefs.setString('user', jsonEncode(userObj));
+              }
+            }
+          }).catchError((_) {});
+        }
+      } catch (e) {
+        debugPrint('Error initRole: $e');
       }
     }
+  }
+
+  bool _isClassTeacherForStudent(dynamic student) {
+    if (_userRole == 'SUPER_ADMIN' || _userRole == 'ADMIN') return true;
+    if (_userRole != 'TEACHER') return false;
+
+    final teacherId = _teacherData?['id']?.toString();
+    final studentClass = student['class'];
+    final studentClassTeacherId = studentClass?['classTeacherId']?.toString();
+
+    // 1. Check direct class.classTeacherId match
+    if (teacherId != null && studentClassTeacherId != null && teacherId == studentClassTeacherId) {
+      return true;
+    }
+
+    // 2. Check if student's class is in teacher's homeRoomClass list
+    final studentClassId = (student['classId'] ?? studentClass?['id'])?.toString();
+    if (studentClassId != null && _teacherData?['homeRoomClass'] != null) {
+      final homeRooms = _teacherData!['homeRoomClass'];
+      if (homeRooms is List) {
+        for (final hr in homeRooms) {
+          if (hr is Map && hr['id']?.toString() == studentClassId) {
+            return true;
+          }
+        }
+      } else if (homeRooms is Map && homeRooms['id']?.toString() == studentClassId) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -407,7 +464,15 @@ class _StudentsScreenState extends State<StudentsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => StudentProfileScreen(student: student)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => StudentProfileScreen(
+                  student: student,
+                  isClassTeacher: _isClassTeacherForStudent(student),
+                ),
+              ),
+            );
           },
           child: Padding(
             padding: const EdgeInsets.all(12),
@@ -471,30 +536,37 @@ class _StudentsScreenState extends State<StudentsScreen> {
                     ],
                   ),
                 ),
-                // Normal Phone Button at the end (replacing arrow)
-                Padding(
-                  padding: const EdgeInsets.only(left: 16),
-                  child: IconButton(
-                    icon: const Icon(Icons.phone_rounded, color: Color(0xFF22C55E), size: 26),
-                    onPressed: () async {
-                      final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? student['user']?['phone'] ?? '';
-                      if (phone.isNotEmpty) {
-                        final url = Uri.parse('tel:$phone');
-                        try {
-                          await launchUrl(url);
-                        } catch (e) {
+                // Phone Button only for Class Teacher / Admin; Chevron for other Subject Teachers
+                if (_isClassTeacherForStudent(student))
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12),
+                    child: IconButton(
+                      icon: const Icon(Icons.phone_rounded, color: Color(0xFF22C55E), size: 24),
+                      tooltip: 'Call Parent',
+                      onPressed: () async {
+                        final phone = student['parentPhone'] ?? student['parent']?['phone'] ?? student['parent']?['user']?['phone'] ?? student['user']?['phone'] ?? '';
+                        if (phone.isNotEmpty) {
+                          final url = Uri.parse('tel:$phone');
+                          try {
+                            await launchUrl(url);
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch phone app')));
+                            }
+                          }
+                        } else {
                           if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not launch phone app')));
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Phone number not available')));
                           }
                         }
-                      } else {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Phone number not available')));
-                        }
-                      }
-                    },
+                      },
+                    ),
+                  )
+                else
+                  const Padding(
+                    padding: EdgeInsets.only(left: 14, right: 4),
+                    child: Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFCBD5E1), size: 15),
                   ),
-                ),
               ],
             ),
           ),

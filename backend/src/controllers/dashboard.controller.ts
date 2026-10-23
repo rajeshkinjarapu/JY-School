@@ -52,7 +52,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentPayments,
       recentAnnouncements,
       weekAttendance,
-      totalAppInstalls
+      totalAppInstalls,
+      studentsWithDob
     ] = await Promise.all([
       prisma.student.count(),
       prisma.teacher.count(),
@@ -76,7 +77,17 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         where: { isActive: true }
       }),
       prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } } }),
-      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } })
+      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } }),
+      prisma.student.findMany({
+        where: { dob: { not: null } },
+        select: {
+          id: true,
+          rollNo: true,
+          dob: true,
+          user: { select: { name: true, photoUrl: true, phone: true } },
+          class: { select: { id: true, name: true, section: true } },
+        }
+      })
     ]);
 
     const totalRevenue = revenueResult._sum.amountPaid || 0;
@@ -137,6 +148,64 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       });
     }
 
+    // Use IST (Asia/Kolkata) for accurate school timezone handling
+    const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const currentMonth = nowIST.getMonth() + 1;
+    const currentDay = nowIST.getDate();
+    const currentYear = nowIST.getFullYear();
+
+    const todayBirthdays: any[] = [];
+    const upcomingBirthdays: any[] = [];
+
+    // Next 7 days map for upcoming birthdays
+    const next7DaysMap = new Map<string, number>();
+    for (let i = 1; i <= 7; i++) {
+      const future = new Date(nowIST);
+      future.setDate(future.getDate() + i);
+      const key = `${future.getMonth() + 1}-${future.getDate()}`;
+      next7DaysMap.set(key, i);
+    }
+
+    studentsWithDob.forEach((s) => {
+      if (!s.dob) return;
+      const d = new Date(new Date(s.dob).toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const m = d.getMonth() + 1;
+      const day = d.getDate();
+      const age = currentYear - d.getFullYear();
+      const parentPhone = s.user?.phone || '';
+      const className = s.class ? `${s.class.name} ${s.class.section ? '-' + s.class.section : ''}`.trim() : 'N/A';
+
+      if (m === currentMonth && day === currentDay) {
+        todayBirthdays.push({
+          id: s.id,
+          name: s.user?.name || 'Student',
+          photoUrl: s.user?.photoUrl,
+          rollNo: s.rollNo,
+          className,
+          age: age > 0 && age < 30 ? age : null,
+          phone: parentPhone,
+          dob: s.dob,
+        });
+      } else {
+        const key = `${m}-${day}`;
+        if (next7DaysMap.has(key)) {
+          upcomingBirthdays.push({
+            id: s.id,
+            name: s.user?.name || 'Student',
+            photoUrl: s.user?.photoUrl,
+            rollNo: s.rollNo,
+            className,
+            daysAway: next7DaysMap.get(key)!,
+            birthDate: `${day} ${months[m - 1]}`,
+            age: age > 0 && age < 30 ? age : null,
+            phone: parentPhone,
+          });
+        }
+      }
+    });
+
+    upcomingBirthdays.sort((a, b) => a.daysAway - b.daysAway);
+
     const responseData = {
       totalStudents,
       totalTeachers,
@@ -149,7 +218,9 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentPayments,
       recentAnnouncements,
       attendanceTrend,
-      totalAppInstalls
+      totalAppInstalls,
+      todayBirthdays,
+      upcomingBirthdays
     };
 
     // Cache for 3 minutes (180000 ms) to make dashboard lightning fast

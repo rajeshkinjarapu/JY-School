@@ -14,12 +14,13 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus,
+  Cake, Sparkles, Phone, MessageCircle
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend
+  PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import { getPhotoUrl } from '../../utils/photo';
 
@@ -237,6 +238,216 @@ const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = (
 const TT = { borderRadius: '14px', border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', fontSize: '12px', fontWeight: 600 };
 const COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#06b6d4'];
 
+/* ── Today's Birthdays Card ─────────────────────────────── */
+const TodayBirthdaysCard: React.FC<{
+  todayBirthdays?: any[];
+  upcomingBirthdays?: any[];
+}> = ({ todayBirthdays = [], upcomingBirthdays = [] }) => {
+  const [activeTab, setActiveTab] = useState<'today' | 'upcoming'>('today');
+
+  const sendWhatsAppWish = (student: any) => {
+    const rawPhone = (student.phone || '').replace(/\D/g, '');
+    const cleanPhone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+    const msg = `Dear Parent,\n\nJY High School Management, Principal & Staff wish your child *${student.name}* a very Happy Birthday! 💐🎂🎉\n\nMay this special year bring immense happiness, good health, and great academic success!\n\nWarm Regards,\n*JY High School Management*`;
+    const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, '_blank');
+  };
+
+  return (
+    <ChartCard className="lg:col-span-3">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 rounded-xl bg-gradient-to-tr from-pink-500 via-rose-500 to-amber-500 text-white shadow-md shadow-rose-200">
+            <Cake className="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight">Today's Birthdays</h3>
+              {todayBirthdays.length > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-100 text-rose-700 border border-rose-200 animate-pulse">
+                  <Sparkles className="w-3 h-3 text-rose-600" /> {todayBirthdays.length} Celebrating Today 🎉
+                </span>
+              ) : (
+                <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">
+                  None Today
+                </span>
+              )}
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">
+              Celebrate and send warm wishes to our students
+            </p>
+          </div>
+        </div>
+
+        {/* Tab Switcher */}
+        <div className="flex items-center bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/60 self-start sm:self-auto shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab('today')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'today'
+                ? 'bg-white text-rose-600 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Today ({todayBirthdays.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('upcoming')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+              activeTab === 'upcoming'
+                ? 'bg-white text-indigo-600 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Upcoming ({upcomingBirthdays.length})
+          </button>
+        </div>
+      </div>
+
+      {/* Content Body */}
+      <div className="h-[240px] overflow-y-auto pr-1 space-y-2.5 custom-scrollbar">
+        {activeTab === 'today' ? (
+          todayBirthdays.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {todayBirthdays.map((s: any) => (
+                <div
+                  key={s.id}
+                  className="relative p-3 rounded-2xl bg-gradient-to-br from-rose-50/70 via-white to-amber-50/60 border border-rose-100/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between group overflow-hidden"
+                >
+                  <div className="absolute -top-6 -right-6 w-14 h-14 bg-gradient-to-br from-amber-300/40 to-rose-400/30 rounded-full blur-md pointer-events-none" />
+
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0">
+                      <div className="ring-2 ring-rose-400/80 ring-offset-2 rounded-full overflow-hidden w-11 h-11 bg-slate-100 flex items-center justify-center">
+                        <Avatar name={s.name} photoUrl={getPhotoUrl(s.photoUrl)} size="md" />
+                      </div>
+                      <span className="absolute -bottom-1 -right-1 text-xs">🎂</span>
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <h4 className="text-xs sm:text-sm font-black text-slate-800 truncate group-hover:text-rose-600 transition-colors">
+                        {s.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                        <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded-md">
+                          {s.className}
+                        </span>
+                        {s.rollNo && (
+                          <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded-md">
+                            Roll #{s.rollNo}
+                          </span>
+                        )}
+                        {s.age && (
+                          <span className="text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.5 rounded-md">
+                            🎈 Turning {s.age}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-rose-100/60 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-semibold text-slate-400 truncate">
+                      {s.phone ? `Ph: ${s.phone}` : 'No phone listed'}
+                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {s.phone && (
+                        <a
+                          href={`tel:${s.phone}`}
+                          title="Call Parent"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-indigo-600 hover:bg-white border border-slate-200 transition"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => sendWhatsAppWish(s)}
+                        title="Send Birthday Wishes on WhatsApp"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-sm shadow-emerald-200 active:scale-95"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5" />
+                        Wish
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center p-4 rounded-2xl bg-gradient-to-br from-indigo-50/40 via-white to-pink-50/40 border border-slate-100">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100/80 text-amber-600 flex items-center justify-center mb-2 shadow-inner">
+                <Cake className="w-6 h-6" />
+              </div>
+              <h4 className="text-sm font-black text-slate-700">No Birthdays Today! 🎈</h4>
+              <p className="text-xs text-slate-400 max-w-xs mt-1">
+                None of our students celebrate their birthday today.
+              </p>
+              {upcomingBirthdays.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('upcoming')}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-700 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  View {upcomingBirthdays.length} Upcoming This Week →
+                </button>
+              )}
+            </div>
+          )
+        ) : (
+          upcomingBirthdays.length > 0 ? (
+            <div className="space-y-2">
+              {upcomingBirthdays.map((s: any) => (
+                <div
+                  key={s.id}
+                  className="p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-100 flex items-center justify-between gap-3 transition"
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <Avatar name={s.name} photoUrl={getPhotoUrl(s.photoUrl)} size="sm" />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-slate-800 truncate">{s.name}</p>
+                        <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
+                          {s.className}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {s.birthDate} {s.age ? `(Turning ${s.age})` : ''}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-100">
+                      {s.daysAway === 1 ? '🌟 Tomorrow' : `In ${s.daysAway} days`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => sendWhatsAppWish(s)}
+                      title="Send Early Birthday Wish"
+                      className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 border border-emerald-200 transition"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center text-center p-4">
+              <p className="text-xs font-semibold text-slate-400">No upcoming birthdays in the next 7 days.</p>
+            </div>
+          )
+        )}
+      </div>
+    </ChartCard>
+  );
+};
+
 /* ── Admin View ─────────────────────────────────────────── */
 const AdminView: React.FC<{ data: any }> = ({ data }) => {
   const totalPresent = data.attendanceTrend?.reduce((s: number, d: any) => s + d.present, 0) || 0;
@@ -370,24 +581,9 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
         </ChartCard>
       </div>
 
-      {/* Charts Row 2 */}
+      {/* Charts Row 2: Today's Birthdays & Class Enrollment */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-        <ChartCard className="lg:col-span-3">
-          <SectionHeader title="Attendance Overview" subtitle="Present vs absent — last 7 days" icon={Activity} iconColor="#10b981" />
-          <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.attendanceTrend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} />
-                <RechartsTooltip contentStyle={TT} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 8 }} />
-                <Line type="monotone" dataKey="present" name="Present" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="absent" name="Absent" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
+        <TodayBirthdaysCard todayBirthdays={data.todayBirthdays} upcomingBirthdays={data.upcomingBirthdays} />
 
         <ChartCard className="lg:col-span-2">
           <SectionHeader title="Class Enrollment" subtitle="Students per class" icon={BarChart3} iconColor="#f59e0b"

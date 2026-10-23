@@ -10,7 +10,8 @@ import 'edit_transaction_screen.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   final dynamic student;
-  const StudentProfileScreen({super.key, required this.student});
+  final bool? isClassTeacher;
+  const StudentProfileScreen({super.key, required this.student, this.isClassTeacher});
 
   @override
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
@@ -23,6 +24,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   List<dynamic> _feeStructures = [];
   bool _isLoading = true;
   bool _isTeacher = false;
+  bool _hasFullAccess = true;
+  Map<String, dynamic>? _teacherData;
 
   @override
   void initState() {
@@ -42,13 +45,33 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       final prefs = await SharedPreferences.getInstance();
       final userStr = prefs.getString('user');
       String role = '';
+      Map<String, dynamic>? teacher;
       if (userStr != null) {
-        role = jsonDecode(userStr)['role'] ?? '';
+        final u = jsonDecode(userStr);
+        role = u['role'] ?? '';
+        if (u['teacher'] != null) {
+          teacher = Map<String, dynamic>.from(u['teacher'] as Map);
+        }
       }
       final isTeacher = role == 'TEACHER';
-      if (isTeacher != _isTeacher && mounted) {
+      final isAdmin = role == 'SUPER_ADMIN' || role == 'ADMIN';
+
+      bool hasFullAccess = isAdmin;
+      if (isTeacher) {
+        if (widget.isClassTeacher != null) {
+          hasFullAccess = widget.isClassTeacher!;
+        } else {
+          hasFullAccess = _checkIfClassTeacher(teacher);
+        }
+      } else if (!isAdmin) {
+        hasFullAccess = true;
+      }
+
+      if (mounted) {
         setState(() {
           _isTeacher = isTeacher;
+          _hasFullAccess = hasFullAccess;
+          _teacherData = teacher;
           _tabController.dispose();
           _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
           _tabController.addListener(() {
@@ -58,9 +81,59 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           });
         });
       }
+
+      // If homeroom class data is not cached, fetch getMe in background
+      if (isTeacher && (teacher == null || teacher['homeRoomClass'] == null)) {
+        try {
+          final meRes = await ApiService.getMe();
+          if (meRes['success'] == true && meRes['data'] != null) {
+            final meTeacher = meRes['data']['teacher'];
+            if (meTeacher != null && mounted) {
+              final updatedTeacher = Map<String, dynamic>.from(meTeacher as Map);
+              final rechecked = _checkIfClassTeacher(updatedTeacher);
+              setState(() {
+                _teacherData = updatedTeacher;
+                _hasFullAccess = rechecked;
+              });
+            }
+          }
+        } catch (_) {}
+      }
     } catch (e) {
       debugPrint('Error initTabs: $e');
     }
+  }
+
+  bool _checkIfClassTeacher(Map<String, dynamic>? teacher) {
+    final s = _studentDetails ?? widget.student;
+    if (s['isClassTeacher'] != null && s['isClassTeacher'] is bool) {
+      return s['isClassTeacher'] as bool;
+    }
+    if (teacher == null) return false;
+    final teacherId = teacher['id']?.toString();
+    final studentClass = s['class'];
+    final studentClassTeacherId = studentClass?['classTeacherId']?.toString();
+
+    // 1. Direct match on class.classTeacherId
+    if (teacherId != null && studentClassTeacherId != null && teacherId == studentClassTeacherId) {
+      return true;
+    }
+
+    // 2. Match through homeRoomClass array
+    final studentClassId = (s['classId'] ?? studentClass?['id'])?.toString();
+    if (studentClassId != null && teacher['homeRoomClass'] != null) {
+      final homeRooms = teacher['homeRoomClass'];
+      if (homeRooms is List) {
+        for (final hr in homeRooms) {
+          if (hr is Map && hr['id']?.toString() == studentClassId) {
+            return true;
+          }
+        }
+      } else if (homeRooms is Map && homeRooms['id']?.toString() == studentClassId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   Future<void> _fetchProfile() async {
@@ -75,6 +148,13 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         setState(() {
           if (studentRes['success'] == true && studentRes['data'] != null && studentRes['data'] is Map) {
             _studentDetails = Map<String, dynamic>.from(studentRes['data'] as Map);
+            if (_isTeacher) {
+              if (_studentDetails!['isClassTeacher'] != null) {
+                _hasFullAccess = _studentDetails!['isClassTeacher'] == true;
+              } else {
+                _hasFullAccess = _checkIfClassTeacher(_teacherData);
+              }
+            }
           } else {
             _studentDetails = widget.student;
           }
@@ -243,12 +323,16 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                             _badge(className.isNotEmpty ? className : 'No Class', const Color(0xFF10B981)),
                             _badge('Roll: $rollNo', const Color(0xFF3B82F6)),
                             if (admissionNo != 'N/A') _badge('Adm: $admissionNo', const Color(0xFF8B5CF6)),
+                            if (_isTeacher)
+                              _hasFullAccess
+                                  ? _badge('Class Teacher', const Color(0xFF059669))
+                                  : _badge('Subject Teacher', const Color(0xFF7C3AED)),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  if (primaryPhone.isNotEmpty)
+                  if (primaryPhone.isNotEmpty && _hasFullAccess)
                     GestureDetector(
                       onTap: () => _launchUrl('whatsapp', primaryPhone),
                       child: Container(
@@ -357,35 +441,181 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user) {
     final dob = s['dob'] != null ? (DateTime.tryParse(s['dob'].toString())?.toLocal().toString().split(' ')[0] ?? 'N/A') : 'N/A';
     final admDate = s['admissionDate'] != null ? (DateTime.tryParse(s['admissionDate'].toString())?.toLocal().toString().split(' ')[0] ?? 'N/A') : 'N/A';
+    final className = '${s['class']?['name'] ?? ''} ${s['class']?['section'] ?? ''}'.trim();
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       child: Column(
         children: [
-          _infoCard('Personal Details', const Color(0xFF6366F1), [
-            _infoRow(Icons.cake_rounded, 'Date of Birth', dob, const Color(0xFF6366F1)),
-            _infoRow(Icons.person_rounded, 'Gender', s['gender'] ?? 'N/A', const Color(0xFF8B5CF6)),
-            _infoRow(Icons.bloodtype_rounded, 'Blood Group', s['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
-            _infoRow(Icons.credit_card_rounded, 'Aadhaar No', s['aadharNo'] ?? 'N/A', const Color(0xFF0EA5E9)),
-            _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
-            _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
-            _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
-          ]),
-          const SizedBox(height: 12),
-          _infoCard('Contact & Academic', const Color(0xFF10B981), [
-            _infoRow(Icons.email_rounded, 'Email', user['email'] ?? 'Not provided', const Color(0xFF10B981)),
-            _infoRow(Icons.home_rounded, 'Address', s['address'] ?? 'Not provided', const Color(0xFF6366F1)),
-            _infoRow(Icons.event_available_rounded, 'Admission Date', admDate, const Color(0xFF0EA5E9)),
-            _infoRow(Icons.receipt_long_rounded, 'RTE Student', (s['isRTE'] == true) ? 'Yes' : 'No', const Color(0xFF8B5CF6)),
-          ]),
-          const SizedBox(height: 12),
-          _infoCard('Family Details', const Color(0xFFF59E0B), [
-            _infoRow(Icons.person_rounded, "Father's Name", s['fatherName'] ?? 'N/A', const Color(0xFF6366F1)),
-            _infoRow(Icons.phone_rounded, "Father's Phone", s['fatherPhone'] ?? 'N/A', const Color(0xFF10B981),
-                onTap: (s['fatherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['fatherPhone']) : null),
-            _infoRow(Icons.person_rounded, "Mother's Name", s['motherName'] ?? 'N/A', const Color(0xFFEC4899)),
-            _infoRow(Icons.phone_rounded, "Mother's Phone", s['motherPhone'] ?? 'N/A', const Color(0xFF10B981),
-                onTap: (s['motherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['motherPhone']) : null),
-          ]),
+          if (_hasFullAccess) ...[
+            _infoCard('Personal Details', const Color(0xFF6366F1), [
+              _infoRow(Icons.cake_rounded, 'Date of Birth', dob, const Color(0xFF6366F1)),
+              _infoRow(Icons.person_rounded, 'Gender', s['gender'] ?? 'N/A', const Color(0xFF8B5CF6)),
+              _infoRow(Icons.bloodtype_rounded, 'Blood Group', s['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
+              _infoRow(Icons.credit_card_rounded, 'Aadhaar No', s['aadharNo'] ?? 'N/A', const Color(0xFF0EA5E9)),
+              _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
+              _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
+              _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
+            ]),
+            const SizedBox(height: 12),
+            _infoCard('Contact & Academic', const Color(0xFF10B981), [
+              _infoRow(Icons.email_rounded, 'Email', user['email'] ?? 'Not provided', const Color(0xFF10B981)),
+              _infoRow(Icons.home_rounded, 'Address', s['address'] ?? 'Not provided', const Color(0xFF6366F1)),
+              _infoRow(Icons.event_available_rounded, 'Admission Date', admDate, const Color(0xFF0EA5E9)),
+              _infoRow(Icons.receipt_long_rounded, 'RTE Student', (s['isRTE'] == true) ? 'Yes' : 'No', const Color(0xFF8B5CF6)),
+            ]),
+            const SizedBox(height: 12),
+            _infoCard('Family Details', const Color(0xFFF59E0B), [
+              _infoRow(Icons.person_rounded, "Father's Name", s['fatherName'] ?? 'N/A', const Color(0xFF6366F1)),
+              _infoRow(Icons.phone_rounded, "Father's Phone", s['fatherPhone'] ?? 'N/A', const Color(0xFF10B981),
+                  onTap: (s['fatherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['fatherPhone']) : null),
+              _infoRow(Icons.person_rounded, "Mother's Name", s['motherName'] ?? 'N/A', const Color(0xFFEC4899)),
+              _infoRow(Icons.phone_rounded, "Mother's Phone", s['motherPhone'] ?? 'N/A', const Color(0xFF10B981),
+                  onTap: (s['motherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['motherPhone']) : null),
+            ]),
+          ] else ...[
+            _infoCard('Academic Details', const Color(0xFF6366F1), [
+              _infoRow(Icons.school_rounded, 'Class & Section', className.isNotEmpty ? className : 'N/A', const Color(0xFF6366F1)),
+              _infoRow(Icons.tag_rounded, 'Roll Number', s['rollNo'] ?? 'N/A', const Color(0xFF3B82F6)),
+              _infoRow(Icons.badge_rounded, 'Admission Number', s['admissionNo'] ?? 'N/A', const Color(0xFF8B5CF6)),
+              _infoRow(Icons.event_available_rounded, 'Admission Date', admDate, const Color(0xFF0EA5E9)),
+              _infoRow(Icons.receipt_long_rounded, 'RTE Student', (s['isRTE'] == true) ? 'Yes' : 'No', const Color(0xFF10B981)),
+            ]),
+            const SizedBox(height: 16),
+            _buildRestrictedPrivacyCard(),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRestrictedPrivacyCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF6366F1).withOpacity(0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFEEF2FF), Color(0xFFE0E7FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFC7D2FE)),
+            ),
+            child: const Icon(Icons.lock_person_rounded, color: Color(0xFF4F46E5), size: 28),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Class Teacher Restricted Access',
+            style: GoogleFonts.outfit(
+              color: const Color(0xFF1E293B),
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFEF3C7),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFFDE68A)),
+            ),
+            child: Text(
+              'STUDENT DATA PRIVACY',
+              style: GoogleFonts.poppins(
+                color: const Color(0xFFB45309),
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFF1F5F9)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.verified_user_rounded, color: Color(0xFF10B981), size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'విద్యార్థి భద్రత మరియు గోప్యత దృష్ట్యా:',
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF334155),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.only(left: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('• పుట్టిన తేదీ, ఆధార్, పూర్తి చిరునామా', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11.5)),
+                      const SizedBox(height: 3),
+                      Text('• తల్లిదండ్రుల పేర్లు మరియు ఫోన్ నంబర్లు', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11.5)),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'ఈ సున్నితమైన వివరాలు కేవలం ఈ తరగతికి కేటాయించబడిన అధికారిక క్లాస్ టీచర్‌కు మరియు అడ్మిన్‌లకు మాత్రమే అందుబాటులో ఉంటాయి.',
+                  style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.info_outline_rounded, color: Color(0xFF6366F1), size: 14),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  'సబ్జెక్ట్ టీచర్ల కొరకు ఎగ్జామ్స్ మరియు మార్కుల వివరాలు EXAMS ట్యాబ్‌లో అందుబాటులో ఉన్నాయి.',
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF6366F1),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );

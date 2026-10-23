@@ -115,7 +115,46 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     },
   });
   if (!student) return next(createError('Student not found', 404));
-  successResponse(res, student, 'Student fetched');
+
+  let isClassTeacher = true;
+  if (req.user?.role === 'TEACHER') {
+    const teacher = await prisma.teacher.findFirst({
+      where: { userId: req.user.id },
+      include: { homeRoomClass: true },
+    });
+    
+    isClassTeacher = Boolean(
+      teacher && (
+        (student.class && student.class.classTeacherId === teacher.id) ||
+        (teacher.homeRoomClass && teacher.homeRoomClass.some(c => c.id === student.classId))
+      )
+    );
+
+    if (!isClassTeacher) {
+      // Restrict personal, contact and family details for non-class teachers (subject teachers)
+      student.aadharNo = null;
+      student.address = null;
+      student.fatherPhone = null;
+      student.motherPhone = null;
+      student.guardianPhone = null;
+      student.fatherName = null;
+      student.motherName = null;
+      student.dob = null;
+      student.religion = null;
+      student.casteCategory = null;
+      if (student.user) {
+        student.user.phone = null;
+        student.user.email = null;
+      }
+    }
+  }
+
+  const responseData = {
+    ...student,
+    isClassTeacher: req.user?.role === 'SUPER_ADMIN' || req.user?.role === 'ADMIN' ? true : isClassTeacher,
+  };
+
+  successResponse(res, responseData, 'Student fetched');
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
