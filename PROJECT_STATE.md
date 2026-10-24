@@ -12,6 +12,18 @@
   7. **Network Error Fix (`axios.ts`)**: ప్రొడక్షన్ లో ఫ్రంట్ఎండ్, బ్యాక్ఎండ్ కి కనెక్ట్ అవ్వడానికి అవసరమైన పోర్ట్ నంబర్ `5000` నుండి `19998` కి మార్చాను. దీనివల్ల వస్తున్న `Network Error` సాల్వ్ అయ్యింది.
 - **అక్టోబర్ 9:** Flutter Hero Banner Notifications/Announcements missing issue fixed. Developed complete Payslip Generation Page for Staff with API integration and auto-calculation.
 
+## తాజా స్థితి (Latest Status - 2026-10-24 Part 3)
+- **టాస్క్:** MCQ Paper Generator ("Print A4") లో బ్రౌజర్ ప్రింట్ ప్రివ్యూలో లేఅవుట్ చెదిరిపోవడం (ప్రశ్న సంఖ్యలు పైకి విరగడం, ఆప్షన్లు అన్నీ 4 లైన్లలో రావడం వల్ల పేజీలు 3 షీట్లకు విస్తరించడం) పరిష్కరించడం.
+- **సమస్య విశ్లేషణ:**
+  1. ప్రింట్ ఐఫ్రేమ్ హెడ్‌లో `<base href>` లేకపోవడం వల్ల ప్రొడక్షన్ CSS అసెట్స్ సరిగ్గా లోడ్ అవ్వక ముందే ప్రింట్ విండో ట్రిగ్గర్ అవ్వడం.
+  2. `twoByTwoLimit` 42 క్యారెక్టర్లకే పరిమితం కావడం వల్ల సెట్ బిల్డర్/రోస్టర్ ఫార్ములాలు (Q1, Q2 మొదలైనవి) One-by-One కి వెళ్లి పేపర్‌ను పెద్దదిగా మార్చడం.
+- **పరిష్కారం:**
+  1. `LiveLatexPreview.tsx`:
+     - థ్రెషోల్డ్స్ క్యాలిబ్రేషన్: Single Line: 18 chars వరకు; 2*2 గ్రిడ్: 19 నుండి 55 chars వరకు; One-by-One: >55 chars.
+     - ప్రశ్న హెడర్ మరియు ఆప్షన్ల కంటైనర్లకు నేరుగా Inline CSS (`style={{ display: 'flex' }}`, `style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}`) అందించబడింది. దీనివల్ల బాహ్య CSS ఆలస్యమైనా ప్రింట్ ఇంజిన్ లో లేఅవుట్ ఎప్పటికీ మారదు.
+  2. `MCQPaperGeneratorPage.tsx`:
+     - ప్రింట్ ఐఫ్రేమ్‌లో `<base href="${window.location.origin}/">` మరియు ఎక్స్‌ప్లిసిట్ గ్రిడ్/ఫ్లెక్స్ రూల్స్ చేర్చబడ్డాయి. ప్రింట్ టైమర్ ఆప్టిమైజ్ చేయబడింది.
+
 ## తాజా స్థితి (Latest Status - 2026-10-24 Part 2)
 - **టాస్క్:** Student Address Collection (`/address-collection/admin` & `/address-collection/teacher`) లో Excel ఫైల్ అప్‌లోడ్ చేసి విద్యార్థుల చిరునామాలను ఒకేసారి బల్క్‌గా డేటాబేస్‌లోకి లోడ్ చేసే సదుపాయం (Bulk Upload) కల్పించడం.
 - **పూర్తయిన పనులు:**

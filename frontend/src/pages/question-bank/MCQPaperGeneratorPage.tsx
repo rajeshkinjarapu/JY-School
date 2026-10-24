@@ -370,75 +370,109 @@ export const MCQPaperGeneratorPage = () => {
     const printDocument = iframe.contentWindow?.document;
     if (!printDocument) { window.print(); return; }
 
-      const dynamicLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-        .map((l) => l.outerHTML)
-        .join('\n');
+    const dynamicLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map((l) => l.outerHTML)
+      .join('\n');
 
-      const styleLinks = `
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-        ${dynamicLinks}
-      `;
+    const styleLinks = `
+      <base href="${window.location.origin}/">
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+      ${dynamicLinks}
+    `;
 
-      const styleTags = Array.from(document.querySelectorAll('style'))
-        .map(style => style.outerHTML)
-        .join('\n');
+    const styleTags = Array.from(document.querySelectorAll('style'))
+      .map(style => style.outerHTML)
+      .join('\n');
 
-      // Add comprehensive print CSS that forces background to white and removes any dark mode restrictions
-      printDocument.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8"/>
-          <meta name="color-scheme" content="light"/>
-          <title>Print - ${examName}</title>
-          ${styleLinks}
-          ${styleTags}
-          <style>
-            :root { color-scheme: light !important; }
-            @page { margin: 0; size: A4; } /* No margin, exact fit */
-            html, body { 
-              margin: 0; padding: 0; 
+    // Add comprehensive print CSS that forces background to white and guarantees flex/grid layouts
+    printDocument.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8"/>
+        <base href="${window.location.origin}/">
+        <meta name="color-scheme" content="light"/>
+        <title>Print - ${examName}</title>
+        ${styleLinks}
+        ${styleTags}
+        <style>
+          :root { color-scheme: light !important; }
+          @page { margin: 6mm 8mm; size: A4; }
+          html, body { 
+            margin: 0; padding: 0; 
+            background-color: #ffffff !important; 
+            background: #ffffff !important;
+            color: #000000 !important;
+            font-family: serif; 
+            height: auto !important; 
+            overflow: visible !important; 
+          }
+          @media print {
+            html, body {
               background-color: #ffffff !important; 
               background: #ffffff !important;
-              color: #000000 !important;
-              font-family: serif; 
               height: auto !important; 
               overflow: visible !important; 
             }
-            @media print {
-              html, body {
-                background-color: #ffffff !important; 
-                background: #ffffff !important;
-                height: auto !important; 
-                overflow: visible !important; 
-              }
-            }
-            #print-root {
-              width: 210mm;
-              margin: 0 auto;
-              background-color: #ffffff !important;
-              height: auto !important;
-              overflow: visible !important;
-            }
-          </style>
-        </head>
-        <body>
-          <div id="print-root">
-            ${cloneEl.outerHTML}
-          </div>
-        </body>
-        </html>
-      `);
+          }
+          #print-root {
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+            background-color: #ffffff !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+          /* Explicit Layout Rules for Print Engine */
+          .flex { display: flex !important; }
+          .flex-col { flex-direction: column !important; }
+          .flex-1 { flex: 1 1 0% !important; min-width: 0 !important; }
+          .flex-shrink-0 { flex-shrink: 0 !important; }
+          .items-start { align-items: flex-start !important; }
+          .items-center { align-items: center !important; }
+          .justify-between { justify-content: space-between !important; }
+          .justify-center { justify-content: center !important; }
+          .w-full { width: 100% !important; }
+          .w-10 { width: 2.5rem !important; flex-shrink: 0 !important; }
+          .ml-10 { margin-left: 2.5rem !important; }
+          .mr-1\\.5 { margin-right: 0.375rem !important; }
+          .pr-4 { padding-right: 1rem !important; }
+          .grid { display: grid !important; }
+          .grid-cols-2 { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          .grid-cols-4 { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+          .gap-x-3 { column-gap: 0.75rem !important; }
+          .gap-x-4 { column-gap: 1rem !important; }
+          .gap-y-0\\.5 { row-gap: 0.125rem !important; }
+          .gap-y-1 { row-gap: 0.25rem !important; }
+          .gap-1 { gap: 0.25rem !important; }
+          .gap-2 { gap: 0.5rem !important; }
+          .break-inside-avoid { break-inside: avoid !important; page-break-inside: avoid !important; }
+          .columns-2 { column-count: 2 !important; columns: 2 !important; }
+          .gap-6 { column-gap: 1.5rem !important; }
+          .whitespace-pre-wrap { white-space: pre-wrap !important; }
+        </style>
+      </head>
+      <body>
+        <div id="print-root">
+          ${cloneEl.outerHTML}
+        </div>
+      </body>
+      </html>
+    `);
     printDocument.close();
 
-    iframe.onload = () => {
-      setTimeout(() => {
+    const doPrint = () => {
+      try {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }, 500);
+      } catch (e) {
+        console.error('Print execution error:', e);
+      }
+      setTimeout(() => iframe.remove(), 1500);
     };
+
+    setTimeout(doPrint, 400);
   };
 
   const toggleFullScreen = () => {
