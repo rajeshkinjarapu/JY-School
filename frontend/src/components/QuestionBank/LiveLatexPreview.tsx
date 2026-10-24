@@ -246,59 +246,60 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               // Remove math delimiters \(, \), \[, \], $
               s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
               
-              // Remove non-rendering LaTeX formatting macros
-              s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
+              // Unpack \text{...}, \mathrm{...}, \mathbf{...}, \mathbb{...}
+              s = s.replace(/\\(?:text|mathrm|mathbf|mathbb)\{([^{}]*)\}/g, '$1');
 
-              // CRITICAL: Normalize superscripts and subscripts FIRST so braces inside exponents like ^{2} or _{1} don't break fraction regex!
-              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
+              // Remove non-rendering formatting macros
+              s = s.replace(/\\(?:displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
+
+              // Normalize superscripts and subscripts (e.g. A^{2} -> A2, 10^{-24} -> 10-24)
+              s = s.replace(/[\^_]\{([^{}]*)\}/g, '$1');
               s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
 
-              // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
-              // In visual rendering, a fraction adds padding and width of numerator/denominator
-              const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
-              let iterations = 0;
-              while (fracRegex.test(s) && iterations < 5) {
+              // Vectors and accents: \hat{i} -> i, \vec{a} -> a, \bar{x} -> x
+              s = s.replace(/\\(?:hat|vec|bar|dot|tilde)\{?([a-zA-Z0-9])\}?/g, '$1');
+
+              // Fractions: \frac{num}{den} and \dfrac{num}{den}
+              // Numerator and denominator are stacked vertically, width is max(len(num), len(den))
+              const fracRegex = /\\d?frac\{([^{}]*)\}\{([^{}]*)\}/;
+              let fracIter = 0;
+              while (fracRegex.test(s) && fracIter < 5) {
                 s = s.replace(fracRegex, (_, num, den) => {
                   const lenN = estimateVisualLength(num);
                   const lenD = estimateVisualLength(den);
-                  return 'X'.repeat(Math.max(lenN, lenD) + 2);
+                  return 'X'.repeat(Math.max(lenN, lenD));
                 });
-                iterations++;
+                fracIter++;
               }
 
-              // Square root: \sqrt{x} visually requires surd symbol width + top bar + padding + inner content
+              // Square roots: \sqrt{x} is radical sign (1 char) + inner expression
               const sqrtRegex = /\\sqrt(?:\[[^\]]*\])?\{([^{}]*)\}/;
               let sqrtIter = 0;
               while (sqrtRegex.test(s) && sqrtIter < 5) {
                 s = s.replace(sqrtRegex, (_, inner) => {
-                  const innerLen = estimateVisualLength(inner);
-                  return 'X'.repeat(innerLen + 3);
+                  return 'X' + inner;
                 });
                 sqrtIter++;
               }
-              // Catch any remaining \sqrt without braces (e.g. \sqrt 2)
-              s = s.replace(/\\sqrt\s*([0-9a-zA-Z])/g, 'XXX$1');
+              s = s.replace(/\\sqrt\s*([0-9a-zA-Z])/g, 'X$1');
 
-              // Multi-letter mathematical / trigonometric functions render as 2-4 characters
-              s = s.replace(/\\(cos|sin|tan|sec|csc|cot|log|lim|det|exp)\b/gi, 'XXX');
-              s = s.replace(/\\(ln)\b/gi, 'XX');
-              // When written without space: e.g. \cos\theta or \sin\alpha
-              s = s.replace(/\\(cos|sin|tan|sec|csc|cot|log|lim|det|exp)(?=\\|\b|[0-9a-zA-Z])/gi, 'XXX ');
+              // Standard multi-letter math functions render as their word length
+              s = s.replace(/\\(cos|sin|tan|sec|csc|cot|log|lim|det|exp)\b/gi, '$1 ');
+              s = s.replace(/\\ln\b/gi, 'ln ');
 
-              // Greek letters: \theta, \alpha, etc.
+              // Greek letters (1 character each)
               s = s.replace(/\\(theta|alpha|beta|gamma|delta|epsilon|zeta|eta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Delta|Omega|Phi|Psi|Sigma|Theta)\b/gi, 'X');
-              s = s.replace(/\\(theta|alpha|beta|gamma|delta|epsilon|zeta|eta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Delta|Omega|Phi|Psi|Sigma|Theta)(?=\\|\b|[0-9a-zA-Z])/gi, 'X ');
 
-              // Math binary and relational operators (they have padding in KaTeX)
-              s = s.replace(/\\(pm|mp|times|div|cdot|leq|geq|neq|approx|equiv)\b/gi, ' X ');
+              // Math binary/relational operators: \times, \cdot, \pm, \mp, \le, \ge, etc.
+              s = s.replace(/\\(times|div|pm|mp|cdot|leq|geq|neq|approx|equiv)\b/gi, ' X ');
 
-              // Replace other LaTeX commands (\vec, \hat, \bar, etc.) with a single character 'X'
+              // Strip other LaTeX commands
               s = s.replace(/\\[a-zA-Z]+/g, 'X');
 
               // Remove remaining braces
               s = s.replace(/[{}]/g, '');
 
-              // Math binary operators like +, -, = have standard visual padding around them
+              // Standard padding around binary operators (+, -, =)
               s = s.replace(/([+\-=])/g, ' $1 ');
 
               return s.replace(/\s+/g, ' ').trim().length;
@@ -311,33 +312,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
 
-            // Wide formula guard: If any option has a compound square root, multi-char fraction, trig formula,
-            // scientific notation with powers (e.g. 10^{-24}), or relation with operators,
-            // it can NEVER safely fit on a single line with 4 columns.
-            const hasWideFormula = [optA, optB, optC, optD].some(opt => {
-              if (!opt) return false;
-              // 1. Compound square roots (e.g. \sqrt{A^2 + C^2} or \sqrt{... + ...})
-              if (/\\sqrt(?:\[[^\]]*\])?\{[^{}]*[\+\-\*\/\s\\][^{}]*\}/.test(opt)) return true;
-              // 2. Fractions with terms or expressions (e.g. \frac{12.3}{\sqrt{V}} or \frac{h}{4\pi})
-              if (/\\d?frac\{[^{}]{2,}\}/.test(opt) || /\\d?frac\{[^{}]*\}\{[^{}]{2,}\}/.test(opt)) return true;
-              // 3. Trigonometric, log, limit functions with terms
-              if (/\\(cos|sin|tan|sec|csc|cot|log|lim)\b.*[\+\-\*\/\=]/.test(opt)) return true;
-              // 4. Scientific notation with exponents (e.g. \times 10^{-24}, \cdot 10^5, 10^{-19})
-              if (/\\times\s*10\^|\\cdot\s*10\^|\b10\^\{?-?[0-9]/.test(opt)) return true;
-              // 5. Equations / inequalities with formulas (e.g. \Delta x \cdot \Delta p \ge, \lambda =)
-              if (/[=><\u2265\u2264]/.test(opt) && /\\|[\+\-\*\/]/.test(opt)) return true;
-              return false;
-            });
-            
             // Calibrated thresholds for A4 layout:
-            // Single line (4 columns): simple numbers, values, short words up to 12 chars (only if no wide formula).
-            // 2*2 (2 columns): wide formulas, expressions, phrases 13 to 32 chars.
-            // One by one (1 column): long polynomials, wide sentences > 32 chars.
-            const singleLineLimit = isDoubleColumn ? 6 : 12;
-            const twoByTwoLimit = isDoubleColumn ? 16 : 32;
+            // Single line (4 columns): simple numbers, values, short expressions up to 16 chars (fits Q46, Q47, Q63, Q64).
+            // 2*2 (2 columns): wide formulas, expressions, scientific notation 17 to 42 chars (fits Q37, Q45, Q65, Q66).
+            // One by one (1 column): long polynomials, wide multi-line sentences > 42 chars.
+            const singleLineLimit = isDoubleColumn ? 8 : 16;
+            const twoByTwoLimit = isDoubleColumn ? 20 : 42;
 
             let optionsLayout = '';
-            if (!hasWideFormula && maxLen <= singleLineLimit) {
+            if (maxLen <= singleLineLimit) {
               // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
               optionsLayout = 'grid grid-cols-4 w-full gap-x-3 gap-y-0.5';
             } else if (maxLen <= twoByTwoLimit) {
