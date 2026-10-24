@@ -281,7 +281,37 @@
     background: transparent !important;
     background-color: transparent !important;
     border-color: currentColor !important;
+    color: #000000 !important;
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+
+  html body .katex .katex-mathml {
+    display: none !important;
+  }
+
+  html body .katex .katex-html {
+    display: inline-flex !important;
+    flex-wrap: wrap !important;
+    visibility: visible !important;
+  }
+
+  html body .katex .base {
+    visibility: visible !important;
+  }
+
+  html body .katex .mord, 
+  html body .katex .mop, 
+  html body .katex .mbin, 
+  html body .katex .mrel, 
+  html body .katex .mopen, 
+  html body .katex .mclose, 
+  html body .katex .mpunct {
+    visibility: visible !important;
+    display: inline-block !important;
+  }
+
 
   /* Specific elements that can carry dark backgrounds */
   html, body, #root,

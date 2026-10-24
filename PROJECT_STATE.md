@@ -6,33 +6,21 @@
   1. `TeacherAttendancePage.tsx`: స్టాఫ్ అటెండెన్స్ మేనేజర్ పేజీని ప్రీమియం టేబుల్ ఫార్మాట్ లోకి మార్చాను.
   2. `CompetitiveExamsPage.tsx`: అడ్మిన్ డ్యాష్బోర్డ్ లో ఎగ్జామ్స్ లిస్ట్ అవ్వడం (API ఫిక్స్), దానికి "Manage Questions", "Publish", మరియు "Admin Preview" బటన్స్ యాడ్ చేయడం జరిగింది.
   3. `ManageCompetitiveQuestions.tsx`: క్వశ్చన్స్ మాన్యువల్ గా యాడ్ చేయడానికి ఒక అద్భుతమైన Interactive Question Editor డెవలప్ చేశాను.
-  4. **Backend Architecture Update (`competitiveExams.controller.ts`)**: మాన్యువల్ గా యాడ్ చేసిన క్వశ్చన్స్ ముందుగా `MasterQuestion` డేటాబేస్ లో సేవ్ అయ్యి, ఆ తర్వాత ఎగ్జామ్ కు కాపీ అవుతాయి.
-  5. **Sidebar UI Fix (`Sidebar.tsx`)**: సైడ్ బార్ లో మెనూ ఐటమ్స్ వ్రాప్ అవ్వకుండా, స్పేస్ కరెక్ట్ గా వాడుకునేలా సరిచేశాను.
-  6. **Bug Fix (`CreateCompetitiveExamPage.tsx`)**: సబ్జెక్ట్స్ లోడ్ అవ్వకుండా వస్తున్న బగ్ ని ఫిక్స్ చేశాను (కేసింగ్ ఇష్యూ).
-  7. **Network Error Fix (`axios.ts`)**: ప్రొడక్షన్ లో ఫ్రంట్ఎండ్, బ్యాక్ఎండ్ కి కనెక్ట్ అవ్వడానికి అవసరమైన పోర్ట్ నంబర్ `5000` నుండి `19998` కి మార్చాను. దీనివల్ల వస్తున్న `Network Error` సాల్వ్ అయ్యింది.
-- **అక్టోబర్ 9:** Flutter Hero Banner Notifications/Announcements missing issue fixed. Developed complete Payslip Generation Page for Staff with API integration and auto-calculation.
-
-## తాజా స్థితి (Latest Status - 2026-10-24 Part 3)
-- **టాస్క్:** MCQ Paper Generator ("Print A4") లో బ్రౌజర్ ప్రింట్ ప్రివ్యూలో లేఅవుట్ చెదిరిపోవడం (ప్రశ్న సంఖ్యలు పైకి విరగడం, ఆప్షన్లు అన్నీ 4 లైన్లలో రావడం వల్ల పేజీలు 3 షీట్లకు విస్తరించడం) పరిష్కరించడం.
-- **సమస్య విశ్లేషణ:**
-  1. ప్రింట్ ఐఫ్రేమ్ హెడ్‌లో `<base href>` లేకపోవడం వల్ల ప్రొడక్షన్ CSS అసెట్స్ సరిగ్గా లోడ్ అవ్వక ముందే ప్రింట్ విండో ట్రిగ్గర్ అవ్వడం.
-  2. `twoByTwoLimit` 42 క్యారెక్టర్లకే పరిమితం కావడం వల్ల సెట్ బిల్డర్/రోస్టర్ ఫార్ములాలు (Q1, Q2 మొదలైనవి) One-by-One కి వెళ్లి పేపర్‌ను పెద్దదిగా మార్చడం.
-- **పరిష్కారం:**
-  1. `LiveLatexPreview.tsx`:
-     - థ్రెషోల్డ్స్ క్యాలిబ్రేషన్: Single Line: 18 chars వరకు; 2*2 గ్రిడ్: 19 నుండి 55 chars వరకు; One-by-One: >55 chars.
-     - ప్రశ్న హెడర్ మరియు ఆప్షన్ల కంటైనర్లకు నేరుగా Inline CSS (`style={{ display: 'flex' }}`, `style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}`) అందించబడింది. దీనివల్ల బాహ్య CSS ఆలస్యమైనా ప్రింట్ ఇంజిన్ లో లేఅవుట్ ఎప్పటికీ మారదు.
-  2. `MCQPaperGeneratorPage.tsx`:
-     - ప్రింట్ ఐఫ్రేమ్‌లో `<base href="${window.location.origin}/">` మరియు ఎక్స్‌ప్లిసిట్ గ్రిడ్/ఫ్లెక్స్ రూల్స్ చేర్చబడ్డాయి. ప్రింట్ టైమర్ ఆప్టిమైజ్ చేయబడింది.
-
-## తాజా స్థితి (Latest Status - 2026-10-24 Part 2)
-- **టాస్క్:** Student Address Collection (`/address-collection/admin` & `/address-collection/teacher`) లో Excel ఫైల్ అప్‌లోడ్ చేసి విద్యార్థుల చిరునామాలను ఒకేసారి బల్క్‌గా డేటాబేస్‌లోకి లోడ్ చేసే సదుపాయం (Bulk Upload) కల్పించడం.
-- **పూర్తయిన పనులు:**
-  1. **Backend Bulk Upload API (`backend/src/controllers/addressCollection.controller.ts` & `routes`):**
-     - `POST /api/address-collection/bulk` API రూట్ మరియు `bulkAddAddressCollection` కంట్రోలర్ రూపొందించబడింది.
-     - ఏ రకమైన కాలమ్ హెడర్స్ (Student Name, Father Name, Village, Mandal, Mobile No, Alternate Mobile No, Teacher) అయినా సరే ఆటోమేటిక్‌గా గుర్తించి సులభంగా మ్యాప్ చేస్తుంది.
-     - డేటాబేస్ లోని టీచర్ల పేర్లను మ్యాచ్ చేసి `referenceTeacherId` కి అసైన్ చేస్తుంది.
-     - `prisma.studentAddressCollection.createMany` ద్వారా క్షణాల్లో వందలాది రికార్డులను ఇన్సర్ట్ చేస్తుంది.
-  2. **Frontend Admin Page (`frontend/src/pages/address-collection/AddressCollectionAdminPage.tsx`):**
+  4. **Backend Architecture Update (`competitiveExams.controller.ts`)**: మాన్యువల్ గా యాడ్ చేసిన క్వశ్చన్స్ ముందుగా `MasterQuestion` డేటాబేస్ లో సేవ్ అయ్యి, ఆ తర�## తాజా స్థితి (Latest Status - 2026-10-24 Part 3)
+- **టాస్క్:** MCQ Paper Generator లో ఆప్షన్ల అమరిక కొలీజన్ ఫిక్స్ (Q53 overlap fix), ప్రింట్ ప్రివ్యూ ఆప్టిమైజేషన్ మరియు Excel Upload ఫీచర్ జోడింపు.
+- **సమస్య:** 
+  1. ప్రింట్ ప్రివ్యూలో కెమిస్ట్రీ పేపర్‌లో అన్ని చిన్న ప్రశ్నలు ఉండటం వల్ల 1 పేజీకి కుదించబడింది (`1 sheet of paper`). అయితే Question 53 లో `(C) Both (A) and (B)` అనే ఆప్షన్ 16 క్యారెక్టర్ల పొడవు ఉండటం వల్ల 4 కాలమ్స్‌లో స్పేస్ చాలక పక్కనున్న `(D) Antimony` పైకి ఎక్కి ఓవర్‌లాప్ అయ్యింది.
+  2. యూజర్ ఎక్సెల్ ఫైల్ ద్వారా ప్రశ్నలు మరియు ఆప్షన్లను ఒకేసారి బల్క్‌గా అప్‌లోడ్ చేసుకునే ఆప్షన్ కోరారు.
+- **పూర్తయిన పరిష్కారాలు:**
+  1. **`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`:**
+     - 4-కాలమ్ సింగిల్ లైన్ పరిమితిని 13 అక్షరాలకు (`singleLineLimit: 13`) ఖచ్చితంగా క్యాలిబ్రేట్ చేశాము. దీనివల్ల Q51, Q52, Q54-Q61 లాంటి చిన్న ఆప్షన్లు (సంఖ్యలు, చిహ్నాలు, చిన్న పదాలు) అన్నీ సింగిల్ లైన్‌లో వస్తాయి.
+     - `Both (A) and (B)` వంటి 13 అక్షరాల కంటే ఎక్కువ ఉన్న ఆప్షన్లు ఆటోమేటిక్‌గా **2×2 Grid** లోకి వెళ్లిపోతాయి (ఎటువంటి ఓవర్‌లాప్ లేకుండా పర్ఫెక్ట్‌గా అమరుతాయి).
+     - ఆప్షన్ టెక్స్ట్ కంటైనర్లకు `break-words` జోడించబడింది.
+  2. **`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`:**
+     - టాప్ టూల్‌బార్‌లో **"Excel Upload"** బటన్ జోడించబడింది.
+     - ఎక్సెల్ ఫైల్ (.xlsx, .xls, .csv) అప్‌లోడ్ మోడల్ మరియు బహుళ సబ్జెక్టులు/సింగిల్ సబ్జెక్ట్ ప్రశ్నలు, ఆప్షన్లు (A, B, C, D) మరియు Answer Key ఆటోమేటిక్ మ్యాపింగ్ లాజిక్ రూపొందించబడింది.
+     - ఉపాధ్యాయులు సులభంగా ఉపయోగించడానికి **"Sample Excel Template"** డౌన్‌లోడ్ బటన్ అందించబడింది.
+*
      - టాప్ బార్ లో "Upload Excel" బటన్ జోడించబడింది.
      - శాంపిల్ ఎక్సెల్ టెంప్లేట్ డౌన్‌లోడ్ సదుపాయం (`Student_Address_Collection_Template.xlsx`).
      - ఫైల్ అప్‌లోడ్ డ్రాప్‌జోన్, లైవ్ డేటా ప్రివ్యూ (మొదటి 5 రికార్డులు) మరియు సులభమైన ఇంపోర్ట్ మోడల్.

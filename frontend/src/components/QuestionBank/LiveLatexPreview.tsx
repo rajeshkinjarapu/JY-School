@@ -313,77 +313,44 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             );
 
             // Calibrated thresholds for A4 layout:
-            // Single line (4 columns): simple numbers, values, short expressions up to 18 chars (fits Q46, Q47, Q63, Q64).
-            // 2*2 (2 columns): wide formulas, expressions, scientific notation 19 to 55 chars (fits Q1, Q2, Q3, Q37, Q45, Q65, Q66).
-            // One by one (1 column): long polynomials, wide multi-line sentences > 55 chars.
-            const singleLineLimit = isDoubleColumn ? 8 : 18;
-            const twoByTwoLimit = isDoubleColumn ? 22 : 55;
+            // Single line (4 columns): simple numbers, values, short expressions up to 13 chars (fits Q46, Q47, Q51, Q52, Q54-Q61).
+            // 2*2 (2 columns): wide formulas, expressions, medium options 14 to 42 chars (fits Q37, Q45, Q53, Q65, Q66).
+            // One by one (1 column): long polynomials, wide multi-line sentences > 42 chars.
+            const singleLineLimit = isDoubleColumn ? 7 : 13;
+            const twoByTwoLimit = isDoubleColumn ? 20 : 42;
 
             let optionsLayout = '';
-            let optionsStyle: React.CSSProperties = {};
             if (maxLen <= singleLineLimit) {
               // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
               optionsLayout = 'grid grid-cols-4 w-full gap-x-3 gap-y-0.5';
-              optionsStyle = {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-                columnGap: '0.75rem',
-                rowGap: '0.125rem',
-                width: '100%'
-              };
             } else if (maxLen <= twoByTwoLimit) {
               // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
               optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
-              optionsStyle = {
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-                columnGap: '1rem',
-                rowGap: '0.25rem',
-                width: '100%'
-              };
             } else {
               // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
               optionsLayout = 'flex flex-col w-full gap-1';
-              optionsStyle = {
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.25rem',
-                width: '100%'
-              };
             }
 
             // Extract question number for hanging indent
             const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
             const qNumStr = qMatch ? qMatch[1] : '';
-            const qRest = qMatch ? questionText.substring(qMatch[0].length).trim() : questionText;
+            const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
             return (
-              <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`} style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
-                <div className="mb-0.5 flex whitespace-pre-wrap" style={{ display: 'flex', alignItems: 'flex-start' }}>
+              <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                <div className="mb-0.5 flex whitespace-pre-wrap">
                   {qNumStr ? (
-                    <strong className="flex-shrink-0 w-10 text-left" style={{ width: '2.5rem', flexShrink: 0, textAlign: 'left' }}>{qNumStr}.</strong>
+                    <strong className="flex-shrink-0 w-10 text-left">{qNumStr}.</strong>
                   ) : (
-                    <div className="flex-shrink-0 w-10" style={{ width: '2.5rem', flexShrink: 0 }}></div>
+                    <div className="flex-shrink-0 w-10"></div>
                   )}
-                  <div className="flex-1 whitespace-pre-wrap" style={{ flex: 1, minWidth: 0 }} dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
-                <div className={`ml-10 pr-4 ${optionsLayout}`} style={{ marginLeft: '2.5rem', paddingRight: '1rem', ...optionsStyle }}>
-                  <div className="flex items-start whitespace-pre-wrap min-w-0" style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0 }}>
-                    <span className="mr-1.5 font-medium flex-shrink-0" style={{ marginRight: '0.375rem', flexShrink: 0 }}>(A)</span>
-                    <span className="flex-1 whitespace-pre-wrap min-w-0" style={{ flex: 1, minWidth: 0 }} dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} />
-                  </div>
-                  <div className="flex items-start whitespace-pre-wrap min-w-0" style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0 }}>
-                    <span className="mr-1.5 font-medium flex-shrink-0" style={{ marginRight: '0.375rem', flexShrink: 0 }}>(B)</span>
-                    <span className="flex-1 whitespace-pre-wrap min-w-0" style={{ flex: 1, minWidth: 0 }} dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} />
-                  </div>
-                  <div className="flex items-start whitespace-pre-wrap min-w-0" style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0 }}>
-                    <span className="mr-1.5 font-medium flex-shrink-0" style={{ marginRight: '0.375rem', flexShrink: 0 }}>(C)</span>
-                    <span className="flex-1 whitespace-pre-wrap min-w-0" style={{ flex: 1, minWidth: 0 }} dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} />
-                  </div>
-                  <div className="flex items-start whitespace-pre-wrap min-w-0" style={{ display: 'flex', alignItems: 'flex-start', minWidth: 0 }}>
-                    <span className="mr-1.5 font-medium flex-shrink-0" style={{ marginRight: '0.375rem', flexShrink: 0 }}>(D)</span>
-                    <span className="flex-1 whitespace-pre-wrap min-w-0" style={{ flex: 1, minWidth: 0 }} dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} />
-                  </div>
+                <div className={`ml-10 pr-4 ${optionsLayout}`}>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0 break-words"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap min-w-0 break-words" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0 break-words"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap min-w-0 break-words" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0 break-words"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap min-w-0 break-words" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0 break-words"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap min-w-0 break-words" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );
@@ -494,7 +461,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           flex-wrap: wrap;
         }
       `}</style>
-      <div className="pt-3 pb-3 px-8 print:p-0 lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-8 lining-nums tabular-nums">
         
         {/* Header Section */}
         {showHeader && (

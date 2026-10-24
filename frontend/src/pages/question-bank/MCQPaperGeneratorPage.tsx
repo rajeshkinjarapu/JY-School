@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, FileSpreadsheet, Download } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
-
 import { PageHeader } from '../../components/UI/PageHeader';
+import { printA4Paper } from '../../utils/printA4Paper';
 
 const AVAILABLE_SUBJECTS = ['Telugu', 'Hindi', 'English', 'Maths', 'Science', 'Biology', 'Physics', 'Chemistry', 'Social'];
 
@@ -66,6 +66,9 @@ export const MCQPaperGeneratorPage = () => {
   const [answerKeys, setAnswerKeys] = useState<Record<string, Record<string, string>>>({});
   const [isAnswerKeyModalOpen, setIsAnswerKeyModalOpen] = useState(false);
   const [isAiSolving, setIsAiSolving] = useState(false);
+  const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+  const [isExcelLoading, setIsExcelLoading] = useState(false);
+  const excelFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isBankModalOpen && bankClasses.length === 0) {
@@ -168,6 +171,220 @@ export const MCQPaperGeneratorPage = () => {
     setIsBankModalOpen(false);
     setBankSelectedIds(new Set());
     toast.success(`Imported ${selected.length} questions from Master Bank!`);
+  };
+
+  const downloadSampleExcel = async () => {
+    try {
+      const XLSX = await import('xlsx');
+      const sampleData = [
+        {
+          'Question': 'Convert the set $A = \\{x \\mid x \\text{ is an integer and } -3 < x < 4\\}$ into Roster form.',
+          'Option A': '{-3, -2, -1, 0, 1, 2, 3, 4}',
+          'Option B': '{-2, -1, 0, 1, 2, 3}',
+          'Option C': '{-2, -1, 1, 2, 3}',
+          'Option D': '{-3, -2, -1, 0, 1, 2, 3}',
+          'Correct Answer': 'B',
+          'Subject': 'Maths'
+        },
+        {
+          'Question': 'What is the value of $(\\vec{a} + \\vec{b}) \\times (\\vec{a} - \\vec{b})$?',
+          'Option A': '$2(\\vec{b} \\times \\vec{a})$',
+          'Option B': '$2(\\vec{a} \\times \\vec{b})$',
+          'Option C': '$\\vec{a}^2 - \\vec{b}^2$',
+          'Option D': '$\\vec{0}$',
+          'Correct Answer': 'B',
+          'Subject': 'Physics'
+        },
+        {
+          'Question': 'What is the SI unit of electric current?',
+          'Option A': 'Volt',
+          'Option B': 'Ampere',
+          'Option C': 'Ohm',
+          'Option D': 'Watt',
+          'Correct Answer': 'B',
+          'Subject': 'Physics'
+        },
+        {
+          'Question': 'What is 25% of 200?',
+          'Option A': '25',
+          'Option B': '50',
+          'Option C': '75',
+          'Option D': '100',
+          'Correct Answer': 'B',
+          'Subject': 'Maths'
+        }
+      ];
+
+      const ws = XLSX.utils.json_to_sheet(sampleData);
+      ws['!cols'] = [
+        { wch: 60 },
+        { wch: 25 },
+        { wch: 25 },
+        { wch: 25 },
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 15 }
+      ];
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'MCQ_Questions');
+      XLSX.writeFile(wb, 'MCQ_Questions_Sample_Template.xlsx');
+      toast.success('Sample Excel Template డౌన్‌లోడ్ అయింది!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Template download failed');
+    }
+  };
+
+  const handleExcelFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsExcelLoading(true);
+    const reader = new FileReader();
+
+    reader.onload = async (evt) => {
+      try {
+        const XLSX = await import('xlsx');
+        const buffer = evt.target?.result;
+        const wb = XLSX.read(buffer, { type: 'array' });
+        const sheetName = wb.SheetNames[0];
+        const sheet = wb.Sheets[sheetName];
+        const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        if (!rows || rows.length === 0) {
+          toast.error('ఎక్సెల్ ఫైల్‌లో ఎటువంటి డేటా కనుగొనబడలేదు');
+          setIsExcelLoading(false);
+          return;
+        }
+
+        const getColVal = (row: any, aliases: string[]) => {
+          const keys = Object.keys(row);
+          for (const alias of aliases) {
+            const matchedKey = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
+            if (matchedKey && row[matchedKey] !== undefined && row[matchedKey] !== null) {
+              return String(row[matchedKey]).trim();
+            }
+          }
+          return '';
+        };
+
+        const updatedContents = { ...subjectContents };
+        const updatedAnswers = { ...answerKeys };
+        const newSubjectsSet = new Set(selectedSubjects.length > 0 ? selectedSubjects : ['General']);
+
+        let importedCount = 0;
+        const groupedRows: Record<string, any[]> = {};
+
+        rows.forEach((row) => {
+          const qText = getColVal(row, ['question', 'q', 'question text', 'questiontext', 'questions', 'problem']);
+          if (!qText) return;
+
+          const optA = getColVal(row, ['option a', 'option_a', 'optiona', 'opt a', 'opta', 'a', 'option 1', 'opt 1']);
+          const optB = getColVal(row, ['option b', 'option_b', 'optionb', 'opt b', 'optb', 'b', 'option 2', 'opt 2']);
+          const optC = getColVal(row, ['option c', 'option_c', 'optionc', 'opt c', 'optc', 'c', 'option 3', 'opt 3']);
+          const optD = getColVal(row, ['option d', 'option_d', 'optiond', 'opt d', 'optd', 'd', 'option 4', 'opt 4']);
+          const ans = getColVal(row, ['correct answer', 'correct_answer', 'correctanswer', 'answer', 'key', 'ans', 'correct']);
+          let sub = getColVal(row, ['subject', 'sub', 'subject name', 'subjectname']);
+
+          if (!sub) {
+            sub = activeSubjectTab || 'General';
+          }
+
+          if (!groupedRows[sub]) {
+            groupedRows[sub] = [];
+          }
+
+          groupedRows[sub].push({ qText, optA, optB, optC, optD, ans });
+        });
+
+        Object.entries(groupedRows).forEach(([sub, qList]) => {
+          newSubjectsSet.add(sub);
+          const currentContent = updatedContents[sub] || '';
+          const lines = currentContent.split('\n');
+          let maxQ = 0;
+          for (const line of lines) {
+            const match = line.match(/^(\d+)\.\s/);
+            if (match) {
+              const num = parseInt(match[1], 10);
+              if (num > maxQ) maxQ = num;
+            }
+          }
+
+          let generatedText = currentContent ? '\n\n' : '';
+          const subAnswers = { ...(updatedAnswers[sub] || {}) };
+
+          qList.forEach((item, idx) => {
+            const qNum = maxQ + idx + 1;
+            generatedText += `${qNum}. ${item.qText}\n`;
+            if (item.optA) generatedText += `(A) ${item.optA}\n`;
+            if (item.optB) generatedText += `(B) ${item.optB}\n`;
+            if (item.optC) generatedText += `(C) ${item.optC}\n`;
+            if (item.optD) generatedText += `(D) ${item.optD}\n`;
+            generatedText += '\n';
+
+            if (item.ans) {
+              let ansLetter = item.ans.trim().toUpperCase();
+              if (ansLetter.startsWith('(') && ansLetter.endsWith(')')) {
+                ansLetter = ansLetter.slice(1, -1);
+              }
+              if (ansLetter === 'A' || ansLetter === 'B' || ansLetter === 'C' || ansLetter === 'D') {
+                subAnswers[qNum.toString()] = ansLetter;
+              } else if (item.ans === item.optA) {
+                subAnswers[qNum.toString()] = 'A';
+              } else if (item.ans === item.optB) {
+                subAnswers[qNum.toString()] = 'B';
+              } else if (item.ans === item.optC) {
+                subAnswers[qNum.toString()] = 'C';
+              } else if (item.ans === item.optD) {
+                subAnswers[qNum.toString()] = 'D';
+              } else {
+                subAnswers[qNum.toString()] = ansLetter;
+              }
+            }
+            importedCount++;
+          });
+
+          updatedContents[sub] = (currentContent + generatedText).trim();
+          updatedAnswers[sub] = subAnswers;
+        });
+
+        if (importedCount === 0) {
+          toast.error('ఎక్సెల్ నుండి ప్రశ్నలు గుర్తించబడలేదు. కాలమ్ హెడర్లు (Question, Option A, Option B...) సరిచూడండి.');
+          setIsExcelLoading(false);
+          return;
+        }
+
+        const newSubjectsArray = Array.from(newSubjectsSet);
+        setSelectedSubjects(newSubjectsArray);
+        localStorage.setItem('mcq_exam_subjects', JSON.stringify(newSubjectsArray));
+        setSubjectContents(updatedContents);
+        setAnswerKeys(updatedAnswers);
+
+        const firstImportedSub = Object.keys(groupedRows)[0];
+        if (firstImportedSub) {
+          setActiveSubjectTab(firstImportedSub);
+        }
+
+        toast.success(`విజయవంతంగా ${importedCount} ప్రశ్నలు ఇంపోర్ట్ అయ్యాయి!`);
+        setIsExcelModalOpen(false);
+      } catch (err) {
+        console.error(err);
+        toast.error('ఎక్సెల్ ఫైల్ చదవడంలో లోపం ఏర్పడింది.');
+      } finally {
+        setIsExcelLoading(false);
+        if (excelFileInputRef.current) {
+          excelFileInputRef.current.value = '';
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      toast.error('ఫైల్ రీడ్ చేయడంలో సమస్య ఏర్పడింది.');
+      setIsExcelLoading(false);
+    };
+
+    reader.readAsArrayBuffer(file);
   };
   
   // Settings State
@@ -343,136 +560,7 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    const paperEl = document.getElementById('a4-preview-paper');
-    if (!paperEl) { window.print(); return; }
-    
-    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]');
-    cloneEl.style.boxShadow = 'none';
-    cloneEl.style.border = 'none';
-    cloneEl.style.outline = 'none';
-    cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '210mm'; // Keep exact A4 width so floating images match
-
-    let oldIframe = document.getElementById('print-iframe');
-    if (oldIframe) { oldIframe.remove(); }
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'print-iframe';
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
-    iframe.style.left = '-10000px';
-    iframe.style.top = '-10000px';
-    document.body.appendChild(iframe);
-
-    const printDocument = iframe.contentWindow?.document;
-    if (!printDocument) { window.print(); return; }
-
-    const dynamicLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-      .map((l) => l.outerHTML)
-      .join('\n');
-
-    const styleLinks = `
-      <base href="${window.location.origin}/">
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-      ${dynamicLinks}
-    `;
-
-    const styleTags = Array.from(document.querySelectorAll('style'))
-      .map(style => style.outerHTML)
-      .join('\n');
-
-    // Add comprehensive print CSS that forces background to white and guarantees flex/grid layouts
-    printDocument.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8"/>
-        <base href="${window.location.origin}/">
-        <meta name="color-scheme" content="light"/>
-        <title>Print - ${examName}</title>
-        ${styleLinks}
-        ${styleTags}
-        <style>
-          :root { color-scheme: light !important; }
-          @page { margin: 6mm 8mm; size: A4; }
-          html, body { 
-            margin: 0; padding: 0; 
-            background-color: #ffffff !important; 
-            background: #ffffff !important;
-            color: #000000 !important;
-            font-family: serif; 
-            height: auto !important; 
-            overflow: visible !important; 
-          }
-          @media print {
-            html, body {
-              background-color: #ffffff !important; 
-              background: #ffffff !important;
-              height: auto !important; 
-              overflow: visible !important; 
-            }
-          }
-          #print-root {
-            width: 100%;
-            max-width: 210mm;
-            margin: 0 auto;
-            background-color: #ffffff !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-          /* Explicit Layout Rules for Print Engine */
-          .flex { display: flex !important; }
-          .flex-col { flex-direction: column !important; }
-          .flex-1 { flex: 1 1 0% !important; min-width: 0 !important; }
-          .flex-shrink-0 { flex-shrink: 0 !important; }
-          .items-start { align-items: flex-start !important; }
-          .items-center { align-items: center !important; }
-          .justify-between { justify-content: space-between !important; }
-          .justify-center { justify-content: center !important; }
-          .w-full { width: 100% !important; }
-          .w-10 { width: 2.5rem !important; flex-shrink: 0 !important; }
-          .ml-10 { margin-left: 2.5rem !important; }
-          .mr-1\\.5 { margin-right: 0.375rem !important; }
-          .pr-4 { padding-right: 1rem !important; }
-          .grid { display: grid !important; }
-          .grid-cols-2 { display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-          .grid-cols-4 { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-          .gap-x-3 { column-gap: 0.75rem !important; }
-          .gap-x-4 { column-gap: 1rem !important; }
-          .gap-y-0\\.5 { row-gap: 0.125rem !important; }
-          .gap-y-1 { row-gap: 0.25rem !important; }
-          .gap-1 { gap: 0.25rem !important; }
-          .gap-2 { gap: 0.5rem !important; }
-          .break-inside-avoid { break-inside: avoid !important; page-break-inside: avoid !important; }
-          .columns-2 { column-count: 2 !important; columns: 2 !important; }
-          .gap-6 { column-gap: 1.5rem !important; }
-          .whitespace-pre-wrap { white-space: pre-wrap !important; }
-        </style>
-      </head>
-      <body>
-        <div id="print-root">
-          ${cloneEl.outerHTML}
-        </div>
-      </body>
-      </html>
-    `);
-    printDocument.close();
-
-    const doPrint = () => {
-      try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      } catch (e) {
-        console.error('Print execution error:', e);
-      }
-      setTimeout(() => iframe.remove(), 1500);
-    };
-
-    setTimeout(doPrint, 400);
+    printA4Paper('a4-preview-paper', examName || 'MCQ Paper');
   };
 
   const toggleFullScreen = () => {
@@ -951,6 +1039,15 @@ export const MCQPaperGeneratorPage = () => {
           >
             <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Import from Bank</span>
+          </button>
+          
+          <button
+            onClick={() => setIsExcelModalOpen(true)}
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+            title="Excel ద్వారా ప్రశ్నలను ఇంపోర్ట్ చేయండి"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden sm:inline">Excel Upload</span>
           </button>
           
           <button
@@ -1745,6 +1842,102 @@ export const MCQPaperGeneratorPage = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Excel Upload Modal */}
+      {isExcelModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsExcelModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-xl rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Excel ద్వారా ప్రశ్నలు దిగుమతి</h2>
+                  <p className="text-sm text-slate-500">MCQ ప్రశ్నలు & సమాధానాలను Excel ఫైల్ నుండి లోడ్ చేయండి</p>
+                </div>
+              </div>
+              <button onClick={() => setIsExcelModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-5 bg-slate-50/50">
+              {/* Step 1: Download Template */}
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-semibold text-slate-800 text-sm">1. శాంపిల్ Excel టెంప్లేట్ డౌన్‌లోడ్ చేయండి</h4>
+                  <p className="text-xs text-slate-500 mt-0.5">సరిగ్గా ఫార్మాట్ చేయబడిన ఉదాహరణల కోసం ఈ ఫైల్ ఉపయోగించండి</p>
+                </div>
+                <button
+                  onClick={downloadSampleExcel}
+                  className="px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold text-xs rounded-xl border border-emerald-200 transition-colors flex items-center gap-1.5 flex-shrink-0"
+                >
+                  <Download className="w-4 h-4" />
+                  టెంప్లేట్ డౌన్‌లోడ్
+                </button>
+              </div>
+
+              {/* Step 2: Upload Area */}
+              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                <h4 className="font-semibold text-slate-800 text-sm mb-3">2. మీ Excel ఫైల్ అప్‌లోడ్ చేయండి (.xlsx, .xls, .csv)</h4>
+                
+                <input
+                  type="file"
+                  ref={excelFileInputRef}
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleExcelFileUpload}
+                  className="hidden"
+                />
+
+                <div 
+                  onClick={() => excelFileInputRef.current?.click()}
+                  className="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 hover:bg-emerald-50/70 transition-all rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer text-center group"
+                >
+                  {isExcelLoading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm font-semibold text-slate-600">ప్రశ్నలు ప్రాసెస్ అవుతున్నాయి...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <Upload className="w-6 h-6" />
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">ఫైల్ ఎంచుకోవడానికి ఇక్కడ క్లిక్ చేయండి</span>
+                      <span className="text-xs text-slate-400 mt-1">.xlsx, .xls లేదా .csv ఫైల్స్ సపోర్ట్ చేయబడతాయి</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Supported Columns Guide */}
+              <div className="bg-slate-100/70 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
+                <p className="font-bold text-slate-700 mb-1.5">📌 Excel కాలమ్ పేర్లు (Column Headers):</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                  <div>• <span className="font-semibold">Question:</span> ప్రశ్న వివరాలు (LaTeX $..$ సపోర్ట్)</div>
+                  <div>• <span className="font-semibold">Option A, B, C, D:</span> నాలుగు ఆప్షన్లు</div>
+                  <div>• <span className="font-semibold">Correct Answer:</span> A / B / C / D</div>
+                  <div>• <span className="font-semibold">Subject:</span> సబ్జెక్ట్ పేరు (ఐచ్ఛికం)</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+              <button
+                onClick={() => setIsExcelModalOpen(false)}
+                className="px-5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-sm transition-colors"
+              >
+                రద్దు చేయి (Close)
+              </button>
             </div>
           </div>
         </div>

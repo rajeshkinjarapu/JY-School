@@ -7,6 +7,7 @@ import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPrevi
 import { api } from '../../api/axios';
 
 import { PageHeader } from '../../components/UI/PageHeader';
+import { printA4Paper } from '../../utils/printA4Paper';
 
 import SavedPapersPage from './SavedPapersPage';
 import { AnswerKeyManager } from '../../components/QuestionBank/AnswerKeyManager';
@@ -145,52 +146,7 @@ export const ExamPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
-    const paperEl = document.getElementById('a4-preview-paper');
-    if (!paperEl) { window.print(); return; }
-    
-    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]');
-    cloneEl.style.boxShadow = 'none';
-    cloneEl.style.border = 'none';
-    cloneEl.style.outline = 'none';
-    cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '210mm';
-
-    let oldIframe = document.getElementById('print-iframe');
-    if (oldIframe) { oldIframe.remove(); }
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'print-iframe';
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
-    iframe.style.left = '-10000px';
-    iframe.style.top = '-10000px';
-    document.body.appendChild(iframe);
-
-    const printDocument = iframe.contentWindow?.document;
-    if (!printDocument) { window.print(); return; }
-
-    const styleLinks = `
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    `;
-
-    const styleTags = Array.from(document.querySelectorAll('style'))
-      .map(style => style.outerHTML)
-      .join('\n');
-
-    printDocument.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="color-scheme" content="light"/><title>Print</title>${styleLinks}${styleTags}<style>:root{color-scheme:light !important;}@page{margin:0;size:A4;}html,body{margin:0;padding:0;background-color:#ffffff !important;background:#ffffff !important;color:#000000 !important;font-family:serif;}@media print{html,body{background-color:#ffffff !important;background:#ffffff !important;}}#print-root{width:210mm;margin:0 auto;background-color:#ffffff !important;}</style></head><body><div id="print-root">${cloneEl.outerHTML}</div></body></html>`);
-    printDocument.close();
-
-    iframe.onload = () => {
-      setTimeout(() => {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }, 500);
-    };
+    printA4Paper('a4-preview-paper', examName || 'Exam Paper');
   };
 
   const toggleFullScreen = () => {
