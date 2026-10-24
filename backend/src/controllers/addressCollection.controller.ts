@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Add new address collection entry
 export const addAddressCollection = async (req: Request, res: Response) => {
   try {
-    const { studentName, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
+    const { studentName, className, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
     
     // Check if the user is a teacher
     // req.user is set by authentication middleware
@@ -23,6 +23,7 @@ export const addAddressCollection = async (req: Request, res: Response) => {
     const newEntry = await prisma.studentAddressCollection.create({
       data: {
         studentName,
+        className: className ? className.toString().trim() : undefined,
         fatherName,
         village,
         mandal,
@@ -65,6 +66,10 @@ export const getAddressCollections = async (req: Request, res: Response) => {
       };
     } else if (req.query.teacherId) {
       whereCondition = { referenceTeacherId: String(req.query.teacherId) };
+    }
+
+    if (req.query.className) {
+      whereCondition.className = String(req.query.className);
     }
 
     const records = await prisma.studentAddressCollection.findMany({
@@ -156,6 +161,7 @@ export const bulkAddAddressCollection = async (req: Request, res: Response) => {
     const validEntries: any[] = [];
     for (const r of records) {
       const studentName = (r.studentName || r['Student Name'] || r.StudentName || r.name || '').toString().trim();
+      const className = (r.className || r['Class'] || r.class || r['Grade'] || r.grade || r['Standard'] || r.standard || '').toString().trim();
       const fatherName = (r.fatherName || r['Father Name'] || r.FatherName || r.father || '').toString().trim();
       const village = (r.village || r['Village'] || r.town || '').toString().trim();
       const mandal = (r.mandal || r['Mandal'] || '').toString().trim();
@@ -180,6 +186,7 @@ export const bulkAddAddressCollection = async (req: Request, res: Response) => {
 
       validEntries.push({
         studentName: studentName.toUpperCase(),
+        className: className ? className.toUpperCase() : null,
         fatherName: (fatherName || '-').toUpperCase(),
         village: village.toUpperCase(),
         mandal: mandal.toUpperCase(),

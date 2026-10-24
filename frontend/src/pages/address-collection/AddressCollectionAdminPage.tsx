@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 interface AddressCollection {
   id: string;
   studentName: string;
+  className?: string | null;
   fatherName: string;
   village: string;
   mandal: string;
@@ -22,12 +23,15 @@ const AddressCollectionAdminPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
+  const [selectedClass, setSelectedClass] = useState<string>('');
   const [teachers, setTeachers] = useState<{id: string, name: string}[]>([]);
+  const [schoolClasses, setSchoolClasses] = useState<string[]>([]);
   
   // Data Entry Modal States
   const [showAddModal, setShowAddModal] = useState(false);
   const [formData, setFormData] = useState({
     studentName: '',
+    className: '',
     fatherName: '',
     village: '',
     mandal: '',
@@ -49,7 +53,22 @@ const AddressCollectionAdminPage = () => {
   useEffect(() => {
     fetchData();
     fetchTeachers();
+    fetchClasses();
   }, []);
+
+  const fetchClasses = async () => {
+    try {
+      const response = await axios.get('http://66.116.252.191:19998/api/classes?limit=1000', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+      if (response.data.success && Array.isArray(response.data.data)) {
+        const unique = Array.from(new Set(response.data.data.map((c: any) => c.name).filter(Boolean))) as string[];
+        setSchoolClasses(unique);
+      }
+    } catch (error) {
+      console.error('Error fetching classes:', error);
+    }
+  };
 
   const fetchTeachers = async () => {
     try {
@@ -85,19 +104,33 @@ const AddressCollectionAdminPage = () => {
   };
 
   const uniqueTeachers = Array.from(new Set(data.map(item => item.referenceTeacherName))).filter(Boolean).sort();
+  
+  const standardClasses = [
+    'Nursery', 'LKG', 'UKG',
+    '1st Class', '2nd Class', '3rd Class', '4th Class', '5th Class',
+    '6th Class', '7th Class', '8th Class', '9th Class', '10th Class'
+  ];
+  const uniqueClasses = Array.from(new Set([
+    ...standardClasses,
+    ...schoolClasses,
+    ...data.map(item => item.className).filter(Boolean) as string[]
+  ])).filter(Boolean);
 
   const filteredData = data.filter(item => {
     const matchesSearch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          (item.className && item.className.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           item.village.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.mandal.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTeacher = selectedTeacher === '' || item.referenceTeacherName === selectedTeacher;
-    return matchesSearch && matchesTeacher;
+    const matchesClass = selectedClass === '' || item.className === selectedClass;
+    return matchesSearch && matchesTeacher && matchesClass;
   });
 
   const exportToExcel = () => {
     const exportData = filteredData.map((item, index) => ({
       'S.No': index + 1,
       'Student Name': item.studentName,
+      'Class': item.className || '-',
       'Father Name': item.fatherName,
       'Village': item.village,
       'Mandal': item.mandal,
@@ -132,6 +165,7 @@ const AddressCollectionAdminPage = () => {
         setShowAddModal(false);
         setFormData({
           studentName: '',
+          className: '',
           fatherName: '',
           village: '',
           mandal: '',
@@ -177,12 +211,15 @@ const AddressCollectionAdminPage = () => {
     doc.setFont('helvetica', 'normal');
     doc.text('Student Address Collection Report', 148.5, 22, { align: 'center' });
 
-    if (selectedTeacher) {
+    let subHeader = [];
+    if (selectedClass) subHeader.push(`Class: ${selectedClass}`);
+    if (selectedTeacher) subHeader.push(`Ref Teacher: ${selectedTeacher}`);
+    if (subHeader.length > 0) {
       doc.setFontSize(10);
-      doc.text(`Reference Teacher: ${selectedTeacher}`, 148.5, 28, { align: 'center' });
+      doc.text(subHeader.join('   |   '), 148.5, 28, { align: 'center' });
     }
 
-    const tableColumn = ['S.No', 'Student Name', 'Father Name', 'Village', 'Mandal', 'Mobile No', 'Alt Mobile', 'Ref Teacher'];
+    const tableColumn = ['S.No', 'Student Name', 'Class', 'Father Name', 'Village', 'Mandal', 'Mobile No', 'Alt Mobile', 'Ref Teacher'];
     
     // Pad data to exact multiples of 15 for perfect layout
     const rowsPerPage = 15;
@@ -198,11 +235,12 @@ const AddressCollectionAdminPage = () => {
     const tableRows = paddedData.map((item, index) => {
       if (!item.studentName) {
         // Empty padded row
-        return [index < filteredData.length ? index + 1 : '', '', '', '', '', '', '', ''];
+        return [index < filteredData.length ? index + 1 : '', '', '', '', '', '', '', '', ''];
       }
       return [
         index + 1,
         item.studentName,
+        item.className || '-',
         item.fatherName,
         item.village,
         item.mandal,
@@ -215,7 +253,7 @@ const AddressCollectionAdminPage = () => {
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: selectedTeacher ? 32 : 28,
+      startY: subHeader.length > 0 ? 32 : 28,
       theme: 'grid',
       styles: { 
         fontSize: 9,
@@ -232,14 +270,15 @@ const AddressCollectionAdminPage = () => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 15, halign: 'center' },
-        1: { cellWidth: 45 },
-        2: { cellWidth: 40 },
-        3: { cellWidth: 35 },
-        4: { cellWidth: 35 },
-        5: { cellWidth: 30, halign: 'center' },
-        6: { cellWidth: 30, halign: 'center' },
-        7: { cellWidth: 40 }
+        0: { cellWidth: 12, halign: 'center' },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 25, halign: 'center' },
+        3: { cellWidth: 38 },
+        4: { cellWidth: 32 },
+        5: { cellWidth: 32 },
+        6: { cellWidth: 28, halign: 'center' },
+        7: { cellWidth: 28, halign: 'center' },
+        8: { cellWidth: 36 }
       },
       margin: { top: 15, bottom: 15, left: 13, right: 13 },
       didDrawPage: function (data: any) {
@@ -261,6 +300,7 @@ const AddressCollectionAdminPage = () => {
     const templateData = [
       {
         'Student Name': 'K. SAI KUMAR',
+        'Class': '10th Class',
         'Father Name': 'K. RAMA RAO',
         'Village': 'NARASANNAPETA',
         'Mandal': 'NARASANNAPETA',
@@ -270,6 +310,7 @@ const AddressCollectionAdminPage = () => {
       },
       {
         'Student Name': 'P. ANITHA',
+        'Class': '9th Class',
         'Father Name': 'P. VENKATA RAO',
         'Village': 'JALUMURU',
         'Mandal': 'JALUMURU',
@@ -317,6 +358,7 @@ const AddressCollectionAdminPage = () => {
           for (const [key, val] of Object.entries(row)) {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
             if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
+            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim();
             else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
             else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
             else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
@@ -418,17 +460,29 @@ const AddressCollectionAdminPage = () => {
           <Search className="absolute left-3 top-3 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search by Student, Village, or Mandal..."
+            placeholder="Search by Student, Class, Village, or Mandal..."
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="md:w-72">
+        <div className="md:w-56">
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium text-gray-700"
+          >
+            <option value="">All Classes</option>
+            {uniqueClasses.map((cls, idx) => (
+              <option key={idx} value={cls}>{cls}</option>
+            ))}
+          </select>
+        </div>
+        <div className="md:w-64">
           <select
             value={selectedTeacher}
             onChange={(e) => setSelectedTeacher(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium text-gray-700"
           >
             <option value="">All Teachers</option>
             {uniqueTeachers.map((teacher, idx) => (
@@ -445,6 +499,7 @@ const AddressCollectionAdminPage = () => {
               <tr className="text-gray-600 text-xs uppercase tracking-wider">
                 <th className="px-6 py-4 font-bold rounded-tl-xl text-gray-700">S.No</th>
                 <th className="px-6 py-4 font-bold text-gray-700">Student Name</th>
+                <th className="px-6 py-4 font-bold text-gray-700">Class</th>
                 <th className="px-6 py-4 font-bold text-gray-700">Father Name</th>
                 <th className="px-6 py-4 font-bold text-gray-700">Village</th>
                 <th className="px-6 py-4 font-bold text-gray-700">Mandal</th>
@@ -459,6 +514,11 @@ const AddressCollectionAdminPage = () => {
                   <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{item.studentName}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                      {item.className || '-'}
+                    </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-600">{item.fatherName}</td>
                   <td className="px-6 py-4">
@@ -495,7 +555,7 @@ const AddressCollectionAdminPage = () => {
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-6 py-12 text-center">
+                  <td colSpan={9} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <Search size={48} className="mb-4 text-gray-300" />
                       <p className="text-lg font-medium text-gray-500">No data found</p>
@@ -541,6 +601,27 @@ const AddressCollectionAdminPage = () => {
                       className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Enter student full name"
                     />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Class / Grade <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="className"
+                      list="admin-class-options"
+                      value={formData.className}
+                      onChange={handleFormChange}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Select or enter Class (e.g. 10th Class)"
+                    />
+                    <datalist id="admin-class-options">
+                      {uniqueClasses.map((cls, idx) => (
+                        <option key={idx} value={cls} />
+                      ))}
+                    </datalist>
                   </div>
                 </div>
                 <div>
@@ -812,6 +893,7 @@ const AddressCollectionAdminPage = () => {
                           <tr>
                             <th className="p-3">#</th>
                             <th className="p-3">Student Name</th>
+                            <th className="p-3">Class</th>
                             <th className="p-3">Father Name</th>
                             <th className="p-3">Village</th>
                             <th className="p-3">Mandal</th>
@@ -824,6 +906,11 @@ const AddressCollectionAdminPage = () => {
                             <tr key={idx} className="hover:bg-slate-50/80">
                               <td className="p-3 font-bold text-slate-500">{idx + 1}</td>
                               <td className="p-3 font-bold text-slate-900">{row.studentName}</td>
+                              <td className="p-3">
+                                <span className="inline-block px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-[11px] font-bold border border-blue-200">
+                                  {row.className || '-'}
+                                </span>
+                              </td>
                               <td className="p-3">{row.fatherName || '-'}</td>
                               <td className="p-3">{row.village}</td>
                               <td className="p-3">{row.mandal}</td>

@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 interface AddressRecord {
   id: string;
   studentName: string;
+  className?: string | null;
   fatherName: string;
   village: string;
   mandal: string;
@@ -21,6 +22,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
 
   const [formData, setFormData] = useState({
     studentName: '',
+    className: '',
     fatherName: '',
     village: '',
     mandal: '',
@@ -107,6 +109,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
         toast.success('చిరునామా వివరాలు విజయవంతంగా సేవ్ అయ్యాయి!');
         setFormData({
           studentName: '',
+          className: '',
           fatherName: '',
           village: '',
           mandal: '',
@@ -148,6 +151,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return (
       r.studentName.toLowerCase().includes(term) ||
+      (r.className && r.className.toLowerCase().includes(term)) ||
       r.fatherName.toLowerCase().includes(term) ||
       r.village.toLowerCase().includes(term) ||
       r.mandal.toLowerCase().includes(term) ||
@@ -164,6 +168,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     const exportData = filteredRecords.map((item, index) => ({
       'S.No': index + 1,
       'Student Name': item.studentName,
+      'Class': item.className || '-',
       'Father Name': item.fatherName,
       'Village': item.village,
       'Mandal': item.mandal,
@@ -183,6 +188,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     const templateData = [
       {
         'Student Name': 'K. SAI KUMAR',
+        'Class': '10th Class',
         'Father Name': 'K. RAMA RAO',
         'Village': 'NARASANNAPETA',
         'Mandal': 'NARASANNAPETA',
@@ -192,6 +198,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
       },
       {
         'Student Name': 'P. ANITHA',
+        'Class': '9th Class',
         'Father Name': 'P. VENKATA RAO',
         'Village': 'JALUMURU',
         'Mandal': 'JALUMURU',
@@ -239,6 +246,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
           for (const [key, val] of Object.entries(row)) {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
             if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
+            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim();
             else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
             else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
             else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
@@ -398,6 +406,39 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     placeholder="Enter student full name"
                     required
                   />
+                </div>
+              </div>
+
+              {/* Class / Grade */}
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-2">
+                  Class / Grade <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="className"
+                    list="teacher-class-options"
+                    value={formData.className}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    placeholder="e.g. 10th Class, 9th Class"
+                  />
+                  <datalist id="teacher-class-options">
+                    <option value="Nursery" />
+                    <option value="LKG" />
+                    <option value="UKG" />
+                    <option value="1st Class" />
+                    <option value="2nd Class" />
+                    <option value="3rd Class" />
+                    <option value="4th Class" />
+                    <option value="5th Class" />
+                    <option value="6th Class" />
+                    <option value="7th Class" />
+                    <option value="8th Class" />
+                    <option value="9th Class" />
+                    <option value="10th Class" />
+                  </datalist>
                 </div>
               </div>
 
@@ -640,7 +681,14 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                         {index + 1}
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
-                        <p className="font-extrabold text-slate-900">{item.studentName}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-extrabold text-slate-900">{item.studentName}</p>
+                          {item.className && (
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                              {item.className}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs font-medium text-slate-500">Father: {item.fatherName}</p>
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
