@@ -9,6 +9,7 @@ interface AddressCollection {
   id: string;
   studentName: string;
   className?: string | null;
+  schoolName?: string | null;
   fatherName: string;
   village: string;
   mandal: string;
@@ -33,6 +34,7 @@ const AddressCollectionAdminPage = () => {
   const [formData, setFormData] = useState({
     studentName: '',
     className: '',
+    schoolName: '',
     fatherName: '',
     village: '',
     mandal: '',
@@ -100,6 +102,7 @@ const AddressCollectionAdminPage = () => {
   const filteredData = data.filter(item => {
     const matchesSearch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (item.className && item.className.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (item.schoolName && item.schoolName.toLowerCase().includes(searchTerm.toLowerCase())) ||
                           item.village.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.mandal.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTeacher = selectedTeacher === '' || item.referenceTeacherName === selectedTeacher;
@@ -112,6 +115,7 @@ const AddressCollectionAdminPage = () => {
       'S.No': index + 1,
       'Student Name': (item.studentName || '').toUpperCase(),
       'Class': (item.className || '-').toUpperCase(),
+      'School Name': (item.schoolName || '-').toUpperCase(),
       'Father Name': (item.fatherName || '').toUpperCase(),
       'Village': (item.village || '').toUpperCase(),
       'Mandal': (item.mandal || '').toUpperCase(),
@@ -141,6 +145,7 @@ const AddressCollectionAdminPage = () => {
     setFormData({
       studentName: item.studentName,
       className: item.className || '',
+      schoolName: item.schoolName || '',
       fatherName: item.fatherName,
       village: item.village,
       mandal: item.mandal,
@@ -158,6 +163,7 @@ const AddressCollectionAdminPage = () => {
     setFormData({
       studentName: '',
       className: '',
+      schoolName: '',
       fatherName: '',
       village: '',
       mandal: '',
@@ -236,7 +242,7 @@ const AddressCollectionAdminPage = () => {
       doc.text(subHeader.join('   |   '), 148.5, 28, { align: 'center' });
     }
 
-    const tableColumn = ['S.No', 'Student Name', 'Class', 'Father Name', 'Village', 'Mandal', 'Mobile No', 'Alt Mobile', 'Ref Teacher'];
+    const tableColumn = ['S.No', 'Student Name', 'Class', 'School Name', 'Father Name', 'Village', 'Mandal', 'Mobile No', 'Alt Mobile', 'Ref Teacher'];
     
     // Pad data to exact multiples of 15 for perfect layout
     const rowsPerPage = 15;
@@ -252,12 +258,13 @@ const AddressCollectionAdminPage = () => {
     const tableRows = paddedData.map((item, index) => {
       if (!item.studentName) {
         // Empty padded row
-        return [index < filteredData.length ? index + 1 : '', '', '', '', '', '', '', '', ''];
+        return [index < filteredData.length ? index + 1 : '', '', '', '', '', '', '', '', '', ''];
       }
       return [
         index + 1,
         (item.studentName || '').toUpperCase(),
         (item.className || '-').toUpperCase(),
+        (item.schoolName || '-').toUpperCase(),
         (item.fatherName || '').toUpperCase(),
         (item.village || '').toUpperCase(),
         (item.mandal || '').toUpperCase(),
@@ -273,8 +280,8 @@ const AddressCollectionAdminPage = () => {
       startY: subHeader.length > 0 ? 32 : 28,
       theme: 'grid',
       styles: { 
-        fontSize: 9,
-        cellPadding: 3,
+        fontSize: 8.5,
+        cellPadding: 2.5,
         minCellHeight: 10.5, // Specifically chosen to fit 15 rows comfortably on A4 Landscape
         valign: 'middle',
         lineColor: [200, 200, 200],
@@ -287,15 +294,16 @@ const AddressCollectionAdminPage = () => {
         halign: 'center'
       },
       columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 40 },
-        2: { cellWidth: 25, halign: 'center' },
-        3: { cellWidth: 38 },
-        4: { cellWidth: 32 },
-        5: { cellWidth: 32 },
-        6: { cellWidth: 28, halign: 'center' },
-        7: { cellWidth: 28, halign: 'center' },
-        8: { cellWidth: 36 }
+        0: { cellWidth: 10, halign: 'center' },
+        1: { cellWidth: 36 },
+        2: { cellWidth: 20, halign: 'center' },
+        3: { cellWidth: 32 },
+        4: { cellWidth: 34 },
+        5: { cellWidth: 28 },
+        6: { cellWidth: 28 },
+        7: { cellWidth: 26, halign: 'center' },
+        8: { cellWidth: 26, halign: 'center' },
+        9: { cellWidth: 29 }
       },
       margin: { top: 15, bottom: 15, left: 13, right: 13 },
       didDrawPage: function (data: any) {
@@ -376,6 +384,7 @@ const AddressCollectionAdminPage = () => {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
             if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('school')) normRow.schoolName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim().toUpperCase();
             else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim().toUpperCase();
@@ -509,48 +518,56 @@ const AddressCollectionAdminPage = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-md border border-gray-300 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f8fafc] border-b border-gray-100">
-              <tr className="text-gray-600 text-xs uppercase tracking-wider">
-                <th className="px-6 py-4 font-bold rounded-tl-xl text-gray-700">S.No</th>
-                <th className="px-6 py-4 font-bold text-gray-700">Student Name</th>
-                <th className="px-6 py-4 font-bold text-gray-700">Class</th>
-                <th className="px-6 py-4 font-bold text-gray-700">Father Name</th>
-                <th className="px-6 py-4 font-bold text-gray-700">Village</th>
-                <th className="px-6 py-4 font-bold text-gray-700">Mandal</th>
-                <th className="px-6 py-4 font-bold text-center text-gray-700">Mobile No</th>
-                <th className="px-6 py-4 font-bold text-center text-gray-700">Ref Teacher</th>
-                <th className="px-6 py-4 font-bold text-center rounded-tr-xl text-gray-700">Actions</th>
+          <table className="w-full text-left border-collapse border border-gray-300">
+            <thead className="bg-slate-100 border-b border-gray-300">
+              <tr className="text-gray-800 text-xs uppercase tracking-wider font-bold">
+                <th className="border border-gray-300 px-3 py-3 text-center">S.No</th>
+                <th className="border border-gray-300 px-4 py-3">Student Name</th>
+                <th className="border border-gray-300 px-3 py-3 text-center">Class</th>
+                <th className="border border-gray-300 px-4 py-3">School Name</th>
+                <th className="border border-gray-300 px-4 py-3">Father Name</th>
+                <th className="border border-gray-300 px-3 py-3">Village</th>
+                <th className="border border-gray-300 px-3 py-3">Mandal</th>
+                <th className="border border-gray-300 px-3 py-3 text-center">Mobile No</th>
+                <th className="border border-gray-300 px-3 py-3 text-center">Ref Teacher</th>
+                <th className="border border-gray-300 px-3 py-3 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {filteredData.map((item, index) => (
-                <tr key={item.id} className="hover:bg-blue-50/50 transition-colors duration-200 group">
-                  <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
-                  <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors uppercase">{item.studentName}</div>
+                <tr key={item.id} className="hover:bg-blue-50/50 transition-colors">
+                  <td className="border border-gray-300 px-3 py-2.5 text-center text-sm font-semibold text-gray-500">{index + 1}</td>
+                  <td className="border border-gray-300 px-4 py-2.5">
+                    <div className="font-semibold text-gray-800 uppercase">{item.studentName}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="border border-gray-300 px-3 py-2.5 text-center whitespace-nowrap">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
                       {item.className || '-'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 uppercase">{item.fatherName}</td>
-                  <td className="px-6 py-4">
+                  <td className="border border-gray-300 px-4 py-2.5 text-sm uppercase text-gray-700 font-medium">
+                    {item.schoolName ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                        {item.schoolName}
+                      </span>
+                    ) : '-'}
+                  </td>
+                  <td className="border border-gray-300 px-4 py-2.5 text-sm text-gray-600 uppercase">{item.fatherName}</td>
+                  <td className="border border-gray-300 px-3 py-2.5">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 uppercase">
                       {item.village}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600 uppercase">{item.mandal}</td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="border border-gray-300 px-3 py-2.5 text-sm text-gray-600 uppercase">{item.mandal}</td>
+                  <td className="border border-gray-300 px-3 py-2.5 text-center whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-800">{item.mobileNo}</div>
                     {item.alternateMobileNo && (
-                      <div className="text-xs text-gray-500 mt-1">{item.alternateMobileNo}</div>
+                      <div className="text-xs text-gray-500 mt-0.5">{item.alternateMobileNo}</div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="border border-gray-300 px-3 py-2.5 text-center whitespace-nowrap">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border uppercase ${
                       item.referenceTeacherName === 'Unknown' || !item.referenceTeacherName
                         ? 'bg-gray-100 text-gray-600 border-gray-200' 
@@ -559,18 +576,18 @@ const AddressCollectionAdminPage = () => {
                       {item.referenceTeacherName || 'Unknown'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="border border-gray-300 px-3 py-2.5 text-center whitespace-nowrap">
                     <div className="flex items-center justify-center gap-1.5">
                       <button
                         onClick={() => handleEdit(item)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors cursor-pointer"
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                         title="Edit Entry"
                       >
                         <Pencil size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                         title="Delete Entry"
                       >
                         <Trash size={18} />
@@ -581,7 +598,7 @@ const AddressCollectionAdminPage = () => {
               ))}
               {filteredData.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-6 py-12 text-center">
+                  <td colSpan={10} className="border border-gray-300 px-6 py-12 text-center">
                     <div className="flex flex-col items-center justify-center text-gray-400">
                       <Search size={48} className="mb-4 text-gray-300" />
                       <p className="text-lg font-medium text-gray-500">No data found</p>
@@ -648,6 +665,21 @@ const AddressCollectionAdminPage = () => {
                         <option key={idx} value={cls} />
                       ))}
                     </datalist>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    School Name <span className="text-gray-400 text-xs">(Optional)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      name="schoolName"
+                      value={formData.schoolName}
+                      onChange={handleFormChange}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                      placeholder="School Name (e.g. St. Claret, Govt School)"
+                    />
                   </div>
                 </div>
                 <div>

@@ -1184,6 +1184,7 @@ model StudentAddressCollection {
   id                 String   @id @default(uuid())
   studentName        String
   className          String?
+  schoolName         String?
   fatherName         String
   village            String
   mandal             String

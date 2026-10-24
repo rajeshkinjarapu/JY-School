@@ -8,6 +8,7 @@ interface AddressRecord {
   id: string;
   studentName: string;
   className?: string | null;
+  schoolName?: string | null;
   fatherName: string;
   village: string;
   mandal: string;
@@ -25,6 +26,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
   const [formData, setFormData] = useState({
     studentName: '',
     className: '',
+    schoolName: '',
     fatherName: '',
     village: '',
     mandal: '',
@@ -113,6 +115,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
           setFormData({
             studentName: '',
             className: '',
+            schoolName: '',
             fatherName: '',
             village: '',
             mandal: '',
@@ -133,6 +136,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
           setFormData({
             studentName: '',
             className: '',
+            schoolName: '',
             fatherName: '',
             village: '',
             mandal: '',
@@ -161,6 +165,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     setFormData({
       studentName: item.studentName,
       className: item.className || '',
+      schoolName: item.schoolName || '',
       fatherName: item.fatherName,
       village: item.village,
       mandal: item.mandal,
@@ -177,6 +182,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     setFormData({
       studentName: '',
       className: '',
+      schoolName: '',
       fatherName: '',
       village: '',
       mandal: '',
@@ -210,6 +216,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     return (
       r.studentName.toLowerCase().includes(term) ||
       (r.className && r.className.toLowerCase().includes(term)) ||
+      (r.schoolName && r.schoolName.toLowerCase().includes(term)) ||
       r.fatherName.toLowerCase().includes(term) ||
       r.village.toLowerCase().includes(term) ||
       r.mandal.toLowerCase().includes(term) ||
@@ -227,6 +234,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
       'S.No': index + 1,
       'Student Name': (item.studentName || '').toUpperCase(),
       'Class': (item.className || '-').toUpperCase(),
+      'School Name': (item.schoolName || '-').toUpperCase(),
       'Father Name': (item.fatherName || '').toUpperCase(),
       'Village': (item.village || '').toUpperCase(),
       'Mandal': (item.mandal || '').toUpperCase(),
@@ -305,6 +313,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
             if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('school')) normRow.schoolName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim().toUpperCase();
             else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim().toUpperCase();
             else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim().toUpperCase();
@@ -512,6 +521,23 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     <option value="9th Class" />
                     <option value="10th Class" />
                   </datalist>
+                </div>
+              </div>
+
+              {/* School Name */}
+              <div>
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-600 mb-2">
+                  School Name <span className="text-slate-400 font-normal lowercase">(optional)</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="schoolName"
+                    value={formData.schoolName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
+                    placeholder="e.g. St. Claret, Govt School"
+                  />
                 </div>
               </div>
 
@@ -735,66 +761,78 @@ export const AddressCollectionTeacherPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-2xl border border-slate-200">
-              <table className="w-full text-left border-collapse">
+            <div className="overflow-x-auto rounded-xl border border-slate-300">
+              <table className="w-full text-left border-collapse border border-slate-300">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-xs font-black text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                    <th className="px-4 py-3.5 text-center w-12">#</th>
-                    <th className="px-4 py-3.5">Student Details</th>
-                    <th className="px-4 py-3.5">Village & Mandal</th>
-                    <th className="px-4 py-3.5">Mobile Numbers</th>
-                    <th className="px-4 py-3.5">Entry Date</th>
-                    <th className="px-4 py-3.5 text-center">Action</th>
+                  <tr className="bg-slate-100 text-xs font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+                    <th className="border border-slate-300 px-3 py-3 text-center w-12">#</th>
+                    <th className="border border-slate-300 px-4 py-3">Student Name</th>
+                    <th className="border border-slate-300 px-3 py-3 text-center">Class</th>
+                    <th className="border border-slate-300 px-4 py-3">School Name</th>
+                    <th className="border border-slate-300 px-4 py-3">Father Name</th>
+                    <th className="border border-slate-300 px-3 py-3">Village</th>
+                    <th className="border border-slate-300 px-3 py-3">Mandal</th>
+                    <th className="border border-slate-300 px-3 py-3 text-center">Mobile No</th>
+                    <th className="border border-slate-300 px-3 py-3 text-center">Entry Date</th>
+                    <th className="border border-slate-300 px-3 py-3 text-center">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-sm">
+                <tbody className="text-sm">
                   {filteredRecords.map((item, index) => (
                     <tr key={item.id} className="hover:bg-indigo-50/40 transition-colors">
-                      <td className="px-4 py-3.5 text-center font-bold text-slate-400 text-xs">
+                      <td className="border border-slate-300 px-3 py-2.5 text-center font-bold text-slate-400 text-xs">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
-                          <p className="font-extrabold text-slate-900 uppercase">{item.studentName}</p>
-                          {item.className && (
-                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase">
-                              {item.className}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-xs font-medium text-slate-500 uppercase">Father: {item.fatherName}</p>
+                      <td className="border border-slate-300 px-4 py-2.5 whitespace-nowrap">
+                        <p className="font-extrabold text-slate-900 uppercase">{item.studentName}</p>
                       </td>
-                      <td className="px-4 py-3.5 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                          <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          <span className="uppercase">{item.village}</span>
-                        </div>
-                        <p className="text-xs text-slate-500 pl-5 uppercase">Mandal: {item.mandal}</p>
+                      <td className="border border-slate-300 px-3 py-2.5 text-center whitespace-nowrap">
+                        {item.className ? (
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase">
+                            {item.className}
+                          </span>
+                        ) : '-'}
                       </td>
-                      <td className="px-4 py-3.5 whitespace-nowrap font-mono text-xs">
+                      <td className="border border-slate-300 px-4 py-2.5 uppercase font-medium text-slate-700 whitespace-nowrap text-xs">
+                        {item.schoolName ? (
+                          <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 uppercase">
+                            {item.schoolName}
+                          </span>
+                        ) : '-'}
+                      </td>
+                      <td className="border border-slate-300 px-4 py-2.5 whitespace-nowrap text-xs font-medium text-slate-700 uppercase">
+                        {item.fatherName}
+                      </td>
+                      <td className="border border-slate-300 px-3 py-2.5 whitespace-nowrap text-xs font-medium uppercase text-slate-800">
+                        {item.village}
+                      </td>
+                      <td className="border border-slate-300 px-3 py-2.5 whitespace-nowrap text-xs font-medium uppercase text-slate-800">
+                        {item.mandal}
+                      </td>
+                      <td className="border border-slate-300 px-3 py-2.5 whitespace-nowrap font-mono text-xs text-center">
                         <a 
                           href={`tel:${item.mobileNo}`} 
-                          className="font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1.5 transition"
+                          className="font-bold text-indigo-600 hover:text-indigo-800 inline-flex items-center gap-1 transition"
                         >
-                          <Phone className="w-3.5 h-3.5" />
+                          <Phone className="w-3 h-3" />
                           {item.mobileNo}
                         </a>
                         {item.alternateMobileNo && (
-                          <p className="text-slate-400 mt-0.5 pl-5">Alt: {item.alternateMobileNo}</p>
+                          <div className="text-[10px] text-slate-400 mt-0.5">{item.alternateMobileNo}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 whitespace-nowrap text-xs font-medium text-slate-500">
+                      <td className="border border-slate-300 px-3 py-2.5 whitespace-nowrap text-xs font-medium text-slate-500 text-center">
                         {item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN', {
                           day: '2-digit',
                           month: 'short',
                           year: 'numeric'
                         }) : '-'}
                       </td>
-                      <td className="px-4 py-3.5 text-center whitespace-nowrap">
+                      <td className="border border-slate-300 px-3 py-2.5 text-center whitespace-nowrap">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => handleStartEdit(item)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
                             title="Edit entry"
                           >
                             <Pencil className="w-4 h-4" />
@@ -802,7 +840,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                           <button
                             onClick={() => handleDelete(item.id, item.studentName)}
                             disabled={deletingId === item.id}
-                            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
                             title="Delete entry"
                           >
                             <Trash2 className="w-4 h-4" />

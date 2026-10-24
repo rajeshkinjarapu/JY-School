@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Add new address collection entry
 export const addAddressCollection = async (req: Request, res: Response) => {
   try {
-    const { studentName, className, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
+    const { studentName, className, schoolName, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
     
     // Check if the user is a teacher
     // req.user is set by authentication middleware
@@ -24,6 +24,7 @@ export const addAddressCollection = async (req: Request, res: Response) => {
       data: {
         studentName: (studentName || '').toString().trim().toUpperCase(),
         className: className ? className.toString().trim().toUpperCase() : undefined,
+        schoolName: schoolName ? schoolName.toString().trim().toUpperCase() : undefined,
         fatherName: (fatherName || '').toString().trim().toUpperCase(),
         village: (village || '').toString().trim().toUpperCase(),
         mandal: (mandal || '').toString().trim().toUpperCase(),
@@ -94,6 +95,7 @@ export const getAddressCollections = async (req: Request, res: Response) => {
       ...record,
       studentName: (record.studentName || '').toUpperCase(),
       className: record.className ? record.className.toUpperCase() : null,
+      schoolName: (record as any).schoolName ? (record as any).schoolName.toUpperCase() : null,
       fatherName: (record.fatherName || '').toUpperCase(),
       village: (record.village || '').toUpperCase(),
       mandal: (record.mandal || '').toUpperCase(),
@@ -138,7 +140,7 @@ export const deleteAddressCollection = async (req: Request, res: Response) => {
 export const updateAddressCollection = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { studentName, className, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId } = req.body;
+    const { studentName, className, schoolName, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId } = req.body;
     const user = (req as any).user;
 
     const existing = await prisma.studentAddressCollection.findUnique({ where: { id } });
@@ -156,6 +158,7 @@ export const updateAddressCollection = async (req: Request, res: Response) => {
       data: {
         studentName: studentName ? studentName.toString().trim().toUpperCase() : undefined,
         className: className !== undefined ? (className ? className.toString().trim().toUpperCase() : null) : undefined,
+        schoolName: schoolName !== undefined ? (schoolName ? schoolName.toString().trim().toUpperCase() : null) : undefined,
         fatherName: fatherName ? fatherName.toString().trim().toUpperCase() : undefined,
         village: village ? village.toString().trim().toUpperCase() : undefined,
         mandal: mandal ? mandal.toString().trim().toUpperCase() : undefined,
@@ -205,6 +208,7 @@ export const bulkAddAddressCollection = async (req: Request, res: Response) => {
     for (const r of records) {
       const studentName = (r.studentName || r['Student Name'] || r.StudentName || r.name || '').toString().trim();
       const className = (r.className || r['Class'] || r.class || r['Grade'] || r.grade || r['Standard'] || r.standard || '').toString().trim();
+      const schoolName = (r.schoolName || r['School Name'] || r.school || r['School'] || r['Present School'] || r['Previous School'] || '').toString().trim();
       const fatherName = (r.fatherName || r['Father Name'] || r.FatherName || r.father || '').toString().trim();
       const village = (r.village || r['Village'] || r.town || '').toString().trim();
       const mandal = (r.mandal || r['Mandal'] || '').toString().trim();
@@ -230,6 +234,7 @@ export const bulkAddAddressCollection = async (req: Request, res: Response) => {
       validEntries.push({
         studentName: studentName.toUpperCase(),
         className: className ? className.toUpperCase() : null,
+        schoolName: schoolName ? schoolName.toUpperCase() : null,
         fatherName: (fatherName || '-').toUpperCase(),
         village: village.toUpperCase(),
         mandal: mandal.toUpperCase(),
