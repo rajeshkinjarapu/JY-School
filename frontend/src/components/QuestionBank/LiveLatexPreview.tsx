@@ -453,12 +453,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           margin: 0.5em 0 !important;
         }
         .katex {
-          white-space: normal !important;
-          word-break: break-word;
+          white-space: nowrap !important;
         }
         .katex-html {
-          display: inline-flex !important;
-          flex-wrap: wrap;
+          display: inline-block !important;
+          white-space: nowrap !important;
+        }
+        .katex .base {
+          display: inline-block !important;
+          white-space: nowrap !important;
         }
       `}</style>
       <div className="pt-3 pb-3 px-8 lining-nums tabular-nums">

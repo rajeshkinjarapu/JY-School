@@ -287,17 +287,23 @@
     print-color-adjust: exact !important;
   }
 
+  html body .katex {
+    white-space: nowrap !important;
+  }
+
   html body .katex .katex-mathml {
     display: none !important;
   }
 
   html body .katex .katex-html {
-    display: inline-flex !important;
-    flex-wrap: wrap !important;
+    display: inline-block !important;
+    white-space: nowrap !important;
     visibility: visible !important;
   }
 
   html body .katex .base {
+    display: inline-block !important;
+    white-space: nowrap !important;
     visibility: visible !important;
   }
 

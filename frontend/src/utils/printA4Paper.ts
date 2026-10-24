@@ -135,22 +135,24 @@ export const printA4Paper = async (
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
+        .katex {
+          white-space: nowrap !important;
+        }
         .katex .katex-mathml {
           display: none !important;
         }
         .katex .katex-html {
-          display: inline-flex !important;
-          flex-wrap: wrap !important;
+          display: inline-block !important;
+          white-space: nowrap !important;
           visibility: visible !important;
         }
         .katex .base {
+          display: inline-block !important;
+          white-space: nowrap !important;
           visibility: visible !important;
-          display: inline-flex !important;
-          flex-wrap: wrap !important;
         }
         .katex .mord, .katex .mop, .katex .mbin, .katex .mrel, .katex .mopen, .katex .mclose, .katex .mpunct {
           visibility: visible !important;
-          display: inline-block !important;
         }
         .katex .frac-line {
           border-bottom-style: solid !important;
