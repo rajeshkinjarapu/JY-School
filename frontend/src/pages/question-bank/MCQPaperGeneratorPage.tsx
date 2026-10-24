@@ -1210,11 +1210,57 @@ export const MCQPaperGeneratorPage = () => {
             <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.05))} className="p-2 bg-white rounded-full shadow-sm text-slate-600 hover:bg-slate-50"><ZoomIn size={16}/></button>
           </div>
 
-          <div className="hidden md:flex sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 justify-between items-center print:hidden">
-            <h3 className="font-semibold text-slate-700 flex items-center gap-2">
+          <div className="hidden md:flex sticky top-0 z-10 bg-slate-100/90 backdrop-blur-md border-b border-slate-200 px-4 py-2.5 justify-between items-center print:hidden gap-3">
+            <h3 className="font-semibold text-slate-700 flex items-center gap-2 text-sm whitespace-nowrap">
               Live Preview
             </h3>
-            {/* PDF button removed from here - moved to top header */}
+
+            <div className="flex items-center gap-3">
+              {/* Quick Spacing Toggle */}
+              <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-xs text-xs">
+                <span className="text-[11px] font-semibold text-slate-500 px-2">Spacing:</span>
+                {(['tight', 'compact', 'normal', 'relaxed'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => {
+                      setQuestionSpacing(mode);
+                      localStorage.setItem('mcq_exam_spacing', mode);
+                    }}
+                    className={`px-2.5 py-1 rounded capitalize font-medium transition-all ${
+                      questionSpacing === mode
+                        ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                    title={mode === 'tight' ? 'Ultra Compact - questions fit tightly' : `${mode} spacing`}
+                  >
+                    {mode === 'tight' ? 'Tight ⚡' : mode}
+                  </button>
+                ))}
+              </div>
+
+              {/* Quick Font Size Toggle */}
+              <div className="flex items-center bg-white border border-slate-200 rounded-lg p-0.5 shadow-xs text-xs">
+                <span className="text-[11px] font-semibold text-slate-500 px-2">Font:</span>
+                {(['small', 'medium', 'large'] as const).map((size) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      setFontSize(size);
+                      localStorage.setItem('mcq_exam_font_size', size);
+                    }}
+                    className={`px-2 py-1 rounded capitalize font-medium transition-all ${
+                      fontSize === size
+                        ? 'bg-indigo-600 text-white shadow-xs font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="flex justify-center p-2 md:p-8 print:p-0 print:block">
             <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto print:!transform-none" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
@@ -1480,7 +1526,10 @@ export const MCQPaperGeneratorPage = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Font Size</label>
                   <select
                     value={fontSize}
-                    onChange={(e) => setFontSize(e.target.value)}
+                    onChange={(e) => {
+                      setFontSize(e.target.value);
+                      localStorage.setItem('mcq_exam_font_size', e.target.value);
+                    }}
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   >
                     <option value="small">Small</option>
@@ -1493,12 +1542,16 @@ export const MCQPaperGeneratorPage = () => {
                   <label className="block text-sm font-medium text-slate-700 mb-1">Question Spacing</label>
                   <select
                     value={questionSpacing}
-                    onChange={(e) => setQuestionSpacing(e.target.value)}
+                    onChange={(e) => {
+                      setQuestionSpacing(e.target.value);
+                      localStorage.setItem('mcq_exam_spacing', e.target.value);
+                    }}
                     className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                   >
-                    <option value="compact">Compact</option>
-                    <option value="normal">Normal</option>
-                    <option value="relaxed">Relaxed</option>
+                    <option value="tight">Tight (అతి తక్కువ స్థలం - Ultra Compact)</option>
+                    <option value="compact">Compact (తక్కువ స్థలం)</option>
+                    <option value="normal">Normal (సాధారణ)</option>
+                    <option value="relaxed">Relaxed (ఎక్కువ ఖాళీ)</option>
                   </select>
                 </div>
               </div>

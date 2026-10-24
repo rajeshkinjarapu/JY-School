@@ -114,9 +114,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const getSpacingClasses = () => {
     switch (questionSpacing) {
-      case 'compact': return 'mb-1 leading-none';
-      case 'relaxed': return 'mb-4 leading-relaxed';
-      default: return 'mb-2 leading-snug';
+      case 'tight': return 'leading-tight';
+      case 'compact': return 'leading-snug';
+      case 'relaxed': return 'leading-relaxed';
+      default: return 'leading-snug';
     }
   };
 
@@ -192,8 +193,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       if (block.trim() === '') continue; // Skip pure whitespace blocks
       
       const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
-      const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
-      const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 3}rem)` : '0.4rem';
+      const extraNewlines = separator ? Math.max(0, (separator.match(/\n/g) || []).length - 2) : 0;
+      const baseSpacing = questionSpacing === 'tight' 
+        ? '0.125rem' 
+        : questionSpacing === 'compact' 
+          ? '0.25rem' 
+          : questionSpacing === 'relaxed' 
+            ? '0.75rem' 
+            : '0.4rem';
+      const marginBottom = extraNewlines > 0 ? `calc(${baseSpacing} + ${extraNewlines * 1.5}rem)` : baseSpacing;
 
       const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
 
@@ -319,16 +327,19 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const singleLineLimit = isDoubleColumn ? 7 : 13;
             const twoByTwoLimit = isDoubleColumn ? 20 : 42;
 
+            const gapY = questionSpacing === 'tight' ? 'gap-y-0.5' : questionSpacing === 'compact' ? 'gap-y-0.5' : 'gap-y-1';
+            const gapX = questionSpacing === 'tight' ? 'gap-x-2' : 'gap-x-4';
+
             let optionsLayout = '';
             if (maxLen <= singleLineLimit) {
               // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
-              optionsLayout = 'grid grid-cols-4 w-full gap-x-3 gap-y-0.5';
+              optionsLayout = `grid grid-cols-4 w-full gap-x-3 ${gapY}`;
             } else if (maxLen <= twoByTwoLimit) {
               // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
+              optionsLayout = `grid grid-cols-2 w-full ${gapX} ${gapY}`;
             } else {
               // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
-              optionsLayout = 'flex flex-col w-full gap-1';
+              optionsLayout = `flex flex-col w-full ${questionSpacing === 'tight' ? 'gap-0.5' : 'gap-1'}`;
             }
 
             // Extract question number for hanging indent
@@ -338,7 +349,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             return (
               <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="mb-0.5 flex whitespace-pre-wrap">
+                <div className={`${questionSpacing === 'tight' ? 'mb-0' : 'mb-0.5'} flex whitespace-pre-wrap`}>
                   {qNumStr ? (
                     <strong className="flex-shrink-0 w-10 text-left">{qNumStr}.</strong>
                   ) : (

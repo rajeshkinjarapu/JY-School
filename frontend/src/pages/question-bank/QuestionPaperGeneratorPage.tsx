@@ -930,6 +930,7 @@ export const QuestionPaperGeneratorPage = () => {
                   }}
                   className="rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none w-32"
                 >
+                  <option value="tight">Tight</option>
                   <option value="compact">Compact</option>
                   <option value="normal">Normal</option>
                   <option value="relaxed">Relaxed</option>

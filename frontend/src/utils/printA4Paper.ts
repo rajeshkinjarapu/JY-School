@@ -31,7 +31,8 @@ export const printA4Paper = async (
   cloneEl.style.border = 'none';
   cloneEl.style.outline = 'none';
   cloneEl.style.margin = '0 auto';
-  cloneEl.style.width = '210mm';
+  cloneEl.style.width = '100%';
+  cloneEl.style.maxWidth = '210mm';
   cloneEl.style.minHeight = '0';
 
   // 3. Create invisible printing iframe
@@ -113,13 +114,14 @@ export const printA4Paper = async (
           background-color: #ffffff !important;
           color: #000000 !important;
           font-family: 'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali' !important;
-          width: 210mm !important;
+          width: 100% !important;
           height: auto !important;
           min-height: 0 !important;
           overflow: visible !important;
         }
         #print-root {
-          width: 210mm !important;
+          width: 100% !important;
+          max-width: 210mm !important;
           margin: 0 auto !important;
           background: #ffffff !important;
           background-color: #ffffff !important;
@@ -162,10 +164,11 @@ export const printA4Paper = async (
           html, body {
             background: #ffffff !important;
             background-color: #ffffff !important;
-            width: 210mm !important;
+            width: 100% !important;
           }
           #print-root {
-            width: 210mm !important;
+            width: 100% !important;
+            max-width: 210mm !important;
             margin: 0 auto !important;
           }
         }
