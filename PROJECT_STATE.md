@@ -12,6 +12,22 @@
   7. **Network Error Fix (`axios.ts`)**: ప్రొడక్షన్ లో ఫ్రంట్ఎండ్, బ్యాక్ఎండ్ కి కనెక్ట్ అవ్వడానికి అవసరమైన పోర్ట్ నంబర్ `5000` నుండి `19998` కి మార్చాను. దీనివల్ల వస్తున్న `Network Error` సాల్వ్ అయ్యింది.
 - **అక్టోబర్ 9:** Flutter Hero Banner Notifications/Announcements missing issue fixed. Developed complete Payslip Generation Page for Staff with API integration and auto-calculation.
 
+## తాజా స్థితి (Latest Status - 2026-10-24 Part 2)
+- **టాస్క్:** Student Address Collection (`/address-collection/admin` & `/address-collection/teacher`) లో Excel ఫైల్ అప్‌లోడ్ చేసి విద్యార్థుల చిరునామాలను ఒకేసారి బల్క్‌గా డేటాబేస్‌లోకి లోడ్ చేసే సదుపాయం (Bulk Upload) కల్పించడం.
+- **పూర్తయిన పనులు:**
+  1. **Backend Bulk Upload API (`backend/src/controllers/addressCollection.controller.ts` & `routes`):**
+     - `POST /api/address-collection/bulk` API రూట్ మరియు `bulkAddAddressCollection` కంట్రోలర్ రూపొందించబడింది.
+     - ఏ రకమైన కాలమ్ హెడర్స్ (Student Name, Father Name, Village, Mandal, Mobile No, Alternate Mobile No, Teacher) అయినా సరే ఆటోమేటిక్‌గా గుర్తించి సులభంగా మ్యాప్ చేస్తుంది.
+     - డేటాబేస్ లోని టీచర్ల పేర్లను మ్యాచ్ చేసి `referenceTeacherId` కి అసైన్ చేస్తుంది.
+     - `prisma.studentAddressCollection.createMany` ద్వారా క్షణాల్లో వందలాది రికార్డులను ఇన్సర్ట్ చేస్తుంది.
+  2. **Frontend Admin Page (`frontend/src/pages/address-collection/AddressCollectionAdminPage.tsx`):**
+     - టాప్ బార్ లో "Upload Excel" బటన్ జోడించబడింది.
+     - శాంపిల్ ఎక్సెల్ టెంప్లేట్ డౌన్‌లోడ్ సదుపాయం (`Student_Address_Collection_Template.xlsx`).
+     - ఫైల్ అప్‌లోడ్ డ్రాప్‌జోన్, లైవ్ డేటా ప్రివ్యూ (మొదటి 5 రికార్డులు) మరియు సులభమైన ఇంపోర్ట్ మోడల్.
+     - అప్‌లోడ్ పూర్తి కాగానే ఆటోమేటిక్‌గా టేబుల్ రిఫ్రెష్ అయి డేటా వెంటనే కనిపిస్తుంది.
+  3. **Frontend Teacher Page (`frontend/src/pages/address-collection/AddressCollectionTeacherPage.tsx`):**
+     - ఉపాధ్యాయులు కూడా తమ సర్వే/అడ్రస్ డేటాను ఎక్సెల్ ఫైల్ ద్వారా సులభంగా అప్‌లోడ్ చేసుకోగలిగేలా Teacher Page లో కూడా "Upload Excel" బటన్ మరియు మోడల్ అందించబడింది.
+
 ## తాజా స్థితి (Latest Status - 2026-10-24)
 - **టాస్క్:** MCQ Paper Generator లో ఆప్షన్ల లేఅవుట్ క్యాలిబ్రేషన్ (Single Line, 2*2, One by One ఖచ్చితమైన అమరిక).
 - **సమస్య:** 

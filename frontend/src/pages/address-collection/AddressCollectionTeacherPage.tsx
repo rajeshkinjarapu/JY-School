@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { User, MapPin, Phone, CheckCircle, Navigation, PlusCircle, ListFilter, Search, Download, Trash2, Calendar, FileSpreadsheet, RefreshCw } from 'lucide-react';
+import { User, MapPin, Phone, CheckCircle, Navigation, PlusCircle, ListFilter, Search, Download, Trash2, Calendar, FileSpreadsheet, RefreshCw, Upload, X, AlertCircle, Check } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
@@ -36,6 +36,15 @@ export const AddressCollectionTeacherPage: React.FC = () => {
   const [fetchingRecords, setFetchingRecords] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  // Excel Import States
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedRows, setParsedRows] = useState<any[]>([]);
+  const [importDefaultTeacher, setImportDefaultTeacher] = useState<string>('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchTeachers = async () => {
     try {
@@ -168,6 +177,124 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, 'My_Addresses');
     XLSX.writeFile(workbook, `My_Collected_Addresses_${new Date().toISOString().slice(0, 10)}.xlsx`);
     toast.success('Excel ఫైల్ డౌన్‌లోడ్ అయింది!');
+  };
+
+  const downloadSampleTemplate = () => {
+    const templateData = [
+      {
+        'Student Name': 'K. SAI KUMAR',
+        'Father Name': 'K. RAMA RAO',
+        'Village': 'NARASANNAPETA',
+        'Mandal': 'NARASANNAPETA',
+        'Mobile No': '9876543210',
+        'Alternate Mobile No': '9123456780',
+        'Reference Teacher': teachers[0]?.name || ''
+      },
+      {
+        'Student Name': 'P. ANITHA',
+        'Father Name': 'P. VENKATA RAO',
+        'Village': 'JALUMURU',
+        'Mandal': 'JALUMURU',
+        'Mobile No': '8765432109',
+        'Alternate Mobile No': '',
+        'Reference Teacher': teachers[1]?.name || ''
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students Data');
+    XLSX.writeFile(workbook, 'Student_Address_Collection_Template.xlsx');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processExcelFile(file);
+  };
+
+  const processExcelFile = (file: File) => {
+    setImportError('');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        if (!sheetName) {
+          setImportError('Excel sheet is empty.');
+          return;
+        }
+        const worksheet = workbook.Sheets[sheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (rawJson.length === 0) {
+          setImportError('No records found in the Excel sheet.');
+          return;
+        }
+
+        const mapped: any[] = [];
+        for (const row of rawJson) {
+          const normRow: any = {};
+          for (const [key, val] of Object.entries(row)) {
+            const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
+            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
+            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
+            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
+            else if (cleanKey.includes('alt') || cleanKey.includes('secondary')) normRow.alternateMobileNo = String(val).trim();
+            else if (cleanKey.includes('mobile') || cleanKey.includes('phone') || cleanKey.includes('contact')) normRow.mobileNo = String(val).trim();
+            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim();
+          }
+
+          if (normRow.studentName && (normRow.village || normRow.mandal || normRow.mobileNo)) {
+            mapped.push(normRow);
+          }
+        }
+
+        if (mapped.length === 0) {
+          setImportError('Could not find valid student records. Please ensure columns: Student Name, Village, Mandal, Mobile No exist in your sheet.');
+          return;
+        }
+
+        setParsedRows(mapped);
+        setImportFile(file);
+      } catch (err: any) {
+        console.error('Error parsing Excel:', err);
+        setImportError('Failed to parse Excel file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleImportSubmit = async () => {
+    if (parsedRows.length === 0) return;
+    setImportLoading(true);
+    setImportError('');
+    try {
+      const response = await axios.post('http://66.116.252.191:19998/api/address-collection/bulk', {
+        records: parsedRows,
+        defaultTeacherId: importDefaultTeacher || undefined
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+
+      if (response.data.success) {
+        toast.success(`విజయవంతంగా ${response.data.count} చిరునామాలు దిగుమతి అయ్యాయి!`);
+        setShowImportModal(false);
+        setImportFile(null);
+        setParsedRows([]);
+        setImportDefaultTeacher('');
+        fetchRecords(); // refresh list
+      }
+    } catch (err: any) {
+      console.error('Import error:', err);
+      const msg = err.response?.data?.message || err.message || 'Import failed.';
+      setImportError(msg);
+      toast.error(msg);
+    } finally {
+      setImportLoading(false);
+    }
   };
 
   return (
@@ -455,6 +582,13 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                 <RefreshCw className={`w-4 h-4 ${fetchingRecords ? 'animate-spin text-indigo-600' : ''}`} />
               </button>
               <button
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-sm shadow-purple-200 transition active:scale-95 cursor-pointer"
+              >
+                <Upload className="w-4 h-4" />
+                <span>Upload Excel</span>
+              </button>
+              <button
                 onClick={exportToExcel}
                 className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-sm shadow-emerald-200 transition active:scale-95 cursor-pointer"
               >
@@ -551,6 +685,212 @@ export const AddressCollectionTeacherPage: React.FC = () => {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Excel Import Modal ── */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-md">
+                  <FileSpreadsheet size={24} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black">Upload Student Addresses (Excel / CSV)</h2>
+                  <p className="text-white/80 text-xs font-medium">Excel ఫైల్ ద్వారా విద్యార్థుల చిరునామాలను ఒకేసారి దిగుమతి చేయండి</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedRows([]);
+                  setImportError('');
+                }}
+                className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-2 rounded-xl transition"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 overflow-y-auto">
+              
+              {/* Template Download Card */}
+              <div className="bg-indigo-50/60 border border-indigo-100 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <h4 className="font-extrabold text-indigo-950 text-sm">నమూనా Excel టెంప్లేట్ (Sample Template)</h4>
+                  <p className="text-indigo-600/80 text-xs mt-0.5">కాలమ్స్ సరిగ్గా ఉండేలా ఈ టెంప్లేట్ డౌన్‌లోడ్ చేసుకొని డేటా నింపండి.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadSampleTemplate}
+                  className="flex items-center gap-2 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-sm transition active:scale-95 shrink-0"
+                >
+                  <Download size={14} />
+                  Download Sample Template
+                </button>
+              </div>
+
+              {/* Upload Dropzone */}
+              <div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                  accept=".xlsx, .xls, .csv" 
+                  className="hidden" 
+                />
+
+                {!importFile ? (
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/20 hover:bg-indigo-50/50 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3 group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition shadow-inner">
+                      <Upload size={28} />
+                    </div>
+                    <div>
+                      <p className="font-extrabold text-slate-800 text-sm">ఇక్కడ మీ Excel ఫైల్ ను ఎంచుకోండి</p>
+                      <p className="text-slate-400 text-xs mt-1">.xlsx, .xls, .csv ఫైల్స్ సపోర్ట్ చేయబడతాయి</p>
+                    </div>
+                    <span className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-200">
+                      Browse File
+                    </span>
+                  </div>
+                ) : (
+                  <div className="border border-emerald-200 bg-emerald-50/40 rounded-2xl p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <FileSpreadsheet size={20} />
+                      </div>
+                      <div>
+                        <p className="font-extrabold text-slate-800 text-sm">{importFile.name}</p>
+                        <p className="text-xs text-emerald-600 font-bold mt-0.5">
+                          ✓ {parsedRows.length} విద్యార్థుల రికార్డులు గుర్తించబడ్డాయి
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImportFile(null);
+                        setParsedRows([]);
+                        setImportError('');
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Default Teacher Assignment Option */}
+              {teachers.length > 0 && (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+                  <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
+                    Reference Teacher (ఐచ్చికం - షీట్‌లో లేకపోతే దీనికి అసైన్ అవుతుంది):
+                  </label>
+                  <select
+                    value={importDefaultTeacher}
+                    onChange={(e) => setImportDefaultTeacher(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-500 transition"
+                  >
+                    <option value="">-- Self / Excel లో పేర్కొన్న ఉపాధ్యాయులు --</option>
+                    {teachers.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Data Preview Table (First 5 Rows) */}
+              {parsedRows.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center px-1">
+                    <span className="text-xs font-extrabold text-slate-600 uppercase tracking-wider">
+                      డేటా ప్రివ్యూ (మొదటి {Math.min(5, parsedRows.length)} / {parsedRows.length} వరుసలు)
+                    </span>
+                  </div>
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm max-h-48">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 text-slate-700 font-bold uppercase sticky top-0 border-b border-slate-200">
+                        <tr>
+                          <th className="p-2.5">#</th>
+                          <th className="p-2.5">Student Name</th>
+                          <th className="p-2.5">Father Name</th>
+                          <th className="p-2.5">Village</th>
+                          <th className="p-2.5">Mandal</th>
+                          <th className="p-2.5">Mobile No</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 bg-white font-medium text-slate-700">
+                        {parsedRows.slice(0, 5).map((row, idx) => (
+                          <tr key={idx} className="hover:bg-slate-50">
+                            <td className="p-2.5 font-bold text-slate-400">{idx + 1}</td>
+                            <td className="p-2.5 font-bold text-slate-900">{row.studentName}</td>
+                            <td className="p-2.5">{row.fatherName || '-'}</td>
+                            <td className="p-2.5">{row.village}</td>
+                            <td className="p-2.5">{row.mandal}</td>
+                            <td className="p-2.5 font-mono">{row.mobileNo || '-'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {importError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm font-semibold">
+                  <AlertCircle size={20} className="flex-shrink-0 text-red-500" />
+                  <span>{importError}</span>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-slate-100 bg-slate-50/50 flex justify-end items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedRows([]);
+                  setImportError('');
+                }}
+                className="px-5 py-2.5 rounded-xl text-slate-600 font-bold border border-slate-200 hover:bg-slate-100 transition text-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!importFile || parsedRows.length === 0 || importLoading}
+                onClick={handleImportSubmit}
+                className={`flex items-center gap-2 px-7 py-2.5 rounded-xl text-white font-extrabold shadow-md transition text-sm cursor-pointer ${
+                  !importFile || parsedRows.length === 0 || importLoading
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-indigo-200 active:scale-95'
+                }`}
+              >
+                {importLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Check size={16} />
+                )}
+                {importLoading ? 'అప్‌లోడ్ చేస్తోంది...' : `అన్నీ దిగుమతి చేయండి (${parsedRows.length})`}
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

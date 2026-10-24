@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle, Trash } from 'lucide-react';
+import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle, Trash, Upload, FileSpreadsheet, AlertCircle, Check } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -36,6 +36,15 @@ const AddressCollectionAdminPage = () => {
     referenceTeacherId: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
+
+  // Excel Import States
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [parsedRows, setParsedRows] = useState<any[]>([]);
+  const [importDefaultTeacher, setImportDefaultTeacher] = useState<string>('');
+  const [importLoading, setImportLoading] = useState(false);
+  const [importError, setImportError] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchData();
@@ -248,6 +257,122 @@ const AddressCollectionAdminPage = () => {
     doc.save('Student_Address_Collection.pdf');
   };
 
+  const downloadSampleTemplate = () => {
+    const templateData = [
+      {
+        'Student Name': 'K. SAI KUMAR',
+        'Father Name': 'K. RAMA RAO',
+        'Village': 'NARASANNAPETA',
+        'Mandal': 'NARASANNAPETA',
+        'Mobile No': '9876543210',
+        'Alternate Mobile No': '9123456780',
+        'Reference Teacher': teachers[0]?.name || 'RAMESH'
+      },
+      {
+        'Student Name': 'P. ANITHA',
+        'Father Name': 'P. VENKATA RAO',
+        'Village': 'JALUMURU',
+        'Mandal': 'JALUMURU',
+        'Mobile No': '8765432109',
+        'Alternate Mobile No': '',
+        'Reference Teacher': teachers[1]?.name || 'SURESH'
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(templateData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Students Data');
+    XLSX.writeFile(workbook, 'Student_Address_Collection_Template.xlsx');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processExcelFile(file);
+  };
+
+  const processExcelFile = (file: File) => {
+    setImportError('');
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        if (!sheetName) {
+          setImportError('Excel sheet is empty.');
+          return;
+        }
+        const worksheet = workbook.Sheets[sheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (rawJson.length === 0) {
+          setImportError('No records found in the Excel sheet.');
+          return;
+        }
+
+        const mapped: any[] = [];
+        for (const row of rawJson) {
+          const normRow: any = {};
+          for (const [key, val] of Object.entries(row)) {
+            const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
+            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
+            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
+            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
+            else if (cleanKey.includes('alt') || cleanKey.includes('secondary')) normRow.alternateMobileNo = String(val).trim();
+            else if (cleanKey.includes('mobile') || cleanKey.includes('phone') || cleanKey.includes('contact')) normRow.mobileNo = String(val).trim();
+            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim();
+          }
+
+          if (normRow.studentName && (normRow.village || normRow.mandal || normRow.mobileNo)) {
+            mapped.push(normRow);
+          }
+        }
+
+        if (mapped.length === 0) {
+          setImportError('Could not find valid student records. Please ensure columns: Student Name, Village, Mandal, Mobile No exist in your sheet.');
+          return;
+        }
+
+        setParsedRows(mapped);
+        setImportFile(file);
+      } catch (err: any) {
+        console.error('Error parsing Excel:', err);
+        setImportError('Failed to parse Excel file: ' + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleImportSubmit = async () => {
+    if (parsedRows.length === 0) return;
+    setImportLoading(true);
+    setImportError('');
+    try {
+      const response = await axios.post('http://66.116.252.191:19998/api/address-collection/bulk', {
+        records: parsedRows,
+        defaultTeacherId: importDefaultTeacher || undefined
+      }, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+      });
+
+      if (response.data.success) {
+        alert(`✅ Successfully imported ${response.data.count} student address records!`);
+        setShowImportModal(false);
+        setImportFile(null);
+        setParsedRows([]);
+        setImportDefaultTeacher('');
+        fetchData(); // refresh list
+      }
+    } catch (err: any) {
+      console.error('Import error:', err);
+      setImportError(err.response?.data?.message || err.message || 'Import failed.');
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center">Loading...</div>;
   }
@@ -258,22 +383,29 @@ const AddressCollectionAdminPage = () => {
         <h1 className="text-2xl font-bold text-gray-800">Student Address Collection (Admin)</h1>
         <div className="flex gap-4 flex-wrap">
           <button 
+            onClick={() => setShowImportModal(true)}
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white px-4 py-2 rounded-lg transition shadow-sm font-semibold active:scale-95"
+          >
+            <Upload size={18} />
+            Upload Excel
+          </button>
+          <button 
             onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-semibold"
           >
             <Plus size={18} />
             Add New Data
           </button>
           <button 
             onClick={exportToPDF}
-            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition font-semibold"
           >
             <FileText size={18} />
             Export PDF
           </button>
           <button 
             onClick={exportToExcel}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-semibold"
           >
             <Download size={18} />
             Export Excel
@@ -536,6 +668,217 @@ const AddressCollectionAdminPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      {/* Upload Excel Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-4xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col max-h-[90vh]">
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-indigo-50/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-100 text-indigo-700 rounded-xl">
+                  <FileSpreadsheet size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-800">
+                    Upload Student Addresses via Excel
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500">
+                    Upload .xlsx, .xls, or .csv file to bulk import all student addresses at once
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedRows([]);
+                  setImportError('');
+                }}
+                className="text-slate-400 hover:text-slate-700 p-2 rounded-full hover:bg-slate-100 transition"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+              
+              {/* Template Download Banner */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-600 text-white rounded-lg">
+                    <FileSpreadsheet size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-emerald-950">Excel Column Template</h4>
+                    <p className="text-xs text-emerald-700 font-medium">Use our official template with columns: Student Name, Father Name, Village, Mandal, Mobile No, Ref Teacher</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadSampleTemplate}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap active:scale-95"
+                >
+                  <Download size={15} />
+                  Download Sample Template
+                </button>
+              </div>
+
+              {/* Upload Dropzone */}
+              {!importFile ? (
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-indigo-200 hover:border-indigo-500 bg-indigo-50/20 hover:bg-indigo-50/50 rounded-2xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3 group"
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <div className="p-4 bg-white rounded-2xl shadow-sm text-indigo-600 group-hover:scale-110 transition">
+                    <Upload size={32} />
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-slate-700 text-sm block">Click to Browse or Drag & Drop Excel File</span>
+                    <span className="text-xs text-slate-400 font-medium">Supports .XLSX, .XLS, or .CSV</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* File Info Bar */}
+                  <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-indigo-600 text-white rounded-xl">
+                        <FileSpreadsheet size={22} />
+                      </div>
+                      <div>
+                        <span className="font-extrabold text-slate-800 text-sm block">{importFile.name}</span>
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                          ✓ {parsedRows.length} Valid Records Ready to Import
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImportFile(null);
+                        setParsedRows([]);
+                        setImportError('');
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="text-xs text-red-600 hover:text-red-800 font-bold px-3 py-1.5 rounded-lg hover:bg-red-50 border border-red-200 transition"
+                    >
+                      Change File
+                    </button>
+                  </div>
+
+                  {/* Optional Default Teacher Selector */}
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+                    <label className="block text-xs font-extrabold text-slate-700 uppercase tracking-wider">
+                      Default Reference Teacher (Optional)
+                    </label>
+                    <p className="text-xs text-slate-500 font-medium">
+                      If an Excel row doesn't have a teacher name, this teacher will be assigned automatically.
+                    </p>
+                    <select
+                      value={importDefaultTeacher}
+                      onChange={(e) => setImportDefaultTeacher(e.target.value)}
+                      className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white font-semibold text-slate-800 text-sm"
+                    >
+                      <option value="">-- Auto-detect from Excel / No Default --</option>
+                      {teachers.map(t => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Preview Table (First 5 Rows) */}
+                  <div>
+                    <div className="flex justify-between items-center mb-2 px-1">
+                      <span className="text-xs font-extrabold text-slate-600 uppercase tracking-wider">
+                        Data Preview (First {Math.min(5, parsedRows.length)} of {parsedRows.length} rows)
+                      </span>
+                    </div>
+                    <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-sm">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-100 text-slate-700 font-bold uppercase border-b border-slate-200">
+                          <tr>
+                            <th className="p-3">#</th>
+                            <th className="p-3">Student Name</th>
+                            <th className="p-3">Father Name</th>
+                            <th className="p-3">Village</th>
+                            <th className="p-3">Mandal</th>
+                            <th className="p-3">Mobile No</th>
+                            <th className="p-3">Teacher</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white font-medium text-slate-700">
+                          {parsedRows.slice(0, 5).map((row, idx) => (
+                            <tr key={idx} className="hover:bg-slate-50/80">
+                              <td className="p-3 font-bold text-slate-500">{idx + 1}</td>
+                              <td className="p-3 font-bold text-slate-900">{row.studentName}</td>
+                              <td className="p-3">{row.fatherName || '-'}</td>
+                              <td className="p-3">{row.village}</td>
+                              <td className="p-3">{row.mandal}</td>
+                              <td className="p-3 font-mono">{row.mobileNo || '-'}</td>
+                              <td className="p-3 text-indigo-600 font-semibold">{row.referenceTeacherName || '-'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Error Message */}
+              {importError && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-700 text-sm font-semibold">
+                  <AlertCircle size={20} className="flex-shrink-0 text-red-500" />
+                  <span>{importError}</span>
+                </div>
+              )}
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowImportModal(false);
+                  setImportFile(null);
+                  setParsedRows([]);
+                  setImportError('');
+                }}
+                className="px-6 py-2.5 rounded-xl text-slate-600 font-bold border border-slate-200 hover:bg-slate-100 transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={!importFile || parsedRows.length === 0 || importLoading}
+                onClick={handleImportSubmit}
+                className={`flex items-center gap-2 px-8 py-2.5 rounded-xl text-white font-extrabold shadow-md transition ${
+                  !importFile || parsedRows.length === 0 || importLoading
+                    ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-indigo-200 active:scale-95'
+                }`}
+              >
+                {importLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Check size={18} />
+                )}
+                {importLoading ? 'Importing Data...' : `Import All ${parsedRows.length} Records`}
+              </button>
+            </div>
+
           </div>
         </div>
       )}
