@@ -3,6 +3,7 @@ import {
   addAddressCollection, 
   getAddressCollections, 
   deleteAddressCollection,
+  updateAddressCollection,
   bulkAddAddressCollection 
 } from '../controllers/addressCollection.controller';
 import { authenticate } from '../middlewares/auth';
@@ -17,6 +18,9 @@ router.post('/', authenticate, addAddressCollection);
 
 // Route for bulk importing address collections from Excel
 router.post('/bulk', authenticate, bulkAddAddressCollection);
+
+// Route for updating an address collection entry
+router.put('/:id', authenticate, updateAddressCollection);
 
 // Route for deleting an address collection entry
 router.delete('/:id', authenticate, deleteAddressCollection);

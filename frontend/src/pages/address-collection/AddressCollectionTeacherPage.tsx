@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { User, MapPin, Phone, CheckCircle, Navigation, PlusCircle, ListFilter, Search, Download, Trash2, Calendar, FileSpreadsheet, RefreshCw, Upload, X, AlertCircle, Check } from 'lucide-react';
+import { User, MapPin, Phone, CheckCircle, Navigation, PlusCircle, ListFilter, Search, Download, Trash2, Calendar, FileSpreadsheet, RefreshCw, Upload, X, AlertCircle, Check, Pencil } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 
@@ -14,11 +14,13 @@ interface AddressRecord {
   mobileNo: string;
   alternateMobileNo?: string;
   referenceTeacherName?: string;
+  referenceTeacherId?: string | null;
   createdAt: string;
 }
 
 export const AddressCollectionTeacherPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'entry' | 'list'>('entry');
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     studentName: '',
@@ -101,24 +103,45 @@ export const AddressCollectionTeacherPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      });
-      
-      if (response.data.success) {
-        toast.success('చిరునామా వివరాలు విజయవంతంగా సేవ్ అయ్యాయి!');
-        setFormData({
-          studentName: '',
-          className: '',
-          fatherName: '',
-          village: '',
-          mandal: '',
-          mobileNo: '',
-          alternateMobileNo: '',
-          referenceTeacherId: ''
+      if (editingId) {
+        const response = await axios.put(`http://66.116.252.191:19998/api/address-collection/${editingId}`, formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
         });
-        // Refresh list immediately so when tab 2 is clicked, it shows the new record
-        fetchRecords();
+        if (response.data.success) {
+          toast.success('చిరునామా వివరాలు విజయవంతంగా సవరించబడ్డాయి!');
+          setEditingId(null);
+          setFormData({
+            studentName: '',
+            className: '',
+            fatherName: '',
+            village: '',
+            mandal: '',
+            mobileNo: '',
+            alternateMobileNo: '',
+            referenceTeacherId: ''
+          });
+          fetchRecords();
+          setActiveTab('list');
+        }
+      } else {
+        const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        
+        if (response.data.success) {
+          toast.success('చిరునామా వివరాలు విజయవంతంగా సేవ్ అయ్యాయి!');
+          setFormData({
+            studentName: '',
+            className: '',
+            fatherName: '',
+            village: '',
+            mandal: '',
+            mobileNo: '',
+            alternateMobileNo: '',
+            referenceTeacherId: ''
+          });
+          fetchRecords();
+        }
       }
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -126,6 +149,41 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStartEdit = (item: AddressRecord) => {
+    let refTeacherId = (item as any).referenceTeacherId || '';
+    if (!refTeacherId && item.referenceTeacherName) {
+      const match = teachers.find(t => t.name.toLowerCase() === item.referenceTeacherName?.toLowerCase());
+      if (match) refTeacherId = match.id;
+    }
+
+    setFormData({
+      studentName: item.studentName,
+      className: item.className || '',
+      fatherName: item.fatherName,
+      village: item.village,
+      mandal: item.mandal,
+      mobileNo: item.mobileNo,
+      alternateMobileNo: item.alternateMobileNo || '',
+      referenceTeacherId: refTeacherId
+    });
+    setEditingId(item.id);
+    setActiveTab('entry');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({
+      studentName: '',
+      className: '',
+      fatherName: '',
+      village: '',
+      mandal: '',
+      mobileNo: '',
+      alternateMobileNo: '',
+      referenceTeacherId: ''
+    });
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -369,22 +427,37 @@ export const AddressCollectionTeacherPage: React.FC = () => {
         </button>
       </div>
 
-      {/* ── Tab 1: New Address Entry Form ── */}
+      {/* ── Tab 1: New Address Entry / Edit Form ── */}
       {activeTab === 'entry' && (
         <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 overflow-hidden animate-fade-in">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-6 border-b border-indigo-100 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-200">
-                <User className="w-5 h-5" />
+                {editingId ? <Pencil className="w-5 h-5" /> : <User className="w-5 h-5" />}
               </div>
               <div>
-                <h2 className="text-lg font-black text-slate-800">Student Address Form</h2>
-                <p className="text-xs text-slate-500 font-medium">నమోదు చేయవలసిన వివరాలను పూరించండి</p>
+                <h2 className="text-lg font-black text-slate-800">
+                  {editingId ? 'Edit Student Address Details' : 'Student Address Form'}
+                </h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  {editingId ? 'వివరాలను సవరించి అప్‌డేట్ చేయండి' : 'నమోదు చేయవలసిన వివరాలను పూరించండి'}
+                </p>
               </div>
             </div>
-            <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
-              * Required Fields
-            </span>
+            <div className="flex items-center gap-2">
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition cursor-pointer"
+                >
+                  Cancel Edit
+                </button>
+              )}
+              <span className="text-xs font-bold text-indigo-600 bg-indigo-100 px-3 py-1 rounded-full">
+                * Required Fields
+              </span>
+            </div>
           </div>
           
           <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-6">
@@ -589,7 +662,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                 ) : (
                   <CheckCircle size={20} />
                 )}
-                {loading ? 'సేవ్ చేస్తోంది...' : 'Save Details (సేవ్ చేయండి)'}
+                {loading ? 'సేవ్ చేస్తోంది...' : editingId ? 'Update Details (సవరించండి)' : 'Save Details (సేవ్ చేయండి)'}
               </button>
             </div>
           </form>
@@ -718,14 +791,23 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                         }) : '-'}
                       </td>
                       <td className="px-4 py-3.5 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleDelete(item.id, item.studentName)}
-                          disabled={deletingId === item.id}
-                          className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
-                          title="Delete entry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => handleStartEdit(item)}
+                            className="p-2 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+                            title="Edit entry"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(item.id, item.studentName)}
+                            disabled={deletingId === item.id}
+                            className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}

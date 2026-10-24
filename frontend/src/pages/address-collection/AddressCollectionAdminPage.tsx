@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle, Trash, Upload, FileSpreadsheet, AlertCircle, Check } from 'lucide-react';
+import { Download, Search, FileText, Plus, X, User, MapPin, Phone, Navigation, CheckCircle, Trash, Upload, FileSpreadsheet, AlertCircle, Check, Pencil } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -15,6 +15,7 @@ interface AddressCollection {
   mobileNo: string;
   alternateMobileNo: string | null;
   referenceTeacherName: string;
+  referenceTeacherId?: string | null;
   createdAt: string;
 }
 
@@ -27,8 +28,9 @@ const AddressCollectionAdminPage = () => {
   const [teachers, setTeachers] = useState<{id: string, name: string}[]>([]);
   const [schoolClasses, setSchoolClasses] = useState<string[]>([]);
   
-  // Data Entry Modal States
+  // Data Entry / Edit Modal States
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<AddressCollection | null>(null);
   const [formData, setFormData] = useState({
     studentName: '',
     className: '',
@@ -150,6 +152,42 @@ const AddressCollectionAdminPage = () => {
     setFormData({ ...formData, [e.target.name]: value });
   };
 
+  const handleEdit = (item: AddressCollection) => {
+    let refTeacherId = item.referenceTeacherId || '';
+    if (!refTeacherId && item.referenceTeacherName) {
+      const match = teachers.find(t => t.name.toLowerCase() === item.referenceTeacherName.toLowerCase());
+      if (match) refTeacherId = match.id;
+    }
+
+    setFormData({
+      studentName: item.studentName,
+      className: item.className || '',
+      fatherName: item.fatherName,
+      village: item.village,
+      mandal: item.mandal,
+      mobileNo: item.mobileNo,
+      alternateMobileNo: item.alternateMobileNo || '',
+      referenceTeacherId: refTeacherId
+    });
+    setEditingItem(item);
+    setShowAddModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowAddModal(false);
+    setEditingItem(null);
+    setFormData({
+      studentName: '',
+      className: '',
+      fatherName: '',
+      village: '',
+      mandal: '',
+      mobileNo: '',
+      alternateMobileNo: '',
+      referenceTeacherId: ''
+    });
+  };
+
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.studentName || !formData.fatherName || !formData.village || !formData.mandal || !formData.mobileNo) {
@@ -158,22 +196,22 @@ const AddressCollectionAdminPage = () => {
     }
     setSubmitLoading(true);
     try {
-      const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      });
-      if (response.data.success) {
-        setShowAddModal(false);
-        setFormData({
-          studentName: '',
-          className: '',
-          fatherName: '',
-          village: '',
-          mandal: '',
-          mobileNo: '',
-          alternateMobileNo: '',
-          referenceTeacherId: ''
+      if (editingItem) {
+        const response = await axios.put(`http://66.116.252.191:19998/api/address-collection/${editingItem.id}`, formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
         });
-        fetchData(); // Refresh the list
+        if (response.data.success) {
+          handleCloseModal();
+          fetchData(); // Refresh the list
+        }
+      } else {
+        const response = await axios.post('http://66.116.252.191:19998/api/address-collection', formData, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
+        });
+        if (response.data.success) {
+          handleCloseModal();
+          fetchData(); // Refresh the list
+        }
       }
     } catch (error: any) {
       console.error('Error submitting form:', error);
@@ -542,14 +580,23 @@ const AddressCollectionAdminPage = () => {
                       {item.referenceTeacherName || 'Unknown'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <button
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                      title="Delete Entry"
-                    >
-                      <Trash size={18} />
-                    </button>
+                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => handleEdit(item)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors cursor-pointer"
+                        title="Edit Entry"
+                      >
+                        <Pencil size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-full transition-colors cursor-pointer"
+                        title="Delete Entry"
+                      >
+                        <Trash size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -569,17 +616,17 @@ const AddressCollectionAdminPage = () => {
         </div>
       </div>
 
-      {/* Add New Data Modal */}
+      {/* Add / Edit Data Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-100 bg-gray-50/50">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <User size={24} className="text-blue-600" />
-                Add Student Details
+                {editingItem ? <Pencil size={24} className="text-blue-600" /> : <User size={24} className="text-blue-600" />}
+                {editingItem ? 'Edit Student Details' : 'Add Student Details'}
               </h2>
               <button 
-                onClick={() => setShowAddModal(false)}
+                onClick={handleCloseModal}
                 className="text-gray-400 hover:text-gray-600 transition"
               >
                 <X size={24} />
@@ -728,7 +775,7 @@ const AddressCollectionAdminPage = () => {
               <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={() => setShowAddModal(false)}
+                  onClick={handleCloseModal}
                   className="px-6 py-2.5 rounded-xl text-gray-600 font-medium border border-gray-200 hover:bg-gray-50 transition"
                 >
                   Cancel
@@ -745,7 +792,7 @@ const AddressCollectionAdminPage = () => {
                   ) : (
                     <CheckCircle size={20} />
                   )}
-                  {submitLoading ? 'Saving...' : 'Save Details'}
+                  {submitLoading ? 'Saving...' : editingItem ? 'Update Details' : 'Save Details'}
                 </button>
               </div>
             </form>

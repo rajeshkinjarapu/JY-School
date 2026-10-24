@@ -129,6 +129,44 @@ export const deleteAddressCollection = async (req: Request, res: Response) => {
   }
 };
 
+// Update address collection entry
+export const updateAddressCollection = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { studentName, className, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId } = req.body;
+    const user = (req as any).user;
+
+    const existing = await prisma.studentAddressCollection.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ success: false, message: 'Record not found' });
+    }
+
+    // Role check: Teacher can only edit their own entries
+    if (user && user.role === 'TEACHER' && existing.createdById && existing.createdById !== user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to edit this record' });
+    }
+
+    const updated = await prisma.studentAddressCollection.update({
+      where: { id },
+      data: {
+        studentName: studentName ? studentName.toString().trim().toUpperCase() : undefined,
+        className: className !== undefined ? (className ? className.toString().trim() : null) : undefined,
+        fatherName: fatherName ? fatherName.toString().trim().toUpperCase() : undefined,
+        village: village ? village.toString().trim().toUpperCase() : undefined,
+        mandal: mandal ? mandal.toString().trim().toUpperCase() : undefined,
+        mobileNo: mobileNo !== undefined ? mobileNo.toString().trim() : undefined,
+        alternateMobileNo: alternateMobileNo !== undefined ? (alternateMobileNo ? alternateMobileNo.toString().trim() : null) : undefined,
+        referenceTeacherId: referenceTeacherId !== undefined ? (referenceTeacherId || null) : undefined,
+      }
+    });
+
+    res.status(200).json({ success: true, data: updated, message: 'Record updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating address collection:', error);
+    res.status(500).json({ success: false, message: 'Failed to update record', error: error.message });
+  }
+};
+
 // Bulk import address collection entries from Excel
 export const bulkAddAddressCollection = async (req: Request, res: Response) => {
   try {
