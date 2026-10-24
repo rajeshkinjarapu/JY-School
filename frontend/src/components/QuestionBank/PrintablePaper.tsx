@@ -325,11 +325,13 @@ export const PrintablePaper: React.FC<PrintablePaperProps> = ({
                                                     >
                                                         {[q.optionA, q.optionB, q.optionC, q.optionD].map(
                                                             (opt, idx) => (
-                                                                <div key={idx} className="question-option">
-                                                                    <span className="option-letter mr-1.5 font-bold">
+                                                                <div key={idx} className="question-option flex items-start min-w-0">
+                                                                    <span className="option-letter mr-1.5 font-bold flex-shrink-0">
                                                                         {getOptionLabel(idx)}
                                                                     </span>
-                                                                    <LaTeXPreview text={opt || ''} />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <LaTeXPreview text={opt || ''} />
+                                                                    </div>
                                                                 </div>
                                                             )
                                                         )}

@@ -254,30 +254,51 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
 
               // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
-              // In visual rendering, a fraction is stacked vertically.
-              // Its horizontal width is simply Math.max(width(num), width(den)).
+              // In visual rendering, a fraction adds padding and width of numerator/denominator
               const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
               let iterations = 0;
               while (fracRegex.test(s) && iterations < 5) {
                 s = s.replace(fracRegex, (_, num, den) => {
                   const lenN = estimateVisualLength(num);
                   const lenD = estimateVisualLength(den);
-                  return 'X'.repeat(Math.max(lenN, lenD));
+                  return 'X'.repeat(Math.max(lenN, lenD) + 2);
                 });
                 iterations++;
               }
 
-              // \sqrt{x} is visually roughly width of x + 1 (radical sign)
-              s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
+              // Square root: \sqrt{x} visually requires surd symbol width + top bar + padding + inner content
+              const sqrtRegex = /\\sqrt(?:\[[^\]]*\])?\{([^{}]*)\}/;
+              let sqrtIter = 0;
+              while (sqrtRegex.test(s) && sqrtIter < 5) {
+                s = s.replace(sqrtRegex, (_, inner) => {
+                  const innerLen = estimateVisualLength(inner);
+                  return 'X'.repeat(innerLen + 3);
+                });
+                sqrtIter++;
+              }
+              // Catch any remaining \sqrt without braces (e.g. \sqrt 2)
+              s = s.replace(/\\sqrt\s*([0-9a-zA-Z])/g, 'XXX$1');
 
-              // Replace other LaTeX commands (\sin, \cos, \tan, \cot, \sec, \csc, \pm, \circ, etc.) with a single character 'X'
+              // Multi-letter mathematical / trigonometric functions render as 2-4 characters
+              s = s.replace(/\\(cos|sin|tan|sec|csc|cot|log|lim|det|exp)\b/gi, 'XXX');
+              s = s.replace(/\\(ln)\b/gi, 'XX');
+              // When written without space: e.g. \cos\theta or \sin\alpha
+              s = s.replace(/\\(cos|sin|tan|sec|csc|cot|log|lim|det|exp)(?=\\|\b|[0-9a-zA-Z])/gi, 'XXX ');
+
+              // Greek letters: \theta, \alpha, etc.
+              s = s.replace(/\\(theta|alpha|beta|gamma|delta|epsilon|zeta|eta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Delta|Omega|Phi|Psi|Sigma|Theta)\b/gi, 'X');
+              s = s.replace(/\\(theta|alpha|beta|gamma|delta|epsilon|zeta|eta|iota|kappa|lambda|mu|nu|xi|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Delta|Omega|Phi|Psi|Sigma|Theta)(?=\\|\b|[0-9a-zA-Z])/gi, 'X ');
+
+              // Math binary and relational operators (they have padding in KaTeX)
+              s = s.replace(/\\(pm|mp|times|div|cdot|leq|geq|neq|approx|equiv)\b/gi, ' X ');
+
+              // Replace other LaTeX commands (\vec, \hat, \bar, etc.) with a single character 'X'
               s = s.replace(/\\[a-zA-Z]+/g, 'X');
 
               // Remove remaining braces
               s = s.replace(/[{}]/g, '');
 
               // Math binary operators like +, -, = have standard visual padding around them
-              // Note: Do NOT expand '/' as that artificially bloats simple divisions like (A/2) or 1/2
               s = s.replace(/([+\-=])/g, ' $1 ');
 
               return s.replace(/\s+/g, ' ').trim().length;
@@ -289,24 +310,42 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optC), 
               estimateVisualLength(optD)
             );
+
+            // Wide formula guard: If any option has a compound square root, multi-char fraction, trig formula,
+            // scientific notation with powers (e.g. 10^{-24}), or relation with operators,
+            // it can NEVER safely fit on a single line with 4 columns.
+            const hasWideFormula = [optA, optB, optC, optD].some(opt => {
+              if (!opt) return false;
+              // 1. Compound square roots (e.g. \sqrt{A^2 + C^2} or \sqrt{... + ...})
+              if (/\\sqrt(?:\[[^\]]*\])?\{[^{}]*[\+\-\*\/\s\\][^{}]*\}/.test(opt)) return true;
+              // 2. Fractions with terms or expressions (e.g. \frac{12.3}{\sqrt{V}} or \frac{h}{4\pi})
+              if (/\\d?frac\{[^{}]{2,}\}/.test(opt) || /\\d?frac\{[^{}]*\}\{[^{}]{2,}\}/.test(opt)) return true;
+              // 3. Trigonometric, log, limit functions with terms
+              if (/\\(cos|sin|tan|sec|csc|cot|log|lim)\b.*[\+\-\*\/\=]/.test(opt)) return true;
+              // 4. Scientific notation with exponents (e.g. \times 10^{-24}, \cdot 10^5, 10^{-19})
+              if (/\\times\s*10\^|\\cdot\s*10\^|\b10\^\{?-?[0-9]/.test(opt)) return true;
+              // 5. Equations / inequalities with formulas (e.g. \Delta x \cdot \Delta p \ge, \lambda =)
+              if (/[=><\u2265\u2264]/.test(opt) && /\\|[\+\-\*\/]/.test(opt)) return true;
+              return false;
+            });
             
             // Calibrated thresholds for A4 layout:
-            // Single line (4 columns): simple numbers, values, short/medium fractions up to 17 chars (fits Q1-Q5).
-            // 2*2 (2 columns): wide formulas, expressions, phrases 18 to 38 chars.
-            // One by one (1 column): long polynomials, wide sentences > 38 chars.
-            const singleLineLimit = isDoubleColumn ? 8 : 17;
-            const twoByTwoLimit = isDoubleColumn ? 18 : 38;
+            // Single line (4 columns): simple numbers, values, short words up to 12 chars (only if no wide formula).
+            // 2*2 (2 columns): wide formulas, expressions, phrases 13 to 32 chars.
+            // One by one (1 column): long polynomials, wide sentences > 32 chars.
+            const singleLineLimit = isDoubleColumn ? 6 : 12;
+            const twoByTwoLimit = isDoubleColumn ? 16 : 32;
 
             let optionsLayout = '';
-            if (maxLen <= singleLineLimit) {
+            if (!hasWideFormula && maxLen <= singleLineLimit) {
               // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
-              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+              optionsLayout = 'grid grid-cols-4 w-full gap-x-3 gap-y-0.5';
             } else if (maxLen <= twoByTwoLimit) {
               // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+              optionsLayout = 'grid grid-cols-2 w-full gap-x-4 gap-y-1';
             } else {
               // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
-              optionsLayout = 'flex flex-col w-full gap-0.5';
+              optionsLayout = 'flex flex-col w-full gap-1';
             }
 
             // Extract question number for hanging indent
@@ -325,10 +364,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                   <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
                 <div className={`ml-10 pr-4 ${optionsLayout}`}>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap min-w-0" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap min-w-0" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap min-w-0" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex items-start whitespace-pre-wrap min-w-0"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap min-w-0" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );
