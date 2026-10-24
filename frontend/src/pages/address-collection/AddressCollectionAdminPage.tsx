@@ -26,7 +26,6 @@ const AddressCollectionAdminPage = () => {
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [teachers, setTeachers] = useState<{id: string, name: string}[]>([]);
-  const [schoolClasses, setSchoolClasses] = useState<string[]>([]);
   
   // Data Entry / Edit Modal States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -55,22 +54,7 @@ const AddressCollectionAdminPage = () => {
   useEffect(() => {
     fetchData();
     fetchTeachers();
-    fetchClasses();
   }, []);
-
-  const fetchClasses = async () => {
-    try {
-      const response = await axios.get('http://66.116.252.191:19998/api/classes?limit=1000', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
-      });
-      if (response.data.success && Array.isArray(response.data.data)) {
-        const unique = Array.from(new Set(response.data.data.map((c: any) => c.name).filter(Boolean))) as string[];
-        setSchoolClasses(unique);
-      }
-    } catch (error) {
-      console.error('Error fetching classes:', error);
-    }
-  };
 
   const fetchTeachers = async () => {
     try {
@@ -107,16 +91,11 @@ const AddressCollectionAdminPage = () => {
 
   const uniqueTeachers = Array.from(new Set(data.map(item => item.referenceTeacherName))).filter(Boolean).sort();
   
-  const standardClasses = [
+  const uniqueClasses = [
     'Nursery', 'LKG', 'UKG',
     '1st Class', '2nd Class', '3rd Class', '4th Class', '5th Class',
     '6th Class', '7th Class', '8th Class', '9th Class', '10th Class'
   ];
-  const uniqueClasses = Array.from(new Set([
-    ...standardClasses,
-    ...schoolClasses,
-    ...data.map(item => item.className).filter(Boolean) as string[]
-  ])).filter(Boolean);
 
   const filteredData = data.filter(item => {
     const matchesSearch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,21 +103,21 @@ const AddressCollectionAdminPage = () => {
                           item.village.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.mandal.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTeacher = selectedTeacher === '' || item.referenceTeacherName === selectedTeacher;
-    const matchesClass = selectedClass === '' || item.className === selectedClass;
+    const matchesClass = selectedClass === '' || (item.className && item.className.trim().toUpperCase() === selectedClass.trim().toUpperCase());
     return matchesSearch && matchesTeacher && matchesClass;
   });
 
   const exportToExcel = () => {
     const exportData = filteredData.map((item, index) => ({
       'S.No': index + 1,
-      'Student Name': item.studentName,
-      'Class': item.className || '-',
-      'Father Name': item.fatherName,
-      'Village': item.village,
-      'Mandal': item.mandal,
+      'Student Name': (item.studentName || '').toUpperCase(),
+      'Class': (item.className || '-').toUpperCase(),
+      'Father Name': (item.fatherName || '').toUpperCase(),
+      'Village': (item.village || '').toUpperCase(),
+      'Mandal': (item.mandal || '').toUpperCase(),
       'Mobile No': item.mobileNo,
       'Alternate Mobile No': item.alternateMobileNo || '-',
-      'Reference Teacher': item.referenceTeacherName
+      'Reference Teacher': (item.referenceTeacherName || '').toUpperCase()
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -277,14 +256,14 @@ const AddressCollectionAdminPage = () => {
       }
       return [
         index + 1,
-        item.studentName,
-        item.className || '-',
-        item.fatherName,
-        item.village,
-        item.mandal,
+        (item.studentName || '').toUpperCase(),
+        (item.className || '-').toUpperCase(),
+        (item.fatherName || '').toUpperCase(),
+        (item.village || '').toUpperCase(),
+        (item.mandal || '').toUpperCase(),
         item.mobileNo,
         item.alternateMobileNo || '-',
-        item.referenceTeacherName
+        (item.referenceTeacherName || '').toUpperCase()
       ];
     });
 
@@ -395,14 +374,14 @@ const AddressCollectionAdminPage = () => {
           const normRow: any = {};
           for (const [key, val] of Object.entries(row)) {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
-            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim();
-            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
-            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
-            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
+            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim().toUpperCase();
             else if (cleanKey.includes('alt') || cleanKey.includes('secondary')) normRow.alternateMobileNo = String(val).trim();
             else if (cleanKey.includes('mobile') || cleanKey.includes('phone') || cleanKey.includes('contact')) normRow.mobileNo = String(val).trim();
-            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim();
+            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim().toUpperCase();
           }
 
           if (normRow.studentName && (normRow.village || normRow.mandal || normRow.mobileNo)) {
@@ -551,20 +530,20 @@ const AddressCollectionAdminPage = () => {
                 <tr key={item.id} className="hover:bg-blue-50/50 transition-colors duration-200 group">
                   <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{item.studentName}</div>
+                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors uppercase">{item.studentName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 uppercase">
                       {item.className || '-'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.fatherName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 uppercase">{item.fatherName}</td>
                   <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 uppercase">
                       {item.village}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.mandal}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600 uppercase">{item.mandal}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="text-sm font-medium text-gray-800">{item.mobileNo}</div>
                     {item.alternateMobileNo && (
@@ -572,7 +551,7 @@ const AddressCollectionAdminPage = () => {
                     )}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border uppercase ${
                       item.referenceTeacherName === 'Unknown' || !item.referenceTeacherName
                         ? 'bg-gray-100 text-gray-600 border-gray-200' 
                         : 'bg-purple-100 text-purple-800 border-purple-200'
@@ -645,7 +624,7 @@ const AddressCollectionAdminPage = () => {
                       name="studentName"
                       value={formData.studentName}
                       onChange={handleFormChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                       placeholder="Enter student full name"
                     />
                   </div>
@@ -661,7 +640,7 @@ const AddressCollectionAdminPage = () => {
                       list="admin-class-options"
                       value={formData.className}
                       onChange={handleFormChange}
-                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                       placeholder="Select or enter Class (e.g. 10th Class)"
                     />
                     <datalist id="admin-class-options">
@@ -682,7 +661,7 @@ const AddressCollectionAdminPage = () => {
                       name="fatherName"
                       value={formData.fatherName}
                       onChange={handleFormChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                       placeholder="Enter father's name"
                     />
                   </div>
@@ -698,7 +677,7 @@ const AddressCollectionAdminPage = () => {
                       name="village"
                       value={formData.village}
                       onChange={handleFormChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                       placeholder="Village / Town"
                     />
                   </div>
@@ -714,7 +693,7 @@ const AddressCollectionAdminPage = () => {
                       name="mandal"
                       value={formData.mandal}
                       onChange={handleFormChange}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
                       placeholder="Mandal"
                     />
                   </div>

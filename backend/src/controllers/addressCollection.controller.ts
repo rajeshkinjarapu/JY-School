@@ -22,13 +22,13 @@ export const addAddressCollection = async (req: Request, res: Response) => {
 
     const newEntry = await prisma.studentAddressCollection.create({
       data: {
-        studentName,
-        className: className ? className.toString().trim() : undefined,
-        fatherName,
-        village,
-        mandal,
-        mobileNo,
-        alternateMobileNo: alternateMobileNo || undefined,
+        studentName: (studentName || '').toString().trim().toUpperCase(),
+        className: className ? className.toString().trim().toUpperCase() : undefined,
+        fatherName: (fatherName || '').toString().trim().toUpperCase(),
+        village: (village || '').toString().trim().toUpperCase(),
+        mandal: (mandal || '').toString().trim().toUpperCase(),
+        mobileNo: (mobileNo || '').toString().trim(),
+        alternateMobileNo: alternateMobileNo ? alternateMobileNo.toString().trim() : undefined,
         referenceTeacherId,
         createdById: user?.id
       }
@@ -89,10 +89,15 @@ export const getAddressCollections = async (req: Request, res: Response) => {
       }
     });
 
-    // Map to include teacher name easily
+    // Map to include teacher name and enforce uppercase on all text fields
     const data = records.map(record => ({
       ...record,
-      referenceTeacherName: record.referenceTeacher?.user?.name || record.createdBy?.name || 'Unknown'
+      studentName: (record.studentName || '').toUpperCase(),
+      className: record.className ? record.className.toUpperCase() : null,
+      fatherName: (record.fatherName || '').toUpperCase(),
+      village: (record.village || '').toUpperCase(),
+      mandal: (record.mandal || '').toUpperCase(),
+      referenceTeacherName: (record.referenceTeacher?.user?.name || record.createdBy?.name || 'Unknown').toUpperCase()
     }));
 
     res.status(200).json({ success: true, data });
@@ -150,7 +155,7 @@ export const updateAddressCollection = async (req: Request, res: Response) => {
       where: { id },
       data: {
         studentName: studentName ? studentName.toString().trim().toUpperCase() : undefined,
-        className: className !== undefined ? (className ? className.toString().trim() : null) : undefined,
+        className: className !== undefined ? (className ? className.toString().trim().toUpperCase() : null) : undefined,
         fatherName: fatherName ? fatherName.toString().trim().toUpperCase() : undefined,
         village: village ? village.toString().trim().toUpperCase() : undefined,
         mandal: mandal ? mandal.toString().trim().toUpperCase() : undefined,

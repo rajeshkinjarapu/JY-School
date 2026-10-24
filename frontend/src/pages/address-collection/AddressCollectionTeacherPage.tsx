@@ -225,11 +225,11 @@ export const AddressCollectionTeacherPage: React.FC = () => {
     }
     const exportData = filteredRecords.map((item, index) => ({
       'S.No': index + 1,
-      'Student Name': item.studentName,
-      'Class': item.className || '-',
-      'Father Name': item.fatherName,
-      'Village': item.village,
-      'Mandal': item.mandal,
+      'Student Name': (item.studentName || '').toUpperCase(),
+      'Class': (item.className || '-').toUpperCase(),
+      'Father Name': (item.fatherName || '').toUpperCase(),
+      'Village': (item.village || '').toUpperCase(),
+      'Mandal': (item.mandal || '').toUpperCase(),
       'Mobile No': item.mobileNo,
       'Alternate Mobile No': item.alternateMobileNo || '-',
       'Entry Date': item.createdAt ? new Date(item.createdAt).toLocaleDateString('en-IN') : '-'
@@ -303,14 +303,14 @@ export const AddressCollectionTeacherPage: React.FC = () => {
           const normRow: any = {};
           for (const [key, val] of Object.entries(row)) {
             const cleanKey = key.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim();
-            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim();
-            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim();
-            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim();
-            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim();
+            if (cleanKey.includes('student') || cleanKey === 'name') normRow.studentName = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('class') || cleanKey.includes('grade') || cleanKey.includes('standard')) normRow.className = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('father')) normRow.fatherName = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('village') || cleanKey.includes('town') || cleanKey.includes('city') || cleanKey === 'address') normRow.village = String(val).trim().toUpperCase();
+            else if (cleanKey.includes('mandal') || cleanKey.includes('taluk') || cleanKey.includes('block')) normRow.mandal = String(val).trim().toUpperCase();
             else if (cleanKey.includes('alt') || cleanKey.includes('secondary')) normRow.alternateMobileNo = String(val).trim();
             else if (cleanKey.includes('mobile') || cleanKey.includes('phone') || cleanKey.includes('contact')) normRow.mobileNo = String(val).trim();
-            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim();
+            else if (cleanKey.includes('teacher') || cleanKey.includes('ref')) normRow.referenceTeacherName = String(val).trim().toUpperCase();
           }
 
           if (normRow.studentName && (normRow.village || normRow.mandal || normRow.mobileNo)) {
@@ -475,7 +475,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     name="studentName"
                     value={formData.studentName}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
                     placeholder="Enter student full name"
                     required
                   />
@@ -494,7 +494,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     list="teacher-class-options"
                     value={formData.className}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
                     placeholder="e.g. 10th Class, 9th Class"
                   />
                   <datalist id="teacher-class-options">
@@ -527,7 +527,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     name="fatherName"
                     value={formData.fatherName}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
                     placeholder="Enter father's name"
                     required
                   />
@@ -546,7 +546,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     name="village"
                     value={formData.village}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
                     placeholder="Village / Town"
                     required
                   />
@@ -565,7 +565,7 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                     name="mandal"
                     value={formData.mandal}
                     onChange={handleChange}
-                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition"
+                    className="w-full pl-10 pr-4 py-3 border-2 border-slate-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 bg-slate-50/50 focus:bg-white transition uppercase"
                     placeholder="Mandal"
                     required
                   />
@@ -755,21 +755,21 @@ export const AddressCollectionTeacherPage: React.FC = () => {
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <p className="font-extrabold text-slate-900">{item.studentName}</p>
+                          <p className="font-extrabold text-slate-900 uppercase">{item.studentName}</p>
                           {item.className && (
-                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200 uppercase">
                               {item.className}
                             </span>
                           )}
                         </div>
-                        <p className="text-xs font-medium text-slate-500">Father: {item.fatherName}</p>
+                        <p className="text-xs font-medium text-slate-500 uppercase">Father: {item.fatherName}</p>
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap">
                         <div className="flex items-center gap-1.5 font-bold text-slate-800">
                           <MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-                          <span>{item.village}</span>
+                          <span className="uppercase">{item.village}</span>
                         </div>
-                        <p className="text-xs text-slate-500 pl-5">Mandal: {item.mandal}</p>
+                        <p className="text-xs text-slate-500 pl-5 uppercase">Mandal: {item.mandal}</p>
                       </td>
                       <td className="px-4 py-3.5 whitespace-nowrap font-mono text-xs">
                         <a 

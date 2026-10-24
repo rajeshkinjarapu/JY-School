@@ -1,181 +1,47 @@
-# ప్రాజెక్ట్ స్థితి (Project State)
+# Project State & Architecture Summary
 
-## చివరి సంభాషణ (Latest Conversation - 2026-10-07)
-- **టాస్క్:** NTA/TCS iON స్టైల్ ఆన్‌లైన్ ఎగ్జామ్ ఇంజిన్ UI డిజైన్, Staff Attendance Page Redesign, Exam Management Flow, & UI Fixes.
-- **మార్పులు:** 
-  1. `TeacherAttendancePage.tsx`: స్టాఫ్ అటెండెన్స్ మేనేజర్ పేజీని ప్రీమియం టేబుల్ ఫార్మాట్ లోకి మార్చాను.
-  2. `CompetitiveExamsPage.tsx`: అడ్మిన్ డ్యాష్బోర్డ్ లో ఎగ్జామ్స్ లిస్ట్ అవ్వడం (API ఫిక్స్), దానికి "Manage Questions", "Publish", మరియు "Admin Preview" బటన్స్ యాడ్ చేయడం జరిగింది.
-  3. `ManageCompetitiveQuestions.tsx`: క్వశ్చన్స్ మాన్యువల్ గా యాడ్ చేయడానికి ఒక అద్భుతమైన Interactive Question Editor డెవలప్ చేశాను.
-  4. **Backend Architecture Update (`competitiveExams.controller.ts`)**: మాన్యువల్ గా యాడ్ చేసిన క్వశ్చన్స్ ముందుగా `MasterQuestion` డేటాబేస్ లో సేవ్ అయ్యి, ఆ తర�## తాజా స్థితి (Latest Status - 2026-10-24 Part 3)
-- **టాస్క్:** MCQ Paper Generator లో ఆప్షన్ల అమరిక కొలీజన్ ఫిక్స్ (Q53 overlap fix), ప్రింట్ ప్రివ్యూ ఆప్టిమైజేషన్ మరియు Excel Upload ఫీచర్ జోడింపు.
-- **సమస్య:** 
-  1. ప్రింట్ ప్రివ్యూలో కెమిస్ట్రీ పేపర్‌లో అన్ని చిన్న ప్రశ్నలు ఉండటం వల్ల 1 పేజీకి కుదించబడింది (`1 sheet of paper`). అయితే Question 53 లో `(C) Both (A) and (B)` అనే ఆప్షన్ 16 క్యారెక్టర్ల పొడవు ఉండటం వల్ల 4 కాలమ్స్‌లో స్పేస్ చాలక పక్కనున్న `(D) Antimony` పైకి ఎక్కి ఓవర్‌లాప్ అయ్యింది.
-  2. యూజర్ ఎక్సెల్ ఫైల్ ద్వారా ప్రశ్నలు మరియు ఆప్షన్లను ఒకేసారి బల్క్‌గా అప్‌లోడ్ చేసుకునే ఆప్షన్ కోరారు.
-- **పూర్తయిన పరిష్కారాలు:**
-  1. **`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`:**
-     - 4-కాలమ్ సింగిల్ లైన్ పరిమితిని 13 అక్షరాలకు (`singleLineLimit: 13`) ఖచ్చితంగా క్యాలిబ్రేట్ చేశాము. దీనివల్ల Q51, Q52, Q54-Q61 లాంటి చిన్న ఆప్షన్లు (సంఖ్యలు, చిహ్నాలు, చిన్న పదాలు) అన్నీ సింగిల్ లైన్‌లో వస్తాయి.
-     - `Both (A) and (B)` వంటి 13 అక్షరాల కంటే ఎక్కువ ఉన్న ఆప్షన్లు ఆటోమేటిక్‌గా **2×2 Grid** లోకి వెళ్లిపోతాయి (ఎటువంటి ఓవర్‌లాప్ లేకుండా పర్ఫెక్ట్‌గా అమరుతాయి).
-     - ఆప్షన్ టెక్స్ట్ కంటైనర్లకు `break-words` జోడించబడింది.
-  2. **`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`:**
-     - టాప్ టూల్‌బార్‌లో **"Excel Upload"** బటన్ జోడించబడింది.
-     - ఎక్సెల్ ఫైల్ (.xlsx, .xls, .csv) అప్‌లోడ్ మోడల్ మరియు బహుళ సబ్జెక్టులు/సింగిల్ సబ్జెక్ట్ ప్రశ్నలు, ఆప్షన్లు (A, B, C, D) మరియు Answer Key ఆటోమేటిక్ మ్యాపింగ్ లాజిక్ రూపొందించబడింది.
-     - ఉపాధ్యాయులు సులభంగా ఉపయోగించడానికి **"Sample Excel Template"** డౌన్‌లోడ్ బటన్ అందించబడింది.
-*
-     - టాప్ బార్ లో "Upload Excel" బటన్ జోడించబడింది.
-     - శాంపిల్ ఎక్సెల్ టెంప్లేట్ డౌన్‌లోడ్ సదుపాయం (`Student_Address_Collection_Template.xlsx`).
-     - ఫైల్ అప్‌లోడ్ డ్రాప్‌జోన్, లైవ్ డేటా ప్రివ్యూ (మొదటి 5 రికార్డులు) మరియు సులభమైన ఇంపోర్ట్ మోడల్.
-     - అప్‌లోడ్ పూర్తి కాగానే ఆటోమేటిక్‌గా టేబుల్ రిఫ్రెష్ అయి డేటా వెంటనే కనిపిస్తుంది.
-     - (Build Fix): `showAddModal` JSX బ్లాక్‌కు మిస్ అయిన `)}` సరిచేయబడింది.
-  3. **Frontend Teacher Page (`frontend/src/pages/address-collection/AddressCollectionTeacherPage.tsx`):**
-     - ఉపాధ్యాయులు కూడా తమ సర్వే/అడ్రస్ డేటాను ఎక్సెల్ ఫైల్ ద్వారా సులభంగా అప్‌లోడ్ చేసుకోగలిగేలా Teacher Page లో కూడా "Upload Excel" బటన్ మరియు మోడల్ అందించబడింది.
+## 1. Hosting & Architecture
+- **Backend (Node.js API):** Runs on VPS at `http://66.116.252.191:19998` via PM2.
+- **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` via PM2 / serve.
+- **Databases:**
+  - Primary DB: Supabase PostgreSQL (`postgresql://postgres.iqffyuxkffxidugtqjox:...@aws-0-ap-south-1.pooler.supabase.com:6543/postgres`).
+  - Secondary DB: Local PostgreSQL on VPS (`jy_school_local`).
+- **Mobile Apps (Flutter):**
+  - Universal App, Student App, Teacher App, Admin App in `flutter_mobile/`.
+  - Deployment via Shorebird (OTA patch or full release).
 
-## తాజా స్థితి (Latest Status - 2026-10-24)
-- **టాస్క్:** MCQ Paper Generator లో ఆప్షన్ల లేఅవుట్ క్యాలిబ్రేషన్ (Single Line, 2*2, One by One ఖచ్చితమైన అమరిక).
-- **సమస్య:** 
-  - గత అప్‌డేట్‌లో లిమిట్‌లు చాలా కఠినంగా (12 chars, 32 chars) ఉండడం వల్ల:
-    - సింగిల్ లైన్ లో రావాల్సిన Question 47 (`\sqrt{6} sq units`) 2*2 లోకి వెళ్ళింది.
-    - 2*2 లో రావాల్సిన Question 45 (`-(1/\sqrt{2})\sin\theta\hat{i} + ...`) వన్-బై-వన్ లోకి వెళ్ళింది.
-- **పరిష్కారం:**
-  - `frontend/src/components/QuestionBank/LiveLatexPreview.tsx` లో:
-    1. `estimateVisualLength` గణిత సూత్రాల అసలు విజువల్ వెడల్పును మాత్రమే లెక్కించేలా (కృత్రిమ ప్యాడింగ్ లేకుండా) పునర్నిర్మించబడింది.
-    2. థ్రెషోల్డ్స్ ఖచ్చితంగా క్రమాంకనం చేయబడ్డాయి:
-       - **Single Line (4 కాలమ్స్):** 16 అక్షరాల వరకు (దీనివల్ల Q46, Q47, Q63, Q64 లు నీట్‌గా ఒకే లైన్‌లో వస్తాయి).
-       - **2*2 (2 కాలమ్స్):** 17 నుండి 42 అక్షరాల వరకు (దీనివల్ల Q37, Q45, Q65, Q66 లు పర్ఫెక్ట్‌గా 2*2 లో వస్తాయి, వన్-బై-వన్ కి వెళ్ళవు).
-       - **One by One (1 కాలమ్):** 42 అక్షరాల కంటే పెద్ద వాక్యాలకు మాత్రమే.
-    3. అనవసరమైన `hasWideFormula` రూల్స్ తీసివేయబడి, కేవలం లెంగ్త్ ఆధారంగానే పర్ఫెక్ట్ లేఅవుట్ సెలెక్షన్ జరిగేలా సింప్లిఫై చేయబడింది.
+## 2. Recent Updates & Fixes (Address Collection Module)
+- **Classes Restricted Strictly to Nursery through 10th Class:**
+  - Removed database `/api/classes` query and removed merging of dynamic/database class names (such as NUR, PP1, PP2, 1st, 2nd, 3rd, etc.).
+  - The Class dropdown and entry modal datalist now strictly contain only the 13 standard classes:
+    `Nursery`, `LKG`, `UKG`, `1st Class`, `2nd Class`, `3rd Class`, `4th Class`, `5th Class`, `6th Class`, `7th Class`, `8th Class`, `9th Class`, `10th Class`.
+  - Class filter logic updated to case-insensitive uppercase matching.
+- **Capital Letters (UPPERCASE) Requirement:**
+  - All text fields (`studentName`, `className`, `fatherName`, `village`, `mandal`, `referenceTeacherName`) are strictly displayed, processed, and stored in **UPPERCASE**.
+  - **Inputs:** Added CSS `uppercase` to input fields on both Admin and Teacher forms for real-time uppercase rendering as user types.
+  - **Backend Controller:** In `backend/src/controllers/addressCollection.controller.ts`, `addAddressCollection`, `updateAddressCollection`, and `bulkAddAddressCollection` convert all string fields to `.toUpperCase()`. `getAddressCollections` maps all existing database records to `.toUpperCase()`.
+  - **Exports:** Both Excel and PDF exports in Admin and Teacher views format all string columns to `.toUpperCase()`.
+  - **Excel Import:** In `processExcelFile`, parsed records are converted to `.toUpperCase()` before submitting to bulk API.
+- **Edit Option Added:**
+  - Added Edit (Pencil icon) button in Admin table and Teacher table.
+  - Admin modal and Teacher form dynamically switch to edit mode and call `PUT /api/address-collection/:id`.
+  - Teacher can edit their own submissions; Admin can edit any record.
+- **Class Field Added:**
+  - Added `className String?` to `StudentAddressCollection` model in Prisma.
+  - Added Class selector/input with datalist in Admin and Teacher entry forms.
+  - Added Class filter in Admin view and Class column in Excel/PDF exports.
+- **PDF Print & Formatting Fix:**
+  - Configured A4 Landscape PDF with exact 15 rows per page padding to prevent awkward overflow or large empty spaces.
 
-
-## తాజా స్థితి (Latest Status - 2026-10-23)
-- **టాస్క్:** ఎగ్జామ్ మార్క్స్ ఎంట్రీ పేజీ (`MarksEntryPage.tsx`) 100% వ్యూ లో అన్ని సబ్జెక్టులు కనిపించేలా మరియు టెక్స్ట్ ర్యాప్ అవ్వకుండా లేఅవుట్ ఆప్టిమైజేషన్.
-- **సమస్య:** 
-  - ప్రతి సబ్జెక్ట్ కాలమ్‌కు `min-w-[200px]` ఉండటం వల్ల టేబుల్ వెడల్పు 1650px+ అయి, 100% జూమ్‌లో Physical Science, Social Studies వంటి సబ్జెక్టులు స్క్రీన్‌కు కుడివైపు కనిపించకుండా పోయేవి.
-  - స్టూడెంట్ నేమ్స్ మరియు హెడర్లలో `nowrap` లేకపోవడం వల్ల పేర్లు 2 లైన్లుగా విరిగిపోయేవి (text wrapping).
-- **పరిష్కారం:**
-  - `frontend/src/pages/exams/MarksEntryPage.tsx` లో:
-    1. విద్యార్థుల పేర్లు, రోల్ నెంబర్లు మరియు సబ్జెక్ట్ హెడర్లకు `whitespace-nowrap` అమలు చేయబడింది.
-    2. సబ్జెక్ట్ కాలమ్‌ల నుండి `min-w-[200px]` తీసివేసి కాంపాక్ట్ సైజింగ్ (`min-w-[76px]`) మరియు సెంటర్డ్ అలైన్‌మెంట్ అందించబడింది.
-    3. మార్క్స్ ఇన్‌పుట్ బాక్స్ `w-14 h-9` (56px) గా ఆప్టిమైజ్ చేయబడింది.
-    4. స్టూడెంట్ కాలమ్‌కు `sticky left-0` యాడ్ చేయబడింది.
-    5. టూల్‌బార్‌లో సైడ్‌బార్‌ను సులభంగా దాచడానికి/తెరవడానికి "Full Width / Standard View" టాగుల్ బటన్ జోడించబడింది.
-    6. ఇప్పుడు 100% బ్రౌజర్ వ్యూలో అన్ని సబ్జెక్టులు ఒకే స్క్రీన్‌లో ఎలాంటి టెక్స్ట్ ర్యాపింగ్ లేకుండా స్పష్టంగా కనిపిస్తాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 2)
-- **టాస్క్:** స్టూడెంట్స్ పేజీ (`StudentListPage.tsx`) లో "Upload Photos" ఆప్షన్ పనిచేయకపోవడం (క్లిక్ చేసినా ఏమీ కాకపోవడం) పరిష్కరించడం.
-- **సమస్య:** 
-  - `StudentListPage.tsx` లో "Upload Photos" బటన్‌కు ఎలాంటి `onClick` హ్యాండ్లర్ లేదు మరియు మోడల్ కూడా రూపొందించబడలేదు.
-- **పరిష్కారం:**
-  - అప్‌లోడ్ పూర్తి కాగానే లోకల్ క్యాష్ క్లియర్ అయి కొత్త ఫోటోలు వెంటనే స్క్రీన్‌పై కనిపిస్తాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 3)
-- **టాస్క్:** ఫ్లట్టర్ యాప్ మరియు వెబ్ యాప్‌లలో టీచర్ లాగిన్‌లో "Address Collection" లో రెండు ట్యాబ్‌ల రూపకల్పన (1. కొత్త ఎంట్రీ, 2. సేకరించిన చిరునామాలు).
-- **పూర్తయిన పనులు:**
-  1. **Backend (`backend/src/controllers/addressCollection.controller.ts`)**:
-     - `GET /api/address-collection` లో టీచర్ రోల్ కి అనుగుణంగా ఆ టీచర్ ఎంటర్ చేసిన వివరాలు మాత్రమే వచ్చేలా సెక్యూర్ ఫిల్టర్ (`createdById` / `referenceTeacherId`) అమలు చేయబడింది.
-     - టీచర్ తన సొంత ఎంట్రీలను మాత్రమే తొలగించగలిగేలా `deleteAddressCollection` లో ఆథరైజేషన్ చేర్చబడింది.
-  2. **Web App (`frontend/src/pages/address-collection/AddressCollectionTeacherPage.tsx`)**:
-     - ప్రొఫెషనల్ 2-ట్యాబ్ ERP డిజైన్: ట్యాబ్ 1 లో ఫారమ్ ఎంట్రీ, ట్యాబ్ 2 లో సేకరించిన చిరునామాల టేబుల్ (కౌంట్ బ్యాడ్జ్, లైవ్ సెర్చ్, Excel ఎక్స్‌పోర్ట్, రిఫ్రెష్, డిలీట్).
-  3. **Flutter App (`flutter_mobile/lib/screens/student_address_collection_screen.dart`)**:
-     - డ్యూయల్ ట్యాబ్ స్క్రీన్: ట్యాబ్ 1 లో క్లీన్ input ఫారమ్, ట్యాబ్ 2 లో కార్డ్ వ్యూ, లైవ్ సెర్చ్, పుల్-టు-రిఫ్రెష్, వన్-ట్యాప్ ఫోన్ నెంబర్ కాపీ బటన్, డిలీట్ కన్ఫర్మేషన్.
-     - సిస్టమ్ నావిగేషన్ బార్ సమస్య లేకుండా `SafeArea(bottom: true)` అమలు చేయబడింది.
-     - కోడ్ మార్పులు కేవలం Dart ఫైల్ లోనే ఉండటం వలన Shorebird Patch (OTA) ద్వారా నేరుగా అప్‌డేట్ చేయవచ్చు.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 4)
-- **టాస్క్:** ID Cards సెక్షన్‌లో 53+ ప్రొఫెషనల్, మోడర్న్ టెంప్లేట్లు రూపొందించడం.
-- **పూర్తయిన పనులు:**
-  1. **`frontend/src/components/idcards/Templates.tsx`** — 53 యూనీక్ ID కార్డ్ టెంప్లేట్లు 11 కేటగరీలలో రూపొందించబడ్డాయి: Classic, Corporate, Premium, Luxury, Nature, Dark, Pastel, Minimal, Modern, Vibrant. Vertical & Horizontal రెండు ఆరియంటేషన్లలో. QR Code, Photo, School Info, Student Info అన్నీ ప్రొఫెషనల్ గా.
-  2. **`frontend/src/pages/idcards/IdCardDashboard.tsx`** — కేటగరీ ఫిల్టర్ పిల్స్, లైవ్ సెర్చ్, 4-కాలమ్ గ్రిడ్, లైవ్ మినీ ప్రివ్యూ, Selected template highlight అన్నీ అందించబడ్డాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 5)
-- **టాస్క్:** చేసిన అన్ని మార్పులను Git కి పంపడం (Git Push) మరియు VPS లో తాజా కోడ్ అప్‌డేట్ చేయడం.
-- **వివరాలు:**
-  - లోకల్ మెషీన్ నుండి గిట్‌కి కోడ్ పుష్ చేయడానికి కమాండ్స్ అందించబడ్డాయి.
-  - VPS సర్వర్‌లో కోడ్ పుల్ చేసి ఫ్రంట్‌ఎండ్/బ్యాక్‌ఎండ్ రీబిల్డ్ చేయడానికి అవసరమైన SSH కమాండ్స్ అందించబడ్డాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 6)
-- **టాస్క్:** Teachers పేజీ (`TeacherListPage.tsx`) లో "Upload Teachers" మరియు "Upload Photos" ఆప్షన్లు పనిచేయకపోవడం పరిష్కరించడం.
-- **సమస్య:**
-  1. `TeacherListPage.tsx` లో "Upload Teachers" మరియు "Upload Photos" బటన్లకు `onClick` హ్యాండ్లర్లు లేవు (కేవలం డమ్మీ బటన్లు).
-  2. టీచర్ల Excel ఇంపోర్ట్ మరియు ఫోటోల బల్క్ అప్‌లోడ్ మోడల్స్ లేవు.
-  3. బ్యాకెండ్‌లో టీచర్ల ఫోటోల బల్క్ అప్‌లోడ్ API (`POST /api/teachers/bulk-photos`) రూట్ & కంట్రోలర్ లేవు.
-- **పరిష్కారం:**
-  1. **Backend (`teachers.controller.ts` & `teachers.ts`)**:
-     - `POST /api/teachers/bulk-photos` ఇంప్లిమెంట్ చేయబడింది. ZIP లేదా మల్టిపుల్ ఇమేజ్ ఫైళ్ల ద్వారా Employee ID (`SVJY-1140`, `1140`), మొబైల్ నెంబర్ (`9949511604`), లేదా పేరు (`SOMESH`) లలో దేనితోనైనా మ్యాచ్ చేసి ఫోటోలను అప్‌డేట్ చేస్తుంది.
-     - `GET /api/teachers/template` Excel టెంప్లేట్ డౌన్‌లోడ్ API జోడించబడింది.
-     - `bulkImport` లో Qualification ని కూడా సేవ్ చేసేలా మరియు కాలమ్ నేమ్ వేరియేషన్స్ సపోర్ట్ చేసేలా మెరుగుపరచబడింది.
-  2. **Frontend (`TeacherListPage.tsx`)**:
-     - "Upload Teachers" మోడల్: Step 1 Excel Template Download, Step 2 Drag & Drop Excel/CSV ఫైల్, ఎర్రర్ లాగ్స్ మరియు సక్సెస్ కౌంట్స్.
-     - "Upload Photos" మోడల్: Multiple Image Files లేదా .ZIP ఫైల్‌ను డ్రాగ్/సెలెక్ట్ చేయవచ్చు, `JSZip` ద్వారా ప్యాకేజ్ చేసి వేగంగా అప్‌లోడ్ అవుతుంది.
-     - డెస్క్‌టాప్ మరియు మొబైల్ వ్యూలలో సూపర్ అడ్మిన్‌లకు బటన్లు సులభంగా అందుబాటులో ఉంచబడ్డాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 7)
-- **టాస్క్:** Forgot Password ప్రక్రియ — Gmail OTP అప్‌డేట్ విధానం, మరియు ప్రత్యామ్నాయ పద్ధతుల (Mobile SMS OTP, WhatsApp OTP, Admin Reset, DOB Verification) వివరణ.
-- **విశ్లేషణ:** బ్యాకెండ్‌లో ఇప్పటికే `nodemailer` మరియు `sendOtpEmail` / `sendResetLinkEmail` కోడ్ ఉన్నప్పటికీ, స్కూల్ విద్యార్థులు/తల్లిదండ్రులకు Gmail వాడటం కష్టతరంగా ఉంటుంది. కాబట్టి స్కూల్ ERP కి అనువైన ఉత్తమ ఆల్టర్నేటివ్స్ వివరంగా చర్చించబడ్డాయి.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 8)
-- **టాస్క్:** Flutter App టీచర్ లాగిన్‌లో "My Students" వద్ద ఇతర సబ్జెక్ట్ టీచర్లకు విద్యార్థుల వ్యక్తిగత, కాంటాక్ట్ మరియు కుటుంబ వివరాలు కనిపించకుండా కేవలం సంబంధిత "క్లాస్ టీచర్" మరియు "అడ్మిన్"లకు మాత్రమే పరిమితం చేయడం.
-- **పూర్తయిన మార్పులు:**
-  1. **Backend API Security (`backend/src/controllers/students.controller.ts`)**:
-     - `getById` API లో డబుల్-లేయర్ ప్రైవసీ చెక్: ఒకవేళ రిక్వెస్ట్ చేసిన టీచర్ ఆ విద్యార్థి తరగతికి చెందిన అధికారిక క్లాస్ టీచర్ కాకపోతే (`!isClassTeacher`), సున్నితమైన వివరాలు (`aadharNo`, `address`, `fatherPhone`, `motherPhone`, `guardianPhone`, `fatherName`, `motherName`, `dob`, `user.phone`, `user.email`) సర్వర్ నుండే `null` గా మాస్క్ చేయబడతాయి.
-  2. **Flutter App (`flutter_mobile/lib/screens/students_screen.dart`)**:
-     - విద్యార్థి కార్డ్‌పై ఉండే డైరెక్ట్ పేరెంట్ ఫోన్ కాల్ బటన్ కేవలం క్లాస్ టీచర్ లేదా అడ్మిన్‌కు మాత్రమే కనిపిస్తుంది. ఇతర సబ్జెక్ట్ టీచర్లకు క్లీన్ నావిగేషన్ యారో కనిపిస్తుంది.
-     - `_isClassTeacherForStudent` మెథడ్ ద్వారా ఆటోమేటిక్‌గా టీచర్ యొక్క `homeRoomClass` మరియు క్లాస్ `classTeacherId` లతో మ్యాచ్ చేయబడుతుంది.
-  3. **Flutter App (`flutter_mobile/lib/screens/student_profile_screen.dart`)**:
-     - క్లాస్ టీచర్ లేదా అడ్మిన్ అయితే పూర్తి వివరాలు (Personal Details, Contact, Family Details) యథావిధిగా ఓపెన్ అవుతాయి.
-     - ఇతర సబ్జెక్ట్ టీచర్లకు:
-       - హీరో సెక్షన్‌లో వాట్సాప్/కాల్ బటన్లు దాచబడతాయి.
-       - Personal, Contact, Family వివరాల స్థానంలో సురక్షితమైన **"Class Teacher Restricted Access"** ప్రైవసీ కార్డ్ మరియు బేసిక్ అకడమిక్ కార్డ్ ప్రదర్శించబడతాయి.
-       - సబ్జెక్ట్ టీచర్లకు అవసరమైన **EXAMS** ట్యాబ్ (మార్క్స్, స్లిప్ టెస్టులు) అందుబాటులో ఉంటుంది.
-     - యూనివర్సల్ యాప్ మరియు టీచర్ యాప్ రెండింటిలోనూ ఒకేలా ఖచ్చితంగా పనిచేస్తుంది.
-     - కోడ్ మార్పులు కేవలం Dart ఫైల్స్‌లోనే ఉన్నందున ఈ అప్‌డేట్ నేరుగా **Shorebird Patch (OTA)** ద్వారా యూజర్లకు అందుతుంది.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 9)
-- **టాస్క్:** వెబ్ యాప్ డ్యాష్‌బోర్డ్ (`DashboardPage.tsx`) లో 0 చూపుతున్న ఫ్లాట్ 7-రోజుల "Attendance Overview" లైన్ గ్రాఫ్ స్థానంలో విద్యార్థుల పుట్టినరోజులను చూపించే ఆధునిక **"Today's Birthdays 🎂"** సెక్షన్ ఏర్పాటు చేయడం.
-- **పూర్తయిన పనులు:**
-  1. **Backend Controller (`backend/src/controllers/dashboard.controller.ts`)**:
-     - `getAdminDashboard` లో `studentsWithDob` క్వెరీ జోడించబడింది.
-     - భారతీయ ప్రామాణిక సమయం (IST - Asia/Kolkata) ఆధారంగా ప్రస్తుత రోజు పుట్టినరోజులు జరుపుకుంటున్న విద్యార్థులను (`todayBirthdays`) మరియు రాబోయే 7 రోజులలో పుట్టినరోజులు ఉన్న విద్యార్థులను (`upcomingBirthdays`) కనుగొనే ఖచ్చితమైన లాజిక్ రూపొందించబడింది.
-     - విద్యార్థి పేరు, ప్రొఫైల్ ఫోటో, క్లాస్, రోల్ నెంబర్, ప్రస్తుత వయస్సు (`Turning X Years 🎈`), మరియు పేరెంట్ ఫోన్ నంబర్ వివరాలు రెస్పాన్స్‌లో అందించబడ్డాయి.
-  2. **Frontend UI (`frontend/src/pages/dashboard/DashboardPage.tsx`)**:
-     - 7-రోజుల ఫ్లాట్ గ్రాఫ్ స్థానంలో ప్రీమియం `TodayBirthdaysCard` కాంపోనెంట్ రూపొందించబడింది.
-     - **ఫీచర్లు:**
-       - **హెడర్ & బ్యాడ్జ్:** కేక్ ఐకాన్, గ్లోయింగ్ కలర్ పాలెట్, నేడు పుట్టినరోజు ఉన్న విద్యార్థుల కౌంట్ పిల్ (`{count} Celebrating Today 🎉`).
-       - **డ్యూయల్ ట్యాబ్స్:** "Today ({count})" మరియు "Upcoming ({count})" ట్యాబ్ స్విచ్చర్ ద్వారా రాబోయే 7 రోజుల పుట్టినరోజులను కూడా ముందస్తుగా ప్లాన్ చేసుకోవచ్చు.
-       - **స్టూడెంట్ బర్త్‌డే కార్డ్స్:** విద్యార్థి ఫోటో (సెలెబ్రేషన్ రింగ్ & కేక్ బ్యాడ్జ్ తో), పేరు, క్లాస్, రోల్ నెంబర్, వయస్సు బ్యాడ్జ్ (`🎈 Turning X`).
-       - **వన్-క్లిక్ WhatsApp విష్:** బటన్ క్లిక్ చేయగానే స్కూల్ మేనేజ్‌మెంట్ పేరుతో అందమైన శుభాకాంక్షల మెసేజ్ ఆటోమేటిక్‌గా టైప్ అయి వాట్సాప్ చాట్ ఓపెన్ అవుతుంది.
-       - **డైరెక్ట్ ఫోన్ కాల్ బటన్:** పేరెంట్ ఫోన్ నంబర్‌కు ఒకే క్లిక్‌తో కాల్ చేసే సదుపాయం.
-       - **ఎంటి స్టేట్:** ఈరోజు ఎవరికీ పుట్టినరోజు లేనప్పుడు నిరుత్సాహపరచకుండా ఆహ్లాదకరమైన ఎంటి-స్టేట్ మరియు "View Upcoming This Week →" బటన్ ప్రదర్శించబడుతుంది.
-  3. **Backend TypeScript Fix (`backend/src/controllers/students.controller.ts`)**:
-     - `students.controller.ts` లో నాన్-క్లాస్ టీచర్లకు సున్నితమైన డేటాను మాస్క్ చేసే సమయంలో TypeScript టైప్ ఎర్రర్‌లు రాకుండా `const masked: any = student;` ద్వారా సరిచేయబడింది. ఇప్పుడు బ్యాకెండ్ `npm run build` ఎటువంటి ఎర్రర్ లేకుండా విజయవంతంగా పూర్తవుతుంది.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 10)
-- **టాస్క్:** Admissions Management పేజీ (`AdmissionsManagementPage.tsx`) లో కలిసిపోయినట్టు ఉన్న వివరాలను విడదీసి, రోల ఎత్తు (Height) పెంచి అందంగా, విశాలంగా మరియు ప్రీమియం ERP లుక్‌లో రీడిజైన్ చేయడం.
-- **పూర్తయిన పనులు:**
-  1. **రో ఎత్తు & ప్యాడింగ్ (`py-6 px-5`):** టేబుల్ రోల ఎత్తును ~70px నుండి ~120px వరకు పెంచి ప్రతి వివరానికి సౌకర్యవంతమైన స్పేసింగ్ కల్పించబడింది.
-  2. **మినిమమ్ విడ్త్ కంట్రోల్ (`min-w-[1250px]`):** టేబుల్ చిన్న స్క్రీన్లలో కూడా పిండినట్టు (cramped) కాకుండా ప్రతి కాలమ్‌కు నిర్దిష్ట `min-width` అందించబడింది.
-  3. **స్టూడెంట్ వివరాల ఆధునీకరణ:** పెద్ద బోల్డ్ పేరు (`text-base font-black`), జెండర్ కలర్ బ్యాడ్జ్, క్యాలెండర్ ఐకాన్‌తో DOB పిల్, మరియు ప్రత్యేక మోనోస్పేస్ అప్లికేషన్ నంబర్ బ్యాడ్జ్.
-  4. **పేరెంట్స్ & కాంటాక్ట్ విభజన:** తండ్రి/తల్లి పేరు, క్లిక్ చేయగల ఎమరాల్డ్ గ్రీన్ ఫోన్ పిల్, మరియు MapPin తో స్పష్టమైన అడ్రస్ లేబుల్.
-  5. **రిజిస్ట్రేషన్ & క్యాష్ రిసిప్ట్ హైలైట్:** రిజిస్టర్ చేసిన సిబ్బంది పేరు, క్యాష్ కలెక్ట్ చేసిన వారి వివరాలను ప్రత్యేక వార్మ్ అంబర్ బ్యాడ్జ్ (`💵 Cash Recvd: ...`) లో మరియు Academic Year ను పర్పుల్ బ్యాడ్జ్‌లో స్పష్టంగా వేరు చేయబడింది.
-  6. **ఫీ & పేమెంట్ స్టేటస్:** పెద్ద రుపీ అమౌంట్, కలర్-కోడెడ్ పేమెంట్ మోడ్ పిల్, మరియు డైరెక్ట్ "View Receipt" బటన్.
-  7. **స్టేటస్ డ్రాప్‌డౌన్ & యాక్షన్స్:** మోడర్న్ రౌండెడ్ సెలెక్ట్ బాక్స్ విత్ ChevronDown, మరియు గ్రాడియంట్ షాడోతో కూడిన "Print PDF" బటన్.
-
-## తాజా స్థితి (Latest Status - 2026-10-23 Part 11)
-- **టాస్క్:** Admissions Management పేజీ (`AdmissionsManagementPage.tsx`) టేబుల్‌లో అనవసరపు వివరాలు తీసివేసి కేవలం 7 ముఖ్య కాలమ్స్ (`S.No`, `Photo`, `Student Name`, `Class`, `Parent Name`, `Mobile No`, `Reference`) మాత్రమే కనిపించేలా చేయడం, మరియు విద్యార్థి పేరుపై క్లిక్ చేయగానే పూర్తి వివరాలతో కూడిన మోడల్ (`Full Details Modal`) ఓపెన్ అయ్యేలా చేయడం.
-- **పూర్తయిన పనులు:**
-  1. **టేబుల్ సింప్లిఫికేషన్ & క్లీన్ లుక్ (`AdmissionsManagementPage.tsx`):**
-     - టేబుల్‌ను తేలికగా, విశాలంగా మరియు స్పష్టంగా మార్చడానికి 7 ముఖ్య కాలమ్స్‌తో పునర్నిర్మించబడింది:
-       - **S.No:** 1, 2, 3... సీరియల్ నెంబర్
-       - **Photo:** విద్యార్థి ఫోటో థంబ్‌నెయిల్
-       - **Student Name:** బోల్డ్, హోవర్ ఎఫెక్ట్ మరియు `↗` ఇండికేటర్‌తో క్లిక్ చేయగల బటన్. దీనిపై క్లిక్ చేస్తే ఫుల్ డీటెయిల్స్ మోడల్ ఓపెన్ అవుతుంది.
-       - **Class:** అప్లై చేసిన క్లాస్ బ్యాడ్జ్ (`Class 8`)
-       - **Parent Name:** తండ్రి పేరు (లేదా తల్లి పేరు)
-       - **Mobile No:** డైరెక్ట్ కాల్ చేయగల ఫోన్ పిల్
-       - **Reference:** రిజిస్టర్ చేసిన సిబ్బంది పేరు మరియు క్యాష్ కలెక్టర్ వివరాలు
-       - **Status & Actions:** క్విక్ స్టేటస్ డ్రాప్‌డౌన్, ఫుల్ డీటెయిల్స్ వ్యూ ఐకాన్ (👁️), ప్రింట్ PDF బటన్ (🖨️), డిలీట్ బటన్ (🗑️).
-  2. **సమగ్ర ఫుల్ డీటెయిల్స్ మోడల్ (`FullAdmissionDetailsModal`):**
-     - విద్యార్థి పేరుపై క్లిక్ చేయగానే స్క్రీన్‌పై మోడర్న్ డార్క్ గ్రాడియంట్ హెడర్‌తో కూడిన ప్రీమియం మోడల్ ఓపెన్ అవుతుంది.
-     - **వివరాలు 4 విభాగాలుగా విభజించబడ్డాయి:**
-       1. **Personal Information:** జెండర్, DOB, ఆధార్, మాతృభాష, జాతీయత, మతం, కులం, మునుపటి పాఠశాల.
-       2. **Parent & Guardian Details:** తండ్రి వివరాలు (పేరు, వృత్తి, ఫోన్, ఆధార్), తల్లి వివరాలు (పేరు, వృత్తి, ఫోన్, ఆధార్).
-       3. **Contact & Address Details:** ప్రాథమిక మొబైల్ నెంబర్ (`Call` & `WhatsApp` బటన్లు), ఆల్టర్నేట్ ఫోన్, పూర్తి నివాస చిరునామా.
-       4. **Fee & Administration Details:** అప్లికేషన్ ఫీజు, చెల్లింపు విధానం, పేమెంట్ స్టేటస్, క్యాష్ కలెక్ట్ చేసిన సిబ్బంది, రిజిస్టర్ చేసిన సిబ్బంది, మరియు పేమెంట్ రసీదు వ్యూ లింక్.
-     - మోడల్ లోపల నుంచే స్టేటస్ (Pending / Enrolled / Rejected) మార్చే సదుపాయం మరియు అధికారిక A4 అప్లికేషన్ ఫారమ్‌ను వెంటనే ప్రింట్ చేసే "Print PDF" బటన్ అందించబడ్డాయి.
+## 3. VPS Deployment Guide
+Always connect via SSH:
+```bash
+ssh root@66.116.252.191
+cd /root/JY-School
+git pull origin main
+cd /root/JY-School/backend
+npm run build
+cd /root/JY-School/frontend
+npm run build
+pm2 restart all
+```
