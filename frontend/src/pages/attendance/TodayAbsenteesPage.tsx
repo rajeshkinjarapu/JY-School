@@ -49,31 +49,29 @@ export default function TodayAbsenteesPage() {
       s.studentId || '-',
       s.studentName || '-',
       s.className || '-',
-      s.mobileNumber || '-',
       s.reason || 'Absent'
     ]);
 
     const remainder = rows.length % 25;
     const padding = remainder === 0 && rows.length > 0 ? 0 : 25 - remainder;
     for (let i = 0; i < padding; i++) {
-      rows.push(['', '', '', '', '', '']);
+      rows.push(['', '', '', '', '']);
     }
 
     autoTable(doc, {
       startY: 32,
-      head: [['S.No', 'Student ID', 'Student Name', 'Class', 'Mobile', 'Status']],
+      head: [['S.No', 'Student ID', 'Student Name', 'Class', 'Status']],
       body: rows,
       theme: 'grid',
       headStyles: { fillColor: [79, 70, 229], textColor: 255, fontStyle: 'bold', minCellHeight: 9, valign: 'middle' },
       bodyStyles: { minCellHeight: 9.6, valign: 'middle' }, 
       styles: { fontSize: 9, cellPadding: 2, overflow: 'hidden' },
       columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 55 },
-        3: { cellWidth: 20 },
-        4: { cellWidth: 35 },
-        5: { cellWidth: 30 }
+        0: { cellWidth: 15, halign: 'center' },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 75 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 32 }
       },
       margin: { top: 32, bottom: 10, left: 14, right: 14 },
       didDrawPage: (data) => {
@@ -145,7 +143,6 @@ export default function TodayAbsenteesPage() {
                     <th className="py-4 px-4 font-bold text-slate-600 uppercase tracking-wider text-xs">Student ID</th>
                     <th className="py-4 px-6 font-bold text-slate-600 uppercase tracking-wider text-xs">Student Name</th>
                     <th className="py-4 px-4 font-bold text-slate-600 uppercase tracking-wider text-xs">Class</th>
-                    <th className="py-4 px-4 font-bold text-slate-600 uppercase tracking-wider text-xs">Mobile Number</th>
                     <th className="py-4 px-6 font-bold text-slate-600 uppercase tracking-wider text-xs text-right">Status</th>
                   </tr>
                 </thead>
@@ -156,7 +153,6 @@ export default function TodayAbsenteesPage() {
                       <td className="py-4 px-4 font-bold text-indigo-600 text-sm">{student.studentId || '-'}</td>
                       <td className="py-4 px-6 font-bold text-slate-800">{student.studentName}</td>
                       <td className="py-4 px-4 font-semibold text-slate-600 text-sm">{student.className}</td>
-                      <td className="py-4 px-4 font-semibold text-slate-600 text-sm">{student.mobileNumber || '-'}</td>
                       <td className="py-4 px-6 text-right">
                         <span className={`inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-lg ${student.reason === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-700'}`}>
                           {student.reason}
