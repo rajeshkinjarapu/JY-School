@@ -3,10 +3,8 @@
 ## Attendance System Enhancements (October 30, 2026)
 
 ### 1. Daily Attendance Report (`/attendance/daily-report`)
-- **Robust Isolated Iframe Print Engine:**
-  - Resolved Chromium / Cốc Cốc print blank page clipping by implementing an isolated printing iframe (same battle-tested mechanism used in Question Paper Generator).
-  - Eliminates DashboardLayout `overflow: hidden` parent clipping and ensures 100% full-page fidelity.
-  - Generous row height and table padding (`7px 6px`), KPI 4-column layout, and 60px signature headroom fit the entire A4 sheet from top to bottom seamlessly.
+- **Restored Exact Previous UI/Design:** Reverted from the custom iframe print back to the clean, modern original visual design with high-density premium cards, badges, and authentic styling.
+- **Status Badge Removal:** Removed "Status: Normal Working Session" badge from the grand summary bar.
 - **Dynamic Academic Session:** Computed accurately (`2026-2027`) based on selected report date and class academic year data.
 - **Header Clean-up:** Removed "Excellence in Quality Education" tagline from the school letterhead.
 - **Section Categorization:** Fixed class separation regex with numeric checks (`num >= 1 && num <= 5`) so `10th-A` correctly routes to Secondary Section instead of Primary Section (Primary: 11 classes, Secondary: 13 classes).
