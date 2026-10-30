@@ -12,7 +12,10 @@ const App: React.FC = () => {
     // Prefetch all core data in background immediately on app boot ONLY if logged in
     // This prevents unauthenticated public pages (like progress card view) from being redirected to login
     if (localStorage.getItem('accessToken')) {
-      DataCache.prefetch(['students', 'classes', 'exams', 'teachers', 'subjects']);
+      // Defer prefetching until 3.5s after boot and stagger requests
+      setTimeout(() => {
+        DataCache.staggeredPrefetch(['classes', 'subjects', 'teachers', 'students', 'exams'], 800);
+      }, 3500);
     }
 
     const handleGlobalClick = (e: MouseEvent) => {

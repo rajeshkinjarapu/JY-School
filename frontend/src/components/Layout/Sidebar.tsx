@@ -200,7 +200,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               onMouseEnter={() => {
                 if (window.innerWidth > 1024 || user?.role === 'SUPER_ADMIN') {
                   hoverTimeoutRef.current = setTimeout(() => {
-                    import('../../router').then(module => {
+                    import('../../router/routeImports').then(module => {
                       const loader = module.routeImports[to];
                       if (loader) loader();
                     }).catch(() => {});

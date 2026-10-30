@@ -15,7 +15,11 @@ const withSuspense = (element: React.ReactElement) => (
   <Suspense fallback={pageLoader}>{element}</Suspense>
 );
 
-export const routeImports: Record<string, () => Promise<any>> = {
+import { routeImports } from './routeImports';
+export { routeImports };
+/* _unusedRouteImports removed //
+const _ignore: any = null;
+/*
   '/dashboard': () => import('../pages/dashboard/DashboardPage'),
   '/students': () => import('../pages/students/StudentListPage'),
   '/teachers': () => import('../pages/teachers/TeacherListPage'),
@@ -40,9 +44,12 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/question-bank': () => import('../pages/question-bank/QuestionBankDashboard'),
   '/transport': () => import('../pages/transport/TransportDashboard'),
   '/settings': () => import('../pages/settings/SettingsPage'),
-  '/app-installs': () => import('../pages/dashboard/AppInstallsPage').then(m => ({ default: m.AppInstallsPage })),
+  '/app-installs': () => null
+//
+//
 };
 
+*/
 const LoginPage = lazy(() => import('../pages/auth/LoginPage'));
 const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage'));
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));

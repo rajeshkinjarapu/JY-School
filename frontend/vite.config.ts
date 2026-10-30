@@ -10,7 +10,29 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp}'],
+        globIgnores: [
+          '**/vendor-pdf-*.js',
+          '**/vendor-excel-*.js',
+          '**/vendor-math-*.js',
+          '**/vendor-charts-*.js',
+          '**/KaTeX_*.*',
+          '**/*.map'
+        ],
+        runtimeCaching: [
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|woff2?|ttf)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'static-media-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+              },
+            },
+          },
+        ],
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
       manifest: {

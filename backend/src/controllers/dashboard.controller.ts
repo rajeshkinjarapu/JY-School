@@ -58,9 +58,9 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       prisma.teacher.count(),
       prisma.class.count(),
       prisma.feePayment.aggregate({ _sum: { amountPaid: true } }),
-      prisma.class.findMany({ include: { _count: { select: { students: true } } } }).then(sortClasses),
-      prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } } }),
-      prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } } }),
+      prisma.class.findMany({ select: { id: true, name: true, section: true, _count: { select: { students: true } } } }).then(sortClasses),
+      prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
+      prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } }, select: { paymentDate: true, amountPaid: true } }),
       prisma.student.groupBy({ by: ['gender'], _count: { _all: true } }),
       prisma.feePayment.findMany({
         take: 5,
@@ -75,7 +75,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         orderBy: { createdAt: 'desc' },
         where: { isActive: true }
       }),
-      prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } } }),
+      prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } }, select: { date: true, status: true } }),
       prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } })
     ]);
 

@@ -110,6 +110,16 @@ export const DataCache = {
   /**
    * Prefetch keys in parallel on app boot (non-blocking).
    */
+  staggeredPrefetch(names: string[], delayMs = 600) {
+    names.forEach((name, index) => {
+      setTimeout(() => {
+        if (!memCache[name] && !readLocal(name)) {
+          fetchFromAPI(name).catch(() => {});
+        }
+      }, index * delayMs);
+    });
+  },
+
   prefetch(names: string[]) {
     names.forEach(name => {
       if (!memCache[name] && !readLocal(name)) {

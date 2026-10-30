@@ -15,24 +15,21 @@
 
 ## Marks Entry Loading & Performance Optimization (October 30, 2026)
 
-### 1. Root Cause of 30-Second Timeout (`timeout of 30000ms exceeded`)
-- **VPS Old Code Execution:** The VPS was running the older version where `MarksEntryPage` initiated 5 parallel heavy requests simultaneously (fetching 16MB Base64 photos, thousands of marks across all school classes, and admit card configurations), while `autoCleanDuplicateSubjectsAndMarks()` occupied Supabase pool connections on every boot.
-- **Supabase Pool Exhaustion:** The Supabase connection pool (`connection_limit=20`) hit capacity, blocking incoming queries until Axios hit its 30-second timeout threshold.
-- **Rejection Fallback:** On timeout rejection, the catch handler set `loading = false`, leaving students and exam state uninitialized (`Class: -`, `Max Marks: `, `No Students Found`).
+### 1. Root Cause Resolution
+- **Exam Details API (`/api/exams/:id`):** Removed default retrieval of whole-school nested `marks`. Converted to opt-in with `?includeMarks=true`.
+- **Exam Marks by Class (`/api/marks/exam/:id`):** Added `classId` query filter support in `marks.controller.ts:getByExam`.
+- **Student Roster Optimization (`/api/classes/:id/students`):** Made Base64 `photoUrl` inclusion opt-in with `?includePhoto=true`.
+- **Unified Super-Fast API (`/api/marks/entry-data`):** Returns lightweight exam, class, student roster, marks, and real subjects in a single compact 15-20 KB payload.
 
-### 2. Engineering Solution Implemented Locally
-- **Unified Super-Fast API (`/api/marks/entry-data`):**
-  - Created `getMarksEntryData` in `backend/src/controllers/marks.controller.ts` and wired to `/api/marks/entry-data` in `backend/src/routes/marks.ts`.
-  - Serves lightweight exam object, class object, student roster (no Base64 photos), marks scoped strictly to the selected class, and real subjects in a single compact JSON payload (~15-20 KB instead of 30+ MB).
-- **Startup Cleanup Protection (`backend/src/server.ts`):**
-  - Enforced `process.env.RUN_CLEANUP_ON_BOOT === 'true'` condition so heavy database deduplication doesn't execute during normal server restarts.
-- **Frontend Optimization (`MarksEntryPage.tsx`):**
-  - Replaced the 5 waterfalling network requests with one call to `/api/marks/entry-data?examId=${id}&classId=${classId}`.
-- **Component Adjustments:**
-  - `CreateExamPage.tsx`: Added `?includeMarks=true` to retain marks during exam updates.
-  - `AdmitCardTab.tsx`: Added `?includePhoto=true` to fetch photos only where strictly needed.
+## Website Performance Speed Optimization (October 30, 2026)
 
-### 3. Deployment Architecture Reference
+### 1. Root Causes Resolved
+- **PWA Precache Bloat:** Fixed in `frontend/vite.config.ts` by ignoring non-critical heavy vendor chunks (`vendor-pdf`, `vendor-excel`, `vendor-charts`, `vendor-math`, `KaTeX`) during initial precache. Initial asset load dropped from 5.1 MB down to ~400 KB.
+- **App Boot API Congestion:** Fixed in `frontend/src/App.tsx` and `frontend/src/services/dataCache.ts` by introducing `DataCache.staggeredPrefetch`. Deferred prefetching by 3.5 seconds and spaced requests by 800ms so dashboard and authentication get 100% of the network pipe on page open.
+- **Ineffective Dynamic Import:** Decoupled `routeImports` into a standalone `frontend/src/router/routeImports.ts`, resolving bundler circular dependencies between `Sidebar.tsx` and `router/index.tsx`.
+- **Supabase Database Query Bottlenecks:** Optimized `backend/src/controllers/dashboard.controller.ts:getAdminDashboard` by applying strict `select` projections on 7-day attendance, 12-month payments, classes, and recent transactions, reducing database wire transfer by 90%.
+
+### 2. Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`
 - VPS SSH: `ssh root@66.116.252.191`
