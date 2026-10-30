@@ -515,3 +515,85 @@ export const clearMarks = async (req: AuthRequest, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const getMarksEntryData = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const examId = (req.query.examId || req.params.examId) as string;
+    const classId = (req.query.classId || req.params.classId) as string;
+
+    if (!examId || !classId) {
+      return next(createError('examId and classId are required', 400));
+    }
+
+    // 1. Fetch exam (lightweight select — NO heavy admitCardSettings Base64, NO whole-school marks)
+    const exam = await prisma.exam.findUnique({
+      where: { id: examId },
+      select: {
+        id: true,
+        name: true,
+        term: true,
+        examDate: true,
+        maxMarks: true,
+        passingMarks: true,
+        subjects: true,
+        frozenClasses: true,
+        classes: { select: { id: true, name: true, section: true } }
+      }
+    });
+
+    if (!exam) return next(createError('Exam not found', 404));
+
+    // 2. Fetch class info
+    let cls = exam.classes.find(c => c.id === classId);
+    if (!cls) {
+      cls = (await prisma.class.findUnique({
+        where: { id: classId },
+        select: { id: true, name: true, section: true }
+      })) as any;
+    }
+
+    // 3. Fetch students of this class (lightweight select — NO heavy Base64 photos)
+    const students = await prisma.student.findMany({
+      where: { classId },
+      select: {
+        id: true,
+        rollNo: true,
+        user: { select: { name: true } }
+      },
+      orderBy: { rollNo: 'asc' }
+    });
+
+    // 4. Fetch marks strictly for this exam and this class's students
+    const studentIds = students.map(s => s.id);
+    const marks = await prisma.mark.findMany({
+      where: {
+        examId,
+        studentId: { in: studentIds }
+      },
+      select: {
+        studentId: true,
+        subjectId: true,
+        marksObtained: true,
+        maxMarks: true,
+        remarks: true,
+        subject: { select: { name: true, code: true } }
+      }
+    });
+
+    // 5. Fetch real DB subjects for this class
+    const realSubjects = await prisma.subject.findMany({
+      where: { classId },
+      select: { id: true, name: true, code: true }
+    });
+
+    successResponse(res, {
+      exam,
+      currentClass: cls,
+      students,
+      marks,
+      realSubjects
+    }, 'Marks entry data fetched');
+  } catch (error) {
+    next(error);
+  }
+};

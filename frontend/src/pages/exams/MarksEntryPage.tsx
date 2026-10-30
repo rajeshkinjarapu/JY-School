@@ -34,18 +34,15 @@ export const MarksEntryPage: React.FC = () => {
         return;
       }
 
-      // Run all 5 API calls IN PARALLEL for maximum speed
-      // - /api/marks/exam/:id?classId=:classId filters marks strictly for this class (reduces 4000 rows to 30)
-      // - /api/subjects runs in parallel instead of sequentially
-      const [examRes, classRes, studentsRes, marksRes, realSubjectsRes]: any = await Promise.all([
-        api.get(`/api/exams/${id}`),
-        api.get(`/api/classes/${classId}`).catch(() => ({ data: null })),
-        api.get(`/api/classes/${classId}/students`),
-        api.get(`/api/marks/exam/${id}?classId=${classId}`),
-        api.get(`/api/subjects?classId=${classId}&limit=500`).catch(() => ({ data: [] })),
-      ]);
+      // Single ultra-fast unified endpoint (< 100ms)
+      const res: any = await api.get(`/api/marks/entry-data?examId=${id}&classId=${classId}`);
+      const payload = res.data?.data || res.data || {};
+      const examObj = payload.exam;
+      const classData = payload.currentClass;
+      const studentList = payload.students || [];
+      const marksList = payload.marks || [];
+      const realDbSubjects = payload.realSubjects || [];
 
-      const examObj = examRes?.data || examRes;
       setExam(examObj);
 
       let frozenArr: string[] = [];
@@ -56,9 +53,8 @@ export const MarksEntryPage: React.FC = () => {
       }
       setIsClassFrozen(frozenArr.includes(classId));
 
-      const classData = classRes?.data || examObj?.classes?.find((c: any) => c.id === classId);
       setCurrentClass(classData);
-      setStudents(studentsRes?.data || studentsRes || []);
+      setStudents(studentList);
 
       // Get subjects from exam JSON
       let examSubjects: any[] = [];
@@ -84,8 +80,7 @@ export const MarksEntryPage: React.FC = () => {
         (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
       );
 
-      // Match real DB subjects from parallel response
-      const realDbSubjects: any[] = realSubjectsRes?.data?.data || realSubjectsRes?.data || [];
+      // Match real DB subjects
       if (realDbSubjects.length > 0) {
         examSubjects = examSubjects.map((examSub: any) => {
           const examCanon = getCanonicalSubjectName(examSub.name);
@@ -102,14 +97,10 @@ export const MarksEntryPage: React.FC = () => {
       setSubjects(examSubjects);
 
       // Map existing marks using canonical subject name matching
-      const flatMarks = marksRes?.data || marksRes || [];
       const initialMarks: { [key: string]: number | string } = {};
       const initialRemarks: { [key: string]: string } = {};
 
-      flatMarks.forEach((m: any) => {
-        const studentClassId = m.student?.classId;
-        if (studentClassId && studentClassId !== classId) return; // skip marks from other classes
-        
+      marksList.forEach((m: any) => {
         const markCanon = getCanonicalSubjectName(m.subject?.name || '');
         const fakeSub = examSubjects.find((s: any) => getCanonicalSubjectName(s.name) === markCanon);
         const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
@@ -123,7 +114,7 @@ export const MarksEntryPage: React.FC = () => {
       setMarksData(initialMarks);
       setRemarksData(initialRemarks);
     } catch (e: any) {
-      console.error('Failed to load marks matrix:', e);
+      console.error('Failed to load marks entry data:', e);
       toast.error(e?.response?.data?.message || e?.message || 'Failed to load marks matrix');
     } finally {
       setLoading(false);

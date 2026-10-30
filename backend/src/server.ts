@@ -150,7 +150,7 @@ if (!process.env.VERCEL) {
     console.log(`🚀 JY School SMS Backend running on http://0.0.0.0:${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV}`);
     // Run subject and mark deduplication in background on boot
-    autoCleanDuplicateSubjectsAndMarks().catch(err => {
+    if (process.env.RUN_CLEANUP_ON_BOOT === 'true') autoCleanDuplicateSubjectsAndMarks().catch(err => {
       console.error('Failed autoCleanDuplicateSubjectsAndMarks:', err);
     });
   });

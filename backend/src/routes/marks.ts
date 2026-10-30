@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getByStudent, getByExam, bulkCreate, getReportCard, downloadReportCard, clearMarks } from '../controllers/marks.controller';
+import { getByStudent, getByExam, bulkCreate, getReportCard, downloadReportCard, clearMarks, getMarksEntryData } from '../controllers/marks.controller';
 
 const router = Router();
 
 router.use(authenticate);
 
+router.get('/entry-data', getMarksEntryData);
 router.get('/student/:studentId', getByStudent);
 router.get('/exam/:examId', getByExam);
 router.get('/report-card/:studentId/:examId', getReportCard);
