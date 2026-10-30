@@ -49,7 +49,7 @@ export const CreateExamPage: React.FC = () => {
     if (editExam) {
       // Fetch full exam details, global settings, and master subjects together
       Promise.all([
-        api.get(`/api/exams/${editExam.id}`),
+        api.get(`/api/exams/${editExam.id}?includeMarks=true`),
         api.get('/api/settings').catch(() => ({ data: {} })),
         api.get('/api/subjects?limit=5000').catch(() => ({ data: [] }))
       ]).then(([res, settingsRes, dbSubRes]: any) => {

@@ -95,7 +95,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       setLoading(true);
       try {
         const [studentsRes, plansRes]: any = await Promise.all([
-          api.get(`/api/classes/${selectedClassId}/students`),
+          api.get(`/api/classes/${selectedClassId}/students?includePhoto=true`),
           api.get(`/api/exams-extended/plans?examId=${selectedExamId}`),
         ]);
         setStudents(studentsRes.data?.data || studentsRes.data || []);

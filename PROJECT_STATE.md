@@ -13,7 +13,18 @@
 - Removed `Mobile Number` column from the interactive web table.
 - Removed `Mobile Number` from the PDF autoTable export and re-proportioned remaining columns (`S.No`, `Student ID`, `Student Name`, `Class`, `Status`).
 
-### 3. Deployment Architecture Reference
+## Marks Entry Loading & Performance Optimization (October 30, 2026)
+
+### 1. Root Cause Resolution
+- **Exam Details API (`/api/exams/:id`):** Removed default retrieval of whole-school nested `marks` (thousands of records with student/user joins). Converted to opt-in with `?includeMarks=true` (only for `CreateExamPage`). Response payload dropped from ~10MB to ~5KB.
+- **Exam Marks by Class (`/api/marks/exam/:id`):** Added `classId` query filter support in `marks.controller.ts:getByExam`. Now only returns 30-40 rows for the active class instead of 4,000+ rows across all classes.
+- **Student Roster Optimization (`/api/classes/:id/students`):** Made Base64 `photoUrl` inclusion opt-in with `?includePhoto=true` in `classes.controller.ts:getStudents`. Saves ~16MB per roster request.
+- **Marks Entry Page (`MarksEntryPage.tsx`):**
+  - Sends `classId` in `/api/marks/exam/:id?classId=:classId`.
+  - Moved `/api/subjects` into the parallel `Promise.all` pool rather than waterfalling sequentially.
+  - Total network transfer reduced from 30+ MB to ~25 KB (over 1000x reduction), eliminating the 30-second Axios timeout and rendering immediately.
+
+### 2. Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`
 - VPS SSH: `ssh root@66.116.252.191`

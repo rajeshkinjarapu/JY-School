@@ -32,11 +32,15 @@ export const getByStudent = async (req: AuthRequest, res: Response, next: NextFu
 
 export const getByExam = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const examId = req.params.examId as string;
-  const exam = await prisma.exam.findUnique({ where: { id: examId } });
-  if (!exam) return next(createError('Exam not found', 404));
+  const classId = req.query.classId as string | undefined;
+
+  const whereClause: any = { examId };
+  if (classId) {
+    whereClause.student = { classId };
+  }
 
   const marks = await prisma.mark.findMany({
-    where: { examId },
+    where: whereClause,
     include: {
       student: {
         select: {

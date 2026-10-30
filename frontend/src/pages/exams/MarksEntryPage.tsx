@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
-import { ArrowLeft, Save, Filter, BookOpen, User, CheckCircle2, Lock, Trash2, Unlock } from 'lucide-react';
+import { ArrowLeft, Save, Filter, BookOpen, User, Lock, Trash2, Unlock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { getCanonicalSubjectName, getSubjectSortWeight } from './ResultsTab';
@@ -34,42 +34,46 @@ export const MarksEntryPage: React.FC = () => {
         return;
       }
 
-      // Run all 4 API calls IN PARALLEL for maximum speed
-      const [examRes, classRes, studentsRes, marksRes]: any = await Promise.all([
+      // Run all 5 API calls IN PARALLEL for maximum speed
+      // - /api/marks/exam/:id?classId=:classId filters marks strictly for this class (reduces 4000 rows to 30)
+      // - /api/subjects runs in parallel instead of sequentially
+      const [examRes, classRes, studentsRes, marksRes, realSubjectsRes]: any = await Promise.all([
         api.get(`/api/exams/${id}`),
-        api.get(`/api/classes/${classId}`),
+        api.get(`/api/classes/${classId}`).catch(() => ({ data: null })),
         api.get(`/api/classes/${classId}/students`),
-        api.get(`/api/marks/exam/${id}`),
+        api.get(`/api/marks/exam/${id}?classId=${classId}`),
+        api.get(`/api/subjects?classId=${classId}&limit=500`).catch(() => ({ data: [] })),
       ]);
 
-      const examObj = examRes.data;
+      const examObj = examRes?.data || examRes;
       setExam(examObj);
 
       let frozenArr: string[] = [];
-      if (examObj.frozenClasses) {
+      if (examObj?.frozenClasses) {
         try {
           frozenArr = typeof examObj.frozenClasses === 'string' ? JSON.parse(examObj.frozenClasses) : examObj.frozenClasses;
         } catch(e) {}
       }
       setIsClassFrozen(frozenArr.includes(classId));
 
-      setCurrentClass(classRes.data);
-      setStudents(studentsRes.data || []);
+      const classData = classRes?.data || examObj?.classes?.find((c: any) => c.id === classId);
+      setCurrentClass(classData);
+      setStudents(studentsRes?.data || studentsRes || []);
 
       // Get subjects from exam JSON
       let examSubjects: any[] = [];
-      if (examObj.subjects && typeof examObj.subjects === 'object' && !Array.isArray(examObj.subjects) && examObj.subjects.classConfigs) {
+      if (examObj?.subjects && typeof examObj.subjects === 'object' && !Array.isArray(examObj.subjects) && examObj.subjects.classConfigs) {
         const classConfig = examObj.subjects.classConfigs.find((cfg: any) => cfg.classId === classId);
         if (classConfig && classConfig.subjects && classConfig.subjects.length > 0) {
           examSubjects = classConfig.subjects;
         } else if (examObj.subjects.globalSubjects && Array.isArray(examObj.subjects.globalSubjects)) {
           examSubjects = examObj.subjects.globalSubjects;
         }
-      } else if (Array.isArray(examObj.subjects)) {
+      } else if (Array.isArray(examObj?.subjects)) {
         examSubjects = examObj.subjects;
       }
 
-      // *** CRITICAL FIX: Canonicalize + deduplicate subjects before use ***
+      // *** Canonicalize + deduplicate subjects before use ***
       const canonMap = new Map<string, any>();
       examSubjects.forEach((s: any) => {
         if (!s.name) return;
@@ -80,10 +84,9 @@ export const MarksEntryPage: React.FC = () => {
         (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
       );
 
-      // Replace fake subject IDs with real DB subject IDs (match by canonical name)
-      try {
-        const realSubjectsRes = await api.get(`/api/subjects?classId=${classId}&limit=500`);
-        const realDbSubjects: any[] = realSubjectsRes.data?.data || realSubjectsRes.data || [];
+      // Match real DB subjects from parallel response
+      const realDbSubjects: any[] = realSubjectsRes?.data?.data || realSubjectsRes?.data || [];
+      if (realDbSubjects.length > 0) {
         examSubjects = examSubjects.map((examSub: any) => {
           const examCanon = getCanonicalSubjectName(examSub.name);
           const realMatch = realDbSubjects.find(
@@ -94,26 +97,23 @@ export const MarksEntryPage: React.FC = () => {
           }
           return { ...examSub, name: examCanon };
         });
-      } catch (e) { /* ignore errors, use original subjects */ }
+      }
 
       setSubjects(examSubjects);
 
-
       // Map existing marks using canonical subject name matching
-      const flatMarks = marksRes.data || [];
+      const flatMarks = marksRes?.data || marksRes || [];
       const initialMarks: { [key: string]: number | string } = {};
       const initialRemarks: { [key: string]: string } = {};
 
       flatMarks.forEach((m: any) => {
-        // Accept marks for this class (classId match) OR if classId missing on response, still accept (exam-scoped)
         const studentClassId = m.student?.classId;
-        if (studentClassId && studentClassId !== classId) return; // skip marks from OTHER classes only
+        if (studentClassId && studentClassId !== classId) return; // skip marks from other classes
         
         const markCanon = getCanonicalSubjectName(m.subject?.name || '');
         const fakeSub = examSubjects.find((s: any) => getCanonicalSubjectName(s.name) === markCanon);
         const fakeSubId = fakeSub ? fakeSub.id : m.subjectId;
         const key = `${m.studentId}_${fakeSubId}`;
-        // Only set if not already set (take first occurrence)
         if (!(key in initialMarks)) {
           initialMarks[key] = m.remarks === 'AB' ? 'AB' : m.marksObtained;
           initialRemarks[key] = m.remarks || '';
@@ -122,13 +122,13 @@ export const MarksEntryPage: React.FC = () => {
 
       setMarksData(initialMarks);
       setRemarksData(initialRemarks);
-    } catch (e) {
-      toast.error('Failed to load marks matrix');
+    } catch (e: any) {
+      console.error('Failed to load marks matrix:', e);
+      toast.error(e?.response?.data?.message || e?.message || 'Failed to load marks matrix');
     } finally {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     fetchData();
@@ -406,7 +406,6 @@ export const MarksEntryPage: React.FC = () => {
         </div>
 
         {/* Mobile / Tablet Card View */}
-        {/* Mobile View */}
         <div className="lg:hidden space-y-4 pb-24">
           {students.map((student, index) => (
             <div key={student.id} className="bg-white/80 backdrop-blur-md border border-indigo-100 rounded-3xl shadow-sm overflow-hidden flex flex-col">

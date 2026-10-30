@@ -53,16 +53,18 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+  const includeMarks = req.query.includeMarks === 'true';
+
   const exam = await prisma.exam.findUnique({
     where: { id },
     include: {
       classes: { select: { id: true, name: true, section: true } },
-      marks: {
+      marks: includeMarks ? {
         include: {
           student: { include: { user: { select: { name: true } } } },
           subject: { select: { name: true } },
         },
-      },
+      } : undefined,
     },
   });
   if (!exam) return next(createError('Exam not found', 404));
@@ -1240,4 +1242,3 @@ export const scanOmr = async (req: AuthRequest, res: Response, next: NextFunctio
     next(error);
   }
 };
-

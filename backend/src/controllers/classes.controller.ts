@@ -201,8 +201,9 @@ export const deleteClass = async (req: AuthRequest, res: Response, next: NextFun
 
 export const getStudents = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+  const includePhoto = req.query.includePhoto === 'true';
 
-  const cacheKey = `class:students:${id}`;
+  const cacheKey = `class:students:${id}:${includePhoto}`;
   const cached = await cache.get<any>(cacheKey);
   if (cached) { res.json(cached); return; }
 
@@ -217,7 +218,7 @@ export const getStudents = async (req: AuthRequest, res: Response, next: NextFun
           name: true,
           email: true,
           phone: true,
-          photoUrl: true, // Needed for admit card template rendering
+          ...(includePhoto ? { photoUrl: true } : {}),
         }
       }
     },
