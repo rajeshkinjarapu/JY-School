@@ -78,9 +78,10 @@ const AddressCollectionAdminPage = () => {
   const uniqueTeachers = Array.from(new Set(data.map(item => item.referenceTeacherName))).filter(Boolean).sort();
 
   const filteredData = data.filter(item => {
-    const matchesSearch = item.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.village.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          item.mandal.toLowerCase().includes(searchTerm.toLowerCase());
+    const s = searchTerm.toLowerCase();
+    const matchesSearch = (item.studentName || '').toLowerCase().includes(s) || (item.fatherName || '').toLowerCase().includes(s) ||
+                          (item.village || '').toLowerCase().includes(s) ||
+                          (item.mandal || '').toLowerCase().includes(s) || (item.mobileNo || '').includes(searchTerm);
     const matchesTeacher = selectedTeacher === '' || item.referenceTeacherName === selectedTeacher;
     return matchesSearch && matchesTeacher;
   });
@@ -88,13 +89,13 @@ const AddressCollectionAdminPage = () => {
   const exportToExcel = () => {
     const exportData = filteredData.map((item, index) => ({
       'S.No': index + 1,
-      'Student Name': item.studentName,
-      'Father Name': item.fatherName,
-      'Village': item.village,
-      'Mandal': item.mandal,
+      'Student Name': item.studentName || '-',
+      'Father Name': item.fatherName || '-',
+      'Village': item.village || '-',
+      'Mandal': item.mandal || '-',
       'Mobile No': item.mobileNo,
       'Alternate Mobile No': item.alternateMobileNo || '-',
-      'Reference Teacher': item.referenceTeacherName
+      'Reference Teacher': item.referenceTeacherName || '-'
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -110,8 +111,8 @@ const AddressCollectionAdminPage = () => {
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.studentName || !formData.fatherName || !formData.village || !formData.mandal || !formData.mobileNo) {
-      alert('Please fill all required fields');
+    if (!formData.mobileNo || !formData.mobileNo.trim()) {
+      alert('Please enter Mobile Number');
       return;
     }
     setSubmitLoading(true);
@@ -187,19 +188,19 @@ const AddressCollectionAdminPage = () => {
     }
 
     const tableRows = paddedData.map((item, index) => {
-      if (!item.studentName) {
+      if (!item.id && !item.mobileNo) {
         // Empty padded row
         return [index < filteredData.length ? index + 1 : '', '', '', '', '', '', '', ''];
       }
       return [
         index + 1,
-        item.studentName,
-        item.fatherName,
-        item.village,
-        item.mandal,
+        item.studentName || '-',
+        item.fatherName || '-',
+        item.village || '-',
+        item.mandal || '-',
         item.mobileNo,
         item.alternateMobileNo || '-',
-        item.referenceTeacherName
+        item.referenceTeacherName || '-'
       ];
     });
 
@@ -326,15 +327,15 @@ const AddressCollectionAdminPage = () => {
                 <tr key={item.id} className="hover:bg-blue-50/50 transition-colors duration-200 group">
                   <td className="px-6 py-4 text-sm text-gray-500">{index + 1}</td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{item.studentName}</div>
+                    <div className="font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">{item.studentName || '-'}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.fatherName}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{item.fatherName || '-'}</td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                      {item.village}
+                      {item.village || '-'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{item.mandal}</td>
+                  <td className="px-6 py-4 text-sm text-gray-600">{item.mandal || '-'}</td>
                   <td className="px-6 py-4 text-center">
                     <div className="text-sm font-medium text-gray-800">{item.mobileNo}</div>
                     {item.alternateMobileNo && (
@@ -343,7 +344,7 @@ const AddressCollectionAdminPage = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                      item.referenceTeacherName === 'Unknown' || !item.referenceTeacherName
+                      item.referenceTeacherName || '-' === 'Unknown' || !item.referenceTeacherName
                         ? 'bg-gray-100 text-gray-600 border-gray-200' 
                         : 'bg-purple-100 text-purple-800 border-purple-200'
                     }`}>
@@ -397,7 +398,7 @@ const AddressCollectionAdminPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Student Name <span className="text-red-500">*</span>
+                    Student Name <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -413,7 +414,7 @@ const AddressCollectionAdminPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Father Name <span className="text-red-500">*</span>
+                    Father Name <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -429,7 +430,7 @@ const AddressCollectionAdminPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Village <span className="text-red-500">*</span>
+                    Village <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -445,7 +446,7 @@ const AddressCollectionAdminPage = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mandal <span className="text-red-500">*</span>
+                    Mandal <span className="text-gray-400 text-xs font-normal">(Optional)</span>
                   </label>
                   <div className="relative">
                     <Navigation className="absolute left-3 top-3 text-gray-400" size={18} />

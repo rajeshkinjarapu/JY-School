@@ -43,8 +43,8 @@ const AddressCollectionTeacherPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.studentName || !formData.fatherName || !formData.village || !formData.mandal || !formData.mobileNo) {
-      toast.error('Please fill all required fields');
+    if (!formData.mobileNo || !formData.mobileNo.trim()) {
+      toast.error('Please enter Mobile Number');
       return;
     }
 
@@ -94,7 +94,7 @@ const AddressCollectionTeacherPage = () => {
             {/* Student Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Student Name <span className="text-red-500">*</span>
+                Student Name <span className="text-gray-400 text-xs font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -112,7 +112,7 @@ const AddressCollectionTeacherPage = () => {
             {/* Father Name */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Father Name <span className="text-red-500">*</span>
+                Father Name <span className="text-gray-400 text-xs font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -130,7 +130,7 @@ const AddressCollectionTeacherPage = () => {
             {/* Village */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Village <span className="text-red-500">*</span>
+                Village <span className="text-gray-400 text-xs font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
@@ -148,7 +148,7 @@ const AddressCollectionTeacherPage = () => {
             {/* Mandal */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mandal <span className="text-red-500">*</span>
+                Mandal <span className="text-gray-400 text-xs font-normal">(Optional)</span>
               </label>
               <div className="relative">
                 <Navigation className="absolute left-3 top-3 text-gray-400" size={18} />

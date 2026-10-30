@@ -22,14 +22,18 @@
 - **Unified Super-Fast API (`/api/marks/entry-data`):** Returns lightweight exam, class, student roster, marks, and real subjects in a single compact 15-20 KB payload.
 
 ## Website Performance Speed Optimization (October 30, 2026)
+- **PWA Precache Bloat:** Configured `globIgnores` in `vite.config.ts` for non-critical heavy vendor chunks (`vendor-pdf`, `vendor-excel`, `vendor-charts`, `vendor-math`, `KaTeX`).
+- **App Boot API Congestion:** Introduced `DataCache.staggeredPrefetch` with 3.5s delay and 800ms spacing.
+- **Ineffective Dynamic Import:** Decoupled `routeImports` into standalone `frontend/src/router/routeImports.ts`.
+- **Database Query Bottlenecks:** Applied strict `select` projections on 7-day attendance and 12-month payments in `dashboard.controller.ts`.
 
-### 1. Root Causes Resolved
-- **PWA Precache Bloat:** Fixed in `frontend/vite.config.ts` by ignoring non-critical heavy vendor chunks (`vendor-pdf`, `vendor-excel`, `vendor-charts`, `vendor-math`, `KaTeX`) during initial precache. Initial asset load dropped from 5.1 MB down to ~400 KB.
-- **App Boot API Congestion:** Fixed in `frontend/src/App.tsx` and `frontend/src/services/dataCache.ts` by introducing `DataCache.staggeredPrefetch`. Deferred prefetching by 3.5 seconds and spaced requests by 800ms so dashboard and authentication get 100% of the network pipe on page open.
-- **Ineffective Dynamic Import:** Decoupled `routeImports` into a standalone `frontend/src/router/routeImports.ts`, resolving bundler circular dependencies between `Sidebar.tsx` and `router/index.tsx`.
-- **Supabase Database Query Bottlenecks:** Optimized `backend/src/controllers/dashboard.controller.ts:getAdminDashboard` by applying strict `select` projections on 7-day attendance, 12-month payments, classes, and recent transactions, reducing database wire transfer by 90%.
+## Student Address Collection Field Requirements (October 30, 2026)
+- **Only Mobile Number Mandatory:** Updated `backend/src/controllers/addressCollection.controller.ts`, `frontend/src/pages/address-collection/AddressCollectionAdminPage.tsx`, and `AddressCollectionTeacherPage.tsx`.
+- `studentName`, `fatherName`, `village`, and `mandal` are now strictly optional and marked with `(Optional)`. Only `Mobile Number` is required (`*`).
+- Backend gracefully handles empty strings for omitted fields to prevent Prisma DB crashes.
+- Table view, search filter, Excel export, and PDF export updated to display `-` gracefully for empty fields.
 
-### 2. Deployment Architecture Reference
+### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`
 - VPS SSH: `ssh root@66.116.252.191`

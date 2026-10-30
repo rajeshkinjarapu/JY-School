@@ -8,6 +8,10 @@ export const addAddressCollection = async (req: Request, res: Response) => {
   try {
     const { studentName, fatherName, village, mandal, mobileNo, alternateMobileNo, referenceTeacherId: bodyTeacherId } = req.body;
     
+    if (!mobileNo || !String(mobileNo).trim()) {
+      return res.status(400).json({ success: false, message: 'Mobile Number is required.' });
+    }
+    
     // Check if the user is a teacher
     // req.user is set by authentication middleware
     const user = (req as any).user;
@@ -22,12 +26,12 @@ export const addAddressCollection = async (req: Request, res: Response) => {
 
     const newEntry = await prisma.studentAddressCollection.create({
       data: {
-        studentName,
-        fatherName,
-        village,
-        mandal,
-        mobileNo,
-        alternateMobileNo: alternateMobileNo || undefined,
+        studentName: (studentName && String(studentName).trim()) || '',
+        fatherName: (fatherName && String(fatherName).trim()) || '',
+        village: (village && String(village).trim()) || '',
+        mandal: (mandal && String(mandal).trim()) || '',
+        mobileNo: String(mobileNo).trim(),
+        alternateMobileNo: (alternateMobileNo && String(alternateMobileNo).trim()) || null,
         referenceTeacherId
       }
     });
