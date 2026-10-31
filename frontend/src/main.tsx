@@ -64,31 +64,44 @@ const idbPersister = {
 };
 
 // Handle Vite dynamic import errors (e.g. after a new deployment)
-window.addEventListener('vite:preloadError', () => {
-  // If PWA Service Worker is caching old index.html, unregister it before reloading
-  // to break the infinite chunk load error loop
-  const url = new URL(window.location.href);
-  if (url.searchParams.has('retry_preload')) {
+window.addEventListener('vite:preloadError', (event: any) => {
+  event?.preventDefault?.();
+  const key = 'vite_preload_retry';
+  const lastTime = sessionStorage.getItem(key);
+  const now = Date.now();
+
+  // Prevent infinite loops within 6 seconds
+  if (lastTime && now - parseInt(lastTime, 10) < 6000) {
     console.error("Vite preload error after retry. The chunk is still missing.");
     return;
   }
-  url.searchParams.set('retry_preload', '1');
-  
+  sessionStorage.setItem(key, now.toString());
+
+  const cleanUrl = new URL(window.location.href);
+  cleanUrl.searchParams.delete('retry_preload');
+
+  const reloadApp = () => {
+    window.location.replace(cleanUrl.toString());
+  };
+
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then((registrations) => {
       for (const registration of registrations) {
         registration.unregister();
       }
-      window.location.href = url.toString();
-    }).catch(() => {
-      window.location.href = url.toString();
-    });
+      if ('caches' in window) {
+        caches.keys().then((names) => {
+          for (const name of names) caches.delete(name);
+          reloadApp();
+        }).catch(reloadApp);
+      } else {
+        reloadApp();
+      }
+    }).catch(reloadApp);
   } else {
-    window.location.href = url.toString();
+    reloadApp();
   }
 });
-
-
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

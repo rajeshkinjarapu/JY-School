@@ -1,4 +1,5 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense } from 'react';
+import { lazyWithRetry as lazy } from '../utils/lazyWithRetry';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import DashboardLayout from '../components/Layout/DashboardLayout';
@@ -55,8 +56,8 @@ const ForgotPasswordPage = lazy(() => import('../pages/auth/ForgotPasswordPage')
 const ResetPasswordPage = lazy(() => import('../pages/auth/ResetPasswordPage'));
 const DashboardPage = lazy(routeImports['/dashboard']);
 const AppInstallsPage = lazy(routeImports['/app-installs']);
-const AddressCollectionAdminPage = lazy(() => import('../pages/address-collection/AddressCollectionAdminPage'));
-const AddressCollectionTeacherPage = lazy(() => import('../pages/address-collection/AddressCollectionTeacherPage'));
+const AddressCollectionAdminPage = lazy(routeImports['/address-collection/admin']);
+const AddressCollectionTeacherPage = lazy(routeImports['/address-collection/teacher']);
 const StudentListPage = lazy(routeImports['/students']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));

@@ -24,5 +24,6 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/transport': () => import('../pages/transport/TransportDashboard'),
   '/settings': () => import('../pages/settings/SettingsPage'),
   '/app-installs': () => import('../pages/dashboard/AppInstallsPage').then(m => ({ default: m.AppInstallsPage })),
+  '/address-collection/admin': () => import('../pages/address-collection/AddressCollectionAdminPage'),
+  '/address-collection/teacher': () => import('../pages/address-collection/AddressCollectionTeacherPage'),
 };
-

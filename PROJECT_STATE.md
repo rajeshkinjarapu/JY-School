@@ -45,6 +45,12 @@
 - **Flutter Mobile App:** Updated `StudentProfileScreen` with role & permission check. Properly renders "Subject Teacher" badge and Telugu privacy restriction shield when restricted, and seamlessly displays full demographics and call/WhatsApp actions when granted.
 - **Deployment Info:** Deployable via Prisma DB push and backend/frontend build on VPS, and Shorebird Patch for Flutter app.
 
+## Frontend Dynamic Import & Stale Chunk Auto-Recovery (October 31, 2026)
+- **Root Cause of TypeError:** When Vite builds a new production release, asset content hashes change. Browsers or PWA service workers caching previous `index.html` requested stale chunk files that were already removed from `dist/assets`, causing `TypeError: Failed to fetch dynamically imported module`.
+- **Resilient Lazy Loader (`frontend/src/utils/lazyWithRetry.ts`):** Wrapped all router dynamic imports with `lazyWithRetry`. Automatically detects dynamic chunk load failures, purges ServiceWorker registrations and CacheStorage, and forces a clean reload with latest assets.
+- **Preload Error Auto-Recovery (`frontend/src/main.tsx`):** Improved `vite:preloadError` listener to clear stale CacheStorage and clean URLs without infinite reload loops.
+- **Route System Registration:** Added `/address-collection/admin` and `/address-collection/teacher` to `routeImports.ts`.
+
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`
