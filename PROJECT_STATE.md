@@ -43,14 +43,12 @@
 - **Backend API:** Updated `teachers.controller.ts` (`create`, `update`) and `students.controller.ts` (`getById`). Teachers with `canViewAllStudents === true` or `isClassTeacher === true` receive full student profiles with contacts, while unpermitted subject teachers have sensitive fields securely masked.
 - **Web Admin UI:** Added "Allow to View All Students Details" toggle in `TeacherFormPage.tsx` enabling admins to grant/revoke access seamlessly.
 - **Flutter Mobile App:** `StudentProfileScreen` has role & permission check. Properly renders "Subject Teacher" badge and Telugu privacy restriction shield when restricted, and displays full demographics and call/WhatsApp actions when granted.
-- **Deployment Info:** Local commits: `50323f4`, `1cb2eee`. Requires `git push origin main` locally, followed by `git pull` & `npm run build` on VPS.
 
 ## Frontend Dynamic Import & Stale Chunk Auto-Recovery (October 31, 2026)
 - **Root Cause of TypeError:** When Vite builds a new production release, asset content hashes change. Browsers or PWA service workers caching previous `index.html` requested stale chunk files that were already removed from `dist/assets`, causing `TypeError: Failed to fetch dynamically imported module`.
 - **Resilient Lazy Loader (`frontend/src/utils/lazyWithRetry.ts`):** Wrapped all router dynamic imports with `lazyWithRetry`. Automatically detects dynamic chunk load failures, purges ServiceWorker registrations and CacheStorage, and forces a clean reload with latest assets.
 - **Preload Error Auto-Recovery (`frontend/src/main.tsx`):** Improved `vite:preloadError` listener to clear stale CacheStorage and clean URLs without infinite reload loops.
 - **Route System Registration:** Added `/address-collection/admin` and `/address-collection/teacher` to `routeImports.ts`.
-- **Deployment Info:** Committed locally in `1cb2eee`. Requires push to GitHub and VPS build.
 
 ## Daily Attendance Report Print Blank Page Resolution (October 31, 2026)
 - **Root Cause of Blank Print Preview:** 
@@ -61,7 +59,6 @@
   1. **Dual Print Architecture in `AttendanceDailyReportPage.tsx`:** Updated `handlePrint` to inject an isolated, hidden print iframe containing only `#reportArea` innerHTML and document stylesheets. This bypasses all React layout hierarchy, sidebar, header, and overflow constraints, producing an instant, crisp 1-page A4 print preview on any printer (Kyocera, HP, Canon, etc.).
   2. **Comprehensive Print Isolation in `AttendanceDailyReport.css`:** Added reset rules for `html, body, #root, main, div` (`overflow: visible !important; height: auto !important; transform: none !important;`) and body-wide `visibility: hidden` with `#reportArea` visibility breakout.
   3. **PullToRefresh Print Resiliency (`PullToRefresh.tsx`):** Added `print:overflow-visible print:h-auto print:static print:transform-none` Tailwind utility classes to container elements.
-- **Deployment Info:** Committed locally in `c175469`. Requires push to GitHub and VPS build.
 
 ## Student Birthday & WhatsApp Wish Dashboard Restoration (October 31, 2026)
 - **Root Cause of Attendance Overview Reappearing:** 
@@ -70,13 +67,16 @@
 - **Implemented Fix:**
   1. **Backend (`backend/src/controllers/dashboard.controller.ts`):** Added query for students with `dob` in `getAdminDashboard`. Automatically computes `todayBirthdays` and `upcomingBirthdays` (next 7 days) and delivers them in `/api/dashboard/admin`.
   2. **Frontend (`frontend/src/pages/dashboard/DashboardPage.tsx`):** Completely replaced the redundant "Attendance Overview" LineChart with a premium "Today's Birthdays" card featuring student photo, name, class badge, roll number, celebration indicators, and a one-click WhatsApp wishing action that sends official personalized birthday greetings to parents. Empty state cleanly displays upcoming birthdays for the week.
-- **Deployment Info:** Committed locally in `30b3565`. Requires push to GitHub and VPS build.
 
-## Student Promotion Module Investigation (October 31, 2026)
-- **Root Cause of Missing Promotion Page:**
-  - Implemented in commits `d5a741e549a1ce5feb12bf8b17011e15951ce1c5` and `3eadee730f8308f17acc1ec8b3d8b55bf2b78dc3`.
-  - A subsequent `git rebase --abort` event on October 29 reset `HEAD` back to an older commit (`231e349`), leaving the promotion commits on a detached branch.
-  - The code remains preserved in the local Git object database and can be checked out directly.
+## Student Promotion Module Restoration (October 31, 2026)
+- **Status:** Fully Restored and Integrated.
+- **Backend Controller:** `backend/src/controllers/promotion.controller.ts` (includes automatic `ensurePromotionTableExists` for `StudentPromotionHistory`).
+- **Backend Route:** `backend/src/routes/promotion.ts` mounted at `/api/promotion` in `server.ts`.
+- **Frontend Page:** `frontend/src/pages/students/StudentPromotionPage.tsx`.
+- **Route System:** Registered `/students/promotion` in `routeImports.ts` and `router/index.tsx`.
+- **UI Access Points:**
+  1. **Sidebar Navigation:** Added "Promotion" under Admin navigation menu.
+  2. **Student List Page:** Added "Promote" button with GraduationCap icon in the header actions.
 
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`

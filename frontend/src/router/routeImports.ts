@@ -1,6 +1,7 @@
 export const routeImports: Record<string, () => Promise<any>> = {
   '/dashboard': () => import('../pages/dashboard/DashboardPage'),
   '/students': () => import('../pages/students/StudentListPage'),
+  '/students/promotion': () => import('../pages/students/StudentPromotionPage').then(m => ({ default: m.StudentPromotionPage })),
   '/teachers': () => import('../pages/teachers/TeacherListPage'),
   '/classes': () => import('../pages/classes/ClassManagementPage'),
   '/subjects': () => import('../pages/subjects/SubjectPage'),

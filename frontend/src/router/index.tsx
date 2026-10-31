@@ -59,6 +59,7 @@ const AppInstallsPage = lazy(routeImports['/app-installs']);
 const AddressCollectionAdminPage = lazy(routeImports['/address-collection/admin']);
 const AddressCollectionTeacherPage = lazy(routeImports['/address-collection/teacher']);
 const StudentListPage = lazy(routeImports['/students']);
+const StudentPromotionPage = lazy(routeImports['/students/promotion']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
 const StudentProfilePage = lazy(() => import('../pages/students/StudentProfilePage'));
 const StudentAdmitCardViewPage = lazy(() => import('../pages/students/StudentAdmitCardViewPage').then((mod) => ({ default: mod.StudentAdmitCardViewPage })));
@@ -250,6 +251,16 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <StudentListPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'students/promotion',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <StudentPromotionPage />
+          </ProtectedRoute>
+        ),
           </ProtectedRoute>
         ),
       },

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu } from "lucide-react";
+import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -214,6 +214,13 @@ export const StudentListPage: React.FC = () => {
               </>
             )}
             {(isSuperAdmin || user?.role === 'ADMIN') && (
+              <Link
+                to="/students/promotion"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-pink-700 bg-white rounded-xl shadow hover:bg-pink-50 transition-colors"
+                title="Promote Students"
+              >
+                <GraduationCap className="w-4 h-4" /> Promote
+              </Link>
               <Link
                 to="/students/new"
                 className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
