@@ -23,10 +23,13 @@ export const MarksEntryPage: React.FC = () => {
   const [remarksData, setRemarksData] = useState<{ [key: string]: string }>({});
   const [loading, setLoading] = useState(true);
   const [isClassFrozen, setIsClassFrozen] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   
   const [selectedSubjectId, setSelectedSubjectId] = useState<string>('ALL');
 
   const fetchData = async () => {
+    setLoading(true);
+    setFetchError(null);
     try {
       if (!classId) {
         toast.error('No class selected for marks entry.');
@@ -80,18 +83,26 @@ export const MarksEntryPage: React.FC = () => {
         (a, b) => getSubjectSortWeight(a.name) - getSubjectSortWeight(b.name)
       );
 
-      // Match real DB subjects
+      // Match real DB subjects or fallback if exam has no JSON subjects
       if (realDbSubjects.length > 0) {
-        examSubjects = examSubjects.map((examSub: any) => {
-          const examCanon = getCanonicalSubjectName(examSub.name);
-          const realMatch = realDbSubjects.find(
-            (rs: any) => getCanonicalSubjectName(rs.name) === examCanon
-          );
-          if (realMatch) {
-            return { ...examSub, id: realMatch.id, name: examCanon };
-          }
-          return { ...examSub, name: examCanon };
-        });
+        if (examSubjects.length === 0) {
+          examSubjects = realDbSubjects.map((rs: any) => ({
+            id: rs.id,
+            name: getCanonicalSubjectName(rs.name),
+            maxMarks: examObj?.maxMarks || 100
+          }));
+        } else {
+          examSubjects = examSubjects.map((examSub: any) => {
+            const examCanon = getCanonicalSubjectName(examSub.name);
+            const realMatch = realDbSubjects.find(
+              (rs: any) => getCanonicalSubjectName(rs.name) === examCanon
+            );
+            if (realMatch) {
+              return { ...examSub, id: realMatch.id, name: examCanon };
+            }
+            return { ...examSub, name: examCanon };
+          });
+        }
       }
 
       setSubjects(examSubjects);
@@ -115,7 +126,9 @@ export const MarksEntryPage: React.FC = () => {
       setRemarksData(initialRemarks);
     } catch (e: any) {
       console.error('Failed to load marks entry data:', e);
-      toast.error(e?.response?.data?.message || e?.message || 'Failed to load marks matrix');
+      const errMsg = e?.response?.data?.message || e?.message || 'Failed to load marks matrix';
+      setFetchError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -442,8 +455,25 @@ export const MarksEntryPage: React.FC = () => {
           ))}
         </div>
 
+        {/* Error State */}
+        {fetchError && (
+          <div className="py-16 text-center border-2 border-dashed border-rose-200 rounded-3xl bg-rose-50/40">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-sm border border-rose-100 mb-4">
+              <User className="w-10 h-10 text-rose-400" />
+            </div>
+            <h3 className="text-xl font-extrabold text-rose-900">Failed to Load Class Details</h3>
+            <p className="text-sm font-medium text-slate-500 mt-2 max-w-md mx-auto">{fetchError}</p>
+            <button
+              onClick={fetchData}
+              className="mt-5 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer"
+            >
+              Retry Loading
+            </button>
+          </div>
+        )}
+
         {/* Empty State */}
-        {students.length === 0 && (
+        {!fetchError && students.length === 0 && (
           <div className="py-16 text-center border-2 border-dashed border-indigo-100 rounded-3xl bg-indigo-50/30">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-sm border border-indigo-50 mb-4">
               <User className="w-10 h-10 text-indigo-300" />

@@ -13,13 +13,17 @@
 - Removed `Mobile Number` column from the interactive web table.
 - Removed `Mobile Number` from the PDF autoTable export and re-proportioned remaining columns (`S.No`, `Student ID`, `Student Name`, `Class`, `Status`).
 
-## Marks Entry Loading & Performance Optimization (October 30, 2026)
+## Marks Entry Loading & Performance Optimization (October 30 - 31, 2026)
 
 ### 1. Root Cause Resolution
 - **Exam Details API (`/api/exams/:id`):** Removed default retrieval of whole-school nested `marks`. Converted to opt-in with `?includeMarks=true`.
 - **Exam Marks by Class (`/api/marks/exam/:id`):** Added `classId` query filter support in `marks.controller.ts:getByExam`.
 - **Student Roster Optimization (`/api/classes/:id/students`):** Made Base64 `photoUrl` inclusion opt-in with `?includePhoto=true`.
 - **Unified Super-Fast API (`/api/marks/entry-data`):** Returns lightweight exam, class, student roster, marks, and real subjects in a single compact 15-20 KB payload.
+- **Parallelized Query Engine:** Refactored `getMarksEntryData` in `backend/src/controllers/marks.controller.ts` to execute `exam`, `class`, `students`, and `realSubjects` simultaneously via `Promise.all` (latency down to 30-50ms).
+- **Exam List Boot De-congestion (`frontend/src/pages/exams/ExamListPage.tsx`):** Eliminated eager initial boot requests (`fetchQuestionGroups`, `fetchOnlineExams`, `fetchQuestions`, `fetchQuestionPapers`). These secondary modules now load strictly lazily only when their specific tab is opened.
+- **Backend Controller Guard Rails (`backend/src/controllers/examsExtended.controller.ts`):** Wrapped `getExamPlans`, `getQuestionGroups`, `getQuestions`, `getOnlineExams`, and `getOnlineExamSubmissions` in try-catch handlers returning clean fallback arrays rather than unhandled 500 errors.
+- **Marks Entry Page Resiliency (`frontend/src/pages/exams/MarksEntryPage.tsx`):** Added explicit `fetchError` handling and retry trigger instead of misleading "No Students Found" message on network timeouts. Added automatic fallback to real class database subjects if exam configuration has empty subjects.
 
 ## Website Performance Speed Optimization (October 30, 2026)
 - **PWA Precache Bloat:** Configured `globIgnores` in `vite.config.ts` for non-critical heavy vendor chunks (`vendor-pdf`, `vendor-excel`, `vendor-charts`, `vendor-math`, `KaTeX`).

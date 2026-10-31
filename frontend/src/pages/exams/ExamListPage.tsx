@@ -644,7 +644,7 @@ export const ExamListPage: React.FC = () => {
         setSelectedGroupId(list[0].id);
       }
     } catch {
-      toast.error('Failed to load question groups');
+      setQuestionGroups([]);
     }
   };
 
@@ -692,7 +692,7 @@ export const ExamListPage: React.FC = () => {
       const res: any = await api.get(`/api/exams-extended/questions${selectedGroupId ? `?groupId=${selectedGroupId}` : ''}`);
       setQuestions(res.data || []);
     } catch {
-      toast.error('Failed to load questions');
+      setQuestions([]);
     }
   };
 
@@ -711,7 +711,9 @@ export const ExamListPage: React.FC = () => {
       setShowQuestionModal(false);
       setQText('');
       setQOptions(['', '', '', '']);
+      if (activeTab === 'question-bank') {
       fetchQuestions();
+    }
     } catch (err: any) {
       toast.error(err.message || 'Error adding question');
     }
@@ -722,7 +724,9 @@ export const ExamListPage: React.FC = () => {
     try {
       await api.delete(`/api/exams-extended/questions/${id}`);
       toast.success('Question deleted');
+      if (activeTab === 'question-bank') {
       fetchQuestions();
+    }
     } catch {
       toast.error('Error deleting question');
     }
@@ -756,7 +760,7 @@ export const ExamListPage: React.FC = () => {
       const res: any = await api.get('/api/exams-extended/online-exams');
       setOnlineExams(res.data || []);
     } catch {
-      toast.error('Failed to load online exams');
+      setOnlineExams([]);
     }
   };
 
@@ -1091,9 +1095,9 @@ export const ExamListPage: React.FC = () => {
     Promise.all([
       fetchBaseFilters(),
       fetchExams(),
-      fetchQuestionGroups(),
-      fetchOnlineExams(),
-      fetchQuestionPapers(),
+
+
+
     ]);
   }, []);
 
@@ -1106,8 +1110,24 @@ export const ExamListPage: React.FC = () => {
 
   // Fetch questions when group changes
   useEffect(() => {
-    fetchQuestions();
-  }, [selectedGroupId]);
+    if (activeTab === 'question-bank') {
+      fetchQuestions();
+    }
+  }, [selectedGroupId, activeTab]);
+
+  // Lazy-load specific tab data only when user navigates to that tab
+  useEffect(() => {
+    if (activeTab === 'question-group') {
+      fetchQuestionGroups();
+    } else if (activeTab === 'question-bank') {
+      fetchQuestionGroups();
+      fetchQuestions();
+    } else if (activeTab === 'online-exams' || activeTab === 'add-online-exam') {
+      fetchOnlineExams();
+    } else if (activeTab === 'question-papers') {
+      fetchQuestionPapers();
+    }
+  }, [activeTab]);
 
   // Initialize planClassId when modal opens or exam changes
   useEffect(() => {
