@@ -51,6 +51,16 @@
 - **Preload Error Auto-Recovery (`frontend/src/main.tsx`):** Improved `vite:preloadError` listener to clear stale CacheStorage and clean URLs without infinite reload loops.
 - **Route System Registration:** Added `/address-collection/admin` and `/address-collection/teacher` to `routeImports.ts`.
 
+## Daily Attendance Report Print Blank Page Resolution (October 31, 2026)
+- **Root Cause of Blank Print Preview:** 
+  1. `DashboardLayout` and `PullToRefresh` wrapped the page in `overflow: hidden`, `overflow-y: auto`, `h-full`, and `transform: translateY(0px)`. Chromium's print engine clips content inside `overflow: hidden` containers, collapsing the printable area to 0 height.
+  2. In `PullToRefresh.tsx`, `isPrinting` state inside `beforeprint` event did not trigger a React re-render before Chromium took the print snapshot due to synchronous event blocking.
+  3. `AttendanceDailyReport.css` lacked complete print isolation and container reset rules.
+- **Implemented Fix:**
+  1. **Dual Print Architecture in `AttendanceDailyReportPage.tsx`:** Updated `handlePrint` to inject an isolated, hidden print iframe containing only `#reportArea` innerHTML and document stylesheets. This bypasses all React layout hierarchy, sidebar, header, and overflow constraints, producing an instant, crisp 1-page A4 print preview on any printer (Kyocera, HP, Canon, etc.).
+  2. **Comprehensive Print Isolation in `AttendanceDailyReport.css`:** Added reset rules for `html, body, #root, main, div` (`overflow: visible !important; height: auto !important; transform: none !important;`) and body-wide `visibility: hidden` with `#reportArea` visibility breakout.
+  3. **PullToRefresh Print Resiliency (`PullToRefresh.tsx`):** Added `print:overflow-visible print:h-auto print:static print:transform-none` Tailwind utility classes to container elements.
+
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`

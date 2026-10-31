@@ -1,17 +1,64 @@
 @media print {
   @page {
     size: A4 portrait;
-    margin: 0;
+    margin: 6mm 8mm !important;
   }
-  body {
+
+  /* Reset all ancestor wrappers so overflow:hidden and transforms do not clip */
+  html,
+  body,
+  #root,
+  #root > div,
+  main,
+  div,
+  section,
+  article {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+    overflow-x: visible !important;
+    transform: none !important;
+    animation: none !important;
+    background: #ffffff !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
+
+  /* Hide everything in the body by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make reportArea and all its children visible */
+  #reportArea,
+  #reportArea * {
+    visibility: visible;
+  }
+
+  /* Position reportArea at the top-left of the physical printed page */
   #reportArea {
-    width: 210mm !important;
-    min-height: 297mm !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
     border: none !important;
     border-radius: 0 !important;
     box-shadow: none !important;
+    background: #ffffff !important;
+    display: block !important;
+  }
+
+  /* Ensure badges and table elements retain borders and exact colors */
+  .daily-report-table th,
+  .daily-report-table td,
+  .daily-kpi-grid div,
+  .daily-summary-strip {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }

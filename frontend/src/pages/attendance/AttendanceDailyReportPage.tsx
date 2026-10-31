@@ -41,7 +41,90 @@ export default function AttendanceDailyReportPage() {
   }, [date]);
 
   const handlePrint = () => {
-    window.print();
+    const reportEl = document.getElementById('reportArea');
+    if (!reportEl) {
+      window.print();
+      return;
+    }
+
+    // Clean up any stale print frames
+    const oldFrame = document.getElementById('attendance-print-frame');
+    if (oldFrame) oldFrame.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'attendance-print-frame';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    // Collect all stylesheets and style tags from current document
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(node => node.outerHTML)
+      .join('\n');
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Daily Attendance Report - ${date}</title>
+          ${styles}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 6mm 8mm;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+            }
+            #reportArea {
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              border: none !important;
+              box-shadow: none !important;
+              border-radius: 0 !important;
+              background: #ffffff !important;
+            }
+            .daily-report-table th,
+            .daily-report-table td {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="reportArea">
+            ${reportEl.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        iframe.remove();
+      }, 1000);
+    }, 250);
   };
 
   // Metrics computation
