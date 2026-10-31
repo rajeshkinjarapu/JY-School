@@ -55,6 +55,7 @@ export const TeacherFormPage: React.FC = () => {
         specialization: teacher.specialization || '',
         joiningDate: teacher.joiningDate ? new Date(teacher.joiningDate).toISOString().split('T')[0] : '',
         canEditStudents: teacher.canEditStudents || false,
+        canViewAllStudents: teacher.canViewAllStudents || false,
       });
       setPhotoUrl(teacher.user.photoUrl || '');
     } catch (e) {
@@ -159,6 +160,19 @@ export const TeacherFormPage: React.FC = () => {
               <label htmlFor="canEditStudents" className="text-sm font-semibold text-gray-900 cursor-pointer">
                 Allow to Edit Student Details
                 <span className="block text-xs font-normal text-gray-500">Grants permission to update student profiles and class assignments</span>
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t border-gray-100 dark:border-gray-800 md:col-span-2">
+              <input 
+                type="checkbox" 
+                id="canViewAllStudents" 
+                className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+                {...register('canViewAllStudents')} 
+              />
+              <label htmlFor="canViewAllStudents" className="text-sm font-semibold text-gray-900 dark:text-white cursor-pointer">
+                Allow to View All Students Details (అన్ని తరగతుల విద్యార్థుల వివరాలు & ఫోన్ నంబర్లు)
+                <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">ఈ టీచర్‌కు అన్ని తరగతుల విద్యార్థుల పూర్తి సమాచారం, తల్లిదండ్రుల ఫోన్ నంబర్లు చూసే పర్మిషన్ లభిస్తుంది.</span>
               </label>
             </div>
           </div>

@@ -115,7 +115,55 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     },
   });
   if (!student) return next(createError('Student not found', 404));
-  successResponse(res, student, 'Student fetched');
+  const userRole = req.user?.role;
+  let isClassTeacher = false;
+  let canViewAllStudents = false;
+  let hasFullAccess = true;
+
+  if (userRole === 'TEACHER') {
+    const teacher = await prisma.teacher.findUnique({
+      where: { userId: req.user?.id },
+      include: { homeRoomClass: { select: { id: true } } },
+    });
+
+    if (teacher) {
+      canViewAllStudents = teacher.canViewAllStudents === true;
+      isClassTeacher = teacher.homeRoomClass?.some(c => c.id === student.classId) || false;
+      hasFullAccess = canViewAllStudents || isClassTeacher;
+    } else {
+      hasFullAccess = false;
+    }
+
+    if (!hasFullAccess) {
+      const sanitizedStudent = {
+        ...student,
+        isClassTeacher: false,
+        canViewAllStudents: false,
+        hasFullAccess: false,
+        address: null,
+        aadharNo: null,
+        dob: null,
+        fatherPhone: null,
+        motherPhone: null,
+        user: {
+          ...student.user,
+          phone: null,
+        },
+        feePayments: [],
+        feeDiscounts: [],
+      };
+      return successResponse(res, sanitizedStudent, 'Student fetched');
+    }
+  }
+
+  const responseStudent = {
+    ...student,
+    isClassTeacher: userRole === 'TEACHER' ? isClassTeacher : true,
+    canViewAllStudents: userRole === 'TEACHER' ? canViewAllStudents : true,
+    hasFullAccess: true,
+  };
+
+  successResponse(res, responseStudent, 'Student fetched');
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

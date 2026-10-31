@@ -108,6 +108,7 @@ model Teacher {
   employeeId            String    @unique
   canEditStudents       Boolean   @default(false)
   canUploadQuestionPapers Boolean @default(false)
+  canViewAllStudents    Boolean   @default(false)
 
   classSubjectTeachers  ClassSubjectTeacher[]
   timetableSlots        Timetable[]

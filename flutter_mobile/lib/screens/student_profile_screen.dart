@@ -23,6 +23,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   List<dynamic> _feeStructures = [];
   bool _isLoading = true;
   bool _isTeacher = false;
+  bool _canViewAllStudents = false;
+  bool _isClassTeacher = false;
 
   @override
   void initState() {
@@ -42,13 +44,20 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       final prefs = await SharedPreferences.getInstance();
       final userStr = prefs.getString('user');
       String role = '';
+      bool canViewAll = false;
       if (userStr != null) {
-        role = jsonDecode(userStr)['role'] ?? '';
+        final decoded = jsonDecode(userStr);
+        role = decoded['role'] ?? '';
+        final teacher = decoded['teacher'];
+        if (teacher != null && teacher is Map) {
+          canViewAll = teacher['canViewAllStudents'] == true;
+        }
       }
       final isTeacher = role == 'TEACHER';
       if (isTeacher != _isTeacher && mounted) {
         setState(() {
           _isTeacher = isTeacher;
+          _canViewAllStudents = canViewAll;
           _tabController.dispose();
           _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
           _tabController.addListener(() {
@@ -75,6 +84,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         setState(() {
           if (studentRes['success'] == true && studentRes['data'] != null && studentRes['data'] is Map) {
             _studentDetails = Map<String, dynamic>.from(studentRes['data'] as Map);
+            if (_studentDetails!['canViewAllStudents'] == true) {
+              _canViewAllStudents = true;
+            }
+            if (_studentDetails!['isClassTeacher'] == true) {
+              _isClassTeacher = true;
+            }
           } else {
             _studentDetails = widget.student;
           }
@@ -134,7 +149,19 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final phones = [user['phone'], s['fatherPhone'], s['motherPhone'], s['guardianPhone']];
     for (final p in phones) {
       if (p != null && p.toString().isNotEmpty && p.toString() != 'N/A') {
-        primaryPhone = p.toString(); break;
+        primaryPhone = p.toString();
+        break;
+      }
+    }
+
+    final bool hasFullAccess = !_isTeacher || _canViewAllStudents || _isClassTeacher || (s['hasFullAccess'] == true);
+    if (false) { if (false) { if (false) { if (false) {
+
+
+      }
+    }
+
+
       }
     }
 
@@ -243,12 +270,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                             _badge(className.isNotEmpty ? className : 'No Class', const Color(0xFF10B981)),
                             _badge('Roll: $rollNo', const Color(0xFF3B82F6)),
                             if (admissionNo != 'N/A') _badge('Adm: $admissionNo', const Color(0xFF8B5CF6)),
+                            if (_isTeacher && !hasFullAccess) _badge('Subject Teacher', const Color(0xFF8B5CF6)),
+                            if (_isTeacher && _canViewAllStudents && !_isClassTeacher) _badge('All Classes Access', const Color(0xFF10B981)),
                           ],
                         ),
                       ],
                     ),
                   ),
-                  if (primaryPhone.isNotEmpty)
+                  if (primaryPhone.isNotEmpty && hasFullAccess)
                     GestureDetector(
                       onTap: () => _launchUrl('whatsapp', primaryPhone),
                       child: Container(
@@ -269,7 +298,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildProfileTab(s, user),
+                _buildProfileTab(s, user, hasFullAccess),
                 _buildExamsTab(s),
                 if (!_isTeacher) _buildFeesTab(s),
               ],
@@ -354,7 +383,150 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   }
 
   // PROFILE TAB
-  Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user) {
+  Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user, bool hasFullAccess) {
+    if (!hasFullAccess) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: const Color(0xFF10B981).withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.description_outlined, color: Color(0xFF10B981), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('RTE Student', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 11, fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 2),
+                      Text(s['isRTE'] == true ? 'Yes' : 'No', style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 16, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 8),
+                  Container(
+                    width: 68,
+                    height: 68,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.security_rounded, size: 36, color: Color(0xFF6366F1)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Class Teacher Restricted Access',
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF3C7),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Text(
+                      'STUDENT DATA PRIVACY',
+                      style: GoogleFonts.poppins(fontSize: 10, fontWeight: FontWeight.w800, color: const Color(0xFFB45309), letterSpacing: 0.8),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFF1F5F9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.check_circle_rounded, color: Color(0xFF10B981), size: 18),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'విద్యార్థి భద్రత మరియు గోప్యత దృష్ట్యా:',
+                                style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 26),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('• పుట్టిన తేదీ, ఆధార్, పూర్తి చిరునామా', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                              const SizedBox(height: 4),
+                              Text('• తల్లిదండ్రుల పేర్లు మరియు ఫోన్ నంబర్లు', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'ఈ సున్నితమైన వివరాలు కేవలం ఈ తరగతికి కేటాయించబడిన అధికారిక క్లాస్ టీచర్‌కు మరియు అడ్మిన్‌లకు మాత్రమే అందుబాటులో ఉంటాయి.',
+                          style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B), height: 1.4),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEEF2FF).withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Color(0xFF6366F1), size: 18),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'సబ్జెక్ట్ టీచర్ల కొరకు ఎగ్జామ్స్ మరియు మార్కుల వివరాలు EXAMS ట్యాబ్‌లో అందుబాటులో ఉన్నాయి.',
+                            style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF4F46E5), fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     final dob = s['dob'] != null ? (DateTime.tryParse(s['dob'].toString())?.toLocal().toString().split(' ')[0] ?? 'N/A') : 'N/A';
     final admDate = s['admissionDate'] != null ? (DateTime.tryParse(s['admissionDate'].toString())?.toLocal().toString().split(' ')[0] ?? 'N/A') : 'N/A';
     return SingleChildScrollView(

@@ -37,6 +37,14 @@
 - Backend gracefully handles empty strings for omitted fields to prevent Prisma DB crashes.
 - Table view, search filter, Excel export, and PDF export updated to display `-` gracefully for empty fields.
 
+## Teacher Global Student Access Permission (October 31, 2026)
+- **Feature Scope:** Implemented ability for Admins to grant specific teachers access to view full student details (DOB, Aadhaar, address, parent phone numbers) across all classes.
+- **Database Model:** Added `canViewAllStudents Boolean @default(false)` to `Teacher` model in `schema.prisma`.
+- **Backend API:** Updated `teachers.controller.ts` (`create`, `update`) and `students.controller.ts` (`getById`). Teachers with `canViewAllStudents === true` or `isClassTeacher === true` receive full student profiles with contacts, while unpermitted subject teachers have sensitive fields securely masked.
+- **Web Admin UI:** Added "Allow to View All Students Details" toggle in `TeacherFormPage.tsx` enabling admins to grant/revoke access seamlessly.
+- **Flutter Mobile App:** Updated `StudentProfileScreen` with role & permission check. Properly renders "Subject Teacher" badge and Telugu privacy restriction shield when restricted, and seamlessly displays full demographics and call/WhatsApp actions when granted.
+- **Deployment Info:** Deployable via Prisma DB push and backend/frontend build on VPS, and Shorebird Patch for Flutter app.
+
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`

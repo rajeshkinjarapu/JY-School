@@ -78,7 +78,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { name, email, password, phone, photoUrl, qualification, specialization, canEditStudents } = req.body;
+  const { name, email, password, phone, photoUrl, qualification, specialization, canEditStudents, canViewAllStudents } = req.body;
 
   if (!email) {
     return next(createError('Email address is required', 400));
@@ -112,7 +112,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
   });
 
   const teacher = await prisma.teacher.create({
-    data: { userId: user.id, employeeId, qualification, specialization, canEditStudents: canEditStudents || false },
+    data: { userId: user.id, employeeId, qualification, specialization, canEditStudents: canEditStudents || false, canViewAllStudents: canViewAllStudents || false },
     include: { user: { select: { id: true, name: true, email: true } } },
   });
 
@@ -137,7 +137,7 @@ export const create = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, phone, photoUrl, qualification, specialization, canEditStudents } = req.body;
+  const { name, phone, photoUrl, qualification, specialization, canEditStudents, canViewAllStudents } = req.body;
 
   const teacher = await prisma.teacher.findUnique({ where: { id } });
   if (!teacher) return next(createError('Teacher not found', 404));
@@ -145,7 +145,12 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   await prisma.user.update({ where: { id: teacher.userId }, data: { name, phone, photoUrl } });
   const updated = await prisma.teacher.update({
     where: { id },
-    data: { qualification, specialization, canEditStudents: canEditStudents !== undefined ? canEditStudents : undefined },
+    data: { 
+      qualification, 
+      specialization, 
+      canEditStudents: canEditStudents !== undefined ? canEditStudents : undefined,
+      canViewAllStudents: canViewAllStudents !== undefined ? canViewAllStudents : undefined,
+    },
     include: { user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } } },
   });
 
