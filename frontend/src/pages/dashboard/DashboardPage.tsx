@@ -14,7 +14,7 @@ import {
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
   BookOpen, CheckCircle2, XCircle, Megaphone, Star,
-  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus
+  ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus, Cake, Sparkles
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
@@ -244,6 +244,17 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
   const attendancePct = totalPresent + totalAbsent > 0
     ? Math.round((totalPresent / (totalPresent + totalAbsent)) * 100) : data.attendanceToday || 0;
 
+  const handleWhatsAppWish = (student: any) => {
+    const rawPhone = student.phone ? String(student.phone).replace(/[^0-9]/g, '') : '';
+    if (!rawPhone || rawPhone.length < 10) {
+      alert(`Parent contact number is not available for ${student.name}`);
+      return;
+    }
+    const phone = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
+    const wishMessage = `🎉 *Dear ${student.name}*,\n\nWishing you a very *Happy Birthday!* 🎂✨\nMay your day be filled with happiness, wonderful smiles, and great success in all your studies.\n\nWarm wishes & blessings,\n*Management & Staff*\n*Sri Venkateswara JY School* 🌟`;
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(wishMessage)}`, '_blank');
+  };
+
   const stats: StatCardProps[] = [
     { label: 'Total Students', value: data.totalStudents, icon: Users, gradient: 'linear-gradient(90deg,#6366f1,#818cf8)', glow: 'rgba(99,102,241,0.08)', link: '/students', sub: 'Enrolled this year' },
     { label: 'Total Teachers', value: data.totalTeachers, icon: GraduationCap, gradient: 'linear-gradient(90deg,#10b981,#34d399)', glow: 'rgba(16,185,129,0.08)', link: '/teachers', sub: 'On staff' },
@@ -373,19 +384,116 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
       {/* Charts Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <ChartCard className="lg:col-span-3">
-          <SectionHeader title="Attendance Overview" subtitle="Present vs absent — last 7 days" icon={Activity} iconColor="#10b981" />
-          <div className="h-[240px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.attendanceTrend} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} dy={8} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#94a3b8', fontWeight: 600 }} />
-                <RechartsTooltip contentStyle={TT} />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: 11, fontWeight: 700, paddingTop: 8 }} />
-                <Line type="monotone" dataKey="present" name="Present" stroke="#10b981" strokeWidth={2.5} dot={{ r: 4, fill: '#10b981', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                <Line type="monotone" dataKey="absent" name="Absent" stroke="#f43f5e" strokeWidth={2.5} dot={{ r: 4, fill: '#f43f5e', strokeWidth: 0 }} activeDot={{ r: 6 }} />
-              </LineChart>
-            </ResponsiveContainer>
+          <SectionHeader 
+            title="Today's Birthdays" 
+            subtitle="Celebrate students & send WhatsApp wishes" 
+            icon={Cake} 
+            iconColor="#ec4899"
+            action={
+              (data.todayBirthdays || []).length > 0 ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-xs animate-pulse">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {data.todayBirthdays.length} Birthday{data.todayBirthdays.length > 1 ? 's' : ''} Today 🎉
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                  No Birthdays Today
+                </span>
+              )
+            } 
+          />
+          <div className="h-[240px] overflow-y-auto pr-1">
+            {(data.todayBirthdays || []).length > 0 ? (
+              <div className="space-y-2.5">
+                {data.todayBirthdays.map((student: any) => (
+                  <div 
+                    key={student.id} 
+                    className="p-3 rounded-2xl bg-gradient-to-r from-pink-50/70 via-purple-50/50 to-indigo-50/50 border border-pink-100/90 hover:border-pink-300 hover:shadow-md transition-all flex items-center justify-between gap-3 group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="relative shrink-0">
+                        <div className="w-11 h-11 rounded-xl overflow-hidden bg-white border border-pink-200 shadow-2xs flex items-center justify-center">
+                          {student.photoUrl ? (
+                            <img src={getPhotoUrl(student.photoUrl)} alt={student.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center font-black text-pink-600 bg-pink-100 text-sm">
+                              {student.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <span className="absolute -bottom-1 -right-1 text-xs" title="Birthday!">🎂</span>
+                      </div>
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-black text-slate-800 truncate group-hover:text-pink-600 transition-colors">
+                            {student.name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-pink-100 text-pink-700 border border-pink-200/60 shrink-0">
+                            {student.className}
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-semibold text-slate-400 mt-0.5 truncate">
+                          ID: <span className="text-slate-600 font-bold">{student.rollNo}</span>
+                          {student.dob && ` • ${new Date(student.dob).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleWhatsAppWish(student)}
+                      title="Send Birthday Wish on WhatsApp"
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-500/20 active:scale-95 transition-all shrink-0 cursor-pointer"
+                    >
+                      <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                      </svg>
+                      <span>Wish</span>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-center p-3">
+                <div className="w-12 h-12 rounded-2xl bg-pink-50 border border-pink-100 flex items-center justify-center text-2xl mb-2 shadow-2xs">
+                  🎂
+                </div>
+                <h4 className="text-sm font-black text-slate-700">No Student Birthdays Today</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5 max-w-xs">
+                  No birthdays scheduled for today. Check upcoming celebrations below.
+                </p>
+
+                {(data.upcomingBirthdays || []).length > 0 && (
+                  <div className="mt-3 w-full pt-2.5 border-t border-slate-100">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-pink-600 mb-2">
+                      Upcoming Birthdays ({data.upcomingBirthdays.length})
+                    </p>
+                    <div className="flex items-center justify-center gap-2 flex-wrap">
+                      {data.upcomingBirthdays.slice(0, 3).map((up: any) => (
+                        <div key={up.id} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                          <span className="font-bold text-slate-800">{up.name}</span>
+                          <span className="text-[10px] font-semibold text-slate-400">({up.className})</span>
+                          <span className="text-[10px] font-black text-pink-600 bg-pink-50 px-1.5 py-0.5 rounded">
+                            {up.daysLeft === 1 ? 'Tomorrow' : `In ${up.daysLeft}d`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+
+
+
+
+
+
+
+
+
+
           </div>
         </ChartCard>
 
@@ -395,6 +503,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
           <div className="h-[220px]">
             {enrollmentData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
+  
                 <BarChart data={enrollmentData} margin={{ top: 4, right: 4, left: -10, bottom: 0 }} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                   <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }} />
@@ -403,6 +512,7 @@ const AdminView: React.FC<{ data: any }> = ({ data }) => {
                   <Bar dataKey="count" fill="#f59e0b" radius={[0, 4, 4, 0]} barSize={14} />
                 </BarChart>
               </ResponsiveContainer>
+  
             ) : <div className="flex items-center justify-center h-full text-slate-400 text-sm">No enrollment data.</div>}
           </div>
         </ChartCard>

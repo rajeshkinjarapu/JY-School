@@ -61,6 +61,14 @@
   2. **Comprehensive Print Isolation in `AttendanceDailyReport.css`:** Added reset rules for `html, body, #root, main, div` (`overflow: visible !important; height: auto !important; transform: none !important;`) and body-wide `visibility: hidden` with `#reportArea` visibility breakout.
   3. **PullToRefresh Print Resiliency (`PullToRefresh.tsx`):** Added `print:overflow-visible print:h-auto print:static print:transform-none` Tailwind utility classes to container elements.
 
+## Student Birthday & WhatsApp Wish Dashboard Restoration (October 31, 2026)
+- **Root Cause of Attendance Overview Reappearing:** 
+  - Originally implemented in commit `4c1a5b27aae1023778af90dd80320a9dec79175e` ("feat(dashboard): replace attendance overview with today birthdays card and whatsapp wish").
+  - When the multi-tenant SaaS model was reverted in commit `300c3b68bcaaa6ee8099053adf7ee83fcd20fe9f` to restore the pure JY School ERP, `DashboardPage.tsx` and `dashboard.controller.ts` were inadvertently reverted to an older commit that still had the redundant "Attendance Overview" LineChart.
+- **Implemented Fix:**
+  1. **Backend (`backend/src/controllers/dashboard.controller.ts`):** Added query for students with `dob` in `getAdminDashboard`. Automatically computes `todayBirthdays` and `upcomingBirthdays` (next 7 days) and delivers them in `/api/dashboard/admin`.
+  2. **Frontend (`frontend/src/pages/dashboard/DashboardPage.tsx`):** Completely replaced the redundant "Attendance Overview" LineChart with a premium "Today's Birthdays" card featuring student photo, name, class badge, roll number, celebration indicators, and a one-click WhatsApp wishing action that sends official personalized birthday greetings to parents. Empty state cleanly displays upcoming birthdays for the week.
+
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`

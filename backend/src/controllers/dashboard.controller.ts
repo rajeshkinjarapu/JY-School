@@ -52,7 +52,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentPayments,
       recentAnnouncements,
       weekAttendance,
-      totalAppInstalls
+      totalAppInstalls,
+      studentsWithDob
     ] = await Promise.all([
       prisma.student.count(),
       prisma.teacher.count(),
@@ -76,7 +77,18 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         where: { isActive: true }
       }),
       prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } }, select: { date: true, status: true } }),
-      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } })
+      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } }),
+      prisma.student.findMany({
+        where: { dob: { not: null } },
+        select: {
+          id: true,
+          rollNo: true,
+          dob: true,
+          gender: true,
+          user: { select: { name: true, phone: true, photoUrl: true } },
+          class: { select: { name: true, section: true } }
+        }
+      })
     ]);
 
     const totalRevenue = revenueResult._sum.amountPaid || 0;
@@ -137,6 +149,52 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       });
     }
 
+    const currentMonth = today.getMonth();
+    const currentDay = today.getDate();
+
+    const todayBirthdays: any[] = [];
+    const upcomingBirthdays: any[] = [];
+
+    (studentsWithDob || []).forEach((s: any) => {
+      if (!s.dob) return;
+      const bDate = new Date(s.dob);
+      const bMonth = bDate.getMonth();
+      const bDay = bDate.getDate();
+
+      let avatarUrl = s.user?.photoUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:image')) {
+        avatarUrl = `/api/users/${s.id}/photo`;
+      }
+
+      const item = {
+        id: s.id,
+        rollNo: s.rollNo,
+        name: s.user?.name || 'Student',
+        phone: s.user?.phone || null,
+        photoUrl: avatarUrl,
+        gender: s.gender,
+        dob: s.dob,
+        className: s.class ? `${s.class.name}${s.class.section ? ' - ' + s.class.section : ''}` : 'N/A'
+      };
+
+      if (bMonth === currentMonth && bDay === currentDay) {
+        todayBirthdays.push(item);
+      } else {
+        const thisYearBirthday = new Date(today.getFullYear(), bMonth, bDay);
+        let diffMs = thisYearBirthday.getTime() - today.getTime();
+        if (diffMs < 0) {
+          const nextYearBirthday = new Date(today.getFullYear() + 1, bMonth, bDay);
+          diffMs = nextYearBirthday.getTime() - today.getTime();
+        }
+        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        if (daysLeft > 0 && daysLeft <= 7) {
+          upcomingBirthdays.push({ ...item, daysLeft });
+        }
+      }
+    });
+
+    upcomingBirthdays.sort((a, b) => a.daysLeft - b.daysLeft);
+
     const responseData = {
       totalStudents,
       totalTeachers,
@@ -149,7 +207,10 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentPayments,
       recentAnnouncements,
       attendanceTrend,
-      totalAppInstalls
+      todayBirthdays,
+      upcomingBirthdays,
+      totalAppInstalls,
+      studentsWithDob
     };
 
     // Cache for 3 minutes (180000 ms) to make dashboard lightning fast
