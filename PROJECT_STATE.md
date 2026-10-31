@@ -69,10 +69,8 @@
   2. **Frontend (`frontend/src/pages/dashboard/DashboardPage.tsx`):** Completely replaced the redundant "Attendance Overview" LineChart with a premium "Today's Birthdays" card featuring student photo, name, class badge, roll number, celebration indicators, and a one-click WhatsApp wishing action that sends official personalized birthday greetings to parents. Empty state cleanly displays upcoming birthdays for the week.
 
 ## Student Promotion Module Restoration & Build Error Resolution (October 31, 2026)
-- **Frontend Syntax Error Fix (`src/router/index.tsx`):** Removed duplicate closing tags `</ProtectedRoute>` and `),` on lines 264-265, allowing Vite build to succeed flawlessly.
-- **Backend TypeScript Compilation Fixes:**
-  - Resolved `students.controller.ts:155` return type mismatch.
-  - Resolved `promotion.controller.ts` missing Prisma types by utilizing safe raw queries (`$executeRawUnsafe` and `$queryRawUnsafe`) for `StudentPromotionHistory` audit logging.
+- **Backend Status:** Build successful with 0 errors.
+- **Frontend JSX Fix:** Added missing closing `<>` fragment wrapper around Promote & Add buttons in `StudentListPage.tsx`.
 - **UI Access Points:**
   1. **Sidebar Navigation:** "Promotion" item added under Admin menu (`Sidebar.tsx`).
   2. **Student List Page:** "Promote" header action button added (`StudentListPage.tsx`).
