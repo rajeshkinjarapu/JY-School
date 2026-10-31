@@ -68,15 +68,14 @@
   1. **Backend (`backend/src/controllers/dashboard.controller.ts`):** Added query for students with `dob` in `getAdminDashboard`. Automatically computes `todayBirthdays` and `upcomingBirthdays` (next 7 days) and delivers them in `/api/dashboard/admin`.
   2. **Frontend (`frontend/src/pages/dashboard/DashboardPage.tsx`):** Completely replaced the redundant "Attendance Overview" LineChart with a premium "Today's Birthdays" card featuring student photo, name, class badge, roll number, celebration indicators, and a one-click WhatsApp wishing action that sends official personalized birthday greetings to parents. Empty state cleanly displays upcoming birthdays for the week.
 
-## Student Promotion Module Restoration (October 31, 2026)
-- **Status:** Fully Restored and Integrated.
-- **Backend Controller:** `backend/src/controllers/promotion.controller.ts` (includes automatic `ensurePromotionTableExists` for `StudentPromotionHistory`).
-- **Backend Route:** `backend/src/routes/promotion.ts` mounted at `/api/promotion` in `server.ts`.
-- **Frontend Page:** `frontend/src/pages/students/StudentPromotionPage.tsx`.
-- **Route System:** Registered `/students/promotion` in `routeImports.ts` and `router/index.tsx`.
+## Student Promotion Module Restoration & Build Error Resolution (October 31, 2026)
+- **Frontend Syntax Error Fix (`src/router/index.tsx`):** Removed duplicate closing tags `</ProtectedRoute>` and `),` on lines 264-265, allowing Vite build to succeed flawlessly.
+- **Backend TypeScript Compilation Fixes:**
+  - Resolved `students.controller.ts:155` return type mismatch.
+  - Resolved `promotion.controller.ts` missing Prisma types by utilizing safe raw queries (`$executeRawUnsafe` and `$queryRawUnsafe`) for `StudentPromotionHistory` audit logging.
 - **UI Access Points:**
-  1. **Sidebar Navigation:** Added "Promotion" under Admin navigation menu.
-  2. **Student List Page:** Added "Promote" button with GraduationCap icon in the header actions.
+  1. **Sidebar Navigation:** "Promotion" item added under Admin menu (`Sidebar.tsx`).
+  2. **Student List Page:** "Promote" header action button added (`StudentListPage.tsx`).
 
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`

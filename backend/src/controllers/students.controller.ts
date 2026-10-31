@@ -152,7 +152,8 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         feePayments: [],
         feeDiscounts: [],
       };
-      return successResponse(res, sanitizedStudent, 'Student fetched');
+      successResponse(res, sanitizedStudent, 'Student fetched');
+      return;
     }
   }
 

@@ -261,8 +261,6 @@ export const router = createBrowserRouter([
             <StudentPromotionPage />
           </ProtectedRoute>
         ),
-          </ProtectedRoute>
-        ),
       },
       {
         path: 'students/new',
