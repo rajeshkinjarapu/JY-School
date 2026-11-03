@@ -65,14 +65,13 @@ const resolveUrl = (url?: string, defaultFallback: string = '') => {
 
 // ──────────────────────────────────────────────────────────────────────────────
 // 1. FRONT HALF-CARD (A5: 134mm Height, Full Width: 100%)
-// Premium, perfectly balanced, authoritative Hall Ticket layout:
-// - Prestigious Georgia serif header with Logo & Academic Year badge
-// - Deep Navy title ribbon with Gold Exam title
-// - Left: Dedicated Photo & Candidate Signature ID block
-// - Right: Demographic profile grid with dark Roll No & indigo Class badges
-// - Exam Day Protocol & Rules box (eliminates dead white space)
-// - 3-party Signature row: Candidate, Invigilator & Principal
-// - High-contrast reverse side timetable notice banner
+// Exactly matches the original prestigious design (Image 3):
+// - Georgia serif header with Logo, Subtitle & Center badge
+// - Iconic skewed black ADMIT CARD badge + centered Exam Title
+// - Candidate Details card with clean zebra rows + Student Photo on right
+// - Important Instructions box (eliminating empty space)
+// - 3 Signatures: Candidate, Invigilator & Principal
+// - Reverse side schedule notice
 // ──────────────────────────────────────────────────────────────────────────────
 export const AdmitCardFrontHalf: React.FC<{
   student: any;
@@ -107,13 +106,13 @@ export const AdmitCardFrontHalf: React.FC<{
     >
       {/* Background Watermark */}
       <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
-        <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[170px] h-[170px] object-contain grayscale" />
+        <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[180px] h-[180px] object-contain grayscale" />
       </div>
 
       <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2 box-border overflow-hidden">
-        {/* Header Bar */}
-        <div className="flex items-center gap-2.5 pb-1 border-b-2 border-slate-900 bg-gradient-to-r from-slate-50 via-white to-slate-50 -mx-2 -mt-2 p-1.5 px-2.5">
-          <div className="w-12 h-12 shrink-0 bg-white border border-slate-300 p-0.5 shadow-2xs rounded-md flex items-center justify-center overflow-hidden">
+        {/* Header Bar - Exactly matches Image 3 */}
+        <div className="flex items-center gap-3 pb-1 border-b-2 border-slate-900 bg-slate-50 -mx-2 -mt-2 p-1.5 px-3">
+          <div className="w-14 h-14 shrink-0 bg-white border border-slate-300 p-1 shadow-2xs rounded-lg flex items-center justify-center overflow-hidden">
             <img
               src={logoUrl || '/logo.png'}
               alt="Logo"
@@ -125,181 +124,137 @@ export const AdmitCardFrontHalf: React.FC<{
               }}
             />
           </div>
-          <div className="flex-1 text-center pr-1">
-            <h1 className="text-[14.5px] leading-tight font-black uppercase tracking-wider text-slate-900" style={{ fontFamily: '"Georgia", serif' }}>
+          <div className="flex-1 text-center pr-2">
+            <h1 className="text-[16px] leading-tight font-black uppercase tracking-wider text-slate-900" style={{ fontFamily: '"Georgia", serif' }}>
               {schoolName}
             </h1>
-            <p className="text-[8.5px] font-extrabold uppercase tracking-wider text-slate-700 leading-tight">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-slate-700 leading-tight mt-0.5">
               {schoolSubtitle}
             </p>
-            <div className="mt-0.5 inline-flex items-center gap-1 text-[7.5px] font-bold text-slate-700 bg-white px-2 py-0.2 rounded-full border border-slate-200">
+            <div className="mt-0.5 inline-flex items-center gap-1 text-[8px] font-semibold text-slate-600 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
               <MapPin className="w-2.5 h-2.5 text-slate-800" />
-              <span className="truncate max-w-[280px]">{examCenter}</span>
+              <span className="truncate max-w-[320px]">{examCenter}</span>
             </div>
-          </div>
-          <div className="hidden sm:flex flex-col items-center justify-center text-center w-20 shrink-0 p-1 border border-slate-200 bg-white rounded-xs">
-            <span className="text-[6.5px] font-black uppercase text-slate-500 tracking-wider">ACADEMIC YEAR</span>
-            <span className="text-[9.5px] font-black text-slate-900 tracking-tight font-mono">2026-27</span>
-            <span className="text-[6px] font-bold text-emerald-700 uppercase bg-emerald-50 px-1 rounded-xs border border-emerald-200 mt-0.5">AUTHENTICATED</span>
           </div>
         </div>
 
-        {/* Title Ribbon */}
-        <div className="flex items-center justify-between px-2.5 py-0.5 bg-slate-900 text-white rounded-xs my-0.5 shadow-2xs border-l-4 border-amber-400">
-          <div className="flex items-center gap-1.5">
-            <span className="bg-amber-400 text-slate-900 font-black text-[7.5px] px-1.5 py-0.2 rounded-xs uppercase tracking-wider">
-              OFFICIAL
-            </span>
-            <span className="text-[9px] font-black uppercase tracking-[0.18em]">
-              HALL TICKET / ADMIT CARD
-            </span>
+        {/* Title Badges - Exactly matches Image 3 */}
+        <div className="flex flex-col items-center py-1">
+          <div className="bg-slate-900 text-white px-7 py-1 rounded-xs shadow-xs mb-0.5 transform -skew-x-12 inline-block">
+            <h2 className="text-[11.5px] font-black uppercase tracking-[0.25em] transform skew-x-12">
+              ADMIT CARD
+            </h2>
           </div>
-          <span className="text-[9.5px] font-black uppercase tracking-wider text-amber-300 truncate max-w-[260px]">
+          <h3 className="text-[10.5px] font-bold text-slate-800 uppercase tracking-widest text-center">
             {examTitle}
-          </span>
-          <span className="text-[7.5px] font-bold uppercase tracking-widest text-slate-300 bg-slate-800 px-1.5 py-0.2 rounded-xs">
-            STUDENT COPY
-          </span>
+          </h3>
         </div>
 
-        {/* Candidate Identity Section (Photo + Demographic Grid) */}
-        <div className="flex gap-2 items-stretch my-0.5">
-          {/* Left: Dedicated Photo & Signature Unit */}
-          <div className="w-[92px] shrink-0 flex flex-col justify-between border-2 border-slate-800 rounded-xs bg-slate-50 p-1 shadow-2xs">
-            <div className="w-full aspect-[3/4] rounded-xs overflow-hidden border border-slate-300 bg-white flex items-center justify-center">
-              {student?.user?.photoUrl ? (
-                <img
-                  src={getPhotoUrl(student.user.photoUrl)}
-                  alt="Student"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full border border-dashed border-slate-300 flex flex-col items-center justify-center text-center p-1 bg-slate-100">
-                  <User className="w-7 h-7 mb-0.5 opacity-30 text-slate-700" />
-                  <span className="text-[7px] uppercase font-black text-slate-400 leading-tight">
-                    Affix<br />Photo
-                  </span>
-                </div>
-              )}
+        {/* Candidate Details & Photo - Exactly matches Image 3 */}
+        <div className="flex gap-3 items-stretch my-0.5">
+          {/* Details Table */}
+          <div className="flex-1 border border-slate-300 rounded-lg overflow-hidden shadow-2xs bg-white">
+            <div className="bg-slate-800 px-3 py-1 flex items-center gap-1.5 text-white">
+              <User className="w-3.5 h-3.5 text-white" />
+              <h4 className="text-[9.5px] font-bold uppercase tracking-widest text-white">
+                Candidate Details
+              </h4>
             </div>
-            {/* Student Signature under photo */}
-            <div className="mt-1 pt-0.5 border-t border-slate-300 text-center">
-              <div className="h-3.5 border-b border-dashed border-slate-400 mb-0.5" />
-              <span className="text-[6.5px] font-black uppercase tracking-wider text-slate-600 block">
-                Candidate Sign
-              </span>
-            </div>
-          </div>
-
-          {/* Right: Rich Demographic Profile Card */}
-          <div className="flex-1 border-2 border-slate-800 rounded-xs overflow-hidden bg-white flex flex-col justify-between shadow-2xs">
-            <div className="bg-slate-900 px-2.5 py-0.5 flex items-center justify-between text-white">
-              <div className="flex items-center gap-1.5">
-                <User className="w-2.5 h-2.5 text-amber-300" />
-                <span className="text-[8.5px] font-black uppercase tracking-wider">Candidate Identification</span>
-              </div>
-              <span className="text-[7.5px] font-bold text-slate-300 uppercase font-mono">
-                REG NO: {student?.admissionNo || student?.rollNo || 'N/A'}
-              </span>
-            </div>
-
-            <table className="w-full text-left border-collapse text-[9.5px] flex-1">
+            <table className="w-full text-left border-collapse text-[9.5px]">
               <tbody className="divide-y divide-slate-200">
-                <tr className="bg-amber-50/30">
-                  <td className="py-0.5 px-2 font-bold text-slate-600 uppercase text-[8px] w-[32%] bg-slate-50 border-r border-slate-200">
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider w-1/3 bg-slate-50 border-r border-slate-200">
                     Candidate Name
                   </td>
-                  <td className="py-0.5 px-2 font-black text-slate-950 uppercase text-[10.5px] tracking-wide truncate">
+                  <td className="py-1 px-3 font-black text-slate-900 uppercase text-[11px] truncate">
                     {student?.user?.name || student?.name}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-0.5 px-2 font-bold text-slate-600 uppercase text-[8px] bg-slate-50 border-r border-slate-200">
-                    Roll & Class
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                    Father Name
                   </td>
-                  <td className="py-0.5 px-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="bg-slate-900 text-white font-mono font-black px-1.5 py-0.2 rounded-xs text-[9px]">
-                        ROLL: {student?.rollNo || 'N/A'}
-                      </span>
-                      <span className="bg-indigo-50 border border-indigo-200 text-indigo-950 font-black px-1.5 py-0.2 rounded-xs text-[9px]">
-                        CLASS: {resolvedClass} - {resolvedSection}
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="py-0.5 px-2 font-bold text-slate-600 uppercase text-[8px] bg-slate-50 border-r border-slate-200">
-                    Father / Guardian
-                  </td>
-                  <td className="py-0.5 px-2 font-extrabold text-slate-800 uppercase text-[9px] truncate">
+                  <td className="py-1 px-3 font-black text-slate-900 uppercase text-[11px] truncate">
                     {student?.parent?.fatherName || student?.fatherName || '-'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-0.5 px-2 font-bold text-slate-600 uppercase text-[8px] bg-slate-50 border-r border-slate-200">
-                    Gender & DOB
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                    Roll Number
                   </td>
-                  <td className="py-0.5 px-2 font-bold text-slate-800 text-[8.5px]">
-                    {student?.gender || 'Male'} &nbsp;|&nbsp; DOB: {student?.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-'}
+                  <td className="py-1 px-3 font-black text-slate-900 text-[11px]">
+                    {student?.rollNo || 'N/A'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-0.5 px-2 font-bold text-slate-600 uppercase text-[8px] bg-slate-50 border-r border-slate-200">
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                    Class & Section
+                  </td>
+                  <td className="py-1 px-3 font-black text-slate-900 text-[11px]">
+                    {resolvedClass} - {resolvedSection}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                    Gender / DOB
+                  </td>
+                  <td className="py-1 px-3 font-black text-slate-900 text-[10px]">
+                    {student?.gender || 'Male'} &nbsp;|&nbsp; {student?.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Exam Center
                   </td>
-                  <td className="py-0.5 px-2 font-bold text-slate-800 text-[8.5px] truncate">
+                  <td className="py-1 px-3 font-black text-slate-900 text-[10px] truncate">
                     {examCenter}
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
-        </div>
 
-        {/* Candidate Instructions & Guidelines Box */}
-        <div className="p-1.5 rounded-xs border border-slate-300 bg-slate-50/90 my-0.5">
-          <div className="flex items-center justify-between mb-0.5 border-b border-slate-200 pb-0.5">
-            <div className="flex items-center gap-1 text-slate-900">
-              <ShieldAlert className="w-2.5 h-2.5 text-slate-800" />
-              <span className="text-[8px] font-black uppercase tracking-wider">
-                Exam Hall Guidelines / పరీక్ష ముఖ్య నిబంధనలు
-              </span>
-            </div>
-            <span className="text-[6.5px] font-bold text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded-xs uppercase">
-              Reporting: 30 Mins Before
-            </span>
-          </div>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[7px] text-slate-700 font-semibold leading-tight">
-            <div className="flex items-start gap-1">
-              <span className="text-slate-900 font-black">•</span>
-              <span>Candidate must bring this Admit Card & School ID to every session without fail.</span>
-            </div>
-            <div className="flex items-start gap-1">
-              <span className="text-slate-900 font-black">•</span>
-              <span>Mobile phones, smartwatches and electronic devices are strictly prohibited.</span>
-            </div>
-            <div className="flex items-start gap-1">
-              <span className="text-slate-900 font-black">•</span>
-              <span>Candidates must occupy their assigned exam desk 15 minutes before start.</span>
-            </div>
-            <div className="flex items-start gap-1">
-              <span className="text-slate-900 font-black">•</span>
-              <span>Strict discipline and adherence to invigilator instructions is mandatory.</span>
+          {/* Student Photo */}
+          <div className="w-[105px] shrink-0 flex flex-col">
+            <div className="w-full aspect-[3/4] border-2 border-slate-300 rounded-lg p-1 bg-white shadow-2xs flex flex-col items-center justify-center overflow-hidden">
+              {student?.user?.photoUrl ? (
+                <img
+                  src={getPhotoUrl(student.user.photoUrl)}
+                  alt="Student"
+                  className="w-full h-full object-cover rounded-md"
+                />
+              ) : (
+                <div className="w-full h-full border border-dashed border-slate-300 rounded-md flex flex-col items-center justify-center text-center p-1 bg-slate-50">
+                  <User className="w-7 h-7 mb-1 opacity-30 text-slate-800" />
+                  <span className="text-[8px] uppercase font-bold leading-tight text-slate-400 tracking-wider">
+                    Affix<br />Photo
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Verification Signatures Row */}
-        <div className="flex items-end justify-between px-2 pt-0.5 pb-0.5 border-t border-slate-300 bg-white">
+        {/* Important Instructions Box - Matches Image 3 footer rules */}
+        <div className="p-1.5 rounded-lg border border-slate-200 bg-slate-50/90 my-0.5">
+          <h5 className="text-[8.5px] font-black uppercase tracking-wider text-slate-900 mb-0.5 flex items-center gap-1.5">
+            <span className="bg-slate-900 w-1.5 h-1.5 rounded-full"></span> Important Instructions / ముఖ్య సూచనలు
+          </h5>
+          <ul className="text-[7.5px] text-slate-700 font-semibold space-y-0.5 list-decimal pl-4 leading-relaxed">
+            <li>Candidate must carry this Admit Card & School ID to every examination session.</li>
+            <li>Electronic devices, smartwatches, and cell phones are strictly prohibited in the exam hall.</li>
+            <li>Candidate should report to the examination center 30 minutes before commencement.</li>
+          </ul>
+        </div>
+
+        {/* 3-Party Signatures Row */}
+        <div className="flex items-end justify-between px-3 pt-0.5">
           <div className="text-center w-28">
-            <div className="w-full border-b border-dashed border-slate-400 mb-0.5 h-4 flex items-end justify-center">
-              <span className="text-[6.5px] text-slate-400 italic font-mono">Verified in hall</span>
-            </div>
+            <div className="w-full border-b border-dashed border-slate-400 mb-0.5" />
             <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-800">Candidate Sign</span>
           </div>
           <div className="text-center w-28">
-            <div className="w-full border-b border-dashed border-slate-400 mb-0.5 h-4" />
+            <div className="w-full border-b border-dashed border-slate-400 mb-0.5" />
             <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-800">Invigilator Sign</span>
           </div>
           <div className="text-center w-36 flex flex-col items-center">
@@ -310,17 +265,16 @@ export const AdmitCardFrontHalf: React.FC<{
                 <div className="w-24 border-b border-dashed border-slate-400 mb-0.5" />
               )}
             </div>
-            <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-950">Principal Signature</span>
+            <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-900">Principal Signature</span>
           </div>
         </div>
 
         {/* Bottom Banner */}
-        <div className="flex items-center justify-between text-[7px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 border-t border-slate-300 -mx-2 -mb-2">
-          <span className="font-extrabold text-indigo-950 uppercase flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block"></span>
-            ⚡ EXAMINATION SCHEDULE & TIMETABLE PRINTED ON REVERSE SIDE (షెడ్యూల్ వెనుక వైపు చూడండి)
+        <div className="flex items-center justify-between text-[7.5px] font-bold text-slate-600 pt-0.5 border-t border-slate-300">
+          <span className="font-extrabold text-indigo-900 uppercase">
+            ⚡ EXAMINATION SCHEDULE ON REVERSE (టైంటేబుల్ వెనుక వైపు చూడండి)
           </span>
-          <span className="uppercase tracking-widest text-slate-500 font-black">STUDENT COPY</span>
+          <span className="uppercase tracking-widest text-slate-400 font-black">STUDENT COPY</span>
         </div>
       </div>
     </div>

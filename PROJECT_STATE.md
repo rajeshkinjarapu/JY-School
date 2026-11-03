@@ -178,3 +178,19 @@
   7. **Bottom Reverse-Schedule Notice:**
      - High-contrast banner with emerald indicator directing students to the reverse-side timetable.
   8. **Strict Dimension Control:** All elements engineered within the `134mm` maximum height limit, ensuring 2 cards fit per A4 page without multi-page overflow in Chrome or desktop printer drivers.
+
+
+## Admit Card Blank PDF Download Resolution & Exact Image 3 Design Restoration (November 3, 2026)
+- **User Feedback:**
+  1. Image 2: Downloading single student admit card ("DOWNLOAD PDF") resulted in a completely blank white PDF.
+  2. Image 1 vs Image 3: The user wanted the admit card to look 100% like the authentic original design in Image 3 (Georgia serif header, centered skewed black `ADMIT CARD` badge with exam name below, clean `CANDIDATE DETAILS` box with zebra rows, and proportionate `[105px]` photo frame on the right).
+- **Root Cause of Blank PDF (Image 2):**
+  - Download elements were wrapped in `<div className="hidden print:hidden" style={{ display: 'none' }}>` inside `admit-cards-print-container`. Because the wrapper had `display: none !important`, `document.getElementById('admit-card-dl-${index}')` had `offsetWidth = 0` and `offsetHeight = 0` during `toJpeg` image snapshot, rendering a completely empty canvas into jsPDF.
+- **Fix Implemented:**
+  1. **Off-Screen Active Layer Architecture (`AdmitCardTab.tsx`):**
+     - Moved download elements out of the hidden print container into a dedicated `#admit-cards-download-container` with `position: fixed; left: -9999px; top: 0; width: 210mm` (never `display: none`).
+     - In `generatePDFForElement`, the element is temporarily elevated to `position: fixed; left: 0; top: 0; zIndex: 999999; opacity: 1; visibility: visible; display: block;` so the browser computes real pixel dimensions (`794px x 1123px`), fonts, and images before `toJpeg` capture.
+     - In `handleDownloadAll`, batch capture coordinates directly through `#admit-cards-download-container`.
+  2. **Exact Image 3 Design Alignment (`AdmitCardTemplate.tsx`):**
+     - `AdmitCardFrontHalf` updated to replicate Image 3's exact visual style: Georgia serif school header, rounded logo box, centered skewed black `ADMIT CARD` badge, exam name, authentic `CANDIDATE DETAILS` card with user icon and zebra rows, and right-aligned passport photo container with rounded border.
+     - Bottom section contains compact Important Instructions, 3-party signatures (Candidate, Invigilator, Principal), and reverse-side timetable notice, all strictly within `134mm` height.

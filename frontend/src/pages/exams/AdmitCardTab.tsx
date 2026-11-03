@@ -135,31 +135,27 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   };
 
   const generatePDFForElement = async (el: HTMLElement, _fileName: string) => {
-    // Make the element visible for rendering
-    const parentContainer = document.getElementById("admit-cards-print-container");
-    const originalParentDisplay = parentContainer?.style.display;
-    const originalParentPosition = parentContainer?.style.position;
-    const originalParentLeft = parentContainer?.style.left;
-    const originalParentVisibility = parentContainer?.style.visibility;
-
-    if (parentContainer) {
-      parentContainer.classList.remove("hidden");
-      parentContainer.style.display = "block";
-      parentContainer.style.position = "absolute";
-      parentContainer.style.left = "-9999px";
-      parentContainer.style.top = "0";
-      parentContainer.style.width = "210mm";
-      parentContainer.style.visibility = "visible";
-      parentContainer.style.zIndex = "-9999";
-    }
-
-    const originalDisplay = el.style.display;
+    // Save original styles
+    const originalPosition = el.style.position;
+    const originalLeft = el.style.left;
+    const originalTop = el.style.top;
+    const originalZIndex = el.style.zIndex;
+    const originalOpacity = el.style.opacity;
     const originalVisibility = el.style.visibility;
-    el.style.display = "flex";
-    el.style.visibility = "visible";
+    const originalDisplay = el.style.display;
 
-    // Wait for DOM + images to render
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    // Bring element into active rendering layer so browser computes layout & renders images
+    el.style.position = "fixed";
+    el.style.left = "0";
+    el.style.top = "0";
+    el.style.width = "210mm";
+    el.style.zIndex = "999999";
+    el.style.opacity = "1";
+    el.style.visibility = "visible";
+    el.style.display = "block";
+
+    // Wait for DOM layout & images to fully load
+    await new Promise((resolve) => setTimeout(resolve, 600));
 
     let pdf: any;
     try {
@@ -174,7 +170,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           const pageEl = pages[i] as HTMLElement;
 
           const w = pageEl.offsetWidth || 794;
-          const h = pageEl.offsetHeight || 500;
+          const h = pageEl.offsetHeight || 1123;
 
           const imgData = await toJpeg(pageEl, {
             cacheBust: true,
@@ -206,29 +202,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight) || 297;
         pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
       }
-    } catch (err) {
-      el.style.display = originalDisplay;
+    } finally {
+      el.style.position = originalPosition;
+      el.style.left = originalLeft;
+      el.style.top = originalTop;
+      el.style.zIndex = originalZIndex;
+      el.style.opacity = originalOpacity;
       el.style.visibility = originalVisibility;
-      if (parentContainer) {
-        parentContainer.classList.add("hidden");
-        parentContainer.style.display = originalParentDisplay || "";
-        parentContainer.style.position = originalParentPosition || "";
-        parentContainer.style.left = originalParentLeft || "";
-        parentContainer.style.visibility = originalParentVisibility || "";
-      }
-      throw new Error(
-        `Failed to generate image: ${err instanceof Error ? err.message : "Unknown error"}`,
-      );
-    }
-
-    el.style.display = originalDisplay;
-    el.style.visibility = originalVisibility;
-    if (parentContainer) {
-      parentContainer.classList.add("hidden");
-      parentContainer.style.display = originalParentDisplay || "";
-      parentContainer.style.position = originalParentPosition || "";
-      parentContainer.style.left = originalParentLeft || "";
-      parentContainer.style.visibility = originalParentVisibility || "";
+      el.style.display = originalDisplay;
     }
     return pdf;
   };
@@ -259,23 +240,19 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
     try {
       const zip = new JSZip();
-      const printArea = document.getElementById("admit-cards-print-container");
+      const dlContainer = document.getElementById("admit-cards-download-container");
 
-      if (printArea) {
-        printArea.classList.remove("hidden");
-        printArea.style.display = "block";
-        printArea.style.position = "absolute";
-        printArea.style.left = "-9999px";
-        printArea.style.top = "0";
-        printArea.style.width = "210mm";
-        printArea.style.zIndex = "-9999";
-        printArea.style.visibility = "visible";
+      if (dlContainer) {
+        dlContainer.style.left = "0";
+        dlContainer.style.top = "0";
+        dlContainer.style.zIndex = "999999";
+        dlContainer.style.opacity = "1";
+        dlContainer.style.visibility = "visible";
       }
 
       // Allow DOM to update and images to load
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Only use individual hidden download containers (not scaled print view)
       const templates = document.querySelectorAll(".admit-card-dl-container");
 
       for (let i = 0; i < templates.length; i++) {
@@ -283,10 +260,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         const student = students[i];
         if (!el) continue;
 
-        // Make this individual container visible for capture
-        el.style.display = "flex";
+        el.style.display = "block";
         el.style.visibility = "visible";
-        await new Promise((resolve) => setTimeout(resolve, 300));
+        await new Promise((resolve) => setTimeout(resolve, 200));
 
         try {
           const pdf = new jsPDF("p", "mm", "a4");
@@ -297,31 +273,33 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           if (pages && pages.length > 0) {
             for (let p = 0; p < pages.length; p++) {
               const pageEl = pages[p] as HTMLElement;
-              if (!pageEl.offsetWidth || !pageEl.offsetHeight) continue;
+              const w = pageEl.offsetWidth || 794;
+              const h = pageEl.offsetHeight || 1123;
               const imgData = await toJpeg(pageEl, {
                 cacheBust: true,
                 pixelRatio: 2,
                 quality: 0.95,
                 backgroundColor: "#ffffff",
-                width: pageEl.offsetWidth,
-                height: pageEl.offsetHeight,
+                width: w,
+                height: h,
               });
-              const imgRatio = pageEl.offsetHeight / pageEl.offsetWidth;
+              const imgRatio = h / w;
               const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
               if (p > 0) pdf.addPage();
               pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
             }
           } else {
-            if (!el.offsetWidth || !el.offsetHeight) continue;
+            const w = el.offsetWidth || 794;
+            const h = el.offsetHeight || 1123;
             const imgData = await toJpeg(el, {
               cacheBust: true,
               pixelRatio: 2,
               quality: 0.95,
               backgroundColor: "#ffffff",
-              width: el.offsetWidth,
-              height: el.offsetHeight,
+              width: w,
+              height: h,
             });
-            const imgRatio = el.offsetHeight / el.offsetWidth;
+            const imgRatio = h / w;
             const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
             pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
           }
@@ -341,15 +319,12 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         }
       }
 
-      if (printArea) {
-        printArea.classList.add("hidden");
-        printArea.style.display = "";
-        printArea.style.position = "";
-        printArea.style.left = "";
-        printArea.style.top = "";
-        printArea.style.width = "";
-        printArea.style.zIndex = "";
-        printArea.style.visibility = "";
+      if (dlContainer) {
+        dlContainer.style.left = "-9999px";
+        dlContainer.style.top = "0";
+        dlContainer.style.zIndex = "-9999";
+        dlContainer.style.opacity = "0";
+        dlContainer.style.visibility = "hidden";
       }
 
       const content = await zip.generateAsync({ type: "blob" });
@@ -359,6 +334,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       });
       triggerDownloadNotification("⬇️ Download Complete", `All ${students.length} admit cards have been downloaded.`);
     } catch (e: any) {
+      const dlContainer = document.getElementById("admit-cards-download-container");
+      if (dlContainer) {
+        dlContainer.style.left = "-9999px";
+        dlContainer.style.top = "0";
+        dlContainer.style.zIndex = "-9999";
+        dlContainer.style.opacity = "0";
+        dlContainer.style.visibility = "hidden";
+      }
       console.error("Zip/PDF generation error:", e);
       const errorMsg =
         e.message ||
@@ -1018,29 +1001,42 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   </div>
                 ))
               )}
+            </div>
 
-              {/* ─── Hidden individual containers for Download PDF ─── */}
-              <div className="hidden print:hidden" style={{ display: 'none' }}>
-                {students.map((student, idx) => (
-                  <div
-                    key={`dl-${student.id}`}
-                    id={`admit-card-dl-${idx}`}
-                    className="admit-card-dl-container"
-                  >
-                    <AdmitCardTemplate
-                      student={student}
-                      exam={selectedExam}
-                      examPlans={examPlans}
-                      className={selectedClass?.name}
-                      section={selectedClass?.section}
-                      doubleSided={isDoubleSided}
-                      logoUrl={logoUrl || '/logo.png'}
-                      signatureUrl={signatureUrl}
-                      teacherSignatureUrl={teacherSignatureUrl}
-                    />
-                  </div>
-                ))}
-              </div>
+            {/* ─── Dedicated Off-Screen Containers for Download PDF (Never display: none) ─── */}
+            <div
+              id="admit-cards-download-container"
+              className="print:hidden pointer-events-none"
+              style={{
+                position: "fixed",
+                left: "-9999px",
+                top: "0",
+                width: "210mm",
+                zIndex: -9999,
+                opacity: 0,
+                visibility: "hidden",
+              }}
+            >
+              {students.map((student, idx) => (
+                <div
+                  key={`dl-${student.id}`}
+                  id={`admit-card-dl-${idx}`}
+                  className="admit-card-dl-container bg-white"
+                  style={{ width: "210mm" }}
+                >
+                  <AdmitCardTemplate
+                    student={student}
+                    exam={selectedExam}
+                    examPlans={examPlans}
+                    className={selectedClass?.name}
+                    section={selectedClass?.section}
+                    doubleSided={isDoubleSided}
+                    logoUrl={logoUrl || '/logo.png'}
+                    signatureUrl={signatureUrl}
+                    teacherSignatureUrl={teacherSignatureUrl}
+                  />
+                </div>
+              ))}
             </div>
           </>
         ))}
