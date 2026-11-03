@@ -28,7 +28,7 @@ import { saveAs } from "file-saver";
 import { triggerDownloadNotification } from "../../utils/downloadNotification";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import { AdmitCardTemplate, getAutoExamSchedule } from "../../components/Exams/AdmitCardTemplate";
+import { AdmitCardTemplate, AdmitCardSheetPair, getAutoExamSchedule } from "../../components/Exams/AdmitCardTemplate";
 
 export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const navigate = useNavigate();
@@ -929,64 +929,33 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 width: 210mm; background: white !important;
                 display: block !important; padding: 0 !important; margin: 0 !important;
               }
-              /* Standard single card */
-              .admit-card-container {
-                page-break-after: always;
-                break-after: page;
-              }
-              .admit-card-container:last-child { page-break-after: auto; break-after: auto; }
-              .admit-card-wrapper {
-                width: 210mm;
-                min-height: 297mm;
-                margin: 0; padding: 6mm;
-                box-sizing: border-box;
-                background: white !important;
-              }
-              /* 2-in-1 sheet */
-              .print-2in1-sheet {
+              .a4-print-sheet {
                 width: 210mm;
                 height: 297mm;
+                max-height: 297mm;
                 page-break-after: always;
                 break-after: page;
                 page-break-inside: avoid;
                 break-inside: avoid;
-                margin: 0; padding: 0;
+                margin: 0;
+                padding: 0;
                 box-sizing: border-box;
                 background: white !important;
                 display: flex;
                 flex-direction: column;
                 overflow: hidden;
               }
-              .print-2in1-sheet:last-child { page-break-after: auto; break-after: auto; }
-              .print-2in1-card {
-                width: 210mm;
-                height: 148.5mm;
-                overflow: hidden;
-                flex-shrink: 0;
-                position: relative;
+              .a4-print-sheet:last-child {
+                page-break-after: auto;
+                break-after: auto;
               }
-              .print-2in1-card .admit-card-container {
-                page-break-after: unset !important;
-                break-after: unset !important;
-                position: absolute;
-                top: 0; left: 0;
-                transform: scale(0.499);
-                transform-origin: top left;
+              .admit-card-wrapper {
                 width: 210mm;
-              }
-              .print-2in1-cutline {
-                width: 100%;
-                flex-shrink: 0;
-                border-top: 1.5px dashed #bbb;
-                text-align: center;
-                font-size: 7pt;
-                color: #bbb;
-                line-height: 0;
+                min-height: 297mm;
                 margin: 0;
-              }
-              .print-2in1-cutline span {
-                background: white;
-                padding: 0 4mm;
+                padding: 6mm;
+                box-sizing: border-box;
+                background: white !important;
               }
             }
           `,
@@ -994,51 +963,40 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               />
 
               {isDoubleSided ? (
-                // 2-IN-1: 2 students per A4 (scaled via CSS to fit half-page each)
+                // 2-IN-1 DUPLEX A4 PRINTING (Page 1: 2 Front Cards, Page 2: 2 Exam Schedules)
                 Array.from({ length: Math.ceil(students.length / 2) }).map((_, pairIdx) => {
-                  const s1 = students[pairIdx * 2];
-                  const s2 = students[pairIdx * 2 + 1];
+                  const studentTop = students[pairIdx * 2];
+                  const studentBottom = students[pairIdx * 2 + 1];
                   return (
-                    <div key={pairIdx} className="print-2in1-sheet">
-                      {/* Top half: Student 1 */}
-                      <div className="print-2in1-card">
-                        <AdmitCardTemplate
-                          student={s1}
+                    <React.Fragment key={pairIdx}>
+                      {/* Front Sheet: Top Student 1 Front + Bottom Student 2 Front */}
+                      <div className="a4-print-sheet">
+                        <AdmitCardSheetPair
+                          side="front"
+                          studentTop={studentTop}
+                          studentBottom={studentBottom}
                           exam={selectedExam}
-                          examPlans={examPlans}
                           className={selectedClass?.name}
                           section={selectedClass?.section}
-                          doubleSided={false}
                           logoUrl={logoUrl || '/logo.png'}
                           signatureUrl={signatureUrl}
-                          teacherSignatureUrl={teacherSignatureUrl}
                         />
                       </div>
-                      {/* Cut line */}
-                      <div className="print-2in1-cutline">
-                        <span>✂ CUT ALONG THIS LINE ✂</span>
+                      {/* Back Sheet: Top Student 1 Schedule + Bottom Student 2 Schedule */}
+                      <div className="a4-print-sheet">
+                        <AdmitCardSheetPair
+                          side="back"
+                          studentTop={studentTop}
+                          studentBottom={studentBottom}
+                          exam={selectedExam}
+                          className={selectedClass?.name}
+                          section={selectedClass?.section}
+                          logoUrl={logoUrl || '/logo.png'}
+                          signatureUrl={signatureUrl}
+                          examPlans={examPlans}
+                        />
                       </div>
-                      {/* Bottom half: Student 2 */}
-                      <div className="print-2in1-card">
-                        {s2 ? (
-                          <AdmitCardTemplate
-                            student={s2}
-                            exam={selectedExam}
-                            examPlans={examPlans}
-                            className={selectedClass?.name}
-                            section={selectedClass?.section}
-                            doubleSided={false}
-                            logoUrl={logoUrl || '/logo.png'}
-                            signatureUrl={signatureUrl}
-                            teacherSignatureUrl={teacherSignatureUrl}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-200 text-xs font-bold uppercase tracking-widest border-2 border-dashed border-slate-100">
-                            End of Roster
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    </React.Fragment>
                   );
                 })
               ) : (
@@ -1047,7 +1005,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <div
                     key={student.id}
                     id={`admit-card-${idx}`}
-                    className="admit-card-container"
+                    className="a4-print-sheet"
                   >
                     <AdmitCardTemplate
                       student={student}
@@ -1065,26 +1023,27 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               )}
 
               {/* ─── Hidden individual containers for Download PDF ─── */}
-              {students.map((student, idx) => (
-                <div
-                  key={`dl-${student.id}`}
-                  id={`admit-card-dl-${idx}`}
-                  className="admit-card-dl-container"
-                  style={{ display: 'none', visibility: 'hidden' }}
-                >
-                  <AdmitCardTemplate
-                    student={student}
-                    exam={selectedExam}
-                    examPlans={examPlans}
-                    className={selectedClass?.name}
-                    section={selectedClass?.section}
-                    doubleSided={false}
-                    logoUrl={logoUrl || '/logo.png'}
-                    signatureUrl={signatureUrl}
-                    teacherSignatureUrl={teacherSignatureUrl}
-                  />
-                </div>
-              ))}
+              <div className="hidden print:hidden" style={{ display: 'none' }}>
+                {students.map((student, idx) => (
+                  <div
+                    key={`dl-${student.id}`}
+                    id={`admit-card-dl-${idx}`}
+                    className="admit-card-dl-container"
+                  >
+                    <AdmitCardTemplate
+                      student={student}
+                      exam={selectedExam}
+                      examPlans={examPlans}
+                      className={selectedClass?.name}
+                      section={selectedClass?.section}
+                      doubleSided={isDoubleSided}
+                      logoUrl={logoUrl || '/logo.png'}
+                      signatureUrl={signatureUrl}
+                      teacherSignatureUrl={teacherSignatureUrl}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         ))}

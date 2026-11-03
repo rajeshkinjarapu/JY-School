@@ -55,6 +55,401 @@ export const getAutoExamSchedule = (
   }));
 };
 
+const resolveUrl = (url?: string, defaultFallback: string = '') => {
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+  if (!url || url === 'null' || url === 'undefined') return defaultFallback;
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+  if (url === '/logo.png' || url === 'logo.png') return '/logo.png';
+  return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 1. FRONT HALF-CARD (A5 Height: ~140mm, Full A4 Width: 100%)
+// Preserves the EXACT same prestigious double-border, badges, and fonts
+// ──────────────────────────────────────────────────────────────────────────────
+export const AdmitCardFrontHalf: React.FC<{
+  student: any;
+  exam: any;
+  className?: string;
+  section?: string;
+  logoUrl?: string;
+}> = ({ student, exam, className, section, logoUrl: propLogoUrl }) => {
+  if (!student) {
+    return (
+      <div className="w-full h-[140mm] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-xs">
+        End of Roster (No Candidate)
+      </div>
+    );
+  }
+
+  const settings = exam?.admitCardSettings || {};
+  const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
+  const resolvedClass = className || student?.class?.name || student?.className || '-';
+  const resolvedSection = section || student?.class?.section || student?.section || '-';
+  const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
+  const examCenter = settings.examCenterOverride || 'JY School Main Campus, Hall A';
+  const schoolName = settings.schoolName || 'SRI VENKATESWARA JY SCHOOL';
+  const schoolSubtitle = settings.schoolSubtitle || '(IIT-JEE/NEET Foundation – Olympiads)';
+
+  return (
+    <div
+      className="w-full h-[140mm] max-h-[140mm] bg-white border-4 border-slate-900 p-1 box-border relative overflow-hidden flex flex-col justify-between"
+      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+    >
+      {/* Background Watermark */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
+        <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[180px] h-[180px] object-contain grayscale" />
+      </div>
+
+      <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2.5 box-border overflow-hidden">
+        {/* Header Bar */}
+        <div className="flex items-center gap-3 pb-2 border-b-2 border-slate-900 bg-slate-50 -mx-2.5 -mt-2.5 p-2 px-3">
+          <div className="w-13 h-13 shrink-0 bg-white border border-slate-300 p-1 shadow-xs rounded-md flex items-center justify-center overflow-hidden">
+            <img
+              src={logoUrl || '/logo.png'}
+              alt="Logo"
+              className="w-full h-full object-contain"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (!target.src.endsWith('/logo.png')) target.src = '/logo.png';
+              }}
+            />
+          </div>
+          <div className="flex-1 text-center pr-2">
+            <h1 className="text-[17px] leading-tight font-black uppercase tracking-wider text-slate-900 mb-0.5" style={{ fontFamily: '"Georgia", serif' }}>
+              {schoolName}
+            </h1>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-700 leading-tight">
+              {schoolSubtitle}
+            </p>
+            <div className="mt-1 inline-flex items-center gap-1.5 text-[8.5px] font-bold text-slate-700 bg-white px-2.5 py-0.5 rounded-full border border-slate-200 shadow-2xs">
+              <MapPin className="w-2.5 h-2.5 text-slate-800" />
+              <span className="truncate max-w-[320px]">{examCenter}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Title Ribbon */}
+        <div className="flex items-center justify-between px-3 py-1 bg-slate-900 text-white rounded-sm my-1">
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] transform -skew-x-12">
+            ADMIT CARD
+          </span>
+          <span className="text-[11px] font-black uppercase tracking-wider text-amber-300 truncate max-w-[380px]">
+            {examTitle}
+          </span>
+          <span className="text-[8.5px] font-bold uppercase tracking-widest text-slate-300">
+            HALL TICKET
+          </span>
+        </div>
+
+        {/* Candidate Details & Photo */}
+        <div className="flex gap-3 items-stretch my-1 flex-1 overflow-hidden">
+          <div className="flex-1 border border-slate-300 rounded-md overflow-hidden bg-white flex flex-col justify-center">
+            <div className="bg-slate-800 px-3 py-1 flex items-center gap-1.5 text-white">
+              <User className="w-3 h-3" />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider">Candidate Details</span>
+            </div>
+            <table className="w-full text-left border-collapse text-[10.5px]">
+              <tbody className="divide-y divide-slate-200">
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider w-1/3 bg-slate-50 border-r border-slate-200">Candidate Name</td>
+                  <td className="py-1 px-3 font-black text-slate-900 uppercase text-[11px] truncate">{student?.user?.name || student?.name}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">Father Name</td>
+                  <td className="py-1 px-3 font-bold text-slate-800 uppercase text-[10.5px] truncate">{student?.parent?.fatherName || student?.fatherName || '-'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">Roll Number</td>
+                  <td className="py-1 px-3 font-black text-slate-900 text-[11px]">{student?.rollNo || 'N/A'}</td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">Class & Section</td>
+                  <td className="py-1 px-3 font-black text-slate-900 text-[11px]">
+                    {resolvedClass} - {resolvedSection}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">Gender / DOB</td>
+                  <td className="py-1 px-3 font-bold text-slate-800 text-[10px]">
+                    {student?.gender || 'Male'} &nbsp;|&nbsp; {student?.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-'}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-1 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">Exam Center</td>
+                  <td className="py-1 px-3 font-bold text-slate-800 text-[10px] truncate">{examCenter}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Student Photo */}
+          <div className="w-[88px] shrink-0 flex flex-col items-center justify-center">
+            <div className="w-full aspect-[3/4] border-2 border-slate-400 rounded-md p-1 bg-white shadow-2xs flex flex-col items-center justify-center overflow-hidden">
+              {student?.user?.photoUrl ? (
+                <img src={getPhotoUrl(student.user.photoUrl)} alt="Student" className="w-full h-full object-cover rounded-xs" />
+              ) : (
+                <div className="w-full h-full border border-dashed border-slate-300 rounded-xs flex flex-col items-center justify-center text-center p-1 bg-slate-50">
+                  <User className="w-7 h-7 mb-1 opacity-30 text-slate-800" />
+                  <span className="text-[8px] uppercase font-bold leading-tight text-slate-400 tracking-wider">Affix<br/>Photo</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Notice */}
+        <div className="flex items-center justify-between text-[8px] font-bold text-slate-600 pt-1 border-t border-slate-200">
+          <span className="font-extrabold text-slate-800 uppercase tracking-wide">
+            * Examination Schedule on Reverse Side (పరీక్షల షెడ్యూల్ వెనుక వైపు చూడండి)
+          </span>
+          <span className="uppercase tracking-widest text-slate-400">STUDENT COPY</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 2. BACK HALF-CARD (A5 Height: ~140mm, Full A4 Width: 100%)
+// Schedule Table, Important Rules & Principal Signature
+// ──────────────────────────────────────────────────────────────────────────────
+export const AdmitCardBackHalf: React.FC<{
+  student: any;
+  exam: any;
+  className?: string;
+  section?: string;
+  logoUrl?: string;
+  signatureUrl?: string;
+  examPlans?: any[];
+}> = ({ student, exam, className, section, logoUrl: propLogoUrl, signatureUrl: propSignatureUrl, examPlans }) => {
+  if (!student) {
+    return (
+      <div className="w-full h-[140mm] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-xs">
+        End of Roster (No Candidate)
+      </div>
+    );
+  }
+
+  const settings = exam?.admitCardSettings || {};
+  const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
+  const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
+  const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
+
+  const autoSchedule = getAutoExamSchedule(
+    exam,
+    student?.classId || student?.class?.id,
+    className || student?.class?.name || student?.className,
+    section || student?.class?.section || student?.section,
+    settings.defaultTiming
+  );
+
+  const displaySchedule = (settings.schedule && settings.schedule.length > 0)
+    ? settings.schedule
+    : (autoSchedule.length > 0 ? autoSchedule : (examPlans || []));
+
+  const resolvedClass = className || student?.class?.name || student?.className || '-';
+  const resolvedSection = section || student?.class?.section || student?.section || '-';
+  const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
+  const schoolName = settings.schoolName || 'SRI VENKATESWARA JY SCHOOL';
+
+  return (
+    <div
+      className="w-full h-[140mm] max-h-[140mm] bg-white border-4 border-slate-900 p-1 box-border relative overflow-hidden flex flex-col justify-between"
+      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+    >
+      {/* Background Watermark */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
+        <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[180px] h-[180px] object-contain grayscale" />
+      </div>
+
+      <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2.5 box-border overflow-hidden">
+        {/* Header / Student Identifier Bar */}
+        <div className="flex items-center justify-between pb-1.5 border-b-2 border-slate-900 bg-slate-50 -mx-2.5 -mt-2.5 p-2 px-3">
+          <div>
+            <h2 className="text-[13px] font-black uppercase tracking-wider text-slate-900 leading-tight" style={{ fontFamily: '"Georgia", serif' }}>
+              {schoolName}
+            </h2>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">
+              {examTitle} — {resolvedClass} ({resolvedSection})
+            </span>
+          </div>
+          <div className="text-right">
+            <span className="text-[8.5px] font-black uppercase bg-slate-900 text-white px-2 py-0.5 rounded-sm tracking-widest">
+              SCHEDULE & RULES
+            </span>
+            <div className="text-[9px] font-bold text-slate-700 mt-0.5">
+              Candidate: <span className="uppercase font-black text-slate-900">{student?.user?.name || student?.name}</span> ({student?.rollNo || '-'})
+            </div>
+          </div>
+        </div>
+
+        {/* Examination Schedule Table */}
+        <div className="border border-slate-300 rounded-md overflow-hidden my-1 bg-white">
+          <div className="bg-slate-800 px-3 py-1 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-white">
+              <Calendar className="w-3 h-3 text-amber-300" />
+              <h4 className="text-[9.5px] font-black uppercase tracking-wider text-white">
+                Examination Schedule
+              </h4>
+            </div>
+            <span className="text-[8px] font-bold text-slate-300 uppercase tracking-wider">
+              Reporting: 30 Mins Before
+            </span>
+          </div>
+          <table className="w-full text-left border-collapse text-[9.5px]">
+            <thead className="bg-slate-100 text-slate-700 border-b border-slate-300 text-[8.5px] uppercase font-black">
+              <tr>
+                <th className="py-1 px-2 text-center w-8 border-r border-slate-300">S.No</th>
+                <th className="py-1 px-2 w-24 border-r border-slate-300">Date</th>
+                <th className="py-1 px-2 border-r border-slate-300">Subject</th>
+                <th className="py-1 px-2 w-36 border-r border-slate-300">Time</th>
+                <th className="py-1 px-2 text-center w-28">Invigilator Sign</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {displaySchedule.slice(0, 7).map((plan: any, i: number) => (
+                <tr key={plan.id || i} className="hover:bg-slate-50">
+                  <td className="py-0.75 px-2 font-bold text-center text-slate-800 border-r border-slate-200">{i + 1}</td>
+                  <td className="py-0.75 px-2 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
+                    {plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}
+                  </td>
+                  <td className="py-0.75 px-2 font-black text-slate-900 border-r border-slate-200 uppercase truncate">
+                    {plan.subject?.name || plan.subject || plan.name}
+                  </td>
+                  <td className="py-0.75 px-2 font-bold text-slate-700 border-r border-slate-200 whitespace-nowrap text-[9px]">
+                    {plan.timing || '09:30 AM - 12:30 PM'}
+                  </td>
+                  <td className="py-0.75 px-2 text-center text-slate-300 font-bold tracking-widest text-[8px]">..................</td>
+                </tr>
+              ))}
+              {displaySchedule.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-3 text-center text-slate-400 font-medium text-[9px] italic">
+                    No schedule mapped for this class.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer: Rules & Signature */}
+        <div className="flex items-end justify-between gap-3 p-1.5 rounded-md border border-slate-200 bg-slate-50">
+          <div className="flex-1 pr-2">
+            <h5 className="text-[8.5px] font-black uppercase tracking-wider text-slate-900 mb-0.5 flex items-center gap-1">
+              <span className="bg-slate-900 w-1 h-1 rounded-full"></span> Important Instructions
+            </h5>
+            <ul className="text-[7.5px] text-slate-700 font-semibold space-y-0.5 list-decimal pl-3.5 leading-snug">
+              {instructions.split('\n').filter(Boolean).slice(0, 3).map((line: string, idx: number) => (
+                <li key={idx}>{line}</li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="w-36 shrink-0 flex flex-col items-center justify-end text-center">
+            <div className="w-full h-8 flex items-end justify-center mb-0.5">
+              {signatureUrl ? (
+                <img src={signatureUrl} alt="Signature" className="h-full object-contain mix-blend-multiply" />
+              ) : (
+                <div className="w-3/4 border-b border-dashed border-slate-400 mb-0.5" />
+              )}
+            </div>
+            {signatureUrl && <div className="w-3/4 border-t border-slate-300 mb-0.5"></div>}
+            <span className="text-[8px] font-black uppercase tracking-wider text-slate-900">Principal Signature</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 3. 2-IN-1 SHEET PAIR (An A4 Page holding 2 students separated by a cut line)
+// ──────────────────────────────────────────────────────────────────────────────
+export const AdmitCardSheetPair: React.FC<{
+  side: 'front' | 'back';
+  studentTop: any;
+  studentBottom?: any;
+  exam: any;
+  className?: string;
+  section?: string;
+  logoUrl?: string;
+  signatureUrl?: string;
+  examPlans?: any[];
+}> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, examPlans }) => {
+  return (
+    <div
+      className="w-[210mm] h-[297mm] max-h-[297mm] bg-white p-[5mm] box-border flex flex-col justify-between overflow-hidden relative"
+      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
+    >
+      {/* Upper Half Card */}
+      <div className="w-full h-[140mm]">
+        {side === 'front' ? (
+          <AdmitCardFrontHalf
+            student={studentTop}
+            exam={exam}
+            className={className}
+            section={section}
+            logoUrl={logoUrl}
+          />
+        ) : (
+          <AdmitCardBackHalf
+            student={studentTop}
+            exam={exam}
+            className={className}
+            section={section}
+            logoUrl={logoUrl}
+            signatureUrl={signatureUrl}
+            examPlans={examPlans}
+          />
+        )}
+      </div>
+
+      {/* Center Dashed Cut Line */}
+      <div className="w-full h-[4mm] flex items-center justify-center relative my-0.5">
+        <div className="w-full border-t-2 border-dashed border-slate-300"></div>
+        <span className="absolute bg-white px-3 text-[8px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+          ✂ CUT ALONG THIS LINE (A5 SIZE) ✂
+        </span>
+      </div>
+
+      {/* Lower Half Card */}
+      <div className="w-full h-[140mm]">
+        {studentBottom ? (
+          side === 'front' ? (
+            <AdmitCardFrontHalf
+              student={studentBottom}
+              exam={exam}
+              className={className}
+              section={section}
+              logoUrl={logoUrl}
+            />
+          ) : (
+            <AdmitCardBackHalf
+              student={studentBottom}
+              exam={exam}
+              className={className}
+              section={section}
+              logoUrl={logoUrl}
+              signatureUrl={signatureUrl}
+              examPlans={examPlans}
+            />
+          )
+        ) : (
+          <div className="w-full h-full border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-[10px]">
+            End of Roster (No Candidate)
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// 4. FULL SINGLE PAGE ADMIT CARD (Default when Double Side is unchecked)
+// ──────────────────────────────────────────────────────────────────────────────
 interface AdmitCardTemplateProps {
   student: any;
   exam: any;
@@ -80,14 +475,6 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   const settings = exam?.admitCardSettings || {};
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  const resolveUrl = (url?: string, defaultFallback: string = '') => {
-    if (!url || url === 'null' || url === 'undefined') return defaultFallback;
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
-    if (url === '/logo.png' || url === 'logo.png') return '/logo.png';
-    return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
-  };
-
   const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
   const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
 
@@ -103,9 +490,47 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
     ? settings.schedule
     : (autoSchedule.length > 0 ? autoSchedule : (examPlans || []));
 
+  // If double-sided is requested for a single student view/download:
+  if (doubleSided) {
+    return (
+      <div className="flex flex-col gap-6 mx-auto admit-card-container">
+        {/* Page 1: Front Half */}
+        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[210mm] flex justify-center">
+          <AdmitCardFrontHalf
+            student={student}
+            exam={exam}
+            className={className}
+            section={section}
+            logoUrl={logoUrl}
+          />
+        </div>
+
+        {/* Page 2: Back Half */}
+        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[210mm] flex justify-center">
+          <AdmitCardBackHalf
+            student={student}
+            exam={exam}
+            className={className}
+            section={section}
+            logoUrl={logoUrl}
+            signatureUrl={signatureUrl}
+            examPlans={examPlans}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Single Page View (Default Full A4)
+  const Watermark = () => (
+    <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
+      <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[380px] h-[380px] object-contain grayscale" />
+    </div>
+  );
+
   const renderHeader = () => (
     <div className="flex items-center gap-6 p-6 border-b-2 border-slate-900 bg-slate-50">
-      <div className="w-24 h-24 shrink-0 bg-white border border-slate-300 p-2 shadow-sm rounded-lg flex items-center justify-center overflow-hidden">
+      <div className="w-24 h-24 shrink-0 bg-white border border-slate-300 p-2 shadow-xs rounded-lg flex items-center justify-center overflow-hidden">
         <img
           src={logoUrl || '/logo.png'}
           alt="School Logo"
@@ -124,7 +549,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         <p className="text-[12px] font-bold uppercase tracking-[0.15em] text-slate-700 mb-2">
           {settings?.schoolSubtitle || "(IIT-JEE/NEET Foundation – Olympiads)"}
         </p>
-        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 bg-white inline-flex px-4 py-1 rounded-full border border-slate-200 shadow-sm">
+        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 bg-white inline-flex px-4 py-1 rounded-full border border-slate-200 shadow-2xs">
           <MapPin className="w-3.5 h-3.5 text-slate-800" />
           {settings.examCenterOverride || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta'}
         </div>
@@ -133,8 +558,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   );
 
   const renderTitleBadges = () => (
-    <div className="flex flex-col items-center py-6 border-b border-slate-200">
-      <div className="bg-slate-900 text-white px-8 py-1.5 rounded-sm shadow-md mb-3 transform -skew-x-12">
+    <div className="flex flex-col items-center py-5 border-b border-slate-200">
+      <div className="bg-slate-900 text-white px-8 py-1.5 rounded-sm shadow-md mb-2 transform -skew-x-12">
         <h2 className="text-xl font-black uppercase tracking-[0.25em] transform skew-x-12">
           ADMIT CARD
         </h2>
@@ -147,7 +572,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
 
   const renderCandidateDetails = () => (
     <div className="flex gap-6 items-stretch">
-      <div className="flex-1 border border-slate-300 rounded-lg overflow-hidden shadow-sm">
+      <div className="flex-1 border border-slate-300 rounded-lg overflow-hidden shadow-2xs">
         <div className="bg-slate-800 px-4 py-2.5">
           <h3 className="text-xs font-bold uppercase tracking-widest text-white flex items-center gap-2">
             <User className="w-4 h-4" /> Candidate Details
@@ -156,39 +581,39 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         <table className="w-full text-sm text-left border-collapse">
           <tbody className="divide-y divide-slate-200">
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider w-1/3 bg-slate-50 border-r border-slate-200">Candidate Name</td>
-              <td className="py-3 px-4 font-black text-slate-900 uppercase text-[13px]">{student?.user?.name || student?.name}</td>
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider w-1/3 bg-slate-50 border-r border-slate-200">Candidate Name</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 uppercase text-[13px]">{student?.user?.name || student?.name}</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Father Name</td>
-              <td className="py-3 px-4 font-black text-slate-900 uppercase text-[13px]">{student?.parent?.fatherName || student?.fatherName || '-'}</td>
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Father Name</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 uppercase text-[13px]">{student?.parent?.fatherName || student?.fatherName || '-'}</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Roll Number</td>
-              <td className="py-3 px-4 font-black text-slate-900 text-[13px]">{student?.rollNo || 'N/A'}</td>
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Roll Number</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">{student?.rollNo || 'N/A'}</td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Class & Section</td>
-              <td className="py-3 px-4 font-black text-slate-900 text-[13px]">
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Class & Section</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">
                 {className || student?.class?.name || student?.className || '-'} - {section || student?.class?.section || student?.section || '-'}
               </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Gender / DOB</td>
-              <td className="py-3 px-4 font-black text-slate-900 text-[13px]">
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Gender / DOB</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">
                 {student?.gender || 'Male'} &nbsp;|&nbsp; {student?.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-'}
               </td>
             </tr>
             <tr>
-              <td className="py-3 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Exam Center</td>
-              <td className="py-3 px-4 font-black text-slate-900 text-[13px]">{settings.examCenterOverride || 'JY School Main Campus, Hall A'}</td>
+              <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Exam Center</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">{settings.examCenterOverride || 'JY School Main Campus, Hall A'}</td>
             </tr>
           </tbody>
         </table>
       </div>
 
       <div className="w-[120px] shrink-0 flex flex-col">
-        <div className="w-full aspect-[3/4] border-2 border-slate-300 rounded-lg p-1 bg-white shadow-sm flex flex-col items-center justify-center overflow-hidden">
+        <div className="w-full aspect-[3/4] border-2 border-slate-300 rounded-lg p-1 bg-white shadow-2xs flex flex-col items-center justify-center overflow-hidden">
           {student?.user?.photoUrl ? (
             <img src={getPhotoUrl(student.user.photoUrl)} alt="Student" className="w-full h-full object-cover rounded-md" />
           ) : (
@@ -203,8 +628,8 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   );
 
   const renderExamSchedule = () => (
-    <div className="border border-slate-300 rounded-lg overflow-hidden shadow-sm mt-2">
-      <div className="bg-slate-800 px-4 py-2.5 flex items-center gap-2">
+    <div className="border border-slate-300 rounded-lg overflow-hidden shadow-2xs mt-2">
+      <div className="bg-slate-800 px-4 py-2 flex items-center gap-2">
         <Calendar className="w-4 h-4 text-white" />
         <h4 className="text-xs font-bold text-white uppercase tracking-widest">
           Examination Schedule
@@ -213,32 +638,32 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
       <table className="w-full text-sm text-left border-collapse">
         <thead className="bg-slate-100 text-slate-700 border-b border-slate-300">
           <tr>
-            <th className="py-3 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center w-12 border-r border-slate-300">S.No</th>
-            <th className="py-3 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Date</th>
-            <th className="py-3 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Subject</th>
-            <th className="py-3 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Time</th>
-            <th className="py-3 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center">Invigilator Sign</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center w-12 border-r border-slate-300">S.No</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Date</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Subject</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Time</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center">Invigilator Sign</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
           {displaySchedule.map((plan: any, i: number) => (
             <tr key={plan.id || i} className="hover:bg-slate-50">
-              <td className="py-2.5 px-4 text-[12px] font-bold text-center text-slate-800 border-r border-slate-200">{i + 1}</td>
-              <td className="py-2.5 px-4 text-[12px] font-bold text-slate-800 border-r border-slate-200">
+              <td className="py-2 px-4 font-bold text-center text-slate-800 border-r border-slate-200">{i + 1}</td>
+              <td className="py-2 px-4 font-bold text-slate-800 border-r border-slate-200">
                 {plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}
               </td>
-              <td className="py-2.5 px-4 text-[12px] font-bold text-slate-800 border-r border-slate-200 uppercase">
+              <td className="py-2 px-4 font-bold text-slate-800 border-r border-slate-200 uppercase">
                 {plan.subject?.name || plan.subject || plan.name}
               </td>
-              <td className="py-2.5 px-4 text-[12px] font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
+              <td className="py-2 px-4 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
                 {plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}` || '09:30 AM - 12:30 PM'}
               </td>
-              <td className="py-2.5 px-4 text-center text-slate-400 font-bold tracking-widest">..................</td>
+              <td className="py-2 px-4 text-center text-slate-400 font-bold tracking-widest">..................</td>
             </tr>
           ))}
           {displaySchedule.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-6 text-center text-slate-400 font-medium text-xs bg-slate-50 italic">No schedule mapped for this class.</td>
+              <td colSpan={5} className="py-4 text-center text-slate-400 font-medium text-xs bg-slate-50 italic">No schedule mapped for this class.</td>
             </tr>
           )}
         </tbody>
@@ -247,12 +672,12 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   );
 
   const renderFooter = () => (
-    <div className="mt-auto m-6 p-5 rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-end gap-6 relative">
+    <div className="mt-auto m-4 p-4 rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-end gap-6 relative">
       <div className="flex-1">
-        <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-3 flex items-center gap-1.5">
+        <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
           <span className="bg-slate-900 w-1.5 h-1.5 rounded-full"></span> Important Instructions
         </h5>
-        <ul className="text-[10px] text-slate-700 font-semibold space-y-2 list-decimal pl-5 pr-4 text-justify leading-relaxed">
+        <ul className="text-[10px] text-slate-700 font-semibold space-y-1 list-decimal pl-5 pr-4 text-justify leading-relaxed">
           {instructions.split('\n').filter(Boolean).map((line: string, idx: number) => (
             <li key={idx} className="pl-1">{line}</li>
           ))}
@@ -260,7 +685,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
       </div>
 
       <div className="w-56 shrink-0 flex flex-col items-center justify-end text-center">
-        <div className="w-full h-24 flex items-end justify-center mb-2">
+        <div className="w-full h-16 flex items-end justify-center mb-1">
           {signatureUrl ? (
             <img src={signatureUrl} alt="Signature" className="h-full object-contain mix-blend-multiply" />
           ) : (
@@ -273,24 +698,14 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
     </div>
   );
 
-  const Watermark = () => (
-    <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
-      <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[380px] h-[380px] object-contain grayscale" />
-    </div>
-  );
-
-  // Single page (default) — full A4 professional design unchanged
   return (
-    <div
-      className="admit-card-container admit-card-wrapper admit-card-page bg-white p-6 w-[210mm] min-h-[297mm] mx-auto flex flex-col relative"
-      style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-    >
+    <div className="admit-card-container admit-card-wrapper admit-card-page bg-white p-6 w-[210mm] min-h-[297mm] mx-auto flex flex-col relative" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Watermark />
       <div className="w-full flex-1 border-4 border-slate-900 p-1 relative flex flex-col z-10 bg-transparent">
         <div className="w-full flex-1 border border-slate-900 flex flex-col bg-white/95 relative">
           {renderHeader()}
           {renderTitleBadges()}
-          <div className="flex-1 flex flex-col gap-6 p-6">
+          <div className="flex-1 flex flex-col gap-4 p-5">
             {renderCandidateDetails()}
             {renderExamSchedule()}
             {renderFooter()}
