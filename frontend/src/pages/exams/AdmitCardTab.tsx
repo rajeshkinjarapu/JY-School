@@ -979,7 +979,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               }
               .a4-print-sheet {
                 width: 202mm;
-                height: 284mm;
+                height: 286mm;
                 page-break-after: always;
                 break-after: page;
                 page-break-inside: avoid;
@@ -998,9 +998,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               }
               .admit-card-wrapper {
                 width: 202mm;
-                min-height: 284mm;
+                min-height: 286mm;
                 margin: 0;
-                padding: 4mm;
+                padding: 2mm;
                 box-sizing: border-box;
                 background: white !important;
               }

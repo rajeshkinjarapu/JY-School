@@ -276,3 +276,27 @@
      - **Top Section (Full Width):** Important Instructions (`Important Instructions / ముఖ్య నిబంధనలు`) spanning across the full width of the card with clear typography, bulleted list, and relaxed leading.
      - **Bottom Section (Full Width):** The 3 signature blocks (**Parent Signature**, **Class Teacher Sign**, and **Principal Signature**) laid out horizontally below the instructions, spanning evenly across the bottom (`px-8 py-3.5 bg-white`).
   2. Also cleaned up `renderExamSchedule` in the full card by removing `..................` dots from the Invigilator Sign column and setting `whitespace-nowrap w-44 min-w-[140px]`, matching the clean design of the backside card.
+
+
+## 2-in-1 Admit Card 50-50 Symmetry, Cut Gap Expansion, Instruction Padding Reduction & 3x Signature Upgrade (November 3, 2026)
+- **User Feedback:**
+  1. A4 page left empty space at the bottom; cards needed to be divided at exactly 50% (half-and-half) of the sheet.
+  2. The center cutting line needed more space for scissors to cut between the two A5 cards comfortably.
+  3. Remove Telugu text from Instructions header (`/ ముఖ్య నిబంధనలు`).
+  4. Reduce extra padding above the Instructions box.
+  5. Scale up the Principal Signature image to 3 times its previous size.
+  6. Remove all dashed lines and top borders above the 3 signatures (Parent Signature, Class Teacher Sign, Principal Signature).
+- **Fix Implemented:**
+  1. **Exact 50-50 Symmetry & Bottom Gap Elimination (`AdmitCardTemplate.tsx` & `AdmitCardTab.tsx`):**
+     - Adjusted `AdmitCardSheetPair` total height to `286mm`: Upper Card `137mm`, Center Cut Zone `12mm`, Lower Card `137mm`.
+     - Midpoint cut line sits precisely at `143mm` (50.0% of the sheet), perfectly centering both cards and eliminating empty bottom space.
+     - Center cut margin doubled from `6mm` to `12mm` (`✂ CUT ALONG THIS LINE (A5 SIZE) ✂`) giving plenty of cutting room.
+     - Synchronized `AdmitCardFrontHalf` and `AdmitCardBackHalf` heights to `137mm`.
+     - Matched print CSS `.a4-print-sheet` and `.admit-card-wrapper` to `height: 286mm`.
+  2. **Instructions Padding & Typography:**
+     - Reduced gap above instructions box to `mt-1 mb-0.5`.
+     - Removed Telugu text from instructions header across all templates.
+  3. **3x Principal Signature & Clean Signature Blocks:**
+     - Scaled Principal Signature container to `h-14` / `max-h-[56px] w-auto max-w-[160px]` (3x larger).
+     - Scaled Class Teacher Signature to `h-12`.
+     - Removed `border-t` top container border and all dashed lines (`border-b-2 border-dashed`) above all 3 signatures.

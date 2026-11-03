@@ -98,7 +98,7 @@ export const AdmitCardFrontHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-[134mm] max-h-[134mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-[137mm] max-h-[137mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -290,7 +290,7 @@ export const AdmitCardBackHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-[134mm] max-h-[134mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-[137mm] max-h-[137mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -356,52 +356,48 @@ export const AdmitCardBackHalf: React.FC<{
           </table>
         </div>
 
-        {/* Instructions & Candidate Declaration Box - Enlarged text */}
-        <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 my-1">
-          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-1.5">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Instructions & Candidate Declaration / ముఖ్య నిబంధనలు
+        {/* Instructions & Candidate Declaration Box - Reduced top padding & English only */}
+        <div className="p-2 px-2.5 rounded-lg border border-slate-200 bg-slate-50 mt-1 mb-0.5">
+          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-900 mb-0.5 flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Instructions & Candidate Declaration
           </h5>
-          <ul className="text-[9.5px] text-slate-800 font-semibold space-y-1 list-decimal pl-4.5 leading-relaxed">
+          <ul className="text-[9.5px] text-slate-800 font-semibold space-y-0.5 list-decimal pl-4.5 leading-relaxed">
             {instructions.split('\n').filter(Boolean).slice(0, 3).map((line: string, idx: number) => (
               <li key={idx}>{line}</li>
             ))}
           </ul>
         </div>
 
-        {/* 3 Signatures: Parent, Class Teacher & Principal */}
-        <div className="flex items-end justify-between px-6 pt-2 pb-0.5 border-t border-slate-300 bg-white">
+        {/* 3 Signatures: Parent, Class Teacher & Principal (Clean - No lines above signatures, 3x Principal Sign) */}
+        <div className="flex items-end justify-between px-6 pb-0.5 bg-white">
           {/* Parent Signature */}
           <div className="text-center w-36 flex flex-col items-center">
-            <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1 h-8" />
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-800">
+            <div className="h-12 flex items-end justify-center mb-1" />
+            <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-800">
               Parent Signature
             </span>
           </div>
 
           {/* Class Teacher Signature */}
           <div className="text-center w-40 flex flex-col items-center">
-            <div className="h-8 flex items-end justify-center mb-1">
+            <div className="h-12 flex items-end justify-center mb-1">
               {teacherSignatureUrl ? (
-                <img src={teacherSignatureUrl} alt="Teacher Signature" className="h-full object-contain mix-blend-multiply" />
-              ) : (
-                <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
-              )}
+                <img src={teacherSignatureUrl} alt="Teacher Signature" className="h-full max-h-[48px] w-auto max-w-[130px] object-contain mix-blend-multiply" />
+              ) : null}
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-800">
+            <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-800">
               Class Teacher Sign
             </span>
           </div>
 
-          {/* Principal Signature */}
-          <div className="text-center w-44 flex flex-col items-center">
-            <div className="h-8 flex items-end justify-center mb-1">
+          {/* Principal Signature (3x larger image) */}
+          <div className="text-center w-48 flex flex-col items-center">
+            <div className="h-14 flex items-end justify-center mb-1">
               {signatureUrl ? (
-                <img src={signatureUrl} alt="Principal Signature" className="h-full object-contain mix-blend-multiply" />
-              ) : (
-                <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
-              )}
+                <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[56px] w-auto max-w-[160px] object-contain mix-blend-multiply" />
+              ) : null}
             </div>
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-900">
+            <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-900">
               Principal Signature
             </span>
           </div>
@@ -430,11 +426,11 @@ export const AdmitCardSheetPair: React.FC<{
 }> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, teacherSignatureUrl, examPlans }) => {
   return (
     <div
-      className="w-[200mm] h-[276mm] max-h-[276mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
+      className="w-[202mm] h-[286mm] max-h-[286mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
-      {/* Upper Half Card (134mm) */}
-      <div className="w-full h-[134mm] shrink-0 overflow-hidden">
+      {/* Upper Half Card (137mm) */}
+      <div className="w-full h-[137mm] shrink-0 overflow-hidden">
         {side === 'front' ? (
           <AdmitCardFrontHalf
             student={studentTop}
@@ -458,16 +454,16 @@ export const AdmitCardSheetPair: React.FC<{
         )}
       </div>
 
-      {/* Center Dashed Cut Line (6mm) */}
-      <div className="w-full h-[6mm] shrink-0 flex items-center justify-center relative my-0.5">
+      {/* Center Dashed Cut Line (12mm with generous cutting room at exact 50% midpoint) */}
+      <div className="w-full h-[12mm] shrink-0 flex items-center justify-center relative my-0">
         <div className="w-full border-t-2 border-dashed border-slate-400"></div>
-        <span className="absolute bg-white px-3 text-[8px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1 border border-slate-300 rounded-full shadow-2xs">
+        <span className="absolute bg-white px-4 py-0.5 text-[8.5px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 border border-slate-300 rounded-full shadow-2xs">
           ✂ CUT ALONG THIS LINE (A5 SIZE) ✂
         </span>
       </div>
 
-      {/* Lower Half Card (134mm) */}
-      <div className="w-full h-[134mm] shrink-0 overflow-hidden">
+      {/* Lower Half Card (137mm) */}
+      <div className="w-full h-[137mm] shrink-0 overflow-hidden">
         {studentBottom ? (
           side === 'front' ? (
             <AdmitCardFrontHalf
@@ -733,7 +729,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
       {/* 1. Important Instructions at TOP */}
       <div className="p-3.5 border-b border-slate-200 bg-slate-50">
         <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-1.5 flex items-center gap-1.5">
-          <CheckCircle className="w-4 h-4 text-emerald-600" /> Important Instructions / ముఖ్య నిబంధనలు
+          <CheckCircle className="w-4 h-4 text-emerald-600" /> Important Instructions
         </h5>
         <ul className="text-[10px] text-slate-800 font-semibold space-y-1 list-decimal pl-5 pr-4 text-justify leading-relaxed">
           {instructions.split('\n').filter(Boolean).map((line: string, idx: number) => (
@@ -742,11 +738,11 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         </ul>
       </div>
 
-      {/* 2. 3 Signatures BELOW Instructions */}
-      <div className="flex items-end justify-between px-8 py-3.5 bg-white">
+      {/* 2. 3 Signatures BELOW Instructions (Clean - No lines above signatures, 3x Principal Sign) */}
+      <div className="flex items-end justify-between px-10 py-3.5 bg-white">
         {/* Parent Signature */}
         <div className="text-center w-36 flex flex-col items-center">
-          <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1.5 h-10" />
+          <div className="h-12 flex items-end justify-center mb-1" />
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
             Parent Signature
           </span>
@@ -754,29 +750,23 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
 
         {/* Class Teacher Signature */}
         <div className="text-center w-40 flex flex-col items-center">
-          <div className="w-full h-10 flex items-end justify-center mb-1.5">
+          <div className="h-12 flex items-end justify-center mb-1">
             {teacherSignatureUrl ? (
-              <img src={teacherSignatureUrl} alt="Class Teacher Sign" className="h-full object-contain mix-blend-multiply" />
-            ) : (
-              <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
-            )}
+              <img src={teacherSignatureUrl} alt="Class Teacher Sign" className="h-full max-h-[48px] w-auto max-w-[130px] object-contain mix-blend-multiply" />
+            ) : null}
           </div>
-          {teacherSignatureUrl && <div className="w-28 border-t border-slate-300 mb-1"></div>}
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
             Class Teacher Sign
           </span>
         </div>
 
-        {/* Principal Signature */}
-        <div className="text-center w-44 flex flex-col items-center">
-          <div className="w-full h-10 flex items-end justify-center mb-1.5">
+        {/* Principal Signature (3x larger image) */}
+        <div className="text-center w-48 flex flex-col items-center">
+          <div className="h-14 flex items-end justify-center mb-1">
             {signatureUrl ? (
-              <img src={signatureUrl} alt="Principal Signature" className="h-full object-contain mix-blend-multiply" />
-            ) : (
-              <div className="w-32 border-b-2 border-dashed border-slate-400 mb-1" />
-            )}
+              <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[56px] w-auto max-w-[160px] object-contain mix-blend-multiply" />
+            ) : null}
           </div>
-          {signatureUrl && <div className="w-32 border-t border-slate-300 mb-1"></div>}
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">
             Principal Signature
           </span>
