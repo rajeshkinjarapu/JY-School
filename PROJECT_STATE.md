@@ -300,3 +300,22 @@
      - Scaled Principal Signature container to `h-14` / `max-h-[56px] w-auto max-w-[160px]` (3x larger).
      - Scaled Class Teacher Signature to `h-12`.
      - Removed `border-t` top container border and all dashed lines (`border-b-2 border-dashed`) above all 3 signatures.
+
+
+## Front & Back 2-in-1 Admit Card Perfect 50-50 Midpoint Cut & Duplex Alignment (November 3, 2026)
+- **User Feedback:** On the Front side of the 2-in-1 sheet, empty white space remained at the bottom, and the cards needed to divide at the exact mathematical midpoint (50%) of the A4 paper so when cut in half, two identical, perfect A5 admit cards are produced.
+- **Fix Implemented:**
+  1. **Sub-Millimeter A4 Page Geometry (`AdmitCardTemplate.tsx` & `AdmitCardTab.tsx`):**
+     - Full A4 Sheet height = `297mm`. Exact 50% midpoint = `148.5mm`.
+     - Engineered `AdmitCardSheetPair` total height to `288mm` (`w-[204mm]`):
+       - Upper Card: `138.5mm`
+       - Center Cut Zone: `11mm` (cut line at 5.5mm offset = `144mm` from top of sheet)
+       - Lower Card: `138.5mm`
+     - With `4.5mm` top and bottom print margins: `4.5mm + 138.5mm + 5.5mm = 148.5mm` (Exact mathematical 50% midpoint of the A4 paper).
+     - Both top and bottom cards now share an identical `4.5mm` outer margin from the paper edges, completely eliminating bottom dead space.
+  2. **Identical Front & Back Duplex Alignment:**
+     - Both `AdmitCardFrontHalf` and `AdmitCardBackHalf` are constrained to `w-full h-full max-h-[138.5mm]`.
+     - In `AdmitCardFrontHalf`, candidate details table rows now have `py-2 px-3.5` with `130px` photo column, filling the candidate details box evenly.
+     - When printed duplex (front and back of the same sheet), the cut lines and borders on the front and back align with 100% precision.
+  3. **Print CSS and Download Offsets:**
+     - Locked `@page { size: A4 portrait; margin: 4mm; }`, `.a4-print-sheet { width: 204mm; height: 288mm; }`, and `.admit-card-wrapper { padding: 0; }`.

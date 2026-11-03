@@ -98,7 +98,7 @@ export const AdmitCardFrontHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-[137mm] max-h-[137mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-full max-h-[138.5mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -165,53 +165,53 @@ export const AdmitCardFrontHalf: React.FC<{
           {/* Box Content: Table on Left + Photo on Right (Aligned TOP) */}
           <div className="flex items-stretch flex-1 divide-x divide-slate-200 bg-white">
             {/* Table Area */}
-            <table className="w-full text-left border-collapse text-[10px] flex-1">
+            <table className="w-full h-full text-left border-collapse text-[10px] flex-1">
               <tbody className="divide-y divide-slate-200">
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider w-[34%] bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider w-[34%] bg-slate-50 border-r border-slate-200">
                     Candidate Name
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 uppercase text-[11.5px] truncate">
+                  <td className="py-2 px-3.5 font-black text-slate-900 uppercase text-[12px] truncate">
                     {student?.user?.name || student?.name}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Father Name
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 uppercase text-[11px] truncate">
+                  <td className="py-2 px-3.5 font-black text-slate-900 uppercase text-[11.5px] truncate">
                     {student?.parent?.fatherName || student?.fatherName || '-'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Roll Number
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 text-[11.5px]">
+                  <td className="py-2 px-3.5 font-black text-slate-900 text-[12px]">
                     {student?.rollNo || 'N/A'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Class & Section
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 text-[11px]">
+                  <td className="py-2 px-3.5 font-black text-slate-900 text-[11.5px]">
                     {resolvedClass} - {resolvedSection}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Gender / DOB
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 text-[10.5px]">
+                  <td className="py-2 px-3.5 font-black text-slate-900 text-[11px]">
                     {student?.gender || 'Male'} &nbsp;|&nbsp; {student?.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-'}
                   </td>
                 </tr>
                 <tr>
-                  <td className="py-1.5 px-3 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
+                  <td className="py-2 px-3.5 font-bold text-slate-600 uppercase text-[9px] tracking-wider bg-slate-50 border-r border-slate-200">
                     Exam Center
                   </td>
-                  <td className="py-1.5 px-3 font-black text-slate-900 text-[10.5px] truncate">
+                  <td className="py-2 px-3.5 font-black text-slate-900 text-[11px] truncate">
                     {examCenter}
                   </td>
                 </tr>
@@ -219,7 +219,7 @@ export const AdmitCardFrontHalf: React.FC<{
             </table>
 
             {/* Photo Inside Box - Aligned to TOP */}
-            <div className="w-[125px] shrink-0 p-2.5 pt-3 bg-slate-50/40 flex flex-col items-center justify-start">
+            <div className="w-[130px] shrink-0 p-2.5 pt-3.5 bg-slate-50/40 flex flex-col items-center justify-start">
               <div className="w-full aspect-[3/4] border-2 border-slate-300 rounded-lg p-1 bg-white shadow-2xs flex flex-col items-center justify-center overflow-hidden">
                 {student?.user?.photoUrl ? (
                   <img
@@ -290,7 +290,7 @@ export const AdmitCardBackHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-[137mm] max-h-[137mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-full max-h-[138.5mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -426,11 +426,11 @@ export const AdmitCardSheetPair: React.FC<{
 }> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, teacherSignatureUrl, examPlans }) => {
   return (
     <div
-      className="w-[202mm] h-[286mm] max-h-[286mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
+      className="w-[204mm] h-[288mm] max-h-[288mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
-      {/* Upper Half Card (137mm) */}
-      <div className="w-full h-[137mm] shrink-0 overflow-hidden">
+      {/* Upper Half Card (138.5mm) */}
+      <div className="w-full h-[138.5mm] shrink-0 overflow-hidden">
         {side === 'front' ? (
           <AdmitCardFrontHalf
             student={studentTop}
@@ -454,16 +454,16 @@ export const AdmitCardSheetPair: React.FC<{
         )}
       </div>
 
-      {/* Center Dashed Cut Line (12mm with generous cutting room at exact 50% midpoint) */}
-      <div className="w-full h-[12mm] shrink-0 flex items-center justify-center relative my-0">
+      {/* Center Dashed Cut Line (11mm - centered at exact 148.5mm midpoint of A4) */}
+      <div className="w-full h-[11mm] shrink-0 flex items-center justify-center relative my-0">
         <div className="w-full border-t-2 border-dashed border-slate-400"></div>
         <span className="absolute bg-white px-4 py-0.5 text-[8.5px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 border border-slate-300 rounded-full shadow-2xs">
           ✂ CUT ALONG THIS LINE (A5 SIZE) ✂
         </span>
       </div>
 
-      {/* Lower Half Card (137mm) */}
-      <div className="w-full h-[137mm] shrink-0 overflow-hidden">
+      {/* Lower Half Card (138.5mm) */}
+      <div className="w-full h-[138.5mm] shrink-0 overflow-hidden">
         {studentBottom ? (
           side === 'front' ? (
             <AdmitCardFrontHalf

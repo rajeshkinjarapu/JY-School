@@ -978,8 +978,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 display: block !important; padding: 0 !important; margin: 0 !important;
               }
               .a4-print-sheet {
-                width: 202mm;
-                height: 286mm;
+                width: 204mm;
+                height: 288mm;
                 page-break-after: always;
                 break-after: page;
                 page-break-inside: avoid;
@@ -997,10 +997,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 break-after: auto;
               }
               .admit-card-wrapper {
-                width: 202mm;
-                min-height: 286mm;
+                width: 204mm;
+                min-height: 288mm;
                 margin: 0;
-                padding: 2mm;
+                padding: 0;
                 box-sizing: border-box;
                 background: white !important;
               }
@@ -1099,7 +1099,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     >
                       <div className="flex flex-col gap-6 mx-auto admit-card-container">
                         {/* Page 1: Front Sheet with BOTH students */}
-                        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[202mm] flex justify-center">
+                        <div className="admit-card-wrapper admit-card-page bg-white p-0 w-[204mm] flex justify-center">
                           <AdmitCardSheetPair
                             side="front"
                             studentTop={studentTop}
@@ -1113,7 +1113,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         </div>
 
                         {/* Page 2: Back Sheet with BOTH students' schedules */}
-                        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[202mm] flex justify-center">
+                        <div className="admit-card-wrapper admit-card-page bg-white p-0 w-[204mm] flex justify-center">
                           <AdmitCardSheetPair
                             side="back"
                             studentTop={studentTop}
