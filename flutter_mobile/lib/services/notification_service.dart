@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:http/http.dart' as http;
 import 'api_service.dart';
 import '../screens/homework_screen.dart';
 import '../screens/announcements_screen.dart';
@@ -87,15 +88,20 @@ class NotificationService {
         syncDeviceToken();
       });
 
-      // Foreground FCM → show local hero banner + cache it
+      // Foreground FCM → show local hero banner with optional Big Picture image
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         debugPrint('Foreground FCM received: ${message.messageId}');
         final title = message.notification?.title ?? message.data['title'] ?? 'JY School';
         final body = message.notification?.body ?? message.data['body'] ?? message.data['message'] ?? '';
         final route = message.data['route'] ?? message.data['link'];
+        final imageUrl = message.notification?.android?.imageUrl ??
+            message.notification?.apple?.imageUrl ??
+            message.data['imageUrl'] ??
+            message.data['image'];
+
         if (title.isNotEmpty || body.isNotEmpty) {
-          _showHeroBanner(title, body, route);
-          _cacheNotification(title, body, route);
+          _showHeroBanner(title, body, route, imageUrl: imageUrl);
+          _cacheNotification(title, body, route, imageUrl: imageUrl);
         }
       });
 
@@ -146,7 +152,6 @@ class NotificationService {
   // LAUNCH: ONLINE → FETCH & CACHE, OFFLINE → REPLAY CACHE
   // ─────────────────────────────────────────────────────────────
   Future<void> _handleLaunchNotifications() async {
-    // Small delay so app UI renders first
     await Future.delayed(const Duration(seconds: 2));
 
     final connectivityResults = await Connectivity().checkConnectivity();
@@ -155,7 +160,6 @@ class NotificationService {
     if (isOnline) {
       await _fetchAndCacheServerNotifications();
     } else {
-      // Offline — prepare cached notifications for UI
       await _replayCachedNotifications();
     }
   }
@@ -176,13 +180,29 @@ class NotificationService {
         final unread = data
             .where((n) => n['isRead'] == false)
             .take(5)
-            .map((n) => {
-                  'id': n['id']?.toString() ?? '',
-                  'title': n['title'] ?? 'JY School',
-                  'body': n['message'] ?? n['body'] ?? '',
-                  'route': n['route'] ?? n['link'] ?? 'announcements',
-                  'createdAt': n['createdAt'] ?? DateTime.now().toIso8601String(),
-                })
+            .map((n) {
+              String? rawLink = n['link']?.toString() ?? n['route']?.toString();
+              String? route = rawLink;
+              String? imgUrl = n['imageUrl']?.toString() ?? n['image']?.toString();
+
+              // Parse "route|imageUrl" if combined
+              if (rawLink != null && rawLink.contains('|')) {
+                final parts = rawLink.split('|');
+                route = parts[0].isNotEmpty ? parts[0] : 'announcements';
+                if (parts.length > 1 && parts[1].isNotEmpty) {
+                  imgUrl = parts[1];
+                }
+              }
+
+              return {
+                'id': n['id']?.toString() ?? '',
+                'title': n['title'] ?? 'JY School',
+                'body': n['message'] ?? n['body'] ?? '',
+                'route': route ?? 'announcements',
+                'imageUrl': imgUrl,
+                'createdAt': n['createdAt'] ?? DateTime.now().toIso8601String(),
+              };
+            })
             .toList();
 
         await _saveToCache(unread);
@@ -202,13 +222,13 @@ class NotificationService {
               }
             } catch (_) {}
 
-            // Only pop banner if created within the last 24 hours
             final isRecent = createdAt == null || DateTime.now().difference(createdAt).inHours < 24;
             if (isRecent) {
               await _showHeroBanner(
                 newest['title'] ?? 'JY School',
                 newest['body'] ?? '',
                 newest['route'],
+                imageUrl: newest['imageUrl'],
               );
             }
             await prefs.setString(_kLastShownHeroNotifId, newestId);
@@ -231,9 +251,46 @@ class NotificationService {
   }
 
   // ─────────────────────────────────────────────────────────────
-  // SHOW HERO BANNER (MAX IMPORTANCE LOCAL NOTIFICATION)
+  // SHOW HERO BANNER (WITH OPTIONAL BIG PICTURE BANNER)
   // ─────────────────────────────────────────────────────────────
-  Future<void> _showHeroBanner(String? title, String? body, String? route) async {
+  Future<void> _showHeroBanner(
+    String? title,
+    String? body,
+    String? route, {
+    String? imageUrl,
+  }) async {
+    StyleInformation? styleInformation;
+
+    // Check if image URL exists and download for Big Picture style
+    if (imageUrl != null && imageUrl.trim().isNotEmpty) {
+      try {
+        final formattedUrl = ApiService.getImageUrl(imageUrl.trim());
+        if (formattedUrl.isNotEmpty) {
+          final http.Response response = await http
+              .get(Uri.parse(formattedUrl))
+              .timeout(const Duration(seconds: 6));
+
+          if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
+            final ByteArrayAndroidBitmap bigPictureBitmap =
+                ByteArrayAndroidBitmap(response.bodyBytes);
+            styleInformation = BigPictureStyleInformation(
+              bigPictureBitmap,
+              largeIcon: bigPictureBitmap,
+              contentTitle: title ?? 'JY School',
+              htmlFormatContentTitle: true,
+              summaryText: body ?? '',
+              htmlFormatSummaryText: true,
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error loading notification big picture: $e');
+      }
+    }
+
+    // Fallback to Rich Big Text Style if no image or download fails
+    styleInformation ??= BigTextStyleInformation(body ?? '');
+
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'jyschool_alerts_v3',
       'JY School Important Alerts',
@@ -241,7 +298,7 @@ class NotificationService {
       importance: Importance.max,
       priority: Priority.high,
       fullScreenIntent: false,
-      styleInformation: BigTextStyleInformation(body ?? ''),
+      styleInformation: styleInformation,
       ticker: title,
       icon: '@mipmap/ic_launcher',
       playSound: true,
@@ -270,15 +327,21 @@ class NotificationService {
   // ─────────────────────────────────────────────────────────────
   // CACHE HELPERS (SharedPreferences)
   // ─────────────────────────────────────────────────────────────
-  Future<void> _cacheNotification(String? title, String? body, String? route) async {
+  Future<void> _cacheNotification(
+    String? title,
+    String? body,
+    String? route, {
+    String? imageUrl,
+  }) async {
     final existing = await _loadFromCache();
     existing.insert(0, {
       'title': title ?? 'JY School',
       'body': body ?? '',
       'route': route ?? 'announcements',
+      'imageUrl': imageUrl,
       'createdAt': DateTime.now().toIso8601String(),
     });
-    final trimmed = existing.take(10).toList();
+    final trimmed = existing.take(15).toList();
     await _saveToCache(trimmed);
   }
 
@@ -312,8 +375,11 @@ class NotificationService {
     if (navigatorKey == null || navigatorKey!.currentContext == null) return;
     final context = navigatorKey!.currentContext!;
 
+    // Remove any trailing image payload attached e.g. "announcements|http..."
+    final cleanRoute = route.split('|').first.toLowerCase();
+
     Widget destination;
-    switch (route) {
+    switch (cleanRoute) {
       case 'homework':
         destination = const HomeworkScreen();
         break;
@@ -327,7 +393,8 @@ class NotificationService {
         destination = const MessagesScreen();
         break;
       default:
-        return;
+        destination = const AnnouncementsScreen();
+        break;
     }
 
     Navigator.of(context).push(MaterialPageRoute(builder: (_) => destination));
@@ -336,9 +403,14 @@ class NotificationService {
   // ─────────────────────────────────────────────────────────────
   // PUBLIC: Manual trigger (for testing)
   // ─────────────────────────────────────────────────────────────
-  Future<void> showTestNotification(String title, String body, String payloadRoute) async {
-    await _showHeroBanner(title, body, payloadRoute);
-    await _cacheNotification(title, body, payloadRoute);
+  Future<void> showTestNotification(
+    String title,
+    String body,
+    String payloadRoute, {
+    String? imageUrl,
+  }) async {
+    await _showHeroBanner(title, body, payloadRoute, imageUrl: imageUrl);
+    await _cacheNotification(title, body, payloadRoute, imageUrl: imageUrl);
   }
 
   /// Clear all cached notifications (e.g. on logout)

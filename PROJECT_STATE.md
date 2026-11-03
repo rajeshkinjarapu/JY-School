@@ -368,3 +368,18 @@
   - This update consists exclusively of pure Dart code changes within Flutter (`flutter_mobile/lib/`).
   - No native Android files, Kotlin/Java, Gradle plugins, or `AndroidManifest.xml` permissions were modified.
   - Therefore, this update can be distributed 100% via Shorebird Patch (`shorebird patch android`) with zero APK rebuild required.
+
+
+## Custom Push Notifications with Big Picture Poster Images & Web Admin Dispatcher (November 3, 2026)
+- **Feature Scope:** Implemented full-stack system enabling Admins to compose and broadcast custom push notifications containing rich text and poster images (Big Picture Banner) to the mobile app without requiring an APK rebuild.
+- **Backend Infrastructure:**
+  1. **Firebase Admin Multicast Push (`backend/src/utils/firebase.ts`):** Added `sendMulticastPushNotification` supporting batches of 500 tokens using `sendEachForMulticast`, plus `formatImageUrl` to transform relative disk paths into valid public HTTP URLs.
+  2. **Custom Notification Controller (`backend/src/controllers/notifications.controller.ts:sendCustomNotification`):** Supports audience filtering (`ALL`, `ROLE`, `CLASS`, `USER`), records database notifications, and broadcasts FCM pushes with image payloads.
+  3. **Protected API Route (`backend/src/routes/notification.routes.ts`):** `POST /api/notifications/send-custom` secured for Super Admin and Admin roles.
+- **Flutter Mobile App Enhancements (`flutter_mobile/`):**
+  1. **Big Picture Hero Banner (`flutter_mobile/lib/services/notification_service.dart`):** When notification contains an image URL, downloads bytes via HTTP and displays `BigPictureStyleInformation` with `ByteArrayAndroidBitmap`. Falls back gracefully to `BigTextStyleInformation` if no image is attached or if download times out.
+  2. **Notification Screen Thumbnail Previews (`flutter_mobile/lib/screens/notifications_screen.dart`):** Displays rounded full-width image banners for notifications containing images.
+  3. **Shorebird Compatibility:** 100% Pure Dart code. Distributable immediately via Shorebird OTA patch with zero APK rebuild.
+- **Web Admin Portal (`frontend/src/`):**
+  1. **`SendCustomNotificationModal.tsx`:** Dedicated modal with target audience selector (All School, By Role, Specific Class), live image upload to public disk storage, destination route picker, and real-time interactive Android notification preview card.
+  2. **`AnnouncementsPage.tsx`:** Added "Send Custom Push" gradient action button in header.

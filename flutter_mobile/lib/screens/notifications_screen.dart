@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/custom_network_image.dart';
 import 'finance_screen.dart';
 import 'exams_screen.dart';
 
@@ -213,6 +214,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final isRead = notif['isRead'] == true;
     final type = notif['type']?.toString();
     final date = _formatTime(notif['createdAt']?.toString());
+    String? rawLink = notif['link']?.toString() ?? notif['route']?.toString();
+    String? imageUrl = notif['imageUrl']?.toString() ?? notif['image']?.toString();
+    if (imageUrl == null && rawLink != null && rawLink.contains('|')) {
+      final parts = rawLink.split('|');
+      if (parts.length > 1 && parts[1].isNotEmpty) {
+        imageUrl = parts[1];
+      }
+    }
     
     final themeColor = _getColorForType(type);
 
@@ -305,6 +314,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           height: 1.4,
                         ),
                       ),
+                      if (imageUrl != null && imageUrl.isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CustomNetworkImage(
+                            ApiService.getImageUrl(imageUrl),
+                            height: 140,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 10),
                       Text(
                         date,

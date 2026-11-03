@@ -118,9 +118,6 @@ export const markAsRead = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
-/**
- * Helper utility to create notifications from any backend controller
- */
 export const getVapidKey = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { getVapidPublicKey } = await import('../utils/push');
@@ -172,8 +169,11 @@ export const createSystemNotification = async (data: {
   message: string;
   type: string;
   link?: string;
+  imageUrl?: string;
 }) => {
   try {
+    const encodedLink = data.imageUrl ? `${data.link || ''}|${data.imageUrl}` : (data.link || null);
+
     await prisma.notification.create({
       data: {
         userId: data.userId || null,
@@ -181,11 +181,11 @@ export const createSystemNotification = async (data: {
         title: data.title,
         message: data.message,
         type: data.type,
-        link: data.link || null,
+        link: encodedLink,
       },
     });
 
-    // Also dispatch Web Push notification to user or role devices (for lock screen / screen-off mobile alerts)
+    // Also dispatch Web Push notification
     const { sendWebPushNotification } = await import('../utils/push');
     sendWebPushNotification(
       {
@@ -228,7 +228,8 @@ export const createSystemNotification = async (data: {
           token, 
           data.title, 
           data.message.length > 100 ? data.message.substring(0, 97) + '...' : data.message,
-          { route: data.link || 'announcements', type: data.type }
+          { route: data.link || 'announcements', type: data.type, imageUrl: data.imageUrl || '' },
+          data.imageUrl
         );
       });
     } catch (fcmError) {
@@ -237,5 +238,128 @@ export const createSystemNotification = async (data: {
 
   } catch (e) {
     console.error('Failed to create system notification:', e);
+  }
+};
+
+/**
+ * Send a custom broadcast or targeted push notification with optional Big Picture image
+ */
+export const sendCustomNotification = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const {
+      title,
+      message,
+      imageUrl,
+      targetType = 'ALL', // 'ALL', 'ROLE', 'CLASS', 'USER'
+      targetRole,         // 'STUDENT', 'TEACHER', 'ADMIN'
+      targetClassId,      // class id
+      targetUserId,       // user id
+      route = 'announcements',
+      type = 'CUSTOM',
+    } = req.body;
+
+    if (!title || !message) {
+      res.status(400).json({ success: false, message: 'Title and message are required' });
+      return;
+    }
+
+    let targetUsers: { id: string; role: string; deviceToken: string | null }[] = [];
+
+    if (targetType === 'USER' && targetUserId) {
+      targetUsers = await prisma.user.findMany({
+        where: { id: targetUserId, isActive: true },
+        select: { id: true, role: true, deviceToken: true },
+      });
+    } else if (targetType === 'CLASS' && targetClassId) {
+      const students = await prisma.student.findMany({
+        where: { classId: targetClassId },
+        select: { userId: true },
+      });
+      const userIds = students.map(s => s.userId).filter(Boolean) as string[];
+      targetUsers = await prisma.user.findMany({
+        where: { id: { in: userIds }, isActive: true },
+        select: { id: true, role: true, deviceToken: true },
+      });
+    } else if (targetType === 'ROLE' && targetRole) {
+      targetUsers = await prisma.user.findMany({
+        where: { role: targetRole, isActive: true },
+        select: { id: true, role: true, deviceToken: true },
+      });
+    } else {
+      // ALL
+      targetUsers = await prisma.user.findMany({
+        where: { isActive: true },
+        select: { id: true, role: true, deviceToken: true },
+      });
+    }
+
+    const encodedLink = imageUrl ? `${route}|${imageUrl}` : route;
+
+    // 1. Create DB notification records
+    if (targetType === 'ALL' || targetType === 'ROLE') {
+      await prisma.notification.create({
+        data: {
+          role: targetType === 'ROLE' ? targetRole : null,
+          title,
+          message,
+          type,
+          link: encodedLink,
+        },
+      });
+    } else {
+      const notifData = targetUsers.slice(0, 300).map(u => ({
+        userId: u.id,
+        title,
+        message,
+        type,
+        link: encodedLink,
+      }));
+      if (notifData.length > 0) {
+        await prisma.notification.createMany({
+          data: notifData,
+        });
+      }
+    }
+
+    // 2. Dispatch FCM Push Notifications with Image
+    const tokens = targetUsers
+      .map(u => u.deviceToken)
+      .filter((t): t is string => Boolean(t && t.trim()));
+
+    if (tokens.length > 0) {
+      const { sendMulticastPushNotification } = await import('../utils/firebase');
+      sendMulticastPushNotification(
+        tokens,
+        title,
+        message,
+        {
+          route,
+          type,
+          imageUrl: imageUrl || '',
+        },
+        imageUrl
+      ).catch(e => console.error('FCM Multicast error:', e));
+    }
+
+    // 3. Web Push dispatch
+    const { sendWebPushNotification } = await import('../utils/push');
+    sendWebPushNotification(
+      {
+        userIds: targetType === 'USER' && targetUserId ? [targetUserId] : (targetType === 'CLASS' ? targetUsers.map(u => u.id) : undefined),
+        roles: targetType === 'ROLE' && targetRole ? [targetRole] : undefined,
+      },
+      {
+        title,
+        message,
+        url: route.startsWith('/') ? route : `/${route}`,
+      }
+    ).catch(e => console.error('Web push error:', e));
+
+    successResponse(res, {
+      targetedUsersCount: targetUsers.length,
+      devicesReachedCount: tokens.length,
+    }, 'Custom notification sent successfully');
+  } catch (error) {
+    next(error);
   }
 };

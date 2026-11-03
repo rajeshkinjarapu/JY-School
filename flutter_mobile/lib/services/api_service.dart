@@ -713,6 +713,10 @@ class ApiService {
     return _performGet('/api/slipTests', 'Failed to get slip tests');
   }
 
+  static Future<Map<String, dynamic>> sendCustomNotification(Map<String, dynamic> payload) async {
+    return _performPost('/api/notifications/send-custom', payload, 'Failed to send notification');
+  }
+
   static Future<Map<String, dynamic>> getNotifications() async {
     return _performGet('/api/notifications', 'Failed to get notifications');
   }

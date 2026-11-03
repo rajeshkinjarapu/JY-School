@@ -10,6 +10,7 @@ import {
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { AnnouncementReadersModal } from './AnnouncementReadersModal';
+import { SendCustomNotificationModal } from './SendCustomNotificationModal';
 
 const PRIORITY_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ElementType; dot: string }> = {
   HIGH:   { label: 'Urgent',  color: 'text-red-600',    bg: 'bg-red-50 border-red-200',    icon: Zap,          dot: 'bg-red-500' },
@@ -24,15 +25,6 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
   EXPIRED:    { label: 'Expired',    color: 'text-gray-500',    bg: 'bg-gray-100' },
 };
 
-const GRADIENT_BANDS = [
-  'from-violet-500 to-purple-600',
-  'from-blue-500 to-indigo-600',
-  'from-rose-500 to-pink-600',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-500',
-  'from-cyan-500 to-sky-600',
-];
-
 const defaultForm = {
   title: '', content: '', targetRoles: ['STUDENT', 'TEACHER'],
   targetClass: '', priority: 'NORMAL', status: 'PUBLISHED',
@@ -44,6 +36,7 @@ export const AnnouncementsPage: React.FC = () => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showCustomNotifModal, setShowCustomNotifModal] = useState(false);
   const [editItem, setEditItem] = useState<any | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [viewReadersAnnId, setViewReadersAnnId] = useState<string | null>(null);
@@ -152,21 +145,27 @@ export const AnnouncementsPage: React.FC = () => {
 
   const handlePin = async (id: string) => {
     try {
-      await api.patch(`/api/announcements/${id}/pin`);
+      await api.put(`/api/announcements/${id}/pin`, {});
+      toast.success('Pin status updated');
       fetchAnnouncements();
-    } catch { toast.error('Failed to pin'); }
+    } catch { toast.error('Failed to toggle pin'); }
   };
 
   const handleMarkRead = async (id: string) => {
     try {
-      await api.post(`/api/announcements/${id}/read`);
-      fetchAnnouncements();
+      await api.post(`/api/announcements/${id}/read`, {});
+      setAnnouncements(prev => prev.map(a => a.id === id ? { ...a, hasRead: true } : a));
     } catch {}
   };
 
   const filtered = announcements.filter(a => {
-    if (searchTerm && !a.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        !a.content?.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    if (searchTerm) {
+      const s = searchTerm.toLowerCase();
+      const match = (a.title || '').toLowerCase().includes(s) ||
+                    (a.content || '').toLowerCase().includes(s) ||
+                    (a.targetClass || '').toLowerCase().includes(s);
+      if (!match) return false;
+    }
     if (filterPriority !== 'ALL' && a.priority !== filterPriority) return false;
     if (filterStatus !== 'ALL' && a.status !== filterStatus) return false;
     return true;
@@ -187,9 +186,22 @@ export const AnnouncementsPage: React.FC = () => {
         icon={<Megaphone className="w-5 h-5" />}
         action={
           canCreate ? (
-            <button onClick={openCreate} className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold">
-              <Plus className="w-5 h-5" /> Create Announcement
-            </button>
+            <div className="flex items-center gap-3">
+              {isManagement && (
+                <button 
+                  onClick={() => setShowCustomNotifModal(true)} 
+                  className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold text-sm"
+                >
+                  <Bell className="w-4 h-4 animate-pulse" /> Send Custom Push
+                </button>
+              )}
+              <button 
+                onClick={openCreate} 
+                className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all font-bold text-sm"
+              >
+                <Plus className="w-5 h-5" /> Create Announcement
+              </button>
+            </div>
           ) : undefined
         }
       />
@@ -321,7 +333,7 @@ export const AnnouncementsPage: React.FC = () => {
                         <AnnouncementCard key={ann.id} ann={ann} idx={idx + pinned.length} isManagement={isManagement}
                           expandedId={expandedId} setExpandedId={setExpandedId}
                           onDelete={handleDelete} onPin={handlePin} onEdit={openEdit}
-                          onMarkRead={handleMarkRead} />
+                          onMarkRead={handleMarkRead} onViewReaders={setViewReadersAnnId} />
                       ))}
                     </div>
                   </div>
@@ -486,6 +498,15 @@ export const AnnouncementsPage: React.FC = () => {
           onClose={() => setViewReadersAnnId(null)} 
         />
       )}
+
+      {/* Custom Push Notification Modal */}
+      {showCustomNotifModal && (
+        <SendCustomNotificationModal
+          isOpen={showCustomNotifModal}
+          onClose={() => setShowCustomNotifModal(false)}
+          onSuccess={fetchAnnouncements}
+        />
+      )}
     </div>
   );
 };
@@ -554,16 +575,19 @@ const AnnouncementCard: React.FC<{
               )}
             </div>
 
-            {/* Target Audience Tags */}
-            <div className="flex items-center gap-2 mb-4 mt-3">
-              <Users className="w-4 h-4 text-indigo-400" />
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Visible To:</span>
-              <div className="flex flex-wrap gap-1.5">
-                {roles.length === 0 ? <span className="text-xs font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded text-center">ALL</span> : roles.map((r: string) => (
-                  <span key={r} className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">{r}</span>
-                ))}
-                {ann.targetClass && <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">Class: {ann.targetClass}</span>}
-              </div>
+            {/* Target Audience Badges */}
+            <div className="flex items-center gap-2 flex-wrap mb-4">
+              <span className="text-xs font-bold text-gray-400">Target:</span>
+              {roles.map(r => (
+                <span key={r} className="text-[11px] font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-md">
+                  {r}
+                </span>
+              ))}
+              {ann.targetClass && (
+                <span className="text-[11px] font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100">
+                  Class: {ann.targetClass}
+                </span>
+              )}
             </div>
 
             {/* Content Preview */}
