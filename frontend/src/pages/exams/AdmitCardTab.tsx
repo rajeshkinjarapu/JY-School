@@ -28,7 +28,7 @@ import { saveAs } from "file-saver";
 import { triggerDownloadNotification } from "../../utils/downloadNotification";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import { AdmitCardTemplate, getAutoExamSchedule } from "../../components/Exams/AdmitCardTemplate";
+import { AdmitCardTemplate, AdmitCardSheetPair, getAutoExamSchedule } from "../../components/Exams/AdmitCardTemplate";
 
 export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const navigate = useNavigate();
@@ -60,8 +60,6 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [examCenterOverride, setExamCenterOverride] = useState("");
   const [defaultTiming, setDefaultTiming] = useState("09:30 AM - 12:30 PM");
   const [schedule, setSchedule] = useState<any[]>([]);
-
-  const isFASaExam = selectedExam?.name?.toUpperCase().includes('FA') || selectedExam?.name?.toUpperCase().includes('SA');
 
   useEffect(() => {
     if (!selectedExamId) return;
@@ -155,8 +153,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     await new Promise((resolve) => setTimeout(resolve, 500));
     let pdf: any;
     try {
-      const isLandscape = isFASaExam && isDoubleSided;
-      pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
+      pdf = new jsPDF("p", "mm", "a4");
       
       const pages = el.querySelectorAll('.admit-card-page');
       
@@ -243,7 +240,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         printArea.style.position = "absolute";
         printArea.style.left = "-9999px";
         printArea.style.top = "0";
-        printArea.style.width = (isFASaExam && isDoubleSided) ? "297mm" : "210mm";
+        printArea.style.width = "210mm";
         printArea.style.zIndex = "-9999";
         printArea.style.visibility = "visible";
       }
@@ -257,8 +254,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         const student = students[i];
 
         try {
-          const isLandscape = isFASaExam && isDoubleSided;
-          const pdf = new jsPDF(isLandscape ? "l" : "p", "mm", "a4");
+          const pdf = new jsPDF("p", "mm", "a4");
           const pages = el.querySelectorAll('.admit-card-page');
 
           if (pages && pages.length > 0) {
@@ -489,17 +485,15 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           )}
           {students.length > 0 && (
             <div className="flex items-center gap-1.5 shrink-0">
-              {isFASaExam && (
-                <label className="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-900/50 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 transition-colors whitespace-nowrap shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={isDoubleSided}
-                    onChange={(e) => setIsDoubleSided(e.target.checked)}
-                    className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500"
-                  />
-                  Double Side
-                </label>
-              )}
+              <label className="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-900/50 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 transition-colors whitespace-nowrap shrink-0">
+                <input
+                  type="checkbox"
+                  checked={isDoubleSided}
+                  onChange={(e) => setIsDoubleSided(e.target.checked)}
+                  className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500"
+                />
+                Double Side (2-in-1 A4)
+              </label>
               <button
                 onClick={handleDownloadAll}
                 disabled={isDownloading}
@@ -869,54 +863,136 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
             <div
               id="admit-cards-print-container"
-              className="hidden print:block print-area space-y-12 bg-gray-50 dark:bg-gray-900 p-4 print:p-0 rounded-xl flex flex-col items-center"
+              className="hidden print:block print-area bg-gray-50 dark:bg-gray-900 p-0 rounded-xl flex flex-col items-center"
             >
               <style
                 dangerouslySetInnerHTML={{
                   __html: `
             @media print {
-              @page { size: A4; margin: 0; }
+              @page { size: A4 portrait; margin: 0; }
               body * { visibility: hidden; }
               .print-area, .print-area * { visibility: visible; }
-              .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; display: block !important; }
+              .print-area { position: absolute; left: 0; top: 0; width: 210mm; background: white !important; display: block !important; padding: 0 !important; margin: 0 !important; }
+              .print-page-a4 {
+                width: 210mm;
+                height: 297mm;
+                max-height: 297mm;
+                page-break-after: always;
+                page-break-inside: avoid;
+                break-after: page;
+                break-inside: avoid;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                background: white !important;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+              }
+              .print-page-a4:last-child { page-break-after: auto; break-after: auto; }
               .admit-card-wrapper { 
                 width: 210mm; 
                 height: 297mm; 
                 page-break-after: always; 
                 page-break-inside: avoid;
+                break-after: page;
+                break-inside: avoid;
                 margin: 0;
-                padding: 10mm;
+                padding: 6mm;
                 box-sizing: border-box;
                 background: white !important;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
               }
-              .admit-card-wrapper:last-child { page-break-after: auto; }
+              .admit-card-wrapper:last-child { page-break-after: auto; break-after: auto; }
             }
           `,
                 }}
               />
 
-              {students.map((student, idx) => (
-                <div
-                  key={student.id}
-                  id={`admit-card-${idx}`}
-                  className="w-full flex justify-center bg-white admit-card-container"
-                >
-                  <AdmitCardTemplate
-                    student={student}
-                    exam={selectedExam}
-                    examPlans={examPlans}
-                    className={selectedClass?.name}
-                    section={selectedClass?.section}
-                    doubleSided={isFASaExam && isDoubleSided}
-                    logoUrl={logoUrl || '/logo.png'}
-                    signatureUrl={signatureUrl}
-                    teacherSignatureUrl={teacherSignatureUrl}
-                  />
-                </div>
-              ))}
+              {isDoubleSided ? (
+                // 2-IN-1 DOUBLE-SIDED A4 PRINTING (2 Students per sheet)
+                Array.from({ length: Math.ceil(students.length / 2) }).map((_, pairIdx) => {
+                  const studentTop = students[pairIdx * 2];
+                  const studentBottom = students[pairIdx * 2 + 1];
+                  return (
+                    <React.Fragment key={pairIdx}>
+                      {/* Page 1 (Front Side): Top Student 1 Front, Bottom Student 2 Front */}
+                      <div className="print-page-a4">
+                        <AdmitCardSheetPair
+                          side="front"
+                          studentTop={studentTop}
+                          studentBottom={studentBottom}
+                          exam={selectedExam}
+                          className={selectedClass?.name}
+                          section={selectedClass?.section}
+                          logoUrl={logoUrl || '/logo.png'}
+                          signatureUrl={signatureUrl}
+                          teacherSignatureUrl={teacherSignatureUrl}
+                        />
+                      </div>
+                      {/* Page 2 (Back Side): Top Student 1 Schedule, Bottom Student 2 Schedule */}
+                      <div className="print-page-a4">
+                        <AdmitCardSheetPair
+                          side="back"
+                          studentTop={studentTop}
+                          studentBottom={studentBottom}
+                          exam={selectedExam}
+                          className={selectedClass?.name}
+                          section={selectedClass?.section}
+                          logoUrl={logoUrl || '/logo.png'}
+                          signatureUrl={signatureUrl}
+                          teacherSignatureUrl={teacherSignatureUrl}
+                        />
+                      </div>
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                // STANDARD SINGLE-SIDED (1 Student per full A4 page)
+                students.map((student, idx) => (
+                  <div
+                    key={student.id}
+                    className="w-full flex justify-center bg-white print:block"
+                  >
+                    <AdmitCardTemplate
+                      student={student}
+                      exam={selectedExam}
+                      examPlans={examPlans}
+                      className={selectedClass?.name}
+                      section={selectedClass?.section}
+                      doubleSided={false}
+                      logoUrl={logoUrl || '/logo.png'}
+                      signatureUrl={signatureUrl}
+                      teacherSignatureUrl={teacherSignatureUrl}
+                    />
+                  </div>
+                ))
+              )}
+
+              {/* Individual student containers for Download PDF (Single) & Download All (Zip) */}
+              <div className="hidden print:hidden">
+                {students.map((student, idx) => (
+                  <div
+                    key={`dl-${student.id}`}
+                    id={`admit-card-${idx}`}
+                    className="admit-card-container"
+                  >
+                    <AdmitCardTemplate
+                      student={student}
+                      exam={selectedExam}
+                      examPlans={examPlans}
+                      className={selectedClass?.name}
+                      section={selectedClass?.section}
+                      doubleSided={isDoubleSided}
+                      logoUrl={logoUrl || '/logo.png'}
+                      signatureUrl={signatureUrl}
+                      teacherSignatureUrl={teacherSignatureUrl}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </>
         ))}

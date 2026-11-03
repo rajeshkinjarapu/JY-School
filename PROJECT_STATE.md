@@ -134,3 +134,17 @@
      - Added a "⚡ Sync from Exam" button in Admit Card Settings modal allowing administrators to refresh or pull latest dates/subjects on demand with a single click.
      - When no manual rows are added, an informational auto-sync alert is shown indicating that the schedule is flowing directly from Exam Configuration.
   4. **Student Portal Support (`StudentAdmitCardViewPage.tsx`):** Passes student's class name and section into `AdmitCardTemplate` so student-side admit card views automatically reflect the exam schedule.
+
+## Double-Sided 2-in-1 A4 Admit Card Print System (November 3, 2026)
+- **Feature Scope:** Implemented full double-sided 2-in-1 A4 Admit Card printing. Each A4 sheet fits 2 students' admit cards on the front, and their corresponding examination schedules + instructions + signatures on the back.
+- **Root Cause of Previous Failure:**
+  1. The `Double Side` option was conditionally restricted only to exams with names containing `FA` or `SA` (`isFASaExam`), hiding the option or forcing `doubleSided = false` for other exams (e.g. `JEE Mains Model Exam - 11`).
+  2. The previous template attempted to render double-sided cards as individual 297mm landscape pages, while the print stylesheet enforced `@page { size: A4 portrait; }` with a 210mm wrapper, causing Chromium print preview clipping and single-card distortion.
+  3. No paired grouping existed: print jobs were rendering 1 student per page regardless of checkbox selection.
+- **Implementation Details:**
+  1. **A5 Half-Card Component (`AdmitCardHalf` in `AdmitCardTemplate.tsx`):** Engineered a high-density, beautifully proportioned ~142mm half-page component supporting `side: 'front'` (school crest, details, student photo, exam title) and `side: 'back'` (examination timetable, instructions, principal signature).
+  2. **Paired A4 Sheet Generator (`AdmitCardSheetPair` in `AdmitCardTemplate.tsx`):** Assembles an A4 portrait sheet (210mm x 297mm) containing Top Half Student, Center Dashed Cut Line (`✂ CUT ALONG THIS LINE (A5 SIZE) ✂`), and Bottom Half Student.
+  3. **Duplex Print Layout (`AdmitCardTab.tsx`):**
+     - When `Double Side (2-in-1 A4)` is checked: `Print All` emits pairs of pages: Sheet N Front (Student i & i+1 front) followed immediately by Sheet N Back (Student i & i+1 schedules). When printed duplex (flip on long edge), Sheet N contains both students' fronts and backs aligned. Slicing horizontally yields two complete double-sided A5 cards per A4 sheet (50% paper savings).
+     - Checkbox is universally available for all exam categories without `isFASaExam` filtering.
+     - Single student download (`handleDownloadSingle`) and bulk zip (`handleDownloadAll`) now seamlessly produce 2-page A4/A5 PDFs when double-sided is selected.
