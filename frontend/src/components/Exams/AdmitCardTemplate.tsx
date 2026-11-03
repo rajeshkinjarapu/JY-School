@@ -98,7 +98,7 @@ export const AdmitCardFrontHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-full max-h-[138.5mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-full max-h-[138mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -290,7 +290,7 @@ export const AdmitCardBackHalf: React.FC<{
 
   return (
     <div
-      className="w-full h-full max-h-[138.5mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
+      className="w-full h-full max-h-[138mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
       {/* Background Watermark */}
@@ -426,11 +426,11 @@ export const AdmitCardSheetPair: React.FC<{
 }> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, teacherSignatureUrl, examPlans }) => {
   return (
     <div
-      className="w-[204mm] h-[288mm] max-h-[288mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
+      className="w-[204mm] h-[297mm] max-h-[297mm] mx-auto bg-white box-border flex flex-col justify-between py-[4.5mm] overflow-hidden relative"
       style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
     >
-      {/* Upper Half Card (138.5mm) */}
-      <div className="w-full h-[138.5mm] shrink-0 overflow-hidden">
+      {/* Upper Half Card (138mm) */}
+      <div className="w-full h-[138mm] shrink-0 overflow-hidden">
         {side === 'front' ? (
           <AdmitCardFrontHalf
             student={studentTop}
@@ -454,16 +454,16 @@ export const AdmitCardSheetPair: React.FC<{
         )}
       </div>
 
-      {/* Center Dashed Cut Line (11mm - centered at exact 148.5mm midpoint of A4) */}
-      <div className="w-full h-[11mm] shrink-0 flex items-center justify-center relative my-0">
+      {/* Center Dashed Cut Line (12mm - centered at exact 148.5mm midpoint of A4) */}
+      <div className="w-full h-[12mm] shrink-0 flex items-center justify-center relative my-0">
         <div className="w-full border-t-2 border-dashed border-slate-400"></div>
         <span className="absolute bg-white px-4 py-0.5 text-[8.5px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5 border border-slate-300 rounded-full shadow-2xs">
           ✂ CUT ALONG THIS LINE (A5 SIZE) ✂
         </span>
       </div>
 
-      {/* Lower Half Card (138.5mm) */}
-      <div className="w-full h-[138.5mm] shrink-0 overflow-hidden">
+      {/* Lower Half Card (138mm) */}
+      <div className="w-full h-[138mm] shrink-0 overflow-hidden">
         {studentBottom ? (
           side === 'front' ? (
             <AdmitCardFrontHalf

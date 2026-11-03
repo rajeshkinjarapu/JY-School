@@ -319,3 +319,16 @@
      - When printed duplex (front and back of the same sheet), the cut lines and borders on the front and back align with 100% precision.
   3. **Print CSS and Download Offsets:**
      - Locked `@page { size: A4 portrait; margin: 4mm; }`, `.a4-print-sheet { width: 204mm; height: 288mm; }`, and `.admit-card-wrapper { padding: 0; }`.
+
+
+## 2-in-1 Admit Card Top Margin & Border Clearance (November 3, 2026)
+- **User Feedback:** The outer dark border of the top admit card was touching the very top edge of the PDF/page with zero space ("boarder paina top lo assalu space ledu konchem space ivvu").
+- **Fix Implemented:**
+  1. Updated `AdmitCardSheetPair` with vertical padding `py-[4.5mm]` and full A4 container height `297mm`:
+     - Top Margin above outer border: `4.5mm`
+     - Upper Card: `138mm`
+     - Center Cut Zone: `12mm` (midpoint cut line at exact `148.5mm` = 50% of A4)
+     - Lower Card: `138mm`
+     - Bottom Margin below outer border: `4.5mm`
+  2. Total: `4.5mm + 138mm + 12mm + 138mm + 4.5mm = 297mm`.
+  3. Provides elegant top margin clearance so printer hardware margins never clip the top border, while maintaining exact 50-50 midpoint symmetry.
