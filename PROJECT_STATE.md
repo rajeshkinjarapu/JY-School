@@ -221,3 +221,18 @@
     - Unified the Candidate Details container: the student photo is now placed directly inside the Candidate Details card on the right-hand column (`w-[125px]`), sharing the same outer rounded border, dark header strip, and inner divider as the demographic table.
     - Removed instructions, signatures row, and reverse notice from the front card.
     - Total card height remains strictly constrained to `134mm` (A5) for 2-in-1 printing.
+
+
+## Admit Card Front Page Typography & Photo Alignment Optimization (November 3, 2026)
+- **User Feedback:**
+  1. Make the examination title heading (`SUMMATIVE ASSESSMENT - 1`) significantly bigger.
+  2. In the header, make the school name (`SRI VENKATESWARA JY SCHOOL`) bolder and larger.
+  3. Make the remaining two lines in the header (the subtitle and the exam center/campus badge) larger and more prominent.
+  4. Align the student image inside the candidate box to the **TOP** on the right side rather than the vertical center (`student image center lo kakunda right lo paina undali`).
+- **Fix Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  - Updated `AdmitCardFrontHalf`:
+    - School title increased to `text-[22px] sm:text-[25px] font-black`.
+    - Subtitle increased to `text-[12px] sm:text-[13px] font-black tracking-[0.16em]`.
+    - Campus center badge increased to `text-[10px] sm:text-[10.5px] font-bold` with an enlarged logo (`w-[72px] h-[72px]`).
+    - Exam title (`SUMMATIVE ASSESSMENT - 1`) increased to `text-[15px] sm:text-[17px] font-black tracking-widest text-slate-950`.
+    - Photo container aligned to the top (`justify-start pt-3`), allowing the passport photo frame to align flush with the top of the candidate details table.

@@ -107,9 +107,9 @@ export const AdmitCardFrontHalf: React.FC<{
       </div>
 
       <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2.5 box-border overflow-hidden">
-        {/* Grand School Header (Increased Size & Height) */}
+        {/* Grand School Header (Bolder & Larger Size) */}
         <div className="flex items-center gap-4 pb-2 border-b-2 border-slate-900 bg-slate-50 -mx-2.5 -mt-2.5 p-2 px-3.5">
-          <div className="w-16 h-16 shrink-0 bg-white border border-slate-300 p-1.5 shadow-2xs rounded-xl flex items-center justify-center overflow-hidden">
+          <div className="w-[72px] h-[72px] shrink-0 bg-white border border-slate-300 p-1.5 shadow-2xs rounded-xl flex items-center justify-center overflow-hidden">
             <img
               src={logoUrl || '/logo.png'}
               alt="Logo"
@@ -122,32 +122,32 @@ export const AdmitCardFrontHalf: React.FC<{
             />
           </div>
           <div className="flex-1 text-center pr-2">
-            <h1 className="text-[18px] sm:text-[20px] leading-tight font-black uppercase tracking-wider text-slate-900" style={{ fontFamily: '"Georgia", serif' }}>
+            <h1 className="text-[22px] sm:text-[25px] leading-tight font-black uppercase tracking-wider text-slate-950" style={{ fontFamily: '"Georgia", serif' }}>
               {schoolName}
             </h1>
-            <p className="text-[10px] sm:text-[10.5px] font-bold uppercase tracking-[0.14em] text-slate-700 leading-tight mt-0.5">
+            <p className="text-[12px] sm:text-[13px] font-black uppercase tracking-[0.16em] text-slate-800 leading-tight mt-1">
               {schoolSubtitle}
             </p>
-            <div className="mt-1 inline-flex items-center gap-1.5 text-[8.5px] font-semibold text-slate-600 bg-white px-3 py-0.5 rounded-full border border-slate-200 shadow-2xs">
-              <MapPin className="w-3 h-3 text-slate-800" />
-              <span className="truncate max-w-[340px]">{examCenter}</span>
+            <div className="mt-1 inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold text-slate-800 bg-white px-3.5 py-0.5 rounded-full border border-slate-300 shadow-2xs">
+              <MapPin className="w-3.5 h-3.5 text-slate-900" />
+              <span className="truncate max-w-[380px]">{examCenter}</span>
             </div>
           </div>
         </div>
 
         {/* Title Badges */}
-        <div className="flex flex-col items-center py-1.5">
+        <div className="flex flex-col items-center py-1">
           <div className="bg-slate-900 text-white px-8 py-1.5 rounded-xs shadow-xs mb-0.5 transform -skew-x-12 inline-block">
-            <h2 className="text-[12.5px] font-black uppercase tracking-[0.25em] transform skew-x-12">
+            <h2 className="text-[13px] font-black uppercase tracking-[0.25em] transform skew-x-12">
               ADMIT CARD
             </h2>
           </div>
-          <h3 className="text-[11.5px] font-bold text-slate-800 uppercase tracking-widest text-center mt-0.5">
+          <h3 className="text-[15px] sm:text-[17px] font-black text-slate-950 uppercase tracking-widest text-center mt-1 leading-tight">
             {examTitle}
           </h3>
         </div>
 
-        {/* Unified Candidate Details Box (Student Image Integrated Inside) */}
+        {/* Unified Candidate Details Box (Student Image Integrated Inside - Aligned to TOP on right) */}
         <div className="border-2 border-slate-300 rounded-lg overflow-hidden shadow-2xs bg-white flex flex-col flex-1 my-0.5">
           {/* Box Header */}
           <div className="bg-slate-800 px-3.5 py-1.5 flex items-center justify-between text-white">
@@ -162,7 +162,7 @@ export const AdmitCardFrontHalf: React.FC<{
             </span>
           </div>
 
-          {/* Box Content: Table on Left + Photo on Right */}
+          {/* Box Content: Table on Left + Photo on Right (Aligned TOP) */}
           <div className="flex items-stretch flex-1 divide-x divide-slate-200 bg-white">
             {/* Table Area */}
             <table className="w-full text-left border-collapse text-[10px] flex-1">
@@ -218,8 +218,8 @@ export const AdmitCardFrontHalf: React.FC<{
               </tbody>
             </table>
 
-            {/* Photo Inside Box */}
-            <div className="w-[125px] shrink-0 p-2.5 bg-slate-50/50 flex flex-col items-center justify-center">
+            {/* Photo Inside Box - Aligned to TOP */}
+            <div className="w-[125px] shrink-0 p-2.5 pt-3 bg-slate-50/40 flex flex-col items-center justify-start">
               <div className="w-full aspect-[3/4] border-2 border-slate-300 rounded-lg p-1 bg-white shadow-2xs flex flex-col items-center justify-center overflow-hidden">
                 {student?.user?.photoUrl ? (
                   <img
