@@ -202,6 +202,10 @@ class ApiService {
     return _performPut('/api/auth/profile', payload, 'Failed to update profile');
   }
 
+  static Future<Map<String, dynamic>> saveDeviceToken(String deviceToken) async {
+    return _performPost('/api/users/device-token', {'deviceToken': deviceToken}, 'Failed to save device token');
+  }
+
   static Future<Map<String, dynamic>> updateAppInfo(Map<String, dynamic> payload) async {
     return _performPost('/api/users/app-info', payload, 'Failed to update app info');
   }

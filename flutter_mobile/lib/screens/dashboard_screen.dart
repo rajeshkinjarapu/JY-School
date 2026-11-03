@@ -47,6 +47,7 @@ import 'create_gate_pass_screen.dart';
 import 'leave_screen.dart';
 import 'fee_reminder_search_screen.dart';
 import 'student_exams_dashboard_screen.dart';
+import '../services/notification_service.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -122,6 +123,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     await _fetchLiveStats();
+    NotificationService().syncDeviceToken();
   }
 
   Future<void> _fetchLiveStats() async {

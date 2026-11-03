@@ -105,15 +105,24 @@ export const create = async (req: AuthRequest, res: Response): Promise<void> => 
     try {
       const rolesList = Array.isArray(targetRoles) ? targetRoles : (targetRoles ? targetRoles.split(',') : []);
       const { createSystemNotification } = await import('./notifications.controller');
-      for (const r of rolesList) {
-        if (r && r.trim()) {
-          createSystemNotification({
-            role: r.trim(),
-            title: `📢 New Announcement`,
-            message: `${title}`,
-            type: 'ANNOUNCEMENT',
-            link: '/announcements',
-          });
+      if (rolesList.length === 0) {
+        createSystemNotification({
+          title: `📢 New Announcement`,
+          message: `${title}`,
+          type: 'ANNOUNCEMENT',
+          link: '/announcements',
+        });
+      } else {
+        for (const r of rolesList) {
+          if (r && r.trim()) {
+            createSystemNotification({
+              role: r.trim(),
+              title: `📢 New Announcement`,
+              message: `${title}`,
+              type: 'ANNOUNCEMENT',
+              link: '/announcements',
+            });
+          }
         }
       }
     } catch (e) {

@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import '../services/api_service.dart';
 import '../services/device_info_service.dart';
+import '../services/notification_service.dart';
 import 'main_layout.dart';
 
 // ═══════════════════════════════════════════════════════
@@ -199,6 +200,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
       // Update app device information
       DeviceInfoService.updateAppInfo();
+      // Sync FCM Push Device Token to backend
+      NotificationService().syncDeviceToken();
 
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Welcome back, ${user['name'] ?? ''}!', style: GoogleFonts.poppins(color: const Color(0xFF1E293B), fontWeight: FontWeight.w600)),

@@ -12,7 +12,7 @@ import '../screens/messages_screen.dart';
 
 /// Cached notification key in SharedPreferences
 const String _kCachedNotifications = 'cached_notifications';
-const String _kLastNotifShownAt = 'last_notif_shown_at';
+const String _kLastShownHeroNotifId = 'last_shown_hero_notif_id';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -49,7 +49,7 @@ class NotificationService {
 
     // ── 2. Create HIGH_IMPORTANCE channel (Android) ──
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
-      'jyschool_alerts_v3', // Bumped ID to force recreate channel
+      'jyschool_alerts_v3',
       'JY School Important Alerts',
       description: 'Critical school notifications — attendance, fees, exams.',
       importance: Importance.max,
@@ -61,9 +61,9 @@ class NotificationService {
     final androidImplementation = _notificationsPlugin
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
-    
+
     await androidImplementation?.createNotificationChannel(channel);
-    
+
     // Explicitly request notification permission for Android 13+
     await androidImplementation?.requestNotificationsPermission();
 
@@ -79,26 +79,31 @@ class NotificationService {
       String? token = await messaging.getToken();
       debugPrint('FCM Token: $token');
 
+      // If user is already logged in at startup, sync token to backend
+      syncDeviceToken();
+
       messaging.onTokenRefresh.listen((newToken) {
         debugPrint('FCM Token Refreshed: $newToken');
+        syncDeviceToken();
       });
 
-      // Foreground FCM → show local banner + cache it
+      // Foreground FCM → show local hero banner + cache it
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-        debugPrint('Foreground FCM received!');
-        if (message.notification != null) {
-          final title = message.notification!.title;
-          final body = message.notification!.body;
-          final route = message.data['route'];
+        debugPrint('Foreground FCM received: ${message.messageId}');
+        final title = message.notification?.title ?? message.data['title'] ?? 'JY School';
+        final body = message.notification?.body ?? message.data['body'] ?? message.data['message'] ?? '';
+        final route = message.data['route'] ?? message.data['link'];
+        if (title.isNotEmpty || body.isNotEmpty) {
           _showHeroBanner(title, body, route);
           _cacheNotification(title, body, route);
         }
       });
 
-      // Background app open
+      // Background app open via notification tap
       FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-        if (message.data['route'] != null) {
-          _navigateToRoute(message.data['route']);
+        final route = message.data['route'] ?? message.data['link'];
+        if (route != null) {
+          _navigateToRoute(route);
         }
       });
     } catch (e) {
@@ -106,7 +111,6 @@ class NotificationService {
     }
 
     // ── 4. Connectivity listener ──
-    // When internet comes back: fetch fresh notifications → cache them
     Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       final isOnline = !results.contains(ConnectivityResult.none);
       if (isOnline) {
@@ -115,9 +119,27 @@ class NotificationService {
     });
 
     // ── 5. On launch: check connectivity ──
-    // Online → fetch fresh + show banners
-    // Offline → replay cached banners
     _handleLaunchNotifications();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // SYNC FCM DEVICE TOKEN TO BACKEND
+  // ─────────────────────────────────────────────────────────────
+  Future<void> syncDeviceToken() async {
+    try {
+      final token = await ApiService.getToken();
+      if (token == null) {
+        debugPrint('NotificationService: Skip sync, user not logged in.');
+        return;
+      }
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      if (fcmToken != null && fcmToken.isNotEmpty) {
+        debugPrint('NotificationService: Syncing FCM Token -> $fcmToken');
+        await ApiService.saveDeviceToken(fcmToken);
+      }
+    } catch (e) {
+      debugPrint('NotificationService: syncDeviceToken error: $e');
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -133,7 +155,7 @@ class NotificationService {
     if (isOnline) {
       await _fetchAndCacheServerNotifications();
     } else {
-      // Offline — replay cached notifications as hero banners
+      // Offline — prepare cached notifications for UI
       await _replayCachedNotifications();
     }
   }
@@ -155,38 +177,56 @@ class NotificationService {
             .where((n) => n['isRead'] == false)
             .take(5)
             .map((n) => {
+                  'id': n['id']?.toString() ?? '',
                   'title': n['title'] ?? 'JY School',
                   'body': n['message'] ?? n['body'] ?? '',
-                  'route': n['route'] ?? 'announcements',
+                  'route': n['route'] ?? n['link'] ?? 'announcements',
                   'createdAt': n['createdAt'] ?? DateTime.now().toIso8601String(),
                 })
             .toList();
 
         await _saveToCache(unread);
 
-        // NOTE: We used to call _showHeroBanner here for unread notifications,
-        // but this caused notifications to trigger repeatedly on app launch or network change.
-        // Banners should only be triggered directly by FCM, not by fetching history.
+        // Smart Hero Banner trigger for newly arrived unread notifications
+        if (unread.isNotEmpty) {
+          final prefs = await SharedPreferences.getInstance();
+          final String? lastShownId = prefs.getString(_kLastShownHeroNotifId);
+          final newest = unread.first;
+          final String newestId = newest['id'] ?? '';
+
+          if (newestId.isNotEmpty && newestId != lastShownId) {
+            DateTime? createdAt;
+            try {
+              if (newest['createdAt'] != null) {
+                createdAt = DateTime.parse(newest['createdAt']);
+              }
+            } catch (_) {}
+
+            // Only pop banner if created within the last 24 hours
+            final isRecent = createdAt == null || DateTime.now().difference(createdAt).inHours < 24;
+            if (isRecent) {
+              await _showHeroBanner(
+                newest['title'] ?? 'JY School',
+                newest['body'] ?? '',
+                newest['route'],
+              );
+            }
+            await prefs.setString(_kLastShownHeroNotifId, newestId);
+          }
+        }
       }
     } catch (e) {
       debugPrint('Error fetching notifications: $e');
-      // If fetch fails (maybe partial internet), just log it. UI will use cache.
       await _replayCachedNotifications();
     }
   }
 
   // ─────────────────────────────────────────────────────────────
-  // REPLAY CACHED NOTIFICATIONS AS HERO BANNERS
+  // REPLAY CACHED NOTIFICATIONS
   // ─────────────────────────────────────────────────────────────
   Future<void> _replayCachedNotifications() async {
     final cached = await _loadFromCache();
-    if (cached.isEmpty) {
-      // No cache available, just return silently instead of showing an annoying fake notification
-      return;
-    }
-
-    // Replaying cached notifications as system push notifications is annoying UX.
-    // The cache will just be read by the Notifications Screen UI.
+    if (cached.isEmpty) return;
     debugPrint('Offline/Error: Cached notifications are ready for UI.');
   }
 
@@ -200,7 +240,7 @@ class NotificationService {
       channelDescription: 'Critical school notifications.',
       importance: Importance.max,
       priority: Priority.high,
-      fullScreenIntent: false,  // true would lock screen — not needed
+      fullScreenIntent: false,
       styleInformation: BigTextStyleInformation(body ?? ''),
       ticker: title,
       icon: '@mipmap/ic_launcher',
@@ -238,7 +278,6 @@ class NotificationService {
       'route': route ?? 'announcements',
       'createdAt': DateTime.now().toIso8601String(),
     });
-    // Keep max 10 cached
     final trimmed = existing.take(10).toList();
     await _saveToCache(trimmed);
   }
@@ -306,6 +345,7 @@ class NotificationService {
   Future<void> clearCache() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kCachedNotifications);
+    await prefs.remove(_kLastShownHeroNotifId);
   }
 
   /// Get cached notifications for display in NotificationsScreen (offline)
@@ -313,4 +353,3 @@ class NotificationService {
     return _loadFromCache();
   }
 }
-

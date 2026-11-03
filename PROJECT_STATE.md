@@ -343,3 +343,28 @@
   1. **Class Teacher Signature Block:** Completely removed the digital image rendering for `Class Teacher Sign` across both 2-in-1 backside (`AdmitCardBackHalf`) and single-page full admit card (`renderFooter`). In its place, an unblocked, clean `h-16` manual signing space is provided so class teachers can cleanly sign with a pen.
   2. **Principal Signature Block (3x Enlargement):** Scaled up the Principal Signature container and image to `h-16`, `max-h-[64px]`, and `max-w-[170px]` (in 2-in-1) and `max-w-[180px]` (in full card), making the official digital signature stamp 3 times more prominent, legible, and authentic.
   3. **Parent Signature Block:** Sized with identical `h-16` height for uniform visual balance across all three signature blocks.
+
+
+## Flutter Mobile App Hero Banner Notifications & FCM Device Token Sync Resolution (November 3, 2026)
+- **Problem Statement:** Hero Banner notifications were not appearing in the Flutter mobile app.
+- **Root Cause Analysis:**
+  1. FCM token was logged to debug console in `NotificationService.dart` upon app launch, but was never transmitted to the backend API (`POST /api/users/device-token`).
+  2. Because users' device tokens in `prisma.user.deviceToken` remained `null`, the backend notification dispatchers (`notifications.controller.ts:createSystemNotification`) found zero target devices with valid tokens, and FCM push notifications were never sent.
+  3. In `NotificationService.dart`, `_fetchAndCacheServerNotifications()` had its Hero Banner pop-up disabled to prevent spamming notifications on every app launch.
+- **Fix Implemented:**
+  1. **Device Token Sync Client API (`flutter_mobile/lib/services/api_service.dart`):** Added `ApiService.saveDeviceToken(String deviceToken)` sending device tokens to `POST /api/users/device-token`.
+  2. **Notification Service Enhancement (`flutter_mobile/lib/services/notification_service.dart`):**
+     - Implemented `syncDeviceToken()` to seamlessly transmit the active Firebase FCM token to the backend whenever an authenticated session is active.
+     - Added automatic sync on startup and token refresh listener (`onTokenRefresh`).
+     - Enhanced foreground notification handler (`FirebaseMessaging.onMessage`) to gracefully process both `message.notification` and `message.data` payload structures, reliably triggering `_showHeroBanner` and local cache.
+     - Implemented smart timestamp and ID caching (`_kLastShownHeroNotifId`) in `_fetchAndCacheServerNotifications()`: if a fresh unread notification exists on the server (created within 24 hours) and hasn't been displayed, it triggers the Hero Banner once and marks it shown, ensuring alerts display even if FCM was blocked by OEM battery optimization, without duplicate pop-ups on subsequent opens.
+  3. **Login & Dashboard Token Registration Hooks:**
+     - `flutter_mobile/lib/screens/login_screen.dart`: Calls `NotificationService().syncDeviceToken()` immediately upon successful login.
+     - `flutter_mobile/lib/screens/dashboard_screen.dart`: Calls `NotificationService().syncDeviceToken()` in `_loadDashboardData()` to ensure tokens stay synchronized continuously.
+  4. **Backend Broadcast & Push Improvements:**
+     - `backend/src/controllers/notifications.controller.ts`: Added broadcast fallback in `createSystemNotification` so notifications without specific `userId` or `role` are sent to all active users with device tokens.
+     - `backend/src/controllers/announcements.controller.ts`: Ensured announcements with no restricted target roles trigger system notifications for all school users.
+- **Deployment & Shorebird Compatibility:**
+  - This update consists exclusively of pure Dart code changes within Flutter (`flutter_mobile/lib/`).
+  - No native Android files, Kotlin/Java, Gradle plugins, or `AndroidManifest.xml` permissions were modified.
+  - Therefore, this update can be distributed 100% via Shorebird Patch (`shorebird patch android`) with zero APK rebuild required.

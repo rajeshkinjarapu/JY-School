@@ -214,6 +214,12 @@ export const createSystemNotification = async (data: {
           where: { role: data.role, deviceToken: { not: null } },
           select: { deviceToken: true }
         });
+      } else {
+        // Broadcast to all active users with deviceToken
+        usersToNotify = await prisma.user.findMany({
+          where: { deviceToken: { not: null }, isActive: true },
+          select: { deviceToken: true }
+        });
       }
 
       const tokens = usersToNotify.map(u => u.deviceToken as string).filter(Boolean);
@@ -221,7 +227,8 @@ export const createSystemNotification = async (data: {
         sendPushNotification(
           token, 
           data.title, 
-          data.message.length > 100 ? data.message.substring(0, 97) + '...' : data.message
+          data.message.length > 100 ? data.message.substring(0, 97) + '...' : data.message,
+          { route: data.link || 'announcements', type: data.type }
         );
       });
     } catch (fcmError) {
