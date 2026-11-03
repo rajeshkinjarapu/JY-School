@@ -207,3 +207,17 @@
      - Both students now seamlessly print on a single double-sided A4 sheet without wasted paper.
   2. **Intelligent File Naming:** Generates informative filename indicating both students on the sheet (e.g., `HANUMANTHU CHANDINI_&_TARRA LEKHANA_2in1_AdmitCard.pdf`).
   3. **Batch Zip Download Alignment:** When Double Sided is checked, batch zip generation processes by pairs (`i += 2`), creating clean paired 2-in-1 PDFs for every 2 students in the roster.
+
+
+## Admit Card Front Page Layout Refinement (November 3, 2026)
+- **User Feedback:**
+  1. Remove "Important Instructions" and bottom signatures (Candidate Sign, Invigilator Sign, Principal Signature) from the front card (since rules and signatures are already placed on the reverse timetable card).
+  2. Remove the bottom text "(టైంటేబుల్ వెనుక వైపు చూడండి)".
+  3. Increase the Header size and height (make School Name, Logo, Subtitle, and Exam Center larger and more prominent).
+  4. Integrate the student photo inside the Candidate Details box itself so it looks cohesive and visually appealing ("student image kuda candidate box lo kalupuko andam ga undali").
+- **Fix Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  - Updated `AdmitCardFrontHalf`:
+    - Header height increased with larger logo (`w-16 h-16`), larger Georgia serif school title (`20px`), prominent subtitle, and centered campus badge.
+    - Unified the Candidate Details container: the student photo is now placed directly inside the Candidate Details card on the right-hand column (`w-[125px]`), sharing the same outer rounded border, dark header strip, and inner divider as the demographic table.
+    - Removed instructions, signatures row, and reverse notice from the front card.
+    - Total card height remains strictly constrained to `134mm` (A5) for 2-in-1 printing.
