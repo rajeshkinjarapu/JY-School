@@ -332,3 +332,14 @@
      - Bottom Margin below outer border: `4.5mm`
   2. Total: `4.5mm + 138mm + 12mm + 138mm + 4.5mm = 297mm`.
   3. Provides elegant top margin clearance so printer hardware margins never clip the top border, while maintaining exact 50-50 midpoint symmetry.
+
+
+## Admit Card Class Teacher Digital Image Removal & 3x Principal Signature Enlargement (November 3, 2026)
+- **User Feedback:**
+  1. Top margin space applied to back side as well.
+  2. Class teacher digital signature image should NOT appear on the admit card ("class teacher image admit card meda rakudadu"). In school protocol, class teachers sign manually with a pen.
+  3. Principal signature image must be 3 times bigger than the current small stamp shown in the screenshot.
+- **Fix Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  1. **Class Teacher Signature Block:** Completely removed the digital image rendering for `Class Teacher Sign` across both 2-in-1 backside (`AdmitCardBackHalf`) and single-page full admit card (`renderFooter`). In its place, an unblocked, clean `h-16` manual signing space is provided so class teachers can cleanly sign with a pen.
+  2. **Principal Signature Block (3x Enlargement):** Scaled up the Principal Signature container and image to `h-16`, `max-h-[64px]`, and `max-w-[170px]` (in 2-in-1) and `max-w-[180px]` (in full card), making the official digital signature stamp 3 times more prominent, legible, and authentic.
+  3. **Parent Signature Block:** Sized with identical `h-16` height for uniform visual balance across all three signature blocks.

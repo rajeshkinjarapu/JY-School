@@ -368,33 +368,29 @@ export const AdmitCardBackHalf: React.FC<{
           </ul>
         </div>
 
-        {/* 3 Signatures: Parent, Class Teacher & Principal (Clean - No lines above signatures, 3x Principal Sign) */}
+        {/* 3 Signatures: Parent, Class Teacher & Principal (Clean - No lines, 3x Principal Sign, No Teacher Image) */}
         <div className="flex items-end justify-between px-6 pb-0.5 bg-white">
           {/* Parent Signature */}
           <div className="text-center w-36 flex flex-col items-center">
-            <div className="h-12 flex items-end justify-center mb-1" />
+            <div className="h-16 flex items-end justify-center mb-1" />
             <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-800">
               Parent Signature
             </span>
           </div>
 
-          {/* Class Teacher Signature */}
+          {/* Class Teacher Signature (Manual signing space - no digital image) */}
           <div className="text-center w-40 flex flex-col items-center">
-            <div className="h-12 flex items-end justify-center mb-1">
-              {teacherSignatureUrl ? (
-                <img src={teacherSignatureUrl} alt="Teacher Signature" className="h-full max-h-[48px] w-auto max-w-[130px] object-contain mix-blend-multiply" />
-              ) : null}
-            </div>
+            <div className="h-16 flex items-end justify-center mb-1" />
             <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-800">
               Class Teacher Sign
             </span>
           </div>
 
           {/* Principal Signature (3x larger image) */}
-          <div className="text-center w-48 flex flex-col items-center">
-            <div className="h-14 flex items-end justify-center mb-1">
+          <div className="text-center w-52 flex flex-col items-center">
+            <div className="h-16 flex items-end justify-center mb-1">
               {signatureUrl ? (
-                <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[56px] w-auto max-w-[160px] object-contain mix-blend-multiply" />
+                <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[64px] w-auto max-w-[170px] object-contain mix-blend-multiply" />
               ) : null}
             </div>
             <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-900">
@@ -738,33 +734,29 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         </ul>
       </div>
 
-      {/* 2. 3 Signatures BELOW Instructions (Clean - No lines above signatures, 3x Principal Sign) */}
+      {/* 2. 3 Signatures BELOW Instructions (Clean - No lines, 3x Principal Sign, No Teacher Image) */}
       <div className="flex items-end justify-between px-10 py-3.5 bg-white">
         {/* Parent Signature */}
-        <div className="text-center w-36 flex flex-col items-center">
-          <div className="h-12 flex items-end justify-center mb-1" />
+        <div className="text-center w-40 flex flex-col items-center">
+          <div className="h-16 flex items-end justify-center mb-1" />
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
             Parent Signature
           </span>
         </div>
 
-        {/* Class Teacher Signature */}
+        {/* Class Teacher Signature (Manual signing space - no digital image) */}
         <div className="text-center w-40 flex flex-col items-center">
-          <div className="h-12 flex items-end justify-center mb-1">
-            {teacherSignatureUrl ? (
-              <img src={teacherSignatureUrl} alt="Class Teacher Sign" className="h-full max-h-[48px] w-auto max-w-[130px] object-contain mix-blend-multiply" />
-            ) : null}
-          </div>
+          <div className="h-16 flex items-end justify-center mb-1" />
           <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
             Class Teacher Sign
           </span>
         </div>
 
         {/* Principal Signature (3x larger image) */}
-        <div className="text-center w-48 flex flex-col items-center">
-          <div className="h-14 flex items-end justify-center mb-1">
+        <div className="text-center w-52 flex flex-col items-center">
+          <div className="h-16 flex items-end justify-center mb-1">
             {signatureUrl ? (
-              <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[56px] w-auto max-w-[160px] object-contain mix-blend-multiply" />
+              <img src={signatureUrl} alt="Principal Signature" className="h-full max-h-[64px] w-auto max-w-[180px] object-contain mix-blend-multiply" />
             ) : null}
           </div>
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">
