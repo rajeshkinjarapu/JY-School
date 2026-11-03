@@ -236,3 +236,34 @@
     - Campus center badge increased to `text-[10px] sm:text-[10.5px] font-bold` with an enlarged logo (`w-[72px] h-[72px]`).
     - Exam title (`SUMMATIVE ASSESSMENT - 1`) increased to `text-[15px] sm:text-[17px] font-black tracking-widest text-slate-950`.
     - Photo container aligned to the top (`justify-start pt-3`), allowing the passport photo frame to align flush with the top of the candidate details table.
+
+
+## Admit Card Back Page Redesign & jsPDF Scale Error Resolution (November 3, 2026)
+- **User Feedback & Errors:**
+  1. Toast Error on Download: `Failed to generate image: Invalid argument passed to jsPDF.scale`.
+  2. Single student download previously produced a blank white PDF.
+  3. Backside card modifications requested:
+     - Remove school header from the back card; start directly with the Examination Schedule table.
+     - Reduce `Subject` column width.
+     - Increase `Invigilator Sign` column size and ensure text stays strictly on a single line without wrapping.
+     - Remove dotted lines (`..............`) from the invigilator sign boxes so cells are clean.
+     - Increase instruction text size and make it clearer.
+     - Add 3 signature blocks at the bottom: **Parent Signature**, **Class Teacher Sign**, and **Principal Signature**.
+- **Fix Implemented:**
+  1. **Backside Hall Ticket Redesign (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+     - Completely removed the bulky top school header bar from `AdmitCardBackHalf`.
+     - Placed the `Examination Schedule & Time Table` container directly at the top of the card.
+     - Reduced `Subject` column width to `w-32`.
+     - Expanded `Invigilator Sign` column to `w-44 min-w-[140px]` with `whitespace-nowrap font-black uppercase text-[9.5px]` to prevent text wrapping.
+     - Removed all dotted lines (`..............`), leaving invigilator signature boxes completely clean.
+     - Enlarged instruction text size to `text-[9.5px]` (bold, `leading-relaxed`).
+     - Added 3 signature blocks in the bottom footer:
+       - **Parent Signature**: dashed line with title.
+       - **Class Teacher Sign**: supports digital `teacherSignatureUrl` or fallback line.
+       - **Principal Signature**: supports digital `signatureUrl` (`mix-blend-multiply`) or fallback line.
+  2. **jsPDF Scale & Blank PDF Error Resolution (`frontend/src/pages/exams/AdmitCardTab.tsx`):**
+     - Clamped element dimensions to `w = Math.max(pageEl.offsetWidth, 794)` and `h = Math.max(pageEl.offsetHeight, 1123)`.
+     - Clamped `imgRatio = (w > 0 && h > 0) ? h / w : 1.414` and guaranteed `imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight`. This completely eliminates `Invalid argument passed to jsPDF.scale` caused by `NaN`.
+     - Added `onImageErrorHandler: () => null` to `toJpeg` configuration so missing images or external CORS blocks do not crash the PDF generator.
+     - Ensured `#admit-cards-download-container` is elevated to `opacity: 1; visibility: visible; z-index: 999999;` during capture so html-to-image never captures a 0-opacity canvas.
+     - Passed `teacherSignatureUrl` into all `AdmitCardSheetPair` instances for both printing and download loops.

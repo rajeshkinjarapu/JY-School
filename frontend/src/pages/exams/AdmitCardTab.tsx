@@ -135,7 +135,18 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   };
 
   const generatePDFForElement = async (el: HTMLElement, _fileName: string) => {
-    // Save original styles
+    const dlContainer = document.getElementById("admit-cards-download-container");
+
+    // Save container original styles
+    const origDlPosition = dlContainer?.style.position;
+    const origDlLeft = dlContainer?.style.left;
+    const origDlTop = dlContainer?.style.top;
+    const origDlZIndex = dlContainer?.style.zIndex;
+    const origDlOpacity = dlContainer?.style.opacity;
+    const origDlVisibility = dlContainer?.style.visibility;
+    const origDlDisplay = dlContainer?.style.display;
+
+    // Save element original styles
     const originalPosition = el.style.position;
     const originalLeft = el.style.left;
     const originalTop = el.style.top;
@@ -144,7 +155,18 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     const originalVisibility = el.style.visibility;
     const originalDisplay = el.style.display;
 
-    // Bring element into active rendering layer so browser computes layout & renders images
+    // Bring container and element into active rendering layer so browser computes layout & renders images
+    if (dlContainer) {
+      dlContainer.style.position = "fixed";
+      dlContainer.style.left = "0";
+      dlContainer.style.top = "0";
+      dlContainer.style.width = "210mm";
+      dlContainer.style.zIndex = "999999";
+      dlContainer.style.opacity = "1";
+      dlContainer.style.visibility = "visible";
+      dlContainer.style.display = "block";
+    }
+
     el.style.position = "fixed";
     el.style.left = "0";
     el.style.top = "0";
@@ -160,8 +182,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     let pdf: any;
     try {
       pdf = new jsPDF("p", "mm", "a4");
-      const pdfPageWidth = pdf.internal.pageSize.getWidth();   // 210mm
-      const pdfPageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+      const pdfPageWidth = 210;
+      const pdfPageHeight = 297;
 
       const pages = el.querySelectorAll('.admit-card-page');
 
@@ -169,8 +191,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         for (let i = 0; i < pages.length; i++) {
           const pageEl = pages[i] as HTMLElement;
 
-          const w = pageEl.offsetWidth || 794;
-          const h = pageEl.offsetHeight || 1123;
+          const w = Math.max(pageEl.offsetWidth, 794);
+          const h = Math.max(pageEl.offsetHeight, 1123);
 
           const imgData = await toJpeg(pageEl, {
             cacheBust: true,
@@ -179,17 +201,21 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             backgroundColor: "#ffffff",
             width: w,
             height: h,
-          });
+            onImageErrorHandler: () => null,
+          } as any);
 
-          const imgRatio = h / w;
-          const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight) || 297;
+          const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+          const calculatedH = pdfPageWidth * imgRatio;
+          const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight;
 
           if (i > 0) pdf.addPage();
-          pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+          if (imgData && imgData.length > 50) {
+            pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+          }
         }
       } else {
-        const w = el.offsetWidth || 794;
-        const h = el.offsetHeight || 1123;
+        const w = Math.max(el.offsetWidth, 794);
+        const h = Math.max(el.offsetHeight, 1123);
         const imgData = await toJpeg(el, {
           cacheBust: true,
           pixelRatio: 2,
@@ -197,10 +223,16 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           backgroundColor: "#ffffff",
           width: w,
           height: h,
-        });
-        const imgRatio = h / w;
-        const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight) || 297;
-        pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+          onImageErrorHandler: () => null,
+        } as any);
+
+        const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+        const calculatedH = pdfPageWidth * imgRatio;
+        const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight;
+
+        if (imgData && imgData.length > 50) {
+          pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+        }
       }
     } finally {
       el.style.position = originalPosition;
@@ -210,6 +242,16 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       el.style.opacity = originalOpacity;
       el.style.visibility = originalVisibility;
       el.style.display = originalDisplay;
+
+      if (dlContainer) {
+        dlContainer.style.position = origDlPosition || "fixed";
+        dlContainer.style.left = origDlLeft || "-9999px";
+        dlContainer.style.top = origDlTop || "0";
+        dlContainer.style.zIndex = origDlZIndex || "-9999";
+        dlContainer.style.opacity = origDlOpacity || "0";
+        dlContainer.style.visibility = origDlVisibility || "hidden";
+        dlContainer.style.display = origDlDisplay || "block";
+      }
     }
     return pdf;
   };
@@ -277,15 +319,15 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
         try {
           const pdf = new jsPDF("p", "mm", "a4");
-          const pdfPageWidth = pdf.internal.pageSize.getWidth();
-          const pdfPageHeight = pdf.internal.pageSize.getHeight();
+          const pdfPageWidth = 210;
+          const pdfPageHeight = 297;
           const pages = el.querySelectorAll('.admit-card-page');
 
           if (pages && pages.length > 0) {
             for (let p = 0; p < pages.length; p++) {
               const pageEl = pages[p] as HTMLElement;
-              const w = pageEl.offsetWidth || 794;
-              const h = pageEl.offsetHeight || 1123;
+              const w = Math.max(pageEl.offsetWidth, 794);
+              const h = Math.max(pageEl.offsetHeight, 1123);
               const imgData = await toJpeg(pageEl, {
                 cacheBust: true,
                 pixelRatio: 2,
@@ -293,15 +335,19 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 backgroundColor: "#ffffff",
                 width: w,
                 height: h,
-              });
-              const imgRatio = h / w;
-              const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
+                onImageErrorHandler: () => null,
+              } as any);
+              const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+              const calculatedH = pdfPageWidth * imgRatio;
+              const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight;
               if (p > 0) pdf.addPage();
-              pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+              if (imgData && imgData.length > 50) {
+                pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+              }
             }
           } else {
-            const w = el.offsetWidth || 794;
-            const h = el.offsetHeight || 1123;
+            const w = Math.max(el.offsetWidth, 794);
+            const h = Math.max(el.offsetHeight, 1123);
             const imgData = await toJpeg(el, {
               cacheBust: true,
               pixelRatio: 2,
@@ -309,10 +355,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               backgroundColor: "#ffffff",
               width: w,
               height: h,
-            });
-            const imgRatio = h / w;
-            const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
-            pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+              onImageErrorHandler: () => null,
+            } as any);
+            const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+            const calculatedH = pdfPageWidth * imgRatio;
+            const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight;
+            if (imgData && imgData.length > 50) {
+              pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
+            }
           }
 
           el.style.display = "none";
@@ -990,6 +1040,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           section={selectedClass?.section}
                           logoUrl={logoUrl || '/logo.png'}
                           signatureUrl={signatureUrl}
+                          teacherSignatureUrl={teacherSignatureUrl}
                           examPlans={examPlans}
                         />
                       </div>
@@ -1072,6 +1123,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                             section={selectedClass?.section}
                             logoUrl={logoUrl || '/logo.png'}
                             signatureUrl={signatureUrl}
+                            teacherSignatureUrl={teacherSignatureUrl}
                             examPlans={examPlans}
                           />
                         </div>

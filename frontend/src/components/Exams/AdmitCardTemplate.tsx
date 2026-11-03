@@ -246,7 +246,11 @@ export const AdmitCardFrontHalf: React.FC<{
 
 // ──────────────────────────────────────────────────────────────────────────────
 // 2. BACK HALF-CARD (A5: 134mm Height, Full Width: 100%)
-// Examination Timetable, Rules & Principal Signature
+// Examination Timetable, Instructions & 3 Signatures:
+// - Direct Examination Schedule (School header removed as requested)
+// - Reduced Subject column width, Invigilator Sign single-line & dots removed
+// - Enlarged instructions text size
+// - 3 Signatures: Parent Signature, Class Teacher Sign & Principal Signature
 // ──────────────────────────────────────────────────────────────────────────────
 export const AdmitCardBackHalf: React.FC<{
   student: any;
@@ -255,8 +259,9 @@ export const AdmitCardBackHalf: React.FC<{
   section?: string;
   logoUrl?: string;
   signatureUrl?: string;
+  teacherSignatureUrl?: string;
   examPlans?: any[];
-}> = ({ student, exam, className, section, logoUrl: propLogoUrl, signatureUrl: propSignatureUrl, examPlans }) => {
+}> = ({ student, exam, className, section, logoUrl: propLogoUrl, signatureUrl: propSignatureUrl, teacherSignatureUrl: propTeacherSignatureUrl, examPlans }) => {
   if (!student) {
     return (
       <div className="w-full h-[134mm] border-2 border-dashed border-slate-200 rounded-lg flex items-center justify-center text-slate-300 font-bold uppercase tracking-widest text-xs">
@@ -268,6 +273,7 @@ export const AdmitCardBackHalf: React.FC<{
   const settings = exam?.admitCardSettings || {};
   const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
   const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
+  const teacherSignatureUrl = resolveUrl(propTeacherSignatureUrl || settings.teacherSignatureUrl || '');
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
 
   const autoSchedule = getAutoExamSchedule(
@@ -282,11 +288,6 @@ export const AdmitCardBackHalf: React.FC<{
     ? settings.schedule
     : (autoSchedule.length > 0 ? autoSchedule : (examPlans || []));
 
-  const resolvedClass = className || student?.class?.name || student?.className || '-';
-  const resolvedSection = section || student?.class?.section || student?.section || '-';
-  const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
-  const schoolName = settings.schoolName || 'SRI VENKATESWARA JY SCHOOL';
-
   return (
     <div
       className="w-full h-[134mm] max-h-[134mm] bg-white border-[3px] border-slate-900 p-0.5 box-border relative overflow-hidden flex flex-col justify-between"
@@ -297,69 +298,56 @@ export const AdmitCardBackHalf: React.FC<{
         <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[160px] h-[160px] object-contain grayscale" />
       </div>
 
-      <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2 box-border overflow-hidden">
-        {/* Header / Student Identifier Bar */}
-        <div className="flex items-center justify-between pb-1 border-b-2 border-slate-900 bg-slate-50 -mx-2 -mt-2 p-1.5 px-2.5">
-          <div>
-            <h2 className="text-[13px] font-black uppercase tracking-wider text-slate-900 leading-tight" style={{ fontFamily: '"Georgia", serif' }}>
-              {schoolName}
-            </h2>
-            <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">
-              {examTitle} — {resolvedClass} ({resolvedSection})
-            </span>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] font-black uppercase bg-slate-900 text-white px-2 py-0.5 rounded-xs tracking-widest">
-              SCHEDULE & RULES
-            </span>
-            <div className="text-[8.5px] font-bold text-slate-700 mt-0.5">
-              Candidate: <span className="uppercase font-black text-slate-900">{student?.user?.name || student?.name}</span> ({student?.rollNo || '-'})
-            </div>
-          </div>
-        </div>
-
-        {/* Examination Schedule Table */}
-        <div className="border border-slate-300 rounded-xs overflow-hidden my-0.5 bg-white">
-          <div className="bg-slate-800 px-2 py-0.5 flex items-center justify-between">
-            <div className="flex items-center gap-1 text-white">
-              <Calendar className="w-3 h-3 text-amber-300" />
-              <h4 className="text-[9px] font-black uppercase tracking-wider text-white">
+      <div className="w-full h-full flex-1 border border-slate-900 bg-white/95 relative z-10 flex flex-col justify-between p-2.5 box-border overflow-hidden">
+        {/* Examination Schedule Table - Directly on top without bulky school header */}
+        <div className="border-2 border-slate-300 rounded-lg overflow-hidden shadow-2xs bg-white">
+          <div className="bg-slate-800 px-3.5 py-1.5 flex items-center justify-between text-white">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-amber-300" />
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-white">
                 Examination Schedule & Time Table
               </h4>
             </div>
-            <span className="text-[7.5px] font-bold text-slate-300 uppercase tracking-wider">
-              Reporting: 30 Mins Before
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[8.5px] font-bold text-amber-300 uppercase tracking-wider">
+                Reporting: 30 Mins Before
+              </span>
+              <span className="text-[9px] font-bold text-slate-300 uppercase">
+                • Candidate: <strong className="text-white font-black">{student?.user?.name || student?.name}</strong> ({student?.rollNo || '-'})
+              </span>
+            </div>
           </div>
-          <table className="w-full text-left border-collapse text-[9px]">
-            <thead className="bg-slate-100 text-slate-700 border-b border-slate-300 text-[8px] uppercase font-black">
+          <table className="w-full text-left border-collapse text-[10px]">
+            <thead className="bg-slate-100 text-slate-700 border-b border-slate-300 text-[9px] uppercase font-black">
               <tr>
-                <th className="py-0.5 px-1.5 text-center w-7 border-r border-slate-300">S.No</th>
-                <th className="py-0.5 px-2 w-22 border-r border-slate-300">Date</th>
-                <th className="py-0.5 px-2 border-r border-slate-300">Subject</th>
-                <th className="py-0.5 px-2 w-32 border-r border-slate-300">Time</th>
-                <th className="py-0.5 px-2 text-center w-24">Invigilator Sign</th>
+                <th className="py-1 px-2 text-center w-8 border-r border-slate-300">S.No</th>
+                <th className="py-1 px-2.5 w-24 border-r border-slate-300 whitespace-nowrap">Date</th>
+                <th className="py-1 px-2.5 w-32 border-r border-slate-300">Subject</th>
+                <th className="py-1 px-2.5 w-32 border-r border-slate-300 whitespace-nowrap">Time</th>
+                <th className="py-1 px-3 text-center w-44 min-w-[140px] border-slate-300 whitespace-nowrap font-black uppercase tracking-wider text-[9.5px]">
+                  Invigilator Sign
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
               {displaySchedule.slice(0, 8).map((plan: any, i: number) => (
                 <tr key={plan.id || i} className="hover:bg-slate-50">
-                  <td className="py-0.5 px-1.5 font-bold text-center text-slate-800 border-r border-slate-200">{i + 1}</td>
-                  <td className="py-0.5 px-2 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
+                  <td className="py-1 px-2 font-bold text-center text-slate-800 border-r border-slate-200">{i + 1}</td>
+                  <td className="py-1 px-2.5 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
                     {plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}
                   </td>
-                  <td className="py-0.5 px-2 font-black text-slate-900 border-r border-slate-200 uppercase truncate">
+                  <td className="py-1 px-2.5 font-black text-slate-900 border-r border-slate-200 uppercase truncate">
                     {plan.subject?.name || plan.subject || plan.name}
                   </td>
-                  <td className="py-0.5 px-2 font-bold text-slate-700 border-r border-slate-200 whitespace-nowrap text-[8.5px]">
+                  <td className="py-1 px-2.5 font-bold text-slate-700 border-r border-slate-200 whitespace-nowrap text-[9px]">
                     {plan.timing || '09:30 AM - 12:30 PM'}
                   </td>
-                  <td className="py-0.5 px-2 text-center text-slate-300 font-bold tracking-widest text-[7.5px]">..................</td>
+                  <td className="py-1 px-3 text-center border-slate-200"></td>
                 </tr>
               ))}
               {displaySchedule.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="py-2.5 text-center text-slate-400 font-medium text-[8.5px] italic">
+                  <td colSpan={5} className="py-3 text-center text-slate-400 font-medium text-[9px] italic">
                     No schedule mapped for this class.
                   </td>
                 </tr>
@@ -368,28 +356,54 @@ export const AdmitCardBackHalf: React.FC<{
           </table>
         </div>
 
-        {/* Footer: Rules & Signatures */}
-        <div className="flex items-end justify-between gap-2 p-1.5 rounded-xs border border-slate-200 bg-slate-50/90">
-          <div className="flex-1 pr-1">
-            <h5 className="text-[8px] font-black uppercase tracking-wider text-slate-900 mb-0.5 flex items-center gap-1">
-              <CheckCircle className="w-2.5 h-2.5 text-emerald-600" /> Instructions & Parent Declaration
-            </h5>
-            <ul className="text-[7px] text-slate-700 font-semibold space-y-0.5 list-decimal pl-3 leading-snug">
-              {instructions.split('\n').filter(Boolean).slice(0, 3).map((line: string, idx: number) => (
-                <li key={idx}>{line}</li>
-              ))}
-            </ul>
+        {/* Instructions & Candidate Declaration Box - Enlarged text */}
+        <div className="p-2.5 rounded-lg border border-slate-200 bg-slate-50 my-1">
+          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-900 mb-1 flex items-center gap-1.5">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Instructions & Candidate Declaration / ముఖ్య నిబంధనలు
+          </h5>
+          <ul className="text-[9.5px] text-slate-800 font-semibold space-y-1 list-decimal pl-4.5 leading-relaxed">
+            {instructions.split('\n').filter(Boolean).slice(0, 3).map((line: string, idx: number) => (
+              <li key={idx}>{line}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 3 Signatures: Parent, Class Teacher & Principal */}
+        <div className="flex items-end justify-between px-6 pt-2 pb-0.5 border-t border-slate-300 bg-white">
+          {/* Parent Signature */}
+          <div className="text-center w-36 flex flex-col items-center">
+            <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1 h-8" />
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-800">
+              Parent Signature
+            </span>
           </div>
 
-          <div className="w-32 shrink-0 flex flex-col items-center justify-end text-center">
-            <div className="w-full h-7 flex items-end justify-center mb-0.5">
-              {signatureUrl ? (
-                <img src={signatureUrl} alt="Signature" className="h-full object-contain mix-blend-multiply" />
+          {/* Class Teacher Signature */}
+          <div className="text-center w-40 flex flex-col items-center">
+            <div className="h-8 flex items-end justify-center mb-1">
+              {teacherSignatureUrl ? (
+                <img src={teacherSignatureUrl} alt="Teacher Signature" className="h-full object-contain mix-blend-multiply" />
               ) : (
-                <div className="w-24 border-b border-dashed border-slate-400 mb-0.5" />
+                <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
               )}
             </div>
-            <span className="text-[7.5px] font-black uppercase tracking-wider text-slate-900">Principal Signature</span>
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-800">
+              Class Teacher Sign
+            </span>
+          </div>
+
+          {/* Principal Signature */}
+          <div className="text-center w-44 flex flex-col items-center">
+            <div className="h-8 flex items-end justify-center mb-1">
+              {signatureUrl ? (
+                <img src={signatureUrl} alt="Principal Signature" className="h-full object-contain mix-blend-multiply" />
+              ) : (
+                <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
+              )}
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-900">
+              Principal Signature
+            </span>
           </div>
         </div>
       </div>
@@ -411,8 +425,9 @@ export const AdmitCardSheetPair: React.FC<{
   section?: string;
   logoUrl?: string;
   signatureUrl?: string;
+  teacherSignatureUrl?: string;
   examPlans?: any[];
-}> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, examPlans }) => {
+}> = ({ side, studentTop, studentBottom, exam, className, section, logoUrl, signatureUrl, teacherSignatureUrl, examPlans }) => {
   return (
     <div
       className="w-[200mm] h-[276mm] max-h-[276mm] mx-auto bg-white box-border flex flex-col justify-between overflow-hidden relative"
@@ -437,6 +452,7 @@ export const AdmitCardSheetPair: React.FC<{
             section={section}
             logoUrl={logoUrl}
             signatureUrl={signatureUrl}
+            teacherSignatureUrl={teacherSignatureUrl}
             examPlans={examPlans}
           />
         )}
@@ -470,6 +486,7 @@ export const AdmitCardSheetPair: React.FC<{
               section={section}
               logoUrl={logoUrl}
               signatureUrl={signatureUrl}
+              teacherSignatureUrl={teacherSignatureUrl}
               examPlans={examPlans}
             />
           )
@@ -507,11 +524,13 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   doubleSided = false,
   logoUrl: propLogoUrl,
   signatureUrl: propSignatureUrl,
+  teacherSignatureUrl: propTeacherSignatureUrl,
 }) => {
   const settings = exam?.admitCardSettings || {};
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
 
   const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
+  const teacherSignatureUrl = resolveUrl(propTeacherSignatureUrl || settings.teacherSignatureUrl || '');
   const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
 
   const autoSchedule = getAutoExamSchedule(
@@ -551,6 +570,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
             section={section}
             logoUrl={logoUrl}
             signatureUrl={signatureUrl}
+            teacherSignatureUrl={teacherSignatureUrl}
             examPlans={examPlans}
           />
         </div>
@@ -721,16 +741,38 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         </ul>
       </div>
 
-      <div className="w-56 shrink-0 flex flex-col items-center justify-end text-center">
-        <div className="w-full h-16 flex items-end justify-center mb-1">
-          {signatureUrl ? (
-            <img src={signatureUrl} alt="Signature" className="h-full object-contain mix-blend-multiply" />
-          ) : (
-            <div className="w-full border-b border-dashed border-slate-400 mb-1" />
-          )}
+      <div className="flex items-end justify-between gap-4 shrink-0">
+        {/* Parent Signature */}
+        <div className="text-center w-28 flex flex-col items-center">
+          <div className="w-24 border-b border-dashed border-slate-400 mb-1 h-12" />
+          <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Parent Sign</span>
         </div>
-        {signatureUrl && <div className="w-full border-t border-slate-300 mb-1"></div>}
-        <span className="text-[10px] font-black uppercase tracking-widest text-slate-800 mt-1">Principal Signature</span>
+
+        {/* Teacher Signature */}
+        <div className="text-center w-36 flex flex-col items-center">
+          <div className="w-full h-12 flex items-end justify-center mb-1">
+            {teacherSignatureUrl ? (
+              <img src={teacherSignatureUrl} alt="Teacher Sign" className="h-full object-contain mix-blend-multiply" />
+            ) : (
+              <div className="w-28 border-b border-dashed border-slate-400 mb-1" />
+            )}
+          </div>
+          {teacherSignatureUrl && <div className="w-full border-t border-slate-300 mb-1"></div>}
+          <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Class Teacher</span>
+        </div>
+
+        {/* Principal Signature */}
+        <div className="text-center w-40 flex flex-col items-center">
+          <div className="w-full h-12 flex items-end justify-center mb-1">
+            {signatureUrl ? (
+              <img src={signatureUrl} alt="Principal Signature" className="h-full object-contain mix-blend-multiply" />
+            ) : (
+              <div className="w-32 border-b border-dashed border-slate-400 mb-1" />
+            )}
+          </div>
+          {signatureUrl && <div className="w-full border-t border-slate-300 mb-1"></div>}
+          <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-900">Principal Signature</span>
+        </div>
       </div>
     </div>
   );
