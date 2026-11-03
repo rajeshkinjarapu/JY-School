@@ -173,39 +173,37 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         for (let i = 0; i < pages.length; i++) {
           const pageEl = pages[i] as HTMLElement;
 
-          // Guard: skip if element has no size
-          if (!pageEl.offsetWidth || !pageEl.offsetHeight) continue;
+          const w = pageEl.offsetWidth || 794;
+          const h = pageEl.offsetHeight || 500;
 
           const imgData = await toJpeg(pageEl, {
             cacheBust: true,
             pixelRatio: 2,
             quality: 0.95,
             backgroundColor: "#ffffff",
-            width: pageEl.offsetWidth,
-            height: pageEl.offsetHeight,
+            width: w,
+            height: h,
           });
 
-          const imgRatio = pageEl.offsetHeight / pageEl.offsetWidth;
-          const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
+          const imgRatio = h / w;
+          const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight) || 297;
 
           if (i > 0) pdf.addPage();
           pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
         }
       } else {
-        // Single element (no admit-card-page children)
-        if (!el.offsetWidth || !el.offsetHeight) {
-          throw new Error("Element has no dimensions. It may still be hidden.");
-        }
+        const w = el.offsetWidth || 794;
+        const h = el.offsetHeight || 1123;
         const imgData = await toJpeg(el, {
           cacheBust: true,
           pixelRatio: 2,
           quality: 0.95,
           backgroundColor: "#ffffff",
-          width: el.offsetWidth,
-          height: el.offsetHeight,
+          width: w,
+          height: h,
         });
-        const imgRatio = el.offsetHeight / el.offsetWidth;
-        const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight);
+        const imgRatio = h / w;
+        const imgH = Math.min(pdfPageWidth * imgRatio, pdfPageHeight) || 297;
         pdf.addImage(imgData, "JPEG", 0, 0, pdfPageWidth, imgH, undefined, "FAST");
       }
     } catch (err) {
@@ -921,39 +919,38 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 dangerouslySetInnerHTML={{
                   __html: `
             @media print {
-              @page { size: A4 portrait; margin: 0; }
+              @page { size: A4 portrait; margin: 3mm; }
               body * { visibility: hidden; }
               .print-area, .print-area * { visibility: visible; }
               .print-area {
                 position: absolute; left: 0; top: 0;
-                width: 210mm; background: white !important;
+                width: 100%; background: white !important;
                 display: block !important; padding: 0 !important; margin: 0 !important;
               }
               .a4-print-sheet {
-                width: 210mm;
-                height: 297mm;
-                max-height: 297mm;
+                width: 202mm;
+                height: 284mm;
                 page-break-after: always;
                 break-after: page;
                 page-break-inside: avoid;
                 break-inside: avoid;
-                margin: 0;
+                margin: 0 auto;
                 padding: 0;
                 box-sizing: border-box;
                 background: white !important;
                 display: flex;
                 flex-direction: column;
-                overflow: hidden;
+                justify-content: space-between;
               }
               .a4-print-sheet:last-child {
                 page-break-after: auto;
                 break-after: auto;
               }
               .admit-card-wrapper {
-                width: 210mm;
-                min-height: 297mm;
+                width: 202mm;
+                min-height: 284mm;
                 margin: 0;
-                padding: 6mm;
+                padding: 4mm;
                 box-sizing: border-box;
                 background: white !important;
               }

@@ -149,5 +149,32 @@
   2. **Paired A4 Duplex Sheet Generator (`AdmitCardSheetPair`):**
      - Front Sheet: Top Student 1 Front + Center Dashed Cut Line (`✂ CUT ALONG THIS LINE (A5 SIZE) ✂`) + Bottom Student 2 Front.
      - Back Sheet: Top Student 1 Schedule + Center Dashed Cut Line + Bottom Student 2 Schedule.
-     - Perfectly sized at 297mm height so it prints duplex cleanly on any printer without overflowing.
-  3. **Universal Compatibility:** Available for all exams. Standard single-page printing remains 100% untouched when Double Side is unchecked. Single student PDF download and bulk zip generation fixed with non-zero element size checks.
+     - Sized at 134mm per card + 6mm cut line = 274mm total sheet height (within 284mm printable boundary), completely preventing Chrome's default 10mm print margins from pushing the 2nd card onto the next sheet or clipping it.
+     - Completely eliminated internal white gaps on the front card by adding Candidate Rules, Student Signature, Invigilator Signature, and Principal Signature boxes.
+  3. **Universal Compatibility & Error Elimination:** Available for all exams. Standard single-page printing remains 100% untouched when Double Side is unchecked. Single student PDF download and bulk zip generation hardened against `Invalid argument passed to jsPDF.scale` with fallback dimension bounds (794x1123).
+
+
+## Admit Card 2-in-1 Front Page Premium Redesign (November 3, 2026)
+- **User Feedback:** The backpage design (auto-schedule timetable, reporting times, principal signature) was highly appreciated, but the front page layout appeared unbalanced: the student photo was small and isolated on the right edge, candidate details were crammed into an unstyled form, and a large empty white space remained at the bottom.
+- **Root Cause:** The earlier front half card placed candidate details in a narrow 6-row table with the photo floating in a disconnected right column, with no dedicated exam guidelines, candidate signing box, or official authentication badges.
+- **Redesign Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  1. **Official School Header:** Centered Georgia serif school title, official crest logo on the left, exam center badge, and an authentic "ACADEMIC YEAR: 2026-27 | AUTHENTICATED" badge on the right.
+  2. **High-Contrast Identity Ribbon:** Slate-900 navy ribbon with gold/amber exam title (`SUMMATIVE ASSESSMENT - 1`), left-accented with "OFFICIAL HALL TICKET / ADMIT CARD".
+  3. **Dedicated Photo & Candidate Signature Block (Left Column):**
+     - Passport-proportioned photo frame (`w-[92px]`) with crisp borders and clean placeholder fallback.
+     - Attached Candidate Signature box directly underneath the photo with verified signing line.
+  4. **Rich Demographic Profile Card (Right Column):**
+     - Dark Slate-900 header with Registration / Admission number.
+     - Highlighted candidate name in bold uppercase.
+     - Dark Navy badge for `ROLL: JY26-XXXX` and Indigo badge for `CLASS: Xth - X` side by side.
+     - Clear rows for Father/Guardian Name, Gender & DOB, and Examination Center.
+  5. **Exam Day Protocol & Guidelines Card:**
+     - 4 high-value board examination guidelines formatted in a compact 2-column layout.
+     - Eliminates all dead white space while providing critical student reporting instructions.
+  6. **Official 3-Party Verification Signatures Bar:**
+     - Candidate's Signature box (verified in exam hall).
+     - Invigilator's Signature box.
+     - Principal / Exam Controller block featuring the authentic digital signature image (`signatureUrl`) with `mix-blend-multiply`.
+  7. **Bottom Reverse-Schedule Notice:**
+     - High-contrast banner with emerald indicator directing students to the reverse-side timetable.
+  8. **Strict Dimension Control:** All elements engineered within the `134mm` maximum height limit, ensuring 2 cards fit per A4 page without multi-page overflow in Chrome or desktop printer drivers.
