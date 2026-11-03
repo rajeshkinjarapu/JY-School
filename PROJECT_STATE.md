@@ -75,6 +75,30 @@
   1. **Sidebar Navigation:** "Promotion" item added under Admin menu (`Sidebar.tsx`).
   2. **Student List Page:** "Promote" header action button added (`StudentListPage.tsx`).
 
+## Student Profile Mobile Number & Direct Actions (October 31, 2026)
+- **Root Cause:** In `StudentProfilePage.tsx`, phone numbers existed in the backend API payload (`student.user.phone` and `student.fatherPhone`), but were not mapped into the interactive web view (Hero header or Family card).
+- **Features Implemented:**
+  1. **Hero Header Contact Badge:** Added an interactive phone badge next to "Joined Date" in the student profile header with direct click-to-call (`tel:`).
+  2. **Family Card Contact Details:** Added a dedicated `Mobile No` row in the Family table displaying the contact number with a click-to-call link and a dedicated one-click **WhatsApp** button (`https://wa.me/91...`).
+  3. **Multi-source Fallback:** Uses `student.user?.phone || student.phone || student.fatherPhone` to ensure contact details display regardless of how the student was registered.
+
+## Flutter Web Compilation & Dependency Resolution (November 2, 2026)
+- **Root Causes:**
+  1. Invalid `const` keywords on `TeXViewPadding.all`, `TeXViewStyle`, and `pdf` package widgets (`pw.TextStyle`, `pw.BoxDecoration`, `pw.EdgeInsets`) causing Dart compiler type resolution cascade failures.
+  2. Missing cached pub package files on local machine for newly introduced dependencies (`pdf`, `qr_flutter`, `font_awesome_flutter`).
+- **Fixes Applied:**
+  1. `lib/widgets/latex_preview_widget.dart`: Removed invalid `const` modifiers.
+  2. `lib/services/admission_pdf_service.dart`: Removed all invalid `const` modifiers across `pw.` widgets.
+  3. `lib/screens/quiz_result_screen.dart`: Replaced `FontAwesomeIcons` with native Flutter Material `Icons`.
+
+## Examination Admit Cards Header Controls Single-Row Compaction (November 3, 2026)
+- **Issue:** The top controls bar in `AdmitCardTab.tsx` had bulky padding (`p-6`), large select dropdowns, and wide button padding (`px-4 py-2 uppercase tracking-widest font-black`), forcing action buttons (`Published`, `Unpublish`, `Settings`, `Download All`, `Print All`) to wrap into 2 lines.
+- **Fix:**
+  - Compacted header card padding to `p-3.5 sm:p-4 rounded-2xl`.
+  - Streamlined dropdowns to `px-3 py-1.5 text-xs font-bold rounded-lg`.
+  - Scaled down buttons to `px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide` with `w-3.5 h-3.5` icons.
+  - Applied `whitespace-nowrap shrink-0` across all action items and aligned them in a single horizontal flex row (`flex items-center flex-wrap sm:flex-nowrap gap-1.5 shrink-0 overflow-x-auto`).
+
 ### Deployment Architecture Reference
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`

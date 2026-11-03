@@ -378,16 +378,16 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] print:hidden gap-4 animate-fade-in-up">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-3.5 rounded-2xl shadow-lg shadow-orange-500/30 text-white shrink-0 hidden sm:block">
-            <FileText className="w-6 h-6" />
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-white/70 dark:bg-slate-900/60 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl border border-white/20 shadow-sm print:hidden gap-3 animate-fade-in-up">
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-2.5 rounded-xl shadow-md shadow-orange-500/20 text-white shrink-0 hidden sm:block">
+            <FileText className="w-5 h-5" />
           </div>
-          <div className="flex flex-col sm:flex-row w-full gap-3">
+          <div className="flex items-center flex-wrap sm:flex-nowrap w-full gap-2">
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(e.target.value)}
-              className="appearance-none bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-orange-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
+              className="appearance-none bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-900/40 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-xs cursor-pointer w-full sm:w-auto sm:min-w-[190px]"
             >
               <option value="" className="text-xs font-medium">-- Select Exam --</option>
               {exams.map((e) => (
@@ -401,7 +401,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="appearance-none bg-white dark:bg-slate-800 border-2 border-orange-100 dark:border-orange-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[180px]"
+                className="appearance-none bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-900/40 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-xs cursor-pointer w-full sm:w-auto sm:min-w-[120px]"
               >
                 <option value="">-- Select Class --</option>
                 {sortClasses(selectedExam.classes || []).map((c: any) => (
@@ -413,7 +413,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center flex-wrap sm:flex-nowrap gap-1.5 shrink-0 overflow-x-auto w-full lg:w-auto justify-start lg:justify-end">
           {isSuperAdmin && selectedExam && (
             <>
               {!published ? (
@@ -438,14 +438,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                       setPublished(false);
                     }
                   }}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md shadow-emerald-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-xs px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
                 >
-                  <CheckCircle className="w-4 h-4" /> Publish Cards
+                  <CheckCircle className="w-3.5 h-3.5" /> Publish
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
-                  <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest flex items-center gap-2 shadow-sm">
-                    <CheckCircle className="w-4 h-4" /> Published
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide flex items-center gap-1.5 shadow-xs whitespace-nowrap shrink-0">
+                    <CheckCircle className="w-3.5 h-3.5" /> Published
                   </span>
                   <button
                     onClick={async () => {
@@ -467,7 +467,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                         setPublished(true);
                       }
                     }}
-                    className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300"
+                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-rose-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 shadow-xs px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all whitespace-nowrap shrink-0 cursor-pointer"
                   >
                     Unpublish
                   </button>
@@ -475,42 +475,42 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               )}
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
+                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400 hover:text-indigo-500 hover:bg-indigo-50 shadow-xs px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <Settings className="w-4 h-4" /> Settings
+                <Settings className="w-3.5 h-3.5" /> Settings
               </button>
             </>
           )}
           {students.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               {isFASaExam && (
-                <label className="flex items-center gap-2 mr-2 cursor-pointer bg-white dark:bg-slate-800 border-2 border-indigo-200 dark:border-indigo-900/50 px-3 py-1.5 rounded-xl text-xs font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 transition-colors">
+                <label className="flex items-center gap-1.5 cursor-pointer bg-white dark:bg-slate-800 border border-indigo-200 dark:border-indigo-900/50 px-2.5 py-1.5 rounded-lg text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:bg-indigo-50 transition-colors whitespace-nowrap shrink-0">
                   <input
                     type="checkbox"
                     checked={isDoubleSided}
                     onChange={(e) => setIsDoubleSided(e.target.checked)}
-                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                    className="w-3.5 h-3.5 text-indigo-600 rounded focus:ring-indigo-500"
                   />
-                  Double Side PDF
+                  Double Side
                 </label>
               )}
               <button
                 onClick={handleDownloadAll}
                 disabled={isDownloading}
-                className="bg-white dark:bg-slate-800 border-2 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 hover:border-orange-400 hover:bg-orange-50 shadow-sm px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
+                className="bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400 hover:border-orange-400 hover:bg-orange-50 shadow-xs px-2.5 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all flex items-center gap-1.5 disabled:opacity-50 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 {isDownloading ? (
                   <span className="animate-pulse">Processing...</span>
                 ) : (
-                  <Download className="w-4 h-4" />
+                  <Download className="w-3.5 h-3.5" />
                 )}
                 {!isDownloading && "Download All"}
               </button>
               <button
                 onClick={handlePrint}
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-md shadow-orange-500/20 hover:-translate-y-0.5 px-4 py-2 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center gap-2"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-xs px-3 py-1.5 rounded-lg text-[11px] font-bold tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 cursor-pointer"
               >
-                <Printer className="w-4 h-4" /> Print All
+                <Printer className="w-3.5 h-3.5" /> Print All
               </button>
             </div>
           )}
