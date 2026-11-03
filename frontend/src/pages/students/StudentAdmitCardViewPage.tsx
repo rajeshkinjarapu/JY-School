@@ -80,7 +80,13 @@ export const StudentAdmitCardViewPage: React.FC = () => {
       `}} />
 
       <div className="print-area w-full max-w-4xl">
-        <AdmitCardTemplate student={data.student} exam={data.exam} examPlans={data.examPlans} />
+        <AdmitCardTemplate 
+          student={data.student} 
+          exam={data.exam} 
+          examPlans={data.examPlans} 
+          className={data.student?.class?.name || data.student?.className}
+          section={data.student?.class?.section || data.student?.section}
+        />
       </div>
     </div>
   );

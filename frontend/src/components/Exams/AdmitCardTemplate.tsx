@@ -3,6 +3,63 @@ import { User, Calendar, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 import { getPhotoUrl } from '../../utils/photo';
 
+export const getAutoExamSchedule = (
+  exam: any,
+  classId?: string,
+  className?: string,
+  section?: string,
+  defaultTiming?: string
+) => {
+  if (!exam || !exam.subjects) return [];
+
+  let subjectsData = exam.subjects;
+  if (typeof subjectsData === 'string') {
+    try { subjectsData = JSON.parse(subjectsData); } catch (e) {}
+  }
+
+  let classSubs: any[] = [];
+
+  // 1. Try to find class in classConfigs
+  if (subjectsData?.classConfigs && Array.isArray(subjectsData.classConfigs)) {
+    // Match by classId first
+    let foundCfg = classId ? subjectsData.classConfigs.find((c: any) => c.classId === classId) : null;
+    
+    // Fallback: match by className and section name
+    if (!foundCfg && className) {
+      const cleanTarget = `${className}${section || ''}`.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+      foundCfg = subjectsData.classConfigs.find((c: any) => {
+        const cleanName = (c.className || '').replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+        return cleanName === cleanTarget;
+      });
+    }
+
+    if (foundCfg && Array.isArray(foundCfg.subjects) && foundCfg.subjects.length > 0) {
+      classSubs = foundCfg.subjects;
+    }
+  }
+
+  // 2. Fallback to globalSubjects or flat subjects array
+  if (classSubs.length === 0) {
+    if (Array.isArray(subjectsData?.globalSubjects) && subjectsData.globalSubjects.length > 0) {
+      classSubs = subjectsData.globalSubjects;
+    } else if (Array.isArray(subjectsData) && subjectsData.length > 0) {
+      classSubs = subjectsData;
+    }
+  }
+
+  if (classSubs.length === 0) return [];
+
+  const timing = defaultTiming || exam?.admitCardSettings?.defaultTiming || '09:30 AM - 12:30 PM';
+
+  return classSubs.map((sub: any, idx: number) => ({
+    id: sub.id || idx,
+    date: sub.date || (exam?.examDate ? new Date(exam.examDate).toISOString().split('T')[0] : ''),
+    subject: typeof sub === 'string' ? sub : (sub.name || sub.subject || ''),
+    timing: sub.timing || timing,
+    maxMarks: sub.maxMarks
+  }));
+};
+
 interface AdmitCardTemplateProps {
   student: any;
   exam: any;
@@ -10,31 +67,65 @@ interface AdmitCardTemplateProps {
   className?: string;
   section?: string;
   doubleSided?: boolean;
+  logoUrl?: string;
+  signatureUrl?: string;
+  teacherSignatureUrl?: string;
 }
 
-export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, exam, examPlans, className, section, doubleSided = false }) => {
+export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ 
+  student, 
+  exam, 
+  examPlans, 
+  className, 
+  section, 
+  doubleSided = false,
+  logoUrl: propLogoUrl,
+  signatureUrl: propSignatureUrl,
+  teacherSignatureUrl: propTeacherSignatureUrl,
+}) => {
   const settings = exam?.admitCardSettings || {};
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
   
   // Resolve relative /uploads/ paths to the backend URL so images load correctly on Vercel
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  const resolveUrl = (url: string) => {
-    if (!url || url === 'null' || url === 'undefined') return '';
+  const resolveUrl = (url?: string, defaultFallback: string = '') => {
+    if (!url || url === 'null' || url === 'undefined') return defaultFallback;
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    if (url === '/logo.png' || url === 'logo.png') return '/logo.png';
     return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
   
-  const signatureUrl = resolveUrl(settings.signatureUrl || '');
-  const logoUrl = resolveUrl(settings.logoUrl || '');
+  const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
+  const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
+
+  // Automatically derive schedule from the exam's configured subjects and dates for this class
+  const autoSchedule = getAutoExamSchedule(
+    exam,
+    student?.classId || student?.class?.id,
+    className || student?.class?.name || student?.className,
+    section || student?.class?.section || student?.section,
+    settings.defaultTiming
+  );
+
+  const displaySchedule = (settings.schedule && settings.schedule.length > 0)
+    ? settings.schedule
+    : (autoSchedule.length > 0 ? autoSchedule : (examPlans || []));
 
   const renderHeader = (isBackSide = false) => (
     <div className={`flex items-center gap-6 p-6 border-b-2 border-slate-900 bg-slate-50 ${doubleSided ? 'py-8' : ''}`}>
-      <div className={`${doubleSided ? 'w-28 h-28' : 'w-24 h-24'} shrink-0 bg-white border border-slate-300 p-2 shadow-sm rounded-lg flex items-center justify-center`}>
-        {logoUrl ? (
-          <img src={logoUrl} alt="Logo" className="w-full h-full object-contain" />
-        ) : (
-          <span className="text-xl font-black text-slate-800">LOGO</span>
-        )}
+      <div className={`${doubleSided ? 'w-28 h-28' : 'w-24 h-24'} shrink-0 bg-white border border-slate-300 p-2 shadow-sm rounded-lg flex items-center justify-center overflow-hidden`}>
+        <img 
+          src={logoUrl || '/logo.png'} 
+          alt="School Logo" 
+          className="w-full h-full object-contain"
+          crossOrigin="anonymous"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (!target.src.endsWith('/logo.png')) {
+              target.src = '/logo.png';
+            }
+          }}
+        />
       </div>
       <div className="flex-1 text-center pr-10">
         <h1 className={`${doubleSided ? 'text-[34px]' : 'text-[22px] sm:text-[28px]'} whitespace-nowrap font-black uppercase tracking-wider text-slate-900 mb-1`} style={{ fontFamily: '"Georgia", serif' }}>
@@ -148,16 +239,22 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
-          {(settings.schedule?.length > 0 ? settings.schedule : examPlans)?.map((plan: any, i: number) => (
+          {displaySchedule.map((plan: any, i: number) => (
             <tr key={plan.id || i} className="hover:bg-slate-50">
               <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-center text-slate-800 border-r border-slate-200`}>{i + 1}</td>
-              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200`}>{plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}</td>
-              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200 uppercase`}>{plan.subject?.name || plan.subject}</td>
-              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap`}>{plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}`}</td>
+              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200`}>
+                {plan.date || plan.examDate ? new Date(plan.date || plan.examDate).toLocaleDateString('en-GB') : '-'}
+              </td>
+              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200 uppercase`}>
+                {plan.subject?.name || plan.subject || plan.name}
+              </td>
+              <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap`}>
+                {plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}` || '09:30 AM - 12:30 PM'}
+              </td>
               <td className={`${doubleSided ? 'py-4 text-[14px]' : 'py-2.5 text-[12px]'} px-4 text-center text-slate-400 font-bold tracking-widest`}>..................</td>
             </tr>
           ))}
-          {(!settings.schedule?.length && (!examPlans || examPlans.length === 0)) && (
+          {displaySchedule.length === 0 && (
             <tr>
               <td colSpan={5} className="py-6 text-center text-slate-400 font-medium text-xs bg-slate-50 italic">No schedule mapped for this class.</td>
             </tr>
@@ -194,11 +291,11 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({ student, e
     </div>
   );
 
-  const Watermark = () => logoUrl ? (
-    <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
-      <img src={logoUrl} alt="Watermark" className="w-[400px] h-[400px] object-contain grayscale" />
+  const Watermark = () => (
+    <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
+      <img src={logoUrl || '/logo.png'} alt="Watermark" className="w-[380px] h-[380px] object-contain grayscale" />
     </div>
-  ) : null;
+  );
 
   if (doubleSided) {
     return (

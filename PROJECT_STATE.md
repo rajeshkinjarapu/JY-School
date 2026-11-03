@@ -103,3 +103,34 @@
 - Backend API: `http://66.116.252.191:19998`
 - Frontend Web: `http://66.116.252.191:19999`
 - VPS SSH: `ssh root@66.116.252.191`
+
+
+## Admit Card Official School Logo Display & Fallback (November 3, 2026)
+- **Issue:** On the Examination Admit Card view and downloaded/printed PDFs, when no custom logo was configured for an exam, the logo box displayed the placeholder word "LOGO" inside a border rather than the official school crest image.
+- **Root Cause:**
+  1. In `AdmitCardTemplate.tsx`, when `settings.logoUrl` was undefined, `logoUrl` resolved to empty and rendered a fallback `<span>LOGO</span>`.
+  2. In `AdmitCardTab.tsx`, `logoUrl`, `signatureUrl`, and `teacherSignatureUrl` were not passed as props to `<AdmitCardTemplate />`.
+- **Fix Implemented:**
+  1. `frontend/src/components/Exams/AdmitCardTemplate.tsx`: Added props `logoUrl`, `signatureUrl`, `teacherSignatureUrl`. Updated `resolveUrl` to default to `/logo.png`. Completely eliminated the placeholder `<span ...>LOGO</span>` element and replaced it with an `<img>` tag pointing to `/logo.png` with `crossOrigin="anonymous"` and an `onError` fallback to `/logo.png`. Also updated the central background watermark to render the authentic school logo at subtle opacity.
+  2. `frontend/src/pages/exams/AdmitCardTab.tsx`: Initialized `logoUrl` state to `"/logo.png"`. Added fallback in `useEffect` so `settings.logoUrl || globalSettings.logoUrl || "/logo.png"` is used. Passed `logoUrl={logoUrl || '/logo.png'}`, `signatureUrl={signatureUrl}`, and `teacherSignatureUrl={teacherSignatureUrl}` directly into `<AdmitCardTemplate />`.
+  3. Verified `StudentAdmitCardViewPage.tsx` and `TeacherAdmitCardsPage.tsx` so both student and teacher portals seamlessly show the official SVJY High School logo on all admit cards.
+
+## Subject Name Normalization & Physical Science Reversion Fix (November 3, 2026)
+- **Issue:** When adding or editing a subject such as "PHYSICAL SCIENCE" (or "BIOLOGICAL SCIENCE") in Exam Configuration, the subject saved temporarily but upon reload reverted back to "PHYSICS" (or "BIOLOGY").
+- **Root Cause:** In `getCanonicalSubjectName()` in `backend/src/controllers/exams.controller.ts` and `frontend/src/pages/exams/ResultsTab.tsx`, greedy regex checking `s.includes('PHYSIC') || s.startsWith('PHY')` matched `"PHYSICAL SCIENCE"` (since `PHYSICALSCIENCE` contains `PHYSIC`), collapsing it into `"PHYSICS"`. Furthermore, when `normalizeSubjectsToRealIds` executed, it mapped the subject to the existing database record for "PHYSICS".
+- **Fix Implemented:**
+  1. Re-ordered canonical matching to evaluate compound high school science names (`PHYSICAL SCIENCE`, `BIOLOGICAL SCIENCE`, `GENERAL SCIENCE`) before single-word physics/chemistry/biology aliases.
+  2. Maintained discrete short codes: `PS` for Physical Science and `BS` for Biological Science.
+  3. Updated curriculum sorting weight order (`getSubjectSortWeight`) to place TELUGU (10), HINDI (20), ENGLISH (30), MATHEMATICS (40), SCIENCE/EVS (50), PHYSICAL SCIENCE (51), BIOLOGICAL SCIENCE (52), PHYSICS (53), CHEMISTRY (54), BIOLOGY (55), SOCIAL (60).
+  4. Synchronized canonical helpers identically between backend (`exams.controller.ts`) and frontend (`ResultsTab.tsx`).
+
+## Admit Card Examination Schedule Automatic Sync (November 3, 2026)
+- **Feature Scope:** Eliminated the requirement to manually re-enter examination timetable rows in Admit Card Settings. Examination subjects and scheduled exam dates configured during exam creation (`/exams/create`) now automatically populate into Admit Cards.
+- **Implementation Details:**
+  1. **Helper Function `getAutoExamSchedule` (`AdmitCardTemplate.tsx`):** Reads the exam's `subjects.classConfigs` matching by `classId` (or normalized class + section name). Gracefully falls back to `globalSubjects`. Generates an array of `{ id, date, subject, timing, maxMarks }`.
+  2. **AdmitCardTemplate Display:** `displaySchedule` defaults directly to `autoSchedule` if `settings.schedule` is empty or unset.
+  3. **AdmitCardTab Settings UI:**
+     - Added unified "Default Exam Timing" input field (default: `09:30 AM - 12:30 PM`), updating all subject timings at once without editing individual rows.
+     - Added a "⚡ Sync from Exam" button in Admit Card Settings modal allowing administrators to refresh or pull latest dates/subjects on demand with a single click.
+     - When no manual rows are added, an informational auto-sync alert is shown indicating that the schedule is flowing directly from Exam Configuration.
+  4. **Student Portal Support (`StudentAdmitCardViewPage.tsx`):** Passes student's class name and section into `AdmitCardTemplate` so student-side admit card views automatically reflect the exam schedule.

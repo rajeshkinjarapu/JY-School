@@ -18,6 +18,8 @@ import {
   ExternalLink,
   Download,
   FileText,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { toJpeg } from "html-to-image";
@@ -26,7 +28,7 @@ import { saveAs } from "file-saver";
 import { triggerDownloadNotification } from "../../utils/downloadNotification";
 import toast from "react-hot-toast";
 import { useAuth } from "../../hooks/useAuth";
-import { AdmitCardTemplate } from "../../components/Exams/AdmitCardTemplate";
+import { AdmitCardTemplate, getAutoExamSchedule } from "../../components/Exams/AdmitCardTemplate";
 
 export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const navigate = useNavigate();
@@ -53,9 +55,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   );
   const [signatureUrl, setSignatureUrl] = useState("");
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState("");
-  const [logoUrl, setLogoUrl] = useState("");
+  const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [examTitleOverride, setExamTitleOverride] = useState("");
   const [examCenterOverride, setExamCenterOverride] = useState("");
+  const [defaultTiming, setDefaultTiming] = useState("09:30 AM - 12:30 PM");
   const [schedule, setSchedule] = useState<any[]>([]);
 
   const isFASaExam = selectedExam?.name?.toUpperCase().includes('FA') || selectedExam?.name?.toUpperCase().includes('SA');
@@ -71,7 +74,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       
       const settings = examObj.admitCardSettings || {};
       setPublished(examObj.admitCardPublished || false);
-      setLogoUrl(settings.logoUrl || globalSettings.logoUrl || "");
+      setLogoUrl(settings.logoUrl || globalSettings.logoUrl || "/logo.png");
       setSignatureUrl(settings.signatureUrl || globalSettings.signatureUrl || globalSettings.principalSignatureUrl || "");
       setTeacherSignatureUrl(settings.teacherSignatureUrl || globalSettings.teacherSignatureUrl || "");
       setInstructions(
@@ -80,6 +83,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       );
       setExamTitleOverride(settings.examTitleOverride || "");
       setExamCenterOverride(settings.examCenterOverride || "");
+      setDefaultTiming(settings.defaultTiming || "09:30 AM - 12:30 PM");
       setSchedule(settings.schedule || []);
     }).catch(() => {});
   }, [selectedExamId]);
@@ -331,6 +335,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           logoUrl,
           examTitleOverride,
           examCenterOverride,
+          defaultTiming,
           schedule,
         },
       });
@@ -345,6 +350,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           logoUrl,
           examTitleOverride,
           examCenterOverride,
+          defaultTiming,
           schedule,
         };
       }
@@ -557,6 +563,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 value={examCenterOverride}
                 onChange={(e) => setExamCenterOverride(e.target.value)}
               />
+
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
+                Default Exam Timing
+              </label>
+              <input
+                type="text"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                placeholder="e.g. 09:30 AM - 12:30 PM"
+                value={defaultTiming}
+                onChange={(e) => setDefaultTiming(e.target.value)}
+              />
             </div>
 
             <div className="space-y-4">
@@ -642,21 +659,44 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
 
           {/* Schedule Editor */}
           <div className="mt-4 border-t border-slate-100 dark:border-slate-800 pt-6">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="font-black text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">
-                Examination Schedule
-              </h4>
-              <button
-                onClick={() =>
-                  setSchedule([
-                    ...schedule,
-                    { date: "", timing: "", subject: "", room: "" },
-                  ])
-                }
-                className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
-              >
-                + Add Row
-              </button>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+              <div>
+                <h4 className="font-black text-slate-700 dark:text-slate-300 text-sm uppercase tracking-wider">
+                  Examination Schedule
+                </h4>
+                <p className="text-xs text-slate-400 font-semibold mt-0.5">
+                  Subjects & exam dates auto-sync directly from Exam Configuration.
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const auto = getAutoExamSchedule(selectedExam, selectedClassId, selectedClass?.name, selectedClass?.section, defaultTiming);
+                    if (auto.length > 0) {
+                      setSchedule(auto.map(a => ({ date: a.date, timing: a.timing, subject: a.subject, room: a.room || '' })));
+                      toast.success(`Loaded ${auto.length} subjects from Exam Configuration!`);
+                    } else {
+                      toast.error('No subjects found in exam configuration for this class.');
+                    }
+                  }}
+                  className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors"
+                  title="Auto-fill schedule from the subjects and exam dates configured for this class"
+                >
+                  ⚡ Sync from Exam
+                </button>
+                <button
+                  onClick={() =>
+                    setSchedule([
+                      ...schedule,
+                      { date: "", timing: defaultTiming || "09:30 AM - 12:30 PM", subject: "", room: "" },
+                    ])
+                  }
+                  className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
+                >
+                  + Add Row
+                </button>
+              </div>
             </div>
 
             {schedule.length > 0 && (
@@ -685,7 +725,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   <input
                     type="text"
                     className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                    placeholder="10:00 AM - 01:00 PM"
+                    placeholder="09:30 AM - 12:30 PM"
                     value={row.timing}
                     onChange={(e) => {
                       const newSch = [...schedule];
@@ -726,9 +766,16 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 </div>
               ))}
               {schedule.length === 0 && (
-                <div className="text-sm font-medium text-slate-400 italic p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700/50">
-                  No schedule added. Will fallback to default exam plans if
-                  available.
+                <div className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div>
+                    <p className="text-xs font-bold text-emerald-900 dark:text-emerald-200">
+                      Auto-Synced from Exam Configuration!
+                    </p>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-300">
+                      All subjects & exam dates configured during exam creation automatically appear on the admit cards. You don't need to add anything here manually.
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
@@ -864,6 +911,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                     className={selectedClass?.name}
                     section={selectedClass?.section}
                     doubleSided={isFASaExam && isDoubleSided}
+                    logoUrl={logoUrl || '/logo.png'}
+                    signatureUrl={signatureUrl}
+                    teacherSignatureUrl={teacherSignatureUrl}
                   />
                 </div>
               ))}
@@ -882,4 +932,3 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     </div>
   );
 };
-

@@ -10,42 +10,53 @@ import { useAuth } from '../../hooks/useAuth';
 
 export const getCanonicalSubjectName = (subjectName: string): string => {
   if (!subjectName) return '';
-  const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+  const trimmed = subjectName.trim().toUpperCase();
+  const s = trimmed.replace(/[^A-Z0-9]/g, '');
   
   // 1. TELUGU (tel, telugu, TEL, TELUGU, etc.)
-  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 'TELUGU';
+  if (s.includes('TELUGU') || s === 'TEL' || s.includes('FIRSTLANG')) return 'TELUGU';
   
   // 2. HINDI (hin, hindi, HIN, HINDI, etc.)
-  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 'HINDI';
+  if (s.includes('HINDI') || s === 'HIN' || s.includes('SECONDLANG')) return 'HINDI';
   
   // 3. ENGLISH (eng, english, ENG, ENGLISH, etc.)
-  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 'ENGLISH';
+  if (s.includes('ENGLISH') || s === 'ENG' || s.includes('THIRDLANG')) return 'ENGLISH';
   
   // 4. MATHEMATICS (mat, maths, math, mathematics, MATHEMATICSi, etc.)
-  if (s.includes('MATH') || s.startsWith('MAT')) return 'MATHEMATICS';
+  if (s.includes('MATHEMATIC') || s === 'MATH' || s === 'MATHS' || s === 'MAT') return 'MATHEMATICS';
   
   // 5. EVS (evs, environmental science, etc.)
   if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
   
-  // 6. SCIENCES
-  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHYSICS';
-  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHEMISTRY';
-  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIOLOGY';
-  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCIENCE';
+  // 6. SCIENCES (Check specific compound state board high school subjects FIRST)
+  // 6a. Physical Science (PS)
+  if (s === 'PS' || s.includes('PHYSICALSCIENCE') || s.includes('PHYSCI') || s.includes('PHYSICALSCI')) return 'PHYSICAL SCIENCE';
+  
+  // 6b. Biological Science / Natural Science (BS / NS)
+  if (s === 'BS' || s === 'NS' || s.includes('BIOLOGICALSCIENCE') || s.includes('BIOSCIENCE') || s.includes('NATURALSCIENCE') || s.includes('BIOSCI') || s.includes('BIOLOGICALSCI') || s.includes('NATURALSCI')) return 'BIOLOGICAL SCIENCE';
+  
+  // 6c. General Science
+  if (s.includes('GENERALSCIENCE') || s.includes('GENSCIENCE') || s === 'GS') return 'GENERAL SCIENCE';
+
+  // 6d. Specific single sciences
+  if (s === 'PHY' || s === 'PHYSICS' || s.startsWith('PHYSIC')) return 'PHYSICS';
+  if (s === 'CHE' || s === 'CHEM' || s === 'CHEMISTRY' || s.startsWith('CHEMIS')) return 'CHEMISTRY';
+  if (s === 'BIO' || s === 'BIOLOGY' || s.startsWith('BIOLOG')) return 'BIOLOGY';
+  if (s === 'SCI' || s === 'SCIENCE') return 'SCIENCE';
   
   // 7. SOCIAL (soc, social, social studies, etc.)
-  if (s.includes('SOC') || s.includes('SOCIAL')) return 'SOCIAL';
+  if (s === 'SOC' || s.includes('SOCIAL') || s.includes('SOCIALSTUDIES')) return 'SOCIAL';
   
   // 8. COMPUTER / IT
-  if (s.includes('COMP') || s.includes('IT')) return 'COMPUTER';
+  if (s.includes('COMP') || s === 'IT' || s.includes('INFORMATIONTECH')) return 'COMPUTER';
   
   // 9. GENERAL KNOWLEDGE
-  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 'GENERAL KNOWLEDGE';
+  if (s === 'GK' || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 'GENERAL KNOWLEDGE';
   
   // 10. ART & CRAFT
   if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 'ART & CRAFT';
   
-  return subjectName.trim().toUpperCase();
+  return trimmed;
 };
 
 export const getSubjectSortWeight = (subjectName: string): number => {
@@ -53,29 +64,32 @@ export const getSubjectSortWeight = (subjectName: string): number => {
   const s = subjectName.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
   
   // 1. TELUGU / First Language
-  if (s.includes('TELUGU') || s.startsWith('TEL') || s.includes('FIRSTLANG')) return 10;
+  if (s.includes('TELUGU') || s === 'TEL' || s.includes('FIRSTLANG')) return 10;
   
   // 2. HINDI / Second Language
-  if (s.includes('HINDI') || s.startsWith('HIN') || s.includes('SECONDLANG')) return 20;
+  if (s.includes('HINDI') || s === 'HIN' || s.includes('SECONDLANG')) return 20;
   
   // 3. ENGLISH / Third Language
-  if (s.includes('ENGLISH') || s.startsWith('ENG') || s.includes('THIRDLANG')) return 30;
+  if (s.includes('ENGLISH') || s === 'ENG' || s.includes('THIRDLANG')) return 30;
   
   // 4. MATHEMATICS / MATHS
-  if (s.includes('MATH') || s.startsWith('MAT')) return 40;
+  if (s.includes('MATHEMATIC') || s === 'MATH' || s === 'MATHS' || s === 'MAT') return 40;
   
-  // 5. SCIENCE / EVS / GENERAL SCIENCE / PHYSICS / CHEMISTRY / BIOLOGY
-  if (s === 'EVS' || s.includes('ENVIRONMENT') || s.includes('SCIENCE') || s.startsWith('SCI')) return 50;
-  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 51;
-  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 52;
-  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 53;
+  // 5. SCIENCES
+  if (s === 'EVS' || s.includes('ENVIRONMENT')) return 50;
+  if (s === 'SCIENCE' || s === 'SCI' || s.includes('GENERALSCIENCE') || s === 'GS') return 50;
+  if (s === 'PS' || s.includes('PHYSICALSCIENCE') || s.includes('PHYSCI') || s.includes('PHYSICALSCI')) return 51;
+  if (s === 'BS' || s === 'NS' || s.includes('BIOLOGICALSCIENCE') || s.includes('NATURALSCIENCE') || s.includes('BIOSCI')) return 52;
+  if (s === 'PHY' || s === 'PHYSICS' || s.startsWith('PHYSIC')) return 53;
+  if (s === 'CHE' || s === 'CHEM' || s === 'CHEMISTRY' || s.startsWith('CHEMIS')) return 54;
+  if (s === 'BIO' || s === 'BIOLOGY' || s.startsWith('BIOLOG')) return 55;
   
   // 6. SOCIAL / SOCIAL STUDIES
-  if (s.includes('SOC') || s.includes('SOCIAL')) return 60;
+  if (s === 'SOC' || s.includes('SOCIAL') || s.includes('SOCIALSTUDIES')) return 60;
   
   // 7. COMPUTER / IT / GK / DRAWING
-  if (s.includes('COMP') || s.includes('IT')) return 70;
-  if (s.includes('GK') || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 80;
+  if (s.includes('COMP') || s === 'IT' || s.includes('INFORMATIONTECH')) return 70;
+  if (s === 'GK' || s.includes('GENERALKNOW') || s.includes('AWARENESS')) return 80;
   if (s.includes('DRAW') || s.includes('ART') || s.includes('CRAFT')) return 90;
   
   return 100;
@@ -88,15 +102,17 @@ export const formatSubjectShortCode = (subjectName: string): string => {
   if (s.includes('TELUGU') || s.startsWith('TEL')) return 'TEL';
   if (s.includes('HINDI') || s.startsWith('HIN')) return 'HIN';
   if (s.includes('ENGLISH') || s.startsWith('ENG')) return 'ENG';
-  if (s.includes('MATH') || s.startsWith('MAT')) return 'MAT';
+  if (s.includes('MATHEMATIC') || s.startsWith('MAT')) return 'MAT';
   if (s === 'EVS' || s.includes('ENVIRONMENT')) return 'EVS';
-  if (s.includes('PHYSIC') || s.startsWith('PHY')) return 'PHY';
-  if (s.includes('CHEMIS') || s.startsWith('CHE')) return 'CHE';
-  if (s.includes('BIOLOG') || s.startsWith('BIO')) return 'BIO';
-  if (s.includes('SCIENCE') || s.startsWith('SCI')) return 'SCI';
-  if (s.includes('SOC') || s.includes('SOCIAL')) return 'SOC';
-  if (s.includes('COMP')) return 'COMP';
-  if (s.includes('GK')) return 'GK';
+  if (s === 'PS' || s.includes('PHYSICALSCIENCE') || s.includes('PHYSCI') || s.includes('PHYSICALSCI')) return 'PS';
+  if (s === 'BS' || s === 'NS' || s.includes('BIOLOGICALSCIENCE') || s.includes('NATURALSCIENCE') || s.includes('BIOSCI')) return 'BS';
+  if (s === 'PHY' || s === 'PHYSICS' || s.startsWith('PHYSIC')) return 'PHY';
+  if (s === 'CHE' || s === 'CHEM' || s === 'CHEMISTRY' || s.startsWith('CHEMIS')) return 'CHE';
+  if (s === 'BIO' || s === 'BIOLOGY' || s.startsWith('BIOLOG')) return 'BIO';
+  if (s === 'SCI' || s === 'SCIENCE' || s.includes('GENERALSCIENCE')) return 'SCI';
+  if (s === 'SOC' || s.includes('SOCIAL')) return 'SOC';
+  if (s.includes('COMP') || s === 'IT') return 'COMP';
+  if (s === 'GK' || s.includes('GENERALKNOW')) return 'GK';
   
   return subjectName.length > 4 ? subjectName.substring(0, 4).toUpperCase() : subjectName.toUpperCase();
 };
@@ -684,4 +700,3 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     </div>
   );
 };
-
