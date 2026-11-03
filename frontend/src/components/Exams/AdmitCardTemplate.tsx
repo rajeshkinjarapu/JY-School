@@ -699,7 +699,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
             <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Date</th>
             <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Subject</th>
             <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest border-r border-slate-300">Time</th>
-            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center">Invigilator Sign</th>
+            <th className="py-2 px-4 font-extrabold uppercase text-[10px] tracking-widest text-center whitespace-nowrap w-44 min-w-[140px]">Invigilator Sign</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200 bg-white">
@@ -715,7 +715,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
               <td className="py-2 px-4 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
                 {plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}` || '09:30 AM - 12:30 PM'}
               </td>
-              <td className="py-2 px-4 text-center text-slate-400 font-bold tracking-widest">..................</td>
+              <td className="py-2 px-4 text-center border-slate-200"></td>
             </tr>
           ))}
           {displaySchedule.length === 0 && (
@@ -729,49 +729,57 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
   );
 
   const renderFooter = () => (
-    <div className="mt-auto m-4 p-4 rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col sm:flex-row justify-between items-end gap-6 relative">
-      <div className="flex-1">
-        <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-2 flex items-center gap-1.5">
-          <span className="bg-slate-900 w-1.5 h-1.5 rounded-full"></span> Important Instructions
+    <div className="mt-auto rounded-lg border-2 border-slate-200 bg-slate-50 flex flex-col overflow-hidden">
+      {/* 1. Important Instructions at TOP */}
+      <div className="p-3.5 border-b border-slate-200 bg-slate-50">
+        <h5 className="text-[11px] font-black uppercase tracking-wider text-slate-900 mb-1.5 flex items-center gap-1.5">
+          <CheckCircle className="w-4 h-4 text-emerald-600" /> Important Instructions / ముఖ్య నిబంధనలు
         </h5>
-        <ul className="text-[10px] text-slate-700 font-semibold space-y-1 list-decimal pl-5 pr-4 text-justify leading-relaxed">
+        <ul className="text-[10px] text-slate-800 font-semibold space-y-1 list-decimal pl-5 pr-4 text-justify leading-relaxed">
           {instructions.split('\n').filter(Boolean).map((line: string, idx: number) => (
-            <li key={idx} className="pl-1">{line}</li>
+            <li key={idx} className="pl-0.5">{line}</li>
           ))}
         </ul>
       </div>
 
-      <div className="flex items-end justify-between gap-4 shrink-0">
+      {/* 2. 3 Signatures BELOW Instructions */}
+      <div className="flex items-end justify-between px-8 py-3.5 bg-white">
         {/* Parent Signature */}
-        <div className="text-center w-28 flex flex-col items-center">
-          <div className="w-24 border-b border-dashed border-slate-400 mb-1 h-12" />
-          <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Parent Sign</span>
+        <div className="text-center w-36 flex flex-col items-center">
+          <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1.5 h-10" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
+            Parent Signature
+          </span>
         </div>
 
-        {/* Teacher Signature */}
-        <div className="text-center w-36 flex flex-col items-center">
-          <div className="w-full h-12 flex items-end justify-center mb-1">
+        {/* Class Teacher Signature */}
+        <div className="text-center w-40 flex flex-col items-center">
+          <div className="w-full h-10 flex items-end justify-center mb-1.5">
             {teacherSignatureUrl ? (
-              <img src={teacherSignatureUrl} alt="Teacher Sign" className="h-full object-contain mix-blend-multiply" />
+              <img src={teacherSignatureUrl} alt="Class Teacher Sign" className="h-full object-contain mix-blend-multiply" />
             ) : (
-              <div className="w-28 border-b border-dashed border-slate-400 mb-1" />
+              <div className="w-28 border-b-2 border-dashed border-slate-400 mb-1" />
             )}
           </div>
-          {teacherSignatureUrl && <div className="w-full border-t border-slate-300 mb-1"></div>}
-          <span className="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Class Teacher</span>
+          {teacherSignatureUrl && <div className="w-28 border-t border-slate-300 mb-1"></div>}
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-800">
+            Class Teacher Sign
+          </span>
         </div>
 
         {/* Principal Signature */}
-        <div className="text-center w-40 flex flex-col items-center">
-          <div className="w-full h-12 flex items-end justify-center mb-1">
+        <div className="text-center w-44 flex flex-col items-center">
+          <div className="w-full h-10 flex items-end justify-center mb-1.5">
             {signatureUrl ? (
               <img src={signatureUrl} alt="Principal Signature" className="h-full object-contain mix-blend-multiply" />
             ) : (
-              <div className="w-32 border-b border-dashed border-slate-400 mb-1" />
+              <div className="w-32 border-b-2 border-dashed border-slate-400 mb-1" />
             )}
           </div>
-          {signatureUrl && <div className="w-full border-t border-slate-300 mb-1"></div>}
-          <span className="text-[9.5px] font-black uppercase tracking-widest text-slate-900">Principal Signature</span>
+          {signatureUrl && <div className="w-32 border-t border-slate-300 mb-1"></div>}
+          <span className="text-[10px] font-black uppercase tracking-widest text-slate-900">
+            Principal Signature
+          </span>
         </div>
       </div>
     </div>

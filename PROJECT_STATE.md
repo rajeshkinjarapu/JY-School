@@ -267,3 +267,12 @@
      - Added `onImageErrorHandler: () => null` to `toJpeg` configuration so missing images or external CORS blocks do not crash the PDF generator.
      - Ensured `#admit-cards-download-container` is elevated to `opacity: 1; visibility: visible; z-index: 999999;` during capture so html-to-image never captures a 0-opacity canvas.
      - Passed `teacherSignatureUrl` into all `AdmitCardSheetPair` instances for both printing and download loops.
+
+
+## Full Single Page Admit Card Footer Restructuring (November 3, 2026)
+- **User Feedback:** In Full Single Page Admit Card (A4), Important Instructions and Signatures were displayed side-by-side horizontally, which compressed the instruction text and squeezed the 3 signature blocks into a narrow corner. The user requested: "FULL ADMIT CARD LO INSTRUCTIONS PAINA IVVU DANI KINDA SIGNATURES IVVU" (Place Instructions on top, and Signatures below it).
+- **Fix Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  1. Restructured `renderFooter` into a vertical two-tier layout:
+     - **Top Section (Full Width):** Important Instructions (`Important Instructions / ముఖ్య నిబంధనలు`) spanning across the full width of the card with clear typography, bulleted list, and relaxed leading.
+     - **Bottom Section (Full Width):** The 3 signature blocks (**Parent Signature**, **Class Teacher Sign**, and **Principal Signature**) laid out horizontally below the instructions, spanning evenly across the bottom (`px-8 py-3.5 bg-white`).
+  2. Also cleaned up `renderExamSchedule` in the full card by removing `..................` dots from the Invigilator Sign column and setting `whitespace-nowrap w-44 min-w-[140px]`, matching the clean design of the backside card.
