@@ -194,3 +194,16 @@
   2. **Exact Image 3 Design Alignment (`AdmitCardTemplate.tsx`):**
      - `AdmitCardFrontHalf` updated to replicate Image 3's exact visual style: Georgia serif school header, rounded logo box, centered skewed black `ADMIT CARD` badge, exam name, authentic `CANDIDATE DETAILS` card with user icon and zebra rows, and right-aligned passport photo container with rounded border.
      - Bottom section contains compact Important Instructions, 3-party signatures (Candidate, Invigilator, Principal), and reverse-side timetable notice, all strictly within `134mm` height.
+
+
+## 2-in-1 Admit Card Download PDF Multi-Student Sheet Pairing Fix (November 3, 2026)
+- **User Feedback:** In `HANUMANTHU CHANDINI_AdmitCard.pdf`, when downloading the admit card with Double Sided (2-in-1 A4) checked, only 1 student's card appeared on the top half of Page 1 (with bottom half empty), and only 1 student's timetable appeared on the top half of Page 2 (with bottom half empty). The second student was missing on the paper.
+- **Root Cause:** In `AdmitCardTab.tsx`, each student's download container passed only that single student into `<AdmitCardTemplate doubleSided={isDoubleSided} />`. While print mode was properly grouped by pairs using `AdmitCardSheetPair`, the download container was not pairing students, leaving the bottom 134mm half of the A4 page empty.
+- **Fix Implemented:**
+  1. **Paired 2-in-1 Download Structure (`AdmitCardTab.tsx`):**
+     - When `isDoubleSided` is true, the off-screen download container maps each student to their pair (`pairIdx = Math.floor(idx / 2)`), binding `studentTop` (`students[pairIdx * 2]`) and `studentBottom` (`students[pairIdx * 2 + 1]`).
+     - Page 1 renders `AdmitCardSheetPair(side="front")` with Student 1 (Top) + Cutline + Student 2 (Bottom).
+     - Page 2 renders `AdmitCardSheetPair(side="back")` with Student 1 Schedule (Top) + Cutline + Student 2 Schedule (Bottom).
+     - Both students now seamlessly print on a single double-sided A4 sheet without wasted paper.
+  2. **Intelligent File Naming:** Generates informative filename indicating both students on the sheet (e.g., `HANUMANTHU CHANDINI_&_TARRA LEKHANA_2in1_AdmitCard.pdf`).
+  3. **Batch Zip Download Alignment:** When Double Sided is checked, batch zip generation processes by pairs (`i += 2`), creating clean paired 2-in-1 PDFs for every 2 students in the roster.

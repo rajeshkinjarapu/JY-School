@@ -217,12 +217,23 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const handleDownloadSingle = async (studentName: string, index: number) => {
     const el = document.getElementById(`admit-card-dl-${index}`);
     if (!el) return toast.error("Could not find card element");
-    const toastId = toast.loading(`Generating PDF for ${studentName}...`);
+
+    let fileName = `${studentName}_AdmitCard.pdf`;
+    if (isDoubleSided) {
+      const pairIdx = Math.floor(index / 2);
+      const studentTop = students[pairIdx * 2];
+      const studentBottom = students[pairIdx * 2 + 1];
+      const name1 = studentTop?.user?.name || studentTop?.name || 'Student1';
+      const name2 = studentBottom ? (studentBottom?.user?.name || studentBottom?.name) : '';
+      fileName = name2 ? `${name1}_&_${name2}_2in1_AdmitCard.pdf` : `${name1}_2in1_AdmitCard.pdf`;
+    }
+
+    const toastId = toast.loading(`Generating PDF...`);
     try {
-      const pdf = await generatePDFForElement(el, studentName);
-      pdf.save(`${studentName}_AdmitCard.pdf`);
+      const pdf = await generatePDFForElement(el, fileName);
+      pdf.save(fileName);
       toast.success("Downloaded successfully!", { id: toastId });
-      triggerDownloadNotification("⬇️ Download Complete", `Admit Card for ${studentName} has been saved.`);
+      triggerDownloadNotification("⬇️ Download Complete", `Admit Card (${fileName}) has been saved.`);
     } catch (e: any) {
       console.error("PDF Generation Error:", e);
       const errorMsg = e.message || "Failed to generate PDF. Please try again.";
@@ -235,7 +246,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     setIsDownloading(true);
 
     const loadingToastId = toast.loading(
-      `Generating ${students.length} admit cards, please wait...`,
+      `Generating admit cards, please wait...`,
     );
 
     try {
@@ -253,10 +264,10 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       // Allow DOM to update and images to load
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      const templates = document.querySelectorAll(".admit-card-dl-container");
+      const step = isDoubleSided ? 2 : 1;
 
-      for (let i = 0; i < templates.length; i++) {
-        const el = templates[i] as HTMLElement;
+      for (let i = 0; i < students.length; i += step) {
+        const el = document.getElementById(`admit-card-dl-${i}`);
         const student = students[i];
         if (!el) continue;
 
@@ -307,7 +318,13 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           el.style.display = "none";
           el.style.visibility = "hidden";
 
-          const fileName = `${student.user?.name || student.name || `Student_${i + 1}`}.pdf`;
+          let fileName = `${student.user?.name || student.name || `Student_${i + 1}`}.pdf`;
+          if (isDoubleSided) {
+            const studentBottom = students[i + 1];
+            const name1 = student.user?.name || student.name || `Student_${i + 1}`;
+            const name2 = studentBottom ? (studentBottom.user?.name || studentBottom.name || `Student_${i + 2}`) : '';
+            fileName = name2 ? `Sheet_${Math.floor(i / 2) + 1}_${name1}_&_${name2}.pdf` : `Sheet_${Math.floor(i / 2) + 1}_${name1}.pdf`;
+          }
           zip.file(fileName, pdf.output("blob"));
         } catch (err) {
           el.style.display = "none";
@@ -332,7 +349,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       toast.success("Downloaded all admit cards successfully!", {
         id: loadingToastId,
       });
-      triggerDownloadNotification("⬇️ Download Complete", `All ${students.length} admit cards have been downloaded.`);
+      triggerDownloadNotification("⬇️ Download Complete", `All admit cards have been downloaded.`);
     } catch (e: any) {
       const dlContainer = document.getElementById("admit-cards-download-container");
       if (dlContainer) {
@@ -1017,26 +1034,74 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 visibility: "hidden",
               }}
             >
-              {students.map((student, idx) => (
-                <div
-                  key={`dl-${student.id}`}
-                  id={`admit-card-dl-${idx}`}
-                  className="admit-card-dl-container bg-white"
-                  style={{ width: "210mm" }}
-                >
-                  <AdmitCardTemplate
-                    student={student}
-                    exam={selectedExam}
-                    examPlans={examPlans}
-                    className={selectedClass?.name}
-                    section={selectedClass?.section}
-                    doubleSided={isDoubleSided}
-                    logoUrl={logoUrl || '/logo.png'}
-                    signatureUrl={signatureUrl}
-                    teacherSignatureUrl={teacherSignatureUrl}
-                  />
-                </div>
-              ))}
+              {students.map((student, idx) => {
+                if (isDoubleSided) {
+                  const pairIdx = Math.floor(idx / 2);
+                  const studentTop = students[pairIdx * 2];
+                  const studentBottom = students[pairIdx * 2 + 1];
+                  return (
+                    <div
+                      key={`dl-${student.id}`}
+                      id={`admit-card-dl-${idx}`}
+                      className="admit-card-dl-container bg-white"
+                      style={{ width: "210mm" }}
+                    >
+                      <div className="flex flex-col gap-6 mx-auto admit-card-container">
+                        {/* Page 1: Front Sheet with BOTH students */}
+                        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[202mm] flex justify-center">
+                          <AdmitCardSheetPair
+                            side="front"
+                            studentTop={studentTop}
+                            studentBottom={studentBottom}
+                            exam={selectedExam}
+                            className={selectedClass?.name}
+                            section={selectedClass?.section}
+                            logoUrl={logoUrl || '/logo.png'}
+                            signatureUrl={signatureUrl}
+                          />
+                        </div>
+
+                        {/* Page 2: Back Sheet with BOTH students' schedules */}
+                        <div className="admit-card-wrapper admit-card-page bg-white p-2 w-[202mm] flex justify-center">
+                          <AdmitCardSheetPair
+                            side="back"
+                            studentTop={studentTop}
+                            studentBottom={studentBottom}
+                            exam={selectedExam}
+                            className={selectedClass?.name}
+                            section={selectedClass?.section}
+                            logoUrl={logoUrl || '/logo.png'}
+                            signatureUrl={signatureUrl}
+                            examPlans={examPlans}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Standard Single Page (1 student per full A4)
+                return (
+                  <div
+                    key={`dl-${student.id}`}
+                    id={`admit-card-dl-${idx}`}
+                    className="admit-card-dl-container bg-white"
+                    style={{ width: "210mm" }}
+                  >
+                    <AdmitCardTemplate
+                      student={student}
+                      exam={selectedExam}
+                      examPlans={examPlans}
+                      className={selectedClass?.name}
+                      section={selectedClass?.section}
+                      doubleSided={false}
+                      logoUrl={logoUrl || '/logo.png'}
+                      signatureUrl={signatureUrl}
+                      teacherSignatureUrl={teacherSignatureUrl}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </>
         ))}
