@@ -490,7 +490,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                             ),
                           ),
                         ),
-                        if (_canCheckBiometrics && _hasSavedCredentials) ...[
+                        /* if (_canCheckBiometrics && _hasSavedCredentials) ...[
                           const SizedBox(width: 14),
                           Container(
                             height: 52,
@@ -506,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               tooltip: 'Login with Biometrics',
                             ),
                           ),
-                        ],
+                        ], */
                       ],
                     ),
                     const SizedBox(height: 18),

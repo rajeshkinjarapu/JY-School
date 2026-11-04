@@ -272,16 +272,16 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   Widget _buildModulesGrid() {
     final modules = [
-      {'title': 'Pending', 'desc': 'Approvals', 'icon': Icons.pending_actions_rounded, 'color': const Color(0xFFEF4444), 'screen': const AdminPendingFeesScreen()},
-      {'title': 'Collect Fee', 'desc': 'Search & Pay', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFF10B981), 'screen': const StudentFeeSearchScreen()},
-      {'title': 'Receipts', 'desc': 'Print Invoices', 'icon': Icons.receipt_long_rounded, 'color': const Color(0xFF0EA5E9), 'screen': const FeeReceiptsScreen()},
-      {'title': 'Reports', 'desc': 'Class Analytics', 'icon': Icons.analytics_rounded, 'color': const Color(0xFF6366F1), 'screen': const FinanceReportsScreen()},
-      {'title': 'Installments', 'desc': 'Timeline View', 'icon': Icons.history_rounded, 'color': const Color(0xFF8B5CF6), 'screen': const FeeInstallmentReportScreen()},
-      {'title': 'Fee Structure', 'desc': 'Manage Templates', 'icon': Icons.account_tree_rounded, 'color': const Color(0xFFF59E0B), 'screen': const FeeStructureManagementScreen()},
-      {'title': 'Payment Setup', 'desc': 'Bank & QR Code', 'icon': Icons.qr_code_2_rounded, 'color': const Color(0xFF64748B), 'screen': const AdminPaymentSettingsScreen()},
-      {'title': 'Fee Category', 'desc': 'Add Custom Fee', 'icon': Icons.category_rounded, 'color': const Color(0xFFEC4899), 'screen': const AddStudentFeeScreen()},
-      {'title': 'Transactions', 'desc': 'Payments List', 'icon': Icons.sync_alt_rounded, 'color': const Color(0xFF14B8A6), 'screen': const TransactionsScreen()},
-      {'title': 'Fee Details', 'desc': 'Export & Share', 'icon': Icons.table_chart_rounded, 'color': const Color(0xFF3B82F6), 'screen': const StudentFeeDetailsScreen()},
+      {'title': 'Pending', 'desc': 'Approvals', 'icon': Icons.pending_actions_rounded, 'color': const Color(0xFFEF4444), 'asset': 'app icons/fee remainder.png', 'screen': const AdminPendingFeesScreen()},
+      {'title': 'Collect Fee', 'desc': 'Search & Pay', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFF10B981), 'asset': 'app icons/my salary.png', 'screen': const StudentFeeSearchScreen()},
+      {'title': 'Receipts', 'desc': 'Print Invoices', 'icon': Icons.receipt_long_rounded, 'color': const Color(0xFF0EA5E9), 'asset': 'app icons/question papers.png', 'screen': const FeeReceiptsScreen()},
+      {'title': 'Reports', 'desc': 'Class Analytics', 'icon': Icons.analytics_rounded, 'color': const Color(0xFF6366F1), 'asset': 'app icons/results.png', 'screen': const FinanceReportsScreen()},
+      {'title': 'Installments', 'desc': 'Timeline View', 'icon': Icons.history_rounded, 'color': const Color(0xFF8B5CF6), 'asset': 'app icons/timetable.png', 'screen': const FeeInstallmentReportScreen()},
+      {'title': 'Fee Structure', 'desc': 'Manage Templates', 'icon': Icons.account_tree_rounded, 'color': const Color(0xFFF59E0B), 'asset': 'app icons/settings.png', 'screen': const FeeStructureManagementScreen()},
+      {'title': 'Payment Setup', 'desc': 'Bank & QR Code', 'icon': Icons.qr_code_2_rounded, 'color': const Color(0xFF64748B), 'asset': 'app icons/gate pass.png', 'screen': const AdminPaymentSettingsScreen()},
+      {'title': 'Fee Category', 'desc': 'Add Custom Fee', 'icon': Icons.category_rounded, 'color': const Color(0xFFEC4899), 'asset': 'app icons/admissions.png', 'screen': const AddStudentFeeScreen()},
+      {'title': 'Transactions', 'desc': 'Payments List', 'icon': Icons.sync_alt_rounded, 'color': const Color(0xFF14B8A6), 'asset': 'app icons/my salary.png', 'screen': const TransactionsScreen()},
+      {'title': 'Fee Details', 'desc': 'Export & Share', 'icon': Icons.table_chart_rounded, 'color': const Color(0xFF3B82F6), 'asset': 'app icons/progress card.png', 'screen': const StudentFeeDetailsScreen()},
     ];
 
     return GridView.builder(
@@ -292,7 +292,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
         crossAxisCount: 3,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.05, // Much shorter cards so they fit perfectly
+        childAspectRatio: 0.95,
       ),
       itemBuilder: (context, index) {
         final mod = modules[index];
@@ -301,13 +301,14 @@ class _FinanceScreenState extends State<FinanceScreen> {
           desc: mod['desc'] as String,
           icon: mod['icon'] as IconData,
           color: mod['color'] as Color,
+          asset: mod['asset'] as String?,
           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (ctx) => mod['screen'] as Widget)),
         );
       },
     );
   }
 
-  Widget _buildGridModule({required String title, required String desc, required IconData icon, required Color color, required VoidCallback onTap}) {
+  Widget _buildGridModule({required String title, required String desc, required IconData icon, required Color color, String? asset, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -331,12 +332,23 @@ class _FinanceScreenState extends State<FinanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: color.withOpacity(0.35), width: 1.5),
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 3)),
+                ],
+
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: asset != null
+                    ? Image.asset(asset, fit: BoxFit.cover, errorBuilder: (c, e, s) => Icon(icon, color: color, size: 22))
+                    : Icon(icon, color: color, size: 22),
+              ),
             ),
             const SizedBox(height: 8),
             Text(title, textAlign: TextAlign.center, style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 11, color: const Color(0xFF1E293B))),

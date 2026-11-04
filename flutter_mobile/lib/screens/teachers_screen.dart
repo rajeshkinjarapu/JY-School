@@ -427,11 +427,16 @@ class _TeachersScreenState extends State<TeachersScreen> {
                     width: 38,
                     height: 38,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF25D366), // WhatsApp Green
+                      color: const Color(0xFF25D366),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const FaIcon(
+                    child: Image.asset(
+                      'app icons/whatsapp.png',
+                      width: 38,
+                      height: 38,
+                      fit: BoxFit.contain,
+                      errorBuilder: (ctx, err, st) => const FaIcon(
                       FontAwesomeIcons.whatsapp,
                       color: Colors.white,
                       size: 22,

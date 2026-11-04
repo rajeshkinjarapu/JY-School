@@ -57,7 +57,7 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
         context,
         title: 'Exams List',
         subtitle: 'Manage exams',
-        imageUrl: 'https://img.icons8.com/3d-fluency/94/books.png',
+        assetPath: 'app icons/timetable.png',
         color: const Color(0xFF4F46E5),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
       ),
@@ -65,7 +65,7 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
         context,
         title: 'Admit Card',
         subtitle: 'Hall tickets',
-        imageUrl: 'https://img.icons8.com/3d-fluency/94/name-tag.png',
+        assetPath: 'app icons/gate pass.png',
         color: const Color(0xFF0EA5E9),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
       ),
@@ -113,7 +113,7 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
         context,
         title: 'Slip Test Rank',
         subtitle: 'Manual ranks',
-        imageUrl: 'https://img.icons8.com/3d-fluency/94/target.png',
+        assetPath: 'app icons/marks entry.png',
         color: const Color(0xFF06B6D4),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
       ),
@@ -129,7 +129,7 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
         context,
         title: 'Overview',
         subtitle: 'Track progress',
-        imageUrl: 'https://img.icons8.com/3d-fluency/94/search.png',
+        assetPath: 'app icons/results.png',
         color: const Color(0xFFF97316),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
       ),
@@ -175,8 +175,9 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+
                 color: const Color(0xFF4C4296).withOpacity(0.03),
+                shape: BoxShape.circle,
               ),
             ),
           ),
@@ -227,15 +228,22 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.08),
-                shape: BoxShape.circle,
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: color.withOpacity(0.35), width: 2),
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 3)),
+                ],
+
               ),
               alignment: Alignment.center,
-              child: assetPath != null ? Image.asset(assetPath, width: 38, height: 38, fit: BoxFit.contain) : CustomNetworkImage(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(13),
+                child: assetPath != null ? Image.asset(assetPath, width: 44, height: 44, fit: BoxFit.cover) : CustomNetworkImage(
                 imageUrl ?? '',
                 width: 26,
                 height: 26,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24),
+                errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24), ),
               ),
             ),
             const SizedBox(height: 10),

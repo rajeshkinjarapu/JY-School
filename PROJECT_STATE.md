@@ -1,5 +1,26 @@
 # JY School Project State
 
+## Mobile App Major UI & Address Collection Overhaul (November 4, 2026)
+- **Address Collection Full-Stack Mobile Redesign (`student_address_collection_screen.dart`):**
+  - **Field Requirements Rule Adherence:** Only `mobileNo` is required (`*`). `studentName`, `fatherName`, `village`, `mandal`, and `alternateMobileNo` are strictly optional with `(Optional)` labels.
+  - **Input Formatting:** Auto-uppercase text capitalization for names and locations.
+  - **Role-Aware Dual Tabs:**
+    - **Tab 1 ("📋 Collected Data"):** Live API fetch (`GET /api/address-collection`), instant multi-field search (student, father, village, mandal, mobile), Reference Teacher filter dropdown, total records badge, rich student cards with location and teacher badges, one-tap phone call and WhatsApp actions, and Admin delete action (`DELETE /api/address-collection/:id`) with confirm modal.
+    - **Tab 2 ("➕ Add Entry"):** Clean submission form, Admin reference teacher selector (`GET /api/teachers`), and bottom safe area padded save button.
+    - **Data Export:** Integrated CSV export and native sharing via `Share.share`.
+- **Login Screen (`login_screen.dart`):** Removed biometric fingerprint icon button from the sign-in row, rendering full-width SIGN IN button.
+- **Classes Screen (`classes_screen.dart`):** Removed header refresh button, eliminated header-to-stats empty space (`height: 0`), and separated "Total Classes" and "Total Students" stats into clean elevated white cards on screen body background with indigo & cyan accents.
+- **Teachers Directory (`teachers_screen.dart`):** Replaced green circle icon with official high-resolution WhatsApp PNG image (`app icons/whatsapp.png`) with asset fallback.
+- **Examination Dashboard (`examination_dashboard_screen.dart`):** Converted all 11 Admin/Super Admin cards to use local 3D squircle icons from `app icons/` with squircle border (`BorderRadius.circular(16)`), subtle border stroke, and colored glow shadow.
+- **Finance Screen (`finance_screen.dart`):** Updated 10 Finance Services cards with 3D squircle icons and glow borders.
+- **All Modules Screen (`modules_screen.dart`):** Completely removed 'OMR Scanner' module; upgraded all module cards with 3D squircle icons.
+- **Build Fix (`dashboard_screen.dart`):** Fixed duplicated `color: Colors.white` in `BoxDecoration` that caused GitHub Actions Shorebird patch failure.
+- **Shorebird Patch Compatibility:** All updates are 100% pure Dart UI and asset improvements deliverable via `shorebird patch android`.
+
+## Dashboard Screen Dart Syntax Fix (November 4, 2026)
+- **Resolved Duplicated Argument:** Fixed Dart compilation error `Duplicated named argument 'color'` in `flutter_mobile/lib/screens/dashboard_screen.dart` (`BoxDecoration`).
+- **Build Recovery:** Enabled GitHub Actions Shorebird patch workflow to build without Dart snapshot compilation failure.
+
 ## Admit Card Header Address & Center Alignment Update (November 4, 2026)
 - **Header Address Update:** Updated default campus address in `AdmitCardTemplate.tsx` and `AdmitCardTab.tsx` to `Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta`.
 - **True Center Alignment:** Added symmetrical balancing spacer opposite the logo so the school title, subtitle, and address are mathematically centered across the entire card.

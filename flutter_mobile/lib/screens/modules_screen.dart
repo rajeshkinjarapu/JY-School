@@ -79,12 +79,12 @@ class _ModulesScreenState extends State<ModulesScreen> {
         'color': const Color(0xFF4F46E5),
         'page': isTeacher ? const AdmissionRegistrationScreen() : const AdmissionsListScreen(),
       },
-      if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
-      if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
+      if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
+      if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
       {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'assetIcon': 'app icons/address data.png', 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
       {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'assetIcon': 'app icons/gate pass.png', 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
-      {'title': 'OMR Scanner', 'icon': Icons.document_scanner_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
+
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'assetIcon': 'app icons/my attendance.png', 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
       {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave apply.png', 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'assetIcon': 'app icons/timetable.png', 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
@@ -186,7 +186,9 @@ class _ModulesScreenState extends State<ModulesScreen> {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: color.withOpacity(0.35), width: 1.5),
                   boxShadow: [
                     BoxShadow(
                       color: color.withOpacity(0.2),
@@ -196,12 +198,12 @@ class _ModulesScreenState extends State<ModulesScreen> {
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   child: Image.asset(
                     assetIcon,
                     width: 48,
                     height: 48,
-                    fit: BoxFit.contain,
+                    fit: BoxFit.cover,
                     errorBuilder: (c, e, s) => Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(

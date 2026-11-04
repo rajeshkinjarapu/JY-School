@@ -2798,11 +2798,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Square icon tile with colourful border
+          /*
           Container(
             width: 68,
             height: 68,
             decoration: BoxDecoration(
               color: Colors.white,
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor, width: 3),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withOpacity(0.35),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: Center(
+                child: Icon(
+*/
+          Container(
+            width: 68,
+            height: 68,
+            decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 3),

@@ -122,7 +122,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
               ),
               elevation: 0,
               actions: [
-                IconButton(
+                if (false) IconButton(
                   icon: const Icon(Icons.refresh_rounded, color: Colors.white),
                   onPressed: _fetchClasses,
                 ),
@@ -140,11 +140,11 @@ class _ClassesScreenState extends State<ClassesScreen> {
               elevation: 0,
               toolbarHeight: 0,
               bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(130),
+                preferredSize: const Size.fromHeight(138),
                 child: Stack(
                   children: [
                     Container(
-                      height: 65,
+                      height: 0,
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [Color(0xFF2E2A66), Color(0xFF4F46E5)],
@@ -158,7 +158,7 @@ class _ClassesScreenState extends State<ClassesScreen> {
                       children: [
                         // Stats row
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
                           child: Row(
                             children: [
                               _statPill(Icons.school_rounded, '${_classes.length}', 'Total Classes'),
@@ -241,19 +241,22 @@ class _ClassesScreenState extends State<ClassesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.15),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+          ],
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.2)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 20),
+            Container(padding: const EdgeInsets.all(6), decoration: BoxDecoration(color: const Color(0xFF4F46E5).withOpacity(0.1), borderRadius: BorderRadius.circular(10)), child: Icon(icon, color: const Color(0xFF4F46E5), size: 18)),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value, style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                Text(label, style: GoogleFonts.poppins(color: Colors.white70, fontSize: 10)),
+                Text(value, style: GoogleFonts.outfit(color: const Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(label, style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontSize: 10, fontWeight: FontWeight.w500)),
               ],
             ),
           ],
