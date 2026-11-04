@@ -383,3 +383,38 @@
 - **Web Admin Portal (`frontend/src/`):**
   1. **`SendCustomNotificationModal.tsx`:** Dedicated modal with target audience selector (All School, By Role, Specific Class), live image upload to public disk storage, destination route picker, and real-time interactive Android notification preview card.
   2. **`AnnouncementsPage.tsx`:** Added "Send Custom Push" gradient action button in header.
+
+
+## Admit Card Header Campus Address Update (November 4, 2026)
+- **User Request:** Change header address badge to `SVL Paradise Campus, Narasannapeta`.
+- **Root Cause & Behavior:**
+  1. Previously, the top location badge under school subtitle rendered `{examCenter}` directly, which defaulted to `'JY School Main Campus, Hall A'`.
+  2. The candidate details table also rendered `{examCenter}` for the `EXAM CENTER` row.
+  3. The user requested the header badge to display the specific campus location: `SVL Paradise Campus, Narasannapeta`, while keeping the exam center designation accurate.
+- **Fix Implemented:**
+  1. **Admit Card Template (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+     - In `AdmitCardFrontHalf`: Added `const headerAddress = settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta';` and rendered it in the top location badge pill.
+     - In `renderHeader` (single page view): Updated location badge to `settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta'`.
+     - Candidate Details table retains the official examination center row (`settings.examCenterOverride || 'JY School Main Campus, Hall A'`).
+  2. **Admit Card Configuration Tab (`frontend/src/pages/exams/AdmitCardTab.tsx`):**
+     - Added `headerAddress` state initialized to `'SVL Paradise Campus, Narasannapeta'`.
+     - Bound it in `useEffect` when fetching exam settings.
+     - Included `headerAddress` in `handleSaveSettings` payload to persist changes to the backend.
+     - Added a dedicated "Header Campus Address" input field in the configuration modal for school administrators.
+
+
+## Admit Card Backside Schedule & Principal Signature Refinements (November 4, 2026)
+- **User Requests:**
+  1. Principal signature image should be double the previous size ("principal sign image ippudu unna image ki double undali").
+  2. In the dark table header box: remove `REPORTING: 30 MINS BEFORE` and `• CANDIDATE: ...` text.
+  3. Increase black box height by 1 point ("black box height 1 point increase cheyu").
+- **Fix Implemented (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+  1. **Schedule Header Box:**
+     - Completely removed the `REPORTING: 30 MINS BEFORE` and `• CANDIDATE: {name} ({rollNo})` badges.
+     - Only `EXAMINATION SCHEDULE & TIME TABLE` remains in the header bar.
+     - Increased vertical padding from `py-1.5` to `py-2.5` (`min-h-[34px]`, font size `text-[11.5px]`), giving it the requested 1-point height increase for solid visual balance.
+  2. **Principal Signature Doubled (2x):**
+     - Sized container up from `h-16` (64px) to `h-20` (80px) across Parent, Teacher, and Principal blocks.
+     - Raised image bounds to `max-h-[80px]` and `max-w-[220px]`.
+     - Applied `transform scale-[1.8] origin-bottom` so the official signature stamp visually scales to double size, anchored cleanly above the "Principal Signature" text label without displacing surrounding elements.
+     - Mirrored this signature scaling in single-page view (`renderFooter`) for complete design parity.

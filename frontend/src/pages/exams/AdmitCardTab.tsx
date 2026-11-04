@@ -57,6 +57,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [examTitleOverride, setExamTitleOverride] = useState("");
+  const [headerAddress, setHeaderAddress] = useState("SVL Paradise Campus, Narasannapeta");
   const [examCenterOverride, setExamCenterOverride] = useState("");
   const [defaultTiming, setDefaultTiming] = useState("09:30 AM - 12:30 PM");
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -80,6 +81,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.",
       );
       setExamTitleOverride(settings.examTitleOverride || "");
+      setHeaderAddress(settings.headerAddress || settings.campusAddress || "SVL Paradise Campus, Narasannapeta");
       setExamCenterOverride(settings.examCenterOverride || "");
       setDefaultTiming(settings.defaultTiming || "09:30 AM - 12:30 PM");
       setSchedule(settings.schedule || []);
@@ -429,6 +431,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           signatureUrl,
           teacherSignatureUrl,
           logoUrl,
+          headerAddress,
           examTitleOverride,
           examCenterOverride,
           defaultTiming,
@@ -444,6 +447,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           signatureUrl,
           teacherSignatureUrl,
           logoUrl,
+          headerAddress,
           examTitleOverride,
           examCenterOverride,
           defaultTiming,
@@ -645,6 +649,17 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                 placeholder="e.g. JEE EXAM - 5 (2026 - 2027)"
                 value={examTitleOverride}
                 onChange={(e) => setExamTitleOverride(e.target.value)}
+              />
+
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
+                Header Campus Address
+              </label>
+              <input
+                type="text"
+                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
+                placeholder="e.g. SVL Paradise Campus, Narasannapeta"
+                value={headerAddress}
+                onChange={(e) => setHeaderAddress(e.target.value)}
               />
 
               <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mt-4">
