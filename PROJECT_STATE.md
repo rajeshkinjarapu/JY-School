@@ -1,5 +1,17 @@
 # JY School Project State
 
+## Hero Banner Push Notification Delivery & Display Fix (November 4, 2026)
+- **Backend Broadcast Query Resolution (`notifications.controller.ts`):**
+  - Resolved root cause where notifications targeted to "All School" (`role: null`, `userId: null`) were completely excluded in `getNotifications` and `markAllAsRead` due to strict `{ userId }` / `{ role: userRole }` filters.
+  - Added `{ role: null, userId: null }` and `{ role: 'ALL' }` to the Prisma `OR` condition, ensuring school-wide broadcasts are delivered to all students, teachers, and staff mobile devices.
+  - Formatted absolute URLs in FCM multicast data payload via `formatImageUrl`, guaranteeing mobile devices receive valid paths for image downloading.
+- **Mobile Hero Banner Memory & IPC Fix (`notification_service.dart`):**
+  - Replaced in-memory byte transfer (`ByteArrayAndroidBitmap`) with cached temporary file storage via `path_provider` and `FilePathAndroidBitmap`.
+  - Prevented Android system `TransactionTooLargeException` / silent notification drop caused by Android's 1MB Binder transaction limit when handling rich poster images.
+  - Added `hideExpandedLargeIcon: true` to prevent large icon overlap on big picture display.
+  - Increased HTTP image download timeout to 12 seconds for slow mobile connections.
+- **OTA Patch Compatibility:** All mobile changes are pure Dart changes deliverable via Shorebird OTA patch (`shorebird patch android`). Backend changes require standard Git pull and PM2 reload on VPS.
+
 ## Mobile App Major UI & Address Collection Overhaul (November 4, 2026)
 - **Address Collection Full-Stack Mobile Redesign (`student_address_collection_screen.dart`):**
   - **Field Requirements Rule Adherence:** Only `mobileNo` is required (`*`). `studentName`, `fatherName`, `village`, `mandal`, and `alternateMobileNo` are strictly optional with `(Optional)` labels.

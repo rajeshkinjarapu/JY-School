@@ -68,6 +68,8 @@ export const getNotifications = async (req: AuthRequest, res: Response, next: Ne
         OR: [
           { userId },
           { role: userRole },
+          { role: null, userId: null },
+          { role: 'ALL' },
         ],
       },
       orderBy: { createdAt: 'desc' },
@@ -92,6 +94,8 @@ export const markAllAsRead = async (req: AuthRequest, res: Response, next: NextF
         OR: [
           { userId },
           { role: userRole },
+          { role: null, userId: null },
+          { role: 'ALL' },
         ],
         isRead: false,
       },
@@ -327,7 +331,8 @@ export const sendCustomNotification = async (req: AuthRequest, res: Response, ne
       .filter((t): t is string => Boolean(t && t.trim()));
 
     if (tokens.length > 0) {
-      const { sendMulticastPushNotification } = await import('../utils/firebase');
+      const { sendMulticastPushNotification, formatImageUrl } = await import('../utils/firebase');
+      const formattedImgUrl = formatImageUrl(imageUrl);
       sendMulticastPushNotification(
         tokens,
         title,
@@ -335,7 +340,8 @@ export const sendCustomNotification = async (req: AuthRequest, res: Response, ne
         {
           route,
           type,
-          imageUrl: imageUrl || '',
+          imageUrl: formattedImgUrl || imageUrl || '',
+          image: formattedImgUrl || imageUrl || '',
         },
         imageUrl
       ).catch(e => console.error('FCM Multicast error:', e));

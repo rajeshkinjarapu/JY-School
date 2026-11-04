@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -268,14 +270,17 @@ class NotificationService {
         if (formattedUrl.isNotEmpty) {
           final http.Response response = await http
               .get(Uri.parse(formattedUrl))
-              .timeout(const Duration(seconds: 6));
+              .timeout(const Duration(seconds: 12));
 
           if (response.statusCode == 200 && response.bodyBytes.isNotEmpty) {
-            final ByteArrayAndroidBitmap bigPictureBitmap =
-                ByteArrayAndroidBitmap(response.bodyBytes);
+            final tempDir = await getTemporaryDirectory();
+            final tempFile = File('${tempDir.path}/hero_banner_${DateTime.now().millisecondsSinceEpoch}.jpg');
+            await tempFile.writeAsBytes(response.bodyBytes);
+            final bigPictureBitmap = FilePathAndroidBitmap(tempFile.path);
+
             styleInformation = BigPictureStyleInformation(
               bigPictureBitmap,
-              largeIcon: bigPictureBitmap,
+              hideExpandedLargeIcon: true,
               contentTitle: title ?? 'JY School',
               htmlFormatContentTitle: true,
               summaryText: body ?? '',
