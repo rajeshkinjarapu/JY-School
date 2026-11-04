@@ -446,3 +446,21 @@
      - 100% Pure Dart code changes across `flutter_mobile/lib/`.
      - Zero native Android file or dependency changes.
      - Distributable immediately via Shorebird OTA Patch (`shorebird patch android`) with no APK rebuild required.
+
+
+## Admit Card Header Plain Text Address, Exam Center & Live Schedule Timing Fix (November 4, 2026)
+- **User Requests:**
+  1. Remove the white pill/box border around the header campus address: make it clean uppercase styled text just like `(IIT-JEE/NEET FOUNDATION – OLYMPIADS)` above it.
+  2. Exam Center in Candidate Details row must display `JY School SVL Paradise Campus`.
+  3. Default Exam Timing set in Admin UI (e.g. `02:00 PM - 05:00 PM` as shown in screenshot) must reflect on the timetable rather than reverting to hardcoded `09:30 AM - 12:30 PM`.
+- **Root Cause & Fixes Implemented:**
+  1. **Header Address Box Removal (`frontend/src/components/Exams/AdmitCardTemplate.tsx`):**
+     - Removed the pill badge border, rounded background, and MapPin icon from both `AdmitCardFrontHalf` and `renderHeader`.
+     - Styled address as `<p className="text-[11px] sm:text-[11.5px] font-black uppercase tracking-[0.14em] text-slate-700 leading-tight mt-1">{headerAddress}</p>`, achieving complete visual harmony with the school subtitle above it.
+  2. **Exam Center Designation:**
+     - Set default exam center fallback in `AdmitCardTemplate.tsx` and `AdmitCardTab.tsx` to `JY School SVL Paradise Campus`.
+     - Synchronized `flutter_mobile/lib/screens/admit_card_screen.dart` to `JY School SVL Paradise Campus`.
+  3. **Live Exam Schedule Timing Synchronization:**
+     - Created `currentExamWithSettings` using `useMemo` in `frontend/src/pages/exams/AdmitCardTab.tsx` that links `published`, `instructions`, `signatureUrl`, `headerAddress`, `examCenterOverride`, `defaultTiming`, and `schedule` state directly to `AdmitCardSheetPair` and `AdmitCardTemplate`.
+     - Replaced hardcoded fallback `'09:30 AM - 12:30 PM'` in `AdmitCardTemplate.tsx` with dynamic `effectiveDefaultTiming` (`settings.defaultTiming || exam?.admitCardSettings?.defaultTiming`).
+     - Setting `02:00 PM - 05:00 PM` in the UI immediately applies across all timetable rows, live preview, print sheet, and PDF downloads.

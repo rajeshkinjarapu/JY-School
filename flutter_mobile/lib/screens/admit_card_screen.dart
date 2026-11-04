@@ -615,7 +615,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                         _buildA4TableRow('Roll Number', rollNo),
                                         _buildA4TableRow('Class & Section', className),
                                         _buildA4TableRow('Gender / DOB', '${studentData['gender'] ?? 'Male'}  |  12/05/2010'),
-                                        _buildA4TableRow('Exam Center', 'JY School Main Campus, Hall A', isLast: true),
+                                        _buildA4TableRow('Exam Center', 'JY School SVL Paradise Campus', isLast: true),
                                       ],
                                     ),
                                   ),

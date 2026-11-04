@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axios";
 import { formatExamOptionLabel } from "../../utils/formatters";
@@ -58,9 +58,41 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [examTitleOverride, setExamTitleOverride] = useState("");
   const [headerAddress, setHeaderAddress] = useState("SVL Paradise Campus, Narasannapeta");
-  const [examCenterOverride, setExamCenterOverride] = useState("");
-  const [defaultTiming, setDefaultTiming] = useState("09:30 AM - 12:30 PM");
+  const [examCenterOverride, setExamCenterOverride] = useState("JY School SVL Paradise Campus");
+  const [defaultTiming, setDefaultTiming] = useState("02:00 PM - 05:00 PM");
   const [schedule, setSchedule] = useState<any[]>([]);
+
+  const currentExamWithSettings = useMemo(() => {
+    if (!selectedExam) return null;
+    return {
+      ...selectedExam,
+      admitCardPublished: published,
+      admitCardSettings: {
+        ...(selectedExam.admitCardSettings || {}),
+        instructions,
+        signatureUrl,
+        teacherSignatureUrl,
+        logoUrl,
+        headerAddress,
+        examTitleOverride,
+        examCenterOverride: examCenterOverride || 'JY School SVL Paradise Campus',
+        defaultTiming: defaultTiming || '02:00 PM - 05:00 PM',
+        schedule,
+      },
+    };
+  }, [
+    selectedExam,
+    published,
+    instructions,
+    signatureUrl,
+    teacherSignatureUrl,
+    logoUrl,
+    headerAddress,
+    examTitleOverride,
+    examCenterOverride,
+    defaultTiming,
+    schedule,
+  ]);
 
   useEffect(() => {
     if (!selectedExamId) return;
@@ -72,6 +104,9 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const globalSettings = settingsRes.data?.data || settingsRes.data || {};
       
       const settings = examObj.admitCardSettings || {};
+      if (selectedExam) {
+        selectedExam.admitCardSettings = settings;
+      }
       setPublished(examObj.admitCardPublished || false);
       setLogoUrl(settings.logoUrl || globalSettings.logoUrl || "/logo.png");
       setSignatureUrl(settings.signatureUrl || globalSettings.signatureUrl || globalSettings.principalSignatureUrl || "");
@@ -82,8 +117,8 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       );
       setExamTitleOverride(settings.examTitleOverride || "");
       setHeaderAddress(settings.headerAddress || settings.campusAddress || "SVL Paradise Campus, Narasannapeta");
-      setExamCenterOverride(settings.examCenterOverride || "");
-      setDefaultTiming(settings.defaultTiming || "09:30 AM - 12:30 PM");
+      setExamCenterOverride(settings.examCenterOverride || "JY School SVL Paradise Campus");
+      setDefaultTiming(settings.defaultTiming || "02:00 PM - 05:00 PM");
       setSchedule(settings.schedule || []);
     }).catch(() => {});
   }, [selectedExamId]);
@@ -668,7 +703,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <input
                 type="text"
                 className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                placeholder="e.g. JY School Main Campus, Hall A"
+                placeholder="e.g. JY School SVL Paradise Campus"
                 value={examCenterOverride}
                 onChange={(e) => setExamCenterOverride(e.target.value)}
               />
@@ -679,7 +714,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <input
                 type="text"
                 className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                placeholder="e.g. 09:30 AM - 12:30 PM"
+                placeholder="e.g. 02:00 PM - 05:00 PM"
                 value={defaultTiming}
                 onChange={(e) => setDefaultTiming(e.target.value)}
               />
@@ -798,7 +833,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   onClick={() =>
                     setSchedule([
                       ...schedule,
-                      { date: "", timing: defaultTiming || "09:30 AM - 12:30 PM", subject: "", room: "" },
+                      { date: "", timing: defaultTiming || "02:00 PM - 05:00 PM", subject: "", room: "" },
                     ])
                   }
                   className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1"
@@ -1037,7 +1072,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           side="front"
                           studentTop={studentTop}
                           studentBottom={studentBottom}
-                          exam={selectedExam}
+                          exam={currentExamWithSettings || selectedExam}
                           className={selectedClass?.name}
                           section={selectedClass?.section}
                           logoUrl={logoUrl || '/logo.png'}
@@ -1050,7 +1085,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                           side="back"
                           studentTop={studentTop}
                           studentBottom={studentBottom}
-                          exam={selectedExam}
+                          exam={currentExamWithSettings || selectedExam}
                           className={selectedClass?.name}
                           section={selectedClass?.section}
                           logoUrl={logoUrl || '/logo.png'}
@@ -1072,7 +1107,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   >
                     <AdmitCardTemplate
                       student={student}
-                      exam={selectedExam}
+                      exam={currentExamWithSettings || selectedExam}
                       examPlans={examPlans}
                       className={selectedClass?.name}
                       section={selectedClass?.section}
@@ -1119,7 +1154,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                             side="front"
                             studentTop={studentTop}
                             studentBottom={studentBottom}
-                            exam={selectedExam}
+                            exam={currentExamWithSettings || selectedExam}
                             className={selectedClass?.name}
                             section={selectedClass?.section}
                             logoUrl={logoUrl || '/logo.png'}
@@ -1133,7 +1168,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                             side="back"
                             studentTop={studentTop}
                             studentBottom={studentBottom}
-                            exam={selectedExam}
+                            exam={currentExamWithSettings || selectedExam}
                             className={selectedClass?.name}
                             section={selectedClass?.section}
                             logoUrl={logoUrl || '/logo.png'}
@@ -1157,7 +1192,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
                   >
                     <AdmitCardTemplate
                       student={student}
-                      exam={selectedExam}
+                      exam={currentExamWithSettings || selectedExam}
                       examPlans={examPlans}
                       className={selectedClass?.name}
                       section={selectedClass?.section}

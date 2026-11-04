@@ -92,7 +92,7 @@ export const AdmitCardFrontHalf: React.FC<{
   const resolvedClass = className || student?.class?.name || student?.className || '-';
   const resolvedSection = section || student?.class?.section || student?.section || '-';
   const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
-  const examCenter = settings.examCenterOverride || 'JY School Main Campus, Hall A';
+  const examCenter = settings.examCenterOverride || 'JY School SVL Paradise Campus';
   const headerAddress = settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta';
   const schoolName = settings.schoolName || 'SRI VENKATESWARA JY SCHOOL';
   const schoolSubtitle = settings.schoolSubtitle || '(IIT-JEE/NEET Foundation – Olympiads)';
@@ -129,10 +129,9 @@ export const AdmitCardFrontHalf: React.FC<{
             <p className="text-[12px] sm:text-[13px] font-black uppercase tracking-[0.16em] text-slate-800 leading-tight mt-1">
               {schoolSubtitle}
             </p>
-            <div className="mt-1 inline-flex items-center gap-1.5 text-[10px] sm:text-[10.5px] font-bold text-slate-800 bg-white px-3.5 py-0.5 rounded-full border border-slate-300 shadow-2xs">
-              <MapPin className="w-3.5 h-3.5 text-slate-900" />
-              <span className="truncate max-w-[380px]">{headerAddress}</span>
-            </div>
+            <p className="text-[11px] sm:text-[11.5px] font-black uppercase tracking-[0.14em] text-slate-700 leading-tight mt-1">
+              {headerAddress}
+            </p>
           </div>
         </div>
 
@@ -276,13 +275,14 @@ export const AdmitCardBackHalf: React.FC<{
   const signatureUrl = resolveUrl(propSignatureUrl || settings.signatureUrl || '');
   const teacherSignatureUrl = resolveUrl(propTeacherSignatureUrl || settings.teacherSignatureUrl || '');
   const instructions = settings.instructions || 'Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.';
+  const effectiveDefaultTiming = settings.defaultTiming || exam?.admitCardSettings?.defaultTiming || '09:30 AM - 12:30 PM';
 
   const autoSchedule = getAutoExamSchedule(
     exam,
     student?.classId || student?.class?.id,
     className || student?.class?.name || student?.className,
     section || student?.class?.section || student?.section,
-    settings.defaultTiming
+    effectiveDefaultTiming
   );
 
   const displaySchedule = (settings.schedule && settings.schedule.length > 0)
@@ -333,7 +333,7 @@ export const AdmitCardBackHalf: React.FC<{
                     {plan.subject?.name || plan.subject || plan.name}
                   </td>
                   <td className="py-1 px-2.5 font-bold text-slate-700 border-r border-slate-200 whitespace-nowrap text-[9px]">
-                    {plan.timing || '09:30 AM - 12:30 PM'}
+                    {plan.timing || effectiveDefaultTiming}
                   </td>
                   <td className="py-1 px-3 text-center border-slate-200"></td>
                 </tr>
@@ -595,10 +595,9 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
         <p className="text-[12px] font-bold uppercase tracking-[0.15em] text-slate-700 mb-2">
           {settings?.schoolSubtitle || "(IIT-JEE/NEET Foundation – Olympiads)"}
         </p>
-        <div className="flex items-center justify-center gap-2 text-xs font-semibold text-slate-600 bg-white inline-flex px-4 py-1 rounded-full border border-slate-200 shadow-2xs">
-          <MapPin className="w-3.5 h-3.5 text-slate-800" />
+        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-600 mb-2">
           {settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta'}
-        </div>
+        </p>
       </div>
     </div>
   );
@@ -652,7 +651,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
             </tr>
             <tr>
               <td className="py-2.5 px-4 font-bold text-slate-600 uppercase text-[11px] tracking-wider bg-slate-50 border-r border-slate-200">Exam Center</td>
-              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">{settings.examCenterOverride || 'JY School Main Campus, Hall A'}</td>
+              <td className="py-2.5 px-4 font-black text-slate-900 text-[13px]">{settings.examCenterOverride || 'JY School SVL Paradise Campus'}</td>
             </tr>
           </tbody>
         </table>
@@ -702,7 +701,7 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
                 {plan.subject?.name || plan.subject || plan.name}
               </td>
               <td className="py-2 px-4 font-bold text-slate-800 border-r border-slate-200 whitespace-nowrap">
-                {plan.timing || `${plan.startTime || ''} ${plan.startTime && plan.endTime ? '-' : ''} ${plan.endTime || ''}` || '09:30 AM - 12:30 PM'}
+                {plan.timing || (plan.startTime && plan.endTime ? `${plan.startTime} - ${plan.endTime}` : '') || settings.defaultTiming || '09:30 AM - 12:30 PM'}
               </td>
               <td className="py-2 px-4 text-center border-slate-200"></td>
             </tr>
