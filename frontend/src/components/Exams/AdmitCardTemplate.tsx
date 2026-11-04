@@ -91,7 +91,12 @@ export const AdmitCardFrontHalf: React.FC<{
   const logoUrl = resolveUrl(propLogoUrl || settings.logoUrl, '/logo.png');
   const resolvedClass = className || student?.class?.name || student?.className || '-';
   const resolvedSection = section || student?.class?.section || student?.section || '-';
-  const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
+  const examNameUpper = (exam?.name || '').toUpperCase();
+  let effectiveOverride = settings.examTitleOverride?.trim() || '';
+  if ((examNameUpper.includes('SUMMATIVE') || examNameUpper.includes('SA-') || examNameUpper.includes('SA 1') || examNameUpper.includes('SA1')) && effectiveOverride.toUpperCase().includes('JEE')) {
+    effectiveOverride = '';
+  }
+  const examTitle = effectiveOverride || exam?.name || 'EXAMINATION ADMIT CARD';
   const examCenter = settings.examCenterOverride || 'JY School SVL Paradise Campus';
   const defaultHeaderAddress = 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta';
   const headerAddress = (settings.headerAddress && settings.headerAddress !== 'SVL Paradise Campus, Narasannapeta')
@@ -609,18 +614,26 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
     </div>
   );
 
-  const renderTitleBadges = () => (
-    <div className="flex flex-col items-center py-5 border-b border-slate-200">
-      <div className="bg-slate-900 text-white px-8 py-1.5 rounded-sm shadow-md mb-2 transform -skew-x-12">
-        <h2 className="text-xl font-black uppercase tracking-[0.25em] transform skew-x-12">
-          ADMIT CARD
-        </h2>
+  const renderTitleBadges = () => {
+    const examNameUpper = (exam?.name || '').toUpperCase();
+    let effectiveOverride = settings.examTitleOverride?.trim() || '';
+    if ((examNameUpper.includes('SUMMATIVE') || examNameUpper.includes('SA-') || examNameUpper.includes('SA 1') || examNameUpper.includes('SA1')) && effectiveOverride.toUpperCase().includes('JEE')) {
+      effectiveOverride = '';
+    }
+    const displayExamTitle = effectiveOverride || `${exam?.name || 'EXAMINATION ADMIT CARD'}`;
+    return (
+      <div className="flex flex-col items-center py-5 border-b border-slate-200">
+        <div className="bg-slate-900 text-white px-8 py-1.5 rounded-sm shadow-md mb-2 transform -skew-x-12">
+          <h2 className="text-xl font-black uppercase tracking-[0.25em] transform skew-x-12">
+            ADMIT CARD
+          </h2>
+        </div>
+        <h3 className="text-lg font-bold text-slate-800 uppercase tracking-widest text-center">
+          {displayExamTitle}
+        </h3>
       </div>
-      <h3 className="text-lg font-bold text-slate-800 uppercase tracking-widest text-center">
-        {settings.examTitleOverride || `${exam?.name}`}
-      </h3>
-    </div>
-  );
+    );
+  };
 
   const renderCandidateDetails = () => (
     <div className="flex gap-6 items-stretch">

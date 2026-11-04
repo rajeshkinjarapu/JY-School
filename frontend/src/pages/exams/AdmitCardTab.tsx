@@ -95,7 +95,14 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   ]);
 
   useEffect(() => {
-    if (!selectedExamId) return;
+    if (!selectedExamId) {
+      setSelectedClassId('');
+      setStudents([]);
+      setExamPlans([]);
+      setExamTitleOverride('');
+      setSchedule([]);
+      return;
+    }
     Promise.all([
       api.get(`/api/exams/${selectedExamId}`),
       api.get('/api/settings').catch(() => ({ data: {} }))
@@ -115,7 +122,15 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         settings.instructions ||
           "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.",
       );
-      setExamTitleOverride(settings.examTitleOverride || "");
+
+      // Auto-sanitize polluted override: If exam is SA-1 / Summative and override contains JEE, discard it!
+      const examNameUpper = (examObj.name || '').toUpperCase();
+      let rawOverride = settings.examTitleOverride || "";
+      if ((examNameUpper.includes('SUMMATIVE') || examNameUpper.includes('SA-') || examNameUpper.includes('SA 1') || examNameUpper.includes('SA1')) && rawOverride.toUpperCase().includes('JEE')) {
+        rawOverride = "";
+      }
+      setExamTitleOverride(rawOverride);
+
       const defaultAddr = "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta";
       const loadedAddr = settings.headerAddress || settings.campusAddress;
       setHeaderAddress(
@@ -533,7 +548,15 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           <div className="flex items-center flex-wrap sm:flex-nowrap w-full gap-2">
             <select
               value={selectedExamId}
-              onChange={(e) => setSelectedExamId(e.target.value)}
+              onChange={(e) => {
+                const newId = e.target.value;
+                setSelectedExamId(newId);
+                setSelectedClassId("");
+                setStudents([]);
+                setExamPlans([]);
+                setExamTitleOverride("");
+                setSchedule([]);
+              }}
               className="appearance-none bg-white dark:bg-slate-800 border border-orange-200 dark:border-orange-900/40 rounded-lg px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-400 transition-all shadow-xs cursor-pointer w-full sm:w-auto sm:min-w-[190px]"
             >
               <option value="" className="text-xs font-medium">-- Select Exam --</option>
@@ -687,7 +710,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <input
                 type="text"
                 className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                placeholder="e.g. JEE EXAM - 5 (2026 - 2027)"
+                placeholder={selectedExam?.name ? `Leave blank to use "${selectedExam.name}"` : "Leave blank to use Exam Name"}
                 value={examTitleOverride}
                 onChange={(e) => setExamTitleOverride(e.target.value)}
               />

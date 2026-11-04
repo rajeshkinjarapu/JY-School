@@ -1,5 +1,27 @@
 # JY School Project State
 
+## Examination Admit Card Deterministic Sorting & Cross-Pollution Resolution (November 4, 2026)
+- **Root Cause Analysis:**
+  - Database queries previously ordered exams solely by `{ examDate: 'desc' }`. When multiple exams (e.g. SA-1 and JEE Mains) share identical dates or timestamps, PostgreSQL returned rows non-deterministically, causing UI dropdowns and default screen selections to toggle randomly between SA-1 and JEE Mains.
+  - In `AdmitCardTab.tsx`, switching exams did not instantly flush `examTitleOverride` or `schedule` states before fetching new exam details, inadvertently saving stale "JEE MAINS" overrides onto SA-1 records during subsequent configuration updates or publish operations.
+  - The UI placeholder `e.g. JEE EXAM - 5` misled administrators into believing the field was populated or required JEE conventions.
+  - Mobile app `student_admit_card_screen.dart` naively selected `_exams.first` without verifying publish status or deterministic ordering.
+- **Backend Fixes (`backend/src/controllers/exams.controller.ts`):**
+  - Updated `getAll` query ordering to deterministic multi-tier sorting: `orderBy: [{ examDate: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }]`.
+  - In `getById`: Added auto-sanitization to detect if an exam name contains "SUMMATIVE" / "SA-1" and its `admitCardSettings.examTitleOverride` contains "JEE". If detected, auto-clears `examTitleOverride` and asynchronously updates the database to heal existing corrupted records.
+  - In `updateAdmitCardSettings`: Added server-side validation rejecting accidental JEE overrides on Summative/SA exams.
+- **Frontend Web Fixes (`AdmitCardTab.tsx` & `AdmitCardTemplate.tsx`):**
+  - In `AdmitCardTab.tsx`: Added instant state reset on exam dropdown change (`setSelectedExamId`, clearing `selectedClassId`, `students`, `examPlans`, `examTitleOverride`, and `schedule`).
+  - Replaced misleading placeholder with dynamic contextual label: `placeholder={selectedExam?.name ? 'Leave blank to use "${selectedExam.name}"' : 'Leave blank to use Exam Name'}`.
+  - In `AdmitCardTemplate.tsx`: Added template-level fallback guard in both `AdmitCardFrontHalf` and single-page `renderTitleBadges` ensuring that SA-1 cards never render a "JEE" title override under any circumstances.
+- **Flutter Mobile App Fixes (`flutter_mobile/lib/screens/student_admit_card_screen.dart`):**
+  - Updated `_fetchExams` to deterministically sort exam lists by published status first (`admitCardPublished == true`), then latest `examDate`, then `id` descending.
+  - Set default selected exam to the latest published exam (`firstWhere(admitCardPublished == true, orElse: () => first)`).
+  - Added title override sanitization in `_buildAdmitCardWidget` to strip accidental JEE overrides for Summative exams.
+- **Deployment Status:**
+  - Web & Backend: Code prepared; user can push and deploy on VPS via standard SSH.
+  - Mobile: 100% pure Dart changes deliverable instantly via Shorebird patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
+
 ## HR Salary & Payroll Velocity Dashboard Overhaul (November 4, 2026)
 - **Backend Analytics & Automated Payroll Engine (`salary.controller.ts`, `backend/src/routes/salary.ts`):**
   - **Comprehensive Analytics (`GET /api/salary/analytics`):** Computes Total Payroll Cost, month-over-month trend %, Total Employees, Average Salary, Pending Approvals, 6-month historical trends (Gross vs Deductions vs Net), and Departmental cost distribution.

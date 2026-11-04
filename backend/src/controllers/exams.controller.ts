@@ -40,7 +40,11 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
       // admitCardSettings is EXCLUDED from list - it contains heavy Base64 images
       // It is included only in getById for individual exam editing
     },
-    orderBy: { examDate: 'desc' },
+    orderBy: [
+      { examDate: 'desc' },
+      { createdAt: 'desc' },
+      { id: 'desc' }
+    ],
   });
 
   const sortedExams = exams.map(e => ({
@@ -71,6 +75,22 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 
   if (exam.classes) {
     exam.classes = sortClasses(exam.classes);
+  }
+
+  // Auto-sanitize polluted admitCardSettings:
+  // If exam name is "SUMMATIVE ASSESSMENT - 1" or contains "SA" or "SUMMATIVE" but admitCardSettings.examTitleOverride contains "JEE",
+  // automatically remove that invalid override so it doesn't show "JEE MAINS" on SA-1!
+  if (exam.admitCardSettings && typeof exam.admitCardSettings === 'object') {
+    const s = exam.admitCardSettings as any;
+    const examNameUpper = (exam.name || '').toUpperCase();
+    const overrideUpper = (s.examTitleOverride || '').toUpperCase();
+    if ((examNameUpper.includes('SUMMATIVE') || examNameUpper.includes('SA-') || examNameUpper.includes('SA 1') || examNameUpper.includes('SA1')) && overrideUpper.includes('JEE')) {
+      s.examTitleOverride = '';
+      prisma.exam.update({
+        where: { id: exam.id },
+        data: { admitCardSettings: s }
+      }).catch(e => console.error('Auto-sanitize admitCardSettings failed:', e));
+    }
   }
 
   successResponse(res, exam, 'Exam fetched');
@@ -826,11 +846,20 @@ export const updateAdmitCardSettings = async (req: AuthRequest, res: Response, n
       return next(createError('Exam not found', 404));
     }
 
+    let cleanedSettings = admitCardSettings !== undefined ? admitCardSettings : exam.admitCardSettings;
+    if (cleanedSettings && typeof cleanedSettings === 'object') {
+      const examNameUpper = (exam.name || '').toUpperCase();
+      const overrideUpper = (cleanedSettings.examTitleOverride || '').toUpperCase();
+      if ((examNameUpper.includes('SUMMATIVE') || examNameUpper.includes('SA-') || examNameUpper.includes('SA 1') || examNameUpper.includes('SA1')) && overrideUpper.includes('JEE')) {
+        cleanedSettings.examTitleOverride = '';
+      }
+    }
+
     const updatedExam = await prisma.exam.update({
       where: { id },
       data: {
         admitCardPublished: admitCardPublished !== undefined ? admitCardPublished : exam.admitCardPublished,
-        admitCardSettings: admitCardSettings !== undefined ? admitCardSettings : exam.admitCardSettings,
+        admitCardSettings: cleanedSettings,
       },
     });
 

@@ -37,7 +37,22 @@ class _StudentAdmitCardScreenState extends State<StudentAdmitCardScreen> {
         setState(() {
           _exams = res['data'] ?? [];
           if (_exams.isNotEmpty) {
-            _selectedExamData = _exams.first; // Default to first/latest exam
+            _exams.sort((a, b) {
+              final isPubA = (a['admitCardPublished'] == true) ? 1 : 0;
+              final isPubB = (b['admitCardPublished'] == true) ? 1 : 0;
+              if (isPubA != isPubB) return isPubB.compareTo(isPubA);
+              final dateA = a['examDate']?.toString() ?? '';
+              final dateB = b['examDate']?.toString() ?? '';
+              final dateComp = dateB.compareTo(dateA);
+              if (dateComp != 0) return dateComp;
+              final idA = a['id']?.toString() ?? '';
+              final idB = b['id']?.toString() ?? '';
+              return idB.compareTo(idA);
+            });
+            _selectedExamData = _exams.firstWhere(
+              (e) => e['admitCardPublished'] == true,
+              orElse: () => _exams.first,
+            );
           }
         });
       } else {
@@ -54,10 +69,17 @@ class _StudentAdmitCardScreenState extends State<StudentAdmitCardScreen> {
     if (_selectedExamData == null) return const SizedBox();
     
     final studentData = widget.user;
-    final examName = _selectedExamData?['name'] ?? 'Exam';
+    final rawExamName = _selectedExamData?['name'] ?? 'Exam';
     final term = _selectedExamData?['term'] ?? 'Term';
     
     final settings = _selectedExamData?['admitCardSettings'] ?? {};
+    String titleOverride = (settings['examTitleOverride'] ?? '').toString().trim();
+    final examNameUpper = rawExamName.toString().toUpperCase();
+    if ((examNameUpper.contains('SUMMATIVE') || examNameUpper.contains('SA-') || examNameUpper.contains('SA 1') || examNameUpper.contains('SA1')) &&
+        titleOverride.toUpperCase().contains('JEE')) {
+      titleOverride = '';
+    }
+    final examName = titleOverride.isNotEmpty ? titleOverride : rawExamName;
     final instructions = settings['instructions'] ?? 
         "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.";
     final signatureUrl = settings['signatureUrl'] ?? '';
