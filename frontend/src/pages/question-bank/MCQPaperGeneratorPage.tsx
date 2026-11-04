@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
+import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
+import { jsPDF } from 'jspdf';
+import { triggerDownloadNotification } from '../../utils/downloadNotification';
 
 import { PageHeader } from '../../components/UI/PageHeader';
 
@@ -15,6 +19,7 @@ export const MCQPaperGeneratorPage = () => {
   const [searchParams] = useSearchParams();
   const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(0.48);
   const [leftWidth, setLeftWidth] = useState(50);
   
@@ -340,6 +345,133 @@ export const MCQPaperGeneratorPage = () => {
     textContent = textContent.replace(/\[IMG:([a-z0-9]+)\]/g, '');
     
     return { textData: { 'General': textContent }, images: migratedImages, keys: {}, settings: undefined };
+  };
+
+  const handleDownloadPdf = async () => {
+    const paperEl = document.getElementById('a4-preview-paper');
+    if (!paperEl) {
+      toast.error('Preview not loaded yet. Please wait.');
+      return;
+    }
+
+    setIsDownloadingPdf(true);
+    const toastId = toast.loading('Generating high-resolution PDF...');
+
+    // Offscreen rendering container to capture unzoomed 210mm layout
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.left = '-10000px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '210mm';
+    tempContainer.style.background = '#ffffff';
+    tempContainer.style.zIndex = '-9999';
+    tempContainer.style.opacity = '1';
+
+    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
+    cloneEl.style.boxShadow = 'none';
+    cloneEl.style.transform = 'none';
+    cloneEl.style.width = '210mm';
+    cloneEl.style.minHeight = '297mm';
+    tempContainer.appendChild(cloneEl);
+    document.body.appendChild(tempContainer);
+
+    try {
+      // Small pause to allow KaTeX fonts and images to settle in cloned DOM
+      await new Promise(r => setTimeout(r, 200));
+
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await html2canvas(cloneEl, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          windowWidth: 1200,
+        });
+      } catch (h2cErr) {
+        console.warn('html2canvas failed, falling back to toJpeg', h2cErr);
+        const imgData = await toJpeg(cloneEl, {
+          pixelRatio: 2,
+          quality: 0.95,
+          backgroundColor: '#ffffff',
+        });
+        const img = new Image();
+        await new Promise((res, rej) => {
+          img.onload = res;
+          img.onerror = rej;
+          img.src = imgData;
+        });
+        canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+      }
+
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Failed to capture preview canvas.');
+      }
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const pageHeightPx = Math.floor((canvas.width * pageHeight) / pageWidth);
+
+      let renderedHeight = 0;
+      let pageIndex = 0;
+
+      while (renderedHeight < canvas.height) {
+        const sliceHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
+
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pageHeightPx;
+        const ctx = pageCanvas.getContext('2d');
+
+        if (ctx) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageHeightPx);
+          ctx.drawImage(
+            canvas,
+            0,
+            renderedHeight,
+            canvas.width,
+            sliceHeight,
+            0,
+            0,
+            canvas.width,
+            sliceHeight
+          );
+        }
+
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+
+        if (pageIndex > 0) {
+          pdf.addPage('a4', 'p');
+        }
+
+        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+
+        renderedHeight += pageHeightPx;
+        pageIndex++;
+      }
+
+      const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
+      pdf.save(filename);
+
+      triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
+      toast.success('PDF downloaded successfully!', { id: toastId });
+    } catch (err: any) {
+      console.error('PDF download error:', err);
+      toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
+    } finally {
+      if (tempContainer.parentNode) {
+        tempContainer.parentNode.removeChild(tempContainer);
+      }
+      setIsDownloadingPdf(false);
+    }
   };
 
   const handlePrint = () => {
@@ -929,10 +1061,11 @@ export const MCQPaperGeneratorPage = () => {
           
           <button
             onClick={handlePrint}
-            className="px-3 py-1.5 md:hidden bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5"
+            disabled={isDownloadingPdf}
+            className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5"
           >
-            <Printer className="w-3.5 h-3.5" />
-            PDF
+            <Download className="w-3.5 h-3.5" />
+            {isDownloadingPdf ? '...' : 'PDF'}
           </button>
 
           <button
@@ -945,8 +1078,19 @@ export const MCQPaperGeneratorPage = () => {
           </button>
           
           <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloadingPdf}
+            className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer"
+            title="Download PDF directly to device"
+          >
+            <Download className="w-4 h-4" />
+            <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
+          </button>
+          
+          <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all items-center gap-2 hidden md:flex"
+            disabled={isDownloadingPdf}
+            className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             Print A4

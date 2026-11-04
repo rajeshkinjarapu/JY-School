@@ -1,5 +1,17 @@
 # JY School Project State
 
+## MCQ Paper Generator Live-Preview PDF Download Feature (November 4, 2026)
+- **Feature Scope:** Added direct high-definition PDF download capability to the MCQ Paper Generator (`MCQPaperGeneratorPage.tsx`), rendering the document identically to the on-screen live preview.
+- **Button Placement:** Positioned a prominent emerald & teal gradient "Download PDF" action button directly beside the "Print A4" button in the top action toolbar on desktop and mobile.
+- **High-Definition Capture & Offscreen Isolation:**
+  - Implemented `handleDownloadPdf` using an offscreen `210mm` fixed staging container to bypass mobile/desktop CSS zoom and responsive viewport constraints.
+  - Leverages `html2canvas` (with 2x scaling and CORS image support) and automatic fallback to `html-to-image` (`toJpeg`), capturing KaTeX math formulas, embedded diagrams, typography, and school headers with 300 DPI clarity.
+- **Multi-Page A4 Smart Slicing:**
+  - Computes exact pixel ratios for A4 portrait (`210mm x 297mm`).
+  - Slices long multi-subject/multi-question papers (e.g. 75 MCQs across Maths, Physics, Chemistry) into discrete A4 pages in `jsPDF` with white background fill, preventing overflow, distorted scaling, or cut-off content.
+  - Dynamically titles the downloaded file as `{examName}_{examDate}.pdf` and fires native/browser notifications via `triggerDownloadNotification`.
+- **Deployment Status:** Web frontend update. Needs `git pull`, `npm run build` in `frontend/` on VPS. No backend or mobile native changes required.
+
 ## Examination Admit Card Deterministic Sorting & Cross-Pollution Resolution (November 4, 2026)
 - **Root Cause Analysis:**
   - Database queries previously ordered exams solely by `{ examDate: 'desc' }`. When multiple exams (e.g. SA-1 and JEE Mains) share identical dates or timestamps, PostgreSQL returned rows non-deterministically, causing UI dropdowns and default screen selections to toggle randomly between SA-1 and JEE Mains.
@@ -19,7 +31,7 @@
   - Set default selected exam to the latest published exam (`firstWhere(admitCardPublished == true, orElse: () => first)`).
   - Added title override sanitization in `_buildAdmitCardWidget` to strip accidental JEE overrides for Summative exams.
 - **Deployment Status:**
-  - Web & Backend: Code prepared; user can push and deploy on VPS via standard SSH.
+  - Web & Backend: Frontend build compiled successfully into `frontend/dist`. Frontend is served directly as static SPA by Nginx (no separate PM2 process needed for frontend; only `jy-backend` runs under PM2).
   - Mobile: 100% pure Dart changes deliverable instantly via Shorebird patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
 
 ## HR Salary & Payroll Velocity Dashboard Overhaul (November 4, 2026)
