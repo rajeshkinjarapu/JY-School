@@ -441,6 +441,7 @@ class _TeachersScreenState extends State<TeachersScreen> {
                       color: Colors.white,
                       size: 22,
                     ),
+                    ),
                   ),
                 ),
             ],
