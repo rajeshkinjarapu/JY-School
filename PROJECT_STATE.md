@@ -1,5 +1,10 @@
 # JY School Project State
 
+## Admit Card Header Address & Center Alignment Update (November 4, 2026)
+- **Header Address Update:** Updated default campus address in `AdmitCardTemplate.tsx` and `AdmitCardTab.tsx` to `Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta`.
+- **True Center Alignment:** Added symmetrical balancing spacer opposite the logo so the school title, subtitle, and address are mathematically centered across the entire card.
+- **Auto-fallback Migration:** Added automatic migration from old address string to the new comprehensive address.
+
 ## Mobile App Teacher Login 3D Icons Update (November 4, 2026)
 - **Source Assets:** Integrated 18 premium 3D squircle icons provided in `flutter_mobile/app icons/`.
 - **Assets Config (`flutter_mobile/pubspec.yaml`):** Registered `- "app icons/"` in `flutter.assets`.

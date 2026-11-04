@@ -57,7 +57,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   const [teacherSignatureUrl, setTeacherSignatureUrl] = useState("");
   const [logoUrl, setLogoUrl] = useState("/logo.png");
   const [examTitleOverride, setExamTitleOverride] = useState("");
-  const [headerAddress, setHeaderAddress] = useState("SVL Paradise Campus, Narasannapeta");
+  const [headerAddress, setHeaderAddress] = useState("Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta");
   const [examCenterOverride, setExamCenterOverride] = useState("JY School SVL Paradise Campus");
   const [defaultTiming, setDefaultTiming] = useState("02:00 PM - 05:00 PM");
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -116,7 +116,13 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           "Candidate must carry this Admit Card to the examination hall.\nElectronic devices including calculators and mobile phones are strictly prohibited.\nCandidate should report to the examination center 30 minutes before commencement.",
       );
       setExamTitleOverride(settings.examTitleOverride || "");
-      setHeaderAddress(settings.headerAddress || settings.campusAddress || "SVL Paradise Campus, Narasannapeta");
+      const defaultAddr = "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta";
+      const loadedAddr = settings.headerAddress || settings.campusAddress;
+      setHeaderAddress(
+        (!loadedAddr || loadedAddr === "SVL Paradise Campus, Narasannapeta")
+          ? defaultAddr
+          : loadedAddr
+      );
       setExamCenterOverride(settings.examCenterOverride || "JY School SVL Paradise Campus");
       setDefaultTiming(settings.defaultTiming || "02:00 PM - 05:00 PM");
       setSchedule(settings.schedule || []);
@@ -692,7 +698,7 @@ export const AdmitCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               <input
                 type="text"
                 className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none"
-                placeholder="e.g. SVL Paradise Campus, Narasannapeta"
+                placeholder="e.g. Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"
                 value={headerAddress}
                 onChange={(e) => setHeaderAddress(e.target.value)}
               />

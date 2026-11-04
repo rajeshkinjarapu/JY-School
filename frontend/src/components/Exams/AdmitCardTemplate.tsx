@@ -93,7 +93,10 @@ export const AdmitCardFrontHalf: React.FC<{
   const resolvedSection = section || student?.class?.section || student?.section || '-';
   const examTitle = settings.examTitleOverride || exam?.name || 'EXAMINATION ADMIT CARD';
   const examCenter = settings.examCenterOverride || 'JY School SVL Paradise Campus';
-  const headerAddress = settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta';
+  const defaultHeaderAddress = 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta';
+  const headerAddress = (settings.headerAddress && settings.headerAddress !== 'SVL Paradise Campus, Narasannapeta')
+    ? settings.headerAddress
+    : (settings.campusAddress || defaultHeaderAddress);
   const schoolName = settings.schoolName || 'SRI VENKATESWARA JY SCHOOL';
   const schoolSubtitle = settings.schoolSubtitle || '(IIT-JEE/NEET Foundation – Olympiads)';
 
@@ -122,17 +125,19 @@ export const AdmitCardFrontHalf: React.FC<{
               }}
             />
           </div>
-          <div className="flex-1 text-center pr-2">
+          <div className="flex-1 text-center">
             <h1 className="text-[22px] sm:text-[25px] leading-tight font-black uppercase tracking-wider text-slate-950" style={{ fontFamily: '"Georgia", serif' }}>
               {schoolName}
             </h1>
             <p className="text-[12px] sm:text-[13px] font-black uppercase tracking-[0.16em] text-slate-800 leading-tight mt-1">
               {schoolSubtitle}
             </p>
-            <p className="text-[11px] sm:text-[11.5px] font-black uppercase tracking-[0.14em] text-slate-700 leading-tight mt-1">
+            <p className="text-[11px] sm:text-[12px] font-bold tracking-wide text-slate-700 leading-tight mt-1">
               {headerAddress}
             </p>
           </div>
+          {/* Symmetrical balance spacer for exact center alignment */}
+          <div className="w-[72px] shrink-0 pointer-events-none" aria-hidden="true" />
         </div>
 
         {/* Title Badges */}
@@ -588,17 +593,19 @@ export const AdmitCardTemplate: React.FC<AdmitCardTemplateProps> = ({
           }}
         />
       </div>
-      <div className="flex-1 text-center pr-10">
+      <div className="flex-1 text-center">
         <h1 className="text-[22px] sm:text-[28px] whitespace-nowrap font-black uppercase tracking-wider text-slate-900 mb-1" style={{ fontFamily: '"Georgia", serif' }}>
           {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
         </h1>
         <p className="text-[12px] font-bold uppercase tracking-[0.15em] text-slate-700 mb-2">
           {settings?.schoolSubtitle || "(IIT-JEE/NEET Foundation – Olympiads)"}
         </p>
-        <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-600 mb-2">
-          {settings.headerAddress || settings.campusAddress || 'SVL Paradise Campus, Narasannapeta'}
+        <p className="text-xs font-bold tracking-wide text-slate-600 mb-2">
+          {settings.headerAddress || settings.campusAddress || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta'}
         </p>
       </div>
+      {/* Symmetrical balance spacer for exact center alignment */}
+      <div className="w-24 shrink-0 pointer-events-none" aria-hidden="true" />
     </div>
   );
 
