@@ -1,5 +1,24 @@
 # JY School Project State
 
+## HR Salary & Payroll Velocity Dashboard Overhaul (November 4, 2026)
+- **Backend Analytics & Automated Payroll Engine (`salary.controller.ts`, `backend/src/routes/salary.ts`):**
+  - **Comprehensive Analytics (`GET /api/salary/analytics`):** Computes Total Payroll Cost, month-over-month trend %, Total Employees, Average Salary, Pending Approvals, 6-month historical trends (Gross vs Deductions vs Net), and Departmental cost distribution.
+  - **1-Click Payroll with Attendance LOP Integration (`POST /api/salary/process-payroll`):**
+    - Automatically processes and calculates monthly payroll for all active teachers and staff.
+    - Inspects `prisma.teacherAttendance` for the selected month to calculate unexcused absences (> 2 days grace period) and automatically computes Loss of Pay (LOP) deductions based on daily rate.
+    - Implemented idempotent `prisma.salary.upsert` with compound key `teacherId_month_year` to guarantee no duplicate records.
+  - **Bulk Disbursement (`POST /api/salary/bulk-pay`):** 1-click bulk mark as `PAID` with automated timestamping for all pending salaries or selected batch.
+- **Frontend Velocity Dashboard & Payslip Generator (`SalaryPage.tsx`):**
+  - **Financial Velocity Shelf:** 4 real-time KPI cards displaying Total Payroll Cost (with % trend badge), Total Employees, Average Salary, and Pending Approvals with gradient icons.
+  - **Interactive Charts (Recharts):**
+    - 6-Month Payroll Trend Area Chart comparing Gross Earnings vs Net Pay.
+    - Department-wise Distribution Donut/Pie Chart with custom colored badges.
+    - Real-time Gross vs Deductions vs Net Take-home progress bar.
+  - **Salary Records Ledger Table:** Replaced empty state with high-density data table showing Employee ID, Name, Photo, Role/Dept, Basic Pay, Allowances, Deductions (with LOP indicator tag), Net Pay, Status badge (`PAID` / `PENDING`), and action suite (View Payslip, Download PDF, Mark Paid, Delete).
+  - **Toolbar & Actions:** Year/Month/Department/Status filters, search bar, "⚡ Process Payroll" modal with configurable base salary, "✅ Bulk Mark Paid", "📥 Export Excel" via `xlsx`, and "+ Add Record" modal.
+  - **Official School Payslip PDF Generator:** Client-side A4 PDF generation via `jspdf` and `jspdf-autotable` featuring official school letterhead (`Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta`), employee metadata, earnings vs deductions breakdown, net pay in numbers and words, and authorized signatory placeholders.
+
+
 ## Hero Banner Push Notification Delivery & Display Fix (November 4, 2026)
 - **Backend Broadcast Query Resolution (`notifications.controller.ts`):**
   - Resolved root cause where notifications targeted to "All School" (`role: null`, `userId: null`) were completely excluded in `getNotifications` and `markAllAsRead` due to strict `{ userId }` / `{ role: userRole }` filters.

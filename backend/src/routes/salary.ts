@@ -3,10 +3,15 @@ import { authenticate, authorize } from '../middlewares/auth';
 import {
   getSalaries, getSalaryById, createSalary, updateSalary,
   markSalaryPaid, deleteSalary, getSalarySummary,
+  getSalaryAnalytics, processPayroll, bulkMarkPaid,
 } from '../controllers/salary.controller';
 
 const router = Router();
 router.use(authenticate);
+
+router.get('/analytics', authorize('SUPER_ADMIN', 'ADMIN'), getSalaryAnalytics);
+router.post('/process-payroll', authorize('SUPER_ADMIN', 'ADMIN'), processPayroll);
+router.post('/bulk-pay', authorize('SUPER_ADMIN', 'ADMIN'), bulkMarkPaid);
 
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'), getSalaries);
 router.get('/summary', authorize('SUPER_ADMIN', 'ADMIN'), getSalarySummary);
