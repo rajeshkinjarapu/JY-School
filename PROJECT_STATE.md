@@ -1,5 +1,43 @@
 # JY School Project State
 
+## Mobile App Teacher Login 3D Icons Update (November 4, 2026)
+- **Source Assets:** Integrated 18 premium 3D squircle icons provided in `flutter_mobile/app icons/`.
+- **Assets Config (`flutter_mobile/pubspec.yaml`):** Registered `- "app icons/"` in `flutter.assets`.
+- **Dashboard (Home Tab - `flutter_mobile/lib/screens/dashboard_screen.dart`):**
+  - Updated all 12 teacher dashboard options to use `_buildImageCard` with local 3D icons:
+    - Mark Attendance (`app icons/mark attendance.png`)
+    - My Students (`app icons/my studens.png`)
+    - Question Papers (`app icons/question papers.png`)
+    - Timetable (`app icons/timetable.png`)
+    - Marks Entry (`app icons/marks entry.png`)
+    - Results (`app icons/results.png`)
+    - Progress Cards (`app icons/progress card.png`)
+    - Fee Reminder (`app icons/fee remainder.png`)
+    - Messaging (`app icons/messaging.png`)
+    - Home Work (`app icons/home work.png`)
+    - Leave Apply (`app icons/leave apply.png`)
+    - Gate Pass (`app icons/gate pass.png`)
+  - Enhanced `_buildImageCard` with crisp squircle border (`width: 3`), white backing, and colored glow shadow.
+- **Exam Tab (`flutter_mobile/lib/screens/examination_dashboard_screen.dart`):**
+  - Added `assetPath` support in `_buildDashboardCard`.
+  - Replaced network `icons8.com` icons with high-res local 3D icons: Question Papers, Marks Upload, Results, Progress Card, Answer Key, Send SMS, and Settings.
+- **More Tab (`flutter_mobile/lib/screens/modules_screen.dart`):**
+  - Added `assetIcon` support in `_buildModuleCard` for both Admin/Teacher and Student module grids.
+  - Replaced generic Material icons with local 3D icons: Admissions, Fee Reminder, Address Data, Gate Pass, Attendance, Leave, Timetable, My Salary, and Settings.
+- **OTA Patch Compatibility:** Verified changes are Dart/asset UI changes fully deliverable via Shorebird OTA patch (`shorebird patch android`).
+
+## Admit Card & Progress Card Design Enhancements (November 4, 2026)
+- **Admit Card Web & Mobile Layout Synchronization:**
+  - Header school name aligned with webapp design (`SRI VENKATESWARA JY SCHOOL`, `(IIT-JEE/NEET FOUNDATION - OLYMPIADS)`).
+  - Address updated to plain text without box (`SVL Paradise Campus, Narasannapeta`).
+  - Candidate details section updated with student photo placeholder and school logo.
+  - Exam Center dynamically reflects configured center (`JY School SVL Paradise Campus`).
+  - Time table schedule synchronizes default exam timing (`02:00 PM - 05:00 PM` or configured time).
+  - Cleaned up reporting notice and enlarged principal signature.
+- **Welcome Screen Bottom Button Safe Area:**
+  - Added `SafeArea(bottom: true)` padding to "Get Started" button to prevent overlap with Android system navigation bar.
+
+
 ## Attendance System Enhancements (October 30, 2026)
 
 ### 1. Daily Attendance Report (`/attendance/daily-report`)

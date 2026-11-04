@@ -62,6 +62,8 @@ flutter:
     - assets/images/logo.png
     - assets/images/admin_icons/
     - assets/images/app_icon.jpg
+    - "app icons/"
+    - assets/images/app_icons/
     - assets/illustrations/students.jpg
     - assets/illustrations/teacher.jpg
     - assets/illustrations/classes.jpg

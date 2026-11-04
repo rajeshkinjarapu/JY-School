@@ -520,7 +520,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 border: Border.all(color: Colors.white.withOpacity(0.3), width: 2),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 child: (() {
                   final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                   if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
@@ -883,11 +883,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               height: 78,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: Colors.white.withOpacity(0.25), width: 2),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(16),
                 child: (() {
                   final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                   if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
@@ -1883,18 +1883,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
           mainAxisSpacing: 4,
         childAspectRatio: ar.clamp(0.75, 1.3),
         children: [
-          _buildImageCard(imagePath: 'assets/images/admin_icons/attendance_mark.jpg',title: 'Mark Attendance',borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/classes.jpg',    title: 'My Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',      title: 'Question Papers', borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/teacher.jpg',    title: 'Timetable',     borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/reports.jpg',    title: 'Marks Entry',   borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/exams.jpg',    title: 'Results',       borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
-          _buildIconWidgetCard(icon: Icons.analytics_rounded,    title: 'Progress Cards',borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/student_fees.jpg', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
-          _buildIconWidgetCard(icon: Icons.chat_rounded,    title: 'Messaging',     borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
-          _buildIconWidgetCard(icon: Icons.edit_document,    title: 'Home Work',     borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
-          _buildImageCard(imagePath: 'assets/images/admin_icons/leave.png',title: 'Leave Apply',  borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
-          _buildIconWidgetCard(icon: Icons.assignment_ind_rounded,    title: 'Gate Pass',          borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatePassScreen()))),
+          _buildImageCard(imagePath: 'app icons/mark attendance.png', title: 'Mark Attendance', borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
+          _buildImageCard(imagePath: 'app icons/my studens.png', title: 'My Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
+          _buildImageCard(imagePath: 'app icons/question papers.png', title: 'Question Papers', borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen()))),
+          _buildImageCard(imagePath: 'app icons/timetable.png', title: 'Timetable', borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
+          _buildImageCard(imagePath: 'app icons/marks entry.png', title: 'Marks Entry', borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
+          _buildImageCard(imagePath: 'app icons/results.png', title: 'Results', borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
+          _buildImageCard(imagePath: 'app icons/progress card.png', title: 'Progress Cards', borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
+          _buildImageCard(imagePath: 'app icons/fee remainder.png', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
+          _buildImageCard(imagePath: 'app icons/messaging.png', title: 'Messaging', borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
+          _buildImageCard(imagePath: 'app icons/home work.png', title: 'Home Work', borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
+          _buildImageCard(imagePath: 'app icons/leave apply.png', title: 'Leave Apply', borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
+          _buildImageCard(imagePath: 'app icons/gate pass.png', title: 'Gate Pass', borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatePassScreen()))),
         ],
       );
     } else {
@@ -2743,6 +2743,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
+              color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 3),
               boxShadow: [
@@ -2801,6 +2802,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
+              color: Colors.white,
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: borderColor, width: 3),

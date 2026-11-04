@@ -75,27 +75,28 @@ class _ModulesScreenState extends State<ModulesScreen> {
       {
         'title': 'Admissions',
         'icon': Icons.person_add_alt_1_rounded,
+        'assetIcon': 'app icons/admissions.png',
         'color': const Color(0xFF4F46E5),
         'page': isTeacher ? const AdmissionRegistrationScreen() : const AdmissionsListScreen(),
       },
       if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
       if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'color': const Color(0xFF8B5CF6), 'page': const StudentFeeSearchScreen()},
-      {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
-      {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
-      {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
+      {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
+      {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'assetIcon': 'app icons/address data.png', 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
+      {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'assetIcon': 'app icons/gate pass.png', 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
       {'title': 'OMR Scanner', 'icon': Icons.document_scanner_rounded, 'color': const Color(0xFF0284C7), 'page': const ExamsScreen()},
-      {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
-      {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
-      {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
-      {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
-      {'title': 'Settings', 'icon': Icons.settings_rounded, 'color': const Color(0xFF475569), 'page': const ProfileScreen()},
+      {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'assetIcon': 'app icons/my attendance.png', 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
+      {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave apply.png', 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
+      {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'assetIcon': 'app icons/timetable.png', 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
+      {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
+      {'title': 'Settings', 'icon': Icons.settings_rounded, 'assetIcon': 'app icons/settings.png', 'color': const Color(0xFF475569), 'page': const ProfileScreen()},
     ];
 
     final List<Map<String, dynamic>> studentModules = [
-      {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'color': const Color(0xFFEF4444), 'page': const GatePassScreen()},
-      {'title': 'Apply Leave', 'icon': Icons.time_to_leave_rounded, 'color': const Color(0xFFF97316), 'page': const LeaveScreen()},
+      {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'assetIcon': 'app icons/gate pass.png', 'color': const Color(0xFFEF4444), 'page': const GatePassScreen()},
+      {'title': 'Apply Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave apply.png', 'color': const Color(0xFFF97316), 'page': const LeaveScreen()},
       {'title': 'ID Card', 'icon': Icons.badge_rounded, 'color': const Color(0xFF3B82F6), 'page': null},
-      {'title': 'Message Teacher', 'icon': Icons.chat_rounded, 'color': const Color(0xFF14B8A6), 'page': const MessagesScreen()},
+      {'title': 'Message Teacher', 'icon': Icons.chat_rounded, 'assetIcon': 'app icons/messaging.png', 'color': const Color(0xFF14B8A6), 'page': const MessagesScreen()},
       {'title': 'Online Classes', 'icon': Icons.video_camera_front_rounded, 'color': const Color(0xFF8B5CF6), 'page': null},
       {'title': 'Certificate Request', 'icon': Icons.workspace_premium_rounded, 'color': const Color(0xFFEAB308), 'page': null},
       {'title': 'Academic Calendar', 'icon': Icons.calendar_month_rounded, 'color': const Color(0xFF06B6D4), 'page': null},
@@ -149,13 +150,14 @@ class _ModulesScreenState extends State<ModulesScreen> {
             module['icon'],
             module['color'],
             module['page'],
+            assetIcon: module['assetIcon'],
           );
         },
       ),
     );
   }
 
-  Widget _buildModuleCard(BuildContext context, String title, IconData icon, Color color, Widget? page) {
+  Widget _buildModuleCard(BuildContext context, String title, IconData icon, Color color, Widget? page, {String? assetIcon}) {
     return GestureDetector(
       onTap: () {
         if (page != null) {
@@ -179,6 +181,39 @@ class _ModulesScreenState extends State<ModulesScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (assetIcon != null) ...[
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.2),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    assetIcon,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.contain,
+                    errorBuilder: (c, e, s) => Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: color.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: color, size: 26),
+                    ),
+                  ),
+                ),
+              ),
+            ] else ...[
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -187,7 +222,8 @@ class _ModulesScreenState extends State<ModulesScreen> {
               ),
               child: Icon(icon, color: color, size: 28),
             ),
-            const SizedBox(height: 12),
+            ],
+            const SizedBox(height: 10),
             Text(
               title,
               textAlign: TextAlign.center,
