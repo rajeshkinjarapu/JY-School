@@ -71,15 +71,20 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
         headers: {'Authorization': 'Bearer $token'},
       );
       
-      // Fetch exam results
+      // Fetch exam results with photo support
       final resultsRes = await http.get(
-        Uri.parse('$baseUrl/exams/${widget.examId}/results?classId=${widget.classId}'),
+        Uri.parse('$baseUrl/exams/${widget.examId}/results?classId=${widget.classId}&includePhoto=true'),
         headers: {'Authorization': 'Bearer $token'},
       );
       
       if (settingsRes.statusCode == 200) {
         final settingsJson = jsonDecode(settingsRes.body);
-        _settings = settingsJson['data'] ?? {};
+        _settings = Map<String, dynamic>.from(settingsJson['data'] ?? {});
+      } else {
+        _settings = {};
+      }
+      if (_settings!['schoolName'] == null || _settings!['schoolName'] == 'JY School') {
+        _settings!['schoolName'] = 'SRI VENKATESWARA JY SCHOOL';
       }
 
       if (resultsRes.statusCode == 200) {
@@ -95,6 +100,28 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
           throw Exception("Student result not found in this exam");
         }
 
+        // Resolve student photo from multiple potential sources
+        String studentPhoto = '';
+        final rawPhoto = targetStudent['photo'] ?? targetStudent['photoUrl'];
+        if (rawPhoto != null && rawPhoto.toString().trim().isNotEmpty) {
+          final p = rawPhoto.toString().trim();
+          if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('data:image')) {
+            studentPhoto = p;
+          } else {
+            studentPhoto = 'http://66.116.252.191:19998${p.startsWith('/') ? '' : '/'}$p';
+          }
+        } else if (widget.studentData != null) {
+          final p = widget.studentData!['user']?['photoUrl'] ?? widget.studentData!['photoUrl'] ?? widget.studentData!['photo'];
+          if (p != null && p.toString().trim().isNotEmpty) {
+            final pStr = p.toString().trim();
+            if (pStr.startsWith('http://') || pStr.startsWith('https://') || pStr.startsWith('data:image')) {
+              studentPhoto = pStr;
+            } else {
+              studentPhoto = 'http://66.116.252.191:19998${pStr.startsWith('/') ? '' : '/'}$pStr';
+            }
+          }
+        }
+
         // Map backend data
         _mappedData = {
           'studentName': targetStudent['name'],
@@ -103,7 +130,7 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
           'section': (targetStudent['className']?.toString() ?? '').split('-').length > 1 ? targetStudent['className']?.toString().split('-')[1].trim() : "",
           'mobile': targetStudent['mobile'],
           'rank': targetStudent['rank'],
-          'photo': targetStudent['photo'] != null ? 'http://66.116.252.191:19998${targetStudent['photo']}' : '',
+          'photo': studentPhoto,
           'total': targetStudent['total'],
           'academicYear': targetStudent['academicYear'],
           'location': "Narasannapeta", 

@@ -418,3 +418,31 @@
      - Raised image bounds to `max-h-[80px]` and `max-w-[220px]`.
      - Applied `transform scale-[1.8] origin-bottom` so the official signature stamp visually scales to double size, anchored cleanly above the "Principal Signature" text label without displacing surrounding elements.
      - Mirrored this signature scaling in single-page view (`renderFooter`) for complete design parity.
+
+
+## Flutter Mobile App Header, Logo, Student Photo & Welcome Screen Safe Area Update (November 4, 2026)
+- **User Requests:**
+  1. In Flutter app admit card & progress card: school name in header must match webapp (`SRI VENKATESWARA JY SCHOOL`), school logo must display (`assets/images/logo.png`), and real student photo must appear.
+  2. In welcome screen: "Get Started" button was overlapping with the Android System Navigation Bar (`<  ○  |||`).
+- **Fixes Implemented:**
+  1. **Welcome Screen Safe Area Clearance (`flutter_mobile/lib/screens/welcome_screen.dart`):**
+     - Replaced rigid Column with `LayoutBuilder` + `SingleChildScrollView(physics: BouncingScrollPhysics())` + `ConstrainedBox(minHeight: constraints.maxHeight)` to adapt to all screen sizes without overflow.
+     - Wrapped "Get Started" button in `SafeArea(bottom: true)` with an additional explicit bottom clearance `SizedBox(height: math.max(bottomInset, 16.0) + 16)`. This guarantees the button sits comfortably above the Android 3-button system navigation bar on all devices.
+  2. **Progress Card & Result Card Native View (`flutter_mobile/lib/widgets/progress_card_native.dart`):**
+     - Header Title: Standardized to `SRI VENKATESWARA JY SCHOOL` (falling back gracefully if database settings have "JY School").
+     - School Logo: Replaced placeholder rosette icon with rounded official school logo (`assets/images/logo.png`).
+     - Address: Updated to `SVL Paradise Campus, Narasannapeta`.
+     - Student Photo: Implemented `_buildStudentPhoto` with resilient parsing supporting both Base64 (`data:image` / raw base64 memory image) and HTTP/HTTPS network URLs, with graceful fallback to person icon.
+  3. **Single Progress Card Screen (`flutter_mobile/lib/screens/single_progress_card_screen.dart`):**
+     - Appended `&includePhoto=true` to `/api/exams/:id/results` query to ensure backend includes student `photoUrl`.
+     - Added multi-source fallback resolving photo from `targetStudent['photo']`, `targetStudent['photoUrl']`, and `widget.studentData`.
+  4. **Student Admit Card Screen (`flutter_mobile/lib/screens/student_admit_card_screen.dart`):**
+     - Rendered actual school logo in circular badge instead of generic school icon.
+     - Standardized school header name to `SRI VENKATESWARA JY SCHOOL`.
+  5. **Admin Admit Card Screen (`flutter_mobile/lib/screens/admit_card_screen.dart`):**
+     - Replaced text `'LOGO'` placeholder with real `assets/images/logo.png`.
+     - Updated location badge to `SVL Paradise Campus, Narasannapeta`.
+  6. **Deployment & Shorebird Compatibility:**
+     - 100% Pure Dart code changes across `flutter_mobile/lib/`.
+     - Zero native Android file or dependency changes.
+     - Distributable immediately via Shorebird OTA Patch (`shorebird patch android`) with no APK rebuild required.

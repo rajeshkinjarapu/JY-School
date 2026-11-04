@@ -482,7 +482,14 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             alignment: Alignment.center,
-                            child: Text('LOGO', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: const Color(0xFF1E293B))),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, __, ___) => const Icon(Icons.school, size: 50, color: Color(0xFF1E293B)),
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 24),
                           // Title
@@ -525,7 +532,7 @@ class _AdmitCardScreenState extends State<AdmitCardScreen> {
                                       const Icon(Icons.location_on, size: 14, color: Color(0xFF1E293B)),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+                                        'SVL Paradise Campus, Narasannapeta',
                                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF475569)),
                                       ),
                                     ],

@@ -42,6 +42,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
@@ -85,220 +87,241 @@ class _WelcomeScreenState extends State<WelcomeScreen> with SingleTickerProvider
           ),
           
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 40),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Column(
-                      children: [
-                        // Logo Container
-                        Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF6366F1).withOpacity(0.15),
-                                blurRadius: 30,
-                                offset: const Offset(0, 10),
-                              ),
-                            ],
-                          ),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(Icons.school_rounded, size: 80, color: Color(0xFF6366F1)),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        // School Name
-                        Text(
-                          'SRI VENKATESWARA\nJY SCHOOL',
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF1E293B),
-                            letterSpacing: 1.2,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        // Tagline
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF6366F1).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            'Learn • Grow • Achieve',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF4F46E5),
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                        ),
-                      ],
+            bottom: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
                     ),
-                  ),
-                  
-                  const Spacer(),
-                  
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: FadeTransition(
-                      opacity: _fadeAnimation,
-                      child: Column(
-                        children: [
-                          // Illustration placeholder (using icons)
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                width: 220,
-                                height: 220,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFF8B5CF6).withOpacity(0.1),
-                                      blurRadius: 40,
-                                      offset: const Offset(0, 20),
+                    child: IntrinsicHeight(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 24),
+                            FadeTransition(
+                              opacity: _fadeAnimation,
+                              child: Column(
+                                children: [
+                                  // Logo Container
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF6366F1).withOpacity(0.15),
+                                          blurRadius: 30,
+                                          offset: const Offset(0, 10),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
-                              Positioned(
-                                top: 40,
-                                left: 30,
-                                child: Transform.rotate(
-                                  angle: -0.2,
-                                  child: const Icon(Icons.menu_book_rounded, size: 45, color: Color(0xFFF59E0B)),
-                                ),
-                              ),
-                              Positioned(
-                                top: 30,
-                                right: 30,
-                                child: Transform.rotate(
-                                  angle: 0.2,
-                                  child: const Icon(Icons.science_rounded, size: 45, color: Color(0xFF10B981)),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 40,
-                                left: 40,
-                                child: Transform.rotate(
-                                  angle: -0.1,
-                                  child: const Icon(Icons.calculate_rounded, size: 45, color: Color(0xFFEF4444)),
-                                ),
-                              ),
-                              Positioned(
-                                bottom: 50,
-                                right: 35,
-                                child: Transform.rotate(
-                                  angle: 0.15,
-                                  child: const Icon(Icons.palette_rounded, size: 45, color: Color(0xFF8B5CF6)),
-                                ),
-                              ),
-                              const Icon(Icons.school_rounded, size: 90, color: Color(0xFF6366F1)),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 40),
-                          
-                          // Welcome Message
-                          Text(
-                            'Welcome to Our School! 👋',
-                            style: GoogleFonts.outfit(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF1E293B),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Your complete digital school experience starts here.',
-                            textAlign: TextAlign.center,
-                            style: GoogleFonts.poppins(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w400,
-                              color: const Color(0xFF64748B),
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 40),
-                          
-                          // Main Action Button
-                          Container(
-                            width: double.infinity,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF6366F1).withOpacity(0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(20),
-                                onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                                      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                        return FadeTransition(opacity: animation, child: child);
-                                      },
+                                    child: Image.asset(
+                                      'assets/images/logo.png',
+                                      height: 90,
+                                      width: 90,
+                                      fit: BoxFit.contain,
+                                      errorBuilder: (context, error, stackTrace) =>
+                                          const Icon(Icons.school_rounded, size: 70, color: Color(0xFF6366F1)),
                                     ),
-                                  );
-                                },
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Get Started',
+                                  ),
+                                  const SizedBox(height: 20),
+                                  // School Name
+                                  Text(
+                                    'SRI VENKATESWARA\nJY SCHOOL',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF1E293B),
+                                      letterSpacing: 1.2,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  // Tagline
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFF6366F1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      'Learn • Grow • Achieve',
                                       style: GoogleFonts.poppins(
-                                        fontSize: 18,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.white,
+                                        color: const Color(0xFF4F46E5),
+                                        letterSpacing: 1.0,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            
+                            const Spacer(),
+                            const SizedBox(height: 16),
+                            
+                            SlideTransition(
+                              position: _slideAnimation,
+                              child: FadeTransition(
+                                opacity: _fadeAnimation,
+                                child: Column(
+                                  children: [
+                                    // Illustration placeholder
+                                    Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Container(
+                                          width: 190,
+                                          height: 190,
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            shape: BoxShape.circle,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: const Color(0xFF8B5CF6).withOpacity(0.1),
+                                                blurRadius: 40,
+                                                offset: const Offset(0, 20),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 35,
+                                          left: 25,
+                                          child: Transform.rotate(
+                                            angle: -0.2,
+                                            child: const Icon(Icons.menu_book_rounded, size: 40, color: Color(0xFFF59E0B)),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 25,
+                                          right: 25,
+                                          child: Transform.rotate(
+                                            angle: 0.2,
+                                            child: const Icon(Icons.science_rounded, size: 40, color: Color(0xFF10B981)),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 35,
+                                          left: 35,
+                                          child: Transform.rotate(
+                                            angle: -0.1,
+                                            child: const Icon(Icons.calculate_rounded, size: 40, color: Color(0xFFEF4444)),
+                                          ),
+                                        ),
+                                        Positioned(
+                                          bottom: 40,
+                                          right: 30,
+                                          child: Transform.rotate(
+                                            angle: 0.15,
+                                            child: const Icon(Icons.palette_rounded, size: 40, color: Color(0xFF8B5CF6)),
+                                          ),
+                                        ),
+                                        const Icon(Icons.school_rounded, size: 80, color: Color(0xFF6366F1)),
+                                      ],
+                                    ),
+                                    
+                                    const SizedBox(height: 24),
+                                    
+                                    // Welcome Message
+                                    Text(
+                                      'Welcome to Our School! 👋',
+                                      style: GoogleFonts.outfit(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF1E293B),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Your complete digital school experience starts here.',
+                                      textAlign: TextAlign.center,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w400,
+                                        color: const Color(0xFF64748B),
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 24),
+                                    
+                                    // Main Action Button wrapped in SafeArea for bottom clearance
+                                    SafeArea(
+                                      top: false,
+                                      bottom: true,
+                                      child: Container(
+                                        width: double.infinity,
+                                        height: 58,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(20),
+                                          gradient: const LinearGradient(
+                                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                                            begin: Alignment.centerLeft,
+                                            end: Alignment.centerRight,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: const Color(0xFF6366F1).withOpacity(0.3),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 8),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Material(
+                                          color: Colors.transparent,
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(20),
+                                            onTap: () {
+                                              Navigator.pushReplacement(
+                                                context,
+                                                PageRouteBuilder(
+                                                  pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                                                  transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                                    return FadeTransition(opacity: animation, child: child);
+                                                  },
+                                                ),
+                                              );
+                                            },
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  'Get Started',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Guarantee generous clearance above Android 3-button navigation
+                                    SizedBox(height: math.max(bottomInset, 16.0) + 16),
                                   ],
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         ],

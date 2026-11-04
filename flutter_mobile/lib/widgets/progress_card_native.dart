@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -86,22 +87,48 @@ class ProgressCardNative extends StatelessWidget {
                         ),
                         child: Row(
                           children: [
-                            // Logo area
+                            // Real School Logo
                             Container(
-                              width: 100,
-                              height: 100,
+                              width: 95,
+                              height: 95,
                               alignment: Alignment.center,
-                              child: const Icon(Icons.workspace_premium, size: 80, color: Color(0xFF1A4A7A)), // Placeholder logo
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.06),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/logo.png',
+                                  width: 85,
+                                  height: 85,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) => const Icon(
+                                    Icons.school_rounded,
+                                    size: 65,
+                                    color: Color(0xFF1A4A7A),
+                                  ),
+                                ),
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
                                 children: [
                                   Text(
-                                    settings['schoolName']?.toString() ?? 'SRI VENKATESWARA JY SCHOOL',
+                                    (settings['schoolName']?.toString() == null || settings['schoolName']?.toString() == 'JY School')
+                                        ? 'SRI VENKATESWARA JY SCHOOL'
+                                        : settings['schoolName'].toString(),
                                     style: const TextStyle(
-                                      fontFamily: 'Times New Roman',
-                                      fontSize: 28,
+                                      fontFamily: 'Georgia',
+                                      fontSize: 27,
                                       fontWeight: FontWeight.w900,
                                       color: Color(0xFF0B1A33),
                                       letterSpacing: 1.5,
@@ -112,7 +139,7 @@ class ProgressCardNative extends StatelessWidget {
                                   Text(
                                     settings['schoolSubtitle']?.toString() ?? '(IIT-JEE / NEET Foundation - Olympiads)',
                                     style: const TextStyle(
-                                      fontFamily: 'Times New Roman',
+                                      fontFamily: 'Georgia',
                                       fontSize: 16,
                                       color: Color(0xFF1A4A7A),
                                       letterSpacing: 0.8,
@@ -121,7 +148,7 @@ class ProgressCardNative extends StatelessWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    settings['address']?.toString() ?? 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+                                    settings['headerAddress']?.toString() ?? settings['address']?.toString() ?? 'SVL Paradise Campus, Narasannapeta',
                                     style: GoogleFonts.outfit(
                                       fontSize: 13,
                                       color: const Color(0xFF5A7A8A),
@@ -258,9 +285,9 @@ class ProgressCardNative extends StatelessWidget {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(5),
-                                      child: photo.isNotEmpty
-                                        ? Image.network(photo, fit: BoxFit.cover, errorBuilder: (_,__,___) => const Icon(Icons.person, size: 50, color: Colors.grey))
-                                        : const Icon(Icons.person, size: 50, color: Colors.grey)
+                                      child: _buildStudentPhoto(photo),
+                                        //
+                                        //
                                     ),
                                   ),
                                 ),
@@ -547,5 +574,31 @@ class ProgressCardNative extends StatelessWidget {
         )
       ],
     );
+  }
+
+  Widget _buildStudentPhoto(String photoUrl) {
+    if (photoUrl.isEmpty) {
+      return const Icon(Icons.person, size: 50, color: Colors.grey);
+    }
+    
+    try {
+      if (photoUrl.startsWith('data:image')) {
+        final commaIdx = photoUrl.indexOf(',');
+        final base64Str = commaIdx != -1 ? photoUrl.substring(commaIdx + 1) : photoUrl;
+        return Image.memory(
+          base64Decode(base64Str),
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
+        );
+      } else if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+        return Image.network(
+          photoUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
+        );
+      }
+    } catch (_) {}
+
+    return const Icon(Icons.person, size: 50, color: Colors.grey);
   }
 }

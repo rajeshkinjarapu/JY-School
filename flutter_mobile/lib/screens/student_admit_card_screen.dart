@@ -104,14 +104,14 @@ class _StudentAdmitCardScreenState extends State<StudentAdmitCardScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                  child: const Icon(Icons.school, color: Color(0xFF6366F1), size: 24),
+                  child: Image.asset('assets/images/logo.png', width: 26, height: 26, fit: BoxFit.contain, errorBuilder: (_, __, ___) => const Icon(Icons.school, color: Color(0xFF6366F1), size: 24)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('JY SCHOOL', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                      Text('SRI VENKATESWARA JY SCHOOL', style: GoogleFonts.outfit(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.8)),
                       Text('ADMIT CARD - $term', style: GoogleFonts.poppins(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
                     ],
                   ),
