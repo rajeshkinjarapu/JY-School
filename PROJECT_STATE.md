@@ -19,7 +19,7 @@
     - Displayed Father's Aadhaar and Mother's Aadhaar rows with credit card icons inside Family Details card.
     - Added Father's Aadhaar and Mother's Aadhaar fields into the 'Edit Student Profile' modal bottom sheet, updating via `ApiService.updateStudent`.
 - **Deployment Status:**
-  - Database: Run `npx prisma db push` on VPS.
+  - Database Migration: Run `node add_columns.js` (direct SQL execution adding `fatherAadhar` and `motherAadhar` columns to PostgreSQL `Student` table) and `npx prisma db push`.
   - Backend: `npm run build` && `pm2 restart backend`.
   - Frontend: `npm run build` && `pm2 restart frontend`.
   - Flutter Mobile: 100% Dart changes, deployable via Shorebird Patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
