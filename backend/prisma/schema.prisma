@@ -79,6 +79,8 @@ model Student {
   medicalInfo    String?
   fatherName     String?
   motherName     String?
+  fatherAadhar   String?
+  motherAadhar   String?
   aadharNo       String?
   penNumber      String?
 
@@ -1117,6 +1119,8 @@ model AdmissionInquiry {
   fatherName     String?
   motherName     String?
   phone          String
+  fatherAadhar   String?
+  motherAadhar   String?
   aadharNo       String?
   dob            DateTime?
   gender         String?
@@ -1141,10 +1145,10 @@ model AdmissionInquiry {
   alternatePhone   String?
   motherTongue     String?
   fatherOccupation String?
-  fatherAadhar     String?
+
   fatherPhone      String?
   motherOccupation String?
-  motherAadhar     String?
+
   motherPhone      String?
   nationality      String?  @default("Indian")
   state            String?

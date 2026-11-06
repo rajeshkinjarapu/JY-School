@@ -168,7 +168,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, aadharNo, penNumber } = req.body;
+  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, aadharNo, penNumber } = req.body;
 
   let rollNo = studentId?.trim();
 
@@ -232,6 +232,8 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
       bloodGroup: bloodGroup || null,
       fatherName: fatherName || null,
       motherName: motherName || null,
+      fatherAadhar: fatherAadhar || null,
+      motherAadhar: motherAadhar || null,
       aadharNo: aadharNo || null,
       penNumber: penNumber || null,
     },
@@ -265,7 +267,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, aadharNo, penNumber } = req.body;
+  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, aadharNo, penNumber } = req.body;
 
   // Check teacher permission if the user is a teacher
   if (req.user?.role === 'TEACHER') {
@@ -309,6 +311,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       bloodGroup: bloodGroup || undefined,
       fatherName: fatherName !== undefined ? fatherName || null : undefined,
       motherName: motherName !== undefined ? motherName || null : undefined,
+      fatherAadhar: fatherAadhar !== undefined ? fatherAadhar || null : undefined,
+      motherAadhar: motherAadhar !== undefined ? motherAadhar || null : undefined,
       aadharNo: aadharNo !== undefined ? aadharNo || null : undefined,
       penNumber: penNumber !== undefined ? penNumber || null : undefined,
     },
@@ -497,6 +501,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const photoUrl = row.photourl || row.photo || null;
         const fatherName = row.fathername || row['father name'] || row['Father Name'] || null;
         const motherName = row.mothername || row['mother name'] || row['Mother Name'] || null;
+        const fatherAadhar = row.fatheraadhar || row['father aadhar'] || row['Father Aadhar'] || row['Father Aadhaar'] || null;
+        const motherAadhar = row.motheraadhar || row['mother aadhar'] || row['Mother Aadhar'] || row['Mother Aadhaar'] || null;
         const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || row['aadhar number'] || null;
         const penNumber = row.pennumber || row.pen || null;
         const dobRaw = row.dob || row['date of birth'] || row['Date of Birth'] || row['DOB'] || null;
@@ -549,6 +555,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
                 bloodGroup: bloodGroup ? String(bloodGroup) : undefined,
                 fatherName: fatherName ? String(fatherName) : undefined,
                 motherName: motherName ? String(motherName) : undefined,
+                fatherAadhar: fatherAadhar ? String(fatherAadhar) : undefined,
+                motherAadhar: motherAadhar ? String(motherAadhar) : undefined,
                 aadharNo: aadharNo ? String(aadharNo) : undefined,
                 penNumber: penNumber ? String(penNumber) : undefined,
               },
@@ -588,6 +596,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             bloodGroup: bloodGroup ? String(bloodGroup) : null,
             fatherName: fatherName ? String(fatherName) : null,
             motherName: motherName ? String(motherName) : null,
+            fatherAadhar: fatherAadhar ? String(fatherAadhar) : null,
+            motherAadhar: motherAadhar ? String(motherAadhar) : null,
             aadharNo: aadharNo ? String(aadharNo) : null,
             penNumber: penNumber ? String(penNumber) : null,
           },
@@ -676,7 +686,9 @@ export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void>
     'Class': s.class ? s.class.name : '',
     'Section': s.class ? s.class.section : '',
     'Father Name': s.fatherName || '',
+    'Father Aadhar': (s as any).fatherAadhar || '',
     'Mother Name': s.motherName || '',
+    'Mother Aadhar': (s as any).motherAadhar || '',
     'Aadhar No': s.aadharNo || '',
     'PEN Number': s.penNumber || '',
     'Gender': s.gender || '',

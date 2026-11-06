@@ -45,6 +45,8 @@ export const StudentFormPage: React.FC = () => {
         bloodGroup: student.bloodGroup || '',
         fatherName: student.fatherName || '',
         motherName: student.motherName || '',
+        fatherAadhar: student.fatherAadhar || '',
+        motherAadhar: student.motherAadhar || '',
         aadharNo: student.aadharNo || '',
         penNumber: student.penNumber || '',
       });
@@ -190,12 +192,20 @@ export const StudentFormPage: React.FC = () => {
                 <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Mother's full name" {...register('motherName')} />
               </div>
               <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Father's Aadhar Number</label>
+                <input type="text" maxLength={12} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit Father Aadhar" {...register('fatherAadhar')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Aadhar Number</label>
+                <input type="text" maxLength={12} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit Mother Aadhar" {...register('motherAadhar')} />
+              </div>
+              <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Contact Phone</label>
                 <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Phone number" {...register('phone')} />
               </div>
               <div className="space-y-1">
-                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Aadhar Number</label>
-                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit Aadhar" {...register('aadharNo')} />
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Student Aadhar Number</label>
+                <input type="text" maxLength={12} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit Student Aadhar" {...register('aadharNo')} />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Blood Group</label>

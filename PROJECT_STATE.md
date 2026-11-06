@@ -1,5 +1,29 @@
 # JY School Project State
 
+## Student Father & Mother Aadhaar System Integration (November 6, 2026)
+- **Feature Scope:** Added full-stack support for Father's Aadhaar and Mother's Aadhaar alongside Student Aadhaar across Database, Backend REST APIs, Web App, and Flutter Mobile App.
+- **Database Schema (`backend/prisma/schema.prisma`):**
+  - Extended `Student` model with optional fields: `fatherAadhar String?` and `motherAadhar String?`.
+  - Non-destructive migration supported via `npx prisma db push`.
+- **Backend API (`backend/src/controllers/students.controller.ts`):**
+  - `create`: Accepts `fatherAadhar` and `motherAadhar` from request payload and writes to Prisma `Student` record.
+  - `update`: Handles updates for `fatherAadhar` and `motherAadhar`.
+  - `bulkImport`: Extracts `fatherAadhar` and `motherAadhar` from Excel columns (case-insensitive headers supported).
+  - `exportCsv`: Added 'Father Aadhar' and 'Mother Aadhar' columns to Excel export spreadsheet.
+- **Web App (`StudentFormPage.tsx` & `StudentProfilePage.tsx`):**
+  - `StudentFormPage.tsx`: Added Father's Aadhar Number and Mother's Aadhar Number 12-digit input fields with validation under "GUARDIAN & ADDITIONAL INFO" section. Linked to `react-hook-form` state.
+  - `StudentProfilePage.tsx`: Added "Father Aadhaar" and "Mother Aadhaar" monospace detail rows inside the Family details card.
+- **Flutter Mobile App (`add_student_screen.dart` & `student_profile_screen.dart`):**
+  - `add_student_screen.dart`: Added `_fatherAadharController` and `_motherAadharController` controllers, disposed them in `dispose()`, and wired inputs into the API payload. Designed input fields with numeric keyboards and 12-digit hints in the "Guardian & Additional Info" card.
+  - `student_profile_screen.dart`:
+    - Displayed Father's Aadhaar and Mother's Aadhaar rows with credit card icons inside Family Details card.
+    - Added Father's Aadhaar and Mother's Aadhaar fields into the 'Edit Student Profile' modal bottom sheet, updating via `ApiService.updateStudent`.
+- **Deployment Status:**
+  - Database: Run `npx prisma db push` on VPS.
+  - Backend: `npm run build` && `pm2 restart backend`.
+  - Frontend: `npm run build` && `pm2 restart frontend`.
+  - Flutter Mobile: 100% Dart changes, deployable via Shorebird Patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
+
 ## MCQ Paper Generator Live-Preview PDF Download Feature (November 4, 2026)
 - **Feature Scope:** Added direct high-definition PDF download capability to the MCQ Paper Generator (`MCQPaperGeneratorPage.tsx`), rendering the document identically to the on-screen live preview.
 - **Button Placement:** Positioned a prominent emerald & teal gradient "Download PDF" action button directly beside the "Print A4" button in the top action toolbar on desktop and mobile.
@@ -10,7 +34,7 @@
   - Computes exact pixel ratios for A4 portrait (`210mm x 297mm`).
   - Slices long multi-subject/multi-question papers (e.g. 75 MCQs across Maths, Physics, Chemistry) into discrete A4 pages in `jsPDF` with white background fill, preventing overflow, distorted scaling, or cut-off content.
   - Dynamically titles the downloaded file as `{examName}_{examDate}.pdf` and fires native/browser notifications via `triggerDownloadNotification`.
-- **Deployment Status:** Web frontend update. Needs `git pull`, `npm run build` in `frontend/` on VPS. No backend or mobile native changes required.
+- **Deployment Status:** Web frontend update. Needs `git pull`, `npm run build` in `frontend/` on VPS. Backend compiled successfully with `npm run build`. If PM2 has no running process for `jy-backend`, launch via `pm2 start dist/server.js --name "jy-backend"` followed by `pm2 save`.
 
 ## Examination Admit Card Deterministic Sorting & Cross-Pollution Resolution (November 4, 2026)
 - **Root Cause Analysis:**
@@ -31,7 +55,7 @@
   - Set default selected exam to the latest published exam (`firstWhere(admitCardPublished == true, orElse: () => first)`).
   - Added title override sanitization in `_buildAdmitCardWidget` to strip accidental JEE overrides for Summative exams.
 - **Deployment Status:**
-  - Web & Backend: Frontend build compiled successfully into `frontend/dist`. Frontend is served directly as static SPA by Nginx (no separate PM2 process needed for frontend; only `jy-backend` runs under PM2).
+  - Web & Backend: Verified PM2 process names on VPS: Backend is named `backend` (id 0) running on port 19998; Frontend is named `frontend` (id 1) running on port 19999. Restart commands: `pm2 restart backend` and `pm2 restart frontend`.
   - Mobile: 100% pure Dart changes deliverable instantly via Shorebird patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
 
 ## HR Salary & Payroll Velocity Dashboard Overhaul (November 4, 2026)

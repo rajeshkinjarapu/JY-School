@@ -537,7 +537,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             _infoRow(Icons.cake_rounded, 'Date of Birth', dob, const Color(0xFF6366F1)),
             _infoRow(Icons.person_rounded, 'Gender', s['gender'] ?? 'N/A', const Color(0xFF8B5CF6)),
             _infoRow(Icons.bloodtype_rounded, 'Blood Group', s['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
-            _infoRow(Icons.credit_card_rounded, 'Aadhaar No', s['aadharNo'] ?? 'N/A', const Color(0xFF0EA5E9)),
+            _infoRow(Icons.credit_card_rounded, 'Student Aadhaar No', s['aadharNo'] ?? 'N/A', const Color(0xFF0EA5E9)),
             _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
             _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
             _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
@@ -552,9 +552,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           const SizedBox(height: 12),
           _infoCard('Family Details', const Color(0xFFF59E0B), [
             _infoRow(Icons.person_rounded, "Father's Name", s['fatherName'] ?? 'N/A', const Color(0xFF6366F1)),
+            _infoRow(Icons.credit_card_rounded, "Father's Aadhaar", s['fatherAadhar'] ?? 'N/A', const Color(0xFF0EA5E9)),
             _infoRow(Icons.phone_rounded, "Father's Phone", s['fatherPhone'] ?? 'N/A', const Color(0xFF10B981),
                 onTap: (s['fatherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['fatherPhone']) : null),
             _infoRow(Icons.person_rounded, "Mother's Name", s['motherName'] ?? 'N/A', const Color(0xFFEC4899)),
+            _infoRow(Icons.credit_card_rounded, "Mother's Aadhaar", s['motherAadhar'] ?? 'N/A', const Color(0xFF0EA5E9)),
             _infoRow(Icons.phone_rounded, "Mother's Phone", s['motherPhone'] ?? 'N/A', const Color(0xFF10B981),
                 onTap: (s['motherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['motherPhone']) : null),
           ]),
@@ -897,6 +899,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final genderC = TextEditingController(text: s['gender'] ?? '');
     final bloodC = TextEditingController(text: s['bloodGroup'] ?? '');
     final fatherNameC = TextEditingController(text: s['fatherName'] ?? '');
+    final fatherAadharC = TextEditingController(text: s['fatherAadhar'] ?? '');
+    final motherAadharC = TextEditingController(text: s['motherAadhar'] ?? '');
     final motherNameC = TextEditingController(text: s['motherName'] ?? '');
     final fatherPhoneC = TextEditingController(text: s['fatherPhone'] ?? '');
     final motherPhoneC = TextEditingController(text: s['motherPhone'] ?? '');
@@ -970,8 +974,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                   const SizedBox(height: 16),
                   _editSection('Family', [
                     _editField("Father's Name", fatherNameC, icon: Icons.person_rounded),
+                    _editField("Father's Aadhaar", fatherAadharC, icon: Icons.credit_card_rounded, keyboardType: TextInputType.number),
                     _editField("Father's Phone", fatherPhoneC, icon: Icons.phone_rounded, keyboardType: TextInputType.phone),
                     _editField("Mother's Name", motherNameC, icon: Icons.person_rounded),
+                    _editField("Mother's Aadhaar", motherAadharC, icon: Icons.credit_card_rounded, keyboardType: TextInputType.number),
                     _editField("Mother's Phone", motherPhoneC, icon: Icons.phone_rounded, keyboardType: TextInputType.phone),
                   ]),
                 ]),
@@ -987,7 +993,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     if (genderC.text.isNotEmpty) data['gender'] = genderC.text.toUpperCase();
                     if (bloodC.text.isNotEmpty) data['bloodGroup'] = bloodC.text;
                     if (fatherNameC.text.isNotEmpty) data['fatherName'] = fatherNameC.text;
+                    data['fatherAadhar'] = fatherAadharC.text.trim();
                     if (motherNameC.text.isNotEmpty) data['motherName'] = motherNameC.text;
+                    data['motherAadhar'] = motherAadharC.text.trim();
                     if (fatherPhoneC.text.isNotEmpty) data['fatherPhone'] = fatherPhoneC.text;
                     if (motherPhoneC.text.isNotEmpty) data['motherPhone'] = motherPhoneC.text;
                     if (addressC.text.isNotEmpty) data['address'] = addressC.text;
