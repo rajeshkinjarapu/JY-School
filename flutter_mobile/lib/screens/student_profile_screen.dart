@@ -560,12 +560,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           _infoCard('Family Details', const Color(0xFFF59E0B), [
             _infoRow(Icons.person_rounded, "Father's Name", s['fatherName'] ?? 'N/A', const Color(0xFF6366F1)),
             _infoRow(Icons.credit_card_rounded, "Father's Aadhaar", _safeValue(s['fatherAadhar'] ?? s['father_aadhar'] ?? s['fatherAadhaar']), const Color(0xFF0EA5E9)),
-            _infoRow(Icons.phone_rounded, "Father's Phone", s['fatherPhone'] ?? 'N/A', const Color(0xFF10B981),
-                onTap: (s['fatherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['fatherPhone']) : null),
+            _infoRow(Icons.phone_rounded, "Father's Phone", _safeValue(s['fatherPhone'] ?? s['father_phone']), const Color(0xFF10B981),
+                onTap: (_safeValue(s['fatherPhone'] ?? s['father_phone']) != 'N/A') ? () => _launchUrl('tel', (s['fatherPhone'] ?? s['father_phone']).toString()) : null),
             _infoRow(Icons.person_rounded, "Mother's Name", s['motherName'] ?? 'N/A', const Color(0xFFEC4899)),
             _infoRow(Icons.credit_card_rounded, "Mother's Aadhaar", _safeValue(s['motherAadhar'] ?? s['mother_aadhar'] ?? s['motherAadhaar']), const Color(0xFF0EA5E9)),
-            _infoRow(Icons.phone_rounded, "Mother's Phone", s['motherPhone'] ?? 'N/A', const Color(0xFF10B981),
-                onTap: (s['motherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['motherPhone']) : null),
+            _infoRow(Icons.phone_rounded, "Mother's Phone", _safeValue(s['motherPhone'] ?? s['mother_phone']), const Color(0xFF10B981),
+                onTap: (_safeValue(s['motherPhone'] ?? s['mother_phone']) != 'N/A') ? () => _launchUrl('tel', (s['motherPhone'] ?? s['mother_phone']).toString()) : null),
           ]),
         ],
       ),
@@ -909,8 +909,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final fatherAadharC = TextEditingController(text: s['fatherAadhar'] ?? s['father_aadhar'] ?? s['fatherAadhaar'] ?? '');
     final motherAadharC = TextEditingController(text: s['motherAadhar'] ?? s['mother_aadhar'] ?? s['motherAadhaar'] ?? '');
     final motherNameC = TextEditingController(text: s['motherName'] ?? '');
-    final fatherPhoneC = TextEditingController(text: s['fatherPhone'] ?? '');
-    final motherPhoneC = TextEditingController(text: s['motherPhone'] ?? '');
+    final fatherPhoneC = TextEditingController(text: s['fatherPhone'] ?? s['father_phone'] ?? '');
+    final motherPhoneC = TextEditingController(text: s['motherPhone'] ?? s['mother_phone'] ?? '');
     final addressC = TextEditingController(text: s['address'] ?? '');
     final religionC = TextEditingController(text: s['religion'] ?? '');
     final categoryC = TextEditingController(text: s['casteCategory'] ?? '');
@@ -1003,8 +1003,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     data['fatherAadhar'] = fatherAadharC.text.trim();
                     if (motherNameC.text.isNotEmpty) data['motherName'] = motherNameC.text;
                     data['motherAadhar'] = motherAadharC.text.trim();
-                    if (fatherPhoneC.text.isNotEmpty) data['fatherPhone'] = fatherPhoneC.text;
-                    if (motherPhoneC.text.isNotEmpty) data['motherPhone'] = motherPhoneC.text;
+                    data['fatherPhone'] = fatherPhoneC.text.trim();
+                    data['motherPhone'] = motherPhoneC.text.trim();
                     if (addressC.text.isNotEmpty) data['address'] = addressC.text;
                     if (religionC.text.isNotEmpty) data['religion'] = religionC.text;
                     if (categoryC.text.isNotEmpty) data['casteCategory'] = categoryC.text;

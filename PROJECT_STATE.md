@@ -1,18 +1,23 @@
 # JY School Project State
 
-## Student Father & Mother Aadhaar System Integration & Instant UI Sync (November 6-7, 2026)
-- **Feature Scope:** Added full-stack support for Father's Aadhaar and Mother's Aadhaar alongside Student Aadhaar across Database, Backend REST APIs, Web App, and Flutter Mobile App.
-- **Root Cause & Resolution (Display & Database Save Issue):**
-  1. **VPS Code Stale & Database Columns:** Identified that `npm run build` was run on the VPS without preceding `git pull origin main`. Database migration script `node add_columns.js` (`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "fatherAadhar" TEXT;` and `motherAadhar`) was waiting for execution on the production PostgreSQL DB.
-  2. **Flutter Mobile Instant UI Sync:** In `flutter_mobile/lib/screens/student_profile_screen.dart`:
-     - Added robust helper `_safeValue(dynamic val)` resolving blank string evaluations, handling all key variants (`fatherAadhar`, `father_aadhar`, `fatherAadhaar`, `motherAadhar`, `mother_aadhar`, `motherAadhaar`, `aadharNo`, `aadhar`).
-     - Added instant optimistic state update in `_showEditProfileSheet`: Upon receiving save success from API, `_studentDetails` immediately updates on screen before re-fetching fresh profile data.
-     - Added Android Navigation Bar clearance using `MediaQuery.of(ctx).padding.bottom` in the profile edit modal.
-  3. **Local Cache Invalidation:** In `flutter_mobile/lib/services/api_service.dart`, `updateStudent` and `createStudent` now actively purge stale offline cache (`cache_/api/students*`) from `SharedPreferences`.
-  4. **Redis Cache Eviction:** Fixed `delPattern` in `backend/src/utils/cache.ts` using Upstash `KEYS` and `DEL` REST commands.
-- **Deployment & Patch Architecture:**
-  - **Flutter Mobile:** 100% pure Dart UI and API handling. Deployed via **Shorebird PATCH (OTA Update)** — does NOT require an APK Release.
-  - **VPS Deployment:** Full commands provided including mandatory `ssh root@66.116.252.191` prefix, `git pull`, `node add_columns.js`, `npm run build`, and `pm2 restart backend`/`frontend`.
+## Student Father & Mother Phone Number & Aadhaar Full-Stack Integration (November 7, 2026)
+- **Feature Scope:** Added end-to-end support for Father's Phone Number (`fatherPhone`) and Mother's Phone Number (`motherPhone`) alongside Aadhaar numbers across Database, Backend REST APIs, Web App, and Flutter Mobile App.
+- **Database Schema & Migration:**
+  - `backend/prisma/schema.prisma`: Added `fatherPhone String?` and `motherPhone String?` to `model Student`.
+  - `backend/add_columns.js`: Added SQL commands `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "fatherPhone" TEXT;` and `motherPhone`.
+- **Backend API (`backend/src/controllers/students.controller.ts`):**
+  - Updated `create`, `update`, and `bulkImport` methods to sanitize, trim, and persist `fatherPhone` and `motherPhone`.
+  - Added role-based masking in `getById` for teachers without full access.
+- **Web App (`StudentFormPage.tsx` & `StudentProfilePage.tsx`):**
+  - `StudentFormPage.tsx`: Added "Father's Phone Number" and "Mother's Phone Number" 10-digit input fields under "GUARDIAN & ADDITIONAL INFO" with `react-hook-form` registration and `useEffect` reset state population.
+  - `StudentProfilePage.tsx`: Added clickable `tel:` phone rows in the Family details table for both Father and Mother.
+- **Flutter Mobile App (`add_student_screen.dart` & `student_profile_screen.dart`):**
+  - `add_student_screen.dart`: Added `_fatherPhoneController` and `_motherPhoneController`, input fields, and wired into `ApiService.createStudent`.
+  - `student_profile_screen.dart`: Supported `fatherPhone` and `motherPhone` in profile view and edit bottom sheet with optimistic UI update and tap-to-call.
+- **Deployment Status:**
+  - Database & Backend: Requires `git pull origin main`, `node add_columns.js`, `npm run build`, and `pm2 restart backend` on VPS (`ssh root@66.116.252.191`).
+  - Web Frontend: Requires `cd /root/JY-School/frontend && git pull origin main && npm run build && pm2 restart frontend`.
+  - Mobile App: 100% pure Dart update deliverable via Shorebird patch (`shorebird patch android --flavor universal --allow-asset-diffs`).
 - **Database Schema (`backend/prisma/schema.prisma`):**
   - Extended `Student` model with optional fields: `fatherAadhar String?` and `motherAadhar String?`.
   - Non-destructive migration supported via `npx prisma db push`.

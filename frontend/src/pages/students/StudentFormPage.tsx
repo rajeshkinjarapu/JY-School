@@ -47,6 +47,8 @@ export const StudentFormPage: React.FC = () => {
         motherName: student.motherName || '',
         fatherAadhar: student.fatherAadhar || '',
         motherAadhar: student.motherAadhar || '',
+        fatherPhone: student.fatherPhone || '',
+        motherPhone: student.motherPhone || '',
         aadharNo: student.aadharNo || '',
         penNumber: student.penNumber || '',
       });
@@ -198,6 +200,14 @@ export const StudentFormPage: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Aadhar Number</label>
                 <input type="text" maxLength={12} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit Mother Aadhar" {...register('motherAadhar')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Father's Phone Number</label>
+                <input type="tel" maxLength={10} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="10-digit Father Phone" {...register('fatherPhone')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Phone Number</label>
+                <input type="tel" maxLength={10} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="10-digit Mother Phone" {...register('motherPhone')} />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Contact Phone</label>

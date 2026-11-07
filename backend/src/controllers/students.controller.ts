@@ -142,6 +142,8 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         hasFullAccess: false,
         address: null,
         aadharNo: null,
+        fatherAadhar: null,
+        motherAadhar: null,
         dob: null,
         fatherPhone: null,
         motherPhone: null,
@@ -168,7 +170,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, aadharNo, penNumber } = req.body;
+  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, aadharNo, penNumber } = req.body;
 
   let rollNo = studentId?.trim();
 
@@ -234,6 +236,8 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
       motherName: motherName || null,
       fatherAadhar: fatherAadhar ? String(fatherAadhar).trim() : null,
       motherAadhar: motherAadhar ? String(motherAadhar).trim() : null,
+      fatherPhone: fatherPhone ? String(fatherPhone).trim() : null,
+      motherPhone: motherPhone ? String(motherPhone).trim() : null,
       aadharNo: aadharNo ? String(aadharNo).trim() : null,
       penNumber: penNumber || null,
     },
@@ -267,7 +271,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, aadharNo, penNumber } = req.body;
+  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, aadharNo, penNumber } = req.body;
 
   // Check teacher permission if the user is a teacher
   if (req.user?.role === 'TEACHER') {
@@ -313,6 +317,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       motherName: motherName !== undefined ? motherName || null : undefined,
       fatherAadhar: fatherAadhar !== undefined ? (fatherAadhar ? String(fatherAadhar).trim() : null) : undefined,
       motherAadhar: motherAadhar !== undefined ? (motherAadhar ? String(motherAadhar).trim() : null) : undefined,
+      fatherPhone: fatherPhone !== undefined ? (fatherPhone ? String(fatherPhone).trim() : null) : undefined,
+      motherPhone: motherPhone !== undefined ? (motherPhone ? String(motherPhone).trim() : null) : undefined,
       aadharNo: aadharNo !== undefined ? (aadharNo ? String(aadharNo).trim() : null) : undefined,
       penNumber: penNumber !== undefined ? penNumber || null : undefined,
     },
@@ -503,6 +509,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         const motherName = row.mothername || row['mother name'] || row['Mother Name'] || null;
         const fatherAadhar = row.fatheraadhar || row['father aadhar'] || row['Father Aadhar'] || row['Father Aadhaar'] || null;
         const motherAadhar = row.motheraadhar || row['mother aadhar'] || row['Mother Aadhar'] || row['Mother Aadhaar'] || null;
+        const fatherPhone = row.fatherphone || row['father phone'] || row['Father Phone'] || row.fathermobile || null;
+        const motherPhone = row.motherphone || row['mother phone'] || row['Mother Phone'] || row.mothermobile || null;
         const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || row['aadhar number'] || null;
         const penNumber = row.pennumber || row.pen || null;
         const dobRaw = row.dob || row['date of birth'] || row['Date of Birth'] || row['DOB'] || null;
@@ -557,6 +565,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
                 motherName: motherName ? String(motherName) : undefined,
                 fatherAadhar: fatherAadhar ? String(fatherAadhar) : undefined,
                 motherAadhar: motherAadhar ? String(motherAadhar) : undefined,
+                fatherPhone: fatherPhone ? String(fatherPhone) : undefined,
+                motherPhone: motherPhone ? String(motherPhone) : undefined,
                 aadharNo: aadharNo ? String(aadharNo) : undefined,
                 penNumber: penNumber ? String(penNumber) : undefined,
               },
@@ -598,6 +608,8 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             motherName: motherName ? String(motherName) : null,
             fatherAadhar: fatherAadhar ? String(fatherAadhar) : null,
             motherAadhar: motherAadhar ? String(motherAadhar) : null,
+            fatherPhone: fatherPhone ? String(fatherPhone) : null,
+            motherPhone: motherPhone ? String(motherPhone) : null,
             aadharNo: aadharNo ? String(aadharNo) : null,
             penNumber: penNumber ? String(penNumber) : null,
           },

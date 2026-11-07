@@ -22,6 +22,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
   final _motherNameController = TextEditingController();
   final _fatherAadharController = TextEditingController();
   final _motherAadharController = TextEditingController();
+  final _fatherPhoneController = TextEditingController();
+  final _motherPhoneController = TextEditingController();
   final _phoneController = TextEditingController();
   final _aadharController = TextEditingController();
   final _bloodGroupController = TextEditingController();
@@ -53,6 +55,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
     _motherNameController.dispose();
     _fatherAadharController.dispose();
     _motherAadharController.dispose();
+    _fatherPhoneController.dispose();
+    _motherPhoneController.dispose();
     _phoneController.dispose();
     _aadharController.dispose();
     _bloodGroupController.dispose();
@@ -176,6 +180,8 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
         'motherName': _motherNameController.text.trim(),
         'fatherAadhar': _fatherAadharController.text.trim(),
         'motherAadhar': _motherAadharController.text.trim(),
+        'fatherPhone': _fatherPhoneController.text.trim(),
+        'motherPhone': _motherPhoneController.text.trim(),
         'phone': _phoneController.text.trim(),
         'aadharNo': _aadharController.text.trim(),
         'bloodGroup': _bloodGroupController.text.trim(),
@@ -545,8 +551,10 @@ class _AddStudentScreenState extends State<AddStudentScreen> {
                           
                           _buildTextField(label: "Father's Name", controller: _fatherNameController, hint: "Father's full name"),
                           _buildTextField(label: "Father's Aadhaar Number", controller: _fatherAadharController, hint: "12-digit Father Aadhaar", keyboardType: TextInputType.number),
+                          _buildTextField(label: "Father's Phone Number", controller: _fatherPhoneController, hint: "10-digit Father Phone", keyboardType: TextInputType.phone),
                           _buildTextField(label: "Mother's Name", controller: _motherNameController, hint: "Mother's full name"),
                           _buildTextField(label: "Mother's Aadhaar Number", controller: _motherAadharController, hint: "12-digit Mother Aadhaar", keyboardType: TextInputType.number),
+                          _buildTextField(label: "Mother's Phone Number", controller: _motherPhoneController, hint: "10-digit Mother Phone", keyboardType: TextInputType.phone),
                           _buildTextField(label: "Contact Phone", controller: _phoneController, hint: "Phone number", keyboardType: TextInputType.phone),
                           _buildTextField(label: "Student Aadhaar Number", controller: _aadharController, hint: "12-digit Student Aadhaar", keyboardType: TextInputType.number),
                           _buildTextField(label: "Blood Group", controller: _bloodGroupController, hint: "e.g. O+, A-"),
