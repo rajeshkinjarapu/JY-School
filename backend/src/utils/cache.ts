@@ -47,5 +47,13 @@ export const cache = {
 
   /** Delete keys matching pattern */
   async delPattern(pattern: string): Promise<void> {
+    try {
+      const keys = await redisRequest(['KEYS', pattern]);
+      if (keys && Array.isArray(keys) && keys.length > 0) {
+        await redisRequest(['DEL', ...keys]);
+      }
+    } catch {
+      // Ignore cache eviction failure
+    }
   },
 };

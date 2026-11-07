@@ -262,6 +262,16 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> updateStudent(String id, Map<String, dynamic> payload) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('cache_/api/students/$id');
+      await prefs.remove('cache_time_/api/students/$id');
+      final keys = prefs.getKeys().where((k) => k.startsWith('cache_/api/students')).toList();
+      for (final k in keys) {
+        await prefs.remove(k);
+        await prefs.remove('time_$k');
+      }
+    } catch (_) {}
     return _performPut('/api/students/$id', payload, 'Failed to update student');
   }
 
@@ -270,6 +280,14 @@ class ApiService {
   }
 
   static Future<Map<String, dynamic>> createStudent(Map<String, dynamic> payload) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where((k) => k.startsWith('cache_/api/students')).toList();
+      for (final k in keys) {
+        await prefs.remove(k);
+        await prefs.remove('time_$k');
+      }
+    } catch (_) {}
     return _performPost('/api/students', payload, 'Failed to create student');
   }
 

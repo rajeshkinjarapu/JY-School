@@ -1,7 +1,18 @@
 # JY School Project State
 
-## Student Father & Mother Aadhaar System Integration (November 6, 2026)
+## Student Father & Mother Aadhaar System Integration & Instant UI Sync (November 6-7, 2026)
 - **Feature Scope:** Added full-stack support for Father's Aadhaar and Mother's Aadhaar alongside Student Aadhaar across Database, Backend REST APIs, Web App, and Flutter Mobile App.
+- **Root Cause & Resolution (Display & Database Save Issue):**
+  1. **VPS Code Stale & Database Columns:** Identified that `npm run build` was run on the VPS without preceding `git pull origin main`. Database migration script `node add_columns.js` (`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "fatherAadhar" TEXT;` and `motherAadhar`) was waiting for execution on the production PostgreSQL DB.
+  2. **Flutter Mobile Instant UI Sync:** In `flutter_mobile/lib/screens/student_profile_screen.dart`:
+     - Added robust helper `_safeValue(dynamic val)` resolving blank string evaluations, handling all key variants (`fatherAadhar`, `father_aadhar`, `fatherAadhaar`, `motherAadhar`, `mother_aadhar`, `motherAadhaar`, `aadharNo`, `aadhar`).
+     - Added instant optimistic state update in `_showEditProfileSheet`: Upon receiving save success from API, `_studentDetails` immediately updates on screen before re-fetching fresh profile data.
+     - Added Android Navigation Bar clearance using `MediaQuery.of(ctx).padding.bottom` in the profile edit modal.
+  3. **Local Cache Invalidation:** In `flutter_mobile/lib/services/api_service.dart`, `updateStudent` and `createStudent` now actively purge stale offline cache (`cache_/api/students*`) from `SharedPreferences`.
+  4. **Redis Cache Eviction:** Fixed `delPattern` in `backend/src/utils/cache.ts` using Upstash `KEYS` and `DEL` REST commands.
+- **Deployment & Patch Architecture:**
+  - **Flutter Mobile:** 100% pure Dart UI and API handling. Deployed via **Shorebird PATCH (OTA Update)** — does NOT require an APK Release.
+  - **VPS Deployment:** Full commands provided including mandatory `ssh root@66.116.252.191` prefix, `git pull`, `node add_columns.js`, `npm run build`, and `pm2 restart backend`/`frontend`.
 - **Database Schema (`backend/prisma/schema.prisma`):**
   - Extended `Student` model with optional fields: `fatherAadhar String?` and `motherAadhar String?`.
   - Non-destructive migration supported via `npx prisma db push`.

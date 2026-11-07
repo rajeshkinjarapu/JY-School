@@ -91,7 +91,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               _isClassTeacher = true;
             }
           } else {
-            _studentDetails = widget.student;
+            _studentDetails = _studentDetails ?? widget.student;
           }
         });
       }
@@ -99,7 +99,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       debugPrint('Error fetching student details: $e');
       if (mounted) {
         setState(() {
-          _studentDetails = widget.student;
+          _studentDetails = _studentDetails ?? widget.student;
         });
       }
     }
@@ -156,6 +156,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
 
     final bool hasFullAccess = !_isTeacher || _canViewAllStudents || _isClassTeacher || (s['hasFullAccess'] == true);
     if (false) { if (false) { if (false) { if (false) {
+
 
 
       }
@@ -382,6 +383,12 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     );
   }
 
+  String _safeValue(dynamic val) {
+    if (val == null) return 'N/A';
+    final str = val.toString().trim();
+    return (str.isEmpty || str == 'null' || str == 'undefined') ? 'N/A' : str;
+  }
+
   // PROFILE TAB
   Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user, bool hasFullAccess) {
     if (!hasFullAccess) {
@@ -537,7 +544,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             _infoRow(Icons.cake_rounded, 'Date of Birth', dob, const Color(0xFF6366F1)),
             _infoRow(Icons.person_rounded, 'Gender', s['gender'] ?? 'N/A', const Color(0xFF8B5CF6)),
             _infoRow(Icons.bloodtype_rounded, 'Blood Group', s['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
-            _infoRow(Icons.credit_card_rounded, 'Student Aadhaar No', s['aadharNo'] ?? 'N/A', const Color(0xFF0EA5E9)),
+            _infoRow(Icons.credit_card_rounded, 'Student Aadhaar No', _safeValue(s['aadharNo'] ?? s['aadhar'] ?? s['aadhaarNo']), const Color(0xFF0EA5E9)),
             _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
             _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
             _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
@@ -552,11 +559,11 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           const SizedBox(height: 12),
           _infoCard('Family Details', const Color(0xFFF59E0B), [
             _infoRow(Icons.person_rounded, "Father's Name", s['fatherName'] ?? 'N/A', const Color(0xFF6366F1)),
-            _infoRow(Icons.credit_card_rounded, "Father's Aadhaar", s['fatherAadhar'] ?? 'N/A', const Color(0xFF0EA5E9)),
+            _infoRow(Icons.credit_card_rounded, "Father's Aadhaar", _safeValue(s['fatherAadhar'] ?? s['father_aadhar'] ?? s['fatherAadhaar']), const Color(0xFF0EA5E9)),
             _infoRow(Icons.phone_rounded, "Father's Phone", s['fatherPhone'] ?? 'N/A', const Color(0xFF10B981),
                 onTap: (s['fatherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['fatherPhone']) : null),
             _infoRow(Icons.person_rounded, "Mother's Name", s['motherName'] ?? 'N/A', const Color(0xFFEC4899)),
-            _infoRow(Icons.credit_card_rounded, "Mother's Aadhaar", s['motherAadhar'] ?? 'N/A', const Color(0xFF0EA5E9)),
+            _infoRow(Icons.credit_card_rounded, "Mother's Aadhaar", _safeValue(s['motherAadhar'] ?? s['mother_aadhar'] ?? s['motherAadhaar']), const Color(0xFF0EA5E9)),
             _infoRow(Icons.phone_rounded, "Mother's Phone", s['motherPhone'] ?? 'N/A', const Color(0xFF10B981),
                 onTap: (s['motherPhone'] as String?)?.isNotEmpty == true ? () => _launchUrl('tel', s['motherPhone']) : null),
           ]),
@@ -899,15 +906,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final genderC = TextEditingController(text: s['gender'] ?? '');
     final bloodC = TextEditingController(text: s['bloodGroup'] ?? '');
     final fatherNameC = TextEditingController(text: s['fatherName'] ?? '');
-    final fatherAadharC = TextEditingController(text: s['fatherAadhar'] ?? '');
-    final motherAadharC = TextEditingController(text: s['motherAadhar'] ?? '');
+    final fatherAadharC = TextEditingController(text: s['fatherAadhar'] ?? s['father_aadhar'] ?? s['fatherAadhaar'] ?? '');
+    final motherAadharC = TextEditingController(text: s['motherAadhar'] ?? s['mother_aadhar'] ?? s['motherAadhaar'] ?? '');
     final motherNameC = TextEditingController(text: s['motherName'] ?? '');
     final fatherPhoneC = TextEditingController(text: s['fatherPhone'] ?? '');
     final motherPhoneC = TextEditingController(text: s['motherPhone'] ?? '');
     final addressC = TextEditingController(text: s['address'] ?? '');
     final religionC = TextEditingController(text: s['religion'] ?? '');
     final categoryC = TextEditingController(text: s['casteCategory'] ?? '');
-    final aadharC = TextEditingController(text: s['aadharNo'] ?? '');
+    final aadharC = TextEditingController(text: s['aadharNo'] ?? s['aadhar'] ?? s['aadhaarNo'] ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -983,7 +990,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 ]),
               )),
               Container(
-                padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+                padding: EdgeInsets.fromLTRB(20, 12, 20, MediaQuery.of(ctx).viewInsets.bottom + MediaQuery.of(ctx).padding.bottom + 16),
                 decoration: const BoxDecoration(border: Border(top: BorderSide(color: Color(0xFFF1F5F9)))),
                 child: GestureDetector(
                   onTap: isSaving ? null : () async {
@@ -1001,7 +1008,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     if (addressC.text.isNotEmpty) data['address'] = addressC.text;
                     if (religionC.text.isNotEmpty) data['religion'] = religionC.text;
                     if (categoryC.text.isNotEmpty) data['casteCategory'] = categoryC.text;
-                    if (aadharC.text.isNotEmpty) data['aadharNo'] = aadharC.text;
+                    data['aadharNo'] = aadharC.text.trim();
                     final res = await ApiService.updateStudent(s['id'] ?? '', data);
                     setSS(() => isSaving = false);
                     if (mounted) {
@@ -1010,7 +1017,21 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                         content: Text(res['success'] ? 'Profile updated!' : (res['message'] ?? 'Failed')),
                         backgroundColor: res['success'] ? const Color(0xFF10B981) : const Color(0xFFF43F5E),
                       ));
-                      if (res['success']) { setState(() => _isLoading = true); _fetchProfile(); }
+                      if (res['success']) {
+                        if (res['data'] != null && res['data'] is Map) {
+                          setState(() {
+                            _studentDetails = Map<String, dynamic>.from(res['data'] as Map);
+                          });
+                        } else {
+                          setState(() {
+                            final current = Map<String, dynamic>.from(_studentDetails ?? widget.student);
+                            current.addAll(data);
+                            _studentDetails = current;
+                          });
+                        }
+                        setState(() => _isLoading = true);
+                        _fetchProfile();
+                      }
                     }
                   },
                   child: Container(
