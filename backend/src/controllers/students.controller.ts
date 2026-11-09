@@ -147,6 +147,9 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         dob: null,
         fatherPhone: null,
         motherPhone: null,
+        guardianName: null,
+        guardianPhone: null,
+        guardianRelation: null,
         user: {
           ...student.user,
           phone: null,
@@ -170,7 +173,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, aadharNo, penNumber } = req.body;
+  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber } = req.body;
 
   let rollNo = studentId?.trim();
 
@@ -238,6 +241,9 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
       motherAadhar: motherAadhar ? String(motherAadhar).trim() : null,
       fatherPhone: fatherPhone ? String(fatherPhone).trim() : null,
       motherPhone: motherPhone ? String(motherPhone).trim() : null,
+      guardianName: guardianName ? String(guardianName).trim() : null,
+      guardianPhone: guardianPhone ? String(guardianPhone).trim() : null,
+      guardianRelation: guardianRelation ? String(guardianRelation).trim() : null,
       aadharNo: aadharNo ? String(aadharNo).trim() : null,
       penNumber: penNumber || null,
     },
@@ -271,7 +277,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, aadharNo, penNumber } = req.body;
+  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber } = req.body;
 
   // Check teacher permission if the user is a teacher
   if (req.user?.role === 'TEACHER') {
@@ -294,13 +300,13 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     // Update User email (login ID) to the new Student ID
     await prisma.user.update({
       where: { id: student.userId },
-      data: { name, phone, photoUrl, email: newStudentId },
+      data: { ...(name ? { name } : {}), ...(phone !== undefined ? { phone: phone || null } : {}), ...(photoUrl !== undefined ? { photoUrl: photoUrl || null } : {}), email: newStudentId },
     });
     finalRollNo = newStudentId;
   } else {
     await prisma.user.update({
       where: { id: student.userId },
-      data: { name, phone, photoUrl },
+      data: { ...(name ? { name } : {}), ...(phone !== undefined ? { phone: phone || null } : {}), ...(photoUrl !== undefined ? { photoUrl: photoUrl || null } : {}) },
     });
   }
 
@@ -309,18 +315,21 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     data: {
       rollNo: finalRollNo,
       classId: classId !== undefined ? classId || null : undefined,
-      dob: dob ? new Date(dob) : undefined,
-      gender: gender || undefined,
-      address: address || undefined,
-      bloodGroup: bloodGroup || undefined,
+      dob: dob !== undefined ? (dob ? new Date(dob) : null) : undefined,
+      gender: gender !== undefined ? gender || null : undefined,
+      address: address !== undefined ? address || null : undefined,
+      bloodGroup: bloodGroup !== undefined ? bloodGroup || null : undefined,
       fatherName: fatherName !== undefined ? fatherName || null : undefined,
       motherName: motherName !== undefined ? motherName || null : undefined,
       fatherAadhar: fatherAadhar !== undefined ? (fatherAadhar ? String(fatherAadhar).trim() : null) : undefined,
       motherAadhar: motherAadhar !== undefined ? (motherAadhar ? String(motherAadhar).trim() : null) : undefined,
       fatherPhone: fatherPhone !== undefined ? (fatherPhone ? String(fatherPhone).trim() : null) : undefined,
       motherPhone: motherPhone !== undefined ? (motherPhone ? String(motherPhone).trim() : null) : undefined,
+      guardianName: guardianName !== undefined ? (guardianName ? String(guardianName).trim() : null) : undefined,
+      guardianPhone: guardianPhone !== undefined ? (guardianPhone ? String(guardianPhone).trim() : null) : undefined,
+      guardianRelation: guardianRelation !== undefined ? (guardianRelation ? String(guardianRelation).trim() : null) : undefined,
       aadharNo: aadharNo !== undefined ? (aadharNo ? String(aadharNo).trim() : null) : undefined,
-      penNumber: penNumber !== undefined ? penNumber || null : undefined,
+      penNumber: penNumber !== undefined ? (penNumber ? String(penNumber).trim() : null) : undefined,
     },
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } },

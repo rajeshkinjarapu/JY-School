@@ -23,6 +23,7 @@ export const StudentProfilePage: React.FC = () => {
   const setDynamicTitle = outletContext?.setDynamicTitle;
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const canEdit = isAdmin || (user?.role === 'TEACHER' && (user?.teacher as any)?.canEditStudents);
   const [student, setStudent] = useState<any>(null);
   const [feeStructures, setFeeStructures] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
@@ -53,6 +54,103 @@ export const StudentProfilePage: React.FC = () => {
   const [showNameModal, setShowNameModal] = useState(false);
   const [newStudentName, setNewStudentName] = useState('');
   const [viewTransaction, setViewTransaction] = useState<any>(null);
+
+  // Demographics Modal States
+  const [showDemographicsModal, setShowDemographicsModal] = useState(false);
+  const [editGender, setEditGender] = useState('');
+  const [editDob, setEditDob] = useState('');
+  const [editBloodGroup, setEditBloodGroup] = useState('');
+  const [editAadharNo, setEditAadharNo] = useState('');
+  const [editPenNumber, setEditPenNumber] = useState('');
+
+  // Family Modal States
+  const [showFamilyModal, setShowFamilyModal] = useState(false);
+  const [editFatherName, setEditFatherName] = useState('');
+  const [editFatherAadhar, setEditFatherAadhar] = useState('');
+  const [editFatherPhone, setEditFatherPhone] = useState('');
+  const [editMotherName, setEditMotherName] = useState('');
+  const [editMotherAadhar, setEditMotherAadhar] = useState('');
+  const [editMotherPhone, setEditMotherPhone] = useState('');
+  const [editGuardianName, setEditGuardianName] = useState('');
+  const [editGuardianPhone, setEditGuardianPhone] = useState('');
+  const [editGuardianRelation, setEditGuardianRelation] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+
+  const openDemographicsModal = () => {
+    if (!student) return;
+    setEditGender(student.gender || '');
+    setEditDob(student.dob ? new Date(student.dob).toISOString().split('T')[0] : '');
+    setEditBloodGroup(student.bloodGroup || '');
+    setEditAadharNo(student.aadharNo || '');
+    setEditPenNumber(student.penNumber || '');
+    setShowDemographicsModal(true);
+  };
+
+  const openFamilyModal = () => {
+    if (!student) return;
+    setEditFatherName(student.fatherName || '');
+    setEditFatherAadhar(student.fatherAadhar || '');
+    setEditFatherPhone(student.fatherPhone || '');
+    setEditMotherName(student.motherName || '');
+    setEditMotherAadhar(student.motherAadhar || '');
+    setEditMotherPhone(student.motherPhone || '');
+    setEditGuardianName(student.guardianName || student.parent?.user?.name || '');
+    setEditGuardianPhone(student.guardianPhone || student.parent?.user?.phone || '');
+    setEditGuardianRelation(student.guardianRelation || '');
+    setEditAddress(student.address || '');
+    setShowFamilyModal(true);
+  };
+
+  const handleSaveDemographics = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const updateToast = toast.loading('Saving demographics...');
+    try {
+      await api.put(`/api/students/${student.id}`, {
+        gender: editGender || null,
+        dob: editDob ? editDob : null,
+        bloodGroup: editBloodGroup || null,
+        aadharNo: editAadharNo ? editAadharNo.trim() : null,
+        penNumber: editPenNumber ? editPenNumber.trim() : null,
+      });
+      toast.success('Demographics updated successfully!', { id: updateToast });
+      setShowDemographicsModal(false);
+      await fetchStudentProfile();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update demographics', { id: updateToast });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSaveFamily = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    const updateToast = toast.loading('Saving family details...');
+    try {
+      await api.put(`/api/students/${student.id}`, {
+        fatherName: editFatherName ? editFatherName.trim() : null,
+        fatherAadhar: editFatherAadhar ? editFatherAadhar.trim() : null,
+        fatherPhone: editFatherPhone ? editFatherPhone.trim() : null,
+        motherName: editMotherName ? editMotherName.trim() : null,
+        motherAadhar: editMotherAadhar ? editMotherAadhar.trim() : null,
+        motherPhone: editMotherPhone ? editMotherPhone.trim() : null,
+        guardianName: editGuardianName ? editGuardianName.trim() : null,
+        guardianPhone: editGuardianPhone ? editGuardianPhone.trim() : null,
+        guardianRelation: editGuardianRelation ? editGuardianRelation.trim() : null,
+        address: editAddress ? editAddress.trim() : null,
+      });
+      toast.success('Family details updated successfully!', { id: updateToast });
+      setShowFamilyModal(false);
+      await fetchStudentProfile();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update family details', { id: updateToast });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   const fetchStudentProfile = async () => {
     try {
       const [studentRes, structRes, classRes]: any = await Promise.all([
@@ -433,107 +531,315 @@ export const StudentProfilePage: React.FC = () => {
           {/* Details Masonry/Grid */}
           <div className={`grid grid-cols-1 md:grid-cols-2 ${user?.role === 'TEACHER' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4 items-start`}>
                 
-            {/* Demographics Table */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
-              <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-blue-50/30 dark:bg-blue-900/10">
-                    <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-blue-600 dark:text-blue-400"><User2 className="w-4 h-4" /></div>
-                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Demographics</h3>
+            {/* Demographics Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full flex flex-col">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-blue-50/50 to-transparent dark:from-blue-900/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-blue-600 dark:text-blue-400">
+                    <User2 className="w-4 h-4" />
                   </div>
-                  
-                  <table className="w-full text-xs text-left">
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
-                      <tr className="hover:bg-blue-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Gender</th>
-                        <td className="px-3 py-2 font-semibold text-gray-900">{student.gender || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-blue-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">DOB</th>
-                        <td className="px-3 py-2 font-semibold text-gray-900">{student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-blue-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Blood Grp</th>
-                        <td className="px-3 py-2 font-semibold text-rose-600 flex items-center gap-1.5"><Droplet className="w-3 h-3" /> {student.bloodGroup || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-blue-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Aadhar</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.aadharNo || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-blue-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">PEN</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.penNumber || 'N/A'}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Demographics</h3>
                 </div>
+                {canEdit && (
+                  <button
+                    onClick={openDemographicsModal}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 rounded-lg transition-colors cursor-pointer"
+                    title="Edit Demographics"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
+                )}
+              </div>
+              
+              <table className="w-full text-xs text-left flex-1">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                  <tr className="hover:bg-blue-50/20 transition-colors">
+                    <th className="px-3 py-2.5 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Gender</th>
+                    <td className="px-3 py-2.5 font-semibold text-gray-900 dark:text-gray-100">
+                      {student.gender ? (
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold ${
+                          student.gender.toUpperCase() === 'MALE' ? 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-300' :
+                          student.gender.toUpperCase() === 'FEMALE' ? 'bg-pink-50 text-pink-700 border border-pink-200 dark:bg-pink-900/40 dark:text-pink-300' :
+                          'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-900/40 dark:text-purple-300'
+                        }`}>
+                          {student.gender}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openDemographicsModal} className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-blue-50/20 transition-colors">
+                    <th className="px-3 py-2.5 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">DOB</th>
+                    <td className="px-3 py-2.5 font-semibold text-gray-900 dark:text-gray-100">
+                      {student.dob ? (
+                        <div className="flex items-center gap-2">
+                          <span>{new Date(student.dob).toLocaleDateString('en-GB')}</span>
+                          {(() => {
+                            const bDate = new Date(student.dob);
+                            const now = new Date();
+                            let years = now.getFullYear() - bDate.getFullYear();
+                            const m = now.getMonth() - bDate.getMonth();
+                            if (m < 0 || (m === 0 && now.getDate() < bDate.getDate())) years--;
+                            return years > 0 ? (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded font-semibold">
+                                {years} yrs
+                              </span>
+                            ) : null;
+                          })()}
+                        </div>
+                      ) : canEdit ? (
+                        <button onClick={openDemographicsModal} className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-blue-50/20 transition-colors">
+                    <th className="px-3 py-2.5 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Blood Grp</th>
+                    <td className="px-3 py-2.5 font-semibold">
+                      {student.bloodGroup ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-black bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-900">
+                          <Droplet className="w-3 h-3 text-rose-600 fill-rose-600" />
+                          {student.bloodGroup}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openDemographicsModal} className="text-gray-400 hover:text-rose-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <Droplet className="w-3 h-3 opacity-40" />
+                          <span>N/A</span>
+                          <span className="text-[10px] text-rose-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-blue-50/20 transition-colors">
+                    <th className="px-3 py-2.5 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Aadhar</th>
+                    <td className="px-3 py-2.5 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.aadharNo ? (
+                        <span className="tracking-wider bg-gray-100/70 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-[11.5px]">
+                          {student.aadharNo.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3')}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openDemographicsModal} className="text-gray-400 hover:text-blue-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-blue-50/20 transition-colors">
+                    <th className="px-3 py-2.5 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">PEN</th>
+                    <td className="px-3 py-2.5 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.penNumber ? (
+                        <span className="bg-emerald-50 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300 px-2 py-0.5 rounded font-mono font-bold text-[11.5px] border border-emerald-200 dark:border-emerald-800">
+                          {student.penNumber}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openDemographicsModal} className="text-gray-400 hover:text-blue-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-blue-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-            {/* Family Table */}
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full">
-              <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center gap-2 bg-amber-50/30 dark:bg-amber-900/10">
-                    <div className="p-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-600 dark:text-amber-400"><Users className="w-4 h-4" /></div>
-                    <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Family</h3>
+            {/* Family Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full flex flex-col">
+              <div className="p-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-900/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-amber-100 dark:bg-amber-900/40 rounded-lg text-amber-600 dark:text-amber-400">
+                    <Users className="w-4 h-4" />
                   </div>
-                  
-                  <table className="w-full text-xs text-left">
-                    <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Father</th>
-                        <td className="px-3 py-2 font-semibold text-gray-900">{student.fatherName || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Father Aadhaar</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.fatherAadhar || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Father Phone</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">
-                          {student.fatherPhone ? (
-                            <a href={`tel:${student.fatherPhone}`} className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5">
+                  <h3 className="text-[13px] font-bold text-gray-900 dark:text-white">Family</h3>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={openFamilyModal}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-50 hover:bg-amber-100 dark:bg-amber-900/30 dark:hover:bg-amber-900/50 rounded-lg transition-colors cursor-pointer"
+                    title="Edit Family Details"
+                  >
+                    <Edit2 className="w-3 h-3" />
+                    <span>Edit</span>
+                  </button>
+                )}
+              </div>
+              
+              <table className="w-full text-xs text-left flex-1">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-800/60">
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Father</th>
+                    <td className="px-3 py-2 font-bold text-gray-900 dark:text-gray-100">
+                      {student.fatherName || (canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>)}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Father Aadhaar</th>
+                    <td className="px-3 py-2 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.fatherAadhar ? (
+                        <span className="tracking-wider bg-gray-100/70 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-[11.5px]">
+                          {student.fatherAadhar.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3')}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Father Phone</th>
+                    <td className="px-3 py-2 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.fatherPhone ? (
+                        <div className="flex items-center gap-2">
+                          <a href={`tel:${student.fatherPhone}`} className="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1.5 hover:underline">
+                            <Phone className="w-3 h-3 text-emerald-500" />
+                            <span>{student.fatherPhone}</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/91${student.fatherPhone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-black bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-1.5 py-0.5 rounded transition-colors"
+                            title="Chat on WhatsApp"
+                          >
+                            WA
+                          </a>
+                        </div>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Mother</th>
+                    <td className="px-3 py-2 font-bold text-gray-900 dark:text-gray-100">
+                      {student.motherName || (canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>)}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Mother Aadhaar</th>
+                    <td className="px-3 py-2 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.motherAadhar ? (
+                        <span className="tracking-wider bg-gray-100/70 dark:bg-gray-800 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-700 text-[11.5px]">
+                          {student.motherAadhar.replace(/(\d{4})(\d{4})(\d{4})/, '$1 $2 $3')}
+                        </span>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Mother Phone</th>
+                    <td className="px-3 py-2 font-mono font-semibold text-gray-900 dark:text-gray-100">
+                      {student.motherPhone ? (
+                        <div className="flex items-center gap-2">
+                          <a href={`tel:${student.motherPhone}`} className="text-emerald-600 hover:text-emerald-700 font-bold flex items-center gap-1.5 hover:underline">
+                            <Phone className="w-3 h-3 text-emerald-500" />
+                            <span>{student.motherPhone}</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/91${student.motherPhone.replace(/\D/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] font-black bg-emerald-100 text-emerald-700 hover:bg-emerald-200 px-1.5 py-0.5 rounded transition-colors"
+                            title="Chat on WhatsApp"
+                          >
+                            WA
+                          </a>
+                        </div>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>N/A</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : <span className="text-gray-400">N/A</span>}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Guardian</th>
+                    <td className="px-3 py-2">
+                      {student.guardianName || student.parent?.user?.name ? (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-gray-900 dark:text-white">{student.guardianName || student.parent?.user?.name}</span>
+                            {student.guardianRelation && (
+                              <span className="text-[10px] px-1.5 py-0.5 bg-amber-100/80 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 rounded font-semibold border border-amber-200 dark:border-amber-800">
+                                {student.guardianRelation}
+                              </span>
+                            )}
+                          </div>
+                          {(student.guardianPhone || student.parent?.user?.phone) && (
+                            <a href={`tel:${student.guardianPhone || student.parent?.user?.phone}`} className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 font-mono text-[11px] font-bold">
                               <Phone className="w-3 h-3 text-emerald-500" />
-                              <span>{student.fatherPhone}</span>
+                              <span>{student.guardianPhone || student.parent?.user?.phone}</span>
                             </a>
-                          ) : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Mother</th>
-                        <td className="px-3 py-2 font-semibold text-gray-900">{student.motherName || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Mother Aadhaar</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">{student.motherAadhar || 'N/A'}</td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Mother Phone</th>
-                        <td className="px-3 py-2 font-mono font-semibold text-gray-900">
-                          {student.motherPhone ? (
-                            <a href={`tel:${student.motherPhone}`} className="text-emerald-600 hover:text-emerald-700 flex items-center gap-1.5">
-                              <Phone className="w-3 h-3 text-emerald-500" />
-                              <span>{student.motherPhone}</span>
-                            </a>
-                          ) : 'N/A'}
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Guardian</th>
-                        <td className="px-3 py-2">
-                          {student.parent ? (
-                            <div className="space-y-1">
-                              <div className="font-bold text-gray-900">{student.parent.user.name}</div>
-                              <div className="flex items-center gap-1.5 text-gray-600">
-                                <Phone className="w-3 h-3 text-amber-500" /> {student.parent.user.phone || 'N/A'}
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-500 font-semibold">No guardian linked.</span>
                           )}
-                        </td>
-                      </tr>
-                      <tr className="hover:bg-amber-50/30 transition-colors">
-                        <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50">Address</th>
-                        <td className="px-3 py-2 text-gray-700 max-w-[150px] truncate" title={student.address}>{student.address || 'No address provided'}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                        </div>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>No guardian linked.</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Add)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400 font-medium">No guardian linked.</span>
+                      )}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-amber-50/20 transition-colors">
+                    <th className="px-3 py-2 w-1/3 font-bold text-gray-500 uppercase bg-gray-50/50 dark:bg-gray-800/30">Address</th>
+                    <td className="px-3 py-2 text-gray-700 dark:text-gray-300">
+                      {student.address ? (
+                        <div className="flex items-start gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                          <span className="text-xs leading-relaxed max-w-[220px] break-words" title={student.address}>{student.address}</span>
+                        </div>
+                      ) : canEdit ? (
+                        <button onClick={openFamilyModal} className="text-gray-400 hover:text-amber-600 text-[11px] font-medium inline-flex items-center gap-1 group">
+                          <span>No address provided</span>
+                          <span className="text-[10px] text-amber-500 font-bold opacity-0 group-hover:opacity-100 transition-opacity">(+ Edit)</span>
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">No address provided</span>
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             {/* Right Column: Fee Ledger Snapshot */}
@@ -1066,6 +1372,314 @@ export const StudentProfilePage: React.FC = () => {
         document.body
       )}
 
+      {/* Edit Demographics Modal */}
+      {showDemographicsModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/50 backdrop-blur-xs print:hidden animate-fade-in">
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setShowDemographicsModal(false)} />
+          <div className="relative card w-full max-w-lg p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 rounded-xl">
+                  <User2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Demographics</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Update gender, DOB, blood group, Aadhaar & PEN for {student.user?.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDemographicsModal(false)}
+                disabled={isSubmitting}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveDemographics} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">Gender</label>
+                  <select
+                    value={editGender}
+                    onChange={(e) => setEditGender(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="MALE">Male (బాలుడు)</option>
+                    <option value="FEMALE">Female (బాలిక)</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">Date of Birth (DOB)</label>
+                  <input
+                    type="date"
+                    value={editDob}
+                    onChange={(e) => setEditDob(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">Blood Group</label>
+                  <select
+                    value={editBloodGroup}
+                    onChange={(e) => setEditBloodGroup(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  >
+                    <option value="">Select Blood Group</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                    Student Aadhaar Number {editAadharNo ? `(${editAadharNo.length}/12)` : ''}
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={editAadharNo}
+                    onChange={(e) => setEditAadharNo(e.target.value.replace(/\D/g, ''))}
+                    placeholder="12-digit Aadhaar"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                </div>
+
+                <div className="sm:col-span-2">
+                  <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">PEN Number</label>
+                  <input
+                    type="text"
+                    value={editPenNumber}
+                    onChange={(e) => setEditPenNumber(e.target.value.toUpperCase())}
+                    placeholder="Permanent Education Number"
+                    className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setShowDemographicsModal(false)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Demographics'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Family Details Modal */}
+      {showFamilyModal && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/50 backdrop-blur-xs print:hidden animate-fade-in">
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setShowFamilyModal(false)} />
+          <div className="relative card w-full max-w-xl p-6 space-y-5 animate-scale-in z-10 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-xl">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Family & Address Details</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Update parents, guardian contacts, and address for {student.user?.name}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFamilyModal(false)}
+                disabled={isSubmitting}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveFamily} className="space-y-5">
+              {/* Father Details */}
+              <div className="p-4 bg-amber-50/40 dark:bg-amber-950/20 rounded-xl border border-amber-100/80 dark:border-amber-900/40 space-y-3">
+                <h4 className="text-xs font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>👨</span> Father's Details
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Father Name</label>
+                    <input
+                      type="text"
+                      value={editFatherName}
+                      onChange={(e) => setEditFatherName(e.target.value)}
+                      placeholder="Father's full name"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">
+                      Aadhaar {editFatherAadhar ? `(${editFatherAadhar.length}/12)` : ''}
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={editFatherAadhar}
+                      onChange={(e) => setEditFatherAadhar(e.target.value.replace(/\D/g, ''))}
+                      placeholder="12-digit Aadhaar"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={editFatherPhone}
+                      onChange={(e) => setEditFatherPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="10-digit Mobile"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-amber-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Mother Details */}
+              <div className="p-4 bg-pink-50/40 dark:bg-pink-950/20 rounded-xl border border-pink-100/80 dark:border-pink-900/40 space-y-3">
+                <h4 className="text-xs font-bold text-pink-800 dark:text-pink-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>👩</span> Mother's Details
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Mother Name</label>
+                    <input
+                      type="text"
+                      value={editMotherName}
+                      onChange={(e) => setEditMotherName(e.target.value)}
+                      placeholder="Mother's full name"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">
+                      Aadhaar {editMotherAadhar ? `(${editMotherAadhar.length}/12)` : ''}
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={12}
+                      value={editMotherAadhar}
+                      onChange={(e) => setEditMotherAadhar(e.target.value.replace(/\D/g, ''))}
+                      placeholder="12-digit Aadhaar"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={editMotherPhone}
+                      onChange={(e) => setEditMotherPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="10-digit Mobile"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-pink-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Guardian / Alternate Details */}
+              <div className="p-4 bg-purple-50/40 dark:bg-purple-950/20 rounded-xl border border-purple-100/80 dark:border-purple-900/40 space-y-3">
+                <h4 className="text-xs font-bold text-purple-800 dark:text-purple-300 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>🛡️</span> Guardian / Alternate Contact (Optional)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Guardian Name</label>
+                    <input
+                      type="text"
+                      value={editGuardianName}
+                      onChange={(e) => setEditGuardianName(e.target.value)}
+                      placeholder="Guardian name"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Relation</label>
+                    <input
+                      type="text"
+                      value={editGuardianRelation}
+                      onChange={(e) => setEditGuardianRelation(e.target.value)}
+                      placeholder="e.g. Grandfather, Uncle"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Guardian Phone</label>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={editGuardianPhone}
+                      onChange={(e) => setEditGuardianPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="10-digit Phone"
+                      className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-mono font-semibold focus:ring-2 focus:ring-purple-500 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 dark:text-gray-300 uppercase tracking-wider mb-1.5">
+                  Residential Home Address
+                </label>
+                <textarea
+                  rows={2}
+                  value={editAddress}
+                  onChange={(e) => setEditAddress(e.target.value)}
+                  placeholder="Full residential address (Door No, Street, Village/Town, Mandal, District, PIN)"
+                  className="w-full px-3.5 py-2.5 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100 dark:border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setShowFamilyModal(false)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-300 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md shadow-amber-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Family Details'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* ============================================================
              ================= PRINT-ONLY DOSSIER VIEW =================
              ============================================================ */}
@@ -1225,7 +1839,7 @@ export const StudentProfilePage: React.FC = () => {
                     </tr>
                     <tr className="border-b border-slate-200">
                       <td className="px-3 py-[5px] font-bold text-slate-500 bg-slate-50/60">PRIMARY CONTACT</td>
-                      <td className="px-3 py-[5px] font-black text-slate-900 font-mono tracking-wider">{student.parent?.user?.phone || student.mobileNumber || student.user?.phone || 'N/A'}</td>
+                      <td className="px-3 py-[5px] font-black text-slate-900 font-mono tracking-wider">{student.guardianPhone || student.fatherPhone || student.motherPhone || student.parent?.user?.phone || student.mobileNumber || student.user?.phone || 'N/A'}</td>
                     </tr>
                   </tbody>
                 </table>

@@ -18,13 +18,22 @@ async function main() {
     await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "motherPhone" TEXT;`);
     console.log('✅ Column "motherPhone" successfully verified/added in "Student" table.');
 
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianName" TEXT;`);
+    console.log('✅ Column "guardianName" successfully verified/added in "Student" table.');
+
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianPhone" TEXT;`);
+    console.log('✅ Column "guardianPhone" successfully verified/added in "Student" table.');
+
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianRelation" TEXT;`);
+    console.log('✅ Column "guardianRelation" successfully verified/added in "Student" table.');
+
     const check = await prisma.$queryRawUnsafe(`
       SELECT column_name, data_type 
       FROM information_schema.columns 
-      WHERE table_name = 'Student' AND column_name IN ('fatherAadhar', 'motherAadhar', 'fatherPhone', 'motherPhone', 'aadharNo');
+      WHERE table_name = 'Student' AND column_name IN ('fatherAadhar', 'motherAadhar', 'fatherPhone', 'motherPhone', 'guardianName', 'guardianPhone', 'guardianRelation', 'aadharNo');
     `);
     console.log('📊 Active Columns in Database:', check);
-    console.log('🎉 Database is 100% ready for Father & Mother Aadhaar, and Father & Mother Phone!');
+    console.log('🎉 Database is 100% ready for Father/Mother/Guardian details and Aadhaar!');
   } catch (err) {
     console.error('❌ Error executing database migration:', err);
   } finally {

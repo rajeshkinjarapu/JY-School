@@ -85,6 +85,9 @@ model Student {
   motherPhone    String?
   aadharNo       String?
   penNumber      String?
+  guardianName   String?
+  guardianPhone  String?
+  guardianRelation String?
 
   attendance            Attendance[]
   marks                 Mark[]

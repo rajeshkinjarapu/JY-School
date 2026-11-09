@@ -1,5 +1,33 @@
 # JY School Project State
 
+## Student Demographics & Family Details In-Place Edit & Display Overhaul (November 9, 2026)
+- **User Request:** "ee box lo unna prati option kuda edit option lo avvali, edit chesaka show avvali perfect ga professsional ga design cheyu".
+- **Feature Scope:** Complete overhaul of Student Demographics and Family Details on the web app. Every single field (Gender, DOB, Blood Group, Aadhaar, PEN, Father Name, Father Aadhaar, Father Phone, Mother Name, Mother Aadhaar, Mother Phone, Guardian Name, Guardian Phone, Guardian Relation, Address) can now be edited directly on the Profile page via dedicated high-density modern modal dialogs or through the full Edit Profile page. All edited values immediately save to the database and reflect live on the profile cards.
+- **Database Schema & Migration:**
+  - `backend/prisma/schema.prisma`: Added `guardianName String?`, `guardianPhone String?`, and `guardianRelation String?` to `model Student`.
+  - `backend/add_columns.js`: Added non-destructive SQL commands:
+    - `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianName" TEXT;`
+    - `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianPhone" TEXT;`
+    - `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianRelation" TEXT;`
+- **Backend API (`backend/src/controllers/students.controller.ts`):**
+  - Updated `update` and `create` methods to accept, sanitize, trim, and persist `guardianName`, `guardianPhone`, `guardianRelation`, `gender`, `dob`, `bloodGroup`, `aadharNo`, `penNumber`, `fatherName`, `motherName`, `fatherAadhar`, `motherAadhar`, `fatherPhone`, `motherPhone`, and `address`.
+  - Converted update logic to strict `!== undefined ? (val || null) : undefined` so clearing or updating fields works reliably without leaving stale values.
+  - Hardened partial User updating to prevent overwriting user name/phone when only demographics/family details are updated.
+- **Web App (`StudentProfilePage.tsx` & `StudentFormPage.tsx`):**
+  - `StudentProfilePage.tsx`:
+    - Added dedicated "Edit" buttons on both the Demographics card header and Family card header.
+    - Added interactive `(+ Edit)` / `(+ Add)` click triggers directly on empty `N/A` rows.
+    - Created two rich, accessible modal portals (`Edit Demographics Modal` and `Edit Family Details Modal`) with segmented inputs, 12-digit Aadhaar formatting, 10-digit phone inputs, DOB date picker with dynamic student age calculation, Blood Group selectors, and real-time toast feedback.
+    - Upgraded Demographics display with colored gender pills (Male 👦 / Female 👧), age badges, crimson blood group droplet badges, monospace 4-digit grouped Aadhaar, and emerald PEN tags.
+    - Upgraded Family display with bold parent names, direct tap-to-call (`tel:`) and WhatsApp buttons, relation badges for guardians, and MapPin formatted addresses.
+  - `StudentFormPage.tsx`:
+    - Added inputs for `guardianName`, `guardianPhone`, and `guardianRelation`.
+    - Wired `reset` and `register` form bindings.
+    - Configured post-save navigation to redirect straight back to `/students/${id}` so changes are visible instantly.
+- **Deployment Status:**
+  - Backend: Run on VPS (`ssh root@66.116.252.191`): `cd /root/JY-School/backend && git pull origin main && node add_columns.js && npx prisma db push && npm run build && pm2 restart backend`.
+  - Frontend Web: Run on VPS (`ssh root@66.116.252.191`): `cd /root/JY-School/frontend && git pull origin main && npm run build && pm2 restart frontend`.
+
 ## Student Father & Mother Phone Number & Aadhaar Full-Stack Integration (November 7, 2026)
 - **Feature Scope:** Added end-to-end support for Father's Phone Number (`fatherPhone`) and Mother's Phone Number (`motherPhone`) alongside Aadhaar numbers across Database, Backend REST APIs, Web App, and Flutter Mobile App.
 - **Database Schema & Migration:**

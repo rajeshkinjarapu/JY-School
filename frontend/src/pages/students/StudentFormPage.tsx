@@ -49,6 +49,9 @@ export const StudentFormPage: React.FC = () => {
         motherAadhar: student.motherAadhar || '',
         fatherPhone: student.fatherPhone || '',
         motherPhone: student.motherPhone || '',
+        guardianName: student.guardianName || '',
+        guardianPhone: student.guardianPhone || '',
+        guardianRelation: student.guardianRelation || '',
         aadharNo: student.aadharNo || '',
         penNumber: student.penNumber || '',
       });
@@ -97,7 +100,7 @@ export const StudentFormPage: React.FC = () => {
         await api.post('/api/students', payload);
         toast.success('New student added successfully!');
       }
-      navigate('/students');
+      navigate(id ? `/students/${id}` : '/students');
     } catch (error: any) {
       toast.error(error.response?.data?.message || error.message || 'Error saving student profile');
     }
@@ -208,6 +211,18 @@ export const StudentFormPage: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Mother's Phone Number</label>
                 <input type="tel" maxLength={10} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="10-digit Mother Phone" {...register('motherPhone')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Guardian Name (Optional)</label>
+                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Guardian's name" {...register('guardianName')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Guardian Relation</label>
+                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="e.g. Grandfather, Uncle" {...register('guardianRelation')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Guardian Phone Number</label>
+                <input type="tel" maxLength={10} className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="10-digit Guardian Phone" {...register('guardianPhone')} />
               </div>
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Contact Phone</label>
