@@ -566,6 +566,14 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             _infoRow(Icons.credit_card_rounded, "Mother's Aadhaar", _safeValue(s['motherAadhar'] ?? s['mother_aadhar'] ?? s['motherAadhaar']), const Color(0xFF0EA5E9)),
             _infoRow(Icons.phone_rounded, "Mother's Phone", _safeValue(s['motherPhone'] ?? s['mother_phone']), const Color(0xFF10B981),
                 onTap: (_safeValue(s['motherPhone'] ?? s['mother_phone']) != 'N/A') ? () => _launchUrl('tel', (s['motherPhone'] ?? s['mother_phone']).toString()) : null),
+            if (_safeValue(s['guardianName']) != 'N/A') ...[
+              _infoRow(Icons.security_rounded, "Guardian's Name", s['guardianName'] ?? 'N/A', const Color(0xFF6366F1)),
+              if (_safeValue(s['guardianRelation']) != 'N/A')
+                _infoRow(Icons.people_outline_rounded, "Guardian Relation", s['guardianRelation'] ?? 'N/A', const Color(0xFF8B5CF6)),
+              if (_safeValue(s['guardianPhone']) != 'N/A')
+                _infoRow(Icons.phone_rounded, "Guardian Phone", _safeValue(s['guardianPhone']), const Color(0xFF10B981),
+                    onTap: () => _launchUrl('tel', s['guardianPhone'].toString())),
+            ],
           ]),
         ],
       ),
@@ -915,6 +923,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final religionC = TextEditingController(text: s['religion'] ?? '');
     final categoryC = TextEditingController(text: s['casteCategory'] ?? '');
     final aadharC = TextEditingController(text: s['aadharNo'] ?? s['aadhar'] ?? s['aadhaarNo'] ?? '');
+    final penC = TextEditingController(text: s['penNumber'] ?? '');
+    final guardianNameC = TextEditingController(text: s['guardianName'] ?? '');
+    final guardianPhoneC = TextEditingController(text: s['guardianPhone'] ?? '');
+    final guardianRelationC = TextEditingController(text: s['guardianRelation'] ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -974,6 +986,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     _editField('Gender', genderC, hint: 'MALE / FEMALE', icon: Icons.person_rounded),
                     _editField('Blood Group', bloodC, hint: 'A+, B-, O+...', icon: Icons.bloodtype_rounded),
                     _editField('Aadhaar No', aadharC, icon: Icons.credit_card_rounded, keyboardType: TextInputType.number),
+                    _editField('PEN Number', penC, icon: Icons.numbers_rounded),
                     _editField('Religion', religionC, icon: Icons.account_balance_rounded),
                     _editField('Category', categoryC, icon: Icons.category_rounded),
                     _editField('Address', addressC, icon: Icons.home_rounded, maxLines: 2),
@@ -986,6 +999,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     _editField("Mother's Name", motherNameC, icon: Icons.person_rounded),
                     _editField("Mother's Aadhaar", motherAadharC, icon: Icons.credit_card_rounded, keyboardType: TextInputType.number),
                     _editField("Mother's Phone", motherPhoneC, icon: Icons.phone_rounded, keyboardType: TextInputType.phone),
+                    _editField("Guardian's Name", guardianNameC, icon: Icons.security_rounded),
+                    _editField("Guardian's Relation", guardianRelationC, icon: Icons.people_outline_rounded),
+                    _editField("Guardian's Phone", guardianPhoneC, icon: Icons.phone_rounded, keyboardType: TextInputType.phone),
                   ]),
                 ]),
               )),
@@ -1009,6 +1025,10 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     if (religionC.text.isNotEmpty) data['religion'] = religionC.text;
                     if (categoryC.text.isNotEmpty) data['casteCategory'] = categoryC.text;
                     data['aadharNo'] = aadharC.text.trim();
+                    data['penNumber'] = penC.text.trim();
+                    data['guardianName'] = guardianNameC.text.trim();
+                    data['guardianPhone'] = guardianPhoneC.text.trim();
+                    data['guardianRelation'] = guardianRelationC.text.trim();
                     final res = await ApiService.updateStudent(s['id'] ?? '', data);
                     setSS(() => isSaving = false);
                     if (mounted) {

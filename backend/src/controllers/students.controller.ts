@@ -82,6 +82,7 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+
   const student = await prisma.student.findFirst({
     where: {
       OR: [
@@ -729,6 +730,7 @@ export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void>
 };
 
 export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+
   const student = await prisma.student.findFirst({
     where: { userId: req.user!.id },
     include: {

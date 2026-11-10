@@ -32,12 +32,12 @@ export const StudentFormPage: React.FC = () => {
     setLoading(true);
     try {
       const res: any = await api.get(`/api/students/${id}`);
-      const student = res.data;
-      setPhotoUrl(student.user.photoUrl || '');
+      const student = res.data?.data || res.data;
+      setPhotoUrl(student?.user?.photoUrl || student?.photoUrl || '');
       reset({
-        name: student.user.name,
+        name: student?.user?.name || student?.name || '',
         studentId: student.rollNo,
-        phone: student.user.phone || '',
+        phone: student?.user?.phone || student?.phone || '',
         classId: student.classId || '',
         dob: student.dob ? new Date(student.dob).toISOString().split('T')[0] : '',
         gender: student.gender || '',

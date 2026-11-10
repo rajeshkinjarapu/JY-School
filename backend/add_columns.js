@@ -27,6 +27,9 @@ async function main() {
     await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianRelation" TEXT;`);
     console.log('✅ Column "guardianRelation" successfully verified/added in "Student" table.');
 
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "penNumber" TEXT;`);
+    console.log('✅ Column "penNumber" successfully verified/added in "Student" table.');
+
     const check = await prisma.$queryRawUnsafe(`
       SELECT column_name, data_type 
       FROM information_schema.columns 

@@ -12,7 +12,8 @@ import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Mail, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
-  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X
+  Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X,
+  CheckCircle2, AlertCircle
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -153,20 +154,21 @@ export const StudentProfilePage: React.FC = () => {
   };
   const fetchStudentProfile = async () => {
     try {
-      const [studentRes, structRes, classRes]: any = await Promise.all([
-        api.get(`/api/students/${id}?_t=${Date.now()}`),
-        api.get(`/api/fees/structures?_t=${Date.now()}`),
-        api.get(`/api/classes?_t=${Date.now()}`),
-      ]);
+      const studentRes: any = await api.get(`/api/students/${id}`);
       const studentData = studentRes?.data?.data || studentRes?.data || studentRes;
-      const structData = structRes?.data?.data || structRes?.data || structRes || [];
-      const classData = classRes?.data?.data || classRes?.data || classRes || [];
       setStudent(studentData);
-      setFeeStructures(structData);
-      setClasses(classData);
+      setLoading(false);
+
+      if (studentData?.id || studentData?.classId) {
+        api.get(`/api/fees/structures?classId=${studentData.classId || ''}&studentId=${studentData.id || ''}`)
+          .then((structRes: any) => {
+            const structData = structRes?.data?.data || structRes?.data || [];
+            setFeeStructures(structData);
+          })
+          .catch(() => {});
+      }
     } catch (e) {
       console.error(e);
-    } finally {
       setLoading(false);
     }
   };
@@ -374,6 +376,28 @@ export const StudentProfilePage: React.FC = () => {
     };
   }, [id]);
 
+  const getProfileCompleteness = (st: any) => {
+    if (!st) return { percentage: 0, completed: [], missing: [], total: 12 };
+    const checklist = [
+      { key: 'photo', label: 'Photo', done: Boolean(st.user?.photoUrl), modal: 'photo' },
+      { key: 'gender', label: 'Gender', done: Boolean(st.gender), modal: 'demographics' },
+      { key: 'dob', label: 'Date of Birth', done: Boolean(st.dob), modal: 'demographics' },
+      { key: 'bloodGroup', label: 'Blood Group', done: Boolean(st.bloodGroup), modal: 'demographics' },
+      { key: 'aadharNo', label: 'Aadhaar', done: Boolean(st.aadharNo), modal: 'demographics' },
+      { key: 'penNumber', label: 'PEN Number', done: Boolean(st.penNumber), modal: 'demographics' },
+      { key: 'fatherName', label: "Father's Name", done: Boolean(st.fatherName), modal: 'family' },
+      { key: 'fatherPhone', label: "Father's Phone", done: Boolean(st.fatherPhone), modal: 'family' },
+      { key: 'fatherAadhar', label: "Father's Aadhaar", done: Boolean(st.fatherAadhar), modal: 'family' },
+      { key: 'motherName', label: "Mother's Name", done: Boolean(st.motherName), modal: 'family' },
+      { key: 'motherPhone', label: "Mother's Phone", done: Boolean(st.motherPhone), modal: 'family' },
+      { key: 'address', label: 'Address', done: Boolean(st.address), modal: 'family' },
+    ];
+    const completed = checklist.filter((c) => c.done);
+    const missing = checklist.filter((c) => !c.done);
+    const percentage = Math.round((completed.length / checklist.length) * 100);
+    return { percentage, completed, missing, total: checklist.length };
+  };
+
   if (loading) return <LoadingSpinner size="lg" className="h-[50vh]" />;
   if (!student) return <div className="text-center py-12">Student profile not found.</div>;
 
@@ -429,7 +453,7 @@ export const StudentProfilePage: React.FC = () => {
                   {(isAdmin || user?.role === 'TEACHER') && (
                     <label className="absolute bottom-2 right-2 cursor-pointer flex items-center justify-center w-8 h-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-md transition-transform hover:scale-110 border-2 border-white dark:border-gray-900">
                       <Camera className="w-4 h-4" />
-                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
+                      <input id="student-photo-file-input" type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploading} />
                     </label>
                   )}
                 </div>
@@ -473,9 +497,15 @@ export const StudentProfilePage: React.FC = () => {
                       </span>
                       {(isAdmin || user?.role === 'TEACHER') && (
                         <button 
-                          onClick={() => {
+                          onClick={async () => {
                             setNewClassId(student.classId || '');
                             setShowSectionModal(true);
+                            if (classes.length === 0) {
+                              try {
+                                const classRes: any = await api.get('/api/classes');
+                                setClasses(classRes?.data?.data || classRes?.data || []);
+                              } catch (e) {}
+                            }
                           }}
                           className="ml-1 text-purple-400 hover:text-purple-600 transition-colors"
                         >
@@ -528,8 +558,98 @@ export const StudentProfilePage: React.FC = () => {
               </div>
             </div>
 
-          {/* Details Masonry/Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 ${user?.role === 'TEACHER' ? 'lg:grid-cols-2' : 'lg:grid-cols-3'} gap-4 items-start`}>
+            {/* Profile Completeness Status Widget */}
+            {(() => {
+              const { percentage, completed, missing, total } = getProfileCompleteness(student);
+              const isFull = percentage === 100;
+              const isWarning = percentage < 60;
+              return (
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 p-4 shadow-sm hover:shadow-md transition-all">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 shadow-inner ${
+                        isFull
+                          ? 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300'
+                          : isWarning
+                          ? 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-950/40 dark:text-amber-300'
+                          : 'bg-indigo-50 text-indigo-600 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300'
+                      }`}>
+                        {percentage}%
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                            {isFull ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <AlertCircle className="w-4 h-4 text-amber-500" />}
+                            Profile Completeness
+                          </h4>
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                            isFull
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300'
+                              : isWarning
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
+                              : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300'
+                          }`}>
+                            {isFull ? '100% Verified' : `${completed.length}/${total} Completed`}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                          {isFull
+                            ? 'All required demographic, family, and identification details are complete & verified.'
+                            : `${missing.length} details are missing. Click any button below to complete them.`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="w-full md:w-56 shrink-0">
+                      <div className="flex justify-between text-[11px] font-bold text-gray-500 dark:text-gray-400 mb-1.5">
+                        <span>Status</span>
+                        <span className={isFull ? 'text-emerald-600 font-extrabold' : 'text-indigo-600'}>{percentage}%</span>
+                      </div>
+                      <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-2.5 overflow-hidden">
+                        <div
+                          className={`h-2.5 rounded-full transition-all duration-700 ${
+                            isFull
+                              ? 'bg-emerald-500'
+                              : isWarning
+                              ? 'bg-gradient-to-r from-amber-400 to-amber-500'
+                              : 'bg-gradient-to-r from-indigo-500 to-blue-500'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {missing.length > 0 && canEdit && (
+                    <div className="mt-3.5 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mr-1">Missing Items:</span>
+                      {missing.map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          onClick={() => {
+                            if (item.modal === 'demographics') openDemographicsModal();
+                            else if (item.modal === 'family') openFamilyModal();
+                            else if (item.modal === 'photo') {
+                              const input = document.getElementById('student-photo-file-input') as HTMLInputElement;
+                              if (input) input.click();
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-colors cursor-pointer group shadow-2xs"
+                          title={`Click to fill ${item.label}`}
+                        >
+                          <span>{item.label}</span>
+                          <span className="text-[10px] text-amber-600 font-extrabold opacity-70 group-hover:opacity-100">+</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+          {/* Details Row 1: Demographics & Family (Spacious 2 Columns) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 
             {/* Demographics Card */}
             <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden h-full flex flex-col">
@@ -842,9 +962,13 @@ export const StudentProfilePage: React.FC = () => {
               </table>
             </div>
 
-            {/* Right Column: Fee Ledger Snapshot */}
-            {user?.role !== 'TEACHER' && (
-              <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-full max-h-[280px]">
+          </div>
+
+          {/* Row 2: Financial Management (Fee Ledger & Transaction History Side-by-Side) */}
+          {user?.role !== 'TEACHER' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start mt-4">
+              {/* Fee Ledger Snapshot Card (1 Col) */}
+              <div className="lg:col-span-1 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col h-full max-h-[320px]">
                 <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex justify-between items-center bg-gradient-to-r from-emerald-50/50 to-transparent dark:from-emerald-900/10">
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 bg-emerald-500 rounded-lg text-white shadow-md shadow-emerald-500/20"><CreditCard className="w-4 h-4" /></div>
@@ -912,83 +1036,80 @@ export const StudentProfilePage: React.FC = () => {
                     })}
                 </div>
               </div>
-            )}
 
-          </div>
-
-          {/* Full Width Transactions Table */}
-          {user?.role !== 'TEACHER' && (
-          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden mt-4">
-            <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-900/10">
-              <h3 className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <div className="p-1.5 bg-indigo-500 rounded-lg text-white shadow-md shadow-indigo-500/30"><ClipboardCheck className="w-4 h-4" /></div>
-                Transaction History
-              </h3>
-            </div>
-            <div className="overflow-x-auto max-h-[220px] overflow-y-auto">
-              <table className="w-full text-xs text-left">
-                <thead className="bg-gray-50/80 dark:bg-gray-800/40 uppercase text-gray-500 font-bold border-b border-gray-100 dark:border-gray-800 sticky top-0">
-                  <tr>
-                    <th className="px-3 py-2">Fee Structure</th>
-                    <th className="px-3 py-2">Amount</th>
-                    <th className="px-3 py-2">Date</th>
-                    <th className="hidden md:table-cell px-4 py-2">Method</th>
-                    <th className="hidden md:table-cell px-4 py-2">Receipt No</th>
-                    <th className="hidden md:table-cell px-4 py-2 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
-                  {student.feePayments?.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-4 text-center text-xs font-bold text-gray-400">No payment records found.</td></tr>
-                  ) : (
-                    student.feePayments?.map((p: any) => (
-                      <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                        <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
-                        <td className="px-3 py-2">
-                          <button
-                            type="button"
-                            onClick={() => setViewTransaction(p)}
-                            className="font-black text-emerald-600 hover:text-emerald-700 underline underline-offset-2 decoration-emerald-300 md:no-underline md:pointer-events-none cursor-pointer text-left"
-                            title="Click to view full transaction details"
-                          >
-                            ₹{p.amountPaid}
-                          </button>
-                        </td>
-                        <td className="px-3 py-2 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
-                        <td className="hidden md:table-cell px-4 py-2">
-                          <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                            {p.method}
-                          </span>
-                        </td>
-                        <td className="hidden md:table-cell px-4 py-2 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
-                        <td className="hidden md:table-cell px-4 py-2 text-right flex items-center justify-end gap-1">
-                          <button onClick={() => handlePrintReceipt(p)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Print Receipt">
-                            <FileDown className="w-3.5 h-3.5" />
-                          </button>
-                          {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
-                            <>
-                              <button onClick={() => { 
-                                setEditingPayment({
-                                  ...p,
-                                  paymentDate: p.paymentDate ? new Date(p.paymentDate).toISOString().split('T')[0] : new Date(p.createdAt).toISOString().split('T')[0]
-                                }); 
-                                setShowEditModal(true); 
-                              }} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button onClick={() => handleDeletePayment(p.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" title="Delete">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </>
-                          )}
-                        </td>
+              {/* Transaction History (2 Cols) */}
+              <div className="lg:col-span-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-3 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-indigo-50/50 to-transparent dark:from-indigo-900/10">
+                  <h3 className="text-[13px] font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <div className="p-1.5 bg-indigo-500 rounded-lg text-white shadow-md shadow-indigo-500/30"><ClipboardCheck className="w-4 h-4" /></div>
+                    Transaction History
+                  </h3>
+                </div>
+                <div className="overflow-x-auto max-h-[320px] overflow-y-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead className="bg-gray-50/80 dark:bg-gray-800/40 uppercase text-gray-500 font-bold border-b border-gray-100 dark:border-gray-800 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2">Fee Structure</th>
+                        <th className="px-3 py-2">Amount</th>
+                        <th className="px-3 py-2">Date</th>
+                        <th className="hidden md:table-cell px-4 py-2">Method</th>
+                        <th className="hidden md:table-cell px-4 py-2">Receipt No</th>
+                        <th className="hidden md:table-cell px-4 py-2 text-right">Actions</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
+                      {student.feePayments?.length === 0 ? (
+                        <tr><td colSpan={6} className="px-4 py-4 text-center text-xs font-bold text-gray-400">No payment records found.</td></tr>
+                      ) : (
+                        student.feePayments?.map((p: any) => (
+                          <tr key={p.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
+                            <td className="px-3 py-2 font-semibold text-gray-800 dark:text-gray-200">{p.feeStructure?.name}</td>
+                            <td className="px-3 py-2">
+                              <button
+                                type="button"
+                                onClick={() => setViewTransaction(p)}
+                                className="font-black text-emerald-600 hover:text-emerald-700 underline underline-offset-2 decoration-emerald-300 md:no-underline md:pointer-events-none cursor-pointer text-left"
+                                title="Click to view full transaction details"
+                              >
+                                ₹{p.amountPaid}
+                              </button>
+                            </td>
+                            <td className="px-3 py-2 font-medium text-gray-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
+                            <td className="hidden md:table-cell px-4 py-2">
+                              <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {p.method}
+                              </span>
+                            </td>
+                            <td className="hidden md:table-cell px-4 py-2 font-mono text-xs font-semibold text-gray-400 truncate max-w-[120px]">{p.receiptNo || 'N/A'}</td>
+                            <td className="hidden md:table-cell px-4 py-2 text-right flex items-center justify-end gap-1">
+                              <button onClick={() => handlePrintReceipt(p)} className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors" title="Print Receipt">
+                                <FileDown className="w-3.5 h-3.5" />
+                              </button>
+                              {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'ACCOUNTANT') && (
+                                <>
+                                  <button onClick={() => { 
+                                    setEditingPayment({
+                                      ...p,
+                                      paymentDate: p.paymentDate ? new Date(p.paymentDate).toISOString().split('T')[0] : new Date(p.createdAt).toISOString().split('T')[0]
+                                    }); 
+                                    setShowEditModal(true); 
+                                  }} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors" title="Edit">
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => handleDeletePayment(p.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors" title="Delete">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
-          </div>
           )}
 
         </div>
