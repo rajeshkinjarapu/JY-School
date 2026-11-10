@@ -346,7 +346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Positioned(
                       right: -2,
                       top: -2,
-                      child: Container(
+                      child: Column(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF3D5E),
@@ -511,7 +511,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Positioned(
             right: 0,
             top: 0,
-            child: Container(
+            child: Column(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
@@ -558,7 +558,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ));
         }
       },
-      child: Container(
+      child: Column(
         margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -695,7 +695,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -712,7 +712,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Expanded(
               flex: 3,
-              child: Container(
+              child: Column(
                 margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
                 decoration: BoxDecoration(
                   color: color,
@@ -878,7 +878,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
             },
-            child: Container(
+            child: Column(
               width: 78,
               height: 78,
               decoration: BoxDecoration(
@@ -913,7 +913,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Row(
         children: [
           Expanded(
-            child: Container(
+            child: Column(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -956,7 +956,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Container(
+            child: Column(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -1004,7 +1004,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Row(
         children: [
           Expanded(
-            child: Container(
+            child: Column(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -1046,7 +1046,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Container(
+            child: Column(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -1194,7 +1194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         }
       },
-      child: Container(
+      child: Column(
         margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -1215,7 +1215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Positioned(
             right: -20,
             top: -20,
-            child: Container(
+            child: Column(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
@@ -1366,7 +1366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildGridItem(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1421,7 +1421,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         height: 100,
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -1445,7 +1445,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -18,
               right: -18,
-              child: Container(
+              child: Column(
                 width: 70,
                 height: 70,
                 decoration: BoxDecoration(
@@ -1457,7 +1457,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 16,
               right: 10,
-              child: Container(
+              child: Column(
                 width: 30,
                 height: 30,
                 decoration: BoxDecoration(
@@ -1524,7 +1524,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildRevenueWideCard(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
-      child: Container(
+      child: Column(
         height: 92,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
@@ -1548,7 +1548,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -25,
               right: -25,
-              child: Container(
+              child: Column(
                 width: 110,
                 height: 110,
                 decoration: BoxDecoration(
@@ -1560,7 +1560,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 18,
               right: 30,
-              child: Container(
+              child: Column(
                 width: 45,
                 height: 45,
                 decoration: BoxDecoration(
@@ -1647,7 +1647,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
@@ -1670,7 +1670,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -28,
               right: -28,
-              child: Container(
+              child: Column(
                 width: 110,
                 height: 110,
                 decoration: BoxDecoration(
@@ -1683,7 +1683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 18,
               right: 18,
-              child: Container(
+              child: Column(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
@@ -1696,7 +1696,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               bottom: -16,
               left: -16,
-              child: Container(
+              child: Column(
                 width: 60,
                 height: 60,
                 decoration: BoxDecoration(
@@ -1710,7 +1710,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
+              child: Column(
                 height: 1.5,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1879,22 +1879,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-        childAspectRatio: ar.clamp(0.75, 1.3),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.0,
         children: [
           _buildImageCard(imagePath: 'app icons/mark attendance.png', title: 'Mark Attendance', borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherAttendanceScreen()))),
           _buildImageCard(imagePath: 'app icons/my studens.png', title: 'My Students', borderColor: const Color(0xFF8B5CF6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
-          _buildImageCard(imagePath: 'app icons/question papers.png', title: 'Question Papers', borderColor: const Color(0xFFF59E0B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen()))),
+
           _buildImageCard(imagePath: 'app icons/timetable.png', title: 'Timetable', borderColor: const Color(0xFF6366F1), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()))),
           _buildImageCard(imagePath: 'app icons/marks entry.png', title: 'Marks Entry', borderColor: const Color(0xFFF97316), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksUploadScreen()))),
           _buildImageCard(imagePath: 'app icons/results.png', title: 'Results', borderColor: const Color(0xFF10B981), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
           _buildImageCard(imagePath: 'app icons/progress card.png', title: 'Progress Cards', borderColor: const Color(0xFFD946EF), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
           _buildImageCard(imagePath: 'app icons/fee remainder.png', title: 'Fee Reminder', borderColor: const Color(0xFF14B8A6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeReminderSearchScreen()))),
-          _buildImageCard(imagePath: 'app icons/messaging.png', title: 'Messaging', borderColor: const Color(0xFF25D366), onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Messaging coming soon!')))),
+
           _buildImageCard(imagePath: 'app icons/home work.png', title: 'Home Work', borderColor: const Color(0xFFEAB308), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
           _buildImageCard(imagePath: 'app icons/leave apply.png', title: 'Leave Apply', borderColor: const Color(0xFF3B82F6), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const LeaveDashboardScreen()))),
-          _buildImageCard(imagePath: 'app icons/gate pass.png', title: 'Gate Pass', borderColor: const Color(0xFF64748B), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const GatePassScreen()))),
+
         ],
       );
     } else {
@@ -1979,7 +1979,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -2075,7 +2075,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color,
@@ -2652,7 +2652,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 16),
           ..._recentHomework.take(3).map((hw) => Padding(
             padding: const EdgeInsets.only(bottom: 12.0),
-            child: Container(
+            child: Column(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
               child: Column(

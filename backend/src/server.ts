@@ -83,17 +83,20 @@ app.use(helmet({
 app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(rateLimiter);
+// Rate limiting applied only to /api below
 // app.use(auditNotificationMiddleware as any); // Disabled to prevent duplicate generic notifications
 
 // Static files (uploads)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), { maxAge: '7d' }));
 const appIconsDir = path.join(__dirname, '../public/app-icons');
 if (!fs.existsSync(appIconsDir)) {
   fs.mkdirSync(appIconsDir, { recursive: true });
 }
-app.use('/app-icons', express.static(appIconsDir));
+app.use('/app-icons', express.static(appIconsDir, { maxAge: '7d', immutable: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+
+// Rate limiter applied ONLY to API endpoints (not static files)
+app.use('/api', rateLimiter);
 
 // API Routes
 app.use('/api/auth', authRoutes);

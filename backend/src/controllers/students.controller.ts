@@ -26,7 +26,7 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
 
     const useCache = limit <= 100;
     const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}`;
-    
+
     if (useCache) {
       const cached = await cache.get<any>(cacheKey);
       if (cached) {
@@ -94,8 +94,8 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true, createdAt: true } },
       class: true,
-      marks: { 
-        select: { 
+      marks: {
+        select: {
           id: true,
           marksObtained: true,
           maxMarks: true,
@@ -105,9 +105,9 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
           examId: true,
           subjectId: true,
           studentId: true,
-          exam: { select: { id: true, name: true, term: true, examDate: true, maxMarks: true, passingMarks: true } }, 
-          subject: { select: { id: true, name: true, code: true, classId: true } } 
-        }, 
+          exam: { select: { id: true, name: true, term: true, examDate: true, maxMarks: true, passingMarks: true } },
+          subject: { select: { id: true, name: true, code: true, classId: true } }
+        },
         orderBy: { createdAt: 'desc' },
         take: 20
       },
@@ -180,7 +180,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
   if (!rollNo) {
     let count = 0;
-    
+
     if (classId) {
       const maxStudentInClass = await prisma.student.findFirst({
         where: { classId },
@@ -193,7 +193,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
         }
       }
     }
-    
+
     if (count === 0) {
       count = await prisma.student.count();
     }
@@ -297,7 +297,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   if (newStudentId && newStudentId !== student.rollNo) {
     const existing = await prisma.student.findUnique({ where: { rollNo: newStudentId } });
     if (existing) return next(createError('Student ID already exists', 409));
-    
+
     // Update User email (login ID) to the new Student ID
     await prisma.user.update({
       where: { id: student.userId },
@@ -456,7 +456,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const rawResults = XLSX.utils.sheet_to_json<any>(sheet);
-    
+
     // Normalize keys to support case-insensitive headers like "STUDENT NAME"
     const results = rawResults.map(r => {
       const normalizedRow: any = {};
@@ -475,7 +475,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
     let success = 0;
     const failed: any[] = [];
-    
+
     // Fetch initial count once to save DB roundtrips
     let currentStudentCount = await prisma.student.count();
 
@@ -483,7 +483,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
       try {
         const name = row.name || row.studentname || row.firstname;
         const phone = row.phone || row.mobileno || row.mobile;
-        
+
         let classId = row.classid || null;
         const className = row.classname || row.class || null;
         const section = row.section || row.sectionname;
@@ -492,12 +492,12 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           const clsName = String(className).trim();
           const clsSec = section ? String(section).trim() : 'A';
           let cls = await prisma.class.findFirst({
-            where: { 
-              name: clsName, 
-              section: clsSec 
+            where: {
+              name: clsName,
+              section: clsSec
             }
           });
-          
+
           if (!cls) {
             cls = await prisma.class.create({
               data: {
@@ -542,7 +542,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
         const rollNo = row.studentid || row.rollno || generateRollNo(currentStudentCount + 1);
         const email = rollNo; // UserID is always Student ID
-        
+
         // Password is explicitly provided, or defaults to Student2026
         const password = row.password || "Student2026";
 
@@ -625,15 +625,15 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           },
         });
 
-        
+
         // Fee details creation
         const admissionFee = row['Admission fee'] || row['Admission Fee'] || null;
         const tuitionFee = row['Tution fee'] || row['Tution Fee'] || row['Tuition fee'] || row['Tuition Fee'] || null;
         const booksFee = row['Books fee'] || row['Books Fee'] || null;
-        
+
         const feeStructuresToCreate = [];
         const dueDate = new Date(); // Default due date to today
-        
+
         if (admissionFee && !isNaN(parseFloat(admissionFee))) {
           feeStructuresToCreate.push({
             studentId: newStudent.id,
@@ -643,7 +643,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             dueDate
           });
         }
-        
+
         if (tuitionFee && !isNaN(parseFloat(tuitionFee))) {
           feeStructuresToCreate.push({
             studentId: newStudent.id,
@@ -653,7 +653,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             dueDate
           });
         }
-        
+
         if (booksFee && !isNaN(parseFloat(booksFee))) {
           feeStructuresToCreate.push({
             studentId: newStudent.id,
@@ -663,13 +663,13 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             dueDate
           });
         }
-        
+
         if (feeStructuresToCreate.length > 0) {
           await prisma.feeStructure.createMany({
             data: feeStructuresToCreate
           });
         }
-        
+
         currentStudentCount++;
         success++;
       } catch (e: any) {
@@ -751,65 +751,65 @@ export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFu
 
 export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   if (!req.file) return next(createError('ZIP file required', 400));
-  
+
   try {
     const zipPath = req.file.path;
     const zip = new AdmZip(zipPath);
     const zipEntries = zip.getEntries();
-    
+
     let success = 0;
     const failed: any[] = [];
-    
+
     const uploadDir = path.join(__dirname, '../../uploads');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
-    
+
     for (const zipEntry of zipEntries) {
       if (zipEntry.isDirectory) continue;
-      
+
       const fileName = zipEntry.entryName.split('/').pop() || zipEntry.entryName;
-      if (fileName.startsWith('.') || fileName.startsWith('__MACOSX')) continue; 
-      
+      if (fileName.startsWith('.') || fileName.startsWith('__MACOSX')) continue;
+
       const ext = path.extname(fileName).toLowerCase();
       if (!['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) {
         failed.push({ file: fileName, reason: 'Invalid image format' });
         continue;
       }
-      
+
       // Extract Roll No using regex (e.g. JY26-0047) to allow names like "JY26-0047 Charan.jpg"
       const rollMatch = fileName.match(/(JY\d{2}-\d+)/i);
       const rollNo = rollMatch ? rollMatch[1].toUpperCase() : path.basename(fileName, ext).trim();
-      
+
       const student = await prisma.student.findUnique({
         where: { rollNo },
         include: { user: true }
       });
-      
+
       if (!student) {
         failed.push({ file: fileName, reason: `Student ID ${rollNo} not found` });
         continue;
       }
-      
+
       const fileBuffer = zipEntry.getData();
       const base64Str = fileBuffer.toString('base64');
       const mimeType = ext === '.png' ? 'image/png' : ext === '.webp' ? 'image/webp' : 'image/jpeg';
       const dataUri = `data:${mimeType};base64,${base64Str}`;
-      
+
       await prisma.user.update({
         where: { id: student.userId },
         data: { photoUrl: dataUri }
       });
-      
+
       success++;
     }
-    
+
     fs.unlinkSync(zipPath);
-    
+
     // Clear list cache so new photos appear everywhere
     cache.delPattern('students:list:*');
     clearDashboardCache();
-    
+
     successResponse(res, { success, failed }, `Bulk photo upload complete. ${success} uploaded.`);
   } catch (error) {
     next(error);
@@ -819,7 +819,7 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
 export const getTemplate = async (_req: AuthRequest, res: Response): Promise<void> => {
   const headers = ['Student ID', 'Student Name', 'Mobile No', 'Class Name', 'Section Name', 'Gender', 'Blood Group', 'Father Name', 'Mother Name', 'Aadhar No', 'PEN Number', 'Address', 'Admission fee', 'Tution fee', 'Books fee'];
   const sampleRow = ['JY26-0004', 'John Doe', '9876543210', 'Grade 10', 'A', 'MALE', 'O+', 'Richard Doe', 'Jane Doe', '123456789012', 'PEN123', '123 Main St', '5000', '25000', '2000'];
-  
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
   XLSX.utils.book_append_sheet(wb, ws, 'Template');
