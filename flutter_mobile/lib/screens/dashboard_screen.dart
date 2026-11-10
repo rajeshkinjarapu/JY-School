@@ -346,8 +346,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Positioned(
                       right: -2,
                       top: -2,
-                      child: Column(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF3D5E),
                           borderRadius: BorderRadius.circular(10),
@@ -381,7 +381,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? _buildStudentDashboard(userName, metaLabel, metaValue)
                     : SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        child: Column(
+                        child: Container(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildProfileCard(userName, userRole, metaLabel, metaValue),
@@ -473,7 +473,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.only(right: 90),
-            child: Column(
+            child: Container(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -511,7 +511,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Positioned(
             right: 0,
             top: 0,
-            child: Column(
+            child: Container(
               width: 80,
               height: 80,
               decoration: BoxDecoration(
@@ -558,8 +558,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ));
         }
       },
-      child: Column(
-        margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -569,7 +569,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
           border: Border.all(color: const Color(0xFFFDE68A), width: 1),
         ),
-        child: Column(
+        child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -695,8 +695,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        decoration: BoxDecoration(
+      child: Container(
+              decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.withOpacity(0.1)),
@@ -708,12 +708,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Column(
+        child: Container(
           children: [
             Expanded(
               flex: 3,
-              child: Column(
-                margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
+              child: Container(
+              margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -768,7 +768,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Column(
+            child: Container(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Learning Today\nLeading Tomorrow', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, height: 1.2)),
@@ -825,7 +825,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Column(
+            child: Container(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -878,7 +878,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
             },
-            child: Column(
+            child: Container(
               width: 78,
               height: 78,
               decoration: BoxDecoration(
@@ -913,14 +913,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Row(
         children: [
           Expanded(
-            child: Column(
+            child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -956,14 +956,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
+            child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1004,14 +1004,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return Row(
         children: [
           Expanded(
-            child: Column(
+            child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1046,14 +1046,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            child: Column(
+            child: Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1194,8 +1194,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           });
         }
       },
-      child: Column(
-        margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
+      child: Container(
+              margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)], // Soft Light Amber/Gold
@@ -1215,7 +1215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Positioned(
             right: -20,
             top: -20,
-            child: Column(
+            child: Container(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
@@ -1246,7 +1246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 14),
                 // Text content
                 Expanded(
-                  child: Column(
+                  child: Container(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
@@ -1279,9 +1279,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-    ));
+    );
   }
-
 
   Widget _buildAdminCombinedGrid(BuildContext context) {
     return Column(
@@ -1366,8 +1365,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildGridItem(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        decoration: BoxDecoration(
+      child: Container(
+              decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
@@ -1379,7 +1378,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
           border: Border.all(color: Colors.grey.withOpacity(0.1)),
         ),
-        child: Column(
+        child: Container(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
@@ -1421,8 +1420,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        height: 100,
+      child: Container(
+              height: 100,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
@@ -1445,8 +1444,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -18,
               right: -18,
-              child: Column(
-                width: 70,
+              child: Container(
+              width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1457,8 +1456,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 16,
               right: 10,
-              child: Column(
-                width: 30,
+              child: Container(
+              width: 30,
                 height: 30,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1468,7 +1467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1524,8 +1523,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildRevenueWideCard(BuildContext context) {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
-      child: Column(
-        height: 92,
+      child: Container(
+              height: 92,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFBE185D), Color(0xFF881337)],
@@ -1548,8 +1547,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -25,
               right: -25,
-              child: Column(
-                width: 110,
+              child: Container(
+              width: 110,
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1560,8 +1559,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 18,
               right: 30,
-              child: Column(
-                width: 45,
+              child: Container(
+              width: 45,
                 height: 45,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1586,7 +1585,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(width: 16),
                   // Label + value
                   Expanded(
-                    child: Column(
+                    child: Container(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1647,8 +1646,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        decoration: BoxDecoration(
+      child: Container(
+              decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
             begin: Alignment.topLeft,
@@ -1670,8 +1669,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: -28,
               right: -28,
-              child: Column(
-                width: 110,
+              child: Container(
+              width: 110,
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1683,8 +1682,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               top: 18,
               right: 18,
-              child: Column(
-                width: 56,
+              child: Container(
+              width: 56,
                 height: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1696,8 +1695,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Positioned(
               bottom: -16,
               left: -16,
-              child: Column(
-                width: 60,
+              child: Container(
+              width: 60,
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1710,8 +1709,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               bottom: 0,
               left: 0,
               right: 0,
-              child: Column(
-                height: 1.5,
+              child: Container(
+              height: 1.5,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -1726,7 +1725,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Main content
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -1979,8 +1978,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        padding: const EdgeInsets.all(16),
+      child: Container(
+              padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [gradientStart, gradientEnd],
@@ -1996,7 +1995,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Column(
+        child: Container(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -2075,8 +2074,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        padding: const EdgeInsets.all(16),
+      child: Container(
+              padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(24),
@@ -2088,7 +2087,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Column(
+        child: Container(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2174,7 +2173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2260,7 +2259,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2332,7 +2331,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2417,7 +2416,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2487,7 +2486,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2522,7 +2521,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFF1F5F9)),
                 ),
-                child: Column(
+                child: Container(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -2560,7 +2559,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2598,7 +2597,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Column(
+                    child: Container(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(slot['subject']?['name'] ?? 'Subject', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2629,7 +2628,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2652,10 +2651,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 16),
           ..._recentHomework.take(3).map((hw) => Padding(
             padding: const EdgeInsets.only(bottom: 12.0),
-            child: Column(
+            child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
-              child: Column(
+              child: Container(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(hw['title'] ?? '', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2679,7 +2678,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
+      child: Container(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2706,7 +2705,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Column(
+                  child: Container(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(mark['examName'] ?? 'Exam', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2734,53 +2733,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Square image tile with colourful border
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: borderColor.withOpacity(0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(13),
-              child: CustomNetworkImage(
-                ApiService.getAppIconUrl(imagePath),
-                fit: BoxFit.cover,
-                errorBuilder: (c, e, s) => Container(
-                  color: borderColor.withOpacity(0.1),
-                  child: Icon(Icons.image_rounded, color: borderColor, size: 30),
-                ),
+      child: Center(
+        child: Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: borderColor.withOpacity(0.5), width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: borderColor.withOpacity(0.22),
+                blurRadius: 12,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(19),
+            child: CustomNetworkImage(
+              ApiService.getAppIconUrl(imagePath),
+              fit: BoxFit.cover,
+              errorBuilder: (c, e, s) => Container(
+                color: borderColor.withOpacity(0.08),
+                child: Icon(Icons.apps_rounded, color: borderColor, size: 38),
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          // Title below the circle
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.outfit(
-              color: const Color(0xFF1E293B),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              height: 1.2,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -2793,7 +2773,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Column(
+      child: Container(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

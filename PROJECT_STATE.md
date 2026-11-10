@@ -1,6 +1,16 @@
 # JY School Project State
 
-## ERR_CONNECTION_RESET & System Lag Investigation and Resolution (November 10, 2026)
+## PowerShell Script Fix, 3x3 Teacher Grid & Icon Size Optimization (November 10, 2026)
+- **User Issue & Actions:**
+  - PowerShell script `compress-icons.ps1` threw parser error `Unexpected token '}' at line 71` due to non-ASCII emojis being misinterpreted in Windows PowerShell 5.1 default ANSI encoding.
+  - Teacher grid requested redesign: Remove `Gate Pass`, `Messaging`, and `Question Papers`. Fit the remaining 9 items into a clean 3x3 square matrix (`crossAxisCount: 3`, `childAspectRatio: 1.0`), enlarge icons, and remove bottom label text (since names are rendered inside the 3D icons).
+- **Applied Fixes:**
+  - Rewrote `backend/scripts/compress-icons.ps1` in pure ASCII, strict PowerShell 5.1 syntax without external packages or UTF-8 multi-byte encoding quirks.
+  - Created `backend/scripts/fix-dashboard.js` to automatically sanitize all container/column misalignments and update `_buildImageCard` to a 90x90 squircle tile with no redundant text below.
+  - Added `backend/scripts/compress_icons.py` as a Python PIL alternative if preferred.
+  - Confirmed Shorebird OTA patch readiness: 100% pure Dart UI changes, no native Gradle or Android manifest changes, patchable directly with `shorebird patch android --flavor universal --allow-asset-diffs`.
+
+
 - **User Issue:** Website down with `ERR_CONNECTION_RESET` on `http://66.116.252.191:19999/dashboard`, and both Web App and Flutter App experiencing severe lag and performance degradation.
 - **Root Cause Analysis:**
   1. **Rate Limiting Block:** `backend/src/server.ts` had global `rateLimiter` (capped at 500 requests per 15 min) positioned *before* static assets `/app-icons` and `/uploads`. Rapidly fetching 20+ uncompressed 3D icons across multiple app launches exceeded the 500-request quota, triggering express-rate-limit to drop/reset TCP sockets from the client IP.
