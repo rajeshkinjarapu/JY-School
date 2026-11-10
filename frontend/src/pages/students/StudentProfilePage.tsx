@@ -11,7 +11,8 @@ import {
   ArrowLeft, Phone, Printer, User2, Calendar, 
   Droplet, ClipboardCheck, Users, Fingerprint, 
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X,
-  CheckCircle2, AlertCircle, Home, ChevronRight, BookOpen, MessageCircle, ArrowRight
+  CheckCircle2, AlertCircle, Home, ChevronRight, BookOpen, MessageCircle, ArrowRight,
+  Copy, ExternalLink, ShieldCheck, Award, FileText, Activity, HeartPulse, Navigation, Clock, Check, Building, Bus, Heart, Mail, ShieldAlert
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -426,6 +427,36 @@ export const StudentProfilePage: React.FC = () => {
   const circumference = 2 * Math.PI * circleRadius;
   const strokeDashoffset = circumference - (circumference * percentage) / 100;
 
+  const calculateAge = (dobString?: string) => {
+    if (!dobString) return null;
+    const dob = new Date(dobString);
+    if (isNaN(dob.getTime())) return null;
+    const diffMs = Date.now() - dob.getTime();
+    const ageDt = new Date(diffMs);
+    return Math.abs(ageDt.getUTCFullYear() - 1970);
+  };
+
+  const handleCopy = (text: string, label: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
+  const relevantFeeStructures = feeStructures.filter(
+    (s) => s.studentId === student.id || s.classId === student.classId
+  );
+
+  const totalFeeObligation = relevantFeeStructures.reduce((sum, s) => {
+    const discountRecord = student.feeDiscounts?.find((d: any) => d.feeStructureId === s.id);
+    const discount = discountRecord ? discountRecord.amount : 0;
+    return sum + Math.max(0, s.amount - discount);
+  }, 0);
+
+  const totalFeePaid = student.feePayments?.reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0) || 0;
+  const totalFeePending = Math.max(0, totalFeeObligation - totalFeePaid);
+  const feeProgress = totalFeeObligation > 0 ? Math.min(100, Math.round((totalFeePaid / totalFeeObligation) * 100)) : 100;
+  const studentAge = calculateAge(student.dob);
+
   return (
     <div className="flex flex-col min-h-full bg-[#F4F7FC] text-slate-800 print:hidden font-sans">
       
@@ -643,15 +674,15 @@ export const StudentProfilePage: React.FC = () => {
         </div>
 
         {/* ============================================================ */}
-        {/* HORIZONTAL NAVIGATION TABS                                   */}
+        {/* HORIZONTAL NAVIGATION TABS (PREMIUM MODERN PILLS)            */}
         {/* ============================================================ */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xs border border-slate-200/80 dark:border-gray-800 p-1.5 flex items-center gap-1 overflow-x-auto">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-gray-800 p-1.5 flex items-center gap-1.5 overflow-x-auto">
           {[
-            { id: 'personal', label: 'Personal Details', icon: User2 },
-            { id: 'family', label: 'Family Details', icon: Users },
-            { id: 'academic', label: 'Academic & Fees', icon: BookOpen },
-            { id: 'address', label: 'Address Details', icon: MapPin },
-            { id: 'other', label: 'Other Details', icon: ClipboardCheck },
+            { id: 'personal', label: 'Personal Details', icon: User2, count: null },
+            { id: 'family', label: 'Family Details', icon: Users, count: '2' },
+            { id: 'academic', label: 'Academic & Fees', icon: BookOpen, count: null },
+            { id: 'address', label: 'Address Details', icon: MapPin, count: null },
+            { id: 'other', label: 'Other Details', icon: ClipboardCheck, count: null },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -661,22 +692,29 @@ export const StudentProfilePage: React.FC = () => {
                 onClick={() => setActiveTab(tab.id as any)}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 shadow-xs border border-blue-200/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-gray-800'
+                    ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-md shadow-blue-500/25'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100/70 dark:hover:bg-gray-800/60'
                 }`}
               >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
+                {tab.count && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500 dark:bg-gray-800 dark:text-slate-400'
+                  }`}>
+                    {tab.count}
+                  </span>
+                )}
               </button>
             );
           })}
         </div>
 
         {/* ============================================================ */}
-        {/* TAB 1: PERSONAL DETAILS (MATCHES EXACT 2-COLUMN REFERENCE UI) */}
+        {/* TAB 1: PERSONAL DETAILS                                      */}
         {/* ============================================================ */}
-        {(activeTab === 'personal' || activeTab === 'address') && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        {activeTab === 'personal' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-fade-in">
             
             {/* Left Column (Personal Info & Quick Actions) */}
             <div className="lg:col-span-6 space-y-4">
@@ -723,7 +761,14 @@ export const StudentProfilePage: React.FC = () => {
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
+                        {studentAge !== null && (
+                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                            {studentAge} Yrs
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm font-black text-slate-800 dark:text-white">
                         {student.dob ? new Date(student.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Not Provided'}
                       </p>
@@ -744,16 +789,27 @@ export const StudentProfilePage: React.FC = () => {
                   </div>
 
                   {/* Aadhaar Number Tile */}
-                  <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50/70 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
-                      <Fingerprint className="w-5 h-5" />
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50/70 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <Fingerprint className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aadhaar Number</p>
+                        <p className="text-sm font-mono font-black text-slate-800 dark:text-white">
+                          {student.aadharNo ? `**** **** ${student.aadharNo.slice(-4)}` : 'Not Provided'}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Aadhaar Number</p>
-                      <p className="text-sm font-mono font-black text-slate-800 dark:text-white">
-                        {student.aadharNo ? `**** **** ${student.aadharNo.slice(-4)}` : 'Not Provided'}
-                      </p>
-                    </div>
+                    {student.aadharNo && (
+                      <button
+                        onClick={() => handleCopy(student.aadharNo, 'Aadhaar Number')}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
+                        title="Copy Aadhaar"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                 </div>
@@ -764,9 +820,18 @@ export const StudentProfilePage: React.FC = () => {
                     <span className="text-emerald-800 flex items-center gap-1.5">
                       <Hash className="w-3.5 h-3.5 text-emerald-600" /> Permanent Education Number (PEN)
                     </span>
-                    <span className="font-mono font-black text-emerald-900 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg">
-                      {student.penNumber}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-black text-emerald-900 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg">
+                        {student.penNumber}
+                      </span>
+                      <button
+                        onClick={() => handleCopy(student.penNumber, 'PEN Number')}
+                        className="p-1 text-emerald-700 hover:text-emerald-900 rounded-md hover:bg-emerald-200/50 transition-colors cursor-pointer"
+                        title="Copy PEN"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -822,10 +887,10 @@ export const StudentProfilePage: React.FC = () => {
 
             </div>
 
-            {/* Right Column (Family & Additional Information) */}
+            {/* Right Column (Family & Profile Readiness) */}
             <div className="lg:col-span-6 space-y-4">
               
-              {/* Card 3: Family Information */}
+              {/* Card 3: Family Preview */}
               <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
                   <div className="flex items-center gap-2">
@@ -834,20 +899,13 @@ export const StudentProfilePage: React.FC = () => {
                     </div>
                     <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">Family Information</h3>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 dark:bg-gray-800 dark:text-slate-300">
-                      2 Parents
-                    </span>
-                    {canEdit && (
-                      <button
-                        onClick={openFamilyModal}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-teal-600 hover:text-teal-700 bg-teal-50 hover:bg-teal-100 dark:bg-teal-900/30 rounded-xl transition-colors cursor-pointer"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        <span>Edit</span>
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => setActiveTab('family')}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>View Full Details</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
 
                 {/* Sub-cards side-by-side: Father & Mother Details */}
@@ -855,11 +913,10 @@ export const StudentProfilePage: React.FC = () => {
                   
                   {/* Father Details Card */}
                   <div 
-                    onClick={openFamilyModal}
+                    onClick={() => setActiveTab('family')}
                     className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/70 to-indigo-50/40 border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Illustrated Male Avatar */}
                       <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner font-black text-sm">
                         👨
                       </div>
@@ -882,11 +939,10 @@ export const StudentProfilePage: React.FC = () => {
 
                   {/* Mother Details Card */}
                   <div 
-                    onClick={openFamilyModal}
+                    onClick={() => setActiveTab('family')}
                     className="p-3.5 rounded-2xl bg-gradient-to-br from-pink-50/70 to-rose-50/40 border border-pink-100 hover:border-pink-300 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Illustrated Female Avatar */}
                       <div className="w-12 h-12 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner font-black text-sm">
                         👩
                       </div>
@@ -910,95 +966,56 @@ export const StudentProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 4: Additional Information (Contacts, Guardian, Address) */}
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 relative overflow-hidden">
-                
-                <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-gray-800 mb-3">
-                  <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
-                    <User2 className="w-4 h-4" />
+              {/* Card 4: Profile Completeness Checklist */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-3.5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">
+                      Profile Completeness ({percentage}%)
+                    </h3>
                   </div>
-                  <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">Additional Information</h3>
+                  <span className="text-[11px] font-bold text-slate-400">
+                    {completed.length} of {total} Complete
+                  </span>
                 </div>
 
-                <div className="space-y-3 relative z-10 max-w-[340px]">
-                  
-                  {/* Guardian Row */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-500 flex items-center gap-2">
-                      <Users className="w-3.5 h-3.5 text-slate-400" /> Guardian
-                    </span>
-                    <span className="font-extrabold text-slate-800 dark:text-white">
-                      {student.guardianName || student.parent?.user?.name || 'No guardian linked'}
-                    </span>
-                  </div>
+                <div className="w-full bg-slate-100 dark:bg-gray-800 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="h-2 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all duration-1000"
+                    style={{ width: `${percentage}%` }}
+                  />
+                </div>
 
-                  {/* Mother Phone Row */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-500 flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-pink-500" /> Mother Phone
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-slate-800 dark:text-white">
-                        {student.motherPhone || 'Not Provided'}
-                      </span>
-                      {student.motherPhone && (
-                        <a
-                          href={`https://wa.me/91${student.motherPhone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-                          title="Chat on WhatsApp"
-                        >
-                          <MessageCircle className="w-3 h-3" />
-                        </a>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
+                  {[
+                    { label: 'Date of Birth', done: Boolean(student.dob), modal: openDemographicsModal },
+                    { label: 'Blood Group', done: Boolean(student.bloodGroup), modal: openDemographicsModal },
+                    { label: 'Aadhaar No', done: Boolean(student.aadharNo), modal: openDemographicsModal },
+                    { label: 'PEN Number', done: Boolean(student.penNumber), modal: openDemographicsModal },
+                    { label: "Father's Phone", done: Boolean(student.fatherPhone), modal: openFamilyModal },
+                    { label: 'Address', done: Boolean(student.address), modal: openFamilyModal },
+                  ].map((item, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={!item.done && canEdit ? item.modal : undefined}
+                      className={`p-2 rounded-xl text-xs font-bold flex items-center justify-between border transition-all ${
+                        item.done 
+                          ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800 dark:bg-emerald-950/20 dark:border-emerald-800/40 dark:text-emerald-300'
+                          : 'bg-slate-50/70 border-slate-200/70 text-slate-500 hover:border-blue-300 cursor-pointer'
+                      }`}
+                    >
+                      <span className="truncate pr-1">{item.label}</span>
+                      {item.done ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <span className="text-[10px] text-blue-600 font-extrabold shrink-0 hover:underline">Add +</span>
                       )}
                     </div>
-                  </div>
-
-                  {/* Father Phone Row */}
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-slate-500 flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-blue-500" /> Father Phone
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-slate-800 dark:text-white">
-                        {student.fatherPhone || 'Not Provided'}
-                      </span>
-                      {student.fatherPhone && (
-                        <a
-                          href={`https://wa.me/91${student.fatherPhone.replace(/\D/g, '')}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors"
-                          title="Chat on WhatsApp"
-                        >
-                          <MessageCircle className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Address Row */}
-                  <div className="flex items-start justify-between text-xs pt-1">
-                    <span className="font-bold text-slate-500 flex items-center gap-2 shrink-0">
-                      <MapPin className="w-3.5 h-3.5 text-amber-500" /> Address
-                    </span>
-                    <span className="font-bold text-slate-700 dark:text-slate-300 text-right leading-tight ml-4">
-                      {student.address || 'Narasannapeta, Srikakulam, AP'}
-                    </span>
-                  </div>
-
+                  ))}
                 </div>
-
-                {/* Decorative Cute 3D Education Art (Graduation Cap + Books) in Bottom Right */}
-                <div className="absolute -bottom-2 -right-2 w-32 h-32 pointer-events-none opacity-90 hidden sm:block">
-                  <div className="relative w-full h-full flex items-end justify-end p-2">
-                    <div className="w-24 h-20 bg-gradient-to-tr from-blue-100 to-indigo-50 rounded-2xl flex items-center justify-center shadow-inner border border-blue-100/50">
-                      <span className="text-4xl drop-shadow-md">🎓📚</span>
-                    </div>
-                  </div>
-                </div>
-
               </div>
 
             </div>
@@ -1007,11 +1024,332 @@ export const StudentProfilePage: React.FC = () => {
         )}
 
         {/* ============================================================ */}
-        {/* TAB 3: ACADEMIC & FEE LEDGER DETAILS                         */}
+        {/* TAB 2: FAMILY DETAILS (DEDICATED FULL HERO CARDS & PROTOCOL) */}
         {/* ============================================================ */}
-        {(activeTab === 'academic' || activeTab === 'other') && (
-          <div className="space-y-4">
+        {activeTab === 'family' && (
+          <div className="space-y-4 animate-fade-in">
             
+            {/* Header Strip with Edit Button */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-300">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Family & Guardian Details</h3>
+                  <p className="text-xs text-slate-500">Official parents contact, identification & emergency routing records</p>
+                </div>
+              </div>
+              {canEdit && (
+                <button
+                  onClick={openFamilyModal}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Family Details</span>
+                </button>
+              )}
+            </div>
+
+            {/* 2 Big Side-by-Side Hero Parent Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Father Card */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-5 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-transparent dark:from-blue-950/30 dark:to-transparent border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 flex items-center justify-center text-2xl shadow-inner border border-blue-200/60">
+                      👨
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-blue-200/70 text-blue-800 dark:bg-blue-800/60 dark:text-blue-200">
+                        Primary Parent
+                      </span>
+                      <h4 className="text-base font-black text-slate-800 dark:text-white mt-1">
+                        {student.fatherName || 'Not Provided'}
+                      </h4>
+                      <p className="text-xs text-slate-400 font-medium">Father</p>
+                    </div>
+                  </div>
+                  {student.fatherPhone && (
+                    <a
+                      href={`tel:${student.fatherPhone}`}
+                      className="p-2.5 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+                      title="Direct Phone Call"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="p-5 space-y-4 flex-1">
+                  
+                  {/* Phone Row */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Mobile Phone</p>
+                        <p className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                          {student.fatherPhone || 'Not Provided'}
+                        </p>
+                      </div>
+                    </div>
+                    {student.fatherPhone && (
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={`https://wa.me/91${student.fatherPhone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold hover:bg-emerald-200 flex items-center gap-1 transition-colors"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Aadhaar Row */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <Fingerprint className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Father Aadhaar</p>
+                        <p className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                          {student.fatherAadhar ? `**** **** ${student.fatherAadhar.slice(-4)}` : 'Not Provided'}
+                        </p>
+                      </div>
+                    </div>
+                    {student.fatherAadhar && (
+                      <button
+                        onClick={() => handleCopy(student.fatherAadhar, "Father's Aadhaar")}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                        title="Copy Aadhaar"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Verification Status */}
+                  <div className="p-3 rounded-xl bg-blue-50/60 border border-blue-100 flex items-center justify-between text-xs font-bold text-blue-800">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" /> Relationship Status
+                    </span>
+                    <span className="text-blue-900 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                      Verified Biological Parent
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Mother Card */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="p-5 bg-gradient-to-r from-pink-50 via-rose-50/50 to-transparent dark:from-pink-950/30 dark:to-transparent border-b border-slate-100 dark:border-gray-800 flex items-center justify-between">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-14 h-14 rounded-2xl bg-pink-100 dark:bg-pink-900/50 text-pink-600 flex items-center justify-center text-2xl shadow-inner border border-pink-200/60">
+                      👩
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-pink-200/70 text-pink-800 dark:bg-pink-800/60 dark:text-pink-200">
+                        Parent
+                      </span>
+                      <h4 className="text-base font-black text-slate-800 dark:text-white mt-1">
+                        {student.motherName || 'Not Provided'}
+                      </h4>
+                      <p className="text-xs text-slate-400 font-medium">Mother</p>
+                    </div>
+                  </div>
+                  {student.motherPhone && (
+                    <a
+                      href={`tel:${student.motherPhone}`}
+                      className="p-2.5 rounded-xl bg-pink-600 text-white hover:bg-pink-700 shadow-md shadow-pink-600/20 transition-all cursor-pointer"
+                      title="Direct Phone Call"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+
+                <div className="p-5 space-y-4 flex-1">
+                  
+                  {/* Phone Row */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Mobile Phone</p>
+                        <p className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                          {student.motherPhone || 'Not Provided'}
+                        </p>
+                      </div>
+                    </div>
+                    {student.motherPhone && (
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={`https://wa.me/91${student.motherPhone.replace(/\D/g, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-800 text-xs font-bold hover:bg-emerald-200 flex items-center gap-1 transition-colors"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>WhatsApp</span>
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Aadhaar Row */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <Fingerprint className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Mother Aadhaar</p>
+                        <p className="text-xs font-mono font-black text-slate-800 dark:text-white">
+                          {student.motherAadhar ? `**** **** ${student.motherAadhar.slice(-4)}` : 'Not Provided'}
+                        </p>
+                      </div>
+                    </div>
+                    {student.motherAadhar && (
+                      <button
+                        onClick={() => handleCopy(student.motherAadhar, "Mother's Aadhaar")}
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
+                        title="Copy Aadhaar"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Verification Status */}
+                  <div className="p-3 rounded-xl bg-pink-50/60 border border-pink-100 flex items-center justify-between text-xs font-bold text-pink-800">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-pink-600" /> Relationship Status
+                    </span>
+                    <span className="text-pink-900 bg-pink-100/80 px-2 py-0.5 rounded-md">
+                      Verified Biological Parent
+                    </span>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* Emergency & Guardian Protocol Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-600">
+                    <ShieldAlert className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">Emergency Contact & Guardian Protocol</h3>
+                    <p className="text-[11px] text-slate-400">Immediate response routing for medical or school notifications</p>
+                  </div>
+                </div>
+                <Badge variant="warning" className="text-[10px]">High Priority</Badge>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Primary Guardian</p>
+                  <p className="text-xs font-black text-slate-800 dark:text-white mt-1">
+                    {student.guardianName || student.fatherName || 'Father / Mother'}
+                  </p>
+                  <p className="text-[10px] text-slate-500 mt-0.5">
+                    Relation: {student.guardianRelation || 'Father'}
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Emergency Hotline</p>
+                  <p className="text-xs font-mono font-black text-slate-800 dark:text-white mt-1">
+                    {student.guardianPhone || student.fatherPhone || student.motherPhone || 'Not Provided'}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 font-bold mt-0.5 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Active SMS & Voice
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 dark:border-gray-700/60">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Notification Protocol</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-1">
+                    Direct WhatsApp & SMS
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Automated ERP alerts enabled</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* TAB 3: ACADEMIC & FEES (METRICS, LEDGER, TRANSACTIONS, MARKS)*/}
+        {/* ============================================================ */}
+        {activeTab === 'academic' && (
+          <div className="space-y-4 animate-fade-in">
+            
+            {/* Top 3 KPI Financial Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+              
+              {/* Total Obligation */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Assigned Fee</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white mt-1">
+                    ₹{totalFeeObligation.toLocaleString('en-IN')}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{relevantFeeStructures.length} Structures Active</p>
+                </div>
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shadow-inner">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Total Paid */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Paid</p>
+                  <p className="text-lg font-black text-emerald-600 mt-1">
+                    ₹{totalFeePaid.toLocaleString('en-IN')}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 font-bold mt-0.5">{feeProgress}% Cleared</p>
+                </div>
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-inner">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Total Pending */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pending Balance</p>
+                  <p className={`text-lg font-black mt-1 ${totalFeePending > 0 ? 'text-rose-600' : 'text-slate-700'}`}>
+                    ₹{totalFeePending.toLocaleString('en-IN')}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    {totalFeePending === 0 ? 'All fees settled' : 'Payment due'}
+                  </p>
+                </div>
+                <div className="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-inner">
+                  <AlertCircle className="w-5 h-5" />
+                </div>
+              </div>
+
+            </div>
+
             {/* Fee Ledger & Transaction History Side-by-Side */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
               
@@ -1024,16 +1362,25 @@ export const StudentProfilePage: React.FC = () => {
                     </div>
                     <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Fee Ledger</h3>
                   </div>
-                  <Badge variant="info" className="text-[10px]">Active</Badge>
+                  {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                    <Link 
+                      to={`/students/${student.id}/pay-fee`}
+                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                    >
+                      <span>Pay Fee</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
                 
                 <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto">
-                  {feeStructures
-                    .filter((s) => s.studentId === student.id || s.classId === student.classId)
-                    .map((s) => {
+                  {relevantFeeStructures.length === 0 ? (
+                    <p className="text-xs text-slate-400 text-center py-6 font-bold">No fee structures assigned yet.</p>
+                  ) : (
+                    relevantFeeStructures.map((s) => {
                       const discountRecord = student.feeDiscounts?.find((d: any) => d.feeStructureId === s.id);
                       const discount = discountRecord ? discountRecord.amount : 0;
-                      const effectiveAmount = s.amount - discount;
+                      const effectiveAmount = Math.max(0, s.amount - discount);
                       const paidSoFar = student.feePayments?.filter((p: any) => p.feeStructureId === s.id).reduce((sum: number, p: any) => sum + p.amountPaid, 0) || 0;
                       const pending = Math.max(0, effectiveAmount - paidSoFar);
                       const progress = effectiveAmount > 0 ? Math.min(100, Math.round((paidSoFar / effectiveAmount) * 100)) : 100;
@@ -1055,7 +1402,8 @@ export const StudentProfilePage: React.FC = () => {
                           </div>
                         </div>
                       );
-                    })}
+                    })
+                  )}
                 </div>
               </div>
 
@@ -1068,6 +1416,9 @@ export const StudentProfilePage: React.FC = () => {
                     </div>
                     Transaction History
                   </h3>
+                  <Badge variant="info" className="text-[10px]">
+                    {student.feePayments?.length || 0} Records
+                  </Badge>
                 </div>
                 
                 <div className="overflow-x-auto max-h-[420px] overflow-y-auto">
@@ -1109,6 +1460,370 @@ export const StudentProfilePage: React.FC = () => {
                       )}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Academic Performance & Marks Card */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-slate-100 dark:border-gray-800 flex items-center justify-between bg-gradient-to-r from-blue-50/50 to-transparent">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-blue-600 text-white">
+                    <GraduationCap className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">Academic Examination Records</h3>
+                    <p className="text-[11px] text-slate-400">Class {student.class?.name || 'Current'} - Section {student.class?.section || 'A'}</p>
+                  </div>
+                </div>
+                <Link to="/exams/report-cards" className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1">
+                  <span>View Full Report Cards</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+
+              <div className="p-4">
+                {(!student.marks || student.marks.length === 0) ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 mx-auto flex items-center justify-center mb-2">
+                      <GraduationCap className="w-6 h-6" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-700">No examination marks published yet</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">Marks will appear here once term exams or assessments are entered.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-slate-50 uppercase text-slate-500 font-bold border-b border-slate-100">
+                        <tr>
+                          <th className="px-4 py-2.5">Subject</th>
+                          <th className="px-4 py-2.5">Exam Name</th>
+                          <th className="px-4 py-2.5">Marks Obtained</th>
+                          <th className="px-4 py-2.5">Percentage</th>
+                          <th className="px-4 py-2.5">Grade</th>
+                          <th className="px-4 py-2.5">Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {student.marks.map((m: any) => {
+                          const pct = m.maxMarks > 0 ? Math.round((m.marksObtained / m.maxMarks) * 100) : 0;
+                          return (
+                            <tr key={m.id} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="px-4 py-2.5 font-bold text-slate-800">{m.subject?.name || 'Subject'}</td>
+                              <td className="px-4 py-2.5 font-medium text-slate-600">{m.exam?.name || 'Exam'}</td>
+                              <td className="px-4 py-2.5 font-black text-slate-900">{m.marksObtained} / {m.maxMarks}</td>
+                              <td className="px-4 py-2.5">
+                                <span className="font-bold text-blue-600">{pct}%</span>
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black ${
+                                  pct >= 75 ? 'bg-emerald-100 text-emerald-800' : pct >= 50 ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                                }`}>
+                                  {m.grade || (pct >= 90 ? 'A+' : pct >= 75 ? 'A' : pct >= 60 ? 'B' : 'C')}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-slate-400 text-[11px]">
+                                {new Date(m.createdAt).toLocaleDateString('en-GB')}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* TAB 4: ADDRESS DETAILS (DEDICATED LOCATION & COMMUTE VIEW)   */}
+        {/* ============================================================ */}
+        {activeTab === 'address' && (
+          <div className="space-y-4 animate-fade-in">
+            
+            {/* Header Strip with Edit Button */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-300">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Address & Geographic Details</h3>
+                  <p className="text-xs text-slate-500">Permanent residence, commute route, and emergency postal correspondence</p>
+                </div>
+              </div>
+              {canEdit && (
+                <button
+                  onClick={openFamilyModal}
+                  className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl text-xs font-bold shadow-md shadow-orange-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Address Details</span>
+                </button>
+              )}
+            </div>
+
+            {/* 2-Column Address Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              
+              {/* Left Column: Residential Address Showcase */}
+              <div className="lg:col-span-7 bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-6 space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 rounded-lg bg-rose-50 text-rose-500">
+                      <Home className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Residential Address</h4>
+                  </div>
+                  <Badge variant="success" className="text-[10px]">Verified Residence</Badge>
+                </div>
+
+                {/* Big Address Visual Block */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/30 border border-slate-200/70 dark:bg-gray-800/40 dark:border-gray-700/60 space-y-3">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md shadow-amber-500/20">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Full Address</p>
+                      <p className="text-sm sm:text-base font-extrabold text-slate-800 dark:text-white leading-relaxed">
+                        {student.address || 'Narasannapeta, Srikakulam, Andhra Pradesh - 532479'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-3 border-t border-slate-200/60 dark:border-gray-700">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Town / Village</p>
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-300">Narasannapeta</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">District</p>
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-300">Srikakulam</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">State & PIN</p>
+                      <p className="text-xs font-black text-slate-700 dark:text-slate-300">Andhra Pradesh - 532479</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Utility Action Buttons */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(student.address || 'Narasannapeta, Srikakulam, Andhra Pradesh')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all shadow-xs"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Open in Google Maps</span>
+                  </a>
+
+                  <button
+                    onClick={() => handleCopy(student.address || 'Narasannapeta, Srikakulam, Andhra Pradesh - 532479', 'Address')}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer shadow-xs"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy Address</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Right Column: Transport & Commute */}
+              <div className="lg:col-span-5 space-y-4">
+                
+                {/* Transport Info Card */}
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
+                  <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-gray-800">
+                    <div className="p-1.5 rounded-lg bg-blue-50 text-blue-600">
+                      <Bus className="w-4 h-4" />
+                    </div>
+                    <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Transport & Commute</h4>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-500">Commute Category</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-white">Local Day Scholar (Self)</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-500">Approx. Distance</span>
+                      <span className="text-xs font-black text-indigo-600">1 - 3 km from Campus</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-500">School Zone</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-white">Narasannapeta Central</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Emergency Dispatch Verification */}
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50/40 border border-emerald-100 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-emerald-800 font-extrabold text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Postal Correspondence Verified</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-700 leading-relaxed font-medium">
+                    Report cards, official notices, and progress dossiers will be sent to this address. Primary contact for dispatch: <span className="font-black">{student.fatherPhone || student.motherPhone || 'School Office'}</span>.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        )}
+
+        {/* ============================================================ */}
+        {/* TAB 5: OTHER DETAILS (NATIONAL REGISTRY, MEDICAL, ACCOUNT)   */}
+        {/* ============================================================ */}
+        {activeTab === 'other' && (
+          <div className="space-y-4 animate-fade-in">
+            
+            {/* Header Strip */}
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-300">
+                  <ClipboardCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-800 dark:text-white">Other Details & Registrations</h3>
+                  <p className="text-xs text-slate-500">National student registries, medical records, credentials & documents</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setPrintPayment(null);
+                  setTimeout(() => window.print(), 100);
+                }}
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              >
+                <Printer className="w-3.5 h-3.5" />
+                <span>Print Official Dossier</span>
+              </button>
+            </div>
+
+            {/* 3 Section Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              
+              {/* Card 1: National Registry Identifiers */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600">
+                    <Hash className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">National Registry</h4>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">PEN (UDISE+ Registry)</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono font-black text-slate-800 dark:text-white">
+                        {student.penNumber || 'Pending Allotment'}
+                      </p>
+                      {student.penNumber && (
+                        <button onClick={() => handleCopy(student.penNumber, 'PEN')} className="text-slate-400 hover:text-emerald-600 cursor-pointer">
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Aadhaar Card Status</p>
+                    <p className="font-bold text-slate-700 dark:text-slate-300">
+                      {student.aadharNo ? 'Verified & On File' : 'Pending Physical Submission'}
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Admission Date</p>
+                    <p className="font-bold text-slate-800 dark:text-white">
+                      {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '18 Jul 2026'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Health & Medical Profile */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
+                    <Heart className="w-4 h-4 fill-rose-500" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Health & Medical Profile</h4>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Blood Group</p>
+                    <p className="font-black text-rose-600 text-sm">
+                      {student.bloodGroup || 'Not Provided'}
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Special Health Notes</p>
+                    <p className="font-medium text-slate-600 dark:text-slate-400">
+                      {student.medicalInfo || 'No known allergies or chronic conditions reported.'}
+                    </p>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Sports & Physical Fitness</p>
+                    <p className="font-bold text-emerald-600 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Eligible for all activities
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Portal Credentials & System ID */}
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-200/80 dark:border-gray-800 shadow-sm p-5 space-y-4">
+                <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-gray-800">
+                  <div className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600">
+                    <ShieldCheck className="w-4 h-4" />
+                  </div>
+                  <h4 className="font-extrabold text-sm text-slate-800 dark:text-white">Portal & System Account</h4>
+                </div>
+
+                <div className="space-y-3 text-xs">
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Roll No / Login ID</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono font-black text-blue-600">{student.rollNo}</p>
+                      <button onClick={() => handleCopy(student.rollNo, 'Roll No')} className="text-slate-400 hover:text-blue-600 cursor-pointer">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">System User UUID</p>
+                    <div className="flex items-center justify-between">
+                      <p className="font-mono text-[11px] font-medium text-slate-600 truncate max-w-[170px]">{student.id}</p>
+                      <button onClick={() => handleCopy(student.id, 'UUID')} className="text-slate-400 hover:text-indigo-600 cursor-pointer">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-gray-800/40 border border-slate-100 space-y-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase">Account Status</p>
+                    <p className="font-bold text-emerald-600 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Active (Full Access)
+                    </p>
+                  </div>
                 </div>
               </div>
 
