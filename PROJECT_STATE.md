@@ -1,13 +1,11 @@
 # JY School Project State
 
 ## చివరి సంభాషణ (Latest Conversation - 2026-11-10)
-- **టాస్క్:** VPS లో బ్యాకెండ్ రన్ కాకపోవడం మరియు TypeScript కంపైలేషన్ ఎర్రర్ (`TS2451 Cannot redeclare block-scoped variable 'userRole'`) పరిష్కరించడం.
-- **సమస్య విశ్లేషణ:** 
-  1. VPS లో PM2 రీస్టార్ట్ అవ్వడంతో బ్యాకెండ్ ఆన్‌లైన్‌లోకి వచ్చింది.
-  2. అయితే `backend/src/controllers/students.controller.ts` లో లైన్ 85 మరియు లైన్ 132 లలో `userRole` రెండుసార్లు డిక్లేర్ అవ్వడం వల్ల TypeScript ఎర్రర్ వచ్చింది.
-- **పరిష్కారం:**
-  1. లోకల్‌లో `students.controller.ts` లోని డూప్లికేట్ `userRole` డిక్లరేషన్‌ను తొలగించాము.
-  2. ఈ మార్పులను GitHub కి పుష్ చేసి VPS లో క్లీన్ `npm run build` చేయడానికి కమాండ్స్ అందించాము.
+- **టాస్క్:** Git లోకల్ రెపో `detached HEAD` నుండి `main` బ్రాంచ్‌కి కనెక్ట్ చేసి GitHub లోకి పుష్ చేయడం.
+- **ఎర్రర్:** `[rejected] main -> main (non-fast-forward)` - లోకల్ `main` బ్రాంచ్ పాత కమిట్‌లో ఉండి, కొత్త కమిట్ `detached HEAD` పై జరగడం వల్ల వచ్చింది.
+- **పరిష్కారం:** `git branch -f main HEAD` మరియు `git checkout main` ద్వారా లోకల్ బ్రాంచ్‌ని ఫిక్స్ చేసి, `git push origin main` కమాండ్స్ అందించాము.
+
+## VPS Backend Online & TS Fix (November 10, 2026)
 
 ## Git Sync & Latest Updates Download (November 10, 2026)
 - **టాస్క్:** GitHub నుండి తాజా మార్పులను లోకల్ మిషన్ లోకి విజయవంతంగా సింక్ చేయడం.
