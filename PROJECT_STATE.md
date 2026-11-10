@@ -1,5 +1,18 @@
 # JY School Project State
 
+## చివరి సంభాషణ (Latest Conversation - 2026-11-10)
+- **టాస్క్:** VPS లో బ్యాకెండ్ రన్ కాకపోవడం మరియు TypeScript కంపైలేషన్ ఎర్రర్ (`TS2451 Cannot redeclare block-scoped variable 'userRole'`) పరిష్కరించడం.
+- **సమస్య విశ్లేషణ:** 
+  1. VPS లో PM2 రీస్టార్ట్ అవ్వడంతో బ్యాకెండ్ ఆన్‌లైన్‌లోకి వచ్చింది.
+  2. అయితే `backend/src/controllers/students.controller.ts` లో లైన్ 85 మరియు లైన్ 132 లలో `userRole` రెండుసార్లు డిక్లేర్ అవ్వడం వల్ల TypeScript ఎర్రర్ వచ్చింది.
+- **పరిష్కారం:**
+  1. లోకల్‌లో `students.controller.ts` లోని డూప్లికేట్ `userRole` డిక్లరేషన్‌ను తొలగించాము.
+  2. ఈ మార్పులను GitHub కి పుష్ చేసి VPS లో క్లీన్ `npm run build` చేయడానికి కమాండ్స్ అందించాము.
+
+## Git Sync & Latest Updates Download (November 10, 2026)
+- **టాస్క్:** GitHub నుండి తాజా మార్పులను లోకల్ మిషన్ లోకి విజయవంతంగా సింక్ చేయడం.
+- **స్టేటస్:** Git merge conflict (`needs merge / unresolved conflict`) ని `git reset --hard origin/main` ద్వారా పరిష్కరించి, లేటెస్ట్ కమిట్ `4488dea9` (Student Profile 0ms Instant Loading & Reference UI Match Redesign) కి హెడ్ అప్‌డేట్ చేయబడింది.
+
 ## Student Profile 0ms Instant Loading & Reference UI Match Redesign (November 10, 2026)
 - **User Issue & Request:**
   - **Issue 1:** "image 1 lo page oopen avvataniki time padutundi" — Profile page stuck on loading spinner `C` taking too long to open.

@@ -129,7 +129,6 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     },
   });
   if (!student) return next(createError('Student not found', 404));
-  const userRole = req.user?.role;
   let isClassTeacher = false;
   let canViewAllStudents = false;
   let hasFullAccess = true;
