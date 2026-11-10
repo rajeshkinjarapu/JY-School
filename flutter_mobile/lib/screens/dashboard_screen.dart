@@ -2756,8 +2756,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(13),
-              child: Image.asset(
-                imagePath,
+              child: CustomNetworkImage(
+                ApiService.getAppIconUrl(imagePath),
                 fit: BoxFit.cover,
                 errorBuilder: (c, e, s) => Container(
                   color: borderColor.withOpacity(0.1),

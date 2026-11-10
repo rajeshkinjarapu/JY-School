@@ -25,6 +25,12 @@ class ApiService {
     return '$baseUrl/$trimmed';
   }
 
+  static String getAppIconUrl(String filename) {
+    if (filename.isEmpty) return '';
+    final clean = filename.trim().replaceAll('app icons/', '').replaceAll('app icons\\', '');
+    return '$baseUrl/app-icons/${Uri.encodeComponent(clean)}';
+  }
+
   // Base headers for API requests
   static Map<String, String> _getHeaders({String? token, bool isMultipart = false}) {
     final headers = <String, String>{

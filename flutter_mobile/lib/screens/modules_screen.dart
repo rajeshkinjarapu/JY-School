@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
+import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -31,6 +33,7 @@ import 'salary_screen.dart';
 import 'admissions_list_screen.dart';
 import 'admission_registration_screen.dart';
 import 'student_address_collection_screen.dart';
+
 class ModulesScreen extends StatefulWidget {
   const ModulesScreen({super.key});
 
@@ -84,9 +87,8 @@ class _ModulesScreenState extends State<ModulesScreen> {
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
       {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'assetIcon': 'app icons/address data.png', 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
       {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'assetIcon': 'app icons/gate pass.png', 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
-
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'assetIcon': 'app icons/my attendance.png', 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
-      {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave apply.png', 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
+      {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave.png', 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'assetIcon': 'app icons/timetable.png', 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
       {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
       {'title': 'Settings', 'icon': Icons.settings_rounded, 'assetIcon': 'app icons/settings.png', 'color': const Color(0xFF475569), 'page': const ProfileScreen()},
@@ -137,9 +139,9 @@ class _ModulesScreenState extends State<ModulesScreen> {
         padding: const EdgeInsets.all(16.0),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
-          crossAxisSpacing: 16.0,
-          mainAxisSpacing: 16.0,
-          childAspectRatio: 0.85,
+          crossAxisSpacing: 14.0,
+          mainAxisSpacing: 14.0,
+          childAspectRatio: 1.0,
         ),
         itemCount: modules.length,
         itemBuilder: (context, index) {
@@ -169,75 +171,52 @@ class _ModulesScreenState extends State<ModulesScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.15),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              color: color.withOpacity(0.18),
+              blurRadius: 12,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (assetIcon != null) ...[
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: color.withOpacity(0.35), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: color.withOpacity(0.2),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.asset(
-                    assetIcon,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                    errorBuilder: (c, e, s) => Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(icon, color: color, size: 26),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: assetIcon != null
+              ? CustomNetworkImage(
+                  ApiService.getAppIconUrl(assetIcon),
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (c, e, s) => Container(
+                    color: color.withOpacity(0.1),
+                    child: Center(
+                      child: Icon(icon, color: color, size: 36),
                     ),
                   ),
+                )
+              : Container(
+                  color: color.withOpacity(0.08),
+                  padding: const EdgeInsets.all(8),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icon, color: color, size: 32),
+                      const SizedBox(height: 6),
+                      Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF1E293B),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ] else ...[
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 28),
-            ),
-            ],
-            const SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF1E293B),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
         ),
       ),
     );

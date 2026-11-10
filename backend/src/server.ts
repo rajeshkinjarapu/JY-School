@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import { createServer } from 'http';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -87,6 +88,11 @@ app.use(rateLimiter);
 
 // Static files (uploads)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const appIconsDir = path.join(__dirname, '../public/app-icons');
+if (!fs.existsSync(appIconsDir)) {
+  fs.mkdirSync(appIconsDir, { recursive: true });
+}
+app.use('/app-icons', express.static(appIconsDir));
 app.use(express.static(path.join(__dirname, '../public')));
 
 // API Routes

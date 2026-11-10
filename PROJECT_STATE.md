@@ -1,5 +1,35 @@
 # JY School Project State
 
+## Flutter 3D App Icons VPS Network Hosting & UI Overhaul (November 10, 2026)
+- **User Request:**
+  1. Image 1: Teacher Dashboard Home Tab icons not displaying (broken image icon fallback).
+  2. Image 2: All Modules / More Tab 3D icons not displaying. Requested: Box size must equal image size, and remove all text inside the box since the 3D images already have text embedded.
+  3. Image 3: Examination Dashboard Exam Tab 3D icons not displaying. Requested: Box size must equal image size, and remove all title/subtitle text inside the box.
+  4. Deployment Choice: User explicitly approved Option 2 (Shorebird OTA Patch via VPS Network Images, avoiding any new APK installation on client devices).
+- **Backend Architecture & Static Route:**
+  - `backend/src/server.ts`: Added `app.use('/app-icons', express.static(path.join(__dirname, '../public/app-icons')));` to serve 3D app icon images publicly at `http://66.116.252.191:19998/app-icons/<filename>`.
+  - `backend/scripts/copy-app-icons.js`: Helper script to sync all 20 high-definition 3D PNG icons from `flutter_mobile/app icons/` into `backend/public/app-icons/`.
+- **Flutter Mobile Architecture (`flutter_mobile/`):**
+  - `lib/services/api_service.dart`: Added `static String getAppIconUrl(String filename)` to clean paths, encode filenames, and construct absolute URLs targeting the VPS backend.
+  - `lib/screens/dashboard_screen.dart` (Image 1): Updated `_buildImageCard` to load via `CustomNetworkImage(ApiService.getAppIconUrl(imagePath))` with graceful fallback.
+  - `lib/screens/modules_screen.dart` (Image 2):
+    - Converted Grid child aspect ratio to `1.0` (matching squircle tiles).
+    - Removed redundant text underneath cards.
+    - Updated `_buildModuleCard` so `CustomNetworkImage` fills 100% of the box (`width: double.infinity, height: double.infinity, fit: BoxFit.cover`) inside `ClipRRect(borderRadius: BorderRadius.circular(20))`.
+    - Mapped exact 3D icon for `Leave` (`leave.png`).
+  - `lib/screens/examination_dashboard_screen.dart` (Image 3):
+    - Converted Grid child aspect ratio to `1.0`.
+    - Removed redundant title and subtitle text.
+    - Updated `_buildDashboardCard` so `CustomNetworkImage` fills 100% of the box (`width: double.infinity, height: double.infinity, fit: BoxFit.cover`) inside `ClipRRect(borderRadius: BorderRadius.circular(20))`.
+    - Mapped exact 3D icon for `Overview` (`overview.png`).
+- **Deployment Status:**
+  - Local sync command: `node backend/scripts/copy-app-icons.js` (or copy via PowerShell).
+  - Git push: Commit and push `backend/public/app-icons`, `backend/`, and `flutter_mobile/`.
+  - VPS Build: `ssh root@66.116.252.191`, `cd /root/JY-School && git pull origin main`, `cd backend && npm run build && pm2 restart all`.
+  - Mobile OTA Patch: `cd flutter_mobile && shorebird patch android --flavor universal --allow-asset-diffs`.
+
+
+
 ## Student Demographics & Family Details In-Place Edit & Display Overhaul (November 9, 2026)
 - **User Request:** "ee box lo unna prati option kuda edit option lo avvali, edit chesaka show avvali perfect ga professsional ga design cheyu".
 - **Feature Scope:** Complete overhaul of Student Demographics and Family Details on the web app. Every single field (Gender, DOB, Blood Group, Aadhaar, PEN, Father Name, Father Aadhaar, Father Phone, Mother Name, Mother Aadhaar, Mother Phone, Guardian Name, Guardian Phone, Guardian Relation, Address) can now be edited directly on the Profile page via dedicated high-density modern modal dialogs or through the full Edit Profile page. All edited values immediately save to the database and reflect live on the profile cards.

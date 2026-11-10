@@ -55,89 +55,67 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
     final List<Widget> cards = [
       if (!isTeacher) _buildDashboardCard(
         context,
-        title: 'Exams List',
-        subtitle: 'Manage exams',
-        assetPath: 'app icons/timetable.png',
+        assetPath: 'timetable.png',
         color: const Color(0xFF4F46E5),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamsScreen())),
       ),
       if (!isTeacher) _buildDashboardCard(
         context,
-        title: 'Admit Card',
-        subtitle: 'Hall tickets',
-        assetPath: 'app icons/gate pass.png',
+        assetPath: 'gate pass.png',
         color: const Color(0xFF0EA5E9),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AdmitCardScreen())),
       ),
       _buildDashboardCard(
         context,
-        title: 'Question Papers',
-        subtitle: 'Upload & manage',
-        assetPath: 'app icons/question papers.png',
+        assetPath: 'question papers.png',
         color: const Color(0xFFF59E0B),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const QuestionPapersScreen())),
       ),
       _buildDashboardCard(
         context,
-        title: 'Marks Upload',
-        subtitle: 'Enter marks',
-        assetPath: 'app icons/marks entry.png',
+        assetPath: 'marks entry.png',
         color: const Color(0xFF10B981),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const MarksUploadScreen())),
       ),
       _buildDashboardCard(
         context,
-        title: 'Results',
-        subtitle: 'Grade sheets',
-        assetPath: 'app icons/results.png',
+        assetPath: 'results.png',
         color: const Color(0xFF8B5CF6),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ResultsScreen())),
       ),
       _buildDashboardCard(
         context,
-        title: 'Progress Card',
-        subtitle: 'Detailed progress',
-        assetPath: 'app icons/progress card.png',
+        assetPath: 'progress card.png',
         color: const Color(0xFFF43F5E),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProgressCardScreen())),
       ),
       _buildDashboardCard(
         context,
-        title: 'Answer Key',
-        subtitle: 'Upload keys',
-        assetPath: 'app icons/answer key.png',
+        assetPath: 'answer key.png',
         color: const Color(0xFFF59E0B),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const AnswerKeysScreen())),
       ),
       if (!isTeacher) _buildDashboardCard(
         context,
-        title: 'Slip Test Rank',
-        subtitle: 'Manual ranks',
-        assetPath: 'app icons/marks entry.png',
+        assetPath: 'marks entry.png',
         color: const Color(0xFF06B6D4),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SlipTestScreen())),
       ),
       if (!isTeacher) _buildDashboardCard(
         context,
-        title: 'Send SMS',
-        subtitle: 'Notify parents',
-        assetPath: 'app icons/messaging.png',
+        assetPath: 'messaging.png',
         color: const Color(0xFFEC4899),
         onTap: () => _showSendSmsBottomSheet(context),
       ),
       _buildDashboardCard(
         context,
-        title: 'Overview',
-        subtitle: 'Track progress',
-        assetPath: 'app icons/results.png',
+        assetPath: 'overview.png',
         color: const Color(0xFFF97316),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamStatusScreen())),
       ),
       if (!isTeacher) _buildDashboardCard(
         context,
-        title: 'Settings',
-        subtitle: 'Configurations',
-        assetPath: 'app icons/settings.png',
+        assetPath: 'settings.png',
         color: const Color(0xFF64748B),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ExamSettingsScreen())),
       ),
@@ -175,7 +153,6 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
               width: 200,
               height: 200,
               decoration: BoxDecoration(
-
                 color: const Color(0xFF4C4296).withOpacity(0.03),
                 shape: BoxShape.circle,
               ),
@@ -185,9 +162,9 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
             crossAxisCount: 3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.9, 
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            childAspectRatio: 1.0, 
             children: cards,
           ),
         ],
@@ -197,13 +174,17 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
 
   Widget _buildDashboardCard(
     BuildContext context, {
-    required String title,
-    required String subtitle,
+    String? title,
+    String? subtitle,
     String? imageUrl,
     String? assetPath,
     required Color color,
     required VoidCallback onTap,
   }) {
+    final iconUrl = (assetPath != null && assetPath.isNotEmpty)
+        ? ApiService.getAppIconUrl(assetPath)
+        : (imageUrl ?? '');
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(20),
@@ -215,67 +196,37 @@ class _ExaminationDashboardScreenState extends State<ExaminationDashboardScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.15),
-              blurRadius: 16,
-              offset: const Offset(0, 8),
+              color: color.withOpacity(0.18),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: color.withOpacity(0.35), width: 2),
-                boxShadow: [
-                  BoxShadow(color: color.withOpacity(0.18), blurRadius: 8, offset: const Offset(0, 3)),
-                ],
-
-              ),
-              alignment: Alignment.center,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(13),
-                child: assetPath != null ? Image.asset(assetPath, width: 44, height: 44, fit: BoxFit.cover) : CustomNetworkImage(
-                imageUrl ?? '',
-                width: 26,
-                height: 26,
-                errorBuilder: (context, error, stackTrace) => Icon(Icons.apps_rounded, color: color, size: 24), ),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.outfit(
-                color: const Color(0xFF1E293B),
-                fontSize: 13,
-                fontWeight: FontWeight.bold,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                color: const Color(0xFF64748B),
-                fontSize: 9,
-                fontWeight: FontWeight.w500,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: iconUrl.isNotEmpty
+              ? CustomNetworkImage(
+                  iconUrl,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: color.withOpacity(0.1),
+                    child: Center(
+                      child: Icon(Icons.quiz_rounded, color: color, size: 36),
+                    ),
+                  ),
+                )
+              : Container(
+                  color: color.withOpacity(0.08),
+                  child: Center(
+                    child: Icon(Icons.quiz_rounded, color: color, size: 36),
+                  ),
+                ),
         ),
       ),
     );
   }
-
 
   void _showSendSmsBottomSheet(BuildContext context) async {
     // Show a beautifully designed bottom sheet to send SMS
@@ -404,7 +355,3 @@ class _SendSmsBottomSheetState extends State<_SendSmsBottomSheet> {
     );
   }
 }
-
-
-
-
