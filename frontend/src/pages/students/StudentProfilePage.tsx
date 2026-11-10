@@ -674,9 +674,9 @@ export const StudentProfilePage: React.FC = () => {
         </div>
 
         {/* ============================================================ */}
-        {/* HORIZONTAL NAVIGATION TABS (PREMIUM MODERN PILLS)            */}
+        {/* HORIZONTAL NAVIGATION TABS - REDESIGNED PREMIUM              */}
         {/* ============================================================ */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-slate-200/80 dark:border-gray-800 p-1.5 flex items-center gap-1.5 overflow-x-auto">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-1.5 flex items-center gap-1 overflow-x-auto scrollbar-none">
           {[
             { id: 'personal', label: 'Personal Details', icon: User2, count: null },
             { id: 'family', label: 'Family Details', icon: Users, count: '2' },
