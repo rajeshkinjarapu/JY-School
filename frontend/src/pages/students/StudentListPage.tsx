@@ -387,7 +387,7 @@ export const StudentListPage: React.FC = () => {
                     </div>
                     
                     <div className="min-w-0 flex-1 pt-1">
-                      <Link to={`/students/${student.id}`} className="block">
+                      <Link to={`/students/${student.id}`} state={{ initialStudent: student }} className="block">
                         <h3 className="font-extrabold text-lg text-slate-800 hover:text-indigo-600 truncate transition-colors leading-tight" title={name}>
                           {name}
                         </h3>
@@ -423,6 +423,7 @@ export const StudentListPage: React.FC = () => {
                     </div>
                     <Link 
                       to={`/students/${student.id}`} 
+                      state={{ initialStudent: student }}
                       className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-indigo-500 hover:bg-indigo-600 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
                     >
                       <Eye className="w-4 h-4" /> View Profile

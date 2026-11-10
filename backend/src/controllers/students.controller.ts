@@ -82,6 +82,19 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
 
 export const getById = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
+  const userRole = req.user?.role;
+  const userId = req.user?.id;
+
+  const cacheKey = `student:${id}:${userRole}:${userId}`;
+  try {
+    const cached = await cache.get<any>(cacheKey);
+    if (cached) {
+      successResponse(res, cached, 'Student fetched');
+      return;
+    }
+  } catch (err) {
+    // Cache read error ignored
+  }
 
   const student = await prisma.student.findFirst({
     where: {
@@ -158,6 +171,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         feePayments: [],
         feeDiscounts: [],
       };
+      await cache.set(cacheKey, sanitizedStudent, 180);
       successResponse(res, sanitizedStudent, 'Student fetched');
       return;
     }
@@ -170,6 +184,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     hasFullAccess: true,
   };
 
+  await cache.set(cacheKey, responseStudent, 180);
   successResponse(res, responseStudent, 'Student fetched');
 };
 
@@ -255,6 +270,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
   });
 
   cache.delPattern('students:list:*');
+  cache.delPattern('student:*');
   clearDashboardCache();
 
   const creatorName = (req as any).user?.name || 'System';
@@ -339,6 +355,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
   });
 
   cache.delPattern('students:list:*');
+  cache.delPattern('student:*');
   clearDashboardCache();
 
   const updaterName = req.user?.name || 'System';
@@ -392,6 +409,8 @@ export const changeName = async (req: AuthRequest, res: Response, next: NextFunc
     link: `/students/${student.id}`
   });
 
+  cache.delPattern('student:*');
+  cache.delPattern('students:list:*');
   successResponse(res, updatedStudent, 'Student name updated');
 };
 
@@ -423,6 +442,8 @@ export const changeClass = async (req: AuthRequest, res: Response, next: NextFun
     link: `/students/${student.id}`
   });
 
+  cache.delPattern('student:*');
+  cache.delPattern('students:list:*');
   successResponse(res, updated, 'Student section/class updated');
 };
 
