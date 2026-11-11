@@ -164,16 +164,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
 
     final bool hasFullAccess = !_isTeacher || _canViewAllStudents || _isClassTeacher || (s['hasFullAccess'] == true);
     final bool canEdit = !_isTeacher || _canEditStudents;
-    if (false) { if (false) { if (false) { if (false) {
-
-
-
-      }
-    }
-
-
-      }
-    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5FB),
@@ -594,8 +584,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               ),
             ),
           ) : null),
-          if (false) _infoCard('', Colors.white, [
-          ]),
           const SizedBox(height: 12),
           _infoCard('Contact & Academic', const Color(0xFF10B981), [
             _infoRow(Icons.email_rounded, 'Email', user['email'] ?? 'Not provided', const Color(0xFF10B981)),
@@ -667,9 +655,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               ),
             ),
           ],
-          if (false) [_infoCard('', Colors.white, [
-            ],
-          ]),
         ],
       ),
     );
@@ -712,16 +697,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 ),
               ),
               if (trailingAction != null) trailingAction,
-            ]),
-          ),
-          if (false) Padding(
-            padding: EdgeInsets.zero,
-            child: Row(children: [
-              Container(
-                child: Row(children: [
-                  ],
-                ),
-              ),
             ]),
           ),
           const SizedBox(height: 12),

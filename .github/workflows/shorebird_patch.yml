@@ -51,24 +51,24 @@ jobs:
 
       - name: Shorebird Patch Universal
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'universal' || github.event_name == 'push'
-        run: shorebird patch android --flavor universal --allow-asset-diffs
+        run: shorebird patch android --flavor universal --allow-asset-diffs --target lib/main.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Student
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'student' || github.event_name == 'push'
-        run: shorebird patch android --flavor student --allow-asset-diffs
+        run: shorebird patch android --flavor student --allow-asset-diffs --target lib/main_student.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Teacher
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'teacher' || github.event_name == 'push'
-        run: shorebird patch android --flavor teacher --allow-asset-diffs
+        run: shorebird patch android --flavor teacher --allow-asset-diffs --target lib/main_teacher.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Admin
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'admin' || github.event_name == 'push'
-        run: shorebird patch android --flavor admin --allow-asset-diffs
+        run: shorebird patch android --flavor admin --allow-asset-diffs --target lib/main_admin.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
