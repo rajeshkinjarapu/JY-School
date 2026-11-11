@@ -1,0 +1,278 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" width="100%" height="100%">
+  <defs>
+    <!-- Sky Gradient -->
+    <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="60%" stop-color="#bae6fd"/>
+      <stop offset="100%" stop-color="#f0f9ff"/>
+    </linearGradient>
+
+    <!-- Wall & Pillar Gradients -->
+    <linearGradient id="wallPeach" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#fed7aa"/>
+      <stop offset="50%" stop-color="#ffedd5"/>
+      <stop offset="100%" stop-color="#fed7aa"/>
+    </linearGradient>
+    <linearGradient id="wallBeige" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="terracotta" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+
+    <!-- Window Glass -->
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="70%" stop-color="#0369a1"/>
+      <stop offset="100%" stop-color="#075985"/>
+    </linearGradient>
+
+    <!-- Lawn Gradient -->
+    <linearGradient id="lawn" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#22c55e"/>
+      <stop offset="40%" stop-color="#16a34a"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+
+    <!-- 3D Book Gradients -->
+    <linearGradient id="bookBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="50%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="bookOrange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="50%" stop-color="#f97316"/>
+      <stop offset="100%" stop-color="#ea580c"/>
+    </linearGradient>
+    <linearGradient id="pages" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="50%" stop-color="#f1f5f9"/>
+      <stop offset="100%" stop-color="#e2e8f0"/>
+    </linearGradient>
+
+    <!-- Cap Gradients -->
+    <linearGradient id="capGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="50%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="tasselGold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+
+    <!-- Drop Shadows -->
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#0f172a" flood-opacity="0.25"/>
+    </filter>
+    <filter id="elementShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="2" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Sky Background -->
+  <rect width="900" height="340" fill="url(#sky)"/>
+
+  <!-- Fluffy White Clouds -->
+  <g fill="#ffffff" opacity="0.85">
+    <ellipse cx="220" cy="70" rx="90" ry="30"/>
+    <ellipse cx="280" cy="55" rx="70" ry="26"/>
+    <ellipse cx="640" cy="80" rx="100" ry="32"/>
+    <ellipse cx="700" cy="65" rx="80" ry="28"/>
+  </g>
+
+  <!-- Distant Background Foliage -->
+  <path d="M0 260 Q 200 240 450 255 Q 700 240 900 255 L 900 360 L 0 360 Z" fill="#15803d" opacity="0.6"/>
+
+  <!-- ==================== SCHOOL CAMPUS BUILDING ==================== -->
+  <g transform="translate(180, 80)">
+    <!-- Main Center Building Wing -->
+    <rect x="0" y="70" width="560" height="180" fill="url(#wallPeach)" stroke="#cbd5e1" stroke-width="1.5"/>
+    <!-- Roof Border Terracotta -->
+    <rect x="-10" y="58" width="580" height="16" fill="url(#terracotta)" rx="3"/>
+    
+    <!-- Floor Dividers -->
+    <rect x="0" y="125" width="560" height="7" fill="url(#terracotta)" opacity="0.8"/>
+    <rect x="0" y="185" width="560" height="7" fill="url(#terracotta)" opacity="0.8"/>
+
+    <!-- Vertical Architectural Columns (Pillars) -->
+    <g fill="url(#wallBeige)" stroke="#e2e8f0" stroke-width="1">
+      <rect x="30" y="65" width="16" height="185"/>
+      <rect x="90" y="65" width="16" height="185"/>
+      <rect x="150" y="65" width="16" height="185"/>
+      <rect x="210" y="65" width="16" height="185"/>
+      <rect x="270" y="65" width="16" height="185"/>
+      <rect x="330" y="65" width="16" height="185"/>
+      <rect x="390" y="65" width="16" height="185"/>
+      <rect x="450" y="65" width="16" height="185"/>
+      <rect x="510" y="65" width="16" height="185"/>
+    </g>
+
+    <!-- Windows (3 Floors, 8 columns) -->
+    <!-- Floor 3 Windows -->
+    <g fill="url(#glass)" stroke="#ffffff" stroke-width="1.5">
+      <rect x="52" y="78" width="32" height="40" rx="3"/>
+      <rect x="112" y="78" width="32" height="40" rx="3"/>
+      <rect x="172" y="78" width="32" height="40" rx="3"/>
+      <rect x="232" y="78" width="32" height="40" rx="3"/>
+      <rect x="292" y="78" width="32" height="40" rx="3"/>
+      <rect x="352" y="78" width="32" height="40" rx="3"/>
+      <rect x="412" y="78" width="32" height="40" rx="3"/>
+      <rect x="472" y="78" width="32" height="40" rx="3"/>
+
+      <!-- Floor 2 Windows -->
+      <rect x="52" y="138" width="32" height="40" rx="3"/>
+      <rect x="112" y="138" width="32" height="40" rx="3"/>
+      <rect x="172" y="138" width="32" height="40" rx="3"/>
+      <rect x="232" y="138" width="32" height="40" rx="3"/>
+      <rect x="292" y="138" width="32" height="40" rx="3"/>
+      <rect x="352" y="138" width="32" height="40" rx="3"/>
+      <rect x="412" y="138" width="32" height="40" rx="3"/>
+      <rect x="472" y="138" width="32" height="40" rx="3"/>
+
+      <!-- Floor 1 Windows / Entrance -->
+      <rect x="52" y="198" width="32" height="42" rx="3"/>
+      <rect x="112" y="198" width="32" height="42" rx="3"/>
+      <rect x="172" y="198" width="32" height="42" rx="3"/>
+      <!-- Grand Glass Entrance Doors -->
+      <rect x="245" y="196" width="66" height="54" rx="4" fill="#0369a1" stroke="#ffffff" stroke-width="2"/>
+      <rect x="352" y="198" width="32" height="42" rx="3"/>
+      <rect x="412" y="198" width="32" height="42" rx="3"/>
+      <rect x="472" y="198" width="32" height="42" rx="3"/>
+    </g>
+
+    <!-- Center Grand Entrance Arch / Portico -->
+    <path d="M 230 65 L 326 65 L 326 198 L 230 198 Z" fill="url(#wallPeach)" stroke="#cbd5e1" stroke-width="1.5"/>
+    <polygon points="220,65 278,20 336,65" fill="url(#terracotta)"/>
+    <circle cx="278" cy="46" r="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+  </g>
+
+  <!-- Green Front Lawn & Trees -->
+  <path d="M 0 320 Q 300 300 600 315 L 900 310 L 900 500 L 0 500 Z" fill="url(#lawn)"/>
+
+  <!-- Foreground Trees -->
+  <!-- Tree Right -->
+  <g transform="translate(730, 220)">
+    <rect x="26" y="70" width="14" height="60" fill="#78350f" rx="3"/>
+    <circle cx="33" cy="50" r="46" fill="#15803d"/>
+    <circle cx="20" cy="35" r="38" fill="#16a34a"/>
+    <circle cx="48" cy="40" r="36" fill="#22c55e" opacity="0.9"/>
+  </g>
+  <!-- Tree Center Right -->
+  <g transform="translate(620, 240)">
+    <rect x="20" y="60" width="10" height="50" fill="#78350f" rx="2"/>
+    <circle cx="25" cy="42" r="36" fill="#15803d"/>
+    <circle cx="15" cy="30" r="30" fill="#16a34a"/>
+    <circle cx="36" cy="32" r="28" fill="#22c55e" opacity="0.9"/>
+  </g>
+  <!-- Tree Left -->
+  <g transform="translate(10, 200)">
+    <rect x="35" y="80" width="18" height="90" fill="#78350f" rx="4"/>
+    <circle cx="44" cy="55" r="55" fill="#15803d"/>
+    <circle cx="28" cy="38" r="45" fill="#16a34a"/>
+    <circle cx="60" cy="42" r="44" fill="#22c55e" opacity="0.9"/>
+  </g>
+
+  <!-- ==================== FOREGROUND 3D ELEMENTS ==================== -->
+  <!-- Left Side: 3D Books, Graduation Cap, Stationery Pencil Cup -->
+  <g transform="translate(20, 260)" filter="url(#softShadow)">
+    
+    <!-- BOTTOM BOOK (Orange) -->
+    <g transform="translate(0, 80)">
+      <!-- Book spine & pages -->
+      <path d="M 10 30 L 190 60 L 220 45 L 40 15 Z" fill="#9a3412"/>
+      <path d="M 10 30 L 10 48 L 190 78 L 190 60 Z" fill="#c2410c"/>
+      <path d="M 190 60 L 190 78 L 220 63 L 220 45 Z" fill="url(#pages)" stroke="#cbd5e1" stroke-width="0.8"/>
+      <!-- Top Cover -->
+      <path d="M 8 28 L 188 58 L 222 43 L 42 13 Z" fill="url(#bookOrange)"/>
+      <!-- Bookmark ribbon -->
+      <path d="M 120 48 L 120 72 L 126 67 L 132 72 L 132 50 Z" fill="#ffffff" opacity="0.9"/>
+    </g>
+
+    <!-- TOP BOOK (Blue) -->
+    <g transform="translate(10, 50)">
+      <!-- Book spine & pages -->
+      <path d="M 10 30 L 175 58 L 205 44 L 40 16 Z" fill="#075985"/>
+      <path d="M 10 30 L 10 46 L 175 74 L 175 58 Z" fill="#0369a1"/>
+      <path d="M 175 58 L 175 74 L 205 60 L 205 44 Z" fill="url(#pages)" stroke="#cbd5e1" stroke-width="0.8"/>
+      <!-- Top Cover -->
+      <path d="M 8 28 L 173 56 L 207 42 L 42 14 Z" fill="url(#bookBlue)"/>
+    </g>
+
+    <!-- 3D GRADUATION CAP ON THE BOOKS -->
+    <g transform="translate(20, -30)" filter="url(#elementShadow)">
+      <!-- Cap Skull Base -->
+      <ellipse cx="110" cy="85" rx="36" ry="18" fill="#0f172a"/>
+      <path d="M 74 85 Q 110 114 146 85 L 146 95 Q 110 124 74 95 Z" fill="#1e293b"/>
+
+      <!-- Diamond Mortarboard Top -->
+      <path d="M 110 32 L 190 68 L 110 104 L 30 68 Z" fill="url(#capGrad)" stroke="#475569" stroke-width="1.5"/>
+      <!-- Inner Diamond Highlight -->
+      <path d="M 110 36 L 184 68 L 110 100 L 36 68 Z" fill="none" stroke="#64748b" stroke-width="1.2" opacity="0.6"/>
+
+      <!-- Gold Button in center -->
+      <ellipse cx="110" cy="68" rx="6" ry="4.5" fill="url(#tasselGold)" stroke="#854d0e" stroke-width="0.7"/>
+
+      <!-- Golden Tassel draping down -->
+      <path d="M 110 68 C 130 68, 160 76, 165 102" fill="none" stroke="url(#tasselGold)" stroke-width="3" stroke-linecap="round"/>
+      
+      <!-- Tassel Ring & Fringe -->
+      <g transform="translate(165, 102)">
+        <ellipse cx="0" cy="0" rx="3.5" ry="2" fill="#ca8a04"/>
+        <path d="M -4 2 C -5 10, -6 24, -5 30 L 5 30 C 6 24, 5 10, 4 2 Z" fill="url(#tasselGold)"/>
+        <line x1="-3" y1="30" x2="-3" y2="36" stroke="#ca8a04" stroke-width="1.2"/>
+        <line x1="0" y1="30" x2="0" y2="37" stroke="#ca8a04" stroke-width="1.2"/>
+        <line x1="3" y1="30" x2="3" y2="36" stroke="#ca8a04" stroke-width="1.2"/>
+      </g>
+    </g>
+
+    <!-- WHITE CERAMIC PENCIL CUP WITH COLORFUL STATIONERY -->
+    <g transform="translate(200, 40)" filter="url(#elementShadow)">
+      <!-- Pens & Pencils Sticking Out -->
+      <!-- Red Pen -->
+      <g transform="translate(16, -20) rotate(-12)">
+        <rect x="0" y="0" width="6" height="50" fill="#ef4444" rx="1.5"/>
+        <polygon points="0,0 3,-10 6,0" fill="#fee2e2"/>
+        <polygon points="1.5,-6 3,-10 4.5,-6" fill="#1e293b"/>
+      </g>
+      <!-- Yellow Pencil -->
+      <g transform="translate(28, -26) rotate(6)">
+        <rect x="0" y="0" width="7" height="55" fill="#facc15" rx="1.5"/>
+        <polygon points="0,0 3.5,-12 7,0" fill="#fef08a"/>
+        <polygon points="2,-7 3.5,-12 5,-7" fill="#1e293b"/>
+        <!-- Pink Eraser at top -->
+        <rect x="0" y="45" width="7" height="8" fill="#f472b6" rx="1"/>
+        <rect x="0" y="43" width="7" height="3" fill="#cbd5e1"/>
+      </g>
+      <!-- Cyan Blue Pen -->
+      <g transform="translate(38, -18) rotate(18)">
+        <rect x="0" y="0" width="6" height="48" fill="#0284c7" rx="1.5"/>
+        <polygon points="0,0 3,-10 6,0" fill="#e0f2fe"/>
+        <polygon points="1.5,-6 3,-10 4.5,-6" fill="#1e293b"/>
+      </g>
+      <!-- Green Ruler -->
+      <g transform="translate(8, -15) rotate(-22)">
+        <rect x="0" y="0" width="10" height="52" fill="#22c55e" rx="1.5"/>
+        <line x1="2" y1="8" x2="6" y2="8" stroke="#ffffff" stroke-width="1"/>
+        <line x1="2" y1="16" x2="6" y2="16" stroke="#ffffff" stroke-width="1"/>
+        <line x1="2" y1="24" x2="6" y2="24" stroke="#ffffff" stroke-width="1"/>
+        <line x1="2" y1="32" x2="6" y2="32" stroke="#ffffff" stroke-width="1"/>
+      </g>
+
+      <!-- White Ceramic Cup Body -->
+      <path d="M 6 15 L 12 75 C 13 82, 47 82, 48 75 L 54 15 Z" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5"/>
+      <!-- Soft Ceramic Shadow & Highlight -->
+      <path d="M 6 15 L 12 75 C 13 82, 28 82, 30 75 L 24 15 Z" fill="#f8fafc" opacity="0.7"/>
+      <!-- Cup Rim -->
+      <ellipse cx="30" cy="15" rx="24" ry="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/>
+      <ellipse cx="30" cy="15" rx="20" ry="5" fill="#334155" opacity="0.3"/>
+    </g>
+
+  </g>
+
+</svg>
+
