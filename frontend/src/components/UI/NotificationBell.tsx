@@ -15,7 +15,11 @@ interface NotificationItem {
   createdAt: string;
 }
 
-export const NotificationBell: React.FC = () => {
+interface NotificationBellProps {
+  variant?: 'light' | 'dark';
+}
+
+export const NotificationBell: React.FC<NotificationBellProps> = ({ variant = 'dark' }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
@@ -130,13 +134,19 @@ export const NotificationBell: React.FC = () => {
           setIsOpen(!isOpen);
           playNotificationChime(); // Play sound test on click
         }}
-        className="relative p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer flex items-center justify-center"
+        className={`relative p-2 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center ${
+          variant === 'light'
+            ? 'text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs'
+            : 'text-white/90 hover:text-white hover:bg-white/20'
+        }`}
         aria-label="Notifications"
         title="Notifications"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-lg border-2 border-indigo-900 animate-pulse">
+          <span className={`absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white font-black text-[10px] flex items-center justify-center shadow-md animate-pulse ${
+            variant === 'light' ? 'border-2 border-white' : 'border-2 border-indigo-900'
+          }`}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}

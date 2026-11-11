@@ -71,9 +71,25 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
           </div>
         </div>
 
-        {/* Right Side: Notification Bell (Restored to original clean button) */}
-        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <NotificationBell />
+        {/* Right Side: Notification Bell + Calendar + Academic Year */}
+        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <NotificationBell variant="light" />
+
+          {/* Calendar Icon Button */}
+          <button
+            type="button"
+            onClick={() => navigate('/timetable')}
+            className="p-2 rounded-xl text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
+            title="School Calendar & Timetable"
+          >
+            <Calendar className="w-5 h-5" />
+          </button>
+
+          {/* Academic Year Dropdown Pill */}
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100/90 border border-slate-200/80 text-xs font-bold text-slate-700 shadow-xs cursor-default">
+            <span>2026 – 27</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+          </div>
         </div>
       </header>
     );

@@ -526,106 +526,95 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
 
         {/* Right Card: Today's Attendance (~42% / col-span-5) */}
         <div className="lg:col-span-5 bg-white rounded-[22px] p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center shadow-xs">
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-slate-800 leading-tight">Today's Attendance</h2>
-                </div>
+          {/* Card Header */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center shadow-xs">
+                <FileText className="w-5 h-5" />
               </div>
-              <Link
-                to="/attendance"
-                className="px-3.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200/80 transition-colors flex items-center gap-1"
-              >
-                View Details <span className="text-[10px]">→</span>
-              </Link>
-            </div>
-
-            {/* Gauge & Metrics Body */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 justify-between pt-2">
-              {/* Left Donut Gauge */}
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="#E2FBE8" strokeWidth="9" fill="transparent" />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      stroke="#10B981"
-                      strokeWidth="9"
-                      strokeDasharray="251.32"
-                      strokeDashoffset={251.32 * (1 - (displayAttendancePct / 100))}
-                      strokeLinecap="round"
-                      fill="transparent"
-                      className="transition-all duration-1000 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
-                      {displayAttendancePct}%
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 mt-2.5 text-[11px] font-bold text-slate-500">
-                  <BarChart3 className="w-3.5 h-3.5 text-emerald-500" />
-                  <span>Overall Performance</span>
-                </div>
-              </div>
-
-              {/* Right Stats Breakdown */}
-              <div className="flex-1 w-full flex flex-col justify-center">
-                {/* Row 1: Total, Present, Absent */}
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-400">Total</p>
-                    <p className="text-xl font-black text-slate-800 mt-0.5">{totalStudentsCount}</p>
-                    <p className="text-[10px] font-medium text-slate-400">Students</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-emerald-600">Present</p>
-                    <p className="text-xl font-black text-emerald-600 mt-0.5">{presentCount}</p>
-                    <p className="text-[10px] font-medium text-emerald-500">Present</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-rose-500">Absent</p>
-                    <p className="text-xl font-black text-rose-600 mt-0.5">{absentCount}</p>
-                    <p className="text-[10px] font-medium text-rose-500">Absent</p>
-                  </div>
-                </div>
-
-                {/* Horizontal Divider */}
-                <div className="border-t border-slate-100 my-4" />
-
-                {/* Row 2: On Leave, Teachers */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-400">On Leave</p>
-                      <p className="text-lg font-black text-slate-800 leading-tight">{leaveCount}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-                      <GraduationCap className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-400">Teachers</p>
-                      <p className="text-lg font-black text-slate-800 leading-tight">
-                        {totalTeachersCount} / {totalTeachersCount}
-                      </p>
-                      <p className="text-[10px] font-medium text-slate-400">Present</p>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <h2 className="text-base font-black text-slate-800 leading-tight">Today's Attendance</h2>
               </div>
             </div>
+            <Link
+              to="/attendance"
+              className="px-3.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200/80 transition-colors flex items-center gap-1"
+            >
+              View Details <span className="text-[10px]">→</span>
+            </Link>
+          </div>
+
+          {/* Gauge & Metrics Body */}
+          <div className="flex flex-col sm:flex-row items-center gap-5 my-auto py-3">
+            {/* Donut Gauge */}
+            <div className="flex flex-col items-center justify-center shrink-0">
+              <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
+                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="40" stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    stroke="#10B981"
+                    strokeWidth="8"
+                    strokeDasharray="251.32"
+                    strokeDashoffset={251.32 * (1 - (displayAttendancePct / 100))}
+                    strokeLinecap="round"
+                    fill="transparent"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                  <span className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+                    {displayAttendancePct}%
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 border border-emerald-100">
+                <BarChart3 className="w-3 h-3 text-emerald-600" />
+                <span>Overall Performance</span>
+              </div>
+            </div>
+
+            {/* Metrics 2x2 Grid */}
+            <div className="flex-1 w-full grid grid-cols-2 gap-2.5">
+              <div className="bg-slate-50/90 rounded-xl p-2.5 border border-slate-100 flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
+                <p className="text-lg font-black text-slate-800">{totalStudentsCount}</p>
+                <p className="text-[10px] font-medium text-slate-400">Students</p>
+              </div>
+              <div className="bg-emerald-50/70 rounded-xl p-2.5 border border-emerald-100/80 flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Present</p>
+                <p className="text-lg font-black text-emerald-600">{presentCount}</p>
+                <p className="text-[10px] font-medium text-emerald-600">Present</p>
+              </div>
+              <div className="bg-rose-50/70 rounded-xl p-2.5 border border-rose-100/80 flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Absent</p>
+                <p className="text-lg font-black text-rose-600">{absentCount}</p>
+                <p className="text-[10px] font-medium text-rose-500">Absent</p>
+              </div>
+              <div className="bg-amber-50/70 rounded-xl p-2.5 border border-amber-100/80 flex flex-col justify-center">
+                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">On Leave</p>
+                <p className="text-lg font-black text-amber-700">{leaveCount}</p>
+                <p className="text-[10px] font-medium text-amber-600">Students</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Teacher Attendance & 100% Present Badge */}
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="font-bold text-slate-700 text-xs">Teachers: </span>
+                <span className="font-black text-indigo-700 text-xs">{totalTeachersCount} / {totalTeachersCount} Present</span>
+              </div>
+            </div>
+            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
+              100% Present
+            </span>
           </div>
         </div>
       </div>
