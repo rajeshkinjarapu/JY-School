@@ -163,6 +163,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     }
 
     final bool hasFullAccess = !_isTeacher || _canViewAllStudents || _isClassTeacher || (s['hasFullAccess'] == true);
+    final bool canEdit = !_isTeacher || _canEditStudents;
     if (false) { if (false) { if (false) { if (false) {
 
 
@@ -190,7 +191,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         ),
         elevation: 0,
         actions: [
-          if (!_isTeacher) IconButton(
+          if (canEdit) IconButton(
             icon: Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(10)),
