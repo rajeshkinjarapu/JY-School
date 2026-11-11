@@ -10,6 +10,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { prisma } from './utils/prisma';
 import { initSocket } from './socket';
 import { errorHandler } from './middlewares/errorHandler';
 import { rateLimiter } from './middlewares/rateLimiter';
@@ -160,6 +161,14 @@ if (!process.env.VERCEL) {
   httpServer.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 JY School SMS Backend running on http://0.0.0.0:${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV}`);
+    // Auto-sync Student columns (childId, apaarId) if missing in DB
+    prisma.$executeRawUnsafe(`
+      ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;
+      ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "apaarId" TEXT;
+      CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
+      CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
+    `).catch(err => console.log('Auto-sync student columns notice:', err?.message));
+
     // Run subject and mark deduplication in background on boot
     if (process.env.RUN_CLEANUP_ON_BOOT === 'true') autoCleanDuplicateSubjectsAndMarks().catch(err => {
       console.error('Failed autoCleanDuplicateSubjectsAndMarks:', err);
