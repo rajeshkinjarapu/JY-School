@@ -92,6 +92,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             if (_studentDetails!['canViewAllStudents'] == true) {
               _canViewAllStudents = true;
             }
+            if (_studentDetails!['canEditStudents'] == true) {
+              _canEditStudents = true;
+            }
             if (_studentDetails!['isClassTeacher'] == true) {
               _isClassTeacher = true;
             }
