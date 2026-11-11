@@ -44,19 +44,51 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
       ];
     }
 
-    const [students, total] = await Promise.all([
-      prisma.student.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { rollNo: 'asc' },
-        include: {
-          user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
-          class: { select: { id: true, name: true, section: true } },
-        },
-      }),
-      prisma.student.count({ where }),
-    ]);
+    let students: any[] = [];
+    let total = 0;
+    try {
+      [students, total] = await Promise.all([
+        prisma.student.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { rollNo: 'asc' },
+          include: {
+            user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+            class: { select: { id: true, name: true, section: true } },
+          },
+        }),
+        prisma.student.count({ where }),
+      ]);
+    } catch (fetchErr: any) {
+      if (fetchErr?.message?.includes('childId') || fetchErr?.message?.includes('apaarId')) {
+        try {
+          await prisma.$executeRawUnsafe(`
+            ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;
+            ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "apaarId" TEXT;
+            CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
+            CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
+          `);
+          [students, total] = await Promise.all([
+            prisma.student.findMany({
+              where,
+              skip,
+              take: limit,
+              orderBy: { rollNo: 'asc' },
+              include: {
+                user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+                class: { select: { id: true, name: true, section: true } },
+              },
+            }),
+            prisma.student.count({ where }),
+          ]);
+        } catch (retryErr) {
+          throw retryErr;
+        }
+      } else {
+        throw fetchErr;
+      }
+    }
 
     const sanitizedStudents = students.map(student => {
       let avatarUrl = student.user.photoUrl;
@@ -487,6 +519,18 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     const sheet = workbook.Sheets[sheetName];
     const rawResults = XLSX.utils.sheet_to_json<any>(sheet);
 
+    // Ensure childId and apaarId columns exist in database before executing queries
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;
+        ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "apaarId" TEXT;
+        CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
+        CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
+      `);
+    } catch (dbColErr: any) {
+      console.warn('DB Column check notice in bulkImport:', dbColErr?.message);
+    }
+
     if (rawResults.length > 5000) {
       return next(createError('Please upload maximum 5000 students at a time', 400));
     }
@@ -572,8 +616,15 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
       const rawRow = rawResults[i];
       const row = normalizeRow(rawRow);
 
-      const name = cleanStr(row.studentname || row.name || row.fullname || row.firstname);
-      const rawStudentId = cleanStr(row.studentid || row.rollno || row.id || row.admissionno);
+      const name = cleanStr(
+        row.studentname || row.name || row.fullname || row.studentfullname || row.firstname ||
+        row.student || row.candidatename || row.pupilname || row.nameofstudent || row.nameofthestudent
+      );
+      const rawStudentId = cleanStr(
+        row.studentid || row.rollno || row.roll || row.rollnumber || row.admissionno ||
+        row.admissionnumber || row.admno || row.admnno || row.regno || row.registrationno ||
+        row.regnumber || row.studentcode || row.studentno || row.studentnumber || row.id || row.htno
+      );
 
       if (!name && !rawStudentId) {
         continue;
@@ -603,21 +654,46 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           classId = cls.id;
         }
 
-        const dob = parseDate(row.dateofbirth || row.dob || row.birthdate);
+        const dob = parseDate(row.dateofbirth || row.dob || row.birthdate || row.birth_date);
         const gender = cleanGender(row.gender || row.sex);
-        const childId = cleanDigits(row.childid || row.childinfo || row.childinfoid);
-        const apaarId = cleanDigits(row.apaarid || row.apaar || row.apaarnumber);
-        const penNumber = cleanDigits(row.pennumber || row.pen || row.penno);
-        const aadharNo = cleanDigits(row.studentaadhar || row.aadharno || row.aadhar || row.aadharnumber || row.studentaadhaar);
-        const fatherName = cleanStr(row.fathername || row.father);
-        const fatherAadhar = cleanDigits(row.fatheraadhar || row.fatheraadhaar);
-        const fatherPhone = cleanDigits(row.fatherphone || row.fathermobile || row.fathercontact);
-        const motherName = cleanStr(row.mothername || row.mother);
-        const motherAadhar = cleanDigits(row.motheraadhar || row.motheraadhaar);
-        const motherPhone = cleanDigits(row.motherphone || row.mothermobile || row.mothercontact);
-        const primaryPhone = cleanDigits(row.mobileno || row.phone || row.mobile || fatherPhone || motherPhone);
-        const address = cleanStr(row.address || row.fulladdress || row.village);
-        const bloodGroup = cleanStr(row.bloodgroup || row.blood);
+        const childId = cleanDigits(
+          row.childid || row.child_id || row.childinfoid || row.childinfo || row.child || row.studentchildid
+        );
+        const apaarId = cleanDigits(
+          row.apaarid || row.apaar_id || row.apaar || row.apaarnumber || row.apaarno || row.aparid || row.apar
+        );
+        const penNumber = cleanDigits(
+          row.pennumber || row.pen_number || row.pen || row.penno || row.permanenteducationnumber || row.pen_no
+        );
+        const aadharNo = cleanDigits(
+          row.studentaadhar || row.studentaadhaar || row.aadharno || row.aadhaarno ||
+          row.aadhar || row.aadhaar || row.studentuid || row.uid || row.aadharnumber || row.studentaadharno
+        );
+        const fatherName = cleanStr(
+          row.fathername || row.father || row.fathersname || row.fatherfullname || row.parentname
+        );
+        const fatherAadhar = cleanDigits(
+          row.fatheraadhar || row.fatheraadhaar || row.fatheraadharno || row.fatheruid || row.father_aadhar
+        );
+        const fatherPhone = cleanDigits(
+          row.fatherphone || row.fathermobile || row.fathercontact || row.fathercontactno || row.father_phone
+        );
+        const motherName = cleanStr(
+          row.mothername || row.mother || row.mothersname || row.motherfullname
+        );
+        const motherAadhar = cleanDigits(
+          row.motheraadhar || row.motheraadhaar || row.motheraadharno || row.motheruid || row.mother_aadhar
+        );
+        const motherPhone = cleanDigits(
+          row.motherphone || row.mothermobile || row.mothercontact || row.mothercontactno || row.mother_phone
+        );
+        const primaryPhone = cleanDigits(
+          row.mobileno || row.phone || row.mobile || row.phoneno || row.contact || row.contactno || row.cell || fatherPhone || motherPhone
+        );
+        const address = cleanStr(
+          row.address || row.fulladdress || row.residentialaddress || row.village || row.city
+        );
+        const bloodGroup = cleanStr(row.bloodgroup || row.blood || row.bg);
 
         // Check if student exists by Student ID (rollNo or User email)
         let existingStudent = null;
@@ -625,50 +701,79 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           existingStudent = await prisma.student.findFirst({
             where: {
               OR: [
-                { rollNo: rawStudentId },
-                { user: { email: rawStudentId } }
+                { rollNo: { equals: rawStudentId, mode: 'insensitive' } },
+                { user: { email: { equals: rawStudentId, mode: 'insensitive' } } }
               ]
             },
             include: { user: true }
           });
         }
 
-        if (existingStudent) {
-          // ── UPDATE EXISTING STUDENT (UPSERT) ──
-          await prisma.user.update({
-            where: { id: existingStudent.userId },
-            data: {
-              name: name || undefined,
-              phone: primaryPhone || undefined,
-            }
+        // If not matched by rollNo, try matching by Child ID, APAAR ID, or Aadhaar No
+        if (!existingStudent && childId) {
+          existingStudent = await prisma.student.findFirst({
+            where: { childId },
+            include: { user: true }
           });
+        }
+        if (!existingStudent && apaarId) {
+          existingStudent = await prisma.student.findFirst({
+            where: { apaarId },
+            include: { user: true }
+          });
+        }
+        if (!existingStudent && aadharNo) {
+          existingStudent = await prisma.student.findFirst({
+            where: { aadharNo },
+            include: { user: true }
+          });
+        }
 
-          await prisma.student.update({
-            where: { id: existingStudent.id },
-            data: {
-              classId: classId || undefined,
-              dob: dob || undefined,
-              gender: gender || undefined,
-              childId: childId || undefined,
-              apaarId: apaarId || undefined,
-              penNumber: penNumber || undefined,
-              aadharNo: aadharNo || undefined,
-              fatherName: fatherName || undefined,
-              fatherAadhar: fatherAadhar || undefined,
-              fatherPhone: fatherPhone || undefined,
-              motherName: motherName || undefined,
-              motherAadhar: motherAadhar || undefined,
-              motherPhone: motherPhone || undefined,
-              address: address || undefined,
-              bloodGroup: bloodGroup || undefined,
-            }
-          });
+        if (existingStudent) {
+          // ── PARTIAL SELECTIVE UPDATE (ONLY UPDATES WHAT WAS GIVEN IN EXCEL!) ──
+          const userDataToUpdate: any = {};
+          if (name) userDataToUpdate.name = name;
+          if (primaryPhone) userDataToUpdate.phone = primaryPhone;
+
+          if (Object.keys(userDataToUpdate).length > 0) {
+            await prisma.user.update({
+              where: { id: existingStudent.userId },
+              data: userDataToUpdate
+            });
+          }
+
+          const studentDataToUpdate: any = {};
+          if (classId) studentDataToUpdate.classId = classId;
+          if (dob) studentDataToUpdate.dob = dob;
+          if (gender) studentDataToUpdate.gender = gender;
+          if (childId) studentDataToUpdate.childId = childId;
+          if (apaarId) studentDataToUpdate.apaarId = apaarId;
+          if (penNumber) studentDataToUpdate.penNumber = penNumber;
+          if (aadharNo) studentDataToUpdate.aadharNo = aadharNo;
+          if (fatherName) studentDataToUpdate.fatherName = fatherName;
+          if (fatherAadhar) studentDataToUpdate.fatherAadhar = fatherAadhar;
+          if (fatherPhone) studentDataToUpdate.fatherPhone = fatherPhone;
+          if (motherName) studentDataToUpdate.motherName = motherName;
+          if (motherAadhar) studentDataToUpdate.motherAadhar = motherAadhar;
+          if (motherPhone) studentDataToUpdate.motherPhone = motherPhone;
+          if (address) studentDataToUpdate.address = address;
+          if (bloodGroup) studentDataToUpdate.bloodGroup = bloodGroup;
+
+          if (Object.keys(studentDataToUpdate).length > 0) {
+            await prisma.student.update({
+              where: { id: existingStudent.id },
+              data: studentDataToUpdate
+            });
+          }
 
           updated++;
         } else {
           // ── CREATE NEW STUDENT ──
           if (!name) {
-            failed.push({ row: rawRow, reason: 'Student Name is required for new admissions' });
+            failed.push({
+              row: rawRow,
+              reason: `Student ID "${rawStudentId || 'N/A'}" డేటాబేస్‌లో కనుగొనబడలేదు మరియు కొత్త విద్యార్థిని సృష్టించడానికి "Student Name" లేదు.`
+            });
             continue;
           }
 

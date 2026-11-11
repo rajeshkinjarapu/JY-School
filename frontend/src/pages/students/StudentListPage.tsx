@@ -572,14 +572,14 @@ export const StudentListPage: React.FC = () => {
                       </div>
 
                       {/* Upsert Hint Card */}
-                      <div className="mt-3 p-3 bg-white/90 rounded-xl border border-indigo-100/80 text-[11px] text-slate-600 space-y-1">
+                      <div className="mt-3 p-3 bg-white/90 rounded-xl border border-indigo-100/80 text-[11px] text-slate-600 space-y-1.5">
                         <div className="flex items-center gap-1.5 font-bold text-indigo-900">
                           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span>స్మార్ట్ ఆటో-అప్‌డేట్ (Smart Upsert Rules):</span>
+                          <span>స్మార్ట్ పార్షియల్ అప్‌డేట్ (Any Custom Excel Supported):</span>
                         </div>
                         <p className="pl-3.5 text-slate-500 leading-relaxed">
-                          • <strong>Student ID</strong> ఉన్న రోల సమాచారం (పేరు, ఆధార్, Child ID, APAAR ID, తండ్రి/తల్లి వివరాలు) ఆటోమేటిక్‌గా <strong>అప్‌డేట్</strong> అవుతుంది.<br />
-                          • <strong>Student ID</strong> లేని రోలు కొత్త విద్యార్థులుగా సిస్టమ్‌లో ఆటో-ఐడీతో <strong>యాడ్</strong> అవుతాయి.
+                          • <strong>అన్ని కాలమ్స్ ఉండాల్సిన పనిలేదు:</strong> మీ ఎక్సెల్‌లో కేవలం <strong>Student ID</strong> (లేదా Roll No) మరియు మీరు అప్‌డేట్ చేయాలనుకుంటున్న కాలమ్స్ (ఉదా: కేవలం Child ID, లేదా APAAR ID, లేదా Aadhaar, లేదా Name) ఏవి ఉన్నా సిస్టమ్ వాటిని మాత్రమే అప్‌డేట్ చేస్తుంది.<br />
+                          • ఎక్సెల్ ఫైల్‌లో ఉన్న ఫీల్డ్‌లు మాత్రమే అప్‌డేట్ అవుతాయి, మిగిలిన ఏ పాత డేటా చెక్కుచెదరదు.
                         </p>
                       </div>
                     </div>
