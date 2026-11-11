@@ -120,11 +120,9 @@ const WelcomeBanner: React.FC<{ name: string; role: string; photoUrl?: string }>
               {name}
             </h1>
             <div className="flex items-center gap-1.5">
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 tracking-wide uppercase">
-                {displayRole}
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 tracking-wide">
+                JY School - {displayRole}
               </span>
-              <span className="text-slate-300 text-[10px] font-bold">•</span>
-              <span className="text-slate-500 text-[9px] sm:text-[10px] font-semibold tracking-wide">JY School</span>
             </div>
           </div>
         </div>
@@ -243,6 +241,16 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     month: 'short',
     year: 'numeric',
   });
+
+  const roleTitleMap: Record<string, string> = {
+    SUPER_ADMIN: 'Super Admin',
+    ADMIN: 'Admin',
+    TEACHER: 'Teacher',
+    STUDENT: 'Student',
+    ACCOUNTANT: 'Accountant',
+    PARENT: 'Parent',
+  };
+  const roleDisplay = roleTitleMap[user?.role || ''] || user?.role || 'Super Admin';
 
   const totalStudentsCount = data.totalStudents || 533;
   const totalTeachersCount = data.totalTeachers || 34;
@@ -374,19 +382,41 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5">
-          {/* Left: 3D Cap & Books + JY SCHOOL Title */}
-          <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
-            <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
-              <img
-                src="/graduation-cap-books.svg"
-                alt="JY School"
-                className="w-full h-full object-contain filter drop-shadow-lg"
-              />
+          {/* Left: Logged-in Person Photo + Name + JY School - Role Subtitle */}
+          <div className="flex items-center gap-4 sm:gap-5 w-full sm:w-auto">
+            {/* User Profile Photo with Premium Glow & Ring */}
+            <div className="relative shrink-0">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 rounded-2xl p-[3px] bg-gradient-to-tr from-white/40 via-white/20 to-white/60 shadow-xl backdrop-blur-md">
+                <div className="w-full h-full rounded-[13px] overflow-hidden bg-white/10 flex items-center justify-center border-2 border-white/80 shadow-inner">
+                  {user?.photoUrl ? (
+                    <img
+                      src={getPhotoUrl(user.photoUrl)}
+                      alt={user.name || 'User'}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-2xl sm:text-3xl ${user?.photoUrl ? 'hidden' : ''}`}>
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </div>
+                </div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full shadow-md" title="Active" />
             </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-wider text-white drop-shadow-md leading-none">
-                JY SCHOOL
+
+            {/* User Name & JY School - Role */}
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight text-white drop-shadow-md leading-tight truncate">
+                {user?.name || 'Administrator'}
               </h1>
+              <div className="mt-1.5 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs sm:text-sm font-bold text-white shadow-xs">
+                  <span>JY School - {roleDisplay}</span>
+                </span>
+              </div>
             </div>
           </div>
 
