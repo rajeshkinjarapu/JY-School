@@ -1,47 +1,36 @@
 const { PrismaClient } = require('@prisma/client');
-require('dotenv').config();
-
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Checking & Updating Database Schema ---');
+  console.log('🔄 Checking and adding childId & apaarId columns to Student table...');
   try {
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "fatherAadhar" TEXT;`);
-    console.log('✅ Column "fatherAadhar" successfully verified/added in "Student" table.');
-    
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "motherAadhar" TEXT;`);
-    console.log('✅ Column "motherAadhar" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "fatherPhone" TEXT;`);
-    console.log('✅ Column "fatherPhone" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "motherPhone" TEXT;`);
-    console.log('✅ Column "motherPhone" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianName" TEXT;`);
-    console.log('✅ Column "guardianName" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianPhone" TEXT;`);
-    console.log('✅ Column "guardianPhone" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "guardianRelation" TEXT;`);
-    console.log('✅ Column "guardianRelation" successfully verified/added in "Student" table.');
-
-    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "penNumber" TEXT;`);
-    console.log('✅ Column "penNumber" successfully verified/added in "Student" table.');
-
-    const check = await prisma.$queryRawUnsafe(`
-      SELECT column_name, data_type 
-      FROM information_schema.columns 
-      WHERE table_name = 'Student' AND column_name IN ('fatherAadhar', 'motherAadhar', 'fatherPhone', 'motherPhone', 'guardianName', 'guardianPhone', 'guardianRelation', 'aadharNo');
-    `);
-    console.log('📊 Active Columns in Database:', check);
-    console.log('🎉 Database is 100% ready for Father/Mother/Guardian details and Aadhaar!');
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;`);
+    console.log('✅ Column "childId" created/verified successfully.');
   } catch (err) {
-    console.error('❌ Error executing database migration:', err);
-  } finally {
-    await prisma.$disconnect();
+    console.error('❌ Error adding childId:', err.message);
   }
+
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "apaarId" TEXT;`);
+    console.log('✅ Column "apaarId" created/verified successfully.');
+  } catch (err) {
+    console.error('❌ Error adding apaarId:', err.message);
+  }
+
+  try {
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");`);
+    await prisma.$executeRawUnsafe(`CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");`);
+    console.log('✅ Indexes for childId and apaarId created/verified successfully.');
+  } catch (err) {
+    console.error('❌ Error creating indexes:', err.message);
+  }
+
+  console.log('🎉 Database migration complete! All Student columns are ready.');
+  await prisma.$disconnect();
 }
 
-main();
+main().catch(async (e) => {
+  console.error('Fatal migration error:', e);
+  await prisma.$disconnect();
+  process.exit(1);
+});

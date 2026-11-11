@@ -2,16 +2,21 @@
 
 ## తేదీ: 11 నవంబర్ 2026
 
-### ఎక్సెల్ ఇంపోర్ట్ లో `Student.childId does not exist` డేటాబేస్ ఎర్రర్ విశ్లేషణ & పరిష్కారం:
+### `prisma.student.findMany()` లో `Student.childId does not exist` పరిష్కారం:
 
-1. **సమస్య విశ్లేషణ (Root Cause Analysis):**
-   - **స్క్రీన్‌షాట్ ఎర్రర్:** `The column 'Student.childId' does not exist in the current database.`
-   - **కారణం:** ہم `schema.prisma` లో `childId` మరియు `apaarId` ఫీల్డ్‌లను జోడించి, ప్రిస్మా క్లయింట్‌ను జెనరేట్ చేశాము. కానీ VPS లోని అసలు PostgreSQL డేటాబేస్‌కు `npx prisma db push` రన్ చేయలేదు. అందువల్ల డేటాబేస్ లోని `Student` టేబుల్‌లో ఇంకా `childId` కాలమ్ లేకపోవడం వల్ల Prisma క్వెరీ రన్ చేసినప్పుడు PostgreSQL ఎర్రర్ ఇచ్చింది.
+1. **సమస్య విశ్లేషణ:**
+   - యూజర్ స్టూడెంట్స్ లిస్ట్ పేజీని ఓపెన్ చేసినప్పుడు కూడా క్రింది ఎర్రర్ వచ్చింది:
+     `Invalid prisma.student.findMany() invocation in students.controller.ts:48:22: The column Student.childId does not exist in the current database.`
+   - **కారణం:** Prisma Client లో `childId` మరియు `apaarId` ఫీల్డ్‌లు ఉన్నాయి. కానీ PostgreSQL డేటాబేస్‌లోని `Student` టేబుల్‌లో ఇంకా `childId` కాలమ్ యాడ్ అవ్వలేదు. అందువల్ల `Student` టేబుల్ నుండి ఏ డేటా చదవాలన్నా (findMany, findFirst) డేటాబేస్ ఎర్రర్ ఇస్తుంది.
 
-2. **చేసిన పరిష్కారాలు (Fix Applied):**
-   - 🛡️ **బ్యాకెండ్ సెల్ఫ్-హీలింగ్ ఆటో-మైగ్రేషన్ (`backend/src/server.ts`):** సర్వర్ స్టార్ట్ అయిన ప్రతిసారీ ఆటోమేటిక్‌గా డేటాబేస్‌ను చెక్ చేసి, ఒకవేళ కాలమ్‌లు లేకపోతే `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;` మరియు `apaarId` కాలమ్‌లను మరియు ఇండెక్స్‌లను ఆటోమేటిక్‌గా క్రియేట్ చేసే కోడ్ చేర్చాము.
-   - ⚡ **డేటాబేస్ స్కీమా పుష్ (VPS Command):** VPS లో `npx prisma db push` రన్ చేయడం ద్వారా డేటాబేస్‌లో `childId`, `apaarId` కాలమ్‌లు వెంటనే యాక్టివేట్ అవుతాయి.
-
-3. **తదుపరి దశ:**
-   - లోకల్ కోడ్‌ను గిట్‌హబ్‌కు పుష్ చేయడం.
-   - VPS లో `git pull`, `npx prisma db push`, `npx prisma generate`, `npm run build`, `pm2 restart all` రన్ చేయడం.
+2. **పూర్తయిన పనులు (Fix Implemented):**
+   - 📄 **`backend/add_columns.js` స్క్రిప్ట్ రూపకల్పన:**
+     - ఎటువంటి ఇంటరాక్టివ్ ప్రాంప్ట్‌లు లేకుండా నేరుగా PostgreSQL డేటాబేస్‌కు కనెక్ట్ అయ్యి:
+       `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "childId" TEXT;`
+       `ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "apaarId" TEXT;`
+       `CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");`
+       `CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");`
+       కమాండ్‌లను ఎగ్జిక్యూట్ చేసే ఫూల్‌ప్రూఫ్ వన్-షాట్ మైగ్రేషన్ స్క్రిప్ట్‌ను రూపొందించాము.
+   - ⚡ **కమాండ్స్ సిద్ధం:**
+     - లోకల్ నుండి GitHub కు పుష్ చేయడం.
+     - VPS లో `git pull origin main` చేసి, `node add_columns.js` రన్ చేయగానే డేటాబేస్‌లో కాలమ్‌లు వెంటనే క్రియేట్ అయిపోతాయి.
