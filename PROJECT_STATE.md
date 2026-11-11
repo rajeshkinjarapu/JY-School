@@ -1,5 +1,17 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Excel Import Date of Birth (DOB) Universal Parser Fix (November 11, 2026)
+- **యూజర్ ప్రశ్న & రిపోర్ట్:** 
+  "excel dwara data of birth update chesa but avvaledu" (BORA HANVIKA ప్రొఫైల్‌లో తండ్రి, తల్లి, PEN అప్‌డేట్ అయ్యాయి కానీ Date of Birth: Not Provided అని వచ్చింది).
+- **సమస్య విశ్లేషణ:**
+  1. ఎక్సెల్ ఫైల్ రీడ్ చేసేటప్పుడు `XLSX.readFile` లో `{ cellDates: true }` లేకపోవడం వలన ఎక్సెల్ డేట్ సెల్స్ ఇంటర్నల్ సీరియల్ నంబర్లుగా మారడం.
+  2. హెడర్ పేరు `Date of Birth (DD/MM/YYYY)` లేదా `DOB` అని ఉన్నప్పుడు పాత హెడర్ మ్యాచింగ్ మిస్ అవ్వడం.
+  3. `parseDate` లో 2-డిజిట్ సంవత్సరాలు (`16/07/16`), ఇండియన్ ఫార్మాట్ డేట్లు మరియు టైమ్‌స్టాంప్‌లు సపోర్ట్ లేకపోవడం వల్ల `null` రిటర్న్ అవ్వడం.
+- **పరిష్కరించిన పనులు ([`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts)):**
+  1. `XLSX.readFile(filePath, { cellDates: true })` ఎనేబుల్ చేయబడింది.
+  2. `Object.keys(rawRow)` ద్వారా `dob` లేదా `birth` ఉన్న ఏ హెడర్ అయినా (`Date of Birth (DD/MM/YYYY)`, `DOB`, `Birth Date`) ఆటో-డిటెక్ట్ చేసే లాజిక్ అమర్చబడింది.
+  3. `parseDate` ను యూనివర్సల్ డేట్ పార్సర్‌గా అప్‌గ్రేడ్ చేశాము: Excel Date Objects, Excel Serial Numbers, `DD/MM/YYYY`, `DD-MM-YYYY`, `DD/MM/YY`, `YYYY-MM-DD`, `DD-Mon-YYYY` లన్నింటినీ సరైన UTC Date గా మారుస్తుంది.
+
 ## చివరి సంభాషణ - Student Excel Partial Update / Any Custom Excel Columns Supported (November 11, 2026)
 - **యూజర్ కోరిక:** 
   "excel lo anni columns undali ani em ledu, excel lo student id tho patu ye column lo data unna danni update cheyali sample excel lo ne fill cheyali ani em ledu"

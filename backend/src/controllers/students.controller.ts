@@ -514,7 +514,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
   try {
     const filePath = req.file.path;
-    const workbook = XLSX.readFile(filePath);
+    const workbook = XLSX.readFile(filePath, { cellDates: true });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     const rawResults = XLSX.utils.sheet_to_json<any>(sheet);
@@ -569,32 +569,71 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     // Helper: Parse Date of Birth flexibly
     const parseDate = (val: any): Date | null => {
       if (!val) return null;
-      if (typeof val === 'number') {
-        const epoch = new Date(1899, 11, 30);
-        const d = new Date(epoch.getTime() + val * 86400000);
-        return isNaN(d.getTime()) ? null : d;
-      }
-      const str = String(val).trim();
-      if (!str) return null;
 
-      // DD/MM/YYYY or DD-MM-YYYY
-      const dmy = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+      // 1. If already Date object (from XLSX cellDates: true)
+      if (val instanceof Date) {
+        return isNaN(val.getTime()) ? null : val;
+      }
+
+      // 2. Excel numeric serial number (e.g. 42567 or "42567")
+      if (typeof val === 'number' || (typeof val === 'string' && /^\d{4,6}(\.\d+)?$/.test(val.trim()))) {
+        const num = typeof val === 'number' ? val : parseFloat(val.trim());
+        if (num > 1000 && num < 100000) {
+          const epoch = new Date(Date.UTC(1899, 11, 30));
+          const d = new Date(epoch.getTime() + num * 86400000);
+          if (!isNaN(d.getTime())) return d;
+        }
+      }
+
+      let str = String(val).trim();
+      if (!str || str.toLowerCase() === 'null' || str.toLowerCase() === 'undefined' || str === 'N/A') {
+        return null;
+      }
+
+      // Strip time suffix if present (e.g. "16/07/2016 00:00:00" or "2016-07-16T00:00:00")
+      str = str.replace(/[T\s].*$/, '').trim();
+
+      // 3. DD/MM/YYYY or DD-MM-YYYY or DD.MM.YYYY (supports 2 or 4 digit year)
+      const dmy = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
       if (dmy) {
         const day = parseInt(dmy[1], 10);
         const month = parseInt(dmy[2], 10) - 1;
-        const year = parseInt(dmy[3], 10);
-        const d = new Date(year, month, day);
-        return isNaN(d.getTime()) ? null : d;
+        let year = parseInt(dmy[3], 10);
+        if (year < 100) {
+          year = year > 40 ? 1900 + year : 2000 + year;
+        }
+        const d = new Date(Date.UTC(year, month, day));
+        if (!isNaN(d.getTime())) return d;
       }
 
-      // YYYY-MM-DD
+      // 4. YYYY-MM-DD or YYYY/MM/DD or YYYY.MM.DD
       const ymd = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
       if (ymd) {
         const year = parseInt(ymd[1], 10);
         const month = parseInt(ymd[2], 10) - 1;
         const day = parseInt(ymd[3], 10);
-        const d = new Date(year, month, day);
-        return isNaN(d.getTime()) ? null : d;
+        const d = new Date(Date.UTC(year, month, day));
+        if (!isNaN(d.getTime())) return d;
+      }
+
+      // 5. DD-Mon-YYYY (e.g. "16-Jul-2016", "16 Jul 2016")
+      const monthNames: Record<string, number> = {
+        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+      };
+      const dMonthY = str.match(/^(\d{1,2})[\s\-\/]+([a-zA-Z]{3,9})[\s\-\/]+(\d{2,4})$/);
+      if (dMonthY) {
+        const day = parseInt(dMonthY[1], 10);
+        const mKey = dMonthY[2].toLowerCase().substring(0, 3);
+        const month = monthNames[mKey];
+        let year = parseInt(dMonthY[3], 10);
+        if (year < 100) {
+          year = year > 40 ? 1900 + year : 2000 + year;
+        }
+        if (month !== undefined) {
+          const d = new Date(Date.UTC(year, month, day));
+          if (!isNaN(d.getTime())) return d;
+        }
       }
 
       const d = new Date(str);
@@ -654,7 +693,13 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           classId = cls.id;
         }
 
-        const dob = parseDate(row.dateofbirth || row.dob || row.birthdate || row.birth_date);
+        const rawDob = row.dateofbirth || row.dob || row.birthdate || row.birth_date ||
+          row.studentdob || row.dateofbirthddmmyyyy || row.dobddmmyyyy || row.dateof_birth ||
+          Object.keys(rawRow).filter(k => {
+            const lk = k.toLowerCase().replace(/[^a-z]/g, '');
+            return lk.includes('dob') || lk.includes('birth');
+          }).map(k => rawRow[k])[0];
+        const dob = parseDate(rawDob);
         const gender = cleanGender(row.gender || row.sex);
         const childId = cleanDigits(
           row.childid || row.child_id || row.childinfoid || row.childinfo || row.child || row.studentchildid
