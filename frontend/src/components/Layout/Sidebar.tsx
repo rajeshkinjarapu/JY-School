@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus
+  Shield, FileText, UserCheck, X, ChevronDown, ChevronRight, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -180,7 +180,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             <img src="/logo.png?v=1" alt="School Logo" className="w-full h-full object-contain p-0.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-indigo-600 font-bold text-xs">JY</span>'; }} />
           </div>
           <div className="min-w-0 flex flex-col justify-center">
-            <h1 className="text-[15px] font-extrabold text-white leading-tight break-words">{schoolName}</h1>
+            <h1 className="text-[16px] font-black text-white leading-tight break-words tracking-wide">{schoolName || 'JY School'}</h1>
+            <p className="text-[10px] font-semibold text-slate-400 tracking-wider mt-0.5">Learn • Grow • Excel</p>
           </div>
         </div>
       </div>
@@ -247,9 +248,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                 link.click();
                 document.body.removeChild(link);
               }}
-              className="w-full flex items-center gap-2 justify-center py-2 px-3 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg shadow-md transition-all font-bold text-sm cursor-pointer shadow-indigo-500/20"
+              className="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#A855F7] hover:brightness-110 text-white rounded-xl shadow-lg transition-all cursor-pointer group border border-white/10"
             >
-              <Smartphone className="w-4 h-4" /> Install App
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-sm">
+                  🚀
+                </div>
+                <div className="text-left">
+                  <p className="font-extrabold text-xs leading-tight">Install App</p>
+                  <p className="text-[9px] font-medium text-white/80 leading-tight">Get a School Application</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
             </button>
           </div>
         )}

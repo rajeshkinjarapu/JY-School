@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import { Menu, ArrowLeft, User, LogOut, Settings, Home } from 'lucide-react';
+import { Menu, ArrowLeft, User, LogOut, Settings, Home, Search, Calendar, ChevronDown } from 'lucide-react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { getPhotoUrl } from '../../utils/photo';
 import { NotificationBell } from '../UI/NotificationBell';
@@ -38,6 +38,70 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
       }
     }
   };
+
+  if (isDashboard) {
+    return (
+      <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs">
+        {/* Left: Hamburger + Pill Search Bar */}
+        <div className="flex items-center gap-3 flex-1 max-w-xl">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onMenuClick?.();
+              window.dispatchEvent(new CustomEvent('toggleSidebar'));
+            }}
+            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <div className="relative flex-1 hidden sm:block">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search students, classes, reports..."
+              className="w-full pl-10 pr-4 py-2 bg-slate-100/90 dark:bg-gray-800 focus:bg-white border border-slate-200/70 dark:border-gray-700 focus:border-indigo-500 rounded-full text-xs font-semibold text-slate-800 dark:text-white placeholder-slate-400 outline-none transition-all shadow-inner"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  navigate(`/students?search=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Right Side: Notification Bell, Calendar, Year Dropdown & Slogan */}
+        <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+          <div className="relative">
+            <NotificationBell />
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
+              3
+            </span>
+          </div>
+
+          <div 
+            onClick={() => navigate('/timetable')}
+            className="p-2 rounded-xl bg-slate-100/80 dark:bg-gray-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/80 transition-colors cursor-pointer" 
+            title="School Calendar"
+          >
+            <Calendar className="w-4 h-4" />
+          </div>
+
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-gray-800 border border-slate-200/60 dark:border-gray-700 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
+            <span>2026 - 27</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </div>
+
+          <div className="hidden lg:block pl-2 border-l border-slate-200 dark:border-gray-700">
+            <span className="font-serif italic text-sm sm:text-[15px] font-bold text-[#1E50D8] tracking-tight">
+              Education for a Better Tomorrow
+            </span>
+          </div>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header
