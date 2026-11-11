@@ -282,11 +282,28 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                             if (admissionNo != 'N/A') _badge('Adm: $admissionNo', const Color(0xFF8B5CF6)),
                             if (_isTeacher && !hasFullAccess) _badge('Subject Teacher', const Color(0xFF8B5CF6)),
                             if (_isTeacher && _canViewAllStudents && !_isClassTeacher) _badge('All Classes Access', const Color(0xFF10B981)),
+                            if (_isTeacher && _canEditStudents) _badge('Edit Access', const Color(0xFF6366F1)),
                           ],
                         ),
                       ],
                     ),
                   ),
+                  if (canEdit)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () => _showEditProfileSheet(s),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF6366F1).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.25)),
+                          ),
+                          child: const Icon(Icons.edit_rounded, color: Color(0xFF6366F1), size: 20),
+                        ),
+                      ),
+                    ),
                   if (primaryPhone.isNotEmpty && hasFullAccess)
                     GestureDetector(
                       onTap: () => _launchUrl('whatsapp', primaryPhone),
@@ -308,7 +325,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildProfileTab(s, user, hasFullAccess),
+                _buildProfileTab(s, user, hasFullAccess, canEdit),
                 _buildExamsTab(s),
                 if (!_isTeacher) _buildFeesTab(s),
               ],
@@ -399,7 +416,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   }
 
   // PROFILE TAB
-  Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user, bool hasFullAccess) {
+  Widget _buildProfileTab(Map<String, dynamic> s, Map<String, dynamic> user, bool hasFullAccess, bool canEdit) {
     if (!hasFullAccess) {
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
@@ -557,6 +574,27 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
             _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
             _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
+          ], trailingAction: canEdit ? InkWell(
+            onTap: () => _showEditProfileSheet(s),
+            borderRadius: BorderRadius.circular(8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF6366F1).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.25)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.edit_rounded, size: 14, color: Color(0xFF6366F1)),
+                  const SizedBox(width: 4),
+                  Text('Edit', style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, color: const Color(0xFF6366F1))),
+                ],
+              ),
+            ),
+          ) : null),
+          if (false) _infoCard('', Colors.white, [
           ]),
           const SizedBox(height: 12),
           _infoCard('Contact & Academic', const Color(0xFF10B981), [
@@ -584,12 +622,60 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     onTap: () => _launchUrl('tel', s['guardianPhone'].toString())),
             ],
           ]),
+          if (canEdit) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF6366F1).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.bolt_rounded, size: 18, color: Color(0xFF6366F1)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text('Quick Actions', style: GoogleFonts.outfit(fontSize: 15, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _showEditProfileSheet(s),
+                      icon: const Icon(Icons.edit_rounded, size: 18, color: Colors.white),
+                      label: Text('Edit Student Profile', style: GoogleFonts.poppins(fontSize: 13.5, fontWeight: FontWeight.bold, color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4F46E5),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (false) [_infoCard('', Colors.white, [
+            ],
+          ]),
         ],
       ),
     );
   }
 
-  Widget _infoCard(String title, Color accentColor, List<Widget> rows) {
+  Widget _infoCard(String title, Color accentColor, List<Widget> rows, {Widget? trailingAction}) {
     IconData getIconForTitle(String t) {
       if (t.contains('Personal')) return Icons.person_outline_rounded;
       if (t.contains('Contact')) return Icons.contact_phone_outlined;
@@ -608,7 +694,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(children: [
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
@@ -622,6 +708,17 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     Icon(getIconForTitle(title), size: 16, color: accentColor),
                     const SizedBox(width: 6),
                     Text(title, style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.w800, color: accentColor, letterSpacing: 0.3)),
+                  ],
+                ),
+              ),
+              if (trailingAction != null) trailingAction,
+            ]),
+          ),
+          if (false) Padding(
+            padding: EdgeInsets.zero,
+            child: Row(children: [
+              Container(
+                child: Row(children: [
                   ],
                 ),
               ),
@@ -847,7 +944,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
           ]),
           if (disc > 0) Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Row(children: [
+            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
               const Icon(Icons.discount_rounded, size: 12, color: Color(0xFFF97316)),
               const SizedBox(width: 4),
               Text('Discount: ₹${disc.toStringAsFixed(0)}', style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFFF97316), fontWeight: FontWeight.w600)),
