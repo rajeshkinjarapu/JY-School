@@ -273,7 +273,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'TOTAL STUDENTS',
       value: totalStudentsCount,
-      trend: '↑ +5% than last year',
       icon: Users,
       gradient: 'from-[#6366F1] to-[#4F46E5]',
       link: '/students',
@@ -281,7 +280,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'TOTAL TEACHERS',
       value: totalTeachersCount,
-      trend: '↑ +2% overall',
       icon: GraduationCap,
       gradient: 'from-[#10B981] to-[#059669]',
       link: '/teachers',
@@ -289,7 +287,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'TOTAL CLASSES',
       value: totalClassesCount,
-      trend: '↑ +0% this term',
       icon: School,
       gradient: 'from-[#F59E0B] to-[#D97706]',
       link: '/classes',
@@ -297,7 +294,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'TOTAL INCOME',
       value: totalRevenueFormatted,
-      trend: '↑ +12% collected',
       icon: Wallet,
       gradient: 'from-[#EF4444] to-[#DC2626]',
       link: '/finance?tab=transaction',
@@ -305,7 +301,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'COLLECT PAYMENT',
       value: 'Fees',
-      trend: '↑ +8% this month',
       icon: CreditCard,
       gradient: 'from-[#8B5CF6] to-[#7C3AED]',
       link: '/collect-payment',
@@ -313,7 +308,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'RESULTS',
       value: 'Exams',
-      trend: '↑ View exam scores',
       icon: FileText,
       gradient: 'from-[#0284C7] to-[#0369A1]',
       link: '/exams?tab=results',
@@ -321,7 +315,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'FEE DETAILS',
       value: 'Student Fees',
-      trend: '↑ Total fees & due',
       icon: BookMarked,
       gradient: 'from-[#EC4899] to-[#DB2777]',
       link: '/finance?tab=student-fee-details',
@@ -329,7 +322,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'PROGRESS CARDS',
       value: 'Reports',
-      trend: '↑ Generate & View',
       icon: Award,
       gradient: 'from-[#0D9488] to-[#0F766E]',
       link: '/exams?tab=progress-card',
@@ -337,7 +329,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'APP INSTALLS',
       value: appInstallsStr,
-      trend: '↑ Mobile app usage',
       icon: Zap,
       gradient: 'from-[#06B6D4] to-[#0891B2]',
       link: '/app-installs',
@@ -345,7 +336,6 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     {
       label: 'ADMISSIONS',
       value: 'Manage',
-      trend: '↑ New admissions',
       icon: UserPlus,
       gradient: 'from-[#3B82F6] to-[#1D4ED8]',
       link: '/admissions',
@@ -383,9 +373,9 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-5">
-          {/* Left: 3D Cap & Books + Title */}
-          <div className="flex items-center gap-4 sm:gap-5 w-full lg:w-auto">
+        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5">
+          {/* Left: 3D Cap & Books + JY SCHOOL Title */}
+          <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
             <div className="shrink-0 w-20 h-20 sm:w-24 sm:h-24 drop-shadow-2xl hover:scale-105 transition-transform duration-300">
               <img
                 src="/graduation-cap-books.svg"
@@ -394,27 +384,14 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
               />
             </div>
             <div>
-              <p className="text-white/90 text-sm sm:text-base font-bold flex items-center gap-1.5 drop-shadow-xs">
-                {greeting}! 👋
-              </p>
-              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-black tracking-wider text-white drop-shadow-md leading-tight mt-0.5">
+              <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black tracking-wider text-white drop-shadow-md leading-none">
                 JY SCHOOL
               </h1>
-              <p className="text-white/85 text-xs sm:text-sm font-semibold tracking-wide mt-1">
-                Learn • Grow • Excel
-              </p>
             </div>
           </div>
 
-          {/* Center: Frosted Glass Quote Card */}
-          <div className="w-full lg:w-auto max-w-sm px-6 py-3.5 rounded-2xl bg-white/12 backdrop-blur-md border border-white/25 text-center shadow-inner">
-            <p className="text-xs sm:text-sm font-medium text-white/95 leading-relaxed italic drop-shadow-xs">
-              “Education is the key<br />to unlock a <span className="font-bold underline decoration-amber-300/80 underline-offset-2">brighter future</span>.”
-            </p>
-          </div>
-
           {/* Right: School Building Campus + Floating Date Pill */}
-          <div className="relative w-full lg:w-[300px] h-28 sm:h-32 rounded-2xl overflow-hidden border border-white/30 shadow-lg group">
+          <div className="relative w-full sm:w-[320px] lg:w-[360px] h-28 sm:h-32 rounded-2xl overflow-hidden border border-white/30 shadow-lg group">
             <img
               src="/school-building.svg"
               alt="JY School Campus"
@@ -429,44 +406,52 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         </div>
       </div>
 
-      {/* ── 2. 10 Colorful Action / Metric Cards (2 rows of 5 cards, 5x2 grid) ── */}
+      {/* ── 2. 10 Colorful Action / Metric Cards (Simple, Clean, No Subtext, Full Numbers) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5">
-        {actionCards.map((card, idx) => (
-          <Link
-            key={idx}
-            to={card.link}
-            className={`relative overflow-hidden rounded-[20px] p-3.5 sm:p-4 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group bg-gradient-to-r ${card.gradient}`}
-          >
-            {/* Top glass gloss overlay */}
-            <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-[20px]" />
+        {actionCards.map((card, idx) => {
+          const valStr = String(card.value);
+          const isLargeValue = valStr.length > 10;
+          const isMediumValue = valStr.length > 7 && valStr.length <= 10;
 
-            {/* Top Content */}
-            <div className="relative z-10 flex items-center justify-between gap-2">
-              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          return (
+            <Link
+              key={idx}
+              to={card.link}
+              className={`relative overflow-hidden rounded-[20px] p-3.5 sm:p-4 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group bg-gradient-to-r ${card.gradient}`}
+            >
+              {/* Top glass gloss overlay */}
+              <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-[20px]" />
+
+              {/* Icon & Details */}
+              <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                 <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shadow-inner shrink-0 group-hover:scale-105 transition-transform">
                   <card.icon className="w-5 h-5 drop-shadow-xs" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white/80 leading-tight truncate">
+                <div className="min-w-0 flex-1 pr-1">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-white/85 leading-tight whitespace-nowrap">
                     {card.label}
                   </p>
-                  <p className="text-lg sm:text-xl font-black text-white tracking-tight leading-tight mt-0.5 drop-shadow-sm truncate">
+                  <p
+                    className={`font-black text-white tracking-tight leading-tight mt-1 drop-shadow-sm ${
+                      isLargeValue
+                        ? 'text-xs sm:text-[13px] lg:text-[14px] whitespace-nowrap'
+                        : isMediumValue
+                        ? 'text-sm sm:text-base lg:text-lg'
+                        : 'text-lg sm:text-xl lg:text-2xl'
+                    }`}
+                  >
                     {card.value}
                   </p>
                 </div>
               </div>
 
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/90 group-hover:bg-white/30 transition-colors shrink-0">
+              {/* Right Chevron Arrow */}
+              <div className="relative z-10 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/90 group-hover:bg-white/30 group-hover:translate-x-0.5 transition-all shrink-0">
                 <ChevronRight className="w-3.5 h-3.5" />
               </div>
-            </div>
-
-            {/* Bottom Trend Line */}
-            <div className="relative z-10 mt-3 pt-2 border-t border-white/20 flex items-center gap-1.5 text-[9px] sm:text-[10px] font-semibold text-white/95 truncate">
-              <span>{card.trend}</span>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {/* ── 3. Bottom Two Master Cards (Recent Payments & Today's Attendance) ── */}

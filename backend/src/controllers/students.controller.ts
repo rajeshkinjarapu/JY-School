@@ -131,6 +131,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
   if (!student) return next(createError('Student not found', 404));
   let isClassTeacher = false;
   let canViewAllStudents = false;
+  let canEditStudents = false;
   let hasFullAccess = true;
 
   if (userRole === 'TEACHER') {
@@ -141,8 +142,9 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 
     if (teacher) {
       canViewAllStudents = teacher.canViewAllStudents === true;
+      canEditStudents = teacher.canEditStudents === true;
       isClassTeacher = teacher.homeRoomClass?.some(c => c.id === student.classId) || false;
-      hasFullAccess = canViewAllStudents || isClassTeacher;
+      hasFullAccess = canViewAllStudents || isClassTeacher || canEditStudents;
     } else {
       hasFullAccess = false;
     }
@@ -152,6 +154,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         ...student,
         isClassTeacher: false,
         canViewAllStudents: false,
+        canEditStudents: false,
         hasFullAccess: false,
         address: null,
         aadharNo: null,
@@ -180,6 +183,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     ...student,
     isClassTeacher: userRole === 'TEACHER' ? isClassTeacher : true,
     canViewAllStudents: userRole === 'TEACHER' ? canViewAllStudents : true,
+    canEditStudents: userRole === 'TEACHER' ? canEditStudents : true,
     hasFullAccess: true,
   };
 

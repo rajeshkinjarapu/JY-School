@@ -71,33 +71,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
           </div>
         </div>
 
-        {/* Right Side: Notification Bell, Calendar, Year Dropdown & Slogan */}
+        {/* Right Side: Notification Bell (Restored to original clean button) */}
         <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-          <div className="relative">
-            <NotificationBell />
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
-              3
-            </span>
-          </div>
-
-          <div 
-            onClick={() => navigate('/timetable')}
-            className="p-2 rounded-xl bg-slate-100/80 dark:bg-gray-800 text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/80 transition-colors cursor-pointer" 
-            title="School Calendar"
-          >
-            <Calendar className="w-4 h-4" />
-          </div>
-
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-gray-800 border border-slate-200/60 dark:border-gray-700 text-xs font-bold text-slate-700 dark:text-slate-200 cursor-pointer">
-            <span>2026 - 27</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </div>
-
-          <div className="hidden lg:block pl-2 border-l border-slate-200 dark:border-gray-700">
-            <span className="font-serif italic text-sm sm:text-[15px] font-bold text-[#1E50D8] tracking-tight">
-              Education for a Better Tomorrow
-            </span>
-          </div>
+          <NotificationBell />
         </div>
       </header>
     );

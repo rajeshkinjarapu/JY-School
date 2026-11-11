@@ -24,6 +24,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   bool _isLoading = true;
   bool _isTeacher = false;
   bool _canViewAllStudents = false;
+  bool _canEditStudents = false;
   bool _isClassTeacher = false;
 
   @override
@@ -45,19 +46,23 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
       final userStr = prefs.getString('user');
       String role = '';
       bool canViewAll = false;
+      bool canEdit = false;
       if (userStr != null) {
         final decoded = jsonDecode(userStr);
         role = decoded['role'] ?? '';
         final teacher = decoded['teacher'];
         if (teacher != null && teacher is Map) {
           canViewAll = teacher['canViewAllStudents'] == true;
+          canEdit = teacher['canEditStudents'] == true;
         }
       }
       final isTeacher = role == 'TEACHER';
-      if (isTeacher != _isTeacher && mounted) {
+      if (mounted) {
         setState(() {
           _isTeacher = isTeacher;
           _canViewAllStudents = canViewAll;
+          _canEditStudents = canEdit;
+
           _tabController.dispose();
           _tabController = TabController(length: _isTeacher ? 2 : 3, vsync: this);
           _tabController.addListener(() {
