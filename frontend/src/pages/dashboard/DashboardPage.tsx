@@ -352,42 +352,48 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
 
   // Recent payments data (with robust fallback matching reference design)
   const fallbackPayments = [
-    { name: 'Rovish Karnan', stream: 'Commerce', date: 'Tomorrow', amount: '₹2,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face' },
-    { name: 'Likitha Kumar', stream: 'Science', date: 'Tomorrow', amount: '₹1,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&crop=face' },
-    { name: 'Aneesh Kumar', stream: 'Commerce', date: 'Tomorrow', amount: '₹3,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face' },
-    { name: 'Rohit Vamshi', stream: 'Science', date: 'Tomorrow', amount: '₹1,650.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face' },
-    { name: 'Sanjiv Mahesh', stream: 'Arts', date: 'Tomorrow', amount: '₹1,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face' },
+    { name: 'Rovish Karnan', stream: 'Class 10 - A', date: 'Today', amount: '₹2,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=face' },
+    { name: 'Likitha Kumar', stream: 'Class 9 - B', date: 'Today', amount: '₹1,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&h=80&fit=crop&crop=face' },
+    { name: 'Aneesh Kumar', stream: 'Class 8 - A', date: 'Today', amount: '₹3,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=80&h=80&fit=crop&crop=face' },
+    { name: 'Rohit Vamshi', stream: 'Class 7 - A', date: 'Today', amount: '₹1,650.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face' },
+    { name: 'Sanjiv Mahesh', stream: 'Class 6 - B', date: 'Today', amount: '₹1,050.00', status: 'Paid', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=face' },
   ];
 
   const recentPayments = (data.recentPayments && data.recentPayments.length > 0)
-    ? data.recentPayments.slice(0, 5).map((p: any) => ({
-        name: p.student?.user?.name || p.student?.name || 'Student',
-        stream: p.student?.className || p.student?.class?.name || 'Science',
-        date: p.paymentDate
-          ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
-          : 'Today',
-        amount: `₹${Number(p.amountPaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-        status: 'Paid',
-        avatar: getPhotoUrl(p.student?.photoUrl),
-      }))
+    ? data.recentPayments.slice(0, 5).map((p: any) => {
+        const classObj = p.student?.class;
+        const className = classObj?.name
+          ? `${classObj.name}${classObj.section ? ` - ${classObj.section}` : ''}`
+          : (p.student?.className || (p.student?.rollNo ? `ID: ${p.student.rollNo}` : 'Student'));
+        return {
+          name: p.student?.user?.name || p.student?.name || 'Student',
+          stream: className,
+          date: p.paymentDate
+            ? new Date(p.paymentDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+            : 'Today',
+          amount: `₹${Number(p.amountPaid || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          status: 'Paid',
+          avatar: getPhotoUrl(p.student?.user?.photoUrl || p.student?.photoUrl),
+        };
+      })
     : fallbackPayments;
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* ── 1. Top Executive Blue Sky Hero Banner ── */}
-      <div className="relative w-full rounded-[22px] overflow-hidden bg-gradient-to-r from-[#1254EB] via-[#1665D8] to-[#0A3FA8] p-4 sm:p-5 lg:p-6 shadow-md border border-blue-400/20 text-white">
+      {/* ── 1. Top Executive Blue Sky Hero Banner (Compact & Sleek) ── */}
+      <div className="relative w-full rounded-[18px] sm:rounded-[20px] overflow-hidden bg-gradient-to-r from-[#1254EB] via-[#1665D8] to-[#0A3FA8] px-4 py-3 sm:px-6 sm:py-3.5 lg:py-4 shadow-md border border-blue-400/20 text-white">
         {/* Soft Ambient Glows */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-blue-300/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-20 -top-20 w-72 h-72 bg-blue-300/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-5">
+        <div className="relative z-10 flex items-center justify-between gap-4">
           {/* Left: Logged-in Person Photo + Name + JY School - Role Subtitle */}
-          <div className="flex items-center gap-4 sm:gap-5 w-full sm:w-auto">
+          <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
             {/* User Profile Photo with Premium Glow & Ring */}
             <div className="relative shrink-0">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-22 lg:h-22 rounded-2xl p-[3px] bg-gradient-to-tr from-white/40 via-white/20 to-white/60 shadow-xl backdrop-blur-md">
-                <div className="w-full h-full rounded-[13px] overflow-hidden bg-white/10 flex items-center justify-center border-2 border-white/80 shadow-inner">
+              <div className="w-13 h-13 sm:w-14 sm:h-14 lg:w-15 lg:h-15 rounded-xl sm:rounded-2xl p-[2px] sm:p-[2.5px] bg-gradient-to-tr from-white/40 via-white/20 to-white/60 shadow-lg backdrop-blur-md">
+                <div className="w-full h-full rounded-[10px] sm:rounded-[13px] overflow-hidden bg-white/10 flex items-center justify-center border-2 border-white/80 shadow-inner">
                   {user?.photoUrl ? (
                     <img
                       src={getPhotoUrl(user.photoUrl)}
@@ -399,39 +405,31 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
                       }}
                     />
                   ) : null}
-                  <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-2xl sm:text-3xl ${user?.photoUrl ? 'hidden' : ''}`}>
+                  <div className={`w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-xl sm:text-2xl ${user?.photoUrl ? 'hidden' : ''}`}>
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </div>
                 </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-white rounded-full shadow-md" title="Active" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-md" title="Active" />
             </div>
 
             {/* User Name & JY School - Role */}
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-black tracking-tight text-white drop-shadow-md leading-tight truncate">
+              <h1 className="text-xl sm:text-2xl lg:text-[25px] font-black tracking-tight text-white drop-shadow-sm leading-tight truncate">
                 {user?.name || 'Administrator'}
               </h1>
-              <div className="mt-1.5 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs sm:text-sm font-bold text-white shadow-xs">
+              <div className="mt-1 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[11px] sm:text-xs font-bold text-white shadow-xs">
                   <span>JY School - {roleDisplay}</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right: School Building Campus + Floating Date Pill */}
-          <div className="relative w-full sm:w-[320px] lg:w-[360px] h-28 sm:h-32 rounded-2xl overflow-hidden border border-white/30 shadow-lg group">
-            <img
-              src="/school-building.svg"
-              alt="JY School Campus"
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            {/* Floating Date Badge */}
-            <div className="absolute top-2.5 right-2.5 bg-white/95 backdrop-blur-md text-slate-800 px-3 py-1.5 rounded-xl shadow-md border border-white/80 flex items-center gap-2">
-              <CalendarDays className="w-3.5 h-3.5 text-blue-600" />
-              <span className="text-[11px] font-black tracking-wide text-slate-700">{todayFormatted}</span>
-            </div>
+          {/* Right: Sleek Floating Glass Date Badge (No school image, compact) */}
+          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 text-white shadow-xs transition-colors">
+            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" />
+            <span className="text-xs sm:text-[13px] font-bold tracking-wide text-white drop-shadow-xs">{todayFormatted}</span>
           </div>
         </div>
       </div>

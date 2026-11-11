@@ -67,7 +67,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {
-          student: { include: { user: { select: { name: true } } } },
+          student: { include: { user: { select: { name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
           feeStructure: { select: { name: true } }
         }
       }),

@@ -2,23 +2,16 @@
 
 ## తేదీ: 11 నవంబర్ 2026
 
-### ధృవీకరణ మరియు స్థితి విశ్లేషణ (Verification & Status Analysis):
+### Recent Payments లో స్టూడెంట్ పేరు క్రింద 'Science' సమస్య పరిష్కారం (Class & Section Display Fix):
 
-1. **GitHub Actions లో Shorebird Patch ఫెయిల్యూర్ విశ్లేషణ (Exit Code 70):**
-   - యూజర్ పంపిన స్క్రీన్‌షాట్‌లలోని GitHub Actions రన్ (#66 మరియు దాని తదుపరి రన్) గత కమిట్ `36b3bff` పై జరిగినవి.
-   - ఆ కమిట్ సమయంలో `flutter_mobile/lib/screens/dashboard_screen.dart` లో 31 చోట్ల `Container(` తో కూడిన ఇన్వాలిడ్ పారామీటర్లు మరియు లైన్ 1172 వద్ద మిస్సింగ్ బ్రాకెట్ ఎర్రర్స్ ఉన్నాయి.
-   - **తాజా స్థితి:** మనం లోకల్ కోడ్‌లో `flutter_mobile/lib/screens/dashboard_screen.dart` ను పూర్తిగా రీరైట్ చేసి, అన్ని `Container`లను సరైన `Column`లతో భర్తీ చేసి, బ్రాకెట్లను 100% సరిదిద్దాము. 
-   - అలాగే `student_profile_screen.dart` మరియు `.github/workflows/shorebird_patch.yml` కూడా నాన్-ఇంటరాక్టివ్ CI ఫ్లాగ్‌లతో సర్వసన్నద్ధంగా ఉన్నాయి.
-   - ఈ కోడ్‌ను GitHub కు పుష్ చేసిన వెంటనే కొత్త CI రన్ విజయవంతంగా పూర్తవుతుంది.
+1. **సమస్య విశ్లేషణ (Root Cause Analysis):**
+   - **యూజర్ ప్రశ్న:** "student name kinda science ani vastundi enduko okasari chudu check chesi cheppu"
+   - **కారణం 1 (Backend Query):** `backend/src/controllers/dashboard.controller.ts` లో `recentPayments` ఫెచ్ చేసే `feePayment.findMany` క్వెరీలో `student` కు కేవలం `user.name` మాత్రమే ఇంక్లూడ్ అయి ఉంది. విద్యార్థికి సంబంధించిన `class` (name, section) లేదా `user.photoUrl` ఫెచ్ అవ్వడం లేదు.
+   - **కారణం 2 (Frontend Fallback):** `frontend/src/pages/dashboard/DashboardPage.tsx` లో `p.student?.className || p.student?.class?.name || 'Science'` అని ఉండటం వలన, క్లాస్ డేటా అందకపోవడంతో హార్డ్‌కోడ్ చేసిన డమ్మీ ఫాల్‌బ్యాక్ `'Science'` ప్రతి స్టూడెంట్ పేరు కింద ప్రింట్ అవుతోంది.
 
-2. **వెబ్ యాప్ (66.116.252.191:19999) లో పాత UI కనిపించడానికి కారణం:**
-   - యూజర్ పంపిన బ్రౌజర్ స్క్రీన్‌షాట్‌లలో టాప్ బ్యానర్‌లో "JY SCHOOL" మరియు పాత ఇంపోర్ట్ మోడల్ కనిపిస్తున్నాయి.
-   - దీనికి కారణం: మనం లోకల్ సిస్టమ్‌లో అభివృద్ధి చేసిన:
-     - డాష్‌బోర్డ్ టాప్ బ్యానర్‌లో లాగిన్ అయిన వ్యక్తి ప్రొఫైల్ ఫోటో + పేరు + `JY School - Super Admin` పిల్ బ్యాడ్జ్
-     - ఎక్సెల్ ఇంపోర్ట్ లో 21 కాలమ్‌ల మాస్టర్ టెంప్లేట్ డౌన్‌లోడ్ + "Export Existing Students (To Edit)" బటన్ + స్మార్ట్ Upsert ఇంజిన్
-     - డేటాబేస్ లో `childId`, `apaarId` ఫీల్డ్‌లు
-   - ఇవన్నీ ఇంకా VPS సర్వర్‌కు పుల్ చేసి బిల్డ్ చేయబడలేదు. లోకల్ నుండి GitHub కు పుష్ చేసి, VPS లో పుల్ & బిల్డ్ చేసిన వెంటనే లైవ్ అవుతాయి.
-
-3. **తదుపరి కార్యాచరణ (Next Steps):**
-   - లోకల్ PowerShell ద్వారా కోడ్ కమిట్ & పుష్ చేయడం.
-   - VPS లో SSH లాగిన్ ద్వారా `prisma db push`, `prisma generate`, బ్యాకెండ్ & ఫ్రంట్‌ఎండ్ బిల్డ్ మరియు PM2 రీస్టార్ట్ చేయడం.
+2. **చేసిన పరిష్కారాలు (Fix Applied):**
+   - 🛠️ **Backend (`dashboard.controller.ts`):** `recentPayments` క్వెరీలో `class: { select: { name: true, section: true } }` మరియు `user: { select: { name: true, photoUrl: true } }` జోడించాము.
+   - 🎨 **Frontend (`DashboardPage.tsx`):**
+     - హార్డ్‌కోడ్ చేసిన `'Science'` తొలగించబడింది.
+     - విద్యార్థికి సంబంధించిన నిజమైన క్లాస్ మరియు సెక్షన్ (`class.name - class.section`, ఉదాహరణకు `Class 10 - A`) లేదా `ID: {rollNo}` కనిపించేలా స్మార్ట్ మ్యాపింగ్ అమర్చాము.
+     - అలాగే విద్యార్థి ప్రొఫైల్ ఫోటో కూడా నేరుగా కనిపించేలా చేసాము.
