@@ -158,6 +158,8 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
         hasFullAccess: false,
         address: null,
         aadharNo: null,
+        childId: null,
+        apaarId: null,
         fatherAadhar: null,
         motherAadhar: null,
         dob: null,
@@ -192,7 +194,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 };
 
 export const create = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber } = req.body;
+  const { name, password, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber, childId, apaarId } = req.body;
 
   let rollNo = studentId?.trim();
 
@@ -265,6 +267,8 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
       guardianRelation: guardianRelation ? String(guardianRelation).trim() : null,
       aadharNo: aadharNo ? String(aadharNo).trim() : null,
       penNumber: penNumber || null,
+      childId: childId ? String(childId).trim() : null,
+      apaarId: apaarId ? String(apaarId).trim() : null,
     },
     include: {
       user: { select: { id: true, name: true, email: true, phone: true } },
@@ -297,7 +301,7 @@ export const create = async (req: Request, res: Response, next: NextFunction): P
 
 export const update = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber } = req.body;
+  const { name, phone, photoUrl, classId, dob, gender, address, bloodGroup, studentId, fatherName, motherName, fatherAadhar, motherAadhar, fatherPhone, motherPhone, guardianName, guardianPhone, guardianRelation, aadharNo, penNumber, childId, apaarId } = req.body;
 
   // Check teacher permission if the user is a teacher
   if (req.user?.role === 'TEACHER') {
@@ -350,6 +354,8 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       guardianRelation: guardianRelation !== undefined ? (guardianRelation ? String(guardianRelation).trim() : null) : undefined,
       aadharNo: aadharNo !== undefined ? (aadharNo ? String(aadharNo).trim() : null) : undefined,
       penNumber: penNumber !== undefined ? (penNumber ? String(penNumber).trim() : null) : undefined,
+      childId: childId !== undefined ? (childId ? String(childId).trim() : null) : undefined,
+      apaarId: apaarId !== undefined ? (apaarId ? String(apaarId).trim() : null) : undefined,
     },
     include: {
       user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } },
@@ -481,53 +487,115 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     const sheet = workbook.Sheets[sheetName];
     const rawResults = XLSX.utils.sheet_to_json<any>(sheet);
 
-    // Normalize keys to support case-insensitive headers like "STUDENT NAME"
-    const results = rawResults.map(r => {
-      const normalizedRow: any = {};
-      for (const key in r) {
-        // Keep original key, but also add a lowercase version with spaces removed for easier access
-        normalizedRow[key] = r[key];
-        const simpleKey = key.toLowerCase().replace(/\s+/g, '');
-        normalizedRow[simpleKey] = r[key];
-      }
-      return normalizedRow;
-    }).filter(r => r.name || r.studentname || r.firstname);
-
-    if (results.length > 5000) {
+    if (rawResults.length > 5000) {
       return next(createError('Please upload maximum 5000 students at a time', 400));
     }
 
-    let success = 0;
+    let created = 0;
+    let updated = 0;
     const failed: any[] = [];
 
-    // Fetch initial count once to save DB roundtrips
+    // Helper: Normalize string keys
+    const normalizeRow = (r: any) => {
+      const norm: any = {};
+      for (const k of Object.keys(r)) {
+        const val = r[k];
+        norm[k] = val;
+        // lowercase and remove spaces, underscores, hyphens, periods
+        const cleanKey = k.toLowerCase().replace(/[\s_\-\.]+/g, '');
+        norm[cleanKey] = val;
+      }
+      return norm;
+    };
+
+    // Helper: Clean numeric digits (removes dashes, spaces)
+    const cleanDigits = (val: any): string | null => {
+      if (val === undefined || val === null) return null;
+      const s = String(val).replace(/[\s\-]+/g, '').trim();
+      return s.length > 0 ? s : null;
+    };
+
+    // Helper: Clean string
+    const cleanStr = (val: any): string | null => {
+      if (val === undefined || val === null) return null;
+      const s = String(val).trim();
+      return (s.length > 0 && s !== 'null' && s !== 'undefined' && s !== 'N/A') ? s : null;
+    };
+
+    // Helper: Parse Date of Birth flexibly
+    const parseDate = (val: any): Date | null => {
+      if (!val) return null;
+      if (typeof val === 'number') {
+        const epoch = new Date(1899, 11, 30);
+        const d = new Date(epoch.getTime() + val * 86400000);
+        return isNaN(d.getTime()) ? null : d;
+      }
+      const str = String(val).trim();
+      if (!str) return null;
+
+      // DD/MM/YYYY or DD-MM-YYYY
+      const dmy = str.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+      if (dmy) {
+        const day = parseInt(dmy[1], 10);
+        const month = parseInt(dmy[2], 10) - 1;
+        const year = parseInt(dmy[3], 10);
+        const d = new Date(year, month, day);
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      // YYYY-MM-DD
+      const ymd = str.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+      if (ymd) {
+        const year = parseInt(ymd[1], 10);
+        const month = parseInt(ymd[2], 10) - 1;
+        const day = parseInt(ymd[3], 10);
+        const d = new Date(year, month, day);
+        return isNaN(d.getTime()) ? null : d;
+      }
+
+      const d = new Date(str);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    // Helper: Clean gender
+    const cleanGender = (val: any): string | null => {
+      if (!val) return null;
+      const g = String(val).trim().toUpperCase();
+      if (g.startsWith('M') || g.includes('BOY')) return 'MALE';
+      if (g.startsWith('F') || g.includes('GIRL')) return 'FEMALE';
+      return g;
+    };
+
     let currentStudentCount = await prisma.student.count();
 
-    for (const row of results) {
-      try {
-        const name = row.name || row.studentname || row.firstname;
-        const phone = row.phone || row.mobileno || row.mobile;
+    for (let i = 0; i < rawResults.length; i++) {
+      const rawRow = rawResults[i];
+      const row = normalizeRow(rawRow);
 
-        let classId = row.classid || null;
-        const className = row.classname || row.class || null;
-        const section = row.section || row.sectionname;
+      const name = cleanStr(row.studentname || row.name || row.fullname || row.firstname);
+      const rawStudentId = cleanStr(row.studentid || row.rollno || row.id || row.admissionno);
+
+      if (!name && !rawStudentId) {
+        continue;
+      }
+
+      try {
+        let classId: string | null = cleanStr(row.classid);
+        const className = cleanStr(row.classname || row.class || row.grade || row.standard);
+        const section = cleanStr(row.sectionname || row.section || row.sec);
 
         if (!classId && className) {
-          const clsName = String(className).trim();
-          const clsSec = section ? String(section).trim() : 'A';
+          const clsName = className;
+          const clsSec = section || 'A';
           let cls = await prisma.class.findFirst({
-            where: {
-              name: clsName,
-              section: clsSec
-            }
+            where: { name: clsName, section: clsSec }
           });
-
           if (!cls) {
             cls = await prisma.class.create({
               data: {
                 name: clsName,
                 section: clsSec,
-                academicYear: new Date().getFullYear() + '-' + (new Date().getFullYear() + 1),
+                academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
                 capacity: 40
               }
             });
@@ -535,182 +603,175 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           classId = cls.id;
         }
 
-        const gender = row.gender || null;
-        const address = row.address || null;
-        const bloodGroup = row.bloodgroup || null;
-        const photoUrl = row.photourl || row.photo || null;
-        const fatherName = row.fathername || row['father name'] || row['Father Name'] || null;
-        const motherName = row.mothername || row['mother name'] || row['Mother Name'] || null;
-        const fatherAadhar = row.fatheraadhar || row['father aadhar'] || row['Father Aadhar'] || row['Father Aadhaar'] || null;
-        const motherAadhar = row.motheraadhar || row['mother aadhar'] || row['Mother Aadhar'] || row['Mother Aadhaar'] || null;
-        const fatherPhone = row.fatherphone || row['father phone'] || row['Father Phone'] || row.fathermobile || null;
-        const motherPhone = row.motherphone || row['mother phone'] || row['Mother Phone'] || row.mothermobile || null;
-        const aadharNo = row.aadharno || row.aadhar || row.aadharnumber || row['aadhar number'] || null;
-        const penNumber = row.pennumber || row.pen || null;
-        const dobRaw = row.dob || row['date of birth'] || row['Date of Birth'] || row['DOB'] || null;
-        let dob: Date | null = null;
-        if (dobRaw) {
-          try {
-            // Handle Excel serial dates (numbers) or string dates
-            if (typeof dobRaw === 'number') {
-              // Excel date serial
-              const excelEpoch = new Date(1899, 11, 30);
-              dob = new Date(excelEpoch.getTime() + dobRaw * 86400000);
-            } else {
-              dob = new Date(String(dobRaw));
-              if (isNaN(dob.getTime())) dob = null;
+        const dob = parseDate(row.dateofbirth || row.dob || row.birthdate);
+        const gender = cleanGender(row.gender || row.sex);
+        const childId = cleanDigits(row.childid || row.childinfo || row.childinfoid);
+        const apaarId = cleanDigits(row.apaarid || row.apaar || row.apaarnumber);
+        const penNumber = cleanDigits(row.pennumber || row.pen || row.penno);
+        const aadharNo = cleanDigits(row.studentaadhar || row.aadharno || row.aadhar || row.aadharnumber || row.studentaadhaar);
+        const fatherName = cleanStr(row.fathername || row.father);
+        const fatherAadhar = cleanDigits(row.fatheraadhar || row.fatheraadhaar);
+        const fatherPhone = cleanDigits(row.fatherphone || row.fathermobile || row.fathercontact);
+        const motherName = cleanStr(row.mothername || row.mother);
+        const motherAadhar = cleanDigits(row.motheraadhar || row.motheraadhaar);
+        const motherPhone = cleanDigits(row.motherphone || row.mothermobile || row.mothercontact);
+        const primaryPhone = cleanDigits(row.mobileno || row.phone || row.mobile || fatherPhone || motherPhone);
+        const address = cleanStr(row.address || row.fulladdress || row.village);
+        const bloodGroup = cleanStr(row.bloodgroup || row.blood);
+
+        // Check if student exists by Student ID (rollNo or User email)
+        let existingStudent = null;
+        if (rawStudentId) {
+          existingStudent = await prisma.student.findFirst({
+            where: {
+              OR: [
+                { rollNo: rawStudentId },
+                { user: { email: rawStudentId } }
+              ]
+            },
+            include: { user: true }
+          });
+        }
+
+        if (existingStudent) {
+          // ── UPDATE EXISTING STUDENT (UPSERT) ──
+          await prisma.user.update({
+            where: { id: existingStudent.userId },
+            data: {
+              name: name || undefined,
+              phone: primaryPhone || undefined,
             }
-          } catch { dob = null; }
-        }
+          });
 
+          await prisma.student.update({
+            where: { id: existingStudent.id },
+            data: {
+              classId: classId || undefined,
+              dob: dob || undefined,
+              gender: gender || undefined,
+              childId: childId || undefined,
+              apaarId: apaarId || undefined,
+              penNumber: penNumber || undefined,
+              aadharNo: aadharNo || undefined,
+              fatherName: fatherName || undefined,
+              fatherAadhar: fatherAadhar || undefined,
+              fatherPhone: fatherPhone || undefined,
+              motherName: motherName || undefined,
+              motherAadhar: motherAadhar || undefined,
+              motherPhone: motherPhone || undefined,
+              address: address || undefined,
+              bloodGroup: bloodGroup || undefined,
+            }
+          });
 
-        const rollNo = row.studentid || row.rollno || generateRollNo(currentStudentCount + 1);
-        const email = rollNo; // UserID is always Student ID
-
-        // Password is explicitly provided, or defaults to Student2026
-        const password = row.password || "Student2026";
-
-        if (!name) {
-          failed.push({ row, reason: 'Name is required' });
-          continue;
-        }
-
-        const existing = await prisma.user.findUnique({ where: { email: String(rollNo) } });
-        if (existing) {
-          // UPDATE existing student instead of failing
-          const existingStudent = await prisma.student.findFirst({ where: { userId: existing.id } });
-          if (existingStudent) {
-            await prisma.user.update({
-              where: { id: existing.id },
-              data: {
-                name: name || undefined,
-                phone: phone ? String(phone) : undefined,
-              },
-            });
-            await prisma.student.update({
-              where: { id: existingStudent.id },
-              data: {
-                classId: classId ? String(classId) : undefined,
-                dob: dob || undefined,
-                gender: gender ? String(gender) : undefined,
-                address: address ? String(address) : undefined,
-                bloodGroup: bloodGroup ? String(bloodGroup) : undefined,
-                fatherName: fatherName ? String(fatherName) : undefined,
-                motherName: motherName ? String(motherName) : undefined,
-                fatherAadhar: fatherAadhar ? String(fatherAadhar) : undefined,
-                motherAadhar: motherAadhar ? String(motherAadhar) : undefined,
-                fatherPhone: fatherPhone ? String(fatherPhone) : undefined,
-                motherPhone: motherPhone ? String(motherPhone) : undefined,
-                aadharNo: aadharNo ? String(aadharNo) : undefined,
-                penNumber: penNumber ? String(penNumber) : undefined,
-              },
-            });
-            success++;
-            continue;
-          } else {
-            failed.push({ row, reason: 'User exists but student record missing' });
+          updated++;
+        } else {
+          // ── CREATE NEW STUDENT ──
+          if (!name) {
+            failed.push({ row: rawRow, reason: 'Student Name is required for new admissions' });
             continue;
           }
-        }
 
+          const rollNo = rawStudentId || generateRollNo(currentStudentCount + 1);
+          const email = rollNo;
+          const plainTextPassword = cleanStr(row.password) || 'Student2026';
+          const hashedPassword = await bcrypt.hash(plainTextPassword, 10);
 
-        const plainTextPassword = String(password);
-        const hashedPassword = await bcrypt.hash(plainTextPassword, 10);
-
-        const user = await prisma.user.create({
-          data: {
-            name,
-            email: String(email),
-            password: hashedPassword,
-            plainPassword: plainTextPassword,
-            role: 'STUDENT',
-            phone: phone ? String(phone) : null,
-            photoUrl: photoUrl ? String(photoUrl) : null,
-          },
-        });
-
-        const newStudent = await prisma.student.create({
-          data: {
-            userId: user.id,
-            rollNo,
-            classId: classId ? String(classId) : null,
-            dob: dob || null,
-            gender: gender ? String(gender) : null,
-            address: address ? String(address) : null,
-            bloodGroup: bloodGroup ? String(bloodGroup) : null,
-            fatherName: fatherName ? String(fatherName) : null,
-            motherName: motherName ? String(motherName) : null,
-            fatherAadhar: fatherAadhar ? String(fatherAadhar) : null,
-            motherAadhar: motherAadhar ? String(motherAadhar) : null,
-            fatherPhone: fatherPhone ? String(fatherPhone) : null,
-            motherPhone: motherPhone ? String(motherPhone) : null,
-            aadharNo: aadharNo ? String(aadharNo) : null,
-            penNumber: penNumber ? String(penNumber) : null,
-          },
-        });
-
-
-        // Fee details creation
-        const admissionFee = row['Admission fee'] || row['Admission Fee'] || null;
-        const tuitionFee = row['Tution fee'] || row['Tution Fee'] || row['Tuition fee'] || row['Tuition Fee'] || null;
-        const booksFee = row['Books fee'] || row['Books Fee'] || null;
-
-        const feeStructuresToCreate = [];
-        const dueDate = new Date(); // Default due date to today
-
-        if (admissionFee && !isNaN(parseFloat(admissionFee))) {
-          feeStructuresToCreate.push({
-            studentId: newStudent.id,
-            term: 'Term 1',
-            name: 'Admission Fee',
-            amount: parseFloat(admissionFee),
-            dueDate
+          const newUser = await prisma.user.create({
+            data: {
+              name,
+              email,
+              password: hashedPassword,
+              plainPassword: plainTextPassword,
+              role: 'STUDENT',
+              phone: primaryPhone,
+            }
           });
-        }
 
-        if (tuitionFee && !isNaN(parseFloat(tuitionFee))) {
-          feeStructuresToCreate.push({
-            studentId: newStudent.id,
-            term: 'Term 1',
-            name: 'Tuition Fee',
-            amount: parseFloat(tuitionFee),
-            dueDate
+          const newStudent = await prisma.student.create({
+            data: {
+              userId: newUser.id,
+              rollNo,
+              classId,
+              dob,
+              gender,
+              childId,
+              apaarId,
+              penNumber,
+              aadharNo,
+              fatherName,
+              fatherAadhar,
+              fatherPhone,
+              motherName,
+              motherAadhar,
+              motherPhone,
+              address,
+              bloodGroup,
+            }
           });
-        }
 
-        if (booksFee && !isNaN(parseFloat(booksFee))) {
-          feeStructuresToCreate.push({
-            studentId: newStudent.id,
-            term: 'Term 1',
-            name: 'Books Fee',
-            amount: parseFloat(booksFee),
-            dueDate
-          });
-        }
+          // Fee components creation if present
+          const admissionFee = parseFloat(row.admissionfee);
+          const tuitionFee = parseFloat(row.tuitionfee || row.tutionfee);
+          const booksFee = parseFloat(row.booksfee);
+          const feeStructuresToCreate = [];
+          const dueDate = new Date();
 
-        if (feeStructuresToCreate.length > 0) {
-          await prisma.feeStructure.createMany({
-            data: feeStructuresToCreate
-          });
-        }
+          if (!isNaN(admissionFee) && admissionFee > 0) {
+            feeStructuresToCreate.push({
+              studentId: newStudent.id,
+              term: 'Term 1',
+              name: 'Admission Fee',
+              amount: admissionFee,
+              dueDate
+            });
+          }
+          if (!isNaN(tuitionFee) && tuitionFee > 0) {
+            feeStructuresToCreate.push({
+              studentId: newStudent.id,
+              term: 'Term 1',
+              name: 'Tuition Fee',
+              amount: tuitionFee,
+              dueDate
+            });
+          }
+          if (!isNaN(booksFee) && booksFee > 0) {
+            feeStructuresToCreate.push({
+              studentId: newStudent.id,
+              term: 'Term 1',
+              name: 'Books Fee',
+              amount: booksFee,
+              dueDate
+            });
+          }
 
-        currentStudentCount++;
-        success++;
-      } catch (e: any) {
-        failed.push({ row, reason: e.message });
+          if (feeStructuresToCreate.length > 0) {
+            await prisma.feeStructure.createMany({ data: feeStructuresToCreate });
+          }
+
+          currentStudentCount++;
+          created++;
+        }
+      } catch (err: any) {
+        failed.push({ row: rawRow, reason: err.message || 'Processing error' });
       }
     }
 
-    // Clean up uploaded file
     try {
       require('fs').unlinkSync(filePath);
-    } catch (e) {
-      console.error('File cleanup failed:', e);
-    }
+    } catch (_) {}
 
     clearDashboardCache();
     cache.delPattern('students:list:*');
-    successResponse(res, { success, failed, total: results.length }, 'Bulk import complete');
+    cache.delPattern('student:*');
+
+    successResponse(res, {
+      success: created + updated,
+      created,
+      updated,
+      failed,
+      total: created + updated + failed.length
+    }, `Bulk import complete: ${created} created, ${updated} updated`);
   } catch (error) {
     next(error);
   }
@@ -726,21 +787,25 @@ export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void>
   });
 
   const rows = students.map((s) => ({
-    'Roll No': s.rollNo,
-    'Name': s.user.name,
-    'Phone': s.user.phone || '',
-    'Class': s.class ? s.class.name : '',
-    'Section': s.class ? s.class.section : '',
-    'Father Name': s.fatherName || '',
-    'Father Aadhar': (s as any).fatherAadhar || '',
-    'Mother Name': s.motherName || '',
-    'Mother Aadhar': (s as any).motherAadhar || '',
-    'Aadhar No': s.aadharNo || '',
-    'PEN Number': s.penNumber || '',
+    'Student ID': s.rollNo,
+    'Student Name': s.user.name,
+    'Class Name': s.class ? s.class.name : '',
+    'Section Name': s.class ? s.class.section : '',
+    'Date of Birth': s.dob ? s.dob.toISOString().split('T')[0] : '',
     'Gender': s.gender || '',
-    'Blood Group': s.bloodGroup || '',
+    'Child ID': s.childId || '',
+    'APAAR ID': s.apaarId || '',
+    'PEN Number': s.penNumber || '',
+    'Student Aadhar': s.aadharNo || '',
+    'Father Name': s.fatherName || '',
+    'Father Aadhar': s.fatherAadhar || '',
+    'Father Phone': s.fatherPhone || '',
+    'Mother Name': s.motherName || '',
+    'Mother Aadhar': s.motherAadhar || '',
+    'Mother Phone': s.motherPhone || '',
     'Address': s.address || '',
-    'Admission Date': s.admissionDate.toISOString().split('T')[0],
+    'Blood Group': s.bloodGroup || '',
+    'Admission Date': s.admissionDate ? s.admissionDate.toISOString().split('T')[0] : '',
   }));
 
   const wb = XLSX.utils.book_new();
@@ -748,13 +813,12 @@ export const exportCsv = async (_req: AuthRequest, res: Response): Promise<void>
   XLSX.utils.book_append_sheet(wb, ws, 'Students');
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
-  res.setHeader('Content-Disposition', 'attachment; filename=students.xlsx');
+  res.setHeader('Content-Disposition', 'attachment; filename=Students_Master_Export.xlsx');
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.send(buffer);
 };
 
 export const getMyProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-
   const student = await prisma.student.findFirst({
     where: { userId: req.user!.id },
     include: {
@@ -830,7 +894,6 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
 
     fs.unlinkSync(zipPath);
 
-    // Clear list cache so new photos appear everywhere
     cache.delPattern('students:list:*');
     clearDashboardCache();
 
@@ -841,12 +904,61 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
 };
 
 export const getTemplate = async (_req: AuthRequest, res: Response): Promise<void> => {
-  const headers = ['Student ID', 'Student Name', 'Mobile No', 'Class Name', 'Section Name', 'Gender', 'Blood Group', 'Father Name', 'Mother Name', 'Aadhar No', 'PEN Number', 'Address', 'Admission fee', 'Tution fee', 'Books fee'];
-  const sampleRow = ['JY26-0004', 'John Doe', '9876543210', 'Grade 10', 'A', 'MALE', 'O+', 'Richard Doe', 'Jane Doe', '123456789012', 'PEN123', '123 Main St', '5000', '25000', '2000'];
+  const headers = [
+    'Student ID', 'Student Name', 'Class Name', 'Section Name', 'Date of Birth',
+    'Gender', 'Child ID', 'APAAR ID', 'PEN Number', 'Student Aadhar',
+    'Father Name', 'Father Aadhar', 'Father Phone',
+    'Mother Name', 'Mother Aadhar', 'Mother Phone',
+    'Address', 'Blood Group',
+    'Admission Fee', 'Tuition Fee', 'Books Fee'
+  ];
+
+  const sampleRow1 = [
+    'JY26-0001', 'K. Rajesh', '10th', 'A', '2010-05-14',
+    'MALE', '1083920194', '928172938471', '20204049266', '457721363532',
+    'K. Ramana', '987654321012', '9848012345',
+    'K. Lakshmi', '876543210987', '9848054321',
+    'Narasannapeta, Srikakulam', 'O+',
+    '5000', '25000', '2000'
+  ];
+
+  const sampleRow2 = [
+    '', 'S. Grishma', '8th', 'B', '2012-08-20',
+    'FEMALE', '1083920205', '928172938482', '20204049288', '568832474643',
+    'S. Apparao', '987654322033', '9502924437',
+    'S. Parvathi', '876543211099', '9502924438',
+    'Palakonda Road, Srikakulam', 'B+',
+    '4000', '20000', '2000'
+  ];
 
   const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
-  XLSX.utils.book_append_sheet(wb, ws, 'Template');
+  const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow1, sampleRow2]);
+
+  ws['!cols'] = [
+    { wch: 14 }, // Student ID
+    { wch: 22 }, // Student Name
+    { wch: 12 }, // Class Name
+    { wch: 12 }, // Section Name
+    { wch: 14 }, // Date of Birth
+    { wch: 10 }, // Gender
+    { wch: 14 }, // Child ID
+    { wch: 16 }, // APAAR ID
+    { wch: 16 }, // PEN Number
+    { wch: 16 }, // Student Aadhar
+    { wch: 20 }, // Father Name
+    { wch: 16 }, // Father Aadhar
+    { wch: 15 }, // Father Phone
+    { wch: 20 }, // Mother Name
+    { wch: 16 }, // Mother Aadhar
+    { wch: 15 }, // Mother Phone
+    { wch: 30 }, // Address
+    { wch: 12 }, // Blood Group
+    { wch: 14 }, // Admission Fee
+    { wch: 14 }, // Tuition Fee
+    { wch: 12 }, // Books Fee
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Students_Template');
   const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
 
   res.setHeader('Content-Disposition', 'attachment; filename=Student_Import_Template.xlsx');

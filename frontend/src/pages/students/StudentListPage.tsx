@@ -134,25 +134,83 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
-  // Old export function replaced by Export Modal
-
+  // Master Template & Export for Upsert
   const downloadTemplate = async () => {
-    const XLSX = await import("xlsx");
-    const ws = XLSX.utils.aoa_to_sheet([
-      ['Student Name', 'Mobile No', 'Class', 'Section', 'Father Name', 'Date of Birth', 'Address'],
-      ['Suhash Kumar', '9052308483', 'PP1', 'A', 'Botu', '2019-05-12', 'Visakhapatnam'],
-      ['Arvindh', '9597429747', 'PP1', 'A', 'Vanjarapu', '2019-08-22', 'Hyderabad'],
-    ]);
-    ws['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 20 }, { wch: 15 }, { wch: 30 }];
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Students');
-    XLSX.writeFile(wb, 'Student_Import_Template.xlsx');
+    try {
+      const res = await api.get('/api/students/template', { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Student_Master_Import_Template.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Excel Master Template downloaded!');
+    } catch (_) {
+      // Fallback local XLSX generation
+      const XLSX = await import("xlsx");
+      const headers = [
+        'Student ID', 'Student Name', 'Class Name', 'Section Name', 'Date of Birth',
+        'Gender', 'Child ID', 'APAAR ID', 'PEN Number', 'Student Aadhar',
+        'Father Name', 'Father Aadhar', 'Father Phone', 'Mother Name',
+        'Mother Aadhar', 'Mother Phone', 'Address', 'Blood Group',
+        'Admission Fee', 'Tuition Fee', 'Books Fee'
+      ];
+      const sampleRow1 = [
+        'JY26-8001', 'K. Rajesh', '10th', 'A', '2010-05-15',
+        'MALE', '1083920204', '928172938481', '20204049266', '457721363532',
+        'K. Suryanarayana', '987654321098', '9502924437',
+        'K. Lakshmi', '876543210987', '9848054321',
+        'Narasannapeta, Srikakulam', 'O+',
+        '5000', '25000', '2000'
+      ];
+      const sampleRow2 = [
+        '', 'S. Grishma', '8th', 'B', '2012-08-20',
+        'FEMALE', '1083920205', '928172938482', '20204049288', '568832474643',
+        'S. Apparao', '987654322033', '9502924437',
+        'S. Parvathi', '876543211099', '9502924438',
+        'Palakonda Road, Srikakulam', 'B+',
+        '4000', '20000', '2000'
+      ];
+      const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow1, sampleRow2]);
+      ws['!cols'] = [
+        { wch: 14 }, { wch: 22 }, { wch: 12 }, { wch: 12 }, { wch: 14 },
+        { wch: 10 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 16 },
+        { wch: 20 }, { wch: 16 }, { wch: 15 }, { wch: 20 }, { wch: 16 },
+        { wch: 15 }, { wch: 30 }, { wch: 12 }, { wch: 14 }, { wch: 14 }, { wch: 12 }
+      ];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Students_Template');
+      XLSX.writeFile(wb, 'Student_Master_Import_Template.xlsx');
+      toast.success('Excel Master Template downloaded!');
+    }
+  };
+
+  const handleExportExistingForEdit = async () => {
+    try {
+      const toastId = toast.loading('Exporting all students for Excel editing...');
+      const res = await api.get('/api/students/export', { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Students_Master_Update_Sheet.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Export downloaded! Edit in Excel and re-upload here to update.', { id: toastId, duration: 5000 });
+    } catch (e: any) {
+      toast.error('Failed to export students');
+    }
   };
 
   const handleBulkImport = async () => {
     if (!importFile) { toast.error('Please select an Excel file first.'); return; }
     setImportLoading(true);
-    const t = toast.loading('Importing students...');
+    const t = toast.loading('Importing & syncing students...');
     try {
       const formData = new FormData();
       formData.append('file', importFile);
@@ -161,7 +219,7 @@ export const StudentListPage: React.FC = () => {
       });
       const data = res.data?.data || res.data;
       setImportResult(data);
-      toast.success(`Import done! ✓ ${data.success || 0} success, ✗ ${data.failed?.length || 0} errors`, { id: t, duration: 5000 });
+      toast.success(`Import complete! 🆕 ${data.created || 0} Added, ✏️ ${data.updated || 0} Updated`, { id: t, duration: 5000 });
       fetchStudents();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Import failed', { id: t });
@@ -486,25 +544,56 @@ export const StudentListPage: React.FC = () => {
             <div className="p-6">
               {!importResult ? (
                 <div className="space-y-6">
-                  <div className="flex items-start gap-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                    <div className="p-3 bg-white rounded-xl shadow-sm text-indigo-600"><FileText className="w-6 h-6" /></div>
-                    <div>
-                      <h4 className="font-bold text-indigo-900">Step 1: Download Template</h4>
-                      <p className="text-sm text-indigo-700/70 mt-1">Use our standard format to ensure data imports correctly.</p>
-                      <button onClick={downloadTemplate} className="mt-3 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-xl shadow-sm hover:bg-indigo-700 transition-colors cursor-pointer">
-                        Download Excel Template
-                      </button>
+                  {/* Step 1: Template or Existing Students Export */}
+                  <div className="flex items-start gap-4 p-4.5 bg-indigo-50/70 rounded-2xl border border-indigo-100">
+                    <div className="p-3 bg-white rounded-xl shadow-xs text-indigo-600 shrink-0"><FileSpreadsheet className="w-6 h-6" /></div>
+                    <div className="flex-1">
+                      <h4 className="font-bold text-indigo-950 text-base">Step 1: Download Template or Current Records</h4>
+                      <p className="text-xs text-indigo-700/80 mt-1 leading-relaxed">
+                        మాస్టర్ ఎక్సెల్ ఫార్మాట్ ద్వారా <strong>Student ID, Child ID, APAAR ID, PEN, Aadhaar, Parents Data</strong> అన్నీ ఒకేసారి మేనేజ్ చేయవచ్చు.
+                      </p>
+
+                      <div className="mt-3.5 flex flex-wrap gap-2.5">
+                        <button 
+                          type="button" 
+                          onClick={downloadTemplate} 
+                          className="px-4 py-2.5 bg-indigo-600 text-white text-xs font-bold rounded-xl shadow-sm hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                        >
+                          <FileDown className="w-4 h-4" /> Download Blank Template
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={handleExportExistingForEdit} 
+                          className="px-4 py-2.5 bg-white text-indigo-700 border border-indigo-200 text-xs font-bold rounded-xl shadow-xs hover:bg-indigo-50 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+                          title="Download all students with their Student IDs to edit and re-upload"
+                        >
+                          <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export Existing Students (To Edit)
+                        </button>
+                      </div>
+
+                      {/* Upsert Hint Card */}
+                      <div className="mt-3 p-3 bg-white/90 rounded-xl border border-indigo-100/80 text-[11px] text-slate-600 space-y-1">
+                        <div className="flex items-center gap-1.5 font-bold text-indigo-900">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span>స్మార్ట్ ఆటో-అప్‌డేట్ (Smart Upsert Rules):</span>
+                        </div>
+                        <p className="pl-3.5 text-slate-500 leading-relaxed">
+                          • <strong>Student ID</strong> ఉన్న రోల సమాచారం (పేరు, ఆధార్, Child ID, APAAR ID, తండ్రి/తల్లి వివరాలు) ఆటోమేటిక్‌గా <strong>అప్‌డేట్</strong> అవుతుంది.<br />
+                          • <strong>Student ID</strong> లేని రోలు కొత్త విద్యార్థులుగా సిస్టమ్‌లో ఆటో-ఐడీతో <strong>యాడ్</strong> అవుతాయి.
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-4 p-4 bg-purple-50/50 rounded-2xl border border-purple-100">
-                    <div className="p-3 bg-white rounded-xl shadow-sm text-purple-600"><Upload className="w-6 h-6" /></div>
+                  {/* Step 2: Upload Data */}
+                  <div className="flex items-start gap-4 p-4.5 bg-purple-50/60 rounded-2xl border border-purple-100">
+                    <div className="p-3 bg-white rounded-xl shadow-xs text-purple-600 shrink-0"><Upload className="w-6 h-6" /></div>
                     <div className="flex-1">
-                      <h4 className="font-bold text-purple-900">Step 2: Upload Data</h4>
-                      <p className="text-sm text-purple-700/70 mt-1">Upload your filled Excel file here.</p>
+                      <h4 className="font-bold text-purple-950 text-base">Step 2: Upload Filled Excel Sheet</h4>
+                      <p className="text-xs text-purple-700/80 mt-1">డేటా నింపిన ఎక్సెల్ ఫైల్‌ను ఇక్కడ అప్‌లోడ్ చేయండి.</p>
                       
                       <div 
-                        className={`mt-4 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer
+                        className={`mt-3.5 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer
                           ${dragOver ? 'border-purple-500 bg-purple-50' : 'border-purple-200 bg-white hover:border-purple-400 hover:bg-purple-50/30'}`}
                         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                         onDragLeave={() => setDragOver(false)}
@@ -527,64 +616,71 @@ export const StudentListPage: React.FC = () => {
                         {importFile ? (
                           <div className="flex flex-col items-center gap-2">
                             <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full"><CheckCircle2 className="w-8 h-8" /></div>
-                            <span className="font-bold text-slate-700">{importFile.name}</span>
-                            <span className="text-xs font-bold text-slate-400">Click to change file</span>
+                            <span className="font-bold text-slate-800 text-sm">{importFile.name}</span>
+                            <span className="text-xs font-bold text-indigo-600 hover:underline">Click to choose another file</span>
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 text-slate-400">
-                            <Upload className="w-8 h-8 text-purple-300" />
-                            <span className="font-bold text-slate-600">Click or drag file here</span>
-                            <span className="text-xs font-bold uppercase tracking-wider">.xlsx, .xls, .csv</span>
+                            <Upload className="w-8 h-8 text-purple-400" />
+                            <span className="font-bold text-slate-700 text-sm">Click or drag Excel file here</span>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">.xlsx, .xls, .csv</span>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t border-slate-100">
+                  <div className="flex justify-end pt-3 border-t border-slate-100">
                     <button
                       onClick={handleBulkImport}
                       disabled={!importFile || importLoading}
-                      className="px-6 py-2.5 bg-indigo-600 text-white font-black rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm rounded-xl shadow-lg shadow-indigo-200 hover:from-indigo-700 hover:to-purple-700 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
                     >
                       {importLoading ? (
-                        <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/> Importing...</>
+                        <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/> Processing Excel Data...</>
                       ) : (
-                        <>Import Students</>
+                        <>Start Import & Sync</>
                       )}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6 text-center py-6">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 mb-2 shadow-inner">
-                    <CheckCircle2 className="w-10 h-10" />
+                <div className="space-y-6 text-center py-5">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 shadow-inner">
+                    <CheckCircle2 className="w-9 h-9" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-black text-slate-800">Import Complete</h3>
-                    <p className="text-slate-500 font-medium mt-1">Your data has been processed.</p>
+                    <h3 className="text-2xl font-black text-slate-800">Processing Complete!</h3>
+                    <p className="text-slate-500 text-xs font-medium mt-1">ఎక్సెల్ డేటా విజయవంతంగా సిస్టమ్‌లో అప్‌డేట్ చేయబడింది.</p>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto mt-6">
-                    <div className="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex flex-col items-center">
-                      <span className="text-3xl font-black text-emerald-600">{importResult?.success || 0}</span>
-                      <span className="text-xs font-bold uppercase tracking-wider text-emerald-600/70 mt-1">Success</span>
+                  {/* Detailed 3-Card Result Metrics */}
+                  <div className="grid grid-cols-3 gap-3 max-w-md mx-auto mt-4">
+                    <div className="bg-emerald-50 border border-emerald-100 p-3.5 rounded-2xl flex flex-col items-center shadow-xs">
+                      <span className="text-2xl sm:text-3xl font-black text-emerald-600">{importResult?.created || 0}</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700/80 mt-1">🆕 New Added</span>
                     </div>
-                    <div className={`${(importResult?.failed?.length || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-4 rounded-2xl flex flex-col items-center`}>
-                      <span className={`text-3xl font-black ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{importResult?.failed?.length || 0}</span>
-                      <span className={`text-xs font-bold uppercase tracking-wider mt-1 ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-600/70' : 'text-slate-400'}`}>Failed</span>
+
+                    <div className="bg-indigo-50 border border-indigo-100 p-3.5 rounded-2xl flex flex-col items-center shadow-xs">
+                      <span className="text-2xl sm:text-3xl font-black text-indigo-600">{importResult?.updated || 0}</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700/80 mt-1">✏️ Updated</span>
+                    </div>
+
+                    <div className={`${(importResult?.failed?.length || 0) > 0 ? 'bg-rose-50 border-rose-100' : 'bg-slate-50 border-slate-100'} p-3.5 rounded-2xl flex flex-col items-center shadow-xs`}>
+                      <span className={`text-2xl sm:text-3xl font-black ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{importResult?.failed?.length || 0}</span>
+                      <span className={`text-[10px] font-black uppercase tracking-wider mt-1 ${(importResult?.failed?.length || 0) > 0 ? 'text-rose-700/80' : 'text-slate-400'}`}>⚠️ Errors</span>
                     </div>
                   </div>
 
                   {importResult?.failed && importResult.failed.length > 0 && (
-                    <div className="text-left mt-6 max-h-40 overflow-y-auto bg-rose-50/50 border border-rose-100 p-3 rounded-xl text-sm">
-                      <div className="flex items-center gap-2 text-rose-700 font-bold mb-2">
-                        <AlertCircle className="w-4 h-4" /> Error Details
+                    <div className="text-left mt-5 max-h-40 overflow-y-auto bg-rose-50/60 border border-rose-100 p-3.5 rounded-xl text-sm">
+                      <div className="flex items-center gap-2 text-rose-700 font-bold mb-2 text-xs">
+                        <AlertCircle className="w-4 h-4" /> Failed Rows & Errors:
                       </div>
                       <ul className="space-y-1 text-rose-600 text-xs">
                         {importResult.failed.map((e: any, idx: number) => (
                           <li key={idx} className="flex gap-2">
-                            <span className="font-mono bg-rose-100 px-1.5 rounded text-rose-700">Row {idx + 1} ({e.row?.name || e.row?.studentname || 'Unknown'})</span>
+                            <span className="font-mono bg-rose-100 px-1.5 rounded text-rose-700">Row {idx + 1} ({e.row?.studentname || e.row?.name || e.row?.studentid || 'Unknown'})</span>
                             <span>{e.reason}</span>
                           </li>
                         ))}
@@ -592,7 +688,7 @@ export const StudentListPage: React.FC = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-center pt-4 mt-6 border-t border-slate-100">
+                  <div className="flex justify-center pt-4 mt-5 border-t border-slate-100">
                     <button
                       onClick={() => {
                         setImportResult(null);

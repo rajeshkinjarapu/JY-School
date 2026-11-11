@@ -561,7 +561,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             _infoRow(Icons.person_rounded, 'Gender', s['gender'] ?? 'N/A', const Color(0xFF8B5CF6)),
             _infoRow(Icons.bloodtype_rounded, 'Blood Group', s['bloodGroup'] ?? 'N/A', const Color(0xFFF43F5E)),
             _infoRow(Icons.credit_card_rounded, 'Student Aadhaar No', _safeValue(s['aadharNo'] ?? s['aadhar'] ?? s['aadhaarNo']), const Color(0xFF0EA5E9)),
-            _infoRow(Icons.numbers_rounded, 'PEN Number', s['penNumber'] ?? 'N/A', const Color(0xFF14B8A6)),
+            _infoRow(Icons.pin_rounded, 'Child ID', _safeValue(s['childId'] ?? s['child_id']), const Color(0xFF6366F1)),
+            _infoRow(Icons.fingerprint_rounded, 'APAAR ID', _safeValue(s['apaarId'] ?? s['apaar_id']), const Color(0xFF8B5CF6)),
+            _infoRow(Icons.numbers_rounded, 'PEN Number', _safeValue(s['penNumber'] ?? s['pen_number']), const Color(0xFF14B8A6)),
             _infoRow(Icons.account_balance_rounded, 'Religion', s['religion'] ?? 'N/A', const Color(0xFFF59E0B)),
             _infoRow(Icons.category_rounded, 'Category', s['casteCategory'] ?? 'N/A', const Color(0xFFEC4899)),
           ], trailingAction: canEdit ? InkWell(
@@ -1004,6 +1006,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
     final religionC = TextEditingController(text: s['religion'] ?? '');
     final categoryC = TextEditingController(text: s['casteCategory'] ?? '');
     final aadharC = TextEditingController(text: s['aadharNo'] ?? s['aadhar'] ?? s['aadhaarNo'] ?? '');
+    final childIdC = TextEditingController(text: s['childId'] ?? s['child_id'] ?? '');
+    final apaarIdC = TextEditingController(text: s['apaarId'] ?? s['apaar_id'] ?? '');
     final penC = TextEditingController(text: s['penNumber'] ?? '');
     final guardianNameC = TextEditingController(text: s['guardianName'] ?? '');
     final guardianPhoneC = TextEditingController(text: s['guardianPhone'] ?? '');
@@ -1067,6 +1071,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     _editField('Gender', genderC, hint: 'MALE / FEMALE', icon: Icons.person_rounded),
                     _editField('Blood Group', bloodC, hint: 'A+, B-, O+...', icon: Icons.bloodtype_rounded),
                     _editField('Aadhaar No', aadharC, icon: Icons.credit_card_rounded, keyboardType: TextInputType.number),
+                    _editField('Child ID', childIdC, icon: Icons.pin_rounded, keyboardType: TextInputType.number),
+                    _editField('APAAR ID', apaarIdC, icon: Icons.fingerprint_rounded, keyboardType: TextInputType.number),
                     _editField('PEN Number', penC, icon: Icons.numbers_rounded),
                     _editField('Religion', religionC, icon: Icons.account_balance_rounded),
                     _editField('Category', categoryC, icon: Icons.category_rounded),
@@ -1106,6 +1112,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                     if (religionC.text.isNotEmpty) data['religion'] = religionC.text;
                     if (categoryC.text.isNotEmpty) data['casteCategory'] = categoryC.text;
                     data['aadharNo'] = aadharC.text.trim();
+                    data['childId'] = childIdC.text.trim();
+                    data['apaarId'] = apaarIdC.text.trim();
                     data['penNumber'] = penC.text.trim();
                     data['guardianName'] = guardianNameC.text.trim();
                     data['guardianPhone'] = guardianPhoneC.text.trim();

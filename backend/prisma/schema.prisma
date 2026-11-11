@@ -85,6 +85,8 @@ model Student {
   motherPhone    String?
   aadharNo       String?
   penNumber      String?
+  childId        String?
+  apaarId        String?
   guardianName   String?
   guardianPhone  String?
   guardianRelation String?
@@ -103,6 +105,8 @@ model Student {
   @@index([classId])
   @@index([rollNo])
   @@index([admissionDate])
+  @@index([childId])
+  @@index([apaarId])
 }
 
 model Teacher {
