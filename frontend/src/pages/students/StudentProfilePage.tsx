@@ -540,18 +540,6 @@ export const StudentProfilePage: React.FC = () => {
                   <span className="p-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-300/40" title="Verified Active Student">
                     <CheckCircle2 className="w-5 h-5 fill-cyan-400 text-[#145DD0]" />
                   </span>
-                  {isAdmin && (
-                    <button 
-                      onClick={() => {
-                        setNewStudentName(student.user?.name || '');
-                        setShowNameModal(true);
-                      }}
-                      className="p-1.5 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                      title="Edit Student Name"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
                 </div>
 
                 {/* Meta Pills (ID, Class, Active) */}
@@ -564,24 +552,9 @@ export const StudentProfilePage: React.FC = () => {
                   </div>
 
                   {/* Class Pill */}
-                  <div 
-                    onClick={async () => {
-                      if (!canEdit) return;
-                      setNewClassId(student.classId || '');
-                      setShowSectionModal(true);
-                      if (classes.length === 0) {
-                        try {
-                          const classRes: any = await api.get('/api/classes');
-                          setClasses(classRes?.data?.data || classRes?.data || []);
-                        } catch {}
-                      }
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-purple-500/25 text-purple-100 border border-purple-400/30 backdrop-blur-sm ${canEdit ? 'cursor-pointer hover:bg-purple-500/35 transition-colors' : ''}`}
-                    title={canEdit ? 'Click to change class/section' : ''}
-                  >
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-purple-500/25 text-purple-100 border border-purple-400/30 backdrop-blur-sm">
                     <GraduationCap className="w-3.5 h-3.5 text-purple-300" />
                     <span>{student.class ? `${student.class.name}-${student.class.section}` : 'N/A'}</span>
-                    {canEdit && <Edit2 className="w-2.5 h-2.5 opacity-60 ml-0.5" />}
                   </div>
 
                   {/* Active Status Pill */}
@@ -590,11 +563,6 @@ export const StudentProfilePage: React.FC = () => {
                     <span>Active Student</span>
                   </div>
                 </div>
-
-                {/* Inspiring Quote */}
-                <p className="text-white/80 text-xs sm:text-sm italic font-medium tracking-wide">
-                  &ldquo;Dream Big... Achieve More...&rdquo;
-                </p>
               </div>
 
             </div>
@@ -728,15 +696,6 @@ export const StudentProfilePage: React.FC = () => {
                     </div>
                     <h3 className="font-extrabold text-slate-800 dark:text-white text-sm">Personal Information</h3>
                   </div>
-                  {canEdit && (
-                    <button
-                      onClick={openDemographicsModal}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 rounded-xl transition-colors cursor-pointer"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                      <span>Edit</span>
-                    </button>
-                  )}
                 </div>
 
                 {/* 2x2 Clean Icon Tile Grid */}
@@ -814,26 +773,70 @@ export const StudentProfilePage: React.FC = () => {
 
                 </div>
 
-                {/* PEN Number (National Student ID) */}
-                {student.penNumber && (
-                  <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200/60 flex items-center justify-between text-xs font-bold">
-                    <span className="text-emerald-800 flex items-center gap-1.5">
-                      <Hash className="w-3.5 h-3.5 text-emerald-600" /> Permanent Education Number (PEN)
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-emerald-900 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg">
-                        {student.penNumber}
-                      </span>
-                      <button
-                        onClick={() => handleCopy(student.penNumber, 'PEN Number')}
-                        className="p-1 text-emerald-700 hover:text-emerald-900 rounded-md hover:bg-emerald-200/50 transition-colors cursor-pointer"
-                        title="Copy PEN"
-                      >
-                        <Copy className="w-3 h-3" />
-                      </button>
-                    </div>
+                {/* Government & Education Identifiers (Child ID, APAAR ID, PEN) */}
+                <div className="space-y-2 pt-1">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {student.childId && (
+                      <div className="p-2.5 rounded-xl bg-sky-50/70 dark:bg-sky-950/20 border border-sky-200/70 dark:border-sky-800/40 flex items-center justify-between text-xs font-bold">
+                        <span className="text-sky-800 dark:text-sky-300 flex items-center gap-1.5">
+                          <Hash className="w-3.5 h-3.5 text-sky-600" /> Child ID
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-black text-sky-900 dark:text-sky-200 bg-sky-100/80 dark:bg-sky-900/40 px-2 py-0.5 rounded-lg">
+                            {student.childId}
+                          </span>
+                          <button
+                            onClick={() => handleCopy(student.childId, 'Child ID')}
+                            className="p-1 text-sky-700 hover:text-sky-900 rounded-md hover:bg-sky-200/50 transition-colors cursor-pointer"
+                            title="Copy Child ID"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {student.apaarId && (
+                      <div className="p-2.5 rounded-xl bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200/70 dark:border-purple-800/40 flex items-center justify-between text-xs font-bold">
+                        <span className="text-purple-800 dark:text-purple-300 flex items-center gap-1.5">
+                          <Hash className="w-3.5 h-3.5 text-purple-600" /> APAAR ID
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono font-black text-purple-900 dark:text-purple-200 bg-purple-100/80 dark:bg-purple-900/40 px-2 py-0.5 rounded-lg">
+                            {student.apaarId}
+                          </span>
+                          <button
+                            onClick={() => handleCopy(student.apaarId, 'APAAR ID')}
+                            className="p-1 text-purple-700 hover:text-purple-900 rounded-md hover:bg-purple-200/50 transition-colors cursor-pointer"
+                            title="Copy APAAR ID"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
+
+                  {student.penNumber && (
+                    <div className="p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200/60 flex items-center justify-between text-xs font-bold">
+                      <span className="text-emerald-800 flex items-center gap-1.5">
+                        <Hash className="w-3.5 h-3.5 text-emerald-600" /> Permanent Education Number (PEN)
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono font-black text-emerald-900 bg-emerald-100/80 px-2.5 py-0.5 rounded-lg">
+                          {student.penNumber}
+                        </span>
+                        <button
+                          onClick={() => handleCopy(student.penNumber, 'PEN Number')}
+                          className="p-1 text-emerald-700 hover:text-emerald-900 rounded-md hover:bg-emerald-200/50 transition-colors cursor-pointer"
+                          title="Copy PEN"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Card 2: Quick Actions */}

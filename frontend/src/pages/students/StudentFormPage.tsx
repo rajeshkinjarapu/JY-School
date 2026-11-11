@@ -54,6 +54,8 @@ export const StudentFormPage: React.FC = () => {
         guardianRelation: student.guardianRelation || '',
         aadharNo: student.aadharNo || '',
         penNumber: student.penNumber || '',
+        childId: student.childId || '',
+        apaarId: student.apaarId || '',
       });
     } catch (e) {
       toast.error('Failed to load student details');
@@ -239,6 +241,14 @@ export const StudentFormPage: React.FC = () => {
               <div className="space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">PEN Number</label>
                 <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Permanent Education Number" {...register('penNumber')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Child ID</label>
+                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="Child ID / State Registry ID" {...register('childId')} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">APAAR ID</label>
+                <input type="text" className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-semibold" placeholder="12-digit APAAR ID" {...register('apaarId')} />
               </div>
               <div className="col-span-1 md:col-span-2 space-y-1">
                 <label className="text-[11px] font-black uppercase tracking-wider text-gray-500">Home Address</label>
