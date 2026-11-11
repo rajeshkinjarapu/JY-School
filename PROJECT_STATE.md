@@ -1,5 +1,25 @@
 # JY School Project State
 
+## చివరి సంభాషణ - GitHub Actions CI Shorebird Fix & Web App Dashboard/Import Deployment Ready (November 11, 2026)
+- **యూజర్ స్క్రీన్‌షాట్‌ల రిపోర్ట్:**
+  1. GitHub Actions లో Shorebird Patch రన్ `#66` ఎగ్జిట్ కోడ్ 70 తో ఫెయిల్ అయింది (`flutter build` ఎర్రర్స్).
+  2. వెబ్ యాప్‌లో (`66.116.252.191:19999/dashboard`) డాష్‌బోర్డ్ హీరో బ్యానర్‌లో ఇంకా పాత "JY SCHOOL" క్యాప్ ఐకాన్ కనిపిస్తోంది; లాగిన్ అయిన వ్యక్తి ఫోటో + పేరు ఇంకా అప్‌డేట్ అవ్వలేదు.
+  3. విద్యార్థుల ఇంపోర్ట్ మోడల్ (`/students`) లో కూడా పాత 2-స్టెప్ మోడల్ కనిపిస్తోంది.
+- **పరిస్థితి విశ్లేషణ & కారణాలు:**
+  1. GitHub Actions లో ఫెయిల్ అయిన రన్ పాత కమిట్ `36b3bff` పై నడిచింది. ఆ సమయంలో `dashboard_screen.dart` లో 31 చోట్ల `Container` సింటాక్స్ ఎర్రర్లు మరియు మిస్సింగ్ బ్రాకెట్ ఉండేవి.
+  2. మనం లోకల్ కోడ్‌లో `dashboard_screen.dart` ను 100% ఎర్రర్-ఫ్రీగా క్లీన్ చేసాము.
+  3. అలాగే డాష్‌బోర్డ్ టాప్ బ్యానర్‌లో లాగిన్ అయిన వ్యక్తి ప్రొఫైల్ ఫోటో + పేరు + `JY School - Super Admin` (లేదా ఇతర రోల్స్) కోడ్ మరియు ఎక్సెల్ స్మార్ట్ Upsert ఇంపోర్ట్/ఎక్స్‌పోర్ట్ కోడ్ లోకల్ రిపోజిటరీలో పూర్తిగా సిద్ధమై ఉన్నాయి.
+  4. ఇవి ఇంకా GitHub కు పుష్ చేసి, VPS సర్వర్‌లో పుల్ & బిల్డ్ చేయనందువల్ల VPS మరియు GitHub CI ఇంకా పాత కోడ్‌తోనే ఉన్నాయి.
+- **సిద్ధంగా ఉన్న మార్పులు (Ready to Deploy):**
+  - `flutter_mobile/lib/screens/dashboard_screen.dart` (Fixed CI build errors)
+  - `flutter_mobile/lib/screens/student_profile_screen.dart` (Child ID & APAAR ID Display & Edit)
+  - `.github/workflows/shorebird_patch.yml` (Non-interactive flags)
+  - `backend/prisma/schema.prisma` (childId, apaarId and indexes)
+  - `backend/src/controllers/students.controller.ts` (Smart Upsert 21 columns, Template & CSV export)
+  - `frontend/src/pages/dashboard/DashboardPage.tsx` (Personalized Profile Banner)
+  - `frontend/src/pages/students/StudentListPage.tsx` (21-column template + Export Existing Students to Edit + Upsert rules)
+
+
 ## చివరి సంభాషణ - Student Master Excel Import & Smart Upsert System (Full-Stack & Flutter) (November 11, 2026)
 - **యూజర్ కోరిక:** 
   1. "IMPORT STUDENT LO STUDENT YOKKA PRATI DETAILS EXCEL DWARA UPLOAD CHESE OPTION UNDALI"

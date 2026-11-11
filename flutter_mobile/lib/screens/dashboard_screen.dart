@@ -347,7 +347,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       right: -2,
                       top: -2,
                       child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFF3D5E),
                           borderRadius: BorderRadius.circular(10),
@@ -381,41 +381,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ? _buildStudentDashboard(userName, metaLabel, metaValue)
                     : SingleChildScrollView(
                         physics: const AlwaysScrollableScrollPhysics(),
-                        child: Container(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildProfileCard(userName, userRole, metaLabel, metaValue),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
-                                  _buildAdminCombinedGrid(context),
-                                  const SizedBox(height: 24),
-                                  _buildRecentPayments(),
-                                  const SizedBox(height: 24),
-                                  _buildAnnouncements(),
-                                ] else if (userRole == 'TEACHER') ...[
-                                  _buildTeacherAnnouncementBanner(),
-                                  const SizedBox(height: 8),
-                                  _buildMenuGrid(userRole),
-                                  const SizedBox(height: 20),
-                                  _buildTeacherMetricsRow(),
-                                  const SizedBox(height: 20),
-                                  _buildTimetableToday(),
-                                  const SizedBox(height: 24),
-                                  _buildRecentHomework(),
-                                  const SizedBox(height: 24),
-                                  _buildAnnouncements(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildProfileCard(userName, userRole, metaLabel, metaValue),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (userRole == 'SUPER_ADMIN' || userRole == 'ADMIN') ...[
+                                    _buildAdminCombinedGrid(context),
+                                    const SizedBox(height: 24),
+                                    _buildRecentPayments(),
+                                    const SizedBox(height: 24),
+                                    _buildAnnouncements(),
+                                  ] else if (userRole == 'TEACHER') ...[
+                                    _buildTeacherAnnouncementBanner(),
+                                    const SizedBox(height: 8),
+                                    _buildMenuGrid(userRole),
+                                    const SizedBox(height: 20),
+                                    _buildTeacherMetricsRow(),
+                                    const SizedBox(height: 20),
+                                    _buildTimetableToday(),
+                                    const SizedBox(height: 24),
+                                    _buildRecentHomework(),
+                                    const SizedBox(height: 24),
+                                    _buildAnnouncements(),
+                                  ],
+                                  const SizedBox(height: 30),
                                 ],
-                                const SizedBox(height: 30),
-                              ],
-                            ),
-                          )
-                        ],
+                              ),
+                            )
+                          ],
+                        ),
                       ),
-                    ),
               ),
             ),
     );
@@ -473,7 +473,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.only(right: 90),
-            child: Container(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -559,7 +559,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       },
       child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+        margin: const EdgeInsets.symmetric(horizontal: 16),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -569,36 +569,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
           border: Border.all(color: const Color(0xFFFDE68A), width: 1),
         ),
-        child: Container(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 14),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'LATEST ANNOUNCEMENT',
-                  style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Icon(Icons.campaign_rounded, color: Color(0xFFD97706), size: 14),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'LATEST ANNOUNCEMENT',
+                    style: GoogleFonts.poppins(color: const Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
                 ),
+              ],
+            ),
+            if (content.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                content,
+                style: GoogleFonts.poppins(color: const Color(0xFF334155), fontSize: 13, height: 1.6, fontWeight: FontWeight.w500),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
-          ),
-          if (content.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(
-              content,
-              style: GoogleFonts.poppins(color: const Color(0xFF334155), fontSize: 13, height: 1.6, fontWeight: FontWeight.w500),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
           ],
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildStudentFavouritesGrid() {
     final List<Map<String, dynamic>> favourites = [
@@ -696,7 +696,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: Colors.grey.withOpacity(0.1)),
@@ -708,12 +708,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Container(
+        child: Column(
           children: [
             Expanded(
               flex: 3,
               child: Container(
-              margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
+                margin: const EdgeInsets.only(top: 8, left: 8, right: 8, bottom: 4),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -749,7 +749,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-
   Widget _buildStudentBottomBanner() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -768,7 +767,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Learning Today\nLeading Tomorrow', style: GoogleFonts.outfit(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, height: 1.2)),
@@ -825,7 +824,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -887,7 +886,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 border: Border.all(color: Colors.white.withOpacity(0.25), width: 2),
               ),
               child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(16),
                 child: (() {
                   final avatar = _user?['avatar'] ?? _user?['photo'] ?? _user?['photoUrl'];
                   if (avatar != null && avatar.toString().isNotEmpty && avatar.toString() != 'null' && avatar.toString() != 'undefined') {
@@ -920,7 +919,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -963,7 +962,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1011,7 +1010,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1053,7 +1052,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -1106,7 +1105,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return res;
   }
 
-  // Teacher Dashboard metrics row Ã¢â‚¬â€ shown below the grid
+  // Teacher Dashboard metrics row — shown below the grid
   Widget _buildTeacherMetricsRow() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12),
@@ -1195,89 +1194,90 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       },
       child: Container(
-              margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)], // Soft Light Amber/Gold
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
+        margin: const EdgeInsets.fromLTRB(11, 8, 11, 0),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFFFBEB), Color(0xFFFEF3C7)], // Soft Light Amber/Gold
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
+          boxShadow: [
+            BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 8)),
+          ],
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFDE68A), width: 1.5),
-        boxShadow: [
-          BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.15), blurRadius: 16, offset: const Offset(0, 8)),
-        ],
-      ),
-      child: Stack(
-        clipBehavior: Clip.hardEdge,
-        children: [
-          // Decorative circle in background
-          Positioned(
-            right: -20,
-            top: -20,
-            child: Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withOpacity(0.06),
-                shape: BoxShape.circle,
+        child: Stack(
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Decorative circle in background
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.06),
+                  shape: BoxShape.circle,
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                // Big Megaphone Icon
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.12),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.25), width: 1.5),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  // Big Megaphone Icon
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withOpacity(0.12),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.25), width: 1.5),
+                    ),
+                    child: const Icon(
+                      Icons.campaign_rounded, // Megaphone icon
+                      color: Color(0xFFD97706),
+                      size: 32,
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.campaign_rounded, // Megaphone icon
-                    color: Color(0xFFD97706),
-                    size: 32,
+                  const SizedBox(width: 14),
+                  // Text content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 14),
-                // Text content
-                Expanded(
-                  child: Container(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: GoogleFonts.outfit(color: const Color(0xFF92400E), fontSize: 14, fontWeight: FontWeight.w800),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                  const SizedBox(width: 10),
+                  // View button
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
+                      ],
+                    ),
+                    child: Text(
+                      'View',
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                // View button
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B),
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(color: const Color(0xFFF59E0B).withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))
-                    ],
-                  ),
-                  child: Text(
-                    'View',
-                    style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1366,7 +1366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              decoration: BoxDecoration(
+        decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
@@ -1378,7 +1378,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ],
           border: Border.all(color: Colors.grey.withOpacity(0.1)),
         ),
-        child: Container(
+        child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
@@ -1421,7 +1421,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              height: 100,
+        height: 100,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
@@ -1445,7 +1445,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: -18,
               right: -18,
               child: Container(
-              width: 70,
+                width: 70,
                 height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1457,7 +1457,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: 16,
               right: 10,
               child: Container(
-              width: 30,
+                width: 30,
                 height: 30,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1467,7 +1467,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1524,7 +1524,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
       child: Container(
-              height: 92,
+        height: 92,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [Color(0xFFBE185D), Color(0xFF881337)],
@@ -1548,7 +1548,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: -25,
               right: -25,
               child: Container(
-              width: 110,
+                width: 110,
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1560,7 +1560,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: 18,
               right: 30,
               child: Container(
-              width: 45,
+                width: 45,
                 height: 45,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1585,7 +1585,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(width: 16),
                   // Label + value
                   Expanded(
-                    child: Container(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -1647,7 +1647,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              decoration: BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: gradientColors,
             begin: Alignment.topLeft,
@@ -1670,7 +1670,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: -28,
               right: -28,
               child: Container(
-              width: 110,
+                width: 110,
                 height: 110,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1683,7 +1683,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               top: 18,
               right: 18,
               child: Container(
-              width: 56,
+                width: 56,
                 height: 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1696,7 +1696,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               bottom: -16,
               left: -16,
               child: Container(
-              width: 60,
+                width: 60,
                 height: 60,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
@@ -1710,7 +1710,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               left: 0,
               right: 0,
               child: Container(
-              height: 1.5,
+                height: 1.5,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
@@ -1725,7 +1725,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // Main content
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.max,
                 children: [
@@ -1859,7 +1859,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       );
     } else if (role == 'TEACHER') {
-      // Professional Teacher Grid Ã¢â‚¬â€ fits 12 tiles (4 rows Ãƒâ€” 3 cols) on single screen
+      // Professional Teacher Grid — fits 12 tiles (4 rows × 3 cols) on single screen
       final double screenH = MediaQuery.of(context).size.height;
       final double screenW = MediaQuery.of(context).size.width;
       // Fixed heights consumed:
@@ -1870,8 +1870,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final double availH = screenH - consumed;
 
       // 3 cols, spacing=5, 4 rows, spacing=5
-        final double tileW = (screenW - 24 - 4 * 2) / 3; // 24 = horizontal padding
-        final double tileH = (availH - 4 * 3) / 4;
+      final double tileW = (screenW - 24 - 4 * 2) / 3; // 24 = horizontal padding
+      final double tileH = (availH - 4 * 3) / 4;
       final double ar = tileW / (tileH < 70 ? 70 : tileH);
 
       return GridView.count(
@@ -1899,7 +1899,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     } else {
       // Admin grid dashboard options
       return GridView.count(
-
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: 2,
@@ -1979,7 +1978,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [gradientStart, gradientEnd],
@@ -1995,7 +1994,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Container(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -2075,7 +2074,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-              padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(24),
@@ -2087,7 +2086,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
-        child: Container(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -2173,7 +2172,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2259,7 +2258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2331,7 +2330,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2416,7 +2415,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2486,7 +2485,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2521,7 +2520,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: const Color(0xFFF1F5F9)),
                 ),
-                child: Container(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
@@ -2559,7 +2558,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2597,7 +2596,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: Container(
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(slot['subject']?['name'] ?? 'Subject', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2628,7 +2627,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2654,7 +2653,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
-              child: Container(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(hw['title'] ?? '', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2678,7 +2677,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Container(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -2705,7 +2704,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Container(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(mark['examName'] ?? 'Exam', style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B))),
@@ -2773,33 +2772,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Square icon tile with colourful border
-          /*
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: borderColor, width: 3),
-              boxShadow: [
-                BoxShadow(
-                  color: borderColor.withOpacity(0.35),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(13),
-              child: Center(
-                child: Icon(
-*/
           Container(
             width: 68,
             height: 68,
@@ -2845,8 +2821,3 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 }
-
-
-
-
-
