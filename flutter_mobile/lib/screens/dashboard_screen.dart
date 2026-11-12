@@ -43,6 +43,7 @@ import 'question_bank/question_bank_dashboard_screen.dart';
 import 'transport_screen.dart';
 import 'id_cards/id_card_templates_screen.dart';
 import 'gate_pass_screen.dart';
+import 'admissions_list_screen.dart';
 import 'create_gate_pass_screen.dart';
 import 'leave_screen.dart';
 import 'fee_reminder_search_screen.dart';
@@ -409,7 +410,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     const SizedBox(height: 24),
                                     _buildAnnouncements(),
                                   ],
-                                  const SizedBox(height: 30),
+                                  SizedBox(height: 30 + MediaQuery.of(context).padding.bottom),
                                 ],
                               ),
                             )
@@ -1330,21 +1331,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 3,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
             childAspectRatio: 1.0,
             children: [
-              _buildGridItem(context, 'Students', Icons.groups_rounded, const Color(0xFF4285F4), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen()))),
-              _buildGridItem(context, 'Teachers', Icons.person_pin_rounded, const Color(0xFFEA4335), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen()))),
-              _buildGridItem(context, 'Classes', Icons.school_rounded, const Color(0xFF34A853), () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen()))),
-              _buildGridItem(context, 'Collect Fee', Icons.account_balance_wallet_rounded, const Color(0xFFFBBC05), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen()))),
-              _buildGridItem(context, 'Results', Icons.fact_check_rounded, const Color(0xFF8E24AA), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen()))),
-              _buildGridItem(context, 'Progress Card', Icons.emoji_events_rounded, const Color(0xFFF06292), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen()))),
-              _buildGridItem(context, 'Installments', Icons.receipt_long_rounded, const Color(0xFF00ACC1), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen()))),
-              _buildGridItem(context, 'Transactions', Icons.sync_alt_rounded, const Color(0xFFFF7043), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen()))),
-              _buildGridItem(context, 'Subjects', Icons.menu_book_rounded, const Color(0xFF7CB342), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen()))),
-              _buildGridItem(context, 'Home Work', Icons.edit_document, const Color(0xFFD79F17), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen()))),
-              _buildGridItem(context, 'App Installs', Icons.install_mobile_rounded, const Color(0xFF673AB7), () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAppInstallsScreen()))),
+              _buildImageCard(
+                imagePath: 'app icons/my studens.png',
+                title: 'Students',
+                borderColor: const Color(0xFF4285F4),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/admissions.png',
+                title: 'Teachers',
+                borderColor: const Color(0xFFEA4335),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/timetable.png',
+                title: 'Classes',
+                borderColor: const Color(0xFF34A853),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/admissions.png',
+                title: 'Admissions',
+                borderColor: const Color(0xFF6366F1),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdmissionsListScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/fee remainder.png',
+                title: 'Collect Fee',
+                borderColor: const Color(0xFFFBBC05),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/results.png',
+                title: 'Results',
+                borderColor: const Color(0xFF8E24AA),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ResultsScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/progress card.png',
+                title: 'Progress Card',
+                borderColor: const Color(0xFFF06292),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProgressCardScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/question papers.png',
+                title: 'Question Papers',
+                borderColor: const Color(0xFFF59E0B),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuestionPapersScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/answer key.png',
+                title: 'Answer Keys',
+                borderColor: const Color(0xFF10B981),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/my salary.png',
+                title: 'Installments',
+                borderColor: const Color(0xFF00ACC1),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/my salary.png',
+                title: 'Transactions',
+                borderColor: const Color(0xFFFF7043),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/home work.png',
+                title: 'Home Work',
+                borderColor: const Color(0xFFD79F17),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/home work.png',
+                title: 'Subjects',
+                borderColor: const Color(0xFF7CB342),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/settings.png',
+                title: 'App Installs',
+                borderColor: const Color(0xFF673AB7),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAppInstallsScreen())),
+              ),
+              _buildImageCard(
+                imagePath: 'app icons/settings.png',
+                title: 'Settings',
+                borderColor: const Color(0xFF64748B),
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+              ),
             ],
           ),
         ),

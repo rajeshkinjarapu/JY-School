@@ -553,95 +553,137 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         </div>
 
         {/* Right Card: Today's Attendance (~42% / col-span-5) */}
-        <div className="lg:col-span-5 bg-white rounded-[22px] p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+        <div className="lg:col-span-5 relative overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/30 rounded-[26px] p-5 sm:p-6 shadow-xl shadow-indigo-900/5 border border-slate-200/80 flex flex-col justify-between">
+          {/* Subtle Ambient Decorative Glow */}
+          <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl from-indigo-200/25 via-emerald-200/15 to-transparent rounded-full blur-2xl pointer-events-none" />
+
           {/* Card Header */}
-          <div className="flex items-center justify-between mb-2">
+          <div className="relative z-10 flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#4F46E5] text-white flex items-center justify-center shadow-xs">
-                <FileText className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 shrink-0">
+                <FileText className="w-5 h-5 drop-shadow-sm" />
               </div>
               <div>
-                <h2 className="text-base font-black text-slate-800 leading-tight">Today's Attendance</h2>
+                <h2 className="text-base font-black text-slate-800 leading-tight flex items-center gap-2">
+                  <span>Today's Attendance</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Live Today" />
+                </h2>
               </div>
             </div>
             <Link
               to="/attendance"
-              className="px-3.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200/80 transition-colors flex items-center gap-1"
+              className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-xs font-black text-indigo-600 border border-indigo-200/70 shadow-2xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
             >
-              View Details <span className="text-[10px]">→</span>
+              <span>View Details</span>
+              <span className="text-[11px] font-bold">→</span>
             </Link>
           </div>
 
           {/* Gauge & Metrics Body */}
-          <div className="flex flex-col sm:flex-row items-center gap-5 my-auto py-3">
+          <div className="relative z-10 flex flex-col sm:flex-row items-center gap-5 my-auto py-3">
             {/* Donut Gauge */}
             <div className="flex flex-col items-center justify-center shrink-0">
               <div className="relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="attendanceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#06B6D4" />
+                    </linearGradient>
+                  </defs>
                   <circle cx="50" cy="50" r="40" stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
                   <circle
                     cx="50"
                     cy="50"
                     r="40"
-                    stroke="#10B981"
+                    stroke="url(#attendanceGradient)"
                     strokeWidth="8"
                     strokeDasharray="251.32"
                     strokeDashoffset={251.32 * (1 - (displayAttendancePct / 100))}
                     strokeLinecap="round"
                     fill="transparent"
-                    className="transition-all duration-1000 ease-out"
+                    className="transition-all duration-1000 ease-out drop-shadow-xs"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl sm:text-3xl font-black text-slate-800 tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-br from-slate-900 to-indigo-950 bg-clip-text text-transparent tracking-tight">
                     {displayAttendancePct}%
                   </span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 -mt-0.5">Rate</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700 border border-emerald-100">
-                <BarChart3 className="w-3 h-3 text-emerald-600" />
+              <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/15 to-emerald-500/10 text-[10px] font-extrabold text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Overall Performance</span>
               </div>
             </div>
 
             {/* Metrics 2x2 Grid */}
             <div className="flex-1 w-full grid grid-cols-2 gap-2.5">
-              <div className="bg-slate-50/90 rounded-xl p-2.5 border border-slate-100 flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total</p>
-                <p className="text-lg font-black text-slate-800">{totalStudentsCount}</p>
-                <p className="text-[10px] font-medium text-slate-400">Students</p>
+              {/* Tile 1: Total */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-indigo-50/60 to-white rounded-2xl p-3 border border-blue-200/70 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">Total</p>
+                  <div className="w-5 h-5 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
+                    <Users className="w-3 h-3" />
+                  </div>
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-blue-950 my-0.5 tracking-tight">{totalStudentsCount}</p>
+                <p className="text-[10px] font-bold text-blue-600/80">Students</p>
               </div>
-              <div className="bg-emerald-50/70 rounded-xl p-2.5 border border-emerald-100/80 flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Present</p>
-                <p className="text-lg font-black text-emerald-600">{presentCount}</p>
-                <p className="text-[10px] font-medium text-emerald-600">Present</p>
+
+              {/* Tile 2: Present */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-teal-50/60 to-white rounded-2xl p-3 border border-emerald-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Present</p>
+                  <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <CheckCircle2 className="w-3 h-3" />
+                  </div>
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-emerald-800 my-0.5 tracking-tight">{presentCount}</p>
+                <p className="text-[10px] font-bold text-emerald-700/80">Present</p>
               </div>
-              <div className="bg-rose-50/70 rounded-xl p-2.5 border border-rose-100/80 flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Absent</p>
-                <p className="text-lg font-black text-rose-600">{absentCount}</p>
-                <p className="text-[10px] font-medium text-rose-500">Absent</p>
+
+              {/* Tile 3: Absent */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-rose-500/10 via-pink-50/60 to-white rounded-2xl p-3 border border-rose-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black text-rose-600 uppercase tracking-wider">Absent</p>
+                  <div className="w-5 h-5 rounded-md bg-rose-100 text-rose-600 flex items-center justify-center">
+                    <XCircle className="w-3 h-3" />
+                  </div>
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-rose-700 my-0.5 tracking-tight">{absentCount}</p>
+                <p className="text-[10px] font-bold text-rose-600/80">Absent</p>
               </div>
-              <div className="bg-amber-50/70 rounded-xl p-2.5 border border-amber-100/80 flex flex-col justify-center">
-                <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider">On Leave</p>
-                <p className="text-lg font-black text-amber-700">{leaveCount}</p>
-                <p className="text-[10px] font-medium text-amber-600">Students</p>
+
+              {/* Tile 4: On Leave */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-50/60 to-white rounded-2xl p-3 border border-amber-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider">On Leave</p>
+                  <div className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center">
+                    <Clock className="w-3 h-3" />
+                  </div>
+                </div>
+                <p className="text-xl sm:text-2xl font-black text-amber-800 my-0.5 tracking-tight">{leaveCount}</p>
+                <p className="text-[10px] font-bold text-amber-700/80">Students</p>
               </div>
             </div>
           </div>
 
           {/* Bottom Bar: Teacher Attendance & 100% Present Badge */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+          <div className="relative z-10 pt-3.5 border-t border-slate-100/90 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs shrink-0">
                 <GraduationCap className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-bold text-slate-700 text-xs">Teachers: </span>
-                <span className="font-black text-indigo-700 text-xs">{totalTeachersCount} / {totalTeachersCount} Present</span>
+                <span className="font-extrabold text-slate-600 text-xs">Teachers: </span>
+                <span className="font-black text-indigo-700 text-xs sm:text-sm">{totalTeachersCount} / {totalTeachersCount} Present</span>
               </div>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black border border-emerald-200">
-              100% Present
+            <span className="px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-[10px] sm:text-[11px] font-black shadow-md shadow-emerald-500/20 flex items-center gap-1.5 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span>100% Present</span>
             </span>
           </div>
         </div>
