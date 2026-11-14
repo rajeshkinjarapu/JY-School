@@ -13,7 +13,7 @@ import {
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X,
   CheckCircle2, AlertCircle, Home, ChevronRight, BookOpen, MessageCircle, ArrowRight,
   Copy, ExternalLink, ShieldCheck, Award, FileText, Activity, HeartPulse, Navigation, Clock, Check, Building, Bus, Heart, Mail, ShieldAlert,
-  ChevronDown, Search, CheckCircle, Info
+  ChevronDown, Search, CheckCircle, Info, Plus
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -75,6 +75,8 @@ export const StudentProfilePage: React.FC = () => {
   const [editBloodGroup, setEditBloodGroup] = useState('');
   const [editAadharNo, setEditAadharNo] = useState('');
   const [editPenNumber, setEditPenNumber] = useState('');
+  const [editChildId, setEditChildId] = useState('');
+  const [editApaarId, setEditApaarId] = useState('');
 
   // Family Modal States
   const [showFamilyModal, setShowFamilyModal] = useState(false);
@@ -89,6 +91,16 @@ export const StudentProfilePage: React.FC = () => {
   const [editGuardianRelation, setEditGuardianRelation] = useState('');
   const [editAddress, setEditAddress] = useState('');
 
+  // Helper: Format 12-digit Aadhaar as "XXXX XXXX XXXX"
+  const formatAadhaar = (val?: string | null) => {
+    if (!val) return '';
+    const digits = String(val).replace(/\D/g, '');
+    if (digits.length === 12) {
+      return `${digits.slice(0, 4)} ${digits.slice(4, 8)} ${digits.slice(8, 12)}`;
+    }
+    return String(val).trim();
+  };
+
   const openDemographicsModal = () => {
     if (!student) return;
     setEditGender(student.gender || '');
@@ -96,6 +108,8 @@ export const StudentProfilePage: React.FC = () => {
     setEditBloodGroup(student.bloodGroup || '');
     setEditAadharNo(student.aadharNo || '');
     setEditPenNumber(student.penNumber || '');
+    setEditChildId(student.childId || '');
+    setEditApaarId(student.apaarId || '');
     setShowDemographicsModal(true);
   };
 
@@ -126,6 +140,8 @@ export const StudentProfilePage: React.FC = () => {
         bloodGroup: editBloodGroup || null,
         aadharNo: editAadharNo ? editAadharNo.trim() : null,
         penNumber: editPenNumber ? editPenNumber.trim() : null,
+        childId: editChildId ? editChildId.trim() : null,
+        apaarId: editApaarId ? editApaarId.trim() : null,
       });
       toast.success('Demographics updated successfully!', { id: updateToast });
       setShowDemographicsModal(false);
@@ -372,7 +388,7 @@ export const StudentProfilePage: React.FC = () => {
   }, [id]);
 
   const getProfileCompleteness = (st: any) => {
-    if (!st) return { percentage: 0, completed: [], missing: [], total: 12 };
+    if (!st) return { percentage: 0, completed: [], missing: [], total: 14 };
     const checklist = [
       { key: 'photo', label: 'Student Photo', done: Boolean(st.user?.photoUrl), modal: 'photo' },
       { key: 'gender', label: 'Gender', done: Boolean(st.gender), modal: 'demographics' },
@@ -380,6 +396,8 @@ export const StudentProfilePage: React.FC = () => {
       { key: 'bloodGroup', label: 'Blood Group', done: Boolean(st.bloodGroup), modal: 'demographics' },
       { key: 'aadharNo', label: 'Aadhaar Number', done: Boolean(st.aadharNo), modal: 'demographics' },
       { key: 'penNumber', label: 'PEN Number', done: Boolean(st.penNumber), modal: 'demographics' },
+      { key: 'childId', label: 'Child ID', done: Boolean(st.childId), modal: 'demographics' },
+      { key: 'apaarId', label: 'APAAR ID', done: Boolean(st.apaarId), modal: 'demographics' },
       { key: 'fatherName', label: "Father's Name", done: Boolean(st.fatherName), modal: 'family' },
       { key: 'fatherPhone', label: "Father's Phone", done: Boolean(st.fatherPhone), modal: 'family' },
       { key: 'fatherAadhar', label: "Father's Aadhaar", done: Boolean(st.fatherAadhar), modal: 'family' },
@@ -765,64 +783,94 @@ export const StudentProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                   
                   {/* Gender Tile */}
-                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-br from-pink-50/50 to-slate-50 border border-slate-200/70">
-                    <div className="w-11 h-11 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner">
-                      <User2 className="w-5 h-5" />
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-br from-pink-50/50 to-slate-50 border border-slate-200/70">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner">
+                        <User2 className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</p>
+                        <p className="text-sm font-black text-slate-800 capitalize mt-0.5">
+                          {student.gender ? (
+                            <span className="text-slate-900 font-extrabold">{student.gender.toLowerCase()}</span>
+                          ) : (
+                            <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</p>
-                      <p className="text-sm font-black text-slate-800 capitalize">
-                        {student.gender ? (
-                          <span className="text-slate-900 font-extrabold">{student.gender.toLowerCase()}</span>
-                        ) : (
-                          <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
-                        )}
-                      </p>
-                    </div>
+                    {!student.gender && canEdit && (
+                      <button
+                        onClick={openDemographicsModal}
+                        className="px-2.5 py-1 text-[11px] font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    )}
                   </div>
 
                   {/* Date of Birth Tile */}
-                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/50 to-slate-50 border border-slate-200/70">
-                    <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
-                        {studentAge !== null && (
-                          <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-700">
-                            {studentAge} Yrs
-                          </span>
-                        )}
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/50 to-slate-50 border border-slate-200/70">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner">
+                        <Calendar className="w-5 h-5" />
                       </div>
-                      <p className="text-sm font-black text-slate-800 mt-0.5">
-                        {student.dob ? (
-                          new Date(student.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                        ) : (
-                          <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
-                        )}
-                      </p>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</p>
+                          {studentAge !== null && (
+                            <span className="text-[9px] font-black px-1.5 py-0.2 rounded-md bg-blue-100 text-blue-700">
+                              {studentAge} Yrs
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-black text-slate-800 mt-0.5">
+                          {student.dob ? (
+                            new Date(student.dob).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                          ) : (
+                            <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
+                    {!student.dob && canEdit && (
+                      <button
+                        onClick={openDemographicsModal}
+                        className="px-2.5 py-1 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    )}
                   </div>
 
                   {/* Blood Group Tile */}
-                  <div className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/50 to-slate-50 border border-slate-200/70">
-                    <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-inner">
-                      <Droplet className="w-5 h-5 fill-rose-600" />
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-br from-rose-50/50 to-slate-50 border border-slate-200/70">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-11 h-11 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 shadow-inner">
+                        <Droplet className="w-5 h-5 fill-rose-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group</p>
+                        <p className="text-sm font-black mt-0.5">
+                          {student.bloodGroup ? (
+                            <span className="text-rose-600 font-extrabold">{student.bloodGroup}</span>
+                          ) : (
+                            <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
+                          )}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group</p>
-                      <p className="text-sm font-black">
-                        {student.bloodGroup ? (
-                          <span className="text-rose-600 font-extrabold">{student.bloodGroup}</span>
-                        ) : (
-                          <span className="text-amber-600 font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
-                        )}
-                      </p>
-                    </div>
+                    {!student.bloodGroup && canEdit && (
+                      <button
+                        onClick={openDemographicsModal}
+                        className="px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" /> Add
+                      </button>
+                    )}
                   </div>
 
-                  {/* Aadhaar Number Tile */}
+                  {/* Aadhaar Number Tile - UNMASKED & FULL DIGITS */}
                   <div className="flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50/50 to-slate-50 border border-slate-200/70">
                     <div className="flex items-center gap-3.5">
                       <div className="w-11 h-11 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 shadow-inner">
@@ -830,16 +878,16 @@ export const StudentProfilePage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aadhaar Number</p>
-                        <p className="text-sm font-mono font-black text-slate-800 mt-0.5">
+                        <p className="text-sm font-mono font-black text-slate-900 mt-0.5 tracking-wider">
                           {student.aadharNo ? (
-                            `**** **** ${student.aadharNo.slice(-4)}`
+                            formatAadhaar(student.aadharNo)
                           ) : (
                             <span className="text-amber-600 font-sans font-bold text-xs bg-amber-50 px-2 py-0.5 rounded-md">Not Provided</span>
                           )}
                         </p>
                       </div>
                     </div>
-                    {student.aadharNo && (
+                    {student.aadharNo ? (
                       <button
                         onClick={() => handleCopy(student.aadharNo, 'Aadhaar Number')}
                         className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors cursor-pointer"
@@ -847,6 +895,15 @@ export const StudentProfilePage: React.FC = () => {
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
+                    ) : (
+                      canEdit && (
+                        <button
+                          onClick={openDemographicsModal}
+                          className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Add
+                        </button>
+                      )
                     )}
                   </div>
 
@@ -879,54 +936,96 @@ export const StudentProfilePage: React.FC = () => {
                           </button>
                         </>
                       ) : (
-                        <span className="text-amber-700 bg-amber-100/80 px-2.5 py-0.5 rounded-md text-[11px]">
-                          Pending Allotment
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-amber-700 bg-amber-100/80 px-2.5 py-0.5 rounded-md text-[11px]">
+                            Pending Allotment
+                          </span>
+                          {canEdit && (
+                            <button
+                              onClick={openDemographicsModal}
+                              className="px-2 py-0.5 text-[11px] font-bold text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
+                            >
+                              <Plus className="w-3 h-3" /> Add
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Child ID & APAAR ID in Grid */}
+                  {/* Child ID & APAAR ID in Grid - ALWAYS VISIBLE */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {student.childId && (
-                      <div className="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/70 flex items-center justify-between text-xs font-bold">
-                        <span className="text-sky-800 flex items-center gap-1.5">
-                          <Hash className="w-3.5 h-3.5 text-sky-600" /> Child ID
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-black text-sky-900 bg-sky-100 px-2 py-0.5 rounded-lg">
-                            {student.childId}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(student.childId, 'Child ID')}
-                            className="p-1 text-sky-700 hover:text-sky-900 rounded-md hover:bg-sky-200/50 transition-colors cursor-pointer"
-                            title="Copy Child ID"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        </div>
+                    
+                    {/* Child ID */}
+                    <div className="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/70 flex items-center justify-between text-xs font-bold">
+                      <span className="text-sky-800 flex items-center gap-1.5">
+                        <Hash className="w-3.5 h-3.5 text-sky-600" /> Child ID
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {student.childId ? (
+                          <>
+                            <span className="font-mono font-black text-sky-900 bg-sky-100 px-2 py-0.5 rounded-lg">
+                              {student.childId}
+                            </span>
+                            <button
+                              onClick={() => handleCopy(student.childId, 'Child ID')}
+                              className="p-1 text-sky-700 hover:text-sky-900 rounded-md hover:bg-sky-200/50 transition-colors cursor-pointer"
+                              title="Copy Child ID"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400 font-sans text-[11px]">Not Provided</span>
+                            {canEdit && (
+                              <button
+                                onClick={openDemographicsModal}
+                                className="px-2 py-0.5 text-[10px] font-bold text-sky-700 bg-sky-100 hover:bg-sky-200 rounded-md transition-colors flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <Plus className="w-3 h-3" /> Add
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {student.apaarId && (
-                      <div className="p-2.5 rounded-xl bg-purple-50/70 border border-purple-200/70 flex items-center justify-between text-xs font-bold">
-                        <span className="text-purple-800 flex items-center gap-1.5">
-                          <Hash className="w-3.5 h-3.5 text-purple-600" /> APAAR ID
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-mono font-black text-purple-900 bg-purple-100 px-2 py-0.5 rounded-lg">
-                            {student.apaarId}
-                          </span>
-                          <button
-                            onClick={() => handleCopy(student.apaarId, 'APAAR ID')}
-                            className="p-1 text-purple-700 hover:text-purple-900 rounded-md hover:bg-purple-200/50 transition-colors cursor-pointer"
-                            title="Copy APAAR ID"
-                          >
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        </div>
+                    {/* APAAR ID */}
+                    <div className="p-2.5 rounded-xl bg-purple-50/70 border border-purple-200/70 flex items-center justify-between text-xs font-bold">
+                      <span className="text-purple-800 flex items-center gap-1.5">
+                        <Hash className="w-3.5 h-3.5 text-purple-600" /> APAAR ID
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {student.apaarId ? (
+                          <>
+                            <span className="font-mono font-black text-purple-900 bg-purple-100 px-2 py-0.5 rounded-lg">
+                              {student.apaarId}
+                            </span>
+                            <button
+                              onClick={() => handleCopy(student.apaarId, 'APAAR ID')}
+                              className="p-1 text-purple-700 hover:text-purple-900 rounded-md hover:bg-purple-200/50 transition-colors cursor-pointer"
+                              title="Copy APAAR ID"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </>
+                        ) : (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-slate-400 font-sans text-[11px]">Not Provided</span>
+                            {canEdit && (
+                              <button
+                                onClick={openDemographicsModal}
+                                className="px-2 py-0.5 text-[10px] font-bold text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-md transition-colors flex items-center gap-0.5 cursor-pointer"
+                              >
+                                <Plus className="w-3 h-3" /> Add
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
+
                   </div>
                 </div>
               </div>
@@ -1018,27 +1117,32 @@ export const StudentProfilePage: React.FC = () => {
                   {/* Father Details Card */}
                   <div 
                     onClick={() => setActiveTab('family')}
-                    className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+                    className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner text-xl">
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner text-xl mt-0.5">
                         👨
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md bg-blue-200/60 text-blue-800">
                             Father
                           </span>
                         </div>
-                        <h4 className="font-black text-xs text-slate-900 group-hover:text-blue-600 transition-colors mt-1 truncate max-w-[130px]">
+                        <h4 className="font-black text-xs text-slate-900 group-hover:text-blue-600 transition-colors mt-1 break-words">
                           {student.fatherName || 'Not Provided'}
                         </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {student.fatherPhone ? student.fatherPhone : 'Phone not set'}
+                        <p className="text-[10px] text-slate-500 font-medium mt-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{student.fatherPhone ? student.fatherPhone : 'Phone not set'}</span>
+                        </p>
+                        <p className="text-[10px] font-mono font-bold text-slate-700 mt-0.5 flex items-center gap-1">
+                          <Fingerprint className="w-3 h-3 text-indigo-500" />
+                          <span>{student.fatherAadhar ? formatAadhaar(student.fatherAadhar) : 'Aadhaar not set'}</span>
                         </p>
                       </div>
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0 mt-1">
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -1046,27 +1150,32 @@ export const StudentProfilePage: React.FC = () => {
                   {/* Mother Details Card */}
                   <div 
                     onClick={() => setActiveTab('family')}
-                    className="p-4 rounded-2xl bg-gradient-to-br from-pink-50/70 via-rose-50/40 to-white border border-pink-100 hover:border-pink-300 hover:shadow-md transition-all cursor-pointer group flex items-center justify-between gap-3"
+                    className="p-4 rounded-2xl bg-gradient-to-br from-pink-50/70 via-rose-50/40 to-white border border-pink-100 hover:border-pink-300 hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner text-xl">
+                    <div className="flex items-start gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner text-xl mt-0.5">
                         👩
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md bg-pink-200/60 text-pink-800">
                             Mother
                           </span>
                         </div>
-                        <h4 className="font-black text-xs text-slate-900 group-hover:text-pink-600 transition-colors mt-1 truncate max-w-[130px]">
+                        <h4 className="font-black text-xs text-slate-900 group-hover:text-pink-600 transition-colors mt-1 break-words">
                           {student.motherName || 'Not Provided'}
                         </h4>
-                        <p className="text-[10px] text-slate-400 mt-0.5">
-                          {student.motherPhone ? student.motherPhone : 'Phone not set'}
+                        <p className="text-[10px] text-slate-500 font-medium mt-1 flex items-center gap-1">
+                          <Phone className="w-3 h-3 text-slate-400" />
+                          <span>{student.motherPhone ? student.motherPhone : 'Phone not set'}</span>
+                        </p>
+                        <p className="text-[10px] font-mono font-bold text-slate-700 mt-0.5 flex items-center gap-1">
+                          <Fingerprint className="w-3 h-3 text-indigo-500" />
+                          <span>{student.motherAadhar ? formatAadhaar(student.motherAadhar) : 'Aadhaar not set'}</span>
                         </p>
                       </div>
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-white text-pink-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-white text-pink-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0 mt-1">
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
                   </div>
@@ -1107,7 +1216,12 @@ export const StudentProfilePage: React.FC = () => {
                     { label: 'Blood Group', done: Boolean(student.bloodGroup), modal: openDemographicsModal },
                     { label: 'Aadhaar No', done: Boolean(student.aadharNo), modal: openDemographicsModal },
                     { label: 'PEN Number', done: Boolean(student.penNumber), modal: openDemographicsModal },
+                    { label: 'Child ID', done: Boolean(student.childId), modal: openDemographicsModal },
+                    { label: 'APAAR ID', done: Boolean(student.apaarId), modal: openDemographicsModal },
                     { label: "Father's Phone", done: Boolean(student.fatherPhone), modal: openFamilyModal },
+                    { label: "Father's Aadhaar", done: Boolean(student.fatherAadhar), modal: openFamilyModal },
+                    { label: "Mother's Phone", done: Boolean(student.motherPhone), modal: openFamilyModal },
+                    { label: "Mother's Aadhaar", done: Boolean(student.motherAadhar), modal: openFamilyModal },
                     { label: 'Address', done: Boolean(student.address), modal: openFamilyModal },
                   ].map((item, idx) => (
                     <div 
@@ -1206,12 +1320,16 @@ export const StudentProfilePage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Mobile Phone</p>
-                        <p className="text-xs font-mono font-black text-slate-900">
-                          {student.fatherPhone || 'Not Provided'}
+                        <p className="text-xs font-mono font-black text-slate-900 mt-0.5">
+                          {student.fatherPhone ? (
+                            student.fatherPhone
+                          ) : (
+                            <span className="text-amber-600 font-sans font-bold text-xs">Not Provided</span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    {student.fatherPhone && (
+                    {student.fatherPhone ? (
                       <div className="flex items-center gap-1.5">
                         <a
                           href={`https://wa.me/91${student.fatherPhone.replace(/\D/g, '')}`}
@@ -1223,10 +1341,19 @@ export const StudentProfilePage: React.FC = () => {
                           <span>WhatsApp</span>
                         </a>
                       </div>
+                    ) : (
+                      canEdit && (
+                        <button
+                          onClick={openFamilyModal}
+                          className="px-2.5 py-1 text-[11px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Add Phone
+                        </button>
+                      )
                     )}
                   </div>
 
-                  {/* Aadhaar Row */}
+                  {/* Aadhaar Row - FULL UNMASKED AADHAAR */}
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
@@ -1234,12 +1361,16 @@ export const StudentProfilePage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Father Aadhaar</p>
-                        <p className="text-xs font-mono font-black text-slate-900">
-                          {student.fatherAadhar ? `**** **** ${student.fatherAadhar.slice(-4)}` : 'Not Provided'}
+                        <p className="text-xs font-mono font-black text-slate-900 tracking-wider mt-0.5">
+                          {student.fatherAadhar ? (
+                            formatAadhaar(student.fatherAadhar)
+                          ) : (
+                            <span className="text-amber-600 font-sans font-bold text-xs">Not Provided</span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    {student.fatherAadhar && (
+                    {student.fatherAadhar ? (
                       <button
                         onClick={() => handleCopy(student.fatherAadhar, "Father's Aadhaar")}
                         className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer"
@@ -1247,6 +1378,15 @@ export const StudentProfilePage: React.FC = () => {
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
+                    ) : (
+                      canEdit && (
+                        <button
+                          onClick={openFamilyModal}
+                          className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Add Aadhaar
+                        </button>
+                      )
                     )}
                   </div>
 
@@ -1301,12 +1441,16 @@ export const StudentProfilePage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Mobile Phone</p>
-                        <p className="text-xs font-mono font-black text-slate-900">
-                          {student.motherPhone || 'Not Provided'}
+                        <p className="text-xs font-mono font-black text-slate-900 mt-0.5">
+                          {student.motherPhone ? (
+                            student.motherPhone
+                          ) : (
+                            <span className="text-amber-600 font-sans font-bold text-xs">Not Provided</span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    {student.motherPhone && (
+                    {student.motherPhone ? (
                       <div className="flex items-center gap-1.5">
                         <a
                           href={`https://wa.me/91${student.motherPhone.replace(/\D/g, '')}`}
@@ -1318,10 +1462,19 @@ export const StudentProfilePage: React.FC = () => {
                           <span>WhatsApp</span>
                         </a>
                       </div>
+                    ) : (
+                      canEdit && (
+                        <button
+                          onClick={openFamilyModal}
+                          className="px-2.5 py-1 text-[11px] font-bold text-pink-600 bg-pink-50 hover:bg-pink-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Add Phone
+                        </button>
+                      )
                     )}
                   </div>
 
-                  {/* Aadhaar Row */}
+                  {/* Aadhaar Row - FULL UNMASKED AADHAAR */}
                   <div className="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-100">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
@@ -1329,12 +1482,16 @@ export const StudentProfilePage: React.FC = () => {
                       </div>
                       <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase">Mother Aadhaar</p>
-                        <p className="text-xs font-mono font-black text-slate-900">
-                          {student.motherAadhar ? `**** **** ${student.motherAadhar.slice(-4)}` : 'Not Provided'}
+                        <p className="text-xs font-mono font-black text-slate-900 tracking-wider mt-0.5">
+                          {student.motherAadhar ? (
+                            formatAadhaar(student.motherAadhar)
+                          ) : (
+                            <span className="text-amber-600 font-sans font-bold text-xs">Not Provided</span>
+                          )}
                         </p>
                       </div>
                     </div>
-                    {student.motherAadhar && (
+                    {student.motherAadhar ? (
                       <button
                         onClick={() => handleCopy(student.motherAadhar, "Mother's Aadhaar")}
                         className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors cursor-pointer"
@@ -1342,6 +1499,15 @@ export const StudentProfilePage: React.FC = () => {
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </button>
+                    ) : (
+                      canEdit && (
+                        <button
+                          onClick={openFamilyModal}
+                          className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> Add Aadhaar
+                        </button>
+                      )
                     )}
                   </div>
 
@@ -2034,12 +2200,34 @@ export const StudentProfilePage: React.FC = () => {
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">PEN Number</label>
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Permanent Education Number (PEN)</label>
                   <input
                     type="text"
                     value={editPenNumber}
                     onChange={(e) => setEditPenNumber(e.target.value.toUpperCase())}
-                    placeholder="Permanent Education Number"
+                    placeholder="UDISE+ Permanent Education Number"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Child ID</label>
+                  <input
+                    type="text"
+                    value={editChildId}
+                    onChange={(e) => setEditChildId(e.target.value.trim())}
+                    placeholder="Child ID / State ID"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">APAAR ID</label>
+                  <input
+                    type="text"
+                    value={editApaarId}
+                    onChange={(e) => setEditApaarId(e.target.value.trim())}
+                    placeholder="APAAR ID (12-digit)"
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
@@ -2319,16 +2507,20 @@ export const StudentProfilePage: React.FC = () => {
 
             <div className="grid grid-cols-2 border-b border-slate-300 flex-1">
               <div className="border-r border-slate-300 p-3 space-y-1 text-[10px]">
-                <div className="font-black text-slate-700 uppercase tracking-wider mb-2">PERSONAL DETAILS</div>
+                <div className="font-black text-slate-700 uppercase tracking-wider mb-2">PERSONAL & GOVT DETAILS</div>
                 <p>DOB: <strong>{student.dob ? new Date(student.dob).toLocaleDateString('en-IN') : 'N/A'}</strong></p>
                 <p>Blood Group: <strong>{student.bloodGroup || 'N/A'}</strong></p>
-                <p>Aadhaar: <strong className="font-mono">{student.aadharNo || 'N/A'}</strong></p>
+                <p>Aadhaar: <strong className="font-mono">{student.aadharNo ? formatAadhaar(student.aadharNo) : 'N/A'}</strong></p>
                 <p>PEN: <strong className="font-mono">{student.penNumber || 'N/A'}</strong></p>
+                {student.childId && <p>Child ID: <strong className="font-mono">{student.childId}</strong></p>}
+                {student.apaarId && <p>APAAR ID: <strong className="font-mono">{student.apaarId}</strong></p>}
               </div>
               <div className="p-3 space-y-1 text-[10px]">
                 <div className="font-black text-slate-700 uppercase tracking-wider mb-2">FAMILY DETAILS</div>
                 <p>Father: <strong>{student.fatherName || 'N/A'}</strong></p>
+                {student.fatherAadhar && <p>Father Aadhaar: <strong className="font-mono">{formatAadhaar(student.fatherAadhar)}</strong></p>}
                 <p>Mother: <strong>{student.motherName || 'N/A'}</strong></p>
+                {student.motherAadhar && <p>Mother Aadhaar: <strong className="font-mono">{formatAadhaar(student.motherAadhar)}</strong></p>}
                 <p>Contact: <strong>{student.fatherPhone || student.motherPhone || 'N/A'}</strong></p>
                 <p>Address: <strong>{student.address || 'Narasannapeta, Srikakulam, AP'}</strong></p>
               </div>

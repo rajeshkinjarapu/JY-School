@@ -552,10 +552,26 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
       return norm;
     };
 
-    // Helper: Clean numeric digits (removes dashes, spaces)
+    // Helper: Clean numeric digits (removes dashes, spaces, and safely handles large numbers/scientific notation)
     const cleanDigits = (val: any): string | null => {
       if (val === undefined || val === null) return null;
-      const s = String(val).replace(/[\s\-]+/g, '').trim();
+      if (typeof val === 'number') {
+        try {
+          return BigInt(Math.trunc(val)).toString();
+        } catch {
+          return String(Math.round(val));
+        }
+      }
+      let s = String(val).trim();
+      if (/^[+-]?\d+(\.\d+)?[eE][+-]?\d+$/.test(s)) {
+        try {
+          const num = Number(s);
+          if (!isNaN(num)) {
+            return BigInt(Math.trunc(num)).toString();
+          }
+        } catch {}
+      }
+      s = s.replace(/[\s\-]+/g, '').trim();
       return s.length > 0 ? s : null;
     };
 

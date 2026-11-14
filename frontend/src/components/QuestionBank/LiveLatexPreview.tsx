@@ -226,14 +226,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const parts = normalized.split(/(\$\$[\s\S]*?\$\$)/g);
       return parts.map(part => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
-          const math = balanceMath(part.slice(2, -2));
+          let math = balanceMath(part.slice(2, -2));
+          // Smart Math Spacing: auto-convert 3+ spaces to \quad and 2 spaces to \ 
+          math = math.replace(/ {3,}/g, ' \\quad ').replace(/ {2}/g, ' \\ ');
           return katex.renderToString(math, { displayMode: true, throwOnError: false });
         }
         
         const inlineParts = part.split(/(\$[\s\S]*?\$)/g);
         return inlineParts.map(inlinePart => {
           if (inlinePart.startsWith('$') && inlinePart.endsWith('$')) {
-            const math = balanceMath(inlinePart.slice(1, -1));
+            let math = balanceMath(inlinePart.slice(1, -1));
+            // Smart Math Spacing: auto-convert 3+ spaces to \quad and 2 spaces to \ 
+            math = math.replace(/ {3,}/g, ' \\quad ').replace(/ {2}/g, ' \\ ');
             return katex.renderToString(math, { displayMode: false, throwOnError: false });
           }
           
@@ -252,8 +256,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             textPart = textPart.replace(/\\newpage/g, '<div style="page-break-after: always" class="w-full h-8 border-b-2 border-dashed border-slate-300 my-4 print:border-0 print:h-0"></div>');
           }
           
-          // Preserve spaces if user typed multiple spaces (e.g. Tab or multiple Space presses)
-          textPart = textPart.replace(/ {2,}/g, (match) => ' ' + '&nbsp;'.repeat(match.length - 1));
+          // Preserve tabs and multiple spaces 1:1
+          textPart = textPart.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+          textPart = textPart.replace(/ {2,}/g, (match) => '&nbsp;'.repeat(match.length));
           return textPart.replace(/\n/g, '<br/>');
         }).join('');
       }).join('');
@@ -265,6 +270,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const parseTextToBlocks = (text: string, subject: string, elements: JSX.Element[]) => {
     if (!text || text.trim() === '') return;
+    // Regex to match option layout tags e.g. [2x2], [1x1], [1x4], [vertical], [horizontal]
+    const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
+
     // Normalize text blocks so that empty lines between a question and its options don't detach the options
     const normalizedText = text.replace(/(\n\s*)\n+(\s*\(A\))/g, '$1$2');
     const rawBlocks = normalizedText.split(/(\n\n+)/);
@@ -274,8 +282,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       if (block.trim() === '') continue; // Skip pure whitespace blocks
       
       const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
-      const extraNewlines = Math.max(0, (separator.match(/\n/g) || []).length - 2);
-      const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 3}rem)` : '0.4rem';
+      const newlineCount = (separator.match(/\n/g) || []).length;
+      const extraNewlines = Math.max(0, newlineCount - 2);
+      const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 1.5}rem)` : '0.4rem';
 
       const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
 
@@ -283,10 +292,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         <React.Fragment key={`${subject}-${i}`}>
         {!hasOptions ? (
           (() => {
-            const qNumMatch2 = block.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
+            const cleanBlockNoOpt = block.replace(layoutTagRegex, '');
+            const qNumMatch2 = cleanBlockNoOpt.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
             if (qNumMatch2) {
               const numStr = qNumMatch2[1];
-              const restText = block.substring(qNumMatch2[0].length);
+              const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
               return (
                 <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-10 text-left">{numStr}.</strong>
@@ -297,12 +307,26 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             return (
               <div 
                 className={`break-inside-avoid whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
-                dangerouslySetInnerHTML={{ __html: renderLatex(block) }} 
+                dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }} 
               />
             );
           })()
         ) : (
           (() => {
+            // Check for explicit option layout tag in this question block
+            const tagMatches = Array.from(block.matchAll(layoutTagRegex));
+            let forcedLayout: '1x4' | '2x2' | '1x1' | null = null;
+            if (tagMatches.length > 0) {
+              const lastVal = tagMatches[tagMatches.length - 1][1].toLowerCase().replace('*', 'x');
+              if (lastVal === '1x4' || lastVal.startsWith('4col') || lastVal === 'horizontal') {
+                forcedLayout = '1x4';
+              } else if (lastVal === '2x2' || lastVal.startsWith('2col')) {
+                forcedLayout = '2x2';
+              } else if (lastVal === '1x1' || lastVal === '4x1' || lastVal.startsWith('1col') || lastVal === 'vertical') {
+                forcedLayout = '1x1';
+              }
+            }
+
             // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
             const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
             const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
@@ -310,7 +334,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
 
             const splitIndexA = block.indexOf('(A)');
-            const questionText = block.substring(0, splitIndexA).trim();
+            const rawQuestionText = block.substring(0, splitIndexA);
+            const questionText = rawQuestionText.replace(layoutTagRegex, '').trimEnd();
             const optionsText = block.substring(splitIndexA);
 
             const matchA = optionsText.match(optARegex);
@@ -318,10 +343,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const matchC = optionsText.match(optCRegex);
             const matchD = optionsText.match(optDRegex);
 
-            const optA = matchA ? matchA[1].trim() : '';
-            const optB = matchB ? matchB[1].trim() : '';
-            const optC = matchC ? matchC[1].trim() : '';
-            const optD = matchD ? matchD[1].trim() : '';
+            const optA = matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '';
+            const optB = matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '';
+            const optC = matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '';
+            const optD = matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '';
             const estimateVisualLength = (text: string): number => {
               if (!text) return 0;
               let s = text.trim();
@@ -360,12 +385,20 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const twoByTwoLimit = isDoubleColumn ? 18 : 38;
 
             let optionsLayout = '';
-            if (maxLen <= singleLineLimit) {
+            if (forcedLayout === '1x4') {
               optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
-            } else if (maxLen <= twoByTwoLimit) {
+            } else if (forcedLayout === '2x2') {
               optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
-            } else {
+            } else if (forcedLayout === '1x1') {
               optionsLayout = 'flex flex-col w-full gap-0.5';
+            } else {
+              if (maxLen <= singleLineLimit) {
+                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+              } else if (maxLen <= twoByTwoLimit) {
+                optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+              } else {
+                optionsLayout = 'flex flex-col w-full gap-0.5';
+              }
             }
 
             const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
