@@ -20,7 +20,12 @@ export const MCQPaperGeneratorPage = () => {
   const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(0.48);
+  const [zoomLevel, setZoomLevel] = useState<number>(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      return 0.52;
+    }
+    return 0.85;
+  });
   const [leftWidth, setLeftWidth] = useState(50);
   
   // Paper Settings State
@@ -1295,9 +1300,8 @@ export const MCQPaperGeneratorPage = () => {
           <div className="h-full flex flex-col pb-20">
             
             {/* Desktop Editor Header Toolbar */}
-            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-3 hidden md:flex justify-between items-center">
-              <span>Question Content (LaTeX Support)</span>
-              <div className="flex gap-2 flex-wrap items-center">
+            <div className="border-b border-slate-100 pb-2.5 mb-3 hidden md:flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 <input 
                   type="file" 
                   ref={imageInputRef} 
@@ -1306,22 +1310,25 @@ export const MCQPaperGeneratorPage = () => {
                   className="hidden" 
                 />
                 <button 
+                  type="button"
                   onClick={() => imageInputRef.current?.click()}
-                  className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1.5 border border-purple-200 shadow-sm cursor-pointer"
+                  className="px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-purple-200 shadow-xs cursor-pointer hover:shadow-sm"
+                  title="Insert or Upload Image"
                 >
-                  <ImagePlus className="w-3.5 h-3.5" /> Insert Image
+                  <ImagePlus className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Insert Image</span>
                 </button>
                 
-                {/* Dedicated Separate Image Sizes & Position Button */}
+                {/* Dedicated Separate Image Sizes & Move Button */}
                 <button 
                   type="button"
                   onClick={() => setIsImageSizeModalOpen(true)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 border shadow-sm cursor-pointer ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border shadow-xs cursor-pointer hover:shadow-sm ${
                     (activeImages.length > 0 || floatingImagesList.length > 0)
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-md hover:shadow-indigo-500/20' 
-                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-indigo-500/20' 
+                      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                   }`}
-                  title="Change Image Sizes & Positions"
+                  title="Change Image Sizes, Alignments & Question Positions"
                 >
                   <Sliders className="w-3.5 h-3.5" />
                   <span>Image Sizes & Move</span>
@@ -1333,20 +1340,23 @@ export const MCQPaperGeneratorPage = () => {
                 </button>
 
                 <button 
+                  type="button"
                   onClick={autoFormatText}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5 border border-blue-200 shadow-sm cursor-pointer"
+                  className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-blue-200 shadow-xs cursor-pointer hover:shadow-sm"
+                  title="Auto-align Options (A), (B), (C), (D)"
                 >
-                  <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
-                </button>
-                
-                <button 
-                  onClick={() => setIsLatexHelpOpen(true)}
-                  className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 border border-amber-200 shadow-sm cursor-pointer ml-1"
-                >
-                  <HelpCircle className="w-3.5 h-3.5" /> Formatting Guide
+                  <Wand2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Auto-Align Format</span>
                 </button>
               </div>
-            </h3>
+
+              {/* Status / Question Count indicator */}
+              <div className="text-[11px] font-semibold text-slate-400 hidden xl:flex items-center gap-2">
+                <span className="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-bold">{availableQuestions.length} Questions</span>
+                <span>•</span>
+                <span>LaTeX & Math Supported</span>
+              </div>
+            </div>
 
             {/* Mobile Quick Action Buttons Bar */}
             <div className="md:hidden flex items-center justify-between gap-1.5 pb-2.5 border-b border-slate-100 mb-2.5">
@@ -1452,20 +1462,85 @@ export const MCQPaperGeneratorPage = () => {
         {/* Right Side: Live Preview */}
         <div className={`w-full split-right overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
           
-          {/* Mobile Zoom Controls */}
-          <div className="md:hidden sticky top-0 z-10 bg-slate-100/90 backdrop-blur-md px-4 py-2 flex justify-end gap-3 items-center print:hidden border-b border-slate-200">
-            <button onClick={() => setZoomLevel(z => Math.max(0.2, z - 0.05))} className="p-2 bg-white rounded-full shadow-sm text-slate-600 hover:bg-slate-50"><ZoomOut size={16}/></button>
-            <span className="text-xs font-bold text-slate-700 w-10 text-center">{Math.round(zoomLevel * 100)}%</span>
-            <button onClick={() => setZoomLevel(z => Math.min(1.5, z + 0.05))} className="p-2 bg-white rounded-full shadow-sm text-slate-600 hover:bg-slate-50"><ZoomIn size={16}/></button>
+          {/* Unified Executive Header Toolbar with Zoom Controls (Desktop + Mobile) */}
+          <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center print:hidden shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <h3 className="font-bold text-slate-800 text-xs md:text-sm tracking-wide">
+                Live Preview
+              </h3>
+              <span className="text-[11px] text-slate-400 font-medium hidden lg:inline">
+                • A4 Page Layout
+              </span>
+            </div>
+
+            {/* Professional Zoom Control Toolbar */}
+            <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-inner">
+              <button 
+                type="button"
+                onClick={() => setZoomLevel(z => Math.max(0.3, Number((z - 0.1).toFixed(2))))} 
+                className="p-1.5 hover:bg-white text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Zoom Out (-10%)"
+                disabled={zoomLevel <= 0.3}
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+
+              <span className="text-xs font-black text-slate-800 min-w-[50px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200/80 shadow-xs select-none">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+
+              <button 
+                type="button"
+                onClick={() => setZoomLevel(z => Math.min(1.8, Number((z + 0.1).toFixed(2))))} 
+                className="p-1.5 hover:bg-white text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                title="Zoom In (+10%)"
+                disabled={zoomLevel >= 1.8}
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+
+              <div className="h-4 w-[1px] bg-slate-300 mx-1 hidden sm:block" />
+
+              <button
+                type="button"
+                onClick={() => setZoomLevel(1.0)}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer hidden sm:block ${
+                  Math.round(zoomLevel * 100) === 100 
+                    ? 'bg-blue-600 text-white shadow-xs' 
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                }`}
+                title="Actual 100% A4 Print Size"
+              >
+                100%
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setZoomLevel(window.innerWidth <= 768 ? 0.52 : 0.85)}
+                className={`px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all cursor-pointer hidden sm:block ${
+                  (window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
+                    ? 'bg-blue-600 text-white shadow-xs' 
+                    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+                }`}
+                title="Fit to Screen Width"
+              >
+                Fit
+              </button>
+            </div>
           </div>
 
-          <div className="hidden md:flex sticky top-0 z-10 bg-slate-100/80 backdrop-blur-md border-b border-slate-200 px-4 py-3 justify-between items-center print:hidden">
-            <h3 className="font-semibold text-slate-700 flex items-center gap-2">
-              Live Preview
-            </h3>
-          </div>
-          <div className="flex justify-center p-2 md:p-8 print:p-0 print:block">
-            <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto print:!transform-none" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
+          <div className="flex justify-center p-2 md:p-8 print:p-0 print:block overflow-x-auto custom-scrollbar">
+            <div 
+              className="dynamic-paper-scale origin-top transition-all duration-150 print:!transform-none" 
+              style={{ 
+                zoom: zoomLevel,
+                ['--paper-zoom' as any]: zoomLevel,
+              }}
+            >
             <LiveLatexPreview 
               subjectContents={subjectContents}
               examName={examName}
@@ -2527,18 +2602,16 @@ export const MCQPaperGeneratorPage = () => {
       )}
 
       <style>{`
-        .paper-zoom { zoom: 0.8; }
-        
-        @media (max-width: 768px) {
-          .paper-zoom-mobile {
-             transform-origin: top center !important;
-             margin-bottom: -150%;
-             width: 100% !important;
-          }
+        .dynamic-paper-scale {
+          zoom: var(--paper-zoom, 0.85);
+          transform-origin: top center;
         }
 
-        @-moz-document url-prefix() {
-          .paper-zoom { transform: scale(0.8); transform-origin: top center; margin-bottom: -20%; }
+        @supports not (zoom: 1) {
+          .dynamic-paper-scale {
+            transform: scale(var(--paper-zoom, 0.85));
+            transform-origin: top center;
+          }
         }
 
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -2547,8 +2620,7 @@ export const MCQPaperGeneratorPage = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         @media print {
-          .paper-zoom { zoom: 1 !important; transform: none !important; margin: 0 !important; }
-          .paper-zoom-mobile { transform: none !important; margin: 0 !important; }
+          .dynamic-paper-scale { zoom: 1 !important; transform: none !important; margin: 0 !important; }
           @page { margin: 10mm; size: A4; }
           html, body { 
             -webkit-print-color-adjust: exact; 

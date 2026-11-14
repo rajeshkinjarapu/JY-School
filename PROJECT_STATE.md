@@ -1,5 +1,21 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator ఎడిటర్ టూల్‌బార్ క్లీనప్ & లైవ్ ప్రివ్యూ జూమ్ కంట్రోల్స్ (November 14, 2026)
+- **యూజర్ కోరిక:** 
+  1. "Question Content (LaTeX Support) ee text remove cheyu"
+  2. "Formatting Guide button kuda remove cheyu"
+  3. "live preview lo paper zoom in and zoom out chesukone option kuda ivvu oka professional developer ga alcohinchi perfect ga design cheyu"
+- **పూర్తయిన పనులు & మార్పులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  1. **ఎడిటర్ హెడర్ క్లీనప్:** "Question Content (LaTeX Support)" టెక్స్ట్ మరియు "Formatting Guide" బటన్లను పూర్తిగా తొలగించాము.
+  2. **రీడిజైన్డ్ ఎగ్జిక్యూటివ్ టూల్‌బార్:** ఎడిటర్ టాప్ బార్‌లో `Insert Image`, `Image Sizes & Move` (విత్ లైవ్ కౌంటర్ బ్యాడ్జ్), `Auto-Align Format` బటన్లను ఆధునిక రౌండెడ్-కార్నర్లతో విశాలంగా అమర్చి, కుడివైపు ప్రశ్నల సంఖ్య సూచిక (`X Questions • LaTeX & Math Supported`) జోడించాము.
+  3. **లైవ్ ప్రివ్యూ ప్రొఫెషనల్ జూమ్ కంట్రోల్స్:** "Live Preview" టాప్ స్టికి బార్‌లో ప్రొఫెషనల్ జూమ్ టూల్‌బార్ అమర్చబడింది:
+     - ➖ **Zoom Out (-):** 10% జూమ్ తగ్గింపు (కనీసం 30% వరకు).
+     - 🔢 **Live % Badge:** ప్రస్తుత జూమ్ స్థాయి సూచిక (ఉదా: 85%, 100%, 120%).
+     - ➕ **Zoom In (+):** 10% జూమ్ పెంపు (గరిష్టంగా 180% వరకు).
+     - 📐 **100% బటన్:** అసలైన A4 ప్రింట్ సైజుకు 1-క్లిక్ రీసెట్.
+     - 📱 **Fit బటన్:** స్క్రీన్ వెడల్పుకు ఆటోమేటిక్ ఫిట్ (డెస్క్‌టాప్‌లో 85%, మొబైల్‌లో 52%).
+  4. **స్మూత్ రెస్పాన్సివ్ స్కేలింగ్:** డెస్క్‌టాప్ మరియు మొబైల్ రెండింటిలోనూ జూమ్ స్మూత్‌గా పనిచేస్తుంది. ప్రింట్ మరియు PDF డౌన్‌లోడ్‌లలో 100% ఒరిజినల్ A4 సైజు ఏమాత్రం డిస్టర్బ్ అవ్వదు.
+
 ## చివరి సంభాషణ - MCQ Paper Generator ఇమేజ్ సైజులు, స్థానం & మూవ్ కంట్రోల్స్ (November 14, 2026)
 - **యూజర్ కోరిక:** "images sizes tho patu kavalasina place ki move chesukone option kuda kavali" (ఇమేజ్ సైజు మార్చుకోవడంతో పాటు కావలసిన ప్రశ్న వద్దకు లేదా కావలసిన స్థానానికి తరలించుకునే ఆప్షన్ కూడా కావాలి).
 - **పూర్తయిన పనులు & మార్పులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) & [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
