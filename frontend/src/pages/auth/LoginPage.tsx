@@ -9,7 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Eye, EyeOff, Lock, User, ArrowRight,
-  GraduationCap, TrendingUp, Trophy
+  GraduationCap, Shield, Users, BookOpen, Award, ChevronRight, CheckCircle2
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -88,344 +88,345 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full relative overflow-hidden bg-[#F8FAFC] flex flex-col justify-between font-sans selection:bg-indigo-500 selection:text-white">
-      {/* ── BACKGROUND WAVES & DECORATIVE GRAPHICS ── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Top-Right Dotted Matrix Grid */}
-        <svg
-          className="absolute top-8 left-[38%] w-64 h-36 opacity-30 text-blue-400"
-          fill="currentColor"
-        >
-          <pattern id="dotPattern" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
-            <circle cx="2" cy="2" r="1.5" />
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#dotPattern)" />
-        </svg>
+    <div className="min-h-screen w-full flex font-sans overflow-hidden">
 
-        {/* Large Sweeping Ocean Blue Wave on Right */}
-        <svg
-          className="absolute -right-16 top-0 h-full w-[62%] min-w-[500px]"
-          viewBox="0 0 700 800"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M 280 0 C 180 220, 210 480, 0 800 L 700 800 L 700 0 Z"
-            fill="url(#blueWaveGrad)"
+      {/* ══════════════════════════════════════════════
+          LEFT PANEL — Brand Showcase (60% width)
+      ══════════════════════════════════════════════ */}
+      <div
+        className="hidden lg:flex lg:w-[58%] xl:w-[60%] relative flex-col overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 35%, #312E81 60%, #1D4ED8 100%)',
+        }}
+      >
+        {/* Animated Background Orbs */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div
+            className="absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #6366F1, transparent 70%)' }}
           />
-          <defs>
-            <linearGradient id="blueWaveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#1E3A8A" stopOpacity="0.95" />
-              <stop offset="45%" stopColor="#2563EB" stopOpacity="0.96" />
-              <stop offset="100%" stopColor="#4F46E5" stopOpacity="0.98" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Layered Purple Wave on Bottom Right */}
-        <svg
-          className="absolute right-0 bottom-0 h-[65%] w-[52%] min-w-[420px]"
-          viewBox="0 0 600 500"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M 110 500 C 230 330, 340 220, 600 170 L 600 500 Z"
-            fill="url(#purpleWaveGrad)"
-            opacity="0.88"
+          <div
+            className="absolute top-1/3 -right-20 w-80 h-80 rounded-full opacity-15"
+            style={{ background: 'radial-gradient(circle, #3B82F6, transparent 70%)' }}
           />
-          <defs>
-            <linearGradient id="purpleWaveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7C3AED" />
-              <stop offset="100%" stopColor="#9333EA" />
-            </linearGradient>
-          </defs>
-        </svg>
-
-        {/* Bottom Flow Wave reaching towards left */}
-        <svg
-          className="absolute left-0 bottom-0 w-full h-32 sm:h-40"
-          viewBox="0 0 1200 120"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M 0 75 C 320 20, 640 100, 1200 45 L 1200 120 L 0 120 Z"
-            fill="url(#bottomGrad)"
-            opacity="0.9"
+          <div
+            className="absolute -bottom-24 left-1/4 w-72 h-72 rounded-full opacity-20"
+            style={{ background: 'radial-gradient(circle, #818CF8, transparent 70%)' }}
           />
-          <defs>
-            <linearGradient id="bottomGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#0284C7" />
-              <stop offset="45%" stopColor="#2563EB" />
-              <stop offset="100%" stopColor="#7C3AED" />
-            </linearGradient>
-          </defs>
-        </svg>
 
-        {/* Floating Line-Art Open Book on the Blue Wave */}
-        <div className="hidden lg:block absolute top-[42%] right-10 text-white/20 transform rotate-12">
-          <svg className="w-20 h-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-          </svg>
+          {/* Grid Pattern */}
+          <div
+            className="absolute inset-0 opacity-[0.04]"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
+              backgroundSize: '48px 48px',
+            }}
+          />
         </div>
 
-        {/* Top-Left Green Leafy Branch Decor */}
-        <div className="absolute -top-3 -left-3 w-36 sm:w-48 h-36 sm:h-48 pointer-events-none opacity-85">
-          <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
-            <path d="M0 0 Q 30 25 60 12 Q 85 5 100 22" stroke="#15803d" strokeWidth="2.5" fill="none" />
-            <ellipse cx="25" cy="20" rx="11" ry="5.5" transform="rotate(28 25 20)" fill="#22c55e" opacity="0.9" />
-            <ellipse cx="46" cy="15" rx="13" ry="6" transform="rotate(-14 46 15)" fill="#16a34a" opacity="0.95" />
-            <ellipse cx="68" cy="13" rx="12" ry="5.5" transform="rotate(22 68 13)" fill="#4ade80" opacity="0.85" />
-            <ellipse cx="88" cy="17" rx="10" ry="4.5" transform="rotate(-18 88 17)" fill="#15803d" opacity="0.9" />
-          </svg>
+        {/* Top Logo Bar */}
+        <div className="relative z-10 flex items-center gap-3 p-8 pb-0">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-2 flex items-center justify-center shadow-lg">
+            <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h2 className="text-white font-black text-xl tracking-tight leading-none">JY SCHOOL</h2>
+            <p className="text-indigo-300 text-xs font-semibold tracking-widest mt-0.5">MANAGEMENT SYSTEM</p>
+          </div>
         </div>
-      </div>
 
-      {/* ── TOP RIGHT SLOGAN ── */}
-      <div className="hidden sm:block absolute top-6 right-8 lg:right-16 z-20">
-        <span className="font-serif italic text-base lg:text-[17px] font-bold text-[#1E50D8] tracking-tight">
-          Education for a Better Tomorrow
-        </span>
-      </div>
+        {/* Center Brand Content */}
+        <div className="relative z-10 flex-1 flex flex-col justify-center px-10 xl:px-14 py-8">
 
-      {/* ── MAIN CONTENT (SPLIT LAYOUT) ── */}
-      <main className="relative z-10 flex-1 flex items-center max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-10 py-8 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center w-full">
-          
-          {/* ════════════ LEFT SHOWCASE (SCHOOL BRANDING & 3D ART) ════════════ */}
-          <div className="lg:col-span-7 flex flex-col justify-center">
-            {/* Top Brand Seal & School Title */}
-            <div className="flex items-center gap-3.5 mb-6 sm:mb-8">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white p-1 shadow-md border border-slate-100 flex items-center justify-center shrink-0">
-                <img src="/logo.png" alt="JY School Logo" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-[#1E293B] tracking-tight leading-none">
-                  JY SCHOOL
-                </h2>
-                <p className="text-xs sm:text-sm font-bold text-slate-500 tracking-wider mt-1">
-                  Learn • Grow • Excel
-                </p>
-              </div>
-            </div>
-
-            {/* Hero Heading with Curved Smile Underline */}
-            <div className="mb-6">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#1E293B] leading-tight">
-                Welcome to
-              </h1>
-              <div className="relative inline-block mt-1">
-                <span className="text-4xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-[#1E40AF] via-[#2563EB] to-[#7C3AED] bg-clip-text text-transparent">
-                  JY SCHOOL
-                </span>
-                {/* Curved Orange/Gold Swoosh */}
-                <svg
-                  className="absolute -bottom-2.5 left-0 w-full h-4 text-[#F59E0B]"
-                  viewBox="0 0 300 20"
-                  fill="none"
-                >
-                  <path
-                    d="M 6 12 Q 150 24 294 8"
-                    stroke="#F59E0B"
-                    strokeWidth="4.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <p className="text-sm sm:text-base font-semibold italic text-slate-600 mt-4 tracking-wide">
-                Building Bright Futures Together
-              </p>
-            </div>
-
-            {/* Three Value Pillars: Learn, Grow, Excel */}
-            <div className="flex items-center gap-4 sm:gap-6 my-4 py-2">
-              {/* Learn */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center shadow-sm">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <span className="text-xs sm:text-sm font-extrabold text-slate-800">Learn</span>
-              </div>
-
-              <div className="w-px h-6 bg-slate-300" />
-
-              {/* Grow */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#F59E0B] text-white flex items-center justify-center shadow-sm">
-                  <TrendingUp className="w-4 h-4" />
-                </div>
-                <span className="text-xs sm:text-sm font-extrabold text-slate-800">Grow</span>
-              </div>
-
-              <div className="w-px h-6 bg-slate-300" />
-
-              {/* Excel */}
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#10B981] text-white flex items-center justify-center shadow-sm">
-                  <Trophy className="w-4 h-4" />
-                </div>
-                <span className="text-xs sm:text-sm font-extrabold text-slate-800">Excel</span>
-              </div>
-            </div>
-
-            {/* Campus Showcase Scene (Building + 3D Cap, Books, Pencil Cup) */}
-            <div className="relative w-full max-w-xl h-60 sm:h-72 lg:h-80 rounded-2xl overflow-hidden mt-3 shadow-md border border-slate-100 group">
-              <img
-                src="/login-campus-showcase.svg"
-                alt="JY School Campus"
-                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-              />
-            </div>
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-1.5 w-fit mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-white/80 text-xs font-semibold tracking-wide">School Management Platform</span>
           </div>
 
-          {/* ════════════ RIGHT FLOATING LOGIN CARD ════════════ */}
-          <div className="lg:col-span-5 flex justify-center lg:justify-end">
-            <div className="relative w-full max-w-[420px] lg:max-w-[430px] pt-8">
-              
-              {/* Floating Purple Circle Badge on Top Center */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 z-20 w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-gradient-to-tr from-[#3B82F6] via-[#6366F1] to-[#8B5CF6] p-1.5 shadow-xl border-4 border-white flex items-center justify-center">
-                <div className="w-full h-full rounded-full flex items-center justify-center text-white">
-                  <GraduationCap className="w-8 h-8 sm:w-9 sm:h-9 drop-shadow-md" />
+          {/* Main Headline */}
+          <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-4" style={{ letterSpacing: '-0.02em' }}>
+            Empowering
+            <br />
+            <span
+              className="bg-clip-text text-transparent"
+              style={{ backgroundImage: 'linear-gradient(90deg, #60A5FA, #A78BFA, #F472B6)' }}
+            >
+              Education
+            </span>
+            <br />
+            Excellence
+          </h1>
+
+          <p className="text-indigo-200/80 text-base leading-relaxed max-w-sm mb-10 font-medium">
+            A unified platform for students, teachers, and administrators to collaborate, learn, and grow together.
+          </p>
+
+          {/* Feature Highlights */}
+          <div className="grid grid-cols-1 gap-3 max-w-sm mb-10">
+            {[
+              { icon: Users, label: 'Student & Staff Management', color: '#60A5FA' },
+              { icon: BookOpen, label: 'Academic Performance Tracking', color: '#A78BFA' },
+              { icon: Award, label: 'Exams, Results & Progress Cards', color: '#F472B6' },
+              { icon: Shield, label: 'Secure & Role-Based Access', color: '#34D399' },
+            ].map(({ icon: Icon, label, color }) => (
+              <div key={label} className="flex items-center gap-3 group">
+                <div
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}
+                >
+                  <Icon className="w-4 h-4" style={{ color }} />
                 </div>
+                <span className="text-white/70 text-sm font-medium group-hover:text-white/90 transition-colors">{label}</span>
+                <ChevronRight className="w-3.5 h-3.5 text-white/20 ml-auto group-hover:text-white/40 transition-colors" />
+              </div>
+            ))}
+          </div>
+
+          {/* Stats Row */}
+          <div className="flex items-center gap-6">
+            {[
+              { value: '500+', label: 'Students' },
+              { value: '34', label: 'Teachers' },
+              { value: '24', label: 'Classes' },
+            ].map(({ value, label }) => (
+              <div key={label}>
+                <div className="text-white font-black text-2xl">{value}</div>
+                <div className="text-indigo-300/70 text-xs font-semibold mt-0.5">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom Quote Bar */}
+        <div className="relative z-10 p-8 pt-0">
+          <div className="border-t border-white/10 pt-6">
+            <p className="text-indigo-300/60 text-sm font-medium italic">
+              "Education is the most powerful weapon which you can use to change the world."
+            </p>
+            <p className="text-indigo-400/50 text-xs font-semibold mt-1">— Nelson Mandela</p>
+          </div>
+        </div>
+      </div>
+
+
+      {/* ══════════════════════════════════════════════
+          RIGHT PANEL — Login Form
+      ══════════════════════════════════════════════ */}
+      <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-[#F8FAFF] px-6 sm:px-10">
+
+        {/* Subtle Background */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-40"
+            style={{ background: 'radial-gradient(circle, #EEF2FF, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full opacity-40"
+            style={{ background: 'radial-gradient(circle, #F0F9FF, transparent 70%)' }}
+          />
+        </div>
+
+        {/* Mobile Logo — shown only on small screens */}
+        <div className="lg:hidden flex items-center gap-3 mb-8">
+          <div className="w-12 h-12 rounded-2xl shadow-md border border-slate-100 p-1.5 flex items-center justify-center bg-white">
+            <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h2 className="text-slate-900 font-black text-xl">JY SCHOOL</h2>
+            <p className="text-slate-400 text-xs font-semibold">Management System</p>
+          </div>
+        </div>
+
+        {/* Login Card */}
+        <div className="relative w-full max-w-[420px] z-10">
+
+          {/* Card */}
+          <div
+            className="bg-white rounded-3xl shadow-2xl border border-slate-100/80 overflow-hidden"
+            style={{ boxShadow: '0 25px 60px -10px rgba(79,70,229,0.12), 0 10px 20px -8px rgba(0,0,0,0.08)' }}
+          >
+
+            {/* Card Header Gradient Bar */}
+            <div
+              className="h-1.5 w-full"
+              style={{ background: 'linear-gradient(90deg, #2563EB, #6366F1, #A855F7)' }}
+            />
+
+            <div className="p-8">
+
+              {/* Icon + Title */}
+              <div className="flex flex-col items-center mb-8">
+                <div
+                  className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center shadow-lg"
+                  style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
+                >
+                  <GraduationCap className="w-8 h-8 text-white drop-shadow" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
+                <p className="text-slate-400 text-sm font-medium mt-1">Sign in to your JY School account</p>
               </div>
 
-              {/* Main White Card */}
-              <div className="bg-white/95 backdrop-blur-xl rounded-[32px] p-6 sm:p-8 pt-12 shadow-2xl border border-white/80">
-                {/* Header */}
-                <div className="text-center mb-6 pt-2">
-                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                    Student / Staff Login
-                  </h2>
-                  <p className="text-xs sm:text-sm font-medium text-slate-400 mt-1">
-                    Please sign in to your account
-                  </p>
+              {/* Form */}
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+                {/* Username */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5 tracking-wide uppercase">
+                    Username or Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter your username or email"
+                      className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all border ${
+                        errors.email
+                          ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-2 focus:ring-red-100'
+                          : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100'
+                      }`}
+                      {...register('email')}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-red-500 text-[11px] font-semibold mt-1.5 ml-1 flex items-center gap-1">
+                      <span>⚠</span> {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  {/* Username or Email */}
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-[#7C3AED]" />
-                      <span>Username or Email</span>
-                    </label>
-                    <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                        <User className="h-4 w-4" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Enter your username"
-                        className={`w-full pl-11 pr-4 py-3 bg-[#F1F4FA] focus:bg-white rounded-full text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 border border-transparent focus:border-indigo-500 outline-none transition-all shadow-inner ${
-                          errors.email ? 'border-red-400 focus:border-red-500' : ''
-                        }`}
-                        {...register('email')}
-                      />
+                {/* Password */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 mb-1.5 tracking-wide uppercase">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-slate-400" />
                     </div>
-                    {errors.email && (
-                      <p className="text-red-500 text-[11px] font-semibold mt-1 ml-3">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Password */}
-                  <div>
-                    <label className="text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <Lock className="w-3.5 h-3.5 text-[#7C3AED]" />
-                      <span>Password</span>
-                    </label>
-                    <div className="relative group">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                        <Lock className="h-4 w-4" />
-                      </div>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        className={`w-full pl-11 pr-11 py-3 bg-[#F1F4FA] focus:bg-white rounded-full text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 border border-transparent focus:border-indigo-500 outline-none transition-all shadow-inner ${
-                          errors.password ? 'border-red-400 focus:border-red-500' : ''
-                        }`}
-                        {...register('password')}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p className="text-red-500 text-[11px] font-semibold mt-1 ml-3">
-                        {errors.password.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Remember Me & Forgot Password */}
-                  <div className="flex items-center justify-between text-xs pt-1">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer"
-                      />
-                      <span className="font-semibold text-slate-600">Remember me</span>
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      className="font-bold text-[#7C3AED] hover:underline"
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      className={`w-full pl-10 pr-11 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all border ${
+                        errors.password
+                          ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-2 focus:ring-red-100'
+                          : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100'
+                      }`}
+                      {...register('password')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
                     >
-                      Forgot Password?
-                    </Link>
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
+                  {errors.password && (
+                    <p className="text-red-500 text-[11px] font-semibold mt-1.5 ml-1 flex items-center gap-1">
+                      <span>⚠</span> {errors.password.message}
+                    </p>
+                  )}
+                </div>
 
-                  {/* Sign In Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3.5 px-6 rounded-full bg-gradient-to-r from-[#2563EB] to-[#9333EA] hover:from-[#1D4ED8] hover:to-[#7E22CE] text-white font-black text-sm sm:text-base shadow-lg shadow-indigo-500/25 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                {/* Remember Me & Forgot Password */}
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer accent-indigo-600"
+                    />
+                    <span className="text-sm font-medium text-slate-600">Remember me</span>
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
                   >
+                    Forgot Password?
+                  </Link>
+                </div>
+
+                {/* Sign In Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 px-6 rounded-xl text-white font-black text-sm relative overflow-hidden group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #9333EA 100%)',
+                    boxShadow: '0 8px 20px -4px rgba(99,102,241,0.5)',
+                  }}
+                >
+                  {/* Hover shimmer */}
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    style={{ background: 'linear-gradient(135deg, #1D4ED8 0%, #4F46E5 50%, #7E22CE 100%)' }}
+                  />
+                  <span className="relative flex items-center justify-center gap-2">
                     {isSubmitting ? (
-                      'Signing In...'
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Signing In...
+                      </>
                     ) : (
                       <>
                         <ArrowRight className="w-4 h-4" />
-                        <span>Sign In</span>
+                        Sign In to Dashboard
                       </>
                     )}
-                  </button>
-                </form>
+                  </span>
+                </button>
+              </form>
 
-                {/* Divider */}
-                <div className="relative my-5 text-center">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-3 font-bold text-slate-400">OR</span>
-                  </div>
+              {/* Divider */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100" />
                 </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
+                    Secure Login
+                  </span>
+                </div>
+              </div>
 
-                {/* Contact Admin & Copyright */}
-                <div className="text-center text-xs">
-                  <p className="text-slate-500 font-medium">
-                    Having trouble logging in?{' '}
-                    <Link to="/register" className="font-bold text-[#7C3AED] hover:underline">
-                      Contact Administrator
-                    </Link>
-                  </p>
-                  <p className="text-[11px] text-slate-400 font-medium mt-2">
-                    &copy; {new Date().getFullYear()} JY Education. All rights reserved.
-                  </p>
-                </div>
+              {/* Trust Badges */}
+              <div className="flex items-center justify-center gap-4 mb-5">
+                {[
+                  { icon: Shield, label: 'SSL Secured' },
+                  { icon: CheckCircle2, label: 'Verified System' },
+                ].map(({ icon: Icon, label }) => (
+                  <div key={label} className="flex items-center gap-1.5 text-slate-400">
+                    <Icon className="w-3.5 h-3.5 text-emerald-500" />
+                    <span className="text-xs font-semibold">{label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Footer Links */}
+              <div className="text-center space-y-1.5">
+                <p className="text-slate-400 text-xs font-medium">
+                  Having trouble?{' '}
+                  <Link to="/register" className="font-bold text-indigo-600 hover:underline">
+                    Contact Administrator
+                  </Link>
+                </p>
+                <p className="text-[11px] text-slate-300 font-medium">
+                  © {new Date().getFullYear()} JY Education. All rights reserved.
+                </p>
               </div>
             </div>
           </div>
 
+          {/* Below-card hint */}
+          <p className="text-center text-xs text-slate-400 font-medium mt-5">
+            Protected by JY School Security System
+          </p>
         </div>
-      </main>
+      </div>
     </div>
   );
 };
