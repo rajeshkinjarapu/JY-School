@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -26,6 +26,7 @@ export const MCQPaperGeneratorPage = () => {
   // Paper Settings State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLatexHelpOpen, setIsLatexHelpOpen] = useState(false);
+  const [isImageSizeModalOpen, setIsImageSizeModalOpen] = useState(false);
   const [examName, setExamName] = useState<string>(() => localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
   const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('mcq_exam_class') || '10th Class');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
@@ -152,7 +153,6 @@ export const MCQPaperGeneratorPage = () => {
       generatedText += '\n';
       
       // Save correct answer mapped to option letter (A, B, C, D)
-      // Since correctAnswer in DB is the full text, we need to find its letter index
       let correctLetter = '?';
       try {
          const opts = JSON.parse(q.options || '[]');
@@ -193,6 +193,18 @@ export const MCQPaperGeneratorPage = () => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Helper to get all images in active subject
+  const getActiveSubjectImages = () => {
+    const activeText = subjectContents[activeSubjectTab] || '';
+    return Array.from(activeText.matchAll(/\[IMAGE:([a-zA-Z0-9_\-\.\/]+)(?:\|([^\]]+))?\]/g)).map(m => ({
+      fullMatch: m[0],
+      id: m[1],
+      size: (m[2] || '').trim() || 'medium'
+    }));
+  };
+
+  const activeImages = getActiveSubjectImages();
+
   // Inline Images State: { id: FloatingImage }
   const [inlineImages, setInlineImages] = useState<Record<string, FloatingImage>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -232,7 +244,7 @@ export const MCQPaperGeneratorPage = () => {
       }));
     }
     
-    toast.success('Image added inline! Delete the [IMAGE:id] text to remove it.');
+    toast.success('Image added! Click "Image Sizes" button above to adjust its size.');
   };
 
   const handleEditorPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -484,7 +496,7 @@ export const MCQPaperGeneratorPage = () => {
     cloneEl.style.border = 'none';
     cloneEl.style.outline = 'none';
     cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '210mm'; // Keep exact A4 width so floating images match
+    cloneEl.style.width = '210mm';
 
     let oldIframe = document.getElementById('print-iframe');
     if (oldIframe) { oldIframe.remove(); }
@@ -516,7 +528,6 @@ export const MCQPaperGeneratorPage = () => {
         .map(style => style.outerHTML)
         .join('\n');
 
-      // Add comprehensive print CSS that forces background to white and removes any dark mode restrictions
       printDocument.write(`
         <!DOCTYPE html>
         <html>
@@ -528,7 +539,7 @@ export const MCQPaperGeneratorPage = () => {
           ${styleTags}
           <style>
             :root { color-scheme: light !important; }
-            @page { margin: 0; size: A4; } /* No margin, exact fit */
+            @page { margin: 0; size: A4; }
             html, body { 
               margin: 0; padding: 0; 
               background-color: #ffffff !important; 
@@ -893,7 +904,7 @@ export const MCQPaperGeneratorPage = () => {
         const res = await api.get(`/api/generated-papers/${paperId}`);
         const p = res.data;
         setExamName(p.examName || '');
-        setExamClass(p.examClass ?? '');  // Always use DB value - never localStorage fallback
+        setExamClass(p.examClass ?? '');
         if (p.examSubject) {
            setSelectedSubjects(p.examSubject.split(', '));
         }
@@ -909,7 +920,6 @@ export const MCQPaperGeneratorPage = () => {
           if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
           if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
         } else {
-          // Legacy papers explicitly had the header ON, normal spacing, medium font.
           setFontSize('medium');
           setQuestionSpacing('normal');
           setShowPaperHeader(true);
@@ -989,8 +999,6 @@ export const MCQPaperGeneratorPage = () => {
       prev.includes(subj) ? prev.filter(s => s !== subj) : [...prev, subj]
     );
   };
-
-  const combinedClassSubject = examClass;
 
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
@@ -1109,10 +1117,11 @@ export const MCQPaperGeneratorPage = () => {
         {/* Left Side: Editor (Hidden on Print) */}
         <div className={`w-full split-left p-4 md:p-6 overflow-y-auto border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
           <div className="h-full flex flex-col pb-20">
-            {/* Mobile Actions removed from here - moved to header */}
-            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-4 hidden md:flex justify-between items-center">
+            
+            {/* Desktop Editor Header Toolbar */}
+            <h3 className="font-semibold text-slate-700 border-b pb-2 mb-3 hidden md:flex justify-between items-center">
               <span>Question Content (LaTeX Support)</span>
-              <div className="flex gap-2 flex-wrap md:flex-nowrap">
+              <div className="flex gap-2 flex-wrap items-center">
                 <input 
                   type="file" 
                   ref={imageInputRef} 
@@ -1120,44 +1129,94 @@ export const MCQPaperGeneratorPage = () => {
                   onChange={handleImageUploadForEditor} 
                   className="hidden" 
                 />
-                <span className="text-xs text-slate-500 bg-white/80 px-2 py-1 rounded-md border border-slate-100 items-center gap-1.5 shadow-sm hidden md:flex">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
-                  Tip: Press Enter 3-4 times to leave empty space
-                </span>
                 <button 
                   onClick={() => imageInputRef.current?.click()}
-                  className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1.5 border border-purple-200 shadow-sm"
+                  className="px-3 py-1.5 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-1.5 border border-purple-200 shadow-sm cursor-pointer"
                 >
                   <ImagePlus className="w-3.5 h-3.5" /> Insert Image
                 </button>
+                
+                {/* Dedicated Separate Image Sizes Button */}
+                <button 
+                  type="button"
+                  onClick={() => setIsImageSizeModalOpen(true)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 border shadow-sm cursor-pointer ${
+                    activeImages.length > 0 
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-md hover:shadow-indigo-500/20' 
+                      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+                  }`}
+                  title="Change Image Sizes"
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>Image Sizes</span>
+                  {activeImages.length > 0 && (
+                    <span className="bg-white text-indigo-700 font-black rounded-full px-1.5 py-0.2 text-[10px] leading-tight shadow-xs">
+                      {activeImages.length}
+                    </span>
+                  )}
+                </button>
+
                 <button 
                   onClick={autoFormatText}
-                  className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5 border border-blue-200 shadow-sm"
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-1.5 border border-blue-200 shadow-sm cursor-pointer"
                 >
                   <Wand2 className="w-3.5 h-3.5" /> Auto-Align Format
                 </button>
+                
                 <button 
                   onClick={() => setIsLatexHelpOpen(true)}
-                  className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 border border-amber-200 shadow-sm ml-1"
+                  className="px-3 py-1.5 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg hover:bg-amber-100 transition-colors flex items-center gap-1.5 border border-amber-200 shadow-sm cursor-pointer ml-1"
                 >
                   <HelpCircle className="w-3.5 h-3.5" /> Formatting Guide
                 </button>
               </div>
             </h3>
+
+            {/* Mobile Quick Action Buttons Bar */}
+            <div className="md:hidden flex items-center justify-between gap-1.5 pb-2.5 border-b border-slate-100 mb-2.5">
+              <span className="text-xs font-bold text-slate-700">Questions Editor</span>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={() => imageInputRef.current?.click()}
+                  className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 flex items-center gap-1"
+                >
+                  <ImagePlus className="w-3 h-3" /> Image
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setIsImageSizeModalOpen(true)}
+                  className={`px-2.5 py-1 text-xs font-bold rounded-lg border flex items-center gap-1 ${
+                    activeImages.length > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'
+                  }`}
+                >
+                  <Sliders className="w-3 h-3" /> Sizes {activeImages.length > 0 && `(${activeImages.length})`}
+                </button>
+                <button 
+                  onClick={autoFormatText}
+                  className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1"
+                >
+                  <Wand2 className="w-3 h-3" /> Align
+                </button>
+              </div>
+            </div>
             
-            <div className="flex gap-1.5 mt-0 md:mt-4 overflow-x-auto pb-2 custom-scrollbar">
+            {/* Subject Buttons Bar - Clear, prominent, never hidden */}
+            <div className="flex items-center gap-1.5 mt-1 md:mt-1 mb-3 overflow-x-auto pb-1.5 custom-scrollbar flex-shrink-0">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex-shrink-0 mr-1 hidden sm:inline">
+                Subjects:
+              </span>
               {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
                 const hasContent = subjectContents[subj] && subjectContents[subj].trim() !== '';
                 return (
                   <button
                     key={subj}
                     onClick={() => setActiveSubjectTab(subj)}
-                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-medium text-xs md:text-sm transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 border ${
+                    className={`px-3 py-1.5 md:px-4 md:py-2 rounded-xl font-bold text-xs md:text-sm transition-all whitespace-nowrap flex-shrink-0 flex items-center gap-1.5 border cursor-pointer ${
                       activeSubjectTab === subj 
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20' 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 scale-102' 
                         : hasContent
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-sm'
-                          : 'bg-slate-100 text-slate-600 border-transparent hover:bg-slate-200'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-xs'
+                          : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
                     }`}
                   >
                     {subj}
@@ -1169,110 +1228,14 @@ export const MCQPaperGeneratorPage = () => {
               })}
             </div>
             
-            {/* Live Image Resizer Controls Strip */}
-            {(() => {
-              const activeText = subjectContents[activeSubjectTab] || '';
-              const detectedImages = Array.from(activeText.matchAll(/\[IMAGE:([a-zA-Z0-9_\-\.\/]+)(?:\|([^\]]+))?\]/g)).map(m => ({
-                fullMatch: m[0],
-                id: m[1],
-                size: (m[2] || '').trim() || 'medium'
-              }));
-              
-              if (detectedImages.length === 0) return null;
-
-              return (
-                <div className="my-2.5 p-3 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/90 rounded-2xl shadow-xs space-y-2.5">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2">
-                      <div className="p-1 rounded-lg bg-purple-600 text-white shadow-xs">
-                        <ImagePlus className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <span className="text-xs font-black text-purple-900">
-                          చిత్రం సైజు మార్చుకోండి (Image Size Controls)
-                        </span>
-                        <span className="text-[11px] text-purple-700 ml-2 font-medium hidden sm:inline">
-                          (నచ్చిన సైజు బటన్ నొక్కితే ఎడిటర్ & లైవ్ ప్రివ్యూలో వెంటనే పెద్దదిగా మారుతుంది)
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    {detectedImages.map((img, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-purple-100 shadow-xs flex-wrap gap-2">
-                        <span className="text-xs font-mono font-black text-purple-800 bg-purple-100/70 px-2.5 py-0.5 rounded-lg border border-purple-200/60">
-                          [IMAGE:{img.id}]
-                        </span>
-                        
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          {[
-                            { label: 'Small (130px)', val: 'small' },
-                            { label: 'Medium (240px)', val: 'medium' },
-                            { label: 'Large (380px) ⭐', val: 'large' },
-                            { label: 'Full Width (100%)', val: 'full' },
-                          ].map((opt) => {
-                            const isActive = (img.size.toLowerCase() === opt.val) || (opt.val === 'medium' && (!img.size || img.size === 'medium'));
-                            return (
-                              <button
-                                key={opt.val}
-                                type="button"
-                                onClick={() => {
-                                  const current = subjectContents[activeSubjectTab] || '';
-                                  const replacement = opt.val === 'medium' ? `[IMAGE:${img.id}]` : `[IMAGE:${img.id}|${opt.val}]`;
-                                  const newContent = current.replace(img.fullMatch, replacement);
-                                  setSubjectContents(prev => ({
-                                    ...prev,
-                                    [activeSubjectTab]: newContent
-                                  }));
-                                  toast.success(`Image [${img.id}] size set to ${opt.label}!`);
-                                }}
-                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                                  isActive 
-                                    ? 'bg-purple-600 text-white shadow-xs' 
-                                    : 'bg-slate-100 hover:bg-purple-100 text-slate-700'
-                                }`}
-                              >
-                                {opt.label}
-                              </button>
-                            );
-                          })}
-                          
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
-                              if (customWidth) {
-                                const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
-                                const current = subjectContents[activeSubjectTab] || '';
-                                const replacement = `[IMAGE:${img.id}|${cleanWidth}]`;
-                                const newContent = current.replace(img.fullMatch, replacement);
-                                setSubjectContents(prev => ({
-                                  ...prev,
-                                  [activeSubjectTab]: newContent
-                                }));
-                                toast.success(`Image [${img.id}] width set to ${cleanWidth}!`);
-                              }
-                            }}
-                            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
-                          >
-                            Custom px...
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
-            
+            {/* Clean Editor Textarea - Full vertical space */}
             <textarea
               ref={textareaRef}
               value={subjectContents[activeSubjectTab] || ''}
               onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
               onPaste={handleEditorPaste}
               onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[400px] resize-none"
+              className="w-full flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[450px] resize-none shadow-inner"
               placeholder={`Enter questions for ${activeSubjectTab}...\n1. Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
             />
           </div>
@@ -1324,7 +1287,6 @@ export const MCQPaperGeneratorPage = () => {
             <h3 className="font-semibold text-slate-700 flex items-center gap-2">
               Live Preview
             </h3>
-            {/* PDF button removed from here - moved to top header */}
           </div>
           <div className="flex justify-center p-2 md:p-8 print:p-0 print:block">
             <div className="paper-zoom-mobile md:paper-zoom origin-top transition-transform w-full md:w-auto print:!transform-none" style={{ transform: window.innerWidth <= 768 ? `scale(${zoomLevel})` : undefined }}>
@@ -1382,6 +1344,208 @@ export const MCQPaperGeneratorPage = () => {
           <span className="text-[11px] font-black tracking-wide">Settings</span>
         </button>
       </div>
+
+      {/* Dedicated Image Size & Management Modal */}
+      {isImageSizeModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+                  <Sliders className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-base md:text-lg text-white">
+                    చిత్రాల సైజు మార్చుకోండి (Image Size Controls)
+                  </h2>
+                  <p className="text-xs text-purple-100">
+                    Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} {activeImages.length === 1 ? 'image' : 'images'} detected
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsImageSizeModalOpen(false)} 
+                className="p-2 hover:bg-white/20 rounded-full transition-colors text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Bulk Actions Bar (if multiple images) */}
+            {activeImages.length > 1 && (
+              <div className="px-6 py-3 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
+                <span className="text-xs font-bold text-indigo-900">
+                  అన్ని చిత్రాలకు ఒకేసారి (Apply to All Images):
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}|large]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images set to Large (380px)! ⭐');
+                    }}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
+                  >
+                    All Large (380px) ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}|full]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images set to Full Width (100%)!');
+                    }}
+                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
+                  >
+                    All Full Width (100%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images reset to Medium (240px)!');
+                    }}
+                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  >
+                    Reset All (Medium)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Body: List of Images */}
+            <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
+              {activeImages.length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <ImagePlus className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="font-semibold text-slate-700">ఈ సబ్జెక్ట్‌లో ఇంకా చిత్రాలు లేవు (No images found)</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    ఎడిటర్‌లో పైనున్న "Insert Image" నొక్కి లేదా చిత్రం కాపీ చేసి పేస్ట్ (Ctrl+V) చేయండి.
+                  </p>
+                </div>
+              ) : (
+                activeImages.map((img, idx) => {
+                  const currentSize = img.size.toLowerCase();
+                  const imgData = inlineImages[img.id];
+                  const imgSrc = typeof imgData === 'string' ? imgData : imgData?.dataUrl;
+
+                  return (
+                    <div 
+                      key={idx}
+                      className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        {imgSrc ? (
+                          <div className="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                            <img src={imgSrc} alt="Preview" className="max-w-full max-h-full object-contain" />
+                          </div>
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl border border-purple-100 bg-purple-50/50 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-xs">
+                            IMG #{idx + 1}
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs font-black text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
+                              [IMAGE:{img.id}]
+                            </span>
+                            <span className="text-[11px] font-bold text-slate-500">
+                              చిత్రం {idx + 1}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-1">
+                            ప్రస్తుత సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong>
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {[
+                          { label: 'Small (130px)', val: 'small' },
+                          { label: 'Medium (240px)', val: 'medium' },
+                          { label: 'Large (380px) ⭐', val: 'large' },
+                          { label: 'Full Width (100%)', val: 'full' },
+                        ].map((opt) => {
+                          const isActive = (currentSize === opt.val) || (opt.val === 'medium' && (!img.size || currentSize === 'medium'));
+                          return (
+                            <button
+                              key={opt.val}
+                              type="button"
+                              onClick={() => {
+                                const current = subjectContents[activeSubjectTab] || '';
+                                const replacement = opt.val === 'medium' ? `[IMAGE:${img.id}]` : `[IMAGE:${img.id}|${opt.val}]`;
+                                const newContent = current.replace(img.fullMatch, replacement);
+                                setSubjectContents(prev => ({
+                                  ...prev,
+                                  [activeSubjectTab]: newContent
+                                }));
+                                toast.success(`Image [${img.id}] size set to ${opt.label}!`);
+                              }}
+                              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                isActive
+                                  ? 'bg-purple-600 text-white shadow-xs scale-105'
+                                  : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
+                            if (customWidth) {
+                              const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
+                              const current = subjectContents[activeSubjectTab] || '';
+                              const replacement = `[IMAGE:${img.id}|${cleanWidth}]`;
+                              const newContent = current.replace(img.fullMatch, replacement);
+                              setSubjectContents(prev => ({
+                                ...prev,
+                                [activeSubjectTab]: newContent
+                              }));
+                              toast.success(`Image [${img.id}] width set to ${cleanWidth}!`);
+                            }
+                          }}
+                          className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
+                        >
+                          Custom px...
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
+              <span className="text-xs text-slate-500">
+                మార్చిన వెంటనే లైవ్ ప్రివ్యూలో కనిపిస్తుంది (Instant Live Preview update)
+              </span>
+              <button 
+                onClick={() => setIsImageSizeModalOpen(false)}
+                className="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                పూర్తయింది (Done)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* AI Generate Modal */}
       {isAiModalOpen && (
@@ -1826,7 +1990,7 @@ export const MCQPaperGeneratorPage = () => {
                 <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
                 <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు మార్చుకోవడానికి (How to Resize):</p>
                 <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
-                  <li>ఎడిటర్ పైభాగంలో కనిపించే <strong>[Small]</strong>, <strong>[Medium]</strong>, <strong>[Large ⭐]</strong>, <strong>[Full Width]</strong> బటన్లు క్లిక్ చేయవచ్చు.</li>
+                  <li>ఎడిటర్ పైనున్న <strong>[Image Sizes]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు ఎంచుకోవచ్చు.</li>
                   <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px]</code></li>
                 </ul>
                 <p className="text-xs text-slate-500">You can drag and drop or copy-paste this code block anywhere in the text to position the image.</p>

@@ -1,18 +1,16 @@
 # JY School Project State
 
-## చివరి సంభాషణ - MCQ Paper Generator ఇమేజ్ రీసైజింగ్ & సైజ్ కంట్రోల్స్ ఫీచర్ (November 14, 2026)
-- **యూజర్ ప్రశ్న:** "image size penchukone option ledu ela" (MCQ Paper Generator లో Question 32 వంటి పెద్ద టేబుల్ డయాగ్రమ్ చిత్రాలు చాలా చిన్నగా, అస్పష్టంగా కనిపిస్తున్నాయి, సైజు పెంచుకునే ఆప్షన్ లేదు).
-- **సమస్య విశ్లేషణ:**
-  - `LiveLatexPreview.tsx` లో ఇమేజ్‌ల కోసం `max-height: 160px` హార్డ్‌కోడ్ చేయబడి ఉంది. దీనివల్ల పెద్ద మ్యాచింగ్ లిస్ట్‌లు/టేబుల్స్ లేదా డయాగ్రమ్‌లు చిన్నగా కుదించబడి చదవడానికి వీల్లేకుండా పోతున్నాయి.
+## చివరి సంభాషణ - MCQ Paper Generator ఇమేజ్ సైజ్ మోడల్ & ఎడిటర్ క్లీనప్ (November 14, 2026)
+- **యూజర్ ఫీడ్‌బ్యాక్:** "subjects butons hide ayipotunnayi, image size marchukovataniki vere button iste baguntundi screen meda bagoledu anni kalasipoyinattu unnayi" (ఎడిటర్ స్క్రీన్‌పై భారీ ఇమేజ్ లిస్ట్ రావడం వల్ల సబ్జెక్ట్ బటన్లు హైడ్ అయిపోయాయి, స్క్రీన్ అంతా కిక్కిరిసిపోయింది. ప్రత్యేకమైన బటన్ ద్వారా మోడల్ ఓపెన్ అయ్యేలా చేయాలి).
 - **పూర్తయిన పనులు & మార్పులు:**
-  1. **`LiveLatexPreview.tsx` ([`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
-     - డీఫాల్ట్ `max-height` ను 160px నుండి 240px కు పెంచాము.
-     - `[IMAGE:id|size]` సింటాక్స్ సపోర్ట్ జోడించబడింది: `small` (130px), `medium` (240px), `large` (380px), `full`/`xlarge` (100% వెడల్పు / 550px), `w=...`, `h=...`, మరియు కస్టమ్ పిక్సెల్స్ (`300px`, `400px`, etc.).
-  2. **`MCQPaperGeneratorPage.tsx` ([`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
-     - ఎడిటర్‌లో ఏదైనా `[IMAGE:...]` ట్యాగ్ ఉన్నప్పుడు, ఎడిటర్ పైన వెంటనే ఒక స్మార్ట్ "Image Size Controls" స్ట్రిప్ కనిపిస్తుంది.
-     - యూజర్ బటన్ నొక్కితే చాలు: `[Small (130px)]`, `[Medium (240px)]`, `[Large (380px) ⭐]`, `[Full Width (100%)]`, లేదా `[Custom px...]`.
-     - బటన్ క్లిక్ చేయగానే ఎడిటర్‌లో ట్యాగ్ ఆటోమేటిక్‌గా అప్‌డేట్ అవుతుంది (ఉదా: `[IMAGE:n52x3u]` నుండి `[IMAGE:n52x3u|large]` కు) మరియు పక్కనే ఉన్న Live Preview లో క్షణాల్లో పెద్దదిగా స్పష్టంగా కనిపిస్తుంది.
-     - "Formatting Guide" మోడల్‌లో ఇమేజ్ సైజింగ్ గైడ్ వివరణను స్పష్టంగా చేర్చాము.
+  1. **స్క్రీన్ క్లీనప్:** ఎడిటర్ స్క్రీన్ మధ్యలో ఉన్న పెద్ద ఇన్‌లైన్ బాక్స్‌ను పూర్తిగా తొలగించాము. దీనివల్ల సబ్జెక్ట్ బటన్లు (`Maths`, `Physics`, `Chemistry`, etc.) ఎల్లప్పుడూ స్పష్టంగా, ప్రముఖంగా కనిపిస్తాయి. టెక్స్ట్ ఎడిటర్ ఏరియా పూర్తి స్పేస్ సంతరించుకుంది.
+  2. **ప్రత్యేకమైన `Image Sizes` బటన్:** ఎడిటర్ టాప్ టూల్‌బార్‌లో "Insert Image" పక్కనే డెడికేటెడ్ `Image Sizes` బటన్‌ను లైవ్ ఇమేజ్ కౌంటర్ బ్యాడ్జ్ (`Image Sizes (4)`) తో చేర్చాము (డెస్క్‌టాప్ మరియు మొబైల్ రెండింటిలోనూ).
+  3. **డెడికేటెడ్ `Image Size Controls` మోడల్:** బటన్ క్లిక్ చేసినప్పుడు అందమైన పాపప్ మోడల్ ఓపెన్ అవుతుంది. అందులో:
+     - పేపర్‌లోని అన్ని ఇమేజ్‌లను ఒకేసారి మార్చే "All Large (380px) ⭐", "All Full Width (100%)", "Reset All (Medium)" బల్క్ యాక్షన్స్.
+     - ప్రతి ఇమేజ్‌కు విడివిడిగా `Small`, `Medium`, `Large ⭐`, `Full Width`, `Custom px...` ఆప్షన్స్.
+     - సైజు మారిన వెంటనే లైవ్ ప్రివ్యూలో రియల్ టైమ్‌లో అప్‌డేట్ అవుతుంది.
+  4. **`LiveLatexPreview.tsx`:** డీఫాల్ట్ ఎత్తు 240px మరియు ఫ్లెక్సిబుల్ సైజింగ్ సింటాక్స్ సపోర్ట్ కొనసాగుతుంది.
+
 
 
 ## చివరి సంభాషణ - Student Profile Page Ultra Premium Professional Redesign (November 14, 2026)
