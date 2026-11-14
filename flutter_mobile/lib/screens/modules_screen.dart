@@ -84,8 +84,8 @@ class _ModulesScreenState extends State<ModulesScreen> {
     // A comprehensive list of modules for the More page
     final List<Map<String, dynamic>> adminModules = [
       if (!isTeacher) {'title': 'Students', 'icon': Icons.groups_rounded, 'assetIcon': 'app icons/my studens.png', 'color': const Color(0xFF4285F4), 'page': const StudentsScreen()},
-      if (!isTeacher) {'title': 'Teachers', 'icon': Icons.person_pin_rounded, 'assetIcon': 'app icons/admissions.png', 'color': const Color(0xFFEA4335), 'page': const TeachersScreen()},
-      if (!isTeacher) {'title': 'Classes', 'icon': Icons.school_rounded, 'assetIcon': 'app icons/timetable.png', 'color': const Color(0xFF34A853), 'page': ClassesScreen()},
+      if (!isTeacher) {'title': 'Teachers', 'icon': Icons.person_pin_rounded, 'assetIcon': 'app icons/teachers.png', 'color': const Color(0xFFEA4335), 'page': const TeachersScreen()},
+      if (!isTeacher) {'title': 'Classes', 'icon': Icons.school_rounded, 'assetIcon': 'app icons/classes.png', 'color': const Color(0xFF34A853), 'page': ClassesScreen()},
       {
         'title': 'Admissions',
         'icon': Icons.person_add_alt_1_rounded,
@@ -93,9 +93,9 @@ class _ModulesScreenState extends State<ModulesScreen> {
         'color': const Color(0xFF4F46E5),
         'page': isTeacher ? const AdmissionRegistrationScreen() : const AdmissionsListScreen(),
       },
-      if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFFFBBC05), 'page': const StudentFeeSearchScreen()},
-      if (!isTeacher) {'title': 'Installments', 'icon': Icons.receipt_long_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFF00ACC1), 'page': const FeeInstallmentReportScreen()},
-      if (!isTeacher) {'title': 'Transactions', 'icon': Icons.sync_alt_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFFFF7043), 'page': const TransactionsScreen()},
+      if (!isTeacher) {'title': 'Fee Collection', 'icon': Icons.credit_card_rounded, 'assetIcon': 'app icons/collect fee.png', 'color': const Color(0xFFFBBC05), 'page': const StudentFeeSearchScreen()},
+      if (!isTeacher) {'title': 'Installments', 'icon': Icons.receipt_long_rounded, 'assetIcon': 'app icons/installments.png', 'color': const Color(0xFF00ACC1), 'page': const FeeInstallmentReportScreen()},
+      if (!isTeacher) {'title': 'Transactions', 'icon': Icons.sync_alt_rounded, 'assetIcon': 'app icons/transactions.png', 'color': const Color(0xFFFF7043), 'page': const TransactionsScreen()},
       {'title': 'Fee Reminder', 'icon': Icons.notifications_active_rounded, 'assetIcon': 'app icons/fee remainder.png', 'color': const Color(0xFFEAB308), 'page': const FeeReminderSearchScreen()},
       if (!isTeacher) {'title': 'Finance', 'icon': Icons.account_balance_wallet_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFFF43F5E), 'page': const FinanceScreen()},
       {'title': 'Results', 'icon': Icons.fact_check_rounded, 'assetIcon': 'app icons/results.png', 'color': const Color(0xFF8E24AA), 'page': const ResultsScreen()},
@@ -105,12 +105,12 @@ class _ModulesScreenState extends State<ModulesScreen> {
       {'title': 'Marks Entry', 'icon': Icons.edit_note_rounded, 'assetIcon': 'app icons/marks entry.png', 'color': const Color(0xFFF97316), 'page': const MarksUploadScreen()},
       {'title': 'Attendance', 'icon': Icons.how_to_reg_rounded, 'assetIcon': 'app icons/mark attendance.png', 'color': const Color(0xFFD97706), 'page': const AttendanceScreen()},
       {'title': 'Home Work', 'icon': Icons.edit_document, 'assetIcon': 'app icons/home work.png', 'color': const Color(0xFFD79F17), 'page': const HomeworkScreen()},
-      {'title': 'Subjects', 'icon': Icons.menu_book_rounded, 'assetIcon': 'app icons/home work.png', 'color': const Color(0xFF7CB342), 'page': const SubjectsScreen()},
+      {'title': 'Subjects', 'icon': Icons.menu_book_rounded, 'assetIcon': 'app icons/subjects.png', 'color': const Color(0xFF7CB342), 'page': const SubjectsScreen()},
       {'title': 'Address Data', 'icon': Icons.location_on_rounded, 'assetIcon': 'app icons/address data.png', 'color': const Color(0xFF10B981), 'page': StudentAddressCollectionScreen()},
       {'title': 'Gate Pass', 'icon': Icons.exit_to_app_rounded, 'assetIcon': 'app icons/gate pass.png', 'color': const Color(0xFF8B5CF6), 'page': isTeacher ? const TeacherGatePassScreen() : const GatePassScreen()},
       {'title': 'Leave', 'icon': Icons.time_to_leave_rounded, 'assetIcon': 'app icons/leave apply.png', 'color': const Color(0xFFEF4444), 'page': isTeacher ? const LeaveDashboardScreen() : const LeaveScreen()},
       {'title': 'Timetable', 'icon': Icons.schedule_rounded, 'assetIcon': 'app icons/timetable.png', 'color': const Color(0xFFEA580C), 'page': const TimetableScreen()},
-      if (!isTeacher) {'title': 'App Installs', 'icon': Icons.install_mobile_rounded, 'assetIcon': 'app icons/settings.png', 'color': const Color(0xFF673AB7), 'page': const AdminAppInstallsScreen()},
+      if (!isTeacher) {'title': 'App Installs', 'icon': Icons.install_mobile_rounded, 'assetIcon': 'app icons/app installs.png', 'color': const Color(0xFF673AB7), 'page': const AdminAppInstallsScreen()},
       {'title': 'School Events', 'icon': Icons.festival_rounded, 'assetIcon': 'app icons/overview.png', 'color': const Color(0xFFD946EF), 'page': const EventsScreen()},
       {'title': 'Transport', 'icon': Icons.directions_bus_rounded, 'assetIcon': 'app icons/overview.png', 'color': const Color(0xFF6366F1), 'page': const TransportScreen()},
       {'title': 'My Salary', 'icon': Icons.monetization_on_rounded, 'assetIcon': 'app icons/my salary.png', 'color': const Color(0xFF10B981), 'page': const SalaryScreen()},
@@ -216,9 +216,26 @@ class _ModulesScreenState extends State<ModulesScreen> {
                   width: double.infinity,
                   height: double.infinity,
                   errorBuilder: (c, e, s) => Container(
-                    color: color.withOpacity(0.1),
-                    child: Center(
-                      child: Icon(icon, color: color, size: 36),
+                    color: color.withOpacity(0.08),
+                    padding: const EdgeInsets.all(6),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(icon, color: color, size: 32),
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            title,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              color: const Color(0xFF1E293B),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 )

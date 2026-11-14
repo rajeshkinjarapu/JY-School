@@ -93,6 +93,17 @@ const appIconsDir = path.join(__dirname, '../public/app-icons');
 if (!fs.existsSync(appIconsDir)) {
   fs.mkdirSync(appIconsDir, { recursive: true });
 }
+// Auto-generate missing 3D app icons on boot if needed
+if (!fs.existsSync(path.join(appIconsDir, 'teachers.png'))) {
+  try {
+    const iconGenScript = path.join(__dirname, '../scripts/generate_app_icons.js');
+    if (fs.existsSync(iconGenScript)) {
+      require(iconGenScript);
+    }
+  } catch (iconErr) {
+    console.warn('[Server] App icons auto-generation check:', iconErr);
+  }
+}
 app.use('/app-icons', express.static(appIconsDir, { maxAge: '7d', immutable: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 

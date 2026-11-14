@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "ts-node prisma/seed.ts",
     "test": "jest",
+    "generate:icons": "node scripts/generate_app_icons.js",
     "postinstall": "prisma generate && prisma generate --schema prisma/schema_local.prisma"
   },
   "dependencies": {

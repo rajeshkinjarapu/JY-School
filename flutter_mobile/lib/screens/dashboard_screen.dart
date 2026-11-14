@@ -1342,13 +1342,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentsScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/admissions.png',
+                imagePath: 'app icons/teachers.png',
                 title: 'Teachers',
                 borderColor: const Color(0xFFEA4335),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeachersScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/timetable.png',
+                imagePath: 'app icons/classes.png',
                 title: 'Classes',
                 borderColor: const Color(0xFF34A853),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClassesScreen())),
@@ -1360,7 +1360,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdmissionsListScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/fee remainder.png',
+                imagePath: 'app icons/collect fee.png',
                 title: 'Collect Fee',
                 borderColor: const Color(0xFFFBBC05),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StudentFeeSearchScreen())),
@@ -1390,13 +1390,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AnswerKeysScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/my salary.png',
+                imagePath: 'app icons/installments.png',
                 title: 'Installments',
                 borderColor: const Color(0xFF00ACC1),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FeeInstallmentReportScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/my salary.png',
+                imagePath: 'app icons/transactions.png',
                 title: 'Transactions',
                 borderColor: const Color(0xFFFF7043),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TransactionsScreen())),
@@ -1408,13 +1408,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TeacherHomeworkScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/home work.png',
+                imagePath: 'app icons/subjects.png',
                 title: 'Subjects',
                 borderColor: const Color(0xFF7CB342),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SubjectsScreen())),
               ),
               _buildImageCard(
-                imagePath: 'app icons/settings.png',
+                imagePath: 'app icons/app installs.png',
                 title: 'App Installs',
                 borderColor: const Color(0xFF673AB7),
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminAppInstallsScreen())),
@@ -2804,6 +2804,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+  IconData _getIconForTitle(String title) {
+    final lower = title.toLowerCase();
+    if (lower.contains('student')) return Icons.groups_rounded;
+    if (lower.contains('teacher')) return Icons.person_pin_rounded;
+    if (lower.contains('class')) return Icons.school_rounded;
+    if (lower.contains('admission')) return Icons.person_add_alt_1_rounded;
+    if (lower.contains('fee') || lower.contains('collect')) return Icons.credit_card_rounded;
+    if (lower.contains('result')) return Icons.workspace_premium_rounded;
+    if (lower.contains('progress')) return Icons.badge_rounded;
+    if (lower.contains('paper')) return Icons.description_rounded;
+    if (lower.contains('key')) return Icons.vpn_key_rounded;
+    if (lower.contains('installment')) return Icons.receipt_long_rounded;
+    if (lower.contains('transaction')) return Icons.sync_alt_rounded;
+    if (lower.contains('home work') || lower.contains('homework')) return Icons.edit_document;
+    if (lower.contains('subject')) return Icons.menu_book_rounded;
+    if (lower.contains('install')) return Icons.install_mobile_rounded;
+    if (lower.contains('setting')) return Icons.settings_rounded;
+    return Icons.apps_rounded;
+  }
+
   Widget _buildImageCard({
     required String imagePath,
     required String title,
@@ -2835,7 +2855,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
               fit: BoxFit.cover,
               errorBuilder: (c, e, s) => Container(
                 color: borderColor.withOpacity(0.08),
-                child: Icon(Icons.apps_rounded, color: borderColor, size: 38),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(_getIconForTitle(title), color: borderColor, size: 34),
+                    const SizedBox(height: 4),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        title,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                          color: const Color(0xFF1E293B),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
