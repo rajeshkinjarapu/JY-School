@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -152,7 +152,6 @@ export const MCQPaperGeneratorPage = () => {
       } catch (e) {}
       generatedText += '\n';
       
-      // Save correct answer mapped to option letter (A, B, C, D)
       let correctLetter = '?';
       try {
          const opts = JSON.parse(q.options || '[]');
@@ -193,20 +192,198 @@ export const MCQPaperGeneratorPage = () => {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Helper to get all images in active subject
+  // Helper to extract questions from active text
+  const getQuestionsInActiveSubject = () => {
+    const text = subjectContents[activeSubjectTab] || '';
+    const matches = Array.from(text.matchAll(/(?:^|\n)(\d+)\.\s+/g));
+    const nums = matches.map(m => parseInt(m[1], 10));
+    return Array.from(new Set(nums)).sort((a, b) => a - b);
+  };
+
+  const availableQuestions = getQuestionsInActiveSubject();
+
+  // Helper to parse image parameters (size & alignment)
+  const parseImageParams = (fullMatch: string) => {
+    const clean = fullMatch.replace(/^\[IMAGE:/, '').replace(/\]$/, '').trim();
+    const parts = clean.split(/[|:,]/).map(s => s.trim());
+    let size = 'medium';
+    let align = 'center';
+
+    for (let i = 1; i < parts.length; i++) {
+      const p = parts[i].toLowerCase();
+      if (['small', 'medium', 'large', 'full', 'xlarge', 's', 'm', 'l', 'xl'].includes(p) || p.endsWith('px') || p.endsWith('%') || p.startsWith('w=') || p.startsWith('h=')) {
+        size = parts[i];
+      } else if (['left', 'center', 'right', 'float-right', 'float-left'].includes(p)) {
+        align = p;
+      }
+    }
+    return { size, align };
+  };
+
+  // Helper to get all inline images in active subject
   const getActiveSubjectImages = () => {
     const activeText = subjectContents[activeSubjectTab] || '';
-    return Array.from(activeText.matchAll(/\[IMAGE:([a-zA-Z0-9_\-\.\/]+)(?:\|([^\]]+))?\]/g)).map(m => ({
-      fullMatch: m[0],
-      id: m[1],
-      size: (m[2] || '').trim() || 'medium'
-    }));
+    return Array.from(activeText.matchAll(/\[IMAGE:([a-zA-Z0-9_\-\.\/]+)(?:\|([^\]]+))?\]/g)).map(m => {
+      const parsed = parseImageParams(m[0]);
+      return {
+        fullMatch: m[0],
+        id: m[1],
+        size: parsed.size,
+        align: parsed.align
+      };
+    });
   };
 
   const activeImages = getActiveSubjectImages();
 
-  // Inline Images State: { id: FloatingImage }
-  const [inlineImages, setInlineImages] = useState<Record<string, FloatingImage>>({});
+  // Helper to update image tag with new size or alignment
+  const updateImageTag = (fullMatch: string, id: string, updates: { size?: string; align?: string }) => {
+    const clean = fullMatch.replace(/^\[IMAGE:/, '').replace(/\]$/, '').trim();
+    const parts = clean.split(/[|:,]/).map(s => s.trim());
+    let size = '';
+    let align = '';
+
+    for (let i = 1; i < parts.length; i++) {
+      const p = parts[i].toLowerCase();
+      if (['small', 'medium', 'large', 'full', 'xlarge', 's', 'm', 'l', 'xl'].includes(p) || p.endsWith('px') || p.endsWith('%') || p.startsWith('w=') || p.startsWith('h=')) {
+        size = parts[i];
+      } else if (['left', 'center', 'right', 'float-right', 'float-left'].includes(p)) {
+        align = p;
+      }
+    }
+
+    if (updates.size !== undefined) {
+      size = updates.size === 'medium' ? '' : updates.size;
+    }
+    if (updates.align !== undefined) {
+      align = updates.align === 'center' ? '' : updates.align;
+    }
+
+    const newParams = [id];
+    if (size) newParams.push(size);
+    if (align) newParams.push(align);
+
+    const replacement = `[IMAGE:${newParams.join('|')}]`;
+    const text = subjectContents[activeSubjectTab] || '';
+    const newContent = text.replace(fullMatch, replacement);
+    setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: newContent }));
+    return replacement;
+  };
+
+  // Helper to move an image tag to under a specific question
+  const moveImageToQuestion = (imgMatch: string, targetQNum: number | 'top' | 'bottom') => {
+    let text = subjectContents[activeSubjectTab] || '';
+    if (!text.includes(imgMatch)) return;
+
+    // Remove the image tag from current text
+    text = text.replace(imgMatch, '').replace(/\n{3,}/g, '\n\n').trim();
+
+    if (targetQNum === 'top') {
+      text = `${imgMatch}\n\n${text}`;
+    } else if (targetQNum === 'bottom') {
+      text = `${text}\n\n${imgMatch}`;
+    } else {
+      // Find question regex e.g. "32. "
+      const qRegex = new RegExp(`(^|\\n)(${targetQNum}\\.\\s+[\\s\\S]*?)(?=(?:\\n\\d+\\.\\s+)|$)`, 'i');
+      const match = text.match(qRegex);
+      if (match) {
+        const fullQBlock = match[0];
+        const replacement = `${fullQBlock.trim()}\n${imgMatch}\n`;
+        text = text.replace(fullQBlock, replacement);
+      } else {
+        text = `${text}\n\n${imgMatch}`;
+      }
+    }
+
+    setSubjectContents(prev => ({
+      ...prev,
+      [activeSubjectTab]: text
+    }));
+  };
+
+  // Helper to shift image up or down relative to questions
+  const shiftImagePosition = (imgMatch: string, direction: 'up' | 'down') => {
+    const text = subjectContents[activeSubjectTab] || '';
+    const imgIndex = text.indexOf(imgMatch);
+    if (imgIndex === -1) return;
+
+    const questions = getQuestionsInActiveSubject();
+    if (questions.length === 0) return;
+
+    const textBefore = text.substring(0, imgIndex);
+    const beforeMatches = Array.from(textBefore.matchAll(/(?:^|\n)(\d+)\.\s+/g));
+    const lastQBefore = beforeMatches.length > 0 ? parseInt(beforeMatches[beforeMatches.length - 1][1], 10) : null;
+
+    if (direction === 'up') {
+      if (lastQBefore === null) return;
+      const prevQIdx = questions.indexOf(lastQBefore);
+      if (prevQIdx > 0) {
+        moveImageToQuestion(imgMatch, questions[prevQIdx - 1]);
+        toast.success(`Image moved up to Question ${questions[prevQIdx - 1]}!`);
+      } else {
+        moveImageToQuestion(imgMatch, 'top');
+        toast.success('Image moved to top of paper!');
+      }
+    } else {
+      if (lastQBefore === null) {
+        if (questions.length > 0) {
+          moveImageToQuestion(imgMatch, questions[0]);
+          toast.success(`Image moved to Question ${questions[0]}!`);
+        }
+        return;
+      }
+      const nextQIdx = questions.indexOf(lastQBefore) + 1;
+      if (nextQIdx < questions.length) {
+        moveImageToQuestion(imgMatch, questions[nextQIdx]);
+        toast.success(`Image moved down to Question ${questions[nextQIdx]}!`);
+      } else {
+        moveImageToQuestion(imgMatch, 'bottom');
+        toast.success('Image moved to end of paper!');
+      }
+    }
+  };
+
+  // Helper to convert inline image to free-floating on paper
+  const convertToFreeFloating = (fullMatch: string, id: string) => {
+    const imgData = inlineImages[id];
+    const src = typeof imgData === 'string' ? imgData : (imgData ? imgData.dataUrl : id);
+    
+    const text = (subjectContents[activeSubjectTab] || '').replace(fullMatch, '').replace(/\n{3,}/g, '\n\n').trim();
+    setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: text }));
+
+    setInlineImages(prev => ({
+      ...prev,
+      [id]: {
+        dataUrl: src,
+        x: 100,
+        y: 280,
+        width: 320,
+        height: 220
+      }
+    }));
+    toast.success(`Image [${id}] converted to Free Drag! You can now drag it anywhere on the preview paper.`);
+  };
+
+  // Helper to convert free-floating image back to inline text
+  const convertToInline = (id: string) => {
+    const imgData = inlineImages[id];
+    const src = typeof imgData === 'string' ? imgData : (imgData ? imgData.dataUrl : id);
+
+    setInlineImages(prev => ({
+      ...prev,
+      [id]: src
+    }));
+
+    const textToInsert = `\n[IMAGE:${id}]\n`;
+    setSubjectContents(prev => ({
+      ...prev,
+      [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + '\n' + textToInsert
+    }));
+    toast.success(`Image [${id}] placed back as inline in text!`);
+  };
+
+  // Inline Images State: { id: FloatingImage | string }
+  const [inlineImages, setInlineImages] = useState<Record<string, FloatingImage | string>>({});
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   const generateImageId = () => Math.random().toString(36).substring(2, 8);
@@ -215,7 +392,7 @@ export const MCQPaperGeneratorPage = () => {
     const id = generateImageId();
     setInlineImages(prev => ({
       ...prev,
-      [id]: dataUrl // Store as raw string to denote it's an inline editor image
+      [id]: dataUrl
     }));
     
     const textToInsert = `\n[IMAGE:${id}]\n`;
@@ -244,7 +421,7 @@ export const MCQPaperGeneratorPage = () => {
       }));
     }
     
-    toast.success('Image added! Click "Image Sizes" button above to adjust its size.');
+    toast.success('Image added! Click "Image Sizes" button to change size or position.');
   };
 
   const handleEditorPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
@@ -276,7 +453,7 @@ export const MCQPaperGeneratorPage = () => {
       const target = e.currentTarget;
       const start = target.selectionStart;
       const end = target.selectionEnd;
-      const tabCharacter = '    '; // 4 spaces
+      const tabCharacter = '    ';
       const newValue = value.substring(0, start) + tabCharacter + value.substring(end);
       setValue(newValue);
       setTimeout(() => {
@@ -319,7 +496,7 @@ export const MCQPaperGeneratorPage = () => {
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
   };
 
-  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage>; keys: Record<string, Record<string, string>>; settings?: any } => {
+  const deserializeContent = (raw: string): { textData: Record<string, string>; images: Record<string, FloatingImage | string>; keys: Record<string, Record<string, string>>; settings?: any } => {
     if (raw.startsWith("<!--MCQ_DATA_V2-->\n")) {
       try {
         const jsonStr = raw.replace("<!--MCQ_DATA_V2-->\n", "");
@@ -335,9 +512,8 @@ export const MCQPaperGeneratorPage = () => {
       }
     }
 
-    // Legacy format
     const imgMatch = raw.match(/\n<!--INLINE_IMAGES:(.*?)-->$/);
-    let migratedImages: Record<string, FloatingImage> = {};
+    let migratedImages: Record<string, FloatingImage | string> = {};
     let textContent = raw;
     
     if (imgMatch) {
@@ -369,7 +545,6 @@ export const MCQPaperGeneratorPage = () => {
     setIsDownloadingPdf(true);
     const toastId = toast.loading('Generating high-resolution PDF...');
 
-    // Offscreen rendering container to capture unzoomed 210mm layout
     const tempContainer = document.createElement('div');
     tempContainer.style.position = 'fixed';
     tempContainer.style.left = '-10000px';
@@ -388,7 +563,6 @@ export const MCQPaperGeneratorPage = () => {
     document.body.appendChild(tempContainer);
 
     try {
-      // Small pause to allow KaTeX fonts and images to settle in cloned DOM
       await new Promise(r => setTimeout(r, 200));
 
       let canvas: HTMLCanvasElement;
@@ -562,7 +736,7 @@ export const MCQPaperGeneratorPage = () => {
               margin: 0 auto;
               background-color: #ffffff !important;
               height: auto !important;
-              overflow: visible !important;
+              overflow: visible !important; 
             }
           </style>
         </head>
@@ -875,7 +1049,6 @@ export const MCQPaperGeneratorPage = () => {
 
   useEffect(() => {
     if (!paperId) {
-      // Reset state for a new paper to avoid state bleeding
       setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
       setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
       try {
@@ -1000,6 +1173,9 @@ export const MCQPaperGeneratorPage = () => {
     );
   };
 
+  // Get list of floating images (not inline)
+  const floatingImagesList = Object.entries(inlineImages).filter(([_, val]) => typeof val !== 'string');
+
   return (
     <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
@@ -1012,14 +1188,14 @@ export const MCQPaperGeneratorPage = () => {
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'))}
-            className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors hidden lg:flex items-center justify-center border border-indigo-200"
+            className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors hidden lg:flex items-center justify-center border border-indigo-200 cursor-pointer"
             title="Toggle Sidebar"
           >
             <Menu className="w-5 h-5" />
           </button>
           <button
             onClick={() => navigate('/question-bank')}
-            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center"
+            className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center cursor-pointer"
             title="Go Back"
           >
             <ChevronLeft className="w-5 h-5" />
@@ -1029,7 +1205,7 @@ export const MCQPaperGeneratorPage = () => {
         <div className="flex items-center gap-3 flex-shrink-0">
           <button
             onClick={() => navigate('/question-bank/saved-papers')}
-            className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium"
+            className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium cursor-pointer"
             title="Saved Papers"
           >
             <BookOpen className="w-4 h-4" />
@@ -1037,7 +1213,7 @@ export const MCQPaperGeneratorPage = () => {
           </button>
           <button
             onClick={toggleFullScreen}
-            className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2"
+            className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 cursor-pointer"
             title="Full Screen"
           >
             <Maximize className="w-5 h-5" />
@@ -1045,7 +1221,7 @@ export const MCQPaperGeneratorPage = () => {
           <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex"
+            className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
           >
             <Settings className="w-4 h-4" />
             Paper Settings
@@ -1053,7 +1229,7 @@ export const MCQPaperGeneratorPage = () => {
           
           <button
             onClick={() => setIsBankModalOpen(true)}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
           >
             <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">Import from Bank</span>
@@ -1061,7 +1237,7 @@ export const MCQPaperGeneratorPage = () => {
           
           <button
             onClick={() => setIsAiModalOpen(true)}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm"
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">AI Gen</span>
@@ -1070,7 +1246,7 @@ export const MCQPaperGeneratorPage = () => {
           <button
             onClick={handlePrint}
             disabled={isDownloadingPdf}
-            className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5"
+            className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             {isDownloadingPdf ? '...' : 'PDF'}
@@ -1079,7 +1255,7 @@ export const MCQPaperGeneratorPage = () => {
           <button
             onClick={handleSave}
             disabled={isSaving}
-            className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm"
+            className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
           >
             <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
             <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update' : 'Save'}</span>
@@ -1136,22 +1312,22 @@ export const MCQPaperGeneratorPage = () => {
                   <ImagePlus className="w-3.5 h-3.5" /> Insert Image
                 </button>
                 
-                {/* Dedicated Separate Image Sizes Button */}
+                {/* Dedicated Separate Image Sizes & Position Button */}
                 <button 
                   type="button"
                   onClick={() => setIsImageSizeModalOpen(true)}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 border shadow-sm cursor-pointer ${
-                    activeImages.length > 0 
+                    (activeImages.length > 0 || floatingImagesList.length > 0)
                       ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-md hover:shadow-indigo-500/20' 
                       : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
                   }`}
-                  title="Change Image Sizes"
+                  title="Change Image Sizes & Positions"
                 >
                   <Sliders className="w-3.5 h-3.5" />
-                  <span>Image Sizes</span>
-                  {activeImages.length > 0 && (
+                  <span>Image Sizes & Move</span>
+                  {(activeImages.length + floatingImagesList.length) > 0 && (
                     <span className="bg-white text-indigo-700 font-black rounded-full px-1.5 py-0.2 text-[10px] leading-tight shadow-xs">
-                      {activeImages.length}
+                      {activeImages.length + floatingImagesList.length}
                     </span>
                   )}
                 </button>
@@ -1186,10 +1362,10 @@ export const MCQPaperGeneratorPage = () => {
                   type="button"
                   onClick={() => setIsImageSizeModalOpen(true)}
                   className={`px-2.5 py-1 text-xs font-bold rounded-lg border flex items-center gap-1 ${
-                    activeImages.length > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'
+                    (activeImages.length + floatingImagesList.length) > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                 >
-                  <Sliders className="w-3 h-3" /> Sizes {activeImages.length > 0 && `(${activeImages.length})`}
+                  <Sliders className="w-3 h-3" /> Sizes & Move {(activeImages.length + floatingImagesList.length) > 0 && `(${activeImages.length + floatingImagesList.length})`}
                 </button>
                 <button 
                   onClick={autoFormatText}
@@ -1302,7 +1478,7 @@ export const MCQPaperGeneratorPage = () => {
               instructions={instructions.split('\n').filter(i => i.trim() !== '')}
               isDoubleColumn={false}
               inlineImages={inlineImages}
-              onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...prev[id], ...updates } }))}
+              onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...(prev[id] as FloatingImage), ...updates } }))}
               onImageDelete={(id) => {
                 setInlineImages(prev => {
                   const newImgs = { ...prev };
@@ -1345,10 +1521,10 @@ export const MCQPaperGeneratorPage = () => {
         </button>
       </div>
 
-      {/* Dedicated Image Size & Management Modal */}
+      {/* Dedicated Image Size, Position & Move Modal */}
       {isImageSizeModalOpen && (
         <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[88vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -1357,10 +1533,10 @@ export const MCQPaperGeneratorPage = () => {
                 </div>
                 <div>
                   <h2 className="font-bold text-base md:text-lg text-white">
-                    చిత్రాల సైజు మార్చుకోండి (Image Size Controls)
+                    చిత్రాల సైజు & స్థానం మార్చుకోండి (Image Sizes & Position Controls)
                   </h2>
                   <p className="text-xs text-purple-100">
-                    Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} {activeImages.length === 1 ? 'image' : 'images'} detected
+                    Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} inline images {floatingImagesList.length > 0 && `• ${floatingImagesList.length} free drag`}
                   </p>
                 </div>
               </div>
@@ -1372,7 +1548,7 @@ export const MCQPaperGeneratorPage = () => {
               </button>
             </div>
 
-            {/* Quick Bulk Actions Bar (if multiple images) */}
+            {/* Quick Bulk Actions Bar */}
             {activeImages.length > 1 && (
               <div className="px-6 py-3 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
                 <span className="text-xs font-bold text-indigo-900">
@@ -1426,8 +1602,49 @@ export const MCQPaperGeneratorPage = () => {
             )}
 
             {/* Modal Body: List of Images */}
-            <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-4">
-              {activeImages.length === 0 ? (
+            <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
+              
+              {/* Free-Floating Images List if any */}
+              {floatingImagesList.length > 0 && (
+                <div className="space-y-3 p-4 bg-purple-50/70 border border-purple-200 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                      <Move className="w-4 h-4 text-purple-600" />
+                      పేపర్‌పై ఫ్రీగా డ్రాగ్ చేయబడుతున్న చిత్రాలు (Free Drag on Paper):
+                    </span>
+                    <span className="text-[11px] text-purple-700">
+                      (ప్రివ్యూ పేపర్‌పై మౌస్‌తో ఎక్కడికైనా డ్రాగ్ చేయవచ్చు)
+                    </span>
+                  </div>
+                  {floatingImagesList.map(([id, imgObj]) => {
+                    const fImg = imgObj as FloatingImage;
+                    return (
+                      <div key={id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                            <img src={fImg.dataUrl} alt="Floating" className="max-w-full max-h-full object-contain" />
+                          </div>
+                          <div>
+                            <span className="font-mono text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-md">
+                              [IMG:{id}]
+                            </span>
+                            <span className="text-xs text-slate-500 ml-2">X: {Math.round(fImg.x)}px, Y: {Math.round(fImg.y)}px</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => convertToInline(id)}
+                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+                        >
+                          📌 Convert back to Inline (టెక్స్ట్‌లోకి మార్చు)
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeImages.length === 0 && floatingImagesList.length === 0 ? (
                 <div className="text-center py-12 text-slate-400">
                   <ImagePlus className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                   <p className="font-semibold text-slate-700">ఈ సబ్జెక్ట్‌లో ఇంకా చిత్రాలు లేవు (No images found)</p>
@@ -1437,93 +1654,201 @@ export const MCQPaperGeneratorPage = () => {
                 </div>
               ) : (
                 activeImages.map((img, idx) => {
-                  const currentSize = img.size.toLowerCase();
+                  const currentSize = (img.size || '').toLowerCase();
+                  const currentAlign = (img.align || 'center').toLowerCase();
                   const imgData = inlineImages[img.id];
-                  const imgSrc = typeof imgData === 'string' ? imgData : imgData?.dataUrl;
+                  const imgSrc = typeof imgData === 'string' ? imgData : (imgData ? (imgData as FloatingImage).dataUrl : '');
 
                   return (
                     <div 
                       key={idx}
-                      className="p-4 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 shadow-xs transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      className="p-4 md:p-5 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 shadow-sm transition-all flex flex-col gap-4"
                     >
-                      <div className="flex items-center gap-3">
-                        {imgSrc ? (
-                          <div className="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
-                            <img src={imgSrc} alt="Preview" className="max-w-full max-h-full object-contain" />
+                      {/* Top Row: Thumbnail + Info + Free Drag Toggle */}
+                      <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          {imgSrc ? (
+                            <div className="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                              <img src={imgSrc} alt="Preview" className="max-w-full max-h-full object-contain" />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl border border-purple-100 bg-purple-50 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              IMG #{idx + 1}
+                            </div>
+                          )}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-black text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
+                                [IMAGE:{img.id}]
+                              </span>
+                              <span className="text-xs font-bold text-slate-700">
+                                చిత్రం {idx + 1}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                              <span>సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong></span>
+                              <span>•</span>
+                              <span>స్థానం: <strong className="text-purple-700 uppercase font-black">{currentAlign || 'center'}</strong></span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="w-16 h-16 rounded-xl border border-purple-100 bg-purple-50/50 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-xs">
-                            IMG #{idx + 1}
-                          </div>
-                        )}
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-black text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
-                              [IMAGE:{img.id}]
-                            </span>
-                            <span className="text-[11px] font-bold text-slate-500">
-                              చిత్రం {idx + 1}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">
-                            ప్రస్తుత సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong>
-                          </p>
+                        </div>
+
+                        {/* Free Drag on Paper Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => convertToFreeFloating(img.fullMatch, img.id)}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                          title="Convert to mouse draggable anywhere on preview paper"
+                        >
+                          <Move className="w-3.5 h-3.5" />
+                          <span>మౌస్‌తో ఫ్రీగా డ్రాగ్ చేయండి (Free Drag 🖱️)</span>
+                        </button>
+                      </div>
+
+                      {/* Control Section 1: సైజు ఎంపిక (Size Options) */}
+                      <div>
+                        <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                          1. చిత్రం సైజు మార్చుకోండి (Size):
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Small (130px)', val: 'small' },
+                            { label: 'Medium (240px)', val: 'medium' },
+                            { label: 'Large (380px) ⭐', val: 'large' },
+                            { label: 'Full Width (100%)', val: 'full' },
+                          ].map((opt) => {
+                            const isActive = (currentSize === opt.val) || (opt.val === 'medium' && (!img.size || currentSize === 'medium'));
+                            return (
+                              <button
+                                key={opt.val}
+                                type="button"
+                                onClick={() => {
+                                  updateImageTag(img.fullMatch, img.id, { size: opt.val });
+                                  toast.success(`Image [${img.id}] size set to ${opt.label}!`);
+                                }}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                  isActive
+                                    ? 'bg-purple-600 text-white shadow-xs scale-105'
+                                    : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
+                              if (customWidth) {
+                                const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
+                                updateImageTag(img.fullMatch, img.id, { size: cleanWidth });
+                                toast.success(`Image [${img.id}] width set to ${cleanWidth}!`);
+                              }
+                            }}
+                            className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
+                          >
+                            Custom px...
+                          </button>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {[
-                          { label: 'Small (130px)', val: 'small' },
-                          { label: 'Medium (240px)', val: 'medium' },
-                          { label: 'Large (380px) ⭐', val: 'large' },
-                          { label: 'Full Width (100%)', val: 'full' },
-                        ].map((opt) => {
-                          const isActive = (currentSize === opt.val) || (opt.val === 'medium' && (!img.size || currentSize === 'medium'));
-                          return (
-                            <button
-                              key={opt.val}
-                              type="button"
-                              onClick={() => {
-                                const current = subjectContents[activeSubjectTab] || '';
-                                const replacement = opt.val === 'medium' ? `[IMAGE:${img.id}]` : `[IMAGE:${img.id}|${opt.val}]`;
-                                const newContent = current.replace(img.fullMatch, replacement);
-                                setSubjectContents(prev => ({
-                                  ...prev,
-                                  [activeSubjectTab]: newContent
-                                }));
-                                toast.success(`Image [${img.id}] size set to ${opt.label}!`);
-                              }}
-                              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                                isActive
-                                  ? 'bg-purple-600 text-white shadow-xs scale-105'
-                                  : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          );
-                        })}
+                      {/* Control Section 2: స్థానం & అలైన్‌మెంట్ (Horizontal Alignment) */}
+                      <div>
+                        <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                          2. స్థానం / అలైన్‌మెంట్ (Alignment):
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Left (ఎడమ)', val: 'left', icon: <AlignLeft className="w-3.5 h-3.5" /> },
+                            { label: 'Center (మధ్య)', val: 'center', icon: <AlignCenter className="w-3.5 h-3.5" /> },
+                            { label: 'Right (కుడి)', val: 'right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                            { label: 'Float Right (టెక్స్ట్ పక్కన)', val: 'float-right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                          ].map((alignOpt) => {
+                            const isAlignActive = (currentAlign === alignOpt.val) || (alignOpt.val === 'center' && (!img.align || currentAlign === 'center'));
+                            return (
+                              <button
+                                key={alignOpt.val}
+                                type="button"
+                                onClick={() => {
+                                  updateImageTag(img.fullMatch, img.id, { align: alignOpt.val });
+                                  toast.success(`Image [${img.id}] aligned ${alignOpt.label}!`);
+                                }}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isAlignActive
+                                    ? 'bg-indigo-600 text-white shadow-xs scale-105'
+                                    : 'bg-slate-100 hover:bg-indigo-50 text-slate-700 border border-slate-200'
+                                }`}
+                              >
+                                {alignOpt.icon}
+                                <span>{alignOpt.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
-                            if (customWidth) {
-                              const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
-                              const current = subjectContents[activeSubjectTab] || '';
-                              const replacement = `[IMAGE:${img.id}|${cleanWidth}]`;
-                              const newContent = current.replace(img.fullMatch, replacement);
-                              setSubjectContents(prev => ({
-                                ...prev,
-                                [activeSubjectTab]: newContent
-                              }));
-                              toast.success(`Image [${img.id}] width set to ${cleanWidth}!`);
-                            }
-                          }}
-                          className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
-                        >
-                          Custom px...
-                        </button>
+                      {/* Control Section 3: కావలసిన ప్రశ్న వద్దకు తరలించండి (Move to Any Question) */}
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                        <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block mb-2">
+                          3. ఏ ప్రశ్న వద్దకు కావాలో అక్కడికి తరలించండి (Move to Any Question):
+                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            id={`move-select-${img.id}`}
+                            className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                            defaultValue=""
+                          >
+                            <option value="" disabled>ప్రశ్నను ఎంచుకోండి (Select Question)...</option>
+                            <option value="top">⬆️ పేపర్ ప్రారంభంలో (Top of Paper)</option>
+                            {availableQuestions.map((qNum) => (
+                              <option key={qNum} value={qNum}>
+                                📌 Question {qNum} క్రిందకు (Under Q.{qNum})
+                              </option>
+                            ))}
+                            <option value="bottom">⬇️ పేపర్ చివరలో (End of Paper)</option>
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const sel = document.getElementById(`move-select-${img.id}`) as HTMLSelectElement;
+                              if (!sel || !sel.value) {
+                                toast.error('దయచేసి ఒక ప్రశ్నను ఎంచుకోండి (Please select a question)');
+                                return;
+                              }
+                              const val = sel.value === 'top' || sel.value === 'bottom' ? sel.value : parseInt(sel.value, 10);
+                              moveImageToQuestion(img.fullMatch, val);
+                              toast.success(`Image [${img.id}] moved ${sel.options[sel.selectedIndex].text}!`);
+                            }}
+                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Pin className="w-3.5 h-3.5" />
+                            <span>ఇక్కడికి తరలించు (Move Here)</span>
+                          </button>
+
+                          <div className="flex items-center gap-1 ml-auto">
+                            <button
+                              type="button"
+                              onClick={() => shiftImagePosition(img.fullMatch, 'up')}
+                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                              title="పై ప్రశ్న వద్దకు జరుపు (Move Up)"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>పైకి (Up)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => shiftImagePosition(img.fullMatch, 'down')}
+                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                              title="క్రింది ప్రశ్న వద్దకు జరుపు (Move Down)"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>క్రిందికి (Down)</span>
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
@@ -1555,7 +1880,7 @@ export const MCQPaperGeneratorPage = () => {
               <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-purple-600" /> AI Generate
               </h2>
-              <button onClick={() => setIsAiModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+              <button onClick={() => setIsAiModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
@@ -1565,19 +1890,19 @@ export const MCQPaperGeneratorPage = () => {
               <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
                 <button 
                   onClick={() => setAiSourceType('text')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                 >
                   📝 Text Prompt
                 </button>
                 <button 
                   onClick={() => setAiSourceType('file')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                 >
                   📄 Upload File
                 </button>
                 <button 
                   onClick={() => setAiSourceType('url')}
-                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                 >
                   🔗 Website Link
                 </button>
@@ -1597,7 +1922,7 @@ export const MCQPaperGeneratorPage = () => {
                   {aiImageBase64 && (
                     <div className="mt-3 relative inline-block">
                        <img src={`data:${aiImageMimeType};base64,${aiImageBase64}`} alt="Pasted" className="h-24 rounded-lg shadow-sm border border-slate-200 object-contain" />
-                       <button onClick={() => { setAiImageBase64(''); setAiImageMimeType(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md">
+                       <button onClick={() => { setAiImageBase64(''); setAiImageMimeType(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md cursor-pointer">
                           <X className="w-3 h-3" />
                        </button>
                     </div>
@@ -1643,7 +1968,7 @@ export const MCQPaperGeneratorPage = () => {
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
               <button 
                 onClick={() => setIsAiModalOpen(false)}
-                className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm"
+                className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
               >
                 Cancel
               </button>
@@ -1653,7 +1978,7 @@ export const MCQPaperGeneratorPage = () => {
                   handleAiGenerate();
                 }}
                 disabled={isGenerating}
-                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg transition-colors shadow-sm flex items-center gap-2"
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
               >
                 <Sparkles className="w-4 h-4" />
                 Generate Now
@@ -1671,7 +1996,7 @@ export const MCQPaperGeneratorPage = () => {
               <h2 className="font-bold text-lg text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-blue-200" /> Paper Settings
               </h2>
-              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors">
+              <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
@@ -1940,7 +2265,7 @@ export const MCQPaperGeneratorPage = () => {
                   setIsSettingsOpen(false);
                   toast.success('Settings saved!');
                 }}
-                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
               >
                 Save Settings
               </button>
@@ -1958,7 +2283,7 @@ export const MCQPaperGeneratorPage = () => {
               <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                 <HelpCircle className="text-amber-500 w-6 h-6" /> LaTeX Formatting Guide
               </h2>
-              <button onClick={() => setIsLatexHelpOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
+              <button onClick={() => setIsLatexHelpOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -1988,12 +2313,11 @@ export const MCQPaperGeneratorPage = () => {
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
                 <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">చిత్రాలు & సైజు మార్పు (Images & Resizing)</h3>
                 <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
-                <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు మార్చుకోవడానికి (How to Resize):</p>
+                <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు & స్థానం మార్చుకోవడానికి (How to Resize & Move):</p>
                 <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
-                  <li>ఎడిటర్ పైనున్న <strong>[Image Sizes]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు ఎంచుకోవచ్చు.</li>
-                  <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px]</code></li>
+                  <li>ఎడిటర్ పైనున్న <strong>[Image Sizes & Move]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు, అలైన్‌మెంట్ మరియు ఏ ప్రశ్న క్రింద కావాలో ఎంచుకోవచ్చు.</li>
+                  <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large|center]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px|right]</code></li>
                 </ul>
-                <p className="text-xs text-slate-500">You can drag and drop or copy-paste this code block anywhere in the text to position the image.</p>
               </div>
               
               <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100">
@@ -2005,7 +2329,7 @@ export const MCQPaperGeneratorPage = () => {
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
               <button 
                 onClick={() => setIsLatexHelpOpen(false)}
-                className="px-6 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm"
+                className="px-6 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm cursor-pointer"
               >
                 Close
               </button>
@@ -2029,7 +2353,7 @@ export const MCQPaperGeneratorPage = () => {
                   <p className="text-sm text-slate-500">Select questions to add to {activeSubjectTab}</p>
                 </div>
               </div>
-              <button onClick={() => setIsBankModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <button onClick={() => setIsBankModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
@@ -2109,10 +2433,10 @@ export const MCQPaperGeneratorPage = () => {
                     <span className="font-bold text-indigo-600">{bankSelectedIds.size}</span> questions selected
                   </div>
                   <div className="flex gap-3">
-                    <button onClick={() => setIsBankModalOpen(false)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50">
+                    <button onClick={() => setIsBankModalOpen(false)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
                       Cancel
                     </button>
-                    <button onClick={handleImportSelected} disabled={bankSelectedIds.size === 0} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors">
+                    <button onClick={handleImportSelected} disabled={bankSelectedIds.size === 0} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer">
                       Add to Paper
                     </button>
                   </div>
@@ -2138,7 +2462,7 @@ export const MCQPaperGeneratorPage = () => {
                   <p className="text-sm text-slate-500">Correct answers for imported questions</p>
                 </div>
               </div>
-              <button onClick={() => setIsAnswerKeyModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+              <button onClick={() => setIsAnswerKeyModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
                 <X className="w-5 h-5 text-slate-400" />
               </button>
             </div>
@@ -2187,13 +2511,13 @@ export const MCQPaperGeneratorPage = () => {
                <button 
                  onClick={handleAiSolve}
                  disabled={isAiSolving}
-                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex items-center gap-2 disabled:opacity-50"
+                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
                >
                  <Wand2 className="w-4 h-4" /> {isAiSolving ? 'Solving...' : 'AI Auto-Solve'}
                </button>
                <button 
                  onClick={() => window.print()}
-                 className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2"
+                 className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
                >
                  <Printer className="w-4 h-4" /> Print Key
                </button>
@@ -2213,7 +2537,6 @@ export const MCQPaperGeneratorPage = () => {
           }
         }
 
-        /* Firefox fallback */
         @-moz-document url-prefix() {
           .paper-zoom { transform: scale(0.8); transform-origin: top center; margin-bottom: -20%; }
         }

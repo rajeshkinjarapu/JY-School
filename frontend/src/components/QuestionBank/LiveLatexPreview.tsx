@@ -49,7 +49,6 @@ export interface LiveLatexPreviewProps {
   pageBorderStyle?: string;
 }
 
-
 export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   subjectContents,
   content,
@@ -128,9 +127,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       fixedText = fixedText.replace(/\\\\\]/g, '\\]');
       fixedText = fixedText.replace(/\\\\\[/g, '\\[');
 
-      // Support for native inline images and editor-inserted images with custom sizes
+      // Support for native inline images and editor-inserted images with custom sizes and positioning
       let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, (match, inner) => {
-        // Support parameters like [IMAGE:id|large], [IMAGE:id|350px], [IMAGE:id|w=400], [IMAGE:id|full]
         const cleanInner = (inner || '').trim();
         const parts = cleanInner.split(/[|:,]/).map((s: string) => s.trim());
         const urlOrId = parts[0];
@@ -168,6 +166,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             alignment = 'right';
           } else if (lower === 'center') {
             alignment = 'center';
+          } else if (lower === 'float-right' || lower === 'floatright') {
+            alignment = 'float-right';
+          } else if (lower === 'float-left' || lower === 'floatleft') {
+            alignment = 'float-left';
           } else if (/^w=(\d+(?:px|%|rem)?)$/i.test(p)) {
             const val = p.match(/^w=(\d+(?:px|%|rem)?)$/i)![1];
             width = val.endsWith('%') || val.endsWith('px') || val.endsWith('rem') ? val : `${val}px`;
@@ -190,13 +192,32 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           }
         }
 
-        const marginStyle = alignment === 'center' 
-          ? 'margin: 8px auto;' 
-          : alignment === 'right' 
-            ? 'margin: 8px 0 8px auto;' 
-            : 'margin: 8px 0;';
+        let marginStyle = 'margin: 8px auto;';
+        let displayStyle = 'display: block;';
+        let floatStyle = '';
 
-        return `<img src="${src}" style="max-width:${maxWidth}; max-height:${maxHeight}; width:${width}; height:${height}; object-fit:contain; ${marginStyle} display:block;" />`;
+        if (alignment === 'center') {
+          marginStyle = 'margin: 10px auto;';
+          displayStyle = 'display: block;';
+        } else if (alignment === 'right') {
+          marginStyle = 'margin: 8px 0 8px auto;';
+          displayStyle = 'display: block;';
+        } else if (alignment === 'left') {
+          marginStyle = 'margin: 8px auto 8px 0;';
+          displayStyle = 'display: block;';
+        } else if (alignment === 'float-right') {
+          floatStyle = 'float: right; clear: both;';
+          marginStyle = 'margin: 4px 0 12px 16px;';
+          displayStyle = 'display: inline-block;';
+          if (maxWidth === '100%') maxWidth = '50%';
+        } else if (alignment === 'float-left') {
+          floatStyle = 'float: left; clear: both;';
+          marginStyle = 'margin: 4px 16px 12px 0;';
+          displayStyle = 'display: inline-block;';
+          if (maxWidth === '100%') maxWidth = '50%';
+        }
+
+        return `<img src="${src}" style="max-width:${maxWidth}; max-height:${maxHeight}; width:${width}; height:${height}; object-fit:contain; ${marginStyle} ${displayStyle} ${floatStyle}" />`;
       });
 
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
@@ -304,19 +325,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const estimateVisualLength = (text: string): number => {
               if (!text) return 0;
               let s = text.trim();
-              // Remove math delimiters \(, \), \[, \], $
               s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
-              
-              // Remove non-rendering LaTeX formatting macros
               s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
-
-              // CRITICAL: Normalize superscripts and subscripts FIRST so braces inside exponents like ^{2} or _{1} don't break fraction regex!
               s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
               s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
 
-              // Smart fraction resolution: \frac{num}{den} and \dfrac{num}{den}
-              // In visual rendering, a fraction is stacked vertically.
-              // Its horizontal width is simply Math.max(width(num), width(den)).
               const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
               let iterations = 0;
               while (fracRegex.test(s) && iterations < 5) {
@@ -328,17 +341,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 iterations++;
               }
 
-              // \sqrt{x} is visually roughly width of x + 1 (radical sign)
               s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
-
-              // Replace other LaTeX commands (\sin, \cos, \tan, \cot, \sec, \csc, \pm, \circ, etc.) with a single character 'X'
               s = s.replace(/\\[a-zA-Z]+/g, 'X');
-
-              // Remove remaining braces
               s = s.replace(/[{}]/g, '');
-
-              // Math binary operators like +, -, = have standard visual padding around them
-              // Note: Do NOT expand '/' as that artificially bloats simple divisions like (A/2) or 1/2
               s = s.replace(/([+\-=])/g, ' $1 ');
 
               return s.replace(/\s+/g, ' ').trim().length;
@@ -351,26 +356,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
-            // Calibrated thresholds for A4 layout:
-            // Single line (4 columns): simple numbers, values, short/medium fractions up to 17 chars (fits Q1-Q5).
-            // 2*2 (2 columns): wide formulas, expressions, phrases 18 to 38 chars.
-            // One by one (1 column): long polynomials, wide sentences > 38 chars.
             const singleLineLimit = isDoubleColumn ? 8 : 17;
             const twoByTwoLimit = isDoubleColumn ? 18 : 38;
 
             let optionsLayout = '';
             if (maxLen <= singleLineLimit) {
-              // 1. Options chinnavi ayite: Single line lo ravali (4 columns)
               optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
             } else if (maxLen <= twoByTwoLimit) {
-              // 2. Options length ekkuva ayite: 2*2 ravali (2 columns)
               optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
             } else {
-              // 3. Appatiki length ekkuva aytite: One by One ravali (1 column)
               optionsLayout = 'flex flex-col w-full gap-0.5';
             }
 
-            // Extract question number for hanging indent
             const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
             const qNumStr = qMatch ? qMatch[1] : '';
             const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
@@ -433,7 +430,6 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         const subjectText = subjectContents[subject];
         if (!subjectText || subjectText.trim() === '') return;
         
-        // Add subject heading
         if (showSubjectHeadings) {
           elements.push(
             <div key={`heading-${subject}`} className="w-full mt-4 mb-2 break-inside-avoid text-center">
@@ -505,7 +501,6 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         {/* Header Section */}
         {showHeader && (
           <div className="mb-2 border-b-2 border-black pb-1.5">
-            {/* Logo left | School name center | spacer right */}
             <div className="grid grid-cols-[80px_1fr_80px] items-center">
               <div>
                 <img 
@@ -558,9 +553,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
       </div>
 
-      {/* Floating Images Layer (Legacy support for old saved papers) */}
+      {/* Floating Images Layer (For free-floating draggable images on paper) */}
       {Object.entries(inlineImages).map(([id, imgData]) => {
-        // Skip rendering as floating if it is a string (new inline format)
         if (typeof imgData === 'string') return null;
         
         const dataUrl = imgData.dataUrl;
@@ -584,10 +578,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }}
             bounds="parent"
             cancel=".delete-btn"
-            className="group absolute z-50"
+            className="group absolute z-50 cursor-move"
             style={{}}
           >
-            <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-transparent group-hover:border-blue-400 border-dashed print:border-none print:bg-transparent !print:border-none">
+            <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-blue-400 group-hover:border-blue-600 border-dashed print:border-none print:bg-transparent !print:border-none shadow-sm">
               <img src={dataUrl} className="w-full h-full object-contain pointer-events-none print:max-w-full" />
               {onImageDelete && (
                 <button
