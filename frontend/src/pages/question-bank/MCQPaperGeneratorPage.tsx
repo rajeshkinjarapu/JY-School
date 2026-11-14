@@ -1121,7 +1121,7 @@ export const MCQPaperGeneratorPage = () => {
                   className="hidden" 
                 />
                 <span className="text-xs text-slate-500 bg-white/80 px-2 py-1 rounded-md border border-slate-100 items-center gap-1.5 shadow-sm hidden md:flex">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-500"><path d="M12 9v2m0 4v.01M5.05 19h13.9c1.66 0 3-1.34 3-3V8c0-1.66-1.34-3-3-3H5.05c-1.66-3-3-3H5.05c-1.66 0-3 1.34-3 3v8c0 1.66 1.34 3 3 3z"/></svg>
                   Tip: Press Enter 3-4 times to leave empty space
                 </span>
                 <button 
@@ -1168,6 +1168,103 @@ export const MCQPaperGeneratorPage = () => {
                 );
               })}
             </div>
+            
+            {/* Live Image Resizer Controls Strip */}
+            {(() => {
+              const activeText = subjectContents[activeSubjectTab] || '';
+              const detectedImages = Array.from(activeText.matchAll(/\[IMAGE:([a-zA-Z0-9_\-\.\/]+)(?:\|([^\]]+))?\]/g)).map(m => ({
+                fullMatch: m[0],
+                id: m[1],
+                size: (m[2] || '').trim() || 'medium'
+              }));
+              
+              if (detectedImages.length === 0) return null;
+
+              return (
+                <div className="my-2.5 p-3 bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200/90 rounded-2xl shadow-xs space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1 rounded-lg bg-purple-600 text-white shadow-xs">
+                        <ImagePlus className="w-3.5 h-3.5" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-black text-purple-900">
+                          చిత్రం సైజు మార్చుకోండి (Image Size Controls)
+                        </span>
+                        <span className="text-[11px] text-purple-700 ml-2 font-medium hidden sm:inline">
+                          (నచ్చిన సైజు బటన్ నొక్కితే ఎడిటర్ & లైవ్ ప్రివ్యూలో వెంటనే పెద్దదిగా మారుతుంది)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    {detectedImages.map((img, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-purple-100 shadow-xs flex-wrap gap-2">
+                        <span className="text-xs font-mono font-black text-purple-800 bg-purple-100/70 px-2.5 py-0.5 rounded-lg border border-purple-200/60">
+                          [IMAGE:{img.id}]
+                        </span>
+                        
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Small (130px)', val: 'small' },
+                            { label: 'Medium (240px)', val: 'medium' },
+                            { label: 'Large (380px) ⭐', val: 'large' },
+                            { label: 'Full Width (100%)', val: 'full' },
+                          ].map((opt) => {
+                            const isActive = (img.size.toLowerCase() === opt.val) || (opt.val === 'medium' && (!img.size || img.size === 'medium'));
+                            return (
+                              <button
+                                key={opt.val}
+                                type="button"
+                                onClick={() => {
+                                  const current = subjectContents[activeSubjectTab] || '';
+                                  const replacement = opt.val === 'medium' ? `[IMAGE:${img.id}]` : `[IMAGE:${img.id}|${opt.val}]`;
+                                  const newContent = current.replace(img.fullMatch, replacement);
+                                  setSubjectContents(prev => ({
+                                    ...prev,
+                                    [activeSubjectTab]: newContent
+                                  }));
+                                  toast.success(`Image [${img.id}] size set to ${opt.label}!`);
+                                }}
+                                className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                                  isActive 
+                                    ? 'bg-purple-600 text-white shadow-xs' 
+                                    : 'bg-slate-100 hover:bg-purple-100 text-slate-700'
+                                }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
+                              if (customWidth) {
+                                const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
+                                const current = subjectContents[activeSubjectTab] || '';
+                                const replacement = `[IMAGE:${img.id}|${cleanWidth}]`;
+                                const newContent = current.replace(img.fullMatch, replacement);
+                                setSubjectContents(prev => ({
+                                  ...prev,
+                                  [activeSubjectTab]: newContent
+                                }));
+                                toast.success(`Image [${img.id}] width set to ${cleanWidth}!`);
+                              }
+                            }}
+                            className="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
+                          >
+                            Custom px...
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
             
             <textarea
               ref={textareaRef}
@@ -1725,12 +1822,14 @@ export const MCQPaperGeneratorPage = () => {
               </div>
               
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Inserting Images</h3>
-                <p className="mb-2">Click the <strong>Insert Image</strong> button above the editor. An image code will be inserted automatically.</p>
-                <div className="font-mono text-blue-600 bg-white p-2 rounded border border-slate-200">
-                  [IMG:123456789]
-                </div>
-                <p className="mt-2 text-xs text-slate-500">You can drag and drop this code block anywhere in the text to position the image.</p>
+                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">చిత్రాలు & సైజు మార్పు (Images & Resizing)</h3>
+                <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
+                <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు మార్చుకోవడానికి (How to Resize):</p>
+                <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
+                  <li>ఎడిటర్ పైభాగంలో కనిపించే <strong>[Small]</strong>, <strong>[Medium]</strong>, <strong>[Large ⭐]</strong>, <strong>[Full Width]</strong> బటన్లు క్లిక్ చేయవచ్చు.</li>
+                  <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px]</code></li>
+                </ul>
+                <p className="text-xs text-slate-500">You can drag and drop or copy-paste this code block anywhere in the text to position the image.</p>
               </div>
               
               <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100">

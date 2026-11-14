@@ -128,14 +128,75 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       fixedText = fixedText.replace(/\\\\\]/g, '\\]');
       fixedText = fixedText.replace(/\\\\\[/g, '\\[');
 
-      // Support for native inline images and editor-inserted images
-      let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, (match, urlOrId) => {
+      // Support for native inline images and editor-inserted images with custom sizes
+      let withImages = fixedText.replace(/\[IMAGE:(.*?)\]/g, (match, inner) => {
+        // Support parameters like [IMAGE:id|large], [IMAGE:id|350px], [IMAGE:id|w=400], [IMAGE:id|full]
+        const cleanInner = (inner || '').trim();
+        const parts = cleanInner.split(/[|:,]/).map((s: string) => s.trim());
+        const urlOrId = parts[0];
+        const params = parts.slice(1);
+
         let src = urlOrId;
         if (inlineImages && inlineImages[urlOrId]) {
            const imgData = inlineImages[urlOrId];
            src = typeof imgData === 'string' ? imgData : imgData.dataUrl;
         }
-        return `<img src="${src}" style="max-width:100%; max-height:160px; object-fit:contain; margin-top:8px; margin-bottom:8px; display:block;" />`;
+
+        let maxWidth = '100%';
+        let maxHeight = '240px'; // Generous default (was 160px)
+        let width = 'auto';
+        let height = 'auto';
+        let alignment = 'center';
+
+        for (const p of params) {
+          const lower = p.toLowerCase();
+          if (lower === 'small' || lower === 's') {
+            maxHeight = '130px';
+            maxWidth = '220px';
+          } else if (lower === 'medium' || lower === 'm') {
+            maxHeight = '240px';
+            maxWidth = '100%';
+          } else if (lower === 'large' || lower === 'l') {
+            maxHeight = '380px';
+            maxWidth = '100%';
+          } else if (lower === 'xlarge' || lower === 'xl' || lower === 'full') {
+            maxHeight = '550px';
+            width = '100%';
+          } else if (lower === 'left') {
+            alignment = 'left';
+          } else if (lower === 'right') {
+            alignment = 'right';
+          } else if (lower === 'center') {
+            alignment = 'center';
+          } else if (/^w=(\d+(?:px|%|rem)?)$/i.test(p)) {
+            const val = p.match(/^w=(\d+(?:px|%|rem)?)$/i)![1];
+            width = val.endsWith('%') || val.endsWith('px') || val.endsWith('rem') ? val : `${val}px`;
+            maxHeight = 'none';
+          } else if (/^h=(\d+(?:px|%|rem)?)$/i.test(p)) {
+            const val = p.match(/^h=(\d+(?:px|%|rem)?)$/i)![1];
+            height = val.endsWith('%') || val.endsWith('px') || val.endsWith('rem') ? val : `${val}px`;
+            maxHeight = height;
+          } else if (/^(\d+)px$/i.test(p)) {
+            width = p;
+            maxHeight = 'none';
+          } else if (/^(\d+)%$/i.test(p)) {
+            width = p;
+            maxHeight = 'none';
+          } else if (/^(\d+)x(\d+)$/i.test(p)) {
+            const m = p.match(/^(\d+)x(\d+)$/i)!;
+            width = `${m[1]}px`;
+            height = `${m[2]}px`;
+            maxHeight = height;
+          }
+        }
+
+        const marginStyle = alignment === 'center' 
+          ? 'margin: 8px auto;' 
+          : alignment === 'right' 
+            ? 'margin: 8px 0 8px auto;' 
+            : 'margin: 8px 0;';
+
+        return `<img src="${src}" style="max-width:${maxWidth}; max-height:${maxHeight}; width:${width}; height:${height}; object-fit:contain; ${marginStyle} display:block;" />`;
       });
 
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');

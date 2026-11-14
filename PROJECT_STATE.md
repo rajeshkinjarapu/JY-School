@@ -1,5 +1,20 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator ఇమేజ్ రీసైజింగ్ & సైజ్ కంట్రోల్స్ ఫీచర్ (November 14, 2026)
+- **యూజర్ ప్రశ్న:** "image size penchukone option ledu ela" (MCQ Paper Generator లో Question 32 వంటి పెద్ద టేబుల్ డయాగ్రమ్ చిత్రాలు చాలా చిన్నగా, అస్పష్టంగా కనిపిస్తున్నాయి, సైజు పెంచుకునే ఆప్షన్ లేదు).
+- **సమస్య విశ్లేషణ:**
+  - `LiveLatexPreview.tsx` లో ఇమేజ్‌ల కోసం `max-height: 160px` హార్డ్‌కోడ్ చేయబడి ఉంది. దీనివల్ల పెద్ద మ్యాచింగ్ లిస్ట్‌లు/టేబుల్స్ లేదా డయాగ్రమ్‌లు చిన్నగా కుదించబడి చదవడానికి వీల్లేకుండా పోతున్నాయి.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **`LiveLatexPreview.tsx` ([`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+     - డీఫాల్ట్ `max-height` ను 160px నుండి 240px కు పెంచాము.
+     - `[IMAGE:id|size]` సింటాక్స్ సపోర్ట్ జోడించబడింది: `small` (130px), `medium` (240px), `large` (380px), `full`/`xlarge` (100% వెడల్పు / 550px), `w=...`, `h=...`, మరియు కస్టమ్ పిక్సెల్స్ (`300px`, `400px`, etc.).
+  2. **`MCQPaperGeneratorPage.tsx` ([`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+     - ఎడిటర్‌లో ఏదైనా `[IMAGE:...]` ట్యాగ్ ఉన్నప్పుడు, ఎడిటర్ పైన వెంటనే ఒక స్మార్ట్ "Image Size Controls" స్ట్రిప్ కనిపిస్తుంది.
+     - యూజర్ బటన్ నొక్కితే చాలు: `[Small (130px)]`, `[Medium (240px)]`, `[Large (380px) ⭐]`, `[Full Width (100%)]`, లేదా `[Custom px...]`.
+     - బటన్ క్లిక్ చేయగానే ఎడిటర్‌లో ట్యాగ్ ఆటోమేటిక్‌గా అప్‌డేట్ అవుతుంది (ఉదా: `[IMAGE:n52x3u]` నుండి `[IMAGE:n52x3u|large]` కు) మరియు పక్కనే ఉన్న Live Preview లో క్షణాల్లో పెద్దదిగా స్పష్టంగా కనిపిస్తుంది.
+     - "Formatting Guide" మోడల్‌లో ఇమేజ్ సైజింగ్ గైడ్ వివరణను స్పష్టంగా చేర్చాము.
+
+
 ## చివరి సంభాషణ - Student Profile Page Ultra Premium Professional Redesign (November 14, 2026)
 - **యూజర్ కోరిక:** "entire design mottam complete ga change cheyu prati okkati clear ga kanapdali professional developer ga cheyu" (స్క్రీన్‌షాట్‌లోని స్టూడెంట్ ప్రొఫైల్ పేజీ డిజైన్‌ను అత్యంత ఆకర్షణీయంగా, ప్రతి అంశం స్పష్టంగా కనిపించేలా ఒక ప్రొఫెషనల్ సాఫ్ట్‌వేర్ ఆర్కిటెక్ట్ స్థాయిలో పూర్తి రీడిజైన్ చేయాలి).
 - **పూర్తయిన మార్పులు ([`StudentProfilePage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentProfilePage.tsx)):**
