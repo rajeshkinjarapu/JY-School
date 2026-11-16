@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu } from "lucide-react";
+import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -255,13 +255,13 @@ export const StudentListPage: React.FC = () => {
                 >
                   <ImageIcon className="w-4 h-4" /> Upload Photos
                 </button>
-                <button
-                  onClick={() => setExportDialog({ open: true, type: 'pdf' })}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
-                  title="Export PDF"
+                <Link
+                  to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-black text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 hover:shadow-md transition-all cursor-pointer"
+                  title="Custom Student Report & Print Studio (కస్టమ్ రిపోర్ట్ & ప్రింట్ స్టూడియో)"
                 >
-                  <FileText className="w-4 h-4" /> PDF
-                </button>
+                  <Printer className="w-4 h-4 text-indigo-600" /> Print Studio
+                </Link>
                 <button
                   onClick={() => setExportDialog({ open: true, type: 'excel' })}
                   className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-emerald-700 bg-white rounded-xl shadow hover:bg-emerald-50 transition-colors"
@@ -328,6 +328,14 @@ export const StudentListPage: React.FC = () => {
               ))}
             </select>
           </div>
+          {/* Mobile Print Studio Shortcut */}
+          <Link
+            to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
+            className="md:hidden p-2.5 bg-white text-indigo-700 rounded-xl transition-all shadow-sm hover:bg-indigo-50 flex items-center justify-center shrink-0"
+            title="Print Studio"
+          >
+            <Printer className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 

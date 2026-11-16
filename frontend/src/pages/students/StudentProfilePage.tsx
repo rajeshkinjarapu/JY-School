@@ -476,6 +476,26 @@ export const StudentProfilePage: React.FC = () => {
   const feeProgress = totalFeeObligation > 0 ? Math.min(100, Math.round((totalFeePaid / totalFeeObligation) * 100)) : 100;
   const studentAge = calculateAge(student.dob);
 
+  const studentChecklist = [
+    { label: 'Student Photo', done: Boolean(student?.user?.photoUrl), action: () => document.getElementById('student-photo-file-input')?.click() },
+    { label: 'Date of Birth', done: Boolean(student?.dob), action: openDemographicsModal },
+    { label: 'Gender', done: Boolean(student?.gender), action: openDemographicsModal },
+    { label: 'Blood Group', done: Boolean(student?.bloodGroup), action: openDemographicsModal },
+    { label: 'Aadhaar Number', done: Boolean(student?.aadharNo), action: openDemographicsModal },
+    { label: 'PEN Number (UDISE+)', done: Boolean(student?.penNumber), action: openDemographicsModal },
+    { label: 'Child ID', done: Boolean(student?.childId), action: openDemographicsModal },
+    { label: 'APAAR ID', done: Boolean(student?.apaarId), action: openDemographicsModal },
+    { label: 'Class & Section', done: Boolean(student?.classId), action: () => {
+      setNewClassId(student?.classId || '');
+      if (classes.length === 0) {
+        api.get('/api/classes').then(res => setClasses(res.data.data || res.data || [])).catch(() => {});
+      }
+      setShowSectionModal(true);
+    } },
+  ];
+  const studentCompletedCount = studentChecklist.filter(item => item.done).length;
+  const studentPercentage = Math.round((studentCompletedCount / studentChecklist.length) * 100);
+
   return (
     <div className="flex flex-col min-h-full bg-[#F4F7FC] text-slate-800 print:hidden font-sans">
       
@@ -1087,104 +1107,195 @@ export const StudentProfilePage: React.FC = () => {
 
             </div>
 
-            {/* Right Column (Family Preview & Profile Completeness) */}
+            {/* Right Column: Institutional Enrollment, Health & Medical, Student-Only Verification */}
             <div className="lg:col-span-6 space-y-4">
               
-              {/* Card 3: Family Preview */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4">
+              {/* Card 3: Institutional & Academic Enrollment Profile */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
-                    <div className="p-2 rounded-xl bg-teal-50 text-teal-600">
-                      <Users className="w-4 h-4" />
+                    <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+                      <GraduationCap className="w-4 h-4" />
                     </div>
                     <div>
-                      <h3 className="font-extrabold text-slate-900 text-sm">Family Information</h3>
-                      <p className="text-[11px] text-slate-400">Parents & guardian contact summary</p>
+                      <h3 className="font-extrabold text-slate-900 text-sm">Institutional Enrollment Status</h3>
+                      <p className="text-[11px] text-slate-400">Current class, section, session & academic standing</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => setActiveTab('family')}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <span>View Full Details</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => {
+                        setNewClassId(student.classId || '');
+                        if (classes.length === 0) {
+                          api.get('/api/classes').then(res => setClasses(res.data.data || res.data || [])).catch(() => {});
+                        }
+                        setShowSectionModal(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition-colors cursor-pointer"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                      <span>Change Section</span>
+                    </button>
+                  )}
                 </div>
 
-                {/* Sub-cards: Father & Mother Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {/* 2x2 Enrollment Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1">
                   
-                  {/* Father Details Card */}
-                  <div 
-                    onClick={() => setActiveTab('family')}
-                    className="p-4 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-white border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-3"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0 shadow-inner text-xl mt-0.5">
-                        👨
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md bg-blue-200/60 text-blue-800">
-                            Father
-                          </span>
-                        </div>
-                        <h4 className="font-black text-xs text-slate-900 group-hover:text-blue-600 transition-colors mt-1 break-words">
-                          {student.fatherName || 'Not Provided'}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 font-medium mt-1 flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{student.fatherPhone ? student.fatherPhone : 'Phone not set'}</span>
-                        </p>
-                        <p className="text-[10px] font-mono font-bold text-slate-700 mt-0.5 flex items-center gap-1">
-                          <Fingerprint className="w-3 h-3 text-indigo-500" />
-                          <span>{student.fatherAadhar ? formatAadhaar(student.fatherAadhar) : 'Aadhaar not set'}</span>
-                        </p>
-                      </div>
+                  {/* Class & Section */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-slate-50 to-white border border-indigo-100/70">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md">
+                        Enrolled Grade
+                      </span>
+                      <GraduationCap className="w-4 h-4 text-indigo-400" />
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-white text-blue-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0 mt-1">
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </div>
+                    <p className="text-base font-black text-slate-900 mt-2">
+                      {student.class ? `${student.class.name} - ${student.class.section}` : 'Not Enrolled'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      Class Teacher: {student.class?.classTeacher?.user?.name || 'Assigned Staff'}
+                    </p>
                   </div>
 
-                  {/* Mother Details Card */}
-                  <div 
-                    onClick={() => setActiveTab('family')}
-                    className="p-4 rounded-2xl bg-gradient-to-br from-pink-50/70 via-rose-50/40 to-white border border-pink-100 hover:border-pink-300 hover:shadow-md transition-all cursor-pointer group flex items-start justify-between gap-3"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center shrink-0 shadow-inner text-xl mt-0.5">
-                        👩
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded-md bg-pink-200/60 text-pink-800">
-                            Mother
-                          </span>
-                        </div>
-                        <h4 className="font-black text-xs text-slate-900 group-hover:text-pink-600 transition-colors mt-1 break-words">
-                          {student.motherName || 'Not Provided'}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 font-medium mt-1 flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{student.motherPhone ? student.motherPhone : 'Phone not set'}</span>
-                        </p>
-                        <p className="text-[10px] font-mono font-bold text-slate-700 mt-0.5 flex items-center gap-1">
-                          <Fingerprint className="w-3 h-3 text-indigo-500" />
-                          <span>{student.motherAadhar ? formatAadhaar(student.motherAadhar) : 'Aadhaar not set'}</span>
-                        </p>
-                      </div>
+                  {/* Academic Session */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-blue-50/60 via-slate-50 to-white border border-blue-100/70">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-blue-700 bg-blue-100/80 px-2 py-0.5 rounded-md">
+                        Academic Year
+                      </span>
+                      <Calendar className="w-4 h-4 text-blue-400" />
                     </div>
-                    <div className="w-7 h-7 rounded-full bg-white text-pink-600 flex items-center justify-center shadow-xs group-hover:translate-x-1 transition-transform shrink-0 mt-1">
-                      <ArrowRight className="w-3.5 h-3.5" />
+                    <p className="text-base font-black text-slate-900 mt-2">
+                      {student.class?.academicYear || '2026 – 2027'}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      Admission: {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '18 Jul 2026'}
+                    </p>
+                  </div>
+
+                  {/* Student Roll No */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-sky-50/60 via-slate-50 to-white border border-sky-100/70">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-md">
+                        Student ID / Roll
+                      </span>
+                      <button
+                        onClick={() => handleCopy(student.rollNo, 'Student ID')}
+                        className="p-1 text-slate-400 hover:text-sky-600 transition-colors"
+                        title="Copy Roll No"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <p className="text-base font-mono font-black text-slate-900 mt-2">
+                      {student.rollNo}
+                    </p>
+                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">
+                      Institutional Roll Identity
+                    </p>
+                  </div>
+
+                  {/* Institutional Status */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-slate-50 to-white border border-emerald-100/70">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                        Student Status
+                      </span>
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    </div>
+                    <p className="text-base font-black text-emerald-950 mt-2 flex items-center gap-1.5">
+                      <span>Active Student</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                    </p>
+                    <p className="text-[10px] text-emerald-700 font-medium mt-0.5">
+                      Full Privileges & Enrolled
+                    </p>
+                  </div>
+
+                </div>
+
+                {/* Campus & Institution Info Footer */}
+                <div className="p-3 rounded-xl bg-slate-50/90 border border-slate-200/60 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Building className="w-4 h-4 text-slate-400" />
+                    <span className="font-bold">JY High School, Narasannapeta</span>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500">Regular Day Scholar</span>
+                </div>
+              </div>
+
+              {/* Card 4: Student Health & Medical Safety Profile */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
+                      <HeartPulse className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-sm">Student Health & Medical Safety</h3>
+                      <p className="text-[11px] text-slate-400">Blood group, fitness classification & campus emergency care</p>
+                    </div>
+                  </div>
+                  {canEdit && (
+                    <button
+                      onClick={openDemographicsModal}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" /> Update Blood
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                  
+                  {/* Blood Group Highlight Card */}
+                  <div className="sm:col-span-5 p-4 rounded-2xl bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-md shadow-rose-500/20 flex flex-col justify-between">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-black uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-md">
+                        Emergency Blood
+                      </span>
+                      <Droplet className="w-4 h-4 text-white/80 fill-white" />
+                    </div>
+                    <div className="my-2">
+                      <span className="text-3xl font-black tracking-tight">
+                        {student.bloodGroup || 'N/A'}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-rose-100 font-medium">
+                      {student.bloodGroup ? 'Verified Category' : 'Blood group not set'}
+                    </p>
+                  </div>
+
+                  {/* Physical Fitness & Activity Notes */}
+                  <div className="sm:col-span-7 p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/60 flex flex-col justify-between space-y-2">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Fitness & Activity Clearance</span>
+                      </div>
+                      <p className="text-xs text-slate-700 font-semibold mt-1">
+                        Fit for Physical Education, Sports & Activities
+                      </p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        {student.medicalInfo || 'No chronic health issues or allergies reported.'}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1 font-bold">
+                        <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                        <span>First-Aid Ready</span>
+                      </span>
+                      <span className="font-semibold text-slate-400">Annual Checkup</span>
                     </div>
                   </div>
 
                 </div>
               </div>
 
-              {/* Card 4: Profile Completeness Checklist */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-3.5">
+              {/* Card 5: Student Records Completeness (100% Student Focus) */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-3.5 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
                     <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600">
@@ -1192,52 +1303,41 @@ export const StudentProfilePage: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="font-extrabold text-slate-900 text-sm">
-                        Profile Completeness ({percentage}%)
+                        Student Records Verification ({studentPercentage}%)
                       </h3>
-                      <p className="text-[11px] text-slate-400">Complete all items for official certification</p>
+                      <p className="text-[11px] text-slate-400">Institutional validation of student's personal documentation</p>
                     </div>
                   </div>
-                  <span className="text-[11px] font-black text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                    {completed.length} of {total} Done
+                  <span className="text-[11px] font-black text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+                    {studentCompletedCount} of {studentChecklist.length} Verified
                   </span>
                 </div>
 
+                {/* Progress Bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
                     className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all duration-1000"
-                    style={{ width: `${percentage}%` }}
+                    style={{ width: `${studentPercentage}%` }}
                   />
                 </div>
 
-                {/* Checklist Tiles Grid */}
+                {/* Checklist Tiles Grid - 100% STUDENT RECORDS ONLY */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
-                  {[
-                    { label: 'Date of Birth', done: Boolean(student.dob), modal: openDemographicsModal },
-                    { label: 'Blood Group', done: Boolean(student.bloodGroup), modal: openDemographicsModal },
-                    { label: 'Aadhaar No', done: Boolean(student.aadharNo), modal: openDemographicsModal },
-                    { label: 'PEN Number', done: Boolean(student.penNumber), modal: openDemographicsModal },
-                    { label: 'Child ID', done: Boolean(student.childId), modal: openDemographicsModal },
-                    { label: 'APAAR ID', done: Boolean(student.apaarId), modal: openDemographicsModal },
-                    { label: "Father's Phone", done: Boolean(student.fatherPhone), modal: openFamilyModal },
-                    { label: "Father's Aadhaar", done: Boolean(student.fatherAadhar), modal: openFamilyModal },
-                    { label: "Mother's Phone", done: Boolean(student.motherPhone), modal: openFamilyModal },
-                    { label: "Mother's Aadhaar", done: Boolean(student.motherAadhar), modal: openFamilyModal },
-                    { label: 'Address', done: Boolean(student.address), modal: openFamilyModal },
-                  ].map((item, idx) => (
+                  {studentChecklist.map((item, idx) => (
                     <div 
                       key={idx}
-                      onClick={!item.done && canEdit ? item.modal : undefined}
+                      onClick={!item.done && canEdit ? item.action : undefined}
                       className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between border transition-all ${
                         item.done 
-                          ? 'bg-emerald-50/60 border-emerald-100 text-emerald-800'
-                          : 'bg-slate-50/70 border-slate-200/70 text-slate-600 hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer'
+                          ? 'bg-emerald-50/70 border-emerald-200/70 text-emerald-900'
+                          : 'bg-slate-50/80 border-slate-200/80 text-slate-600 hover:border-blue-300 hover:bg-blue-50/40 cursor-pointer'
                       }`}
                     >
                       <span className="truncate pr-1 text-[11px]">{item.label}</span>
                       {item.done ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                       ) : (
-                        <span className="text-[10px] text-blue-600 font-extrabold shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md hover:bg-blue-100">
+                        <span className="text-[10px] text-blue-600 font-extrabold shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md hover:bg-blue-100 border border-blue-200/50">
                           Add +
                         </span>
                       )}

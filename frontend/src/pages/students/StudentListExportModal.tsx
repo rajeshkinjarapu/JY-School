@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   X, FileText, FileSpreadsheet, Download, Plus, Trash2, Filter, 
   SlidersHorizontal, RotateCcw, Bookmark, Save, Sparkles, Check, 
-  Layers, ArrowUpDown
+  Layers, ArrowUpDown, Printer
 } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -561,6 +561,30 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
 
         <div className="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar space-y-6">
           
+          {/* Dedicated Full-Screen Print Studio Promotion Banner */}
+          <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 rounded-2xl text-white shadow-md flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-white/20 rounded-xl backdrop-blur-md shrink-0">
+                <Printer className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-wider text-blue-200">
+                  Full-Screen Custom Report & Print Studio
+                </p>
+                <p className="text-xs font-bold text-white mt-0.5">
+                  ప్రత్యేక ఫుల్ పేజీలో విద్యార్థుల పూర్తి వివరాలు (ఆధార్, PEN, అడ్రస్) టిక్ చేసి ప్రింట్ చేయండి
+                </p>
+              </div>
+            </div>
+            <a
+              href={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
+              className="px-4 py-2 bg-white text-indigo-700 rounded-xl text-xs font-black hover:bg-blue-50 transition-all shadow-md shrink-0 flex items-center gap-1.5"
+            >
+              <span>స్టూడియో ఓపెన్ చేయండి</span>
+              <span>→</span>
+            </a>
+          </div>
+
           {/* SECTION 1: SAVED TEMPLATES / PRESETS (టెంప్లేట్లు) */}
           <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
