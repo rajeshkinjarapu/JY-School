@@ -64,9 +64,9 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
           {/* Calendar Icon Button */}
           <button
             type="button"
-            onClick={() => navigate('/timetable')}
+            onClick={() => navigate('/attendance/holidays')}
             className="p-2 rounded-xl text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
-            title="School Calendar & Timetable"
+            title="Academic Calendar & Holidays"
           >
             <Calendar className="w-5 h-5" />
           </button>

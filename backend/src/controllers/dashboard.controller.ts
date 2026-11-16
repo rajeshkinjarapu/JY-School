@@ -47,6 +47,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       revenueResult,
       classes,
       todayAttendance,
+      todayTeacherAttendance,
       payments,
       genderGroups,
       recentPayments,
@@ -61,6 +62,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       prisma.feePayment.aggregate({ _sum: { amountPaid: true } }),
       prisma.class.findMany({ select: { id: true, name: true, section: true, _count: { select: { students: true } } } }).then(sortClasses),
       prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
+      prisma.teacherAttendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
       prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } }, select: { paymentDate: true, amountPaid: true } }),
       prisma.student.groupBy({ by: ['gender'], _count: { _all: true } }),
       prisma.feePayment.findMany({
@@ -98,9 +100,22 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       count: c._count.students
     }));
 
-    const totalMarked = todayAttendance.length;
-    const presentMarked = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
-    const attendanceToday = totalMarked > 0 ? Math.round((presentMarked / totalMarked) * 100) : 0;
+    // Live Student Attendance calculation
+    const studentTotalMarked = todayAttendance.length;
+    const studentPresentCount = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
+    const studentAbsentCount = todayAttendance.filter(a => a.status === AttendanceStatus.ABSENT).length;
+    const studentLeaveCount = todayAttendance.filter(a => a.status === AttendanceStatus.EXCUSED).length;
+    const attendanceToday = studentTotalMarked > 0 ? Math.round((studentPresentCount / studentTotalMarked) * 100) : 0;
+
+    // Live Teacher Attendance calculation
+    const teacherTotalMarked = todayTeacherAttendance.length;
+    const teacherPresentCount = todayTeacherAttendance.filter(t => t.status === 'PRESENT' || t.status === 'LATE').length;
+    const teacherAbsentCount = todayTeacherAttendance.filter(t => t.status === 'ABSENT').length;
+    const teacherLeaveCount = todayTeacherAttendance.filter(t => t.status === 'HALF_DAY').length;
+    const isTeacherAttendanceMarked = teacherTotalMarked > 0;
+    const teacherAttendancePercentage = isTeacherAttendanceMarked ? Math.round((teacherPresentCount / teacherTotalMarked) * 100) : 0;
+
+
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyCollectionMap: { [key: string]: number } = {};
@@ -202,6 +217,23 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       totalRevenue,
       enrollmentByClass,
       attendanceToday,
+      studentAttendance: {
+        totalMarked: studentTotalMarked,
+        present: studentPresentCount,
+        absent: studentAbsentCount,
+        leave: studentLeaveCount,
+        percentage: attendanceToday,
+        isMarked: studentTotalMarked > 0
+      },
+      teacherAttendance: {
+        totalMarked: teacherTotalMarked,
+        totalTeachers,
+        present: teacherPresentCount,
+        absent: teacherAbsentCount,
+        leave: teacherLeaveCount,
+        percentage: teacherAttendancePercentage,
+        isMarked: isTeacherAttendanceMarked
+      },
       monthlyFeeCollection,
       genderDistribution,
       recentPayments,
@@ -267,13 +299,14 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
     // Current month for teacher's own attendance
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
-    const [todayAttendance, recentHomework, myAttendanceThisMonth, pendingSalary, timetableToday, announcements] = await Promise.all([
+    const [todayAttendance, todayTeacherAttendance, recentHomework, myAttendanceThisMonth, pendingSalary, timetableToday, announcements] = await Promise.all([
       prisma.attendance.findMany({
         where: {
           classId: { in: classIds },
           date: { gte: today, lt: tomorrow }
         }
       }),
+      prisma.teacherAttendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }).catch(() => []),
       (prisma as any).homework.findMany({
         where: { teacherId: teacher.id },
         take: 5,
@@ -321,13 +354,27 @@ export const getTeacherDashboard = async (req: AuthRequest, res: Response, next:
       })
     ]);
 
-    const totalMarked = todayAttendance.length;
-    const presentMarked = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
+    // Live Student Attendance calculation
+    const studentTotalMarked = todayAttendance.length;
+    const studentPresentCount = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
+    const studentAbsentCount = todayAttendance.filter(a => a.status === AttendanceStatus.ABSENT).length;
+    const studentLeaveCount = todayAttendance.filter(a => a.status === AttendanceStatus.EXCUSED).length;
+    const attendanceToday = studentTotalMarked > 0 ? Math.round((studentPresentCount / studentTotalMarked) * 100) : 0;
+
+    // Live Teacher Attendance calculation
+    const teacherTotalMarked = todayTeacherAttendance.length;
+    const teacherPresentCount = todayTeacherAttendance.filter(t => t.status === 'PRESENT' || t.status === 'LATE').length;
+    const teacherAbsentCount = todayTeacherAttendance.filter(t => t.status === 'ABSENT').length;
+    const teacherLeaveCount = todayTeacherAttendance.filter(t => t.status === 'HALF_DAY').length;
+    const isTeacherAttendanceMarked = teacherTotalMarked > 0;
+    const teacherAttendancePercentage = isTeacherAttendanceMarked ? Math.round((teacherPresentCount / teacherTotalMarked) * 100) : 0;
+
     const todayAttendanceSummary = {
-      total: totalMarked,
-      present: presentMarked,
-      absent: totalMarked - presentMarked,
-      rate: totalMarked > 0 ? Math.round((presentMarked / totalMarked) * 100) : 0
+      total: studentTotalMarked,
+      present: studentPresentCount,
+      absent: studentAbsentCount,
+      leave: studentLeaveCount,
+      rate: studentTotalMarked > 0 ? Math.round((studentPresentCount / studentTotalMarked) * 100) : 0
     };
 
 

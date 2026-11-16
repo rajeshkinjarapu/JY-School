@@ -320,6 +320,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
 
     const classStatsMap = new Map<string, { className: string; present: number; absent: number; total: number }>();
     const studentsOnLeave: any[] = [];
+    const studentsAbsent: any[] = [];
 
     todayRecords.forEach(record => {
       const clsName = `${record.class.name}-${record.class.section}`;
@@ -332,19 +333,25 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       if (record.status === 'PRESENT' || record.status === 'LATE') {
         todayPresent++;
         cStat.present++;
-      } else if (record.status === 'ABSENT' || record.status === 'EXCUSED') {
-        if (record.status === 'ABSENT') {
-          todayAbsent++;
-        } else {
-          todayLeave++;
-        }
-        cStat.absent++; // Count leave/absent as absent for class stat %
+      } else if (record.status === 'EXCUSED') {
+        todayLeave++;
+        cStat.absent++;
         studentsOnLeave.push({
           studentName: record.student.user.name,
           studentId: record.student.rollNo,
           mobileNumber: record.student.user.phone,
           className: clsName,
-          reason: record.status === 'ABSENT' ? 'Absent' : (record.note || 'Leave')
+          reason: record.note || 'Excused Leave'
+        });
+      } else if (record.status === 'ABSENT') {
+        todayAbsent++;
+        cStat.absent++;
+        studentsAbsent.push({
+          studentName: record.student.user.name,
+          studentId: record.student.rollNo,
+          mobileNumber: record.student.user.phone,
+          className: clsName,
+          reason: record.note || 'Absent'
         });
       }
     });
@@ -404,6 +411,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       attendancePercentage,
       classWise,
       studentsOnLeave,
+      studentsAbsent,
       weeklyTrend,
       recentActivities: recentActivities.slice(0, 5) // top 5
     });

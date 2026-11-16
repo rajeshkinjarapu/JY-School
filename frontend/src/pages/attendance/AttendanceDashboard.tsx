@@ -16,6 +16,7 @@ export default function AttendanceDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [selectedClass, setSelectedClass] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusListTab, setStatusListTab] = useState<'leaves' | 'absent'>('absent');
 
   const fetchStats = async () => {
     try {
@@ -219,23 +220,68 @@ export default function AttendanceDashboard() {
             </div>
           </div>
 
-          {/* Students on Leave */}
+          {/* Students on Leave / Absent Today */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-amber-500" />
-              On Leave Today
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <AlertTriangle className={`w-5 h-5 ${statusListTab === 'leaves' ? 'text-amber-500' : 'text-rose-500'}`} />
+                {statusListTab === 'leaves' ? 'On Leave Today' : 'Absent Today'}
+              </h3>
+              <div className="flex bg-slate-100 p-0.5 rounded-lg text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => setStatusListTab('absent')}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    statusListTab === 'absent' ? 'bg-rose-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Absent ({stats.todayAbsent || 0})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatusListTab('leaves')}
+                  className={`px-2.5 py-1 rounded-md transition-all ${
+                    statusListTab === 'leaves' ? 'bg-amber-500 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Leaves ({stats.todayLeave || 0})
+                </button>
+              </div>
+            </div>
+
             <div className="space-y-3 max-h-[250px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
-              {stats.studentsOnLeave.length > 0 ? stats.studentsOnLeave.map((s: any, i: number) => (
-                <div key={i} className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-bold text-slate-800">{s.studentName}</p>
-                    <p className="text-xs text-slate-500">{s.className}</p>
-                  </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-1 rounded-md">{s.reason}</span>
-                </div>
-              )) : (
-                <p className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">No students on leave today.</p>
+              {statusListTab === 'leaves' ? (
+                (stats.studentsOnLeave && stats.studentsOnLeave.length > 0) ? (
+                  stats.studentsOnLeave.map((s: any, i: number) => (
+                    <div key={i} className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{s.studentName}</p>
+                        <p className="text-xs text-slate-500">{s.className} • ID: {s.studentId}</p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-1 rounded-md">
+                        {s.reason || 'Leave'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">No students on leave today.</p>
+                )
+              ) : (
+                (stats.studentsAbsent && stats.studentsAbsent.length > 0) ? (
+                  stats.studentsAbsent.map((s: any, i: number) => (
+                    <div key={i} className="bg-rose-50/50 border border-rose-100 rounded-xl p-3 flex justify-between items-start">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{s.studentName}</p>
+                        <p className="text-xs text-slate-500">{s.className} • ID: {s.studentId}</p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 bg-rose-100 px-2 py-1 rounded-md">
+                        Absent
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-xl">No students absent today.</p>
+                )
               )}
             </div>
           </div>

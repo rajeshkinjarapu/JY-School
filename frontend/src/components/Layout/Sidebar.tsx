@@ -181,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           </div>
           <div className="min-w-0 flex flex-col justify-center">
             <h1 className="text-[16px] font-black text-white leading-tight break-words tracking-wide">{schoolName || 'JY School'}</h1>
-            <p className="text-[10px] font-semibold text-slate-400 tracking-wider mt-0.5">Learn • Grow • Excel</p>
+
           </div>
         </div>
       </div>
