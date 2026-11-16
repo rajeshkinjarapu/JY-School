@@ -9,7 +9,9 @@ import {
   Layers, Sparkles, Plus, Trash2, Save, Search, Building, 
   CheckCircle2, AlertCircle, Calendar, Users, GraduationCap, 
   Eye, Settings2, HeartPulse, ShieldCheck, MapPin, Check, 
-  Fingerprint, Phone, Hash, ChevronDown, RefreshCw, X
+  Fingerprint, Phone, Hash, ChevronDown, RefreshCw, X,
+  Maximize2, Minimize2, Palette, ChevronUp, ChevronRight,
+  ZoomIn, ZoomOut, CheckCircle, Sliders, Type
 } from 'lucide-react';
 
 interface ColumnDef {
@@ -30,8 +32,10 @@ interface PresetTemplate {
   isBuiltIn: boolean;
   orientation: 'portrait' | 'landscape';
   customHeading: string;
-  rowHeight: 'compact' | 'normal' | 'spacious' | 'signature';
+  rowHeightMm: number;
+  cellPadding: 'compact' | 'normal' | 'relaxed';
   fontSize: 'sm' | 'base' | 'lg';
+  tableTheme: 'navy' | 'purple' | 'emerald' | 'crimson' | 'charcoal';
   selectedColumns: string[];
   customBlankColumns?: { id: string; label: string; widthPt: number }[];
 }
@@ -52,13 +56,14 @@ export const StudentReportPrintPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Page / Print Configuration
-  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape');
-  const [rowHeight, setRowHeight] = useState<'compact' | 'normal' | 'spacious' | 'signature'>('normal');
+  // ── ROW HEIGHT & SPACING CONTROLS (DIRECTLY EDITABLE) ──
+  const [rowHeightMm, setRowHeightMm] = useState<number>(9); // 5mm to 30mm
+  const [cellPadding, setCellPadding] = useState<'compact' | 'normal' | 'relaxed'>('normal');
   const [fontSize, setFontSize] = useState<'sm' | 'base' | 'lg'>('base');
+  const [orientation, setOrientation] = useState<'portrait' | 'landscape'>('landscape');
   const [reportTitle, setReportTitle] = useState('STUDENT MASTER DIRECTORY & REPORT');
-  const [showPhoto, setShowPhoto] = useState(false);
-  const [activeTab, setActiveTab] = useState<'columns' | 'templates' | 'settings'>('columns');
+  const [tableTheme, setTableTheme] = useState<'navy' | 'purple' | 'emerald' | 'crimson' | 'charcoal'>('navy');
+  const [showColumnsSelector, setShowColumnsSelector] = useState(true);
 
   // Custom added blank columns for handwriting/signatures
   const [customBlankCols, setCustomBlankCols] = useState<{ id: string; label: string; widthPt: number }[]>([]);
@@ -147,8 +152,10 @@ export const StudentReportPrintPage: React.FC = () => {
       isBuiltIn: true,
       orientation: 'portrait',
       customHeading: 'STUDENT LIST & CONTACT DIRECTORY',
-      rowHeight: 'normal',
+      rowHeightMm: 8,
+      cellPadding: 'normal',
       fontSize: 'base',
+      tableTheme: 'navy',
       selectedColumns: ['sno', 'rollNo', 'name', 'className', 'gender', 'fatherName', 'fatherPhone'],
     },
     {
@@ -158,68 +165,93 @@ export const StudentReportPrintPage: React.FC = () => {
       isBuiltIn: true,
       orientation: 'landscape',
       customHeading: 'GOVERNMENT UDISE+, PEN & AADHAAR REGISTRY',
-      rowHeight: 'normal',
+      rowHeightMm: 9,
+      cellPadding: 'normal',
       fontSize: 'base',
-      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'gender', 'dob', 'aadharNo', 'penNumber', 'childId', 'apaarId'],
+      tableTheme: 'emerald',
+      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'gender', 'aadharNo', 'penNumber', 'childId', 'apaarId'],
     },
     {
-      id: 'preset_ptm_sheet',
+      id: 'preset_parent_sig',
       name: '✍️ Parent Signature & PTM Sheet',
       icon: '✍️',
       isBuiltIn: true,
       orientation: 'landscape',
-      customHeading: 'PARENT-TEACHER MEETING ACKNOWLEDGEMENT SHEET',
-      rowHeight: 'signature',
+      customHeading: 'PARENT SIGNATURE & ACKNOWLEDGEMENT SHEET',
+      rowHeightMm: 18, // Generous signature box height
+      cellPadding: 'relaxed',
       fontSize: 'base',
+      tableTheme: 'purple',
       selectedColumns: ['sno', 'rollNo', 'name', 'className', 'fatherName', 'fatherPhone', 'parentSignature', 'remarks'],
     },
     {
-      id: 'preset_family_directory',
-      name: '👨‍👩‍👧 Family & Parents Directory',
-      icon: '👨‍👩‍👧',
+      id: 'preset_bus_attendance',
+      name: '🚌 Bus Transport Attendance',
+      icon: '🚌',
       isBuiltIn: true,
       orientation: 'landscape',
-      customHeading: 'PARENTS DETAILED CONTACT & AADHAAR REGISTER',
-      rowHeight: 'normal',
+      customHeading: 'BUS TRANSPORT DAILY ATTENDANCE & ROUTE SHEET',
+      rowHeightMm: 10,
+      cellPadding: 'compact',
       fontSize: 'sm',
-      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'fatherName', 'fatherPhone', 'fatherAadhar', 'motherName', 'motherPhone', 'address'],
+      tableTheme: 'crimson',
+      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'fatherPhone', 'address', 'attendanceBox'],
     },
     {
-      id: 'preset_health_registry',
-      name: '🩺 Student Health & Blood Group',
-      icon: '🩺',
-      isBuiltIn: true,
-      orientation: 'landscape',
-      customHeading: 'STUDENT HEALTH, BLOOD GROUP & EMERGENCY ROSTER',
-      rowHeight: 'normal',
-      fontSize: 'base',
-      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'gender', 'bloodGroup', 'dob', 'age', 'fatherPhone', 'address'],
-    },
-    {
-      id: 'preset_fee_register',
-      name: '💰 Fee Collection Register',
+      id: 'preset_fees',
+      name: '💰 Fee Verification & Collection',
       icon: '💰',
       isBuiltIn: true,
       orientation: 'landscape',
-      customHeading: 'STUDENT FEE COLLECTION & RECEIPT REGISTER',
-      rowHeight: 'signature',
+      customHeading: 'STUDENT TERM FEE VERIFICATION & COLLECTION REGISTER',
+      rowHeightMm: 12,
+      cellPadding: 'normal',
       fontSize: 'base',
+      tableTheme: 'navy',
       selectedColumns: ['sno', 'rollNo', 'name', 'className', 'fatherName', 'fatherPhone', 'feeAmount', 'receiptNo', 'parentSignature'],
     },
     {
-      id: 'preset_master_all',
-      name: '🌟 Complete Master Dossier (All Columns)',
-      icon: '🌟',
+      id: 'preset_blood_group',
+      name: '🩸 Student Health & Blood Group',
+      icon: '🩸',
+      isBuiltIn: true,
+      orientation: 'portrait',
+      customHeading: 'STUDENT BLOOD GROUP & EMERGENCY CARE DIRECTORY',
+      rowHeightMm: 9,
+      cellPadding: 'normal',
+      fontSize: 'base',
+      tableTheme: 'crimson',
+      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'gender', 'dob', 'age', 'bloodGroup', 'fatherPhone'],
+    },
+    {
+      id: 'preset_family_address',
+      name: '📍 Address & Family Directory',
+      icon: '📍',
       isBuiltIn: true,
       orientation: 'landscape',
-      customHeading: 'COMPLETE STUDENT MASTER REPOSITORY',
-      rowHeight: 'compact',
+      customHeading: 'STUDENT RESIDENTIAL ADDRESS & FAMILY ENROLMENT',
+      rowHeightMm: 10,
+      cellPadding: 'normal',
+      fontSize: 'base',
+      tableTheme: 'charcoal',
+      selectedColumns: ['sno', 'rollNo', 'name', 'className', 'fatherName', 'fatherPhone', 'motherName', 'motherPhone', 'address'],
+    },
+    {
+      id: 'preset_master_all',
+      name: '📑 All Columns Master Directory',
+      icon: '📑',
+      isBuiltIn: true,
+      orientation: 'landscape',
+      customHeading: 'STUDENTS ALL RECORDS OFFICIAL MASTER DIRECTORY',
+      rowHeightMm: 10,
+      cellPadding: 'compact',
       fontSize: 'sm',
+      tableTheme: 'navy',
       selectedColumns: MASTER_COLUMNS.map(c => c.id),
     },
   ], [MASTER_COLUMNS]);
 
-  // Saved presets from localStorage
+  // Saved user presets in localStorage
   const [savedPresets, setSavedPresets] = useState<PresetTemplate[]>(() => {
     try {
       const stored = localStorage.getItem('jy_school_custom_report_presets');
@@ -300,7 +332,7 @@ export const StudentReportPrintPage: React.FC = () => {
     const customCols: ColumnDef[] = customBlankCols.map(c => ({
       id: c.id,
       label: c.label,
-      teluguLabel: 'కస్టమ్ ఖాళీ కాలమ్',
+      teluguLabel: c.label,
       category: 'custom',
       defaultSelected: true,
       widthPt: c.widthPt,
@@ -310,60 +342,67 @@ export const StudentReportPrintPage: React.FC = () => {
     return [...standardCols, ...customCols];
   }, [MASTER_COLUMNS, selectedColIds, customBlankCols]);
 
-  // Toggle single column
-  const toggleColumn = (id: string) => {
-    setSelectedColIds(prev => {
-      if (prev.includes(id)) {
-        if (prev.length <= 1) {
-          toast.error('At least one column must be selected');
-          return prev;
-        }
-        return prev.filter(c => c !== id);
-      } else {
-        return [...prev, id];
+  // Toggle Column Selection
+  const toggleColumn = (colId: string) => {
+    if (selectedColIds.includes(colId)) {
+      if (selectedColIds.length === 1 && customBlankCols.length === 0) {
+        toast.error('At least one column must be selected');
+        return;
       }
-    });
+      setSelectedColIds(prev => prev.filter(id => id !== colId));
+    } else {
+      setSelectedColIds(prev => [...prev, colId]);
+    }
   };
 
-  // Toggle Category
-  const toggleCategory = (category: string, selectAll: boolean) => {
-    const catColIds = MASTER_COLUMNS.filter(c => c.category === category).map(c => c.id);
-    setSelectedColIds(prev => {
-      if (selectAll) {
-        return Array.from(new Set([...prev, ...catColIds]));
-      } else {
-        const remaining = prev.filter(id => !catColIds.includes(id));
-        return remaining.length > 0 ? remaining : [catColIds[0]];
+  // Select all or deselect category
+  const selectAllCategory = (category: string) => {
+    const catCols = MASTER_COLUMNS.filter(c => c.category === category).map(c => c.id);
+    const allSelected = catCols.every(id => selectedColIds.includes(id));
+    if (allSelected) {
+      // Remove all except don't allow 0 columns
+      const remaining = selectedColIds.filter(id => !catCols.includes(id));
+      if (remaining.length === 0 && customBlankCols.length === 0) {
+        toast.error('At least one column must remain active');
+        return;
       }
-    });
+      setSelectedColIds(remaining);
+    } else {
+      setSelectedColIds(prev => Array.from(new Set([...prev, ...catCols])));
+    }
   };
 
-  // Select all columns
-  const selectAllColumns = () => {
-    setSelectedColIds(MASTER_COLUMNS.map(c => c.id));
-    toast.success('All columns selected!');
+  // Add custom column
+  const handleAddCustomColumn = (e: React.FormEvent) => {
+    e.preventDefault();
+    const name = newColName.trim();
+    if (!name) return;
+    const newId = `custom_col_${Date.now()}`;
+    setCustomBlankCols(prev => [...prev, { id: newId, label: name.toUpperCase(), widthPt: 40 }]);
+    setNewColName('');
+    toast.success(`Custom column "${name}" added!`, { icon: '✍️' });
   };
 
-  // Clear to standard minimal columns
-  const clearToMinimal = () => {
-    setSelectedColIds(['sno', 'rollNo', 'name', 'className']);
-    toast.success('Reset to basic columns');
+  const handleRemoveCustomColumn = (id: string) => {
+    setCustomBlankCols(prev => prev.filter(c => c.id !== id));
   };
 
-  // Apply a preset template
+  // Apply Preset
   const applyPreset = (preset: PresetTemplate) => {
     setOrientation(preset.orientation);
-    setRowHeight(preset.rowHeight);
-    setFontSize(preset.fontSize);
     setReportTitle(preset.customHeading);
-    setSelectedColIds(preset.selectedColumns);
+    setRowHeightMm(preset.rowHeightMm || 9);
+    setCellPadding(preset.cellPadding || 'normal');
+    setFontSize(preset.fontSize || 'base');
+    setTableTheme(preset.tableTheme || 'navy');
+    setSelectedColIds(preset.selectedColumns.filter(id => MASTER_COLUMNS.some(c => c.id === id)));
     if (preset.customBlankColumns) {
       setCustomBlankCols(preset.customBlankColumns);
     }
-    toast.success(`Loaded "${preset.name}"`, { icon: '✨' });
+    toast.success(`Template applied: ${preset.name}`, { icon: '✨' });
   };
 
-  // Save current preset
+  // Save Current Preset
   const handleSavePreset = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTemplateName.trim()) {
@@ -371,14 +410,16 @@ export const StudentReportPrintPage: React.FC = () => {
       return;
     }
     const newPreset: PresetTemplate = {
-      id: `custom_preset_${Date.now()}`,
+      id: `saved_preset_${Date.now()}`,
       name: newTemplateName.trim(),
       icon: '⭐',
       isBuiltIn: false,
       orientation,
       customHeading: reportTitle,
-      rowHeight,
+      rowHeightMm,
+      cellPadding,
       fontSize,
+      tableTheme,
       selectedColumns: [...selectedColIds],
       customBlankColumns: [...customBlankCols],
     };
@@ -387,14 +428,13 @@ export const StudentReportPrintPage: React.FC = () => {
     try {
       localStorage.setItem('jy_school_custom_report_presets', JSON.stringify(updated));
     } catch {}
-    setShowSaveModal(false);
     setNewTemplateName('');
-    toast.success('Template saved successfully! You can reuse it anytime.', { icon: '💾' });
+    setShowSaveModal(false);
+    toast.success('Custom preset template saved!', { icon: '💾' });
   };
 
-  // Delete custom preset
   const handleDeletePreset = (id: string, name: string) => {
-    if (!window.confirm(`Delete custom template "${name}"?`)) return;
+    if (!window.confirm(`Delete preset "${name}"?`)) return;
     const updated = savedPresets.filter(p => p.id !== id);
     setSavedPresets(updated);
     try {
@@ -403,52 +443,98 @@ export const StudentReportPrintPage: React.FC = () => {
     toast.success(`Template "${name}" deleted`);
   };
 
-  // Add custom blank column
-  const handleAddCustomColumn = (e: React.FormEvent) => {
-    e.preventDefault();
-    const name = newColName.trim();
-    if (!name) return;
-    const id = `col_custom_${Date.now()}`;
-    setCustomBlankCols(prev => [...prev, { id, label: name.toUpperCase(), widthPt: 40 }]);
-    setNewColName('');
-    toast.success(`Added blank column: "${name}"`);
-  };
-
-  // Remove custom blank column
-  const handleRemoveCustomColumn = (id: string) => {
-    setCustomBlankCols(prev => prev.filter(c => c.id !== id));
-  };
-
-  // Native Print
+  // Direct Browser Print
   const handlePrint = () => {
     window.print();
   };
 
-  // PDF Export
+  // Color theme definition map
+  const THEME_STYLES = {
+    navy: {
+      id: 'navy',
+      name: 'Royal Navy (నీలం)',
+      headerBg: 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white',
+      border: 'border-blue-900',
+      accentText: 'text-blue-950',
+      rowAlt: 'bg-blue-50/20',
+      hover: 'hover:bg-blue-50/40',
+      rgbHeader: [30, 58, 138],
+    },
+    purple: {
+      id: 'purple',
+      name: 'Imperial Purple (రాయల్ పర్పుల్)',
+      headerBg: 'bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white',
+      border: 'border-purple-900',
+      accentText: 'text-purple-950',
+      rowAlt: 'bg-purple-50/20',
+      hover: 'hover:bg-purple-50/40',
+      rgbHeader: [88, 28, 135],
+    },
+    emerald: {
+      id: 'emerald',
+      name: 'Emerald Green (ఎమరాల్డ్ పచ్చ)',
+      headerBg: 'bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-950 text-white',
+      border: 'border-emerald-900',
+      accentText: 'text-emerald-950',
+      rowAlt: 'bg-emerald-50/20',
+      hover: 'hover:bg-emerald-50/40',
+      rgbHeader: [6, 95, 70],
+    },
+    crimson: {
+      id: 'crimson',
+      name: 'Crimson Maroon (మరూన్ ఎరుపు)',
+      headerBg: 'bg-gradient-to-r from-rose-900 via-red-900 to-rose-950 text-white',
+      border: 'border-rose-900',
+      accentText: 'text-rose-950',
+      rowAlt: 'bg-rose-50/20',
+      hover: 'hover:bg-rose-50/40',
+      rgbHeader: [159, 18, 57],
+    },
+    charcoal: {
+      id: 'charcoal',
+      name: 'Classic Charcoal (నలుపు/బూడిద)',
+      headerBg: 'bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-950 text-white',
+      border: 'border-slate-800',
+      accentText: 'text-slate-950',
+      rowAlt: 'bg-slate-50/50',
+      hover: 'hover:bg-slate-100/50',
+      rgbHeader: [15, 23, 42],
+    },
+  };
+
+  const currentTheme = THEME_STYLES[tableTheme];
+
+  // PDF Export using jsPDF and autoTable
   const handleExportPDF = async () => {
-    const toastId = toast.loading('Generating high-resolution PDF report...');
+    const toastId = toast.loading('Generating PDF report...');
     try {
       const { default: jsPDF } = await import('jspdf');
       const autoTableModule: any = await import('jspdf-autotable');
       const autoTable = autoTableModule.default || autoTableModule;
 
-      const doc = new jsPDF({ orientation, unit: 'mm', format: 'a4' });
+      const doc = new jsPDF({
+        orientation,
+        unit: 'mm',
+        format: 'a4',
+      });
+
       const pageWidth = doc.internal.pageSize.getWidth();
 
-      // Top School Brand Header
+      // Official School Header
       doc.setFontSize(16);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(15, 23, 42);
       doc.text('SRI VENKATESWARA JY HIGH SCHOOL', pageWidth / 2, 13, { align: 'center' });
 
-      doc.setFontSize(9);
+      doc.setFontSize(8.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 116, 139);
-      doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist.', pageWidth / 2, 18, { align: 'center' });
+      doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist. • Contact: 9441104648', pageWidth / 2, 18, { align: 'center' });
 
-      doc.setFontSize(11);
+      // Custom Report Title
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(30, 58, 138);
+      doc.setTextColor(currentTheme.rgbHeader[0], currentTheme.rgbHeader[1], currentTheme.rgbHeader[2]);
       doc.text(reportTitle.toUpperCase(), pageWidth / 2, 25, { align: 'center' });
 
       doc.setDrawColor(226, 232, 240);
@@ -483,7 +569,9 @@ export const StudentReportPrintPage: React.FC = () => {
         return activeColumns.map(c => c.getValue(s, idx));
       });
 
-      const rowPadding = rowHeight === 'compact' ? 1.5 : rowHeight === 'spacious' ? 4.5 : rowHeight === 'signature' ? 7 : 2.8;
+      // Calculate exact row height and padding for jsPDF
+      const verticalPad = Math.max(1, (rowHeightMm - 5) / 2);
+      const horizontalPad = cellPadding === 'compact' ? 1.2 : cellPadding === 'relaxed' ? 3.0 : 2.0;
 
       autoTable(doc, {
         head: [headers],
@@ -496,15 +584,16 @@ export const StudentReportPrintPage: React.FC = () => {
           textColor: [30, 41, 59],
           lineColor: [203, 213, 225],
           lineWidth: 0.2,
-          cellPadding: { top: rowPadding, bottom: rowPadding, left: 1.8, right: 1.8 },
+          minCellHeight: rowHeightMm,
+          cellPadding: { top: verticalPad, bottom: verticalPad, left: horizontalPad, right: horizontalPad },
           overflow: 'linebreak',
         },
         headStyles: {
-          fillColor: [30, 58, 138],
+          fillColor: currentTheme.rgbHeader,
           textColor: [255, 255, 255],
           fontStyle: 'bold',
           halign: 'center',
-          cellPadding: { top: 2.5, bottom: 2.5, left: 1.8, right: 1.8 },
+          cellPadding: { top: 3, bottom: 3, left: horizontalPad, right: horizontalPad },
         },
         alternateRowStyles: {
           fillColor: [248, 250, 252],
@@ -534,15 +623,20 @@ export const StudentReportPrintPage: React.FC = () => {
     const toastId = toast.loading('Preparing Excel spreadsheet...');
     try {
       const XLSX = await import('xlsx');
-      const excelRows = filteredStudents.map((s, idx) => {
-        const rowObj: any = {};
-        activeColumns.forEach(c => {
-          rowObj[c.label] = c.getValue(s, idx);
-        });
-        return rowObj;
+      const headerRow: string[] = activeColumns.map(c => c.label);
+      const dataRows = filteredStudents.map((s, idx) => {
+        return activeColumns.map(c => c.getValue(s, idx));
       });
 
-      const worksheet = XLSX.utils.json_to_sheet(excelRows);
+      const worksheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+      
+      // Set precise row height in Excel points (1 mm ≈ 2.83465 pt)
+      const excelRowHeightPt = Math.max(18, rowHeightMm * 2.83465);
+      worksheet['!rows'] = [
+        { hpt: 26 }, // Header row height
+        ...dataRows.map(() => ({ hpt: excelRowHeightPt }))
+      ];
+
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Students Report');
 
@@ -555,54 +649,142 @@ export const StudentReportPrintPage: React.FC = () => {
     }
   };
 
-  // Grouped columns for selector UI
+  // Vibrant Category definitions with distinct colorful gradients
   const categories = [
-    { id: 'basic', title: 'Basic & Identity', telugu: 'ప్రాథమిక & గుర్తింపు వివరాలు', icon: Users, color: 'text-blue-600 bg-blue-50 border-blue-200' },
-    { id: 'govt', title: 'Government & UDISE+', telugu: 'ప్రభుత్వ రిజిస్ట్రీ వివరాలు', icon: Building, color: 'text-emerald-600 bg-emerald-50 border-emerald-200' },
-    { id: 'academic', title: 'Academic & Institutional', telugu: 'విద్యా & తరగతి వివరాలు', icon: GraduationCap, color: 'text-indigo-600 bg-indigo-50 border-indigo-200' },
-    { id: 'family', title: 'Parents & Family', telugu: 'తల్లిదండ్రుల వివరాలు', icon: HeartPulse, color: 'text-pink-600 bg-pink-50 border-pink-200' },
-    { id: 'address', title: 'Address & Residence', telugu: 'నివాస చిరునామా', icon: MapPin, color: 'text-amber-600 bg-amber-50 border-amber-200' },
-    { id: 'custom', title: 'Physical Blank & Signature Columns', telugu: 'సంతకాలు & బాక్స్‌లు', icon: SlidersHorizontal, color: 'text-purple-600 bg-purple-50 border-purple-200' },
+    { 
+      id: 'basic', 
+      title: 'Basic & Identity', 
+      telugu: 'ప్రాథమిక & గుర్తింపు వివరాలు', 
+      icon: Users, 
+      gradient: 'from-blue-600 via-indigo-600 to-blue-700',
+      badgeBg: 'bg-blue-100 text-blue-800',
+      borderHover: 'hover:border-blue-400',
+      cardBg: 'bg-blue-50/30'
+    },
+    { 
+      id: 'govt', 
+      title: 'Government & UDISE+', 
+      telugu: 'ప్రభుత్వ రిజిస్ట్రీ (PEN, Child ID)', 
+      icon: Building, 
+      gradient: 'from-emerald-600 via-teal-600 to-emerald-700',
+      badgeBg: 'bg-emerald-100 text-emerald-800',
+      borderHover: 'hover:border-emerald-400',
+      cardBg: 'bg-emerald-50/30'
+    },
+    { 
+      id: 'academic', 
+      title: 'Academic & Institutional', 
+      telugu: 'విద్యా & తరగతి వివరాలు', 
+      icon: GraduationCap, 
+      gradient: 'from-indigo-600 via-purple-600 to-indigo-700',
+      badgeBg: 'bg-indigo-100 text-indigo-800',
+      borderHover: 'hover:border-indigo-400',
+      cardBg: 'bg-indigo-50/30'
+    },
+    { 
+      id: 'family', 
+      title: 'Parents & Family', 
+      telugu: 'తల్లిదండ్రుల వివరాలు', 
+      icon: HeartPulse, 
+      gradient: 'from-amber-500 via-orange-600 to-amber-600',
+      badgeBg: 'bg-amber-100 text-amber-800',
+      borderHover: 'hover:border-amber-400',
+      cardBg: 'bg-amber-50/30'
+    },
+    { 
+      id: 'address', 
+      title: 'Address & Residence', 
+      telugu: 'నివాస చిరునామా / గ్రామం', 
+      icon: MapPin, 
+      gradient: 'from-rose-500 via-pink-600 to-rose-600',
+      badgeBg: 'bg-rose-100 text-rose-800',
+      borderHover: 'hover:border-rose-400',
+      cardBg: 'bg-rose-50/30'
+    },
+    { 
+      id: 'custom', 
+      title: 'Signatures & Physical Boxes', 
+      telugu: 'సంతకాలు & పెన్నుతో రాసుకునే కాలమ్స్', 
+      icon: SlidersHorizontal, 
+      gradient: 'from-purple-600 via-fuchsia-600 to-purple-700',
+      badgeBg: 'bg-purple-100 text-purple-800',
+      borderHover: 'hover:border-purple-400',
+      cardBg: 'bg-purple-50/30'
+    },
   ];
 
+  // Cell padding classes
+  const paddingXClass = 
+    cellPadding === 'compact' ? 'px-2' : 
+    cellPadding === 'relaxed' ? 'px-4' : 'px-3';
+
+  // Font size classes for table cells
+  const fontSizeClass = 
+    fontSize === 'sm' ? 'text-[10px]' : 
+    fontSize === 'lg' ? 'text-sm' : 'text-xs';
+
   return (
-    <div className="flex flex-col min-h-screen bg-slate-100/90 text-slate-800 font-sans print:bg-white print:p-0 print:m-0">
+    <div className="flex flex-col min-h-screen bg-[#F1F5F9] text-slate-800 font-sans print:bg-white print:p-0 print:m-0">
       
+      {/* Dynamic Print CSS to enforce exact row height in printing */}
+      <style>{`
+        @media print {
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          @page {
+            size: ${orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'};
+            margin: 8mm 6mm 8mm 6mm;
+          }
+          .custom-print-row {
+            height: ${rowHeightMm}mm !important;
+            min-height: ${rowHeightMm}mm !important;
+          }
+        }
+      `}</style>
+
       {/* ============================================================ */}
-      {/* ── TOP CONTROL BAR (HIDDEN IN PRINT) ──                      */}
+      {/* ── 1. ULTRA-PREMIUM COLORFUL HERO TOP BANNER (HIDDEN IN PRINT) ── */}
       {/* ============================================================ */}
-      <div className="bg-white border-b border-slate-200/90 sticky top-0 z-30 shadow-xs print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="relative overflow-hidden bg-gradient-to-r from-[#0F172A] via-[#1E1B4B] to-[#312E81] text-white p-4 sm:p-6 shadow-xl border-b border-indigo-950 print:hidden">
+        
+        {/* Glow ambient lights */}
+        <div className="absolute -top-10 right-1/4 w-80 h-80 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-10 right-10 w-96 h-96 rounded-full bg-fuchsia-500/15 blur-3xl pointer-events-none" />
+        <div className="absolute -left-10 top-0 w-64 h-64 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           
-          {/* Back Button & Title */}
-          <div className="flex items-center gap-3">
+          {/* Title & Navigation */}
+          <div className="flex items-center gap-3.5">
             <Link
               to="/students"
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+              className="p-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white backdrop-blur-md transition-all hover:scale-105 border border-white/10 shadow-sm"
               title="Back to Students List"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
-                  Student Custom Report & Print Studio
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                  <span>Custom Student Report & Print Studio</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-black shadow-sm uppercase tracking-wider">
+                    PRO STUDIO
+                  </span>
                 </h1>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
-                  Full Page Studio
-                </span>
               </div>
-              <p className="text-xs text-slate-500 font-medium">
-                ఏ వివరాలు కావాలో టిక్ చేసుకుని, అనుకూలమైన రో-సైజుతో ప్రింట్ లేదా పిడిఎఫ్ డౌన్‌లోడ్ చేయండి
+              <p className="text-xs sm:text-sm text-indigo-200/90 font-medium mt-0.5">
+                మీకు నచ్చిన వివరాలు ఎంచుకోండి • వరుసల ఎత్తు, స్పేసింగ్ & కలర్స్ సర్దుబాటు చేసి నేరుగా ప్రింట్ తీయండి
               </p>
             </div>
           </div>
 
-          {/* Quick Actions (Print, PDF, Excel) */}
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Master Action Buttons */}
+          <div className="flex items-center gap-2.5 flex-wrap">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-black shadow-md shadow-blue-500/25 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Print (డైరెక్ట్ ప్రింట్)</span>
@@ -610,45 +792,46 @@ export const StudentReportPrintPage: React.FC = () => {
 
             <button
               onClick={handleExportPDF}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 hover:border-blue-400 hover:bg-blue-50 text-slate-800 hover:text-blue-700 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold backdrop-blur-md hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-sm"
             >
-              <FileText className="w-4 h-4 text-rose-500" />
+              <FileText className="w-4 h-4 text-rose-400" />
               <span>Download PDF</span>
             </button>
 
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50 text-slate-800 hover:text-emerald-700 rounded-xl text-xs font-bold shadow-xs transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold backdrop-blur-md hover:scale-105 active:scale-95 transition-all cursor-pointer shadow-sm"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
               <span>Export Excel</span>
             </button>
           </div>
 
         </div>
+
       </div>
 
       {/* ============================================================ */}
-      {/* ── MAIN CONFIGURATION & LIVE PREVIEW WORKSPACE ──             */}
+      {/* ── MAIN CONTENT WORKSPACE ──                                 */}
       {/* ============================================================ */}
-      <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 py-4 space-y-4 print:p-0 print:m-0 print:max-w-none">
-
-        {/* ── FILTER & LIVE STATS STRIP (HIDDEN IN PRINT) ── */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3 print:hidden">
+      <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 py-5 space-y-5 print:p-0 print:m-0 print:max-w-none">
+        
+        {/* ── SECTION A: PRESETS & LIVE FILTER BAR (HIDDEN IN PRINT) ── */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-3.5 print:hidden">
           
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Row 1: Filters & Search */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             
-            {/* Class & Filter Selectors */}
             <div className="flex items-center gap-2.5 flex-wrap">
               
               {/* Class Dropdown */}
-              <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5">
-                <GraduationCap className="w-4 h-4 text-indigo-500" />
-                <span className="text-[11px] font-bold text-slate-500 uppercase">Class:</span>
+              <div className="flex items-center gap-2 bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-2xl px-3.5 py-2 shadow-2xs">
+                <GraduationCap className="w-4 h-4 text-indigo-600" />
+                <span className="text-[11px] font-black text-indigo-900 uppercase">Class:</span>
                 <select
                   value={selectedClassId}
                   onChange={(e) => setSelectedClassId(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
                 >
                   <option value="">All Classes ({students.length})</option>
                   {classes.map(c => (
@@ -658,12 +841,12 @@ export const StudentReportPrintPage: React.FC = () => {
               </div>
 
               {/* Gender Filter Buttons */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1">
+              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200">
                 {(['all', 'male', 'female'] as const).map(g => (
                   <button
                     key={g}
                     onClick={() => setGenderFilter(g)}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-lg capitalize transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-xl capitalize transition-all cursor-pointer ${
                       genderFilter === g
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -675,12 +858,12 @@ export const StudentReportPrintPage: React.FC = () => {
               </div>
 
               {/* Status Filter */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-xl p-1">
+              <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-2xl border border-slate-200">
                 {(['all', 'active', 'inactive'] as const).map(s => (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className={`px-2.5 py-1 text-xs font-bold rounded-lg capitalize transition-colors cursor-pointer ${
+                    className={`px-3 py-1.5 text-xs font-bold rounded-xl capitalize transition-all cursor-pointer ${
                       statusFilter === s
                         ? 'bg-indigo-600 text-white shadow-xs'
                         : 'text-slate-600 hover:text-slate-900'
@@ -693,40 +876,38 @@ export const StudentReportPrintPage: React.FC = () => {
 
             </div>
 
-            {/* Live Search & Count Badge */}
-            <div className="flex items-center gap-2.5 self-end md:self-auto">
-              
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            {/* Search & Active Stats */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1 sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                 <input
                   type="text"
-                  placeholder="Search student or parent..."
+                  placeholder="Search student, roll, phone, aadhar..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium w-48 sm:w-56 focus:outline-none focus:border-blue-500 focus:bg-white"
+                  className="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium focus:outline-none focus:border-indigo-500 focus:bg-white transition-all"
                 />
               </div>
 
-              <div className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-xl text-xs font-black text-blue-900 shrink-0">
+              <div className="flex items-center gap-2 px-3.5 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl text-xs font-black shadow-sm shrink-0">
                 <span>{filteredStudents.length} Students</span>
-                <span className="text-blue-500 mx-1.5">•</span>
-                <span>{activeColumns.length} Cols</span>
+                <span>•</span>
+                <span>{activeColumns.length} Columns</span>
               </div>
-
             </div>
 
           </div>
 
-          {/* Quick Presets Strip (1-Click Setup) */}
-          <div className="pt-2 border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1">
+          {/* Row 2: 1-Click Saved & Built-in Presets */}
+          <div className="pt-2.5 border-t border-slate-100 flex items-center gap-2 overflow-x-auto scrollbar-none">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1">
               <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Presets:
             </span>
             {BUILT_IN_PRESETS.map(preset => (
               <button
                 key={preset.id}
                 onClick={() => applyPreset(preset)}
-                className="px-3 py-1.5 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                className="px-3.5 py-1.5 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-300 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs hover:shadow-xs"
               >
                 <span>{preset.icon}</span>
                 <span>{preset.name.replace(/^[^\s]+\s*/, '')}</span>
@@ -736,7 +917,7 @@ export const StudentReportPrintPage: React.FC = () => {
               <div key={preset.id} className="relative group shrink-0">
                 <button
                   onClick={() => applyPreset(preset)}
-                  className="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
                 >
                   <span>⭐</span>
                   <span>{preset.name}</span>
@@ -752,131 +933,364 @@ export const StudentReportPrintPage: React.FC = () => {
             ))}
             <button
               onClick={() => setShowSaveModal(true)}
-              className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1 cursor-pointer"
+              className="px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 cursor-pointer"
             >
-              <Save className="w-3 h-3" />
-              <span>Save Current as Preset</span>
+              <Save className="w-3.5 h-3.5" />
+              <span>Save Current Setup</span>
             </button>
           </div>
 
         </div>
 
-        {/* ── TABS FOR CONTROLS (COLUMNS PICKER / PAGE SETTINGS) (HIDDEN IN PRINT) ── */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden print:hidden">
+        {/* ============================================================ */}
+        {/* ── SECTION B: DEDICATED ROW HEIGHT, SPACING & COLOR CONTROLS ── */}
+        {/* ============================================================ */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-sm space-y-4 print:hidden">
           
-          {/* Tab Selector */}
-          <div className="p-2 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-1">
-              {[
-                { id: 'columns', label: '1. Select Columns (వివరాలు ఎంచుకోండి)', icon: CheckSquare, count: activeColumns.length },
-                { id: 'settings', label: '2. Page Setup & Heights (పేజీ అమరిక)', icon: SlidersHorizontal, count: null },
-              ].map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-white text-blue-700 shadow-xs border border-slate-200/90'
-                        : 'text-slate-600 hover:text-slate-900'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" />
-                    <span>{tab.label}</span>
-                    {tab.count !== null && (
-                      <span className="px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 text-[10px] font-black">
-                        {tab.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 text-white shadow-sm">
+                <Sliders className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-slate-900 tracking-tight">
+                  Row Height, Spacing & Layout Studio (వరుస ఎత్తు & ఖాళీల నియంత్రణ)
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  వరుసల ఎత్తును మిల్లీమీటర్లలో సర్దుబాటు చేయండి • కాలమ్స్ స్పేసింగ్ & కలర్స్ మార్చుకోండి
+                </p>
+              </div>
             </div>
 
-            {/* Quick Select All / Reset Actions */}
-            {activeTab === 'columns' && (
-              <div className="flex items-center gap-2 pr-2">
-                <button
-                  onClick={selectAllColumns}
-                  className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
-                >
-                  <CheckSquare className="w-3.5 h-3.5" /> Select All
-                </button>
-                <span className="text-slate-300">|</span>
-                <button
-                  onClick={clearToMinimal}
-                  className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" /> Minimal
-                </button>
-              </div>
-            )}
+            {/* Quick Status Tag */}
+            <span className="px-3 py-1 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-black text-indigo-700">
+              Current: {rowHeightMm} mm Height • {orientation.toUpperCase()}
+            </span>
           </div>
 
-          {/* Tab 1: Column Checkboxes Grid */}
-          {activeTab === 'columns' && (
-            <div className="p-4 sm:p-5 space-y-5">
+          {/* 4 Interactive Control Clusters */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            
+            {/* Control 1: Row Height (Quick presets + Stepper) */}
+            <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                  <Maximize2 className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Row Height (వరుస ఎత్తు)</span>
+                </span>
+                <span className="text-xs font-mono font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-indigo-100">
+                  {rowHeightMm} mm
+                </span>
+              </div>
+
+              {/* Quick Pills */}
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { mm: 6, label: '6mm', title: 'Compact' },
+                  { mm: 9, label: '9mm', title: 'Normal' },
+                  { mm: 13, label: '13mm', title: 'Spacious' },
+                  { mm: 18, label: '18mm', title: 'Signature' },
+                ].map(item => (
+                  <button
+                    key={item.mm}
+                    onClick={() => setRowHeightMm(item.mm)}
+                    className={`py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      rowHeightMm === item.mm
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white text-slate-700 border border-slate-200 hover:border-indigo-300'
+                    }`}
+                    title={item.title}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Live Increment / Decrement Stepper */}
+              <div className="flex items-center gap-1.5 pt-1">
+                <button
+                  onClick={() => setRowHeightMm(prev => Math.max(5, prev - 1))}
+                  className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-700 transition-colors cursor-pointer"
+                  title="Decrease row height"
+                >
+                  - 1mm
+                </button>
+                <input
+                  type="range"
+                  min="5"
+                  max="25"
+                  value={rowHeightMm}
+                  onChange={(e) => setRowHeightMm(Number(e.target.value))}
+                  className="flex-1 accent-indigo-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                />
+                <button
+                  onClick={() => setRowHeightMm(prev => Math.min(30, prev + 1))}
+                  className="px-3 py-1 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-black text-slate-700 transition-colors cursor-pointer"
+                  title="Increase row height"
+                >
+                  + 1mm
+                </button>
+              </div>
+            </div>
+
+            {/* Control 2: Cell Spacing & Padding */}
+            <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+              <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
+                <span>Cell Spacing / Padding (ఖాళీలు)</span>
+              </span>
+
+              <div className="grid grid-cols-3 gap-1.5 pt-1">
+                {[
+                  { id: 'compact', label: 'Tight', desc: 'చిన్న ఖాళీ' },
+                  { id: 'normal', label: 'Balanced', desc: 'సాధారణం' },
+                  { id: 'relaxed', label: 'Wide', desc: 'విశాలమైన' },
+                ].map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => setCellPadding(p.id as any)}
+                    className={`py-2 px-1 rounded-xl text-xs font-bold border text-center transition-all cursor-pointer ${
+                      cellPadding === p.id
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300'
+                    }`}
+                  >
+                    <span className="block font-black">{p.label}</span>
+                    <span className={`block text-[10px] ${cellPadding === p.id ? 'text-blue-100' : 'text-slate-400'}`}>{p.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Control 3: Page Orientation & Font Size */}
+            <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+              <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Orientation & Font (అమరిక & ఫాంట్)</span>
+              </span>
+
+              <div className="grid grid-cols-2 gap-2">
+                {/* Orientation Buttons */}
+                <button
+                  onClick={() => setOrientation('portrait')}
+                  className={`p-1.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    orientation === 'portrait'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Portrait</span>
+                </button>
+
+                <button
+                  onClick={() => setOrientation('landscape')}
+                  className={`p-1.5 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                    orientation === 'landscape'
+                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                      : 'bg-white border-slate-200 text-slate-700 hover:border-emerald-300'
+                  }`}
+                >
+                  <div className="rotate-90">
+                    <FileText className="w-3.5 h-3.5" />
+                  </div>
+                  <span>Landscape</span>
+                </button>
+              </div>
+
+              {/* Font Size Pills */}
+              <div className="grid grid-cols-3 gap-1 pt-1">
+                {[
+                  { id: 'sm', label: 'Small (A-)' },
+                  { id: 'base', label: 'Medium (A)' },
+                  { id: 'lg', label: 'Large (A+)' },
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    onClick={() => setFontSize(f.id as any)}
+                    className={`py-1 rounded-lg text-[11px] font-bold transition-all cursor-pointer ${
+                      fontSize === f.id
+                        ? 'bg-slate-900 text-white shadow-2xs'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Control 4: Table Color Themes */}
+            <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
+              <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                <Palette className="w-3.5 h-3.5 text-fuchsia-600" />
+                <span>Table Color Theme (రంగుల థీమ్)</span>
+              </span>
+
+              <div className="grid grid-cols-5 gap-1.5 pt-1">
+                {Object.values(THEME_STYLES).map(theme => (
+                  <button
+                    key={theme.id}
+                    onClick={() => setTableTheme(theme.id as any)}
+                    className={`h-9 rounded-xl flex items-center justify-center text-white transition-all transform hover:scale-105 cursor-pointer shadow-xs ${
+                      theme.headerBg
+                    } ${tableTheme === theme.id ? 'ring-2 ring-indigo-500 ring-offset-2' : 'opacity-85'}`}
+                    title={theme.name}
+                  >
+                    {tableTheme === theme.id ? <Check className="w-4 h-4 text-white" /> : null}
+                  </button>
+                ))}
+              </div>
+
+              <p className="text-[10px] text-slate-500 font-medium text-center">
+                Selected: <strong className="text-slate-800">{currentTheme.name}</strong>
+              </p>
+            </div>
+
+          </div>
+
+          {/* Heading Edit Box */}
+          <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+            <span className="text-xs font-black text-slate-700 whitespace-nowrap">
+              Report Title (రిపోర్ట్ హెడ్డింగ్):
+            </span>
+            <input
+              type="text"
+              value={reportTitle}
+              onChange={(e) => setReportTitle(e.target.value)}
+              placeholder="Enter Custom Report Heading..."
+              className="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-indigo-950 uppercase tracking-wide focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+        </div>
+
+        {/* ============================================================ */}
+        {/* ── SECTION C: COLORFUL CHECKBOX SELECTION CARDS ──           */}
+        {/* ============================================================ */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden print:hidden">
+          
+          {/* Collapsible Header */}
+          <div 
+            onClick={() => setShowColumnsSelector(!showColumnsSelector)}
+            className="p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-white/10 backdrop-blur-md">
+                <CheckSquare className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
+                  <span>Select Columns & Student Details (వివరాల చెక్‌బాక్స్‌లు)</span>
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 font-bold border border-indigo-400/30">
+                    {activeColumns.length} Selected
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-300">
+                  ఏ వివరాలు కావాలో టిక్ పెట్టండి • వెంటనే క్రింద లైవ్ ప్రివ్యూలో కనిపిస్తాయి
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-indigo-300 hidden sm:inline">
+                {showColumnsSelector ? 'క్లోజ్ చేయండి' : 'వివరాలు తెరవండి'}
+              </span>
+              <div className="p-1.5 rounded-lg bg-white/10">
+                {showColumnsSelector ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </div>
+            </div>
+          </div>
+
+          {/* Expanded Columns Grid */}
+          {showColumnsSelector && (
+            <div className="p-5 space-y-5 animate-fade-in">
               
+              {/* Quick Actions (Select All / Minimal) */}
+              <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+                <span className="text-xs font-extrabold text-slate-500">
+                  Select Columns to display on report:
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setSelectedColIds(MASTER_COLUMNS.map(c => c.id))}
+                    className="px-3 py-1 text-xs font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Select All ({MASTER_COLUMNS.length})
+                  </button>
+                  <button
+                    onClick={() => setSelectedColIds(['sno', 'rollNo', 'name', 'className'])}
+                    className="px-3 py-1 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Reset to Minimal (4)
+                  </button>
+                </div>
+              </div>
+
+              {/* 6 Category Cards with Distinct Colorful Headers */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map(cat => {
-                  const catCols = MASTER_COLUMNS.filter(c => c.category === cat.id);
-                  if (catCols.length === 0 && cat.id !== 'custom') return null;
-                  const allSelected = catCols.every(c => selectedColIds.includes(c.id));
+                {categories.map((cat) => {
                   const Icon = cat.icon;
+                  const catCols = MASTER_COLUMNS.filter(c => c.category === cat.id);
+                  const isAllSelected = catCols.length > 0 && catCols.every(c => selectedColIds.includes(c.id));
+                  const selectedInCat = catCols.filter(c => selectedColIds.includes(c.id)).length;
 
                   return (
-                    <div key={cat.id} className="bg-slate-50/60 rounded-2xl border border-slate-200/80 p-3.5 flex flex-col justify-between">
-                      <div>
-                        {/* Category Header */}
-                        <div className="flex items-center justify-between pb-2 mb-2.5 border-b border-slate-200/70">
-                          <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-lg border ${cat.color}`}>
-                              <Icon className="w-3.5 h-3.5" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-black text-slate-900">{cat.title}</p>
-                              <p className="text-[10px] text-slate-400">{cat.telugu}</p>
-                            </div>
+                    <div
+                      key={cat.id}
+                      className={`rounded-2xl border border-slate-200/90 overflow-hidden shadow-2xs hover:shadow-md transition-all flex flex-col justify-between ${cat.cardBg}`}
+                    >
+                      {/* Colorful Category Header */}
+                      <div className={`p-3.5 bg-gradient-to-r ${cat.gradient} text-white flex items-center justify-between`}>
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 rounded-lg bg-white/20 backdrop-blur-md">
+                            <Icon className="w-4 h-4 text-white" />
                           </div>
-                          {catCols.length > 0 && (
-                            <button
-                              onClick={() => toggleCategory(cat.id, !allSelected)}
-                              className="text-[10px] font-bold text-blue-600 hover:text-blue-800 cursor-pointer"
-                            >
-                              {allSelected ? 'Deselect' : 'Select All'}
-                            </button>
-                          )}
+                          <div>
+                            <h4 className="font-extrabold text-xs tracking-wide">{cat.title}</h4>
+                            <p className="text-[10px] text-white/80">{cat.telugu}</p>
+                          </div>
                         </div>
 
-                        {/* Column Checkboxes */}
+                        {cat.id !== 'custom' && (
+                          <button
+                            type="button"
+                            onClick={() => selectAllCategory(cat.id)}
+                            className="text-[10px] font-black uppercase px-2 py-0.5 rounded-lg bg-white/20 hover:bg-white/30 text-white transition-colors cursor-pointer"
+                          >
+                            {isAllSelected ? 'Deselect' : 'Select All'}
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Checkbox Options Grid */}
+                      <div className="p-3.5 space-y-2 flex-1">
                         <div className="space-y-1.5">
-                          {catCols.map(col => {
-                            const isSelected = selectedColIds.includes(col.id);
+                          {catCols.map((col) => {
+                            const isChecked = selectedColIds.includes(col.id);
                             return (
                               <label
                                 key={col.id}
-                                className={`flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
-                                  isSelected
-                                    ? 'bg-white border-blue-200 text-blue-950 shadow-2xs'
-                                    : 'bg-white/50 border-transparent text-slate-600 hover:bg-white hover:border-slate-200'
+                                className={`flex items-center justify-between p-2 rounded-xl text-xs font-bold cursor-pointer transition-all border ${
+                                  isChecked
+                                    ? 'bg-white border-indigo-400 text-slate-900 shadow-2xs ring-1 ring-indigo-400/20'
+                                    : 'bg-white/60 border-slate-200/80 text-slate-600 hover:bg-white hover:border-slate-300'
                                 }`}
                               >
-                                <div className="flex items-center gap-2 min-w-0 pr-2">
+                                <div className="flex items-center gap-2.5 truncate pr-2">
                                   <input
                                     type="checkbox"
-                                    checked={isSelected}
+                                    checked={isChecked}
                                     onChange={() => toggleColumn(col.id)}
-                                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                    className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer accent-indigo-600 shrink-0"
                                   />
                                   <div className="truncate">
-                                    <span className="block truncate">{col.label}</span>
-                                    <span className="block text-[9px] font-normal text-slate-400 truncate">{col.teluguLabel}</span>
+                                    <span className="block truncate text-slate-900">{col.label}</span>
+                                    <span className="block text-[10px] text-slate-400 truncate">{col.teluguLabel}</span>
                                   </div>
                                 </div>
-                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                                  isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-400'
+                                <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                  isChecked ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-400'
                                 }`}>
                                   {col.widthPt}pt
                                 </span>
@@ -888,11 +1302,11 @@ export const StudentReportPrintPage: React.FC = () => {
                           {cat.id === 'custom' && customBlankCols.map(col => (
                             <div
                               key={col.id}
-                              className="flex items-center justify-between p-2 rounded-xl text-xs font-bold bg-purple-50/80 border border-purple-200 text-purple-950 shadow-2xs"
+                              className="flex items-center justify-between p-2 rounded-xl text-xs font-bold bg-white border border-purple-400 text-purple-950 shadow-2xs"
                             >
                               <div className="flex items-center gap-2 truncate pr-2">
                                 <CheckSquare className="w-4 h-4 text-purple-600 shrink-0" />
-                                <span className="truncate">{col.label} (Custom)</span>
+                                <span className="truncate">{col.label} (Custom Box)</span>
                               </div>
                               <button
                                 onClick={() => handleRemoveCustomColumn(col.id)}
@@ -908,19 +1322,19 @@ export const StudentReportPrintPage: React.FC = () => {
 
                       {/* Add new custom blank column button in custom category */}
                       {cat.id === 'custom' && (
-                        <form onSubmit={handleAddCustomColumn} className="mt-3 pt-2 border-t border-slate-200/70 flex gap-1.5">
+                        <form onSubmit={handleAddCustomColumn} className="p-3 bg-white border-t border-purple-100 flex gap-1.5">
                           <input
                             type="text"
-                            placeholder="Add Custom Box..."
+                            placeholder="Add Custom Box (e.g. Marks, Kit)..."
                             value={newColName}
                             onChange={(e) => setNewColName(e.target.value)}
-                            className="px-2.5 py-1 text-xs bg-white border border-slate-200 rounded-lg flex-1 focus:outline-none focus:border-purple-500"
+                            className="px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl flex-1 focus:outline-none focus:border-purple-500 font-medium"
                           />
                           <button
                             type="submit"
-                            className="px-2.5 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                            className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-xs font-bold transition-all hover:scale-105 cursor-pointer shadow-xs"
                           >
-                            Add
+                            + Add
                           </button>
                         </form>
                       )}
@@ -932,113 +1346,41 @@ export const StudentReportPrintPage: React.FC = () => {
             </div>
           )}
 
-          {/* Tab 2: Settings (Orientation, Heights, Heading) */}
-          {activeTab === 'settings' && (
-            <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-3 gap-5">
-              
-              {/* Orientation Box */}
-              <div className="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 space-y-2.5">
-                <p className="text-xs font-black text-slate-800 uppercase tracking-wide">1. Page Orientation (పేజీ అమరిక)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setOrientation('portrait')}
-                    className={`p-3 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      orientation === 'portrait'
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'
-                    }`}
-                  >
-                    <FileText className="w-5 h-5" />
-                    <span>Portrait (నిలువు)</span>
-                    <span className="text-[10px] opacity-80">Best for 4-7 cols</span>
-                  </button>
-
-                  <button
-                    onClick={() => setOrientation('landscape')}
-                    className={`p-3 rounded-xl text-xs font-bold border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                      orientation === 'landscape'
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-700 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="rotate-90">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <span>Landscape (అడ్డంగా)</span>
-                    <span className="text-[10px] opacity-80">Best for 8+ cols</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Row Height & Font Size */}
-              <div className="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 space-y-2.5">
-                <p className="text-xs font-black text-slate-800 uppercase tracking-wide">2. Row Height & Spacing (వరుస ఎత్తు)</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: 'compact', label: 'Compact (6mm)', desc: 'Max students/page' },
-                    { id: 'normal', label: 'Normal (9mm)', desc: 'Standard clean ERP' },
-                    { id: 'spacious', label: 'Spacious (13mm)', desc: 'Clear reading view' },
-                    { id: 'signature', label: 'Signature (18mm)', desc: 'Pen signatures box' },
-                  ].map(h => (
-                    <button
-                      key={h.id}
-                      onClick={() => setRowHeight(h.id as any)}
-                      className={`p-2 rounded-xl text-xs font-bold border text-left transition-all cursor-pointer ${
-                        rowHeight === h.id
-                          ? 'bg-blue-50 border-blue-400 text-blue-900 shadow-xs'
-                          : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
-                      }`}
-                    >
-                      <span className="block font-black">{h.label}</span>
-                      <span className="block text-[10px] text-slate-400">{h.desc}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Report Heading Title */}
-              <div className="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 space-y-2.5">
-                <p className="text-xs font-black text-slate-800 uppercase tracking-wide">3. Custom Heading (రిపోర్ట్ శీర్షిక)</p>
-                <input
-                  type="text"
-                  value={reportTitle}
-                  onChange={(e) => setReportTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-500 uppercase"
-                />
-                <p className="text-[11px] text-slate-400">
-                  ఈ టైటిల్ ప్రింట్ తీసినప్పుడు మరియు పిడిఎఫ్ డౌన్‌లోడ్ చేసినప్పుడు టాప్‌లో ప్రముఖంగా కనిపిస్తుంది.
-                </p>
-              </div>
-
-            </div>
-          )}
-
         </div>
 
         {/* ============================================================ */}
-        {/* ── LIVE INTERACTIVE A4 SHEET PREVIEW (EXACT PRINT VIEW) ──  */}
+        {/* ── SECTION D: LIVE A4 SHEET PREVIEW & EXACT PRINT SHEET ──   */}
         {/* ============================================================ */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           
           <div className="flex items-center justify-between px-1 print:hidden">
             <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
+              <Eye className="w-4 h-4 text-indigo-600" />
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
                 Live A4 Print Preview (రియల్-టైమ్ ప్రింట్ ప్రివ్యూ)
               </h3>
             </div>
-            <span className="text-[11px] font-bold text-slate-400">
-              {orientation === 'landscape' ? 'A4 Landscape (అడ్డంగా)' : 'A4 Portrait (నిలువు)'} • {activeColumns.length} Columns Active
-            </span>
+            <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
+              <span>{orientation === 'landscape' ? 'A4 Landscape (అడ్డంగా)' : 'A4 Portrait (నిలువు)'}</span>
+              <span>•</span>
+              <span className="text-indigo-600 font-extrabold">{rowHeightMm} mm Row Height</span>
+              <span>•</span>
+              <span className="text-slate-700">{activeColumns.length} Columns</span>
+            </div>
           </div>
 
           {/* The Actual Printable Sheet Container */}
-          <div className="bg-white rounded-2xl border border-slate-200/90 shadow-md p-6 sm:p-8 overflow-x-auto print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none">
+          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 overflow-x-auto print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none">
             
             {/* School Official Print Header */}
-            <div className="pb-4 mb-4 border-b-2 border-slate-800 text-center space-y-1">
+            <div className="pb-4 mb-4 border-b-2 border-slate-900 text-center space-y-1">
               <div className="flex items-center justify-center gap-3">
-                <img src="/logo.png" alt="JY School Logo" className="w-10 h-10 object-contain hidden sm:block print:block" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <img 
+                  src="/logo.png" 
+                  alt="JY School Logo" 
+                  className="w-12 h-12 object-contain hidden sm:block print:block" 
+                  onError={(e) => { e.currentTarget.style.display = 'none'; }} 
+                />
                 <div>
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-wide uppercase">
                     SRI VENKATESWARA JY HIGH SCHOOL
@@ -1050,7 +1392,7 @@ export const StudentReportPrintPage: React.FC = () => {
               </div>
 
               <div className="pt-2">
-                <h3 className="text-sm sm:text-base font-black text-blue-900 tracking-wider uppercase inline-block border-b-2 border-blue-600 pb-0.5">
+                <h3 className="text-sm sm:text-base font-black text-indigo-900 tracking-wider uppercase inline-block border-b-2 border-indigo-600 pb-0.5">
                   {reportTitle}
                 </h3>
               </div>
@@ -1059,18 +1401,18 @@ export const StudentReportPrintPage: React.FC = () => {
                 <span>Class: <strong className="text-slate-900">{selectedClassId ? classes.find(c => c.id === selectedClassId)?.name || 'Class' : 'All Classes'}</strong></span>
                 <span>Gender: <strong className="text-slate-900 capitalize">{genderFilter}</strong></span>
                 <span>Date: <strong className="text-slate-900">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>
-                <span>Total Students: <strong className="text-blue-900 font-black">{filteredStudents.length}</strong></span>
+                <span>Total Students: <strong className="text-indigo-900 font-black">{filteredStudents.length}</strong></span>
               </div>
             </div>
 
             {/* Table Content */}
             {loading ? (
               <div className="py-20 text-center">
-                <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-2" />
+                <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
                 <p className="text-xs font-bold text-slate-500">Loading student records...</p>
               </div>
             ) : filteredStudents.length === 0 ? (
-              <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-xl">
+              <div className="py-16 text-center border-2 border-dashed border-slate-200 rounded-2xl">
                 <AlertCircle className="w-8 h-8 text-amber-500 mx-auto mb-2" />
                 <h4 className="text-sm font-bold text-slate-800">No students match the chosen filters</h4>
                 <p className="text-xs text-slate-400 mt-1">Try clearing filters or selecting another class.</p>
@@ -1078,15 +1420,13 @@ export const StudentReportPrintPage: React.FC = () => {
             ) : (
               <table className="w-full border-collapse text-left border border-slate-300">
                 <thead>
-                  <tr className="bg-slate-900 text-white border border-slate-900 print:bg-slate-900 print:text-white">
+                  <tr className={`${currentTheme.headerBg} border border-slate-300 print:text-white`}>
                     {activeColumns.map((col, idx) => (
                       <th
                         key={idx}
-                        className={`px-2.5 py-2 font-black border border-slate-300 text-white ${
+                        className={`${paddingXClass} py-2 font-black border border-slate-300 text-white ${
                           col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
-                        } ${
-                          fontSize === 'sm' ? 'text-[9px]' : fontSize === 'lg' ? 'text-xs' : 'text-[11px]'
-                        }`}
+                        } ${fontSizeClass}`}
                         style={{ width: `${col.widthPt * 3}px` }}
                       >
                         {col.label}
@@ -1096,18 +1436,14 @@ export const StudentReportPrintPage: React.FC = () => {
                 </thead>
                 <tbody>
                   {filteredStudents.map((student, rowIdx) => {
-                    const rowClass = rowIdx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70 print:bg-slate-50/50';
-                    const padClass = 
-                      rowHeight === 'compact' ? 'py-1 px-2' :
-                      rowHeight === 'spacious' ? 'py-3.5 px-2.5' :
-                      rowHeight === 'signature' ? 'py-5 px-3' : 'py-2 px-2.5';
+                    const rowClass = rowIdx % 2 === 0 ? 'bg-white' : `${currentTheme.rowAlt} print:bg-slate-50/50`;
                     
-                    const fontClass = 
-                      fontSize === 'sm' ? 'text-[10px]' : 
-                      fontSize === 'lg' ? 'text-sm' : 'text-xs';
-
                     return (
-                      <tr key={student.id || rowIdx} className={`${rowClass} border-b border-slate-200 hover:bg-blue-50/40 transition-colors`}>
+                      <tr 
+                        key={student.id || rowIdx} 
+                        className={`custom-print-row ${rowClass} ${currentTheme.hover} border-b border-slate-200 transition-colors`}
+                        style={{ height: `${rowHeightMm * 3.78}px`, minHeight: `${rowHeightMm * 3.78}px` }}
+                      >
                         {activeColumns.map((col, colIdx) => {
                           const val = col.getValue(student, rowIdx);
 
@@ -1115,8 +1451,8 @@ export const StudentReportPrintPage: React.FC = () => {
                           if (col.id === 'photo') {
                             const photoUrl = getPhotoUrl(student.user?.photoUrl);
                             return (
-                              <td key={colIdx} className={`border border-slate-300 ${padClass} text-center`}>
-                                <div className="w-8 h-9 rounded bg-slate-200 mx-auto overflow-hidden flex items-center justify-center border border-slate-300">
+                              <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                <div className="w-8 h-9 rounded bg-slate-200 mx-auto overflow-hidden flex items-center justify-center border border-slate-300 shadow-2xs">
                                   {photoUrl ? (
                                     <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
                                   ) : (
@@ -1127,10 +1463,64 @@ export const StudentReportPrintPage: React.FC = () => {
                             );
                           }
 
+                          // Gender Badge
+                          if (col.id === 'gender') {
+                            return (
+                              <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center ${fontSizeClass}`}>
+                                {val === 'Boy' ? (
+                                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100/90 text-blue-800 print:bg-transparent print:text-slate-900">
+                                    Boy
+                                  </span>
+                                ) : val === 'Girl' ? (
+                                  <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-pink-100/90 text-pink-800 print:bg-transparent print:text-slate-900">
+                                    Girl
+                                  </span>
+                                ) : (
+                                  val
+                                )}
+                              </td>
+                            );
+                          }
+
+                          // Blood Group Badge
+                          if (col.id === 'bloodGroup') {
+                            return (
+                              <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center ${fontSizeClass}`}>
+                                {val !== '-' ? (
+                                  <span className="inline-block px-1.5 py-0.5 rounded font-black text-rose-700 bg-rose-50 border border-rose-200/80 print:border-none print:bg-transparent print:text-slate-900">
+                                    {val}
+                                  </span>
+                                ) : '-'}
+                              </td>
+                            );
+                          }
+
+                          // Attendance Box check
+                          if (col.id === 'attendanceBox') {
+                            return (
+                              <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                <div className="w-5 h-5 mx-auto border-2 border-slate-400 rounded-md bg-white print:border-slate-800" />
+                              </td>
+                            );
+                          }
+
+                          // Signatures or blank boxes
+                          if (col.id === 'parentSignature' || col.id === 'studentSignature') {
+                            return (
+                              <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                <div className="h-full flex items-center justify-center">
+                                  <span className="text-[10px] text-slate-300 font-mono tracking-widest hidden print:inline">
+                                    . . . . . . . . . .
+                                  </span>
+                                </div>
+                              </td>
+                            );
+                          }
+
                           return (
                             <td
                               key={colIdx}
-                              className={`border border-slate-300 font-medium ${padClass} ${fontClass} ${
+                              className={`border border-slate-300 font-medium ${paddingXClass} ${fontSizeClass} ${
                                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
                               } ${col.id === 'rollNo' || col.id === 'sno' ? 'font-mono font-bold text-slate-900' : 'text-slate-800'}`}
                             >
@@ -1148,18 +1538,21 @@ export const StudentReportPrintPage: React.FC = () => {
             {/* Print Official Footer (Signature row) */}
             <div className="pt-12 mt-8 flex items-center justify-between text-xs font-bold text-slate-800 border-t border-slate-300">
               <div className="text-center">
-                <div className="w-40 border-b border-slate-400 mb-1" />
-                <span>Class Teacher Signature</span>
+                <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
+                <p>Class Teacher Signature</p>
+                <p className="text-[10px] text-slate-400 font-normal">తరగతి ఉపాధ్యాయుని సంతకం</p>
               </div>
 
               <div className="text-center">
-                <div className="w-40 border-b border-slate-400 mb-1" />
-                <span>Verified By / Office Incharge</span>
+                <div className="w-24 h-24 border border-dashed border-slate-300 rounded-full mx-auto flex items-center justify-center text-[10px] text-slate-400 font-medium mb-1">
+                  School Seal
+                </div>
               </div>
 
               <div className="text-center">
-                <div className="w-40 border-b border-slate-400 mb-1" />
-                <span>Principal / Headmaster Stamp</span>
+                <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
+                <p>Headmaster / Principal</p>
+                <p className="text-[10px] text-slate-400 font-normal">శ్రీ వెంకటేశ్వర జేవై ఉన్నత పాఠశాల</p>
               </div>
             </div>
 
@@ -1169,53 +1562,26 @@ export const StudentReportPrintPage: React.FC = () => {
 
       </div>
 
-      {/* ============================================================ */}
-      {/* ── SAVE AS PRESET MODAL POPUP ──                             */}
-      {/* ============================================================ */}
+      {/* Save Preset Modal */}
       {showSaveModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-scale-in">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-amber-50 text-amber-600">
-                  <Save className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-black text-slate-900">Save Custom Template</h3>
-                  <p className="text-xs text-slate-400">Reuse these exact columns & layout anytime</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowSaveModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 print:hidden">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
+            <h3 className="text-base font-black text-slate-900 mb-1">
+              Save Current Template (టెంప్లేట్ సేవ్ చేయండి)
+            </h3>
+            <p className="text-xs text-slate-500 mb-4">
+              ఈ కాలమ్స్, రో-హైట్ ({rowHeightMm}mm) మరియు కలర్ సెట్టింగ్‌లను భవిష్యత్తు కోసం 1-క్లిక్ టెంప్లేట్‌గా సేవ్ చేసుకోండి.
+            </p>
             <form onSubmit={handleSavePreset} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Template Name (టెంప్లేట్ పేరు)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g., Term 1 Exam Parent Sheet"
-                  value={newTemplateName}
-                  onChange={(e) => setNewTemplateName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:border-blue-500 focus:bg-white"
-                  autoFocus
-                />
-              </div>
-
-              <div className="p-3 bg-blue-50/70 border border-blue-200/60 rounded-xl text-xs text-blue-900">
-                <p className="font-bold">Summary:</p>
-                <p className="text-[11px] mt-0.5">
-                  {activeColumns.length} columns selected • Orientation: {orientation.toUpperCase()} • Row height: {rowHeight}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
+              <input
+                type="text"
+                placeholder="Template Name (e.g. Monthly Attendance Sheet)..."
+                value={newTemplateName}
+                onChange={(e) => setNewTemplateName(e.target.value)}
+                autoFocus
+                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500"
+              />
+              <div className="flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setShowSaveModal(false)}
@@ -1225,7 +1591,7 @@ export const StudentReportPrintPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-xs font-black shadow-md hover:scale-[1.02] transition-transform cursor-pointer"
+                  className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-blue-600 text-white rounded-xl text-xs font-black shadow-md hover:scale-105 transition-all cursor-pointer"
                 >
                   Save Preset
                 </button>
@@ -1238,5 +1604,5 @@ export const StudentReportPrintPage: React.FC = () => {
     </div>
   );
 };
-export default StudentReportPrintPage;
 
+export default StudentReportPrintPage;
