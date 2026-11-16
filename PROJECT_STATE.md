@@ -1,5 +1,28 @@
 # JY School Project State
 
+## చివరి సంభాషణ - కస్టమ్ స్టూడెంట్ రిపోర్ట్ 'Print Report' బ్లాంక్ పేజీ సమస్య పరిష్కారం & ఐఫ్రేమ్ ప్రింటింగ్ ఇంజిన్ (November 16, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  - "print ravatam ledu"
+  - అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్: `http://66.116.252.191:19999/students/custom-report` లో ప్రింట్ రిపోర్ట్ క్లిక్ చేసినప్పుడు బ్రౌజర్ ప్రింట్ డైలాగ్‌లో "13 sheets of paper" అని వస్తోంది, కానీ ప్రివ్యూలో పేజీలు పూర్తిగా ఖాళీగా (బ్లాంక్ వైట్) వస్తున్నాయి.
+- **సమస్య విశ్లేషణ:**
+  1. పేరెంట్ లేఅవుట్ (`DashboardLayout` -> `<main>` -> `<PullToRefresh>`) లో `transform: translateY(...)` మరియు `animate-slide-in` ఉన్నాయి. క్రోమ్ బ్రౌజర్‌లో ఏదైనా పేరెంట్‌కు `transform` లేదా `overflow: hidden` ఉంటే, ఆ కంటైనర్ లోపల ఉన్న పెద్ద టేబుల్ (533 స్టూడెంట్స్) ను మల్టీ-పేజీ డాక్యుమెంట్‌గా పేజినేషన్ చేయలేక ప్రింట్ పేజీలను ఖాళీగా లేదా వ్యూపోర్ట్ వెలుపల క్లిప్ చేసి చూపిస్తుంది.
+  2. `frontend/src/index.css` లో `*, *::before, *::after { background: #ffffff !important; }` ఉండటం మరియు `StudentReportPrintPage.tsx` లో `.custom-report-table thead th { color: #ffffff !important; }` ఉండటం వల్ల హెడర్ తెల్లటి బ్యాక్‌గ్రౌండ్ పై తెల్లటి అక్షరాలతో కనిపించకుండా పోయింది.
+  3. షీట్ డివ్‌లో `overflow-x-auto` ఉండటం వల్ల ప్రింటర్ వద్ద కంటెంట్ బాక్స్ క్లిప్ అయింది.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **ఐసోలేటెడ్ ఐఫ్రేమ్ ప్రింట్ ఇంజిన్ ([`StudentReportPrintPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**
+     - `handlePrint` ను అప్‌గ్రేడ్ చేసి, ఒక ప్రత్యేక ఐసోలేటెడ్ హిడెన్ `<iframe>` ద్వారా కేవలం రిపోర్ట్ షీట్ (`#custom-report-printable-area`) ను మాత్రమే నేరుగా ప్రింట్ చేసేలా చేసాము.
+     - సైడ్‌బార్, హెడర్, పుల్-టు-రిఫ్రెష్ లేదా CSS ట్రాన్స్‌ఫార్మ్స్ ప్రభావం ప్రింటింగ్ పై ఏమాత్రం పడదు.
+     - `@page { size: ${orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'}; margin: 7mm 6mm; }` ఆటోమేటిక్‌గా ఇంజెక్ట్ అవ్వడం వల్ల యూజర్ ఎంచుకున్న ల్యాండ్‌స్కేప్ లేదా పోర్ట్రెయిట్ మోడ్‌లోనే ప్రింటర్ ఓపెన్ అవుతుంది.
+     - `thead { display: table-header-group !important; }` మరియు `tr { page-break-inside: avoid !important; }` ద్వారా ప్రతి పేజీ పైభాగంలో కాలమ్ హెడ్డింగ్‌లు ఆటోమేటిక్‌గా రిపీట్ అవుతాయి, రికార్డులు కట్ కావు.
+     - యూజర్ సెట్ చేసిన రో-హైట్ (6mm, 9mm, 13mm, 18mm), ప్యాడింగ్ మరియు థీమ్ కలర్ ఖచ్చితంగా ప్రింట్ అవుతాయి.
+  2. **ప్రింటబుల్ ఏరియా & షీట్ కంటైనర్ ([`StudentReportPrintPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**
+     - `id="custom-report-printable-area"`, `ref={printContainerRef}`, `print:overflow-visible print:w-full` ఇచ్చాము.
+  3. **గ్లోబల్ ప్రింట్ CSS ప్రొటెక్షన్ ([`index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css)):**
+     - `*:not(.custom-report-table):not(#custom-report-printable-area *)` ద్వారా రిపోర్ట్ టేబుల్‌ను గ్లోబల్ వైట్ బ్యాక్‌గ్రౌండ్ ఓవర్‌రైడ్ నుండి రక్షించాము.
+  4. **డాష్‌బోర్డ్ లేఅవుట్ & పుల్-టు-రిఫ్రెష్ ([`DashboardLayout.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/DashboardLayout.tsx) & [`PullToRefresh.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/UI/PullToRefresh.tsx)):**
+     - ప్రింట్ సమయంలో `animate-none` మరియు `transform: none` ఇచ్చి లేఅవుట్ క్లిప్పింగ్ సమస్యలను పరిష్కరించాము.
+
+
 ## చివరి సంభాషణ - హాలిడే క్యాలెండర్ టేబుల్ హెడ్డింగ్స్ విజిబిలిటీ & తెలుగు తొలగింపు (November 16, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   - "telugu lo undakudadu"

@@ -119,16 +119,16 @@ export const DashboardLayout: React.FC = () => {
 
   if (hideSidebar) {
     return (
-      <div className="print:h-auto print:overflow-visible" style={{ minHeight: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div className="print:h-auto print:min-h-0 print:overflow-visible print:block" style={{ minHeight: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         <MobileNotificationToast />
         <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
-        <main className="pb-4 print:overflow-visible print:h-auto" style={{ flex: 1, overflow: 'hidden' }}>
+        <main className="pb-4 print:overflow-visible print:h-auto print:block" style={{ flex: 1, overflow: 'hidden' }}>
           <PullToRefresh onRefresh={async () => {
             await new Promise(r => setTimeout(r, 600));
             window.location.reload();
           }}>
-            <div key={location.pathname} className="animate-slide-in h-full print:h-auto">
+            <div key={location.pathname} className="animate-slide-in h-full print:h-auto print:animate-none print:transform-none">
               <Outlet context={{ setDynamicTitle }} />
             </div>
           </PullToRefresh>
@@ -153,7 +153,7 @@ export const DashboardLayout: React.FC = () => {
             await new Promise(r => setTimeout(r, 600));
             window.location.reload();
           }}>
-            <div key={location.pathname} className="animate-slide-in h-full print:h-auto">
+            <div key={location.pathname} className="animate-slide-in h-full print:h-auto print:animate-none print:transform-none">
               <Outlet context={{ setDynamicTitle }} />
             </div>
           </PullToRefresh>

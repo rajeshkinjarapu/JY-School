@@ -121,8 +121,8 @@ export const PullToRefresh: React.FC<PullToRefreshProps> = ({ onRefresh, childre
         ref={scrollContainerRef}
         className="h-full w-full overflow-y-auto print:overflow-visible print:h-auto print:transform-none"
         style={{ 
-          transform: `translateY(${pullDistance}px)`,
-          transition: isPulling.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+          transform: isPrinting ? 'none' : `translateY(${pullDistance}px)`,
+          transition: isPulling.current || isPrinting ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
           overscrollBehavior: 'contain'
         }}
       >

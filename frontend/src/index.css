@@ -261,9 +261,9 @@
   }
 
   /* Override every element's background */
-  *,
-  *::before,
-  *::after {
+  *:not(.custom-report-table):not(.custom-report-table *):not(#custom-report-printable-area *),
+  *:not(.custom-report-table):not(.custom-report-table *):not(#custom-report-printable-area *)::before,
+  *:not(.custom-report-table):not(.custom-report-table *):not(#custom-report-printable-area *)::after {
     background: #ffffff !important;
     background-color: #ffffff !important;
     background-image: none !important;
@@ -286,7 +286,8 @@
   /* Specific elements that can carry dark backgrounds */
   html, body, #root,
   .a4-paper, .a4-paper *,
-  div, section, article, main, nav, header, footer, aside {
+  div:not(#custom-report-printable-area):not(#custom-report-printable-area *),
+  section, article, main, nav, header, footer, aside {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;

@@ -44,6 +44,7 @@ export const StudentReportPrintPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const initialClassId = searchParams.get('classId') || '';
+  const printContainerRef = useRef<HTMLDivElement>(null);
 
   // Data states
   const [students, setStudents] = useState<any[]>([]);
@@ -443,17 +444,13 @@ export const StudentReportPrintPage: React.FC = () => {
     toast.success(`Template "${name}" deleted`);
   };
 
-  // Direct Browser Print
-  const handlePrint = () => {
-    window.print();
-  };
-
   // Color theme definition map
   const THEME_STYLES = {
     navy: {
       id: 'navy',
       name: 'Royal Navy',
       headerBg: 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white',
+      headerHex: '#1e3a8a',
       border: 'border-blue-900',
       accentText: 'text-blue-950',
       rowAlt: 'bg-blue-50/20',
@@ -464,6 +461,7 @@ export const StudentReportPrintPage: React.FC = () => {
       id: 'purple',
       name: 'Imperial Purple',
       headerBg: 'bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white',
+      headerHex: '#581c87',
       border: 'border-purple-900',
       accentText: 'text-purple-950',
       rowAlt: 'bg-purple-50/20',
@@ -474,6 +472,7 @@ export const StudentReportPrintPage: React.FC = () => {
       id: 'emerald',
       name: 'Emerald Green',
       headerBg: 'bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-950 text-white',
+      headerHex: '#065f46',
       border: 'border-emerald-900',
       accentText: 'text-emerald-950',
       rowAlt: 'bg-emerald-50/20',
@@ -484,6 +483,7 @@ export const StudentReportPrintPage: React.FC = () => {
       id: 'crimson',
       name: 'Crimson Maroon',
       headerBg: 'bg-gradient-to-r from-rose-900 via-red-900 to-rose-950 text-white',
+      headerHex: '#9f1239',
       border: 'border-rose-900',
       accentText: 'text-rose-950',
       rowAlt: 'bg-rose-50/20',
@@ -494,6 +494,7 @@ export const StudentReportPrintPage: React.FC = () => {
       id: 'charcoal',
       name: 'Classic Charcoal',
       headerBg: 'bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-950 text-white',
+      headerHex: '#0f172a',
       border: 'border-slate-800',
       accentText: 'text-slate-950',
       rowAlt: 'bg-slate-50/50',
@@ -503,6 +504,144 @@ export const StudentReportPrintPage: React.FC = () => {
   };
 
   const currentTheme = THEME_STYLES[tableTheme];
+
+  // Direct Browser Print (Using isolated iframe for 100% clean, non-blank prints)
+  const handlePrint = () => {
+    if (!printContainerRef.current) {
+      window.print();
+      return;
+    }
+
+    const toastId = toast.loading('Opening print dialog...');
+
+    // Create an isolated hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      toast.dismiss(toastId);
+      window.print();
+      return;
+    }
+
+    const contentHtml = printContainerRef.current.innerHTML;
+    const headerRgb = currentTheme.rgbHeader.join(', ');
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${reportTitle}</title>
+          <style>
+            @page {
+              size: ${orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'};
+              margin: 7mm 6mm;
+            }
+            html, body {
+              background: #ffffff !important;
+              color: #000000 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              height: auto !important;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              box-sizing: border-box !important;
+            }
+            table {
+              width: 100% !important;
+              border-collapse: collapse !important;
+              margin-top: 4px !important;
+            }
+            thead {
+              display: table-header-group !important;
+            }
+            tbody {
+              display: table-row-group !important;
+            }
+            tr {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            .custom-print-row {
+              height: ${rowHeightMm}mm !important;
+              min-height: ${rowHeightMm}mm !important;
+            }
+            th {
+              background-color: rgb(${headerRgb}) !important;
+              color: #ffffff !important;
+              -webkit-text-fill-color: #ffffff !important;
+              border: 1px solid #334155 !important;
+              font-weight: 900 !important;
+              font-size: ${fontSize === 'sm' ? '8pt' : fontSize === 'lg' ? '10pt' : '9pt'} !important;
+              text-transform: uppercase !important;
+              letter-spacing: 0.5px !important;
+              padding: 6px 8px !important;
+            }
+            th * {
+              color: #ffffff !important;
+              -webkit-text-fill-color: #ffffff !important;
+              font-weight: 900 !important;
+            }
+            td {
+              border: 1px solid #cbd5e1 !important;
+              color: #0f172a !important;
+              font-size: ${fontSize === 'sm' ? '7.5pt' : fontSize === 'lg' ? '9.5pt' : '8.5pt'} !important;
+              padding: ${cellPadding === 'compact' ? '2px 4px' : cellPadding === 'relaxed' ? '6px 8px' : '4px 6px'} !important;
+              vertical-align: middle !important;
+            }
+            tr:nth-child(even) td {
+              background-color: #f8fafc !important;
+            }
+            .footer-signature {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              margin-top: 24px !important;
+              padding-top: 14px !important;
+              border-top: 1px solid #94a3b8 !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div style="width: 100%; padding: 0;">
+            ${contentHtml}
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    toast.dismiss(toastId);
+
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.error('Print iframe error:', err);
+        window.print();
+      } finally {
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1500);
+      }
+    }, 250);
+  };
 
   // PDF Export using jsPDF and autoTable
   const handleExportPDF = async () => {
@@ -724,7 +863,7 @@ export const StudentReportPrintPage: React.FC = () => {
     fontSize === 'lg' ? 'text-sm' : 'text-xs';
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F1F5F9] text-slate-800 font-sans print:bg-white print:p-0 print:m-0">
+    <div className={`flex flex-col min-h-screen bg-[#F1F5F9] text-slate-800 font-sans print:bg-white print:p-0 print:m-0 ${orientation === 'landscape' ? 'print-landscape' : ''}`}>
       
       {/* Dynamic Print CSS & Table Header Visibility */}
       <style>{`
@@ -736,22 +875,48 @@ export const StudentReportPrintPage: React.FC = () => {
           opacity: 1 !important;
         }
         @media print {
+          html, body, #root {
+            background: #ffffff !important;
+            height: auto !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+          }
           body {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           @page {
             size: ${orientation === 'landscape' ? 'A4 landscape' : 'A4 portrait'};
-            margin: 8mm 6mm 8mm 6mm;
+            margin: 7mm 6mm;
           }
           .custom-print-row {
             height: ${rowHeightMm}mm !important;
             min-height: ${rowHeightMm}mm !important;
           }
+          .custom-report-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+          }
           .custom-report-table thead th,
           .custom-report-table thead th span {
+            background-color: ${currentTheme.headerHex} !important;
             color: #ffffff !important;
             -webkit-text-fill-color: #ffffff !important;
+            border: 1px solid #334155 !important;
+          }
+          .custom-report-table td {
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+          }
+          #custom-report-printable-area {
+            display: block !important;
+            overflow: visible !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
           }
         }
       `}</style>
@@ -1382,7 +1547,11 @@ export const StudentReportPrintPage: React.FC = () => {
           </div>
 
           {/* The Actual Printable Sheet Container */}
-          <div className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 overflow-x-auto print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none">
+          <div 
+            id="custom-report-printable-area"
+            ref={printContainerRef}
+            className="bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 overflow-x-auto print:overflow-visible print:w-full print:max-w-none print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none"
+          >
             
             {/* School Official Print Header */}
             <div className="pb-4 mb-4 border-b-2 border-slate-900 text-center space-y-1">
@@ -1432,7 +1601,10 @@ export const StudentReportPrintPage: React.FC = () => {
             ) : (
               <table className="custom-report-table w-full border-collapse text-left border border-slate-300">
                 <thead>
-                  <tr className={`${currentTheme.headerBg} border border-slate-400/50 print:text-white`}>
+                  <tr 
+                    className={`${currentTheme.headerBg} border border-slate-400/50 print:text-white`}
+                    style={{ backgroundColor: currentTheme.headerHex }}
+                  >
                     {activeColumns.map((col, idx) => (
                       <th
                         key={idx}
@@ -1557,7 +1729,7 @@ export const StudentReportPrintPage: React.FC = () => {
             )}
 
             {/* Print Official Footer (Signature row) */}
-            <div className="pt-12 mt-8 flex items-center justify-between text-xs font-bold text-slate-800 border-t border-slate-300">
+            <div className="footer-signature pt-12 mt-8 flex items-center justify-between text-xs font-bold text-slate-800 border-t border-slate-300 print:break-inside-avoid">
               <div className="text-center">
                 <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
                 <p>Class Teacher Signature</p>
