@@ -1,5 +1,21 @@
 # JY School Project State
 
+## చివరి సంభాషణ - కస్టమ్ రిపోర్ట్ టేబుల్ హెడింగ్ పేర్లు (Column Names) విజిబిలిటీ & ప్యూర్ వైట్ ఫిక్స్ (November 16, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  - "heading lo unna names kanapdatam ledu"
+  - అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్: కస్టమ్ రిపోర్ట్ టేబుల్ ప్రివ్యూలో డార్క్ హెడర్ మీద కాలమ్ పేర్లు దాగిపోయి సరిగా కనిపించకపోవడం.
+- **సమస్య విశ్లేషణ:**
+  - `frontend/src/index.css` లో `table.w-full th { @apply !text-indigo-900 ... }` అనే `!important` రూల్ ఉంది.
+  - ఇది `StudentReportPrintPage.tsx` లోని `text-white` ను ఓవర్‌రైడ్ చేసి, డార్క్ బ్లూ హెడర్ మీద `#312e81` (చీకటి ఇండిగో రంగు) టెక్స్ట్‌గా మార్చడం వలన హెడింగ్ పేర్లు డార్క్ బ్యాక్‌గ్రౌండ్‌లో కలిసిపోయి కనిపించలేదు.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **గ్లోబల్ టేబుల్ రూల్ ఎక్స్‌క్లూజన్ ([`index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css)):**
+     - `table.w-full:not(.custom-report-table) th` గా మార్చి, కస్టమ్ రిపోర్ట్ టేబుల్‌ను గ్లోబల్ ఓవర్‌రైడ్ నుండి వేరు చేశాము.
+  2. **ప్యూర్ వైట్ బోల్డ్ హెడింగ్స్ & ఇన్‌లైన్ స్టైలింగ్ ([`StudentReportPrintPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**
+     - టేబుల్‌కు `custom-report-table` క్లాస్ ఇచ్చాము.
+     - పేజీ `<style>` లో `.custom-report-table thead th, .custom-report-table thead th span { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }` రూల్ జోడించాము.
+     - ప్రతి `th` లోపల `<span style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>` ఇచ్చి, డ్రాప్ షాడో మరియు బోల్డ్ అక్షరాలతో అన్ని కాలమ్ పేర్లు (S.No, Student ID, Student Name, Gender, Class & Section, Father Name, Father's Phone మొదలైనవి) ఏ థీమ్‌లోనైనా ఎల్లప్పుడూ స్పష్టమైన తెల్లటి అక్షరాలలో కనిపించేలా చేశాము.
+
+
 ## చివరి సంభాషణ - హెడర్ క్యాలెండర్ బటన్ నావిగేషన్ ఫిక్స్, సైడ్‌బార్ ట్యాగ్‌లైన్ తొలగింపు & ప్రింట్ స్టూడియో 100% ఇంగ్లీష్ (November 16, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   - "header lo calendar button matrame undali but click cheste timetable open裂avutundi"

@@ -726,8 +726,15 @@ export const StudentReportPrintPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F1F5F9] text-slate-800 font-sans print:bg-white print:p-0 print:m-0">
       
-      {/* Dynamic Print CSS to enforce exact row height in printing */}
+      {/* Dynamic Print CSS & Table Header Visibility */}
       <style>{`
+        .custom-report-table thead th,
+        .custom-report-table thead th span,
+        .custom-report-table thead tr th {
+          color: #ffffff !important;
+          -webkit-text-fill-color: #ffffff !important;
+          opacity: 1 !important;
+        }
         @media print {
           body {
             -webkit-print-color-adjust: exact !important;
@@ -740,6 +747,11 @@ export const StudentReportPrintPage: React.FC = () => {
           .custom-print-row {
             height: ${rowHeightMm}mm !important;
             min-height: ${rowHeightMm}mm !important;
+          }
+          .custom-report-table thead th,
+          .custom-report-table thead th span {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
           }
         }
       `}</style>
@@ -1418,18 +1430,27 @@ export const StudentReportPrintPage: React.FC = () => {
                 <p className="text-xs text-slate-400 mt-1">Try clearing filters or selecting another class.</p>
               </div>
             ) : (
-              <table className="w-full border-collapse text-left border border-slate-300">
+              <table className="custom-report-table w-full border-collapse text-left border border-slate-300">
                 <thead>
-                  <tr className={`${currentTheme.headerBg} border border-slate-300 print:text-white`}>
+                  <tr className={`${currentTheme.headerBg} border border-slate-400/50 print:text-white`}>
                     {activeColumns.map((col, idx) => (
                       <th
                         key={idx}
-                        className={`${paddingXClass} py-2 font-black border border-slate-300 text-white ${
+                        className={`${paddingXClass} py-2.5 font-black border border-slate-400/40 text-white ${
                           col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
                         } ${fontSizeClass}`}
-                        style={{ width: `${col.widthPt * 3}px` }}
+                        style={{ 
+                          width: `${col.widthPt * 3}px`,
+                          color: '#ffffff',
+                          WebkitTextFillColor: '#ffffff'
+                        }}
                       >
-                        {col.label}
+                        <span 
+                          className="font-black tracking-wider uppercase text-white drop-shadow-xs" 
+                          style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                        >
+                          {col.label}
+                        </span>
                       </th>
                     ))}
                   </tr>

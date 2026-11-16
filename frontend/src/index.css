@@ -211,15 +211,15 @@
 
 /* ── Unified Professional Tables ────────────────────────── */
 @layer components {
-  .card table, .table-wrapper table, table.w-full {
+  .card table:not(.custom-report-table), .table-wrapper table:not(.custom-report-table), table.w-full:not(.custom-report-table) {
     @apply !w-full !border-collapse !border-spacing-0;
   }
   
-  .card table thead, .table-wrapper table thead, table.w-full thead {
+  .card table:not(.custom-report-table) thead, .table-wrapper table:not(.custom-report-table) thead, table.w-full:not(.custom-report-table) thead {
     @apply !bg-indigo-50/60 dark:!bg-indigo-950/20;
   }
   
-  .card table th, .table-wrapper table th, table.w-full th {
+  .card table:not(.custom-report-table) th, .table-wrapper table:not(.custom-report-table) th, table.w-full:not(.custom-report-table) th {
     @apply !px-3 !py-2.5 !text-[10px] !font-black !uppercase !tracking-wider !text-indigo-900 dark:!text-indigo-300 !border-b !border-indigo-100 dark:!border-gray-800 !text-left;
   }
   
