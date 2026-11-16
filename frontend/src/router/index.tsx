@@ -82,6 +82,7 @@ const MyAttendancePage = lazy(() => import('../pages/attendance/MyAttendancePage
 const AttendanceReportPage = lazy(() => import('../pages/attendance/AttendanceReportPage'));
 const AttendanceDailyReportPage = lazy(() => import('../pages/attendance/AttendanceDailyReportPage'));
 const TodayAbsenteesPage = lazy(() => import('../pages/attendance/TodayAbsenteesPage'));
+const HolidayCalendarPage = lazy(routeImports['/attendance/holidays']);
 const ExamListPage = lazy(routeImports['/exams']);
 const CreateExamPage = lazy(routeImports['/exams/create']);
 const MarksEntryPage = lazy(() => import('../pages/exams/MarksEntryPage'));
@@ -430,6 +431,14 @@ export const router = createBrowserRouter([
       {
         path: 'attendance/absentees-today',
         element: withSuspense(<TodayAbsenteesPage />),
+      },
+      {
+        path: 'attendance/holidays',
+        element: withSuspense(<HolidayCalendarPage />),
+      },
+      {
+        path: 'holidays',
+        element: withSuspense(<HolidayCalendarPage />),
       },
       {
         path: 'exams',

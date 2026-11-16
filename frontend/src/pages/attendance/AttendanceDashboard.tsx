@@ -245,8 +245,8 @@ export default function AttendanceDashboard() {
             {[
               { to: '/attendance/mark', label: 'Register', icon: Edit, color: 'text-blue-600' },
               { to: '/attendance/absentees-today', label: 'Leaves', icon: FileText, color: 'text-emerald-600' },
-              { to: '#', label: 'Holidays', icon: Calendar, color: 'text-amber-600' },
-              { to: '#', label: 'Late Entry', icon: Clock, color: 'text-rose-600' }
+              { to: '/attendance/holidays', label: 'Holidays', icon: Calendar, color: 'text-amber-600' },
+              { to: '/attendance/report', label: 'Monthly Report', icon: Clock, color: 'text-indigo-600' }
             ].map((s, i) => (
               <Link key={i} to={s.to} className="bg-white border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition-colors shadow-sm">
                 <s.icon className={`w-5 h-5 mb-2 ${s.color}`} />
