@@ -21,6 +21,14 @@ interface SchoolHoliday {
   createdAt?: string;
 }
 
+export const cleanHolidayTitle = (title?: string) => {
+  if (!title) return '';
+  return title
+    .replace(/\s*\([\u0C00-\u0C7F\s\-–\.]+\)/g, '')
+    .replace(/[\u0C00-\u0C7F]+/g, '')
+    .trim();
+};
+
 export const HolidayCalendarPage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
@@ -90,7 +98,7 @@ export const HolidayCalendarPage: React.FC = () => {
   // Open Edit Modal
   const openEditModal = (h: SchoolHoliday) => {
     setEditingId(h.id);
-    setFormTitle(h.title);
+    setFormTitle(cleanHolidayTitle(h.title));
     
     // Extract category from description (e.g., HOLIDAY:FESTIVAL)
     let cat = 'FESTIVAL';
@@ -341,11 +349,11 @@ export const HolidayCalendarPage: React.FC = () => {
   };
 
   const CATEGORY_TAGS = {
-    NATIONAL: { label: 'National Holiday', telugu: 'జాతీయ దినోత్సవం', bg: 'bg-amber-100 text-amber-900 border-amber-300', dot: 'bg-amber-500' },
-    FESTIVAL: { label: 'Festival Holiday', telugu: 'పండుగ సెలవు', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-500' },
-    VACATION: { label: 'Vacation Break', telugu: 'వేసవి / దసరా సెలవులు', bg: 'bg-emerald-100 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
-    EMERGENCY: { label: 'Emergency / Order', telugu: 'ప్రభుత్వ ఆదేశం / వర్షం', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' },
-    LOCAL: { label: 'Local Break', telugu: 'స్థానిక సెలవు', bg: 'bg-blue-100 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
+    NATIONAL: { label: 'National Holiday', bg: 'bg-amber-100 text-amber-900 border-amber-300', dot: 'bg-amber-500' },
+    FESTIVAL: { label: 'Festival Holiday', bg: 'bg-purple-100 text-purple-900 border-purple-300', dot: 'bg-purple-500' },
+    VACATION: { label: 'Vacation Break', bg: 'bg-emerald-100 text-emerald-900 border-emerald-300', dot: 'bg-emerald-500' },
+    EMERGENCY: { label: 'Emergency / Order', bg: 'bg-rose-100 text-rose-900 border-rose-300', dot: 'bg-rose-500' },
+    LOCAL: { label: 'Local Break', bg: 'bg-blue-100 text-blue-900 border-blue-300', dot: 'bg-blue-500' },
   };
 
   return (
@@ -384,7 +392,7 @@ export const HolidayCalendarPage: React.FC = () => {
                   </h1>
                 </div>
                 <p className="text-xs sm:text-sm text-indigo-200/90 font-medium mt-0.5">
-                  పాఠశాల అధికారిక సెలవులు, పండుగలు & వెకేషన్ క్యాలెండర్ నిర్వహణ
+                  Official academic schedule, gazetted holidays, festivals & vacation calendar
                 </p>
               </div>
             </div>
@@ -454,8 +462,8 @@ export const HolidayCalendarPage: React.FC = () => {
                 <p className="text-[10px] font-bold text-amber-200 uppercase tracking-wider">
                   {nextHoliday ? (nextHoliday.daysLeft === 0 ? 'Holiday Today!' : `In ${nextHoliday.daysLeft} Days`) : 'Next Holiday'}
                 </p>
-                <p className="text-xs font-black text-white truncate" title={nextHoliday?.holiday.title}>
-                  {nextHoliday ? nextHoliday.holiday.title : 'None Scheduled'}
+                <p className="text-xs font-black text-white truncate" title={cleanHolidayTitle(nextHoliday?.holiday.title)}>
+                  {nextHoliday ? cleanHolidayTitle(nextHoliday.holiday.title) : 'None Scheduled'}
                 </p>
               </div>
             </div>
@@ -500,8 +508,8 @@ export const HolidayCalendarPage: React.FC = () => {
             {/* View Tabs */}
             <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80">
               {[
-                { id: 'upcoming', label: 'Upcoming Holidays (రాబోయేవి)', icon: Clock },
-                { id: 'all', label: 'All Holidays (మొత్తం సెలవులు)', icon: CalendarIcon },
+                { id: 'upcoming', label: 'Upcoming Holidays', icon: Clock },
+                { id: 'all', label: 'All Holidays', icon: CalendarIcon },
                 { id: 'table', label: 'Official Table View', icon: Layers },
               ].map(tab => {
                 const Icon = tab.icon;
@@ -605,7 +613,7 @@ export const HolidayCalendarPage: React.FC = () => {
             </div>
             <h3 className="text-base font-black text-slate-900">No Holidays Found</h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              సెలవుల వివరాలు ఏవీ కనుగొనబడలేదు. అడ్మిన్ అయితే పైన ఉన్న <strong>"⚡ Auto Populate AP Holidays"</strong> బటన్ క్లిక్ చేసి రాష్ట్ర అధికారిక క్యాలెండర్‌ను లోడ్ చేసుకోవచ్చు.
+              No holidays found. Administrators can click <strong>"+ Auto Populate AP State Holidays"</strong> above to load the official state school calendar.
             </p>
             {isAdmin && (
               <button
@@ -621,17 +629,43 @@ export const HolidayCalendarPage: React.FC = () => {
           /* ── TABLE VIEW (OFFICIAL ACADEMIC REGISTRY) ──                 */
           /* ============================================================ */
           <div className="bg-white rounded-3xl border border-slate-200/90 shadow-md p-6 overflow-hidden">
+            <style>{`
+              .holiday-table thead, .holiday-table thead tr {
+                background: linear-gradient(to right, #0f172a, #1e1b4b, #0f172a) !important;
+              }
+              .holiday-table thead th, .holiday-table thead th * {
+                color: #ffffff !important;
+                -webkit-text-fill-color: #ffffff !important;
+                font-weight: 900 !important;
+              }
+            `}</style>
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse border border-slate-300">
+              <table className="w-full holiday-table text-left border-collapse border border-slate-300">
                 <thead>
-                  <tr className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-300">
-                    <th className="py-3 px-4 text-xs font-black text-center w-12 border border-slate-300">#</th>
-                    <th className="py-3 px-4 text-xs font-black border border-slate-300">Date / Duration</th>
-                    <th className="py-3 px-4 text-xs font-black border border-slate-300">Day</th>
-                    <th className="py-3 px-4 text-xs font-black border border-slate-300">Holiday / Festival Name</th>
-                    <th className="py-3 px-4 text-xs font-black border border-slate-300 text-center">Category</th>
-                    <th className="py-3 px-4 text-xs font-black border border-slate-300 text-center">Break</th>
-                    {isAdmin && <th className="py-3 px-4 text-xs font-black border border-slate-300 text-center">Actions</th>}
+                  <tr className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white border border-slate-700">
+                    <th className="py-3.5 px-4 text-xs font-black text-center w-12 border border-slate-700 bg-slate-900 text-white">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>#</span>
+                    </th>
+                    <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>DATE / DURATION</span>
+                    </th>
+                    <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>DAY</span>
+                    </th>
+                    <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>HOLIDAY / FESTIVAL NAME</span>
+                    </th>
+                    <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white text-center">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>CATEGORY</span>
+                    </th>
+                    <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white text-center">
+                      <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>BREAK</span>
+                    </th>
+                    {isAdmin && (
+                      <th className="py-3.5 px-4 text-xs font-black border border-slate-700 bg-slate-900 text-white text-center">
+                        <span className="text-white font-black" style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}>ACTIONS</span>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -652,7 +686,7 @@ export const HolidayCalendarPage: React.FC = () => {
                           {dayText}
                         </td>
                         <td className="py-3 px-4 text-xs font-black border border-slate-300 text-indigo-950">
-                          {h.title}
+                          {cleanHolidayTitle(h.title)}
                           {h.description && !h.description.startsWith('HOLIDAY:') && (
                             <span className="block text-[11px] font-normal text-slate-400">{h.description}</span>
                           )}
@@ -762,7 +796,7 @@ export const HolidayCalendarPage: React.FC = () => {
 
                     {/* Holiday Title & Description */}
                     <h4 className="text-base font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
-                      {h.title}
+                      {cleanHolidayTitle(h.title)}
                     </h4>
 
                     {h.description && !h.description.startsWith('HOLIDAY:') && (
@@ -829,7 +863,7 @@ export const HolidayCalendarPage: React.FC = () => {
                   <td className="p-2 border border-slate-400 text-center">{i + 1}</td>
                   <td className="p-2 border border-slate-400 font-bold">{spanText}</td>
                   <td className="p-2 border border-slate-400">{dayText}</td>
-                  <td className="p-2 border border-slate-400 font-bold">{h.title}</td>
+                  <td className="p-2 border border-slate-400 font-bold">{cleanHolidayTitle(h.title)}</td>
                   <td className="p-2 border border-slate-400 text-center">
                     {cat === 'NATIONAL' ? 'National Holiday' : cat === 'VACATION' ? 'Vacation Break' : 'Festival'}
                   </td>
@@ -872,7 +906,7 @@ export const HolidayCalendarPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900">
-                    {editingId ? 'Edit Holiday (సెలవు వివరాలు మార్చండి)' : 'Add New Holiday (కొత్త సెలవును చేర్చండి)'}
+                    {editingId ? 'Edit Holiday' : 'Add New Holiday'}
                   </h3>
                   <p className="text-xs text-slate-400">Official academic calendar entry</p>
                 </div>
@@ -890,7 +924,7 @@ export const HolidayCalendarPage: React.FC = () => {
               {/* Title */}
               <div>
                 <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                  Holiday / Occasion Title (సెలవు పేరు) *
+                  Holiday / Occasion Title *
                 </label>
                 <input
                   type="text"
@@ -905,18 +939,18 @@ export const HolidayCalendarPage: React.FC = () => {
               {/* Category */}
               <div>
                 <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                  Category (వర్గం) *
+                  Category *
                 </label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value)}
                   className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
-                  <option value="FESTIVAL">🪔 Festival Holiday (పండుగ సెలవు)</option>
-                  <option value="NATIONAL">🏛️ National Holiday (జాతీయ సెలవు)</option>
-                  <option value="VACATION">☀️ Vacation Break (వేసవి / దసరా సెలవులు)</option>
-                  <option value="EMERGENCY">🚨 Emergency / Govt Order (వర్షం / ప్రభుత్వ ఉత్తర్వు)</option>
-                  <option value="LOCAL">🏫 Local / Institutional Break (పాఠశాల సెలవు)</option>
+                  <option value="FESTIVAL">🪔 Festival Holiday</option>
+                  <option value="NATIONAL">🏛️ National Holiday</option>
+                  <option value="VACATION">☀️ Vacation Break</option>
+                  <option value="EMERGENCY">🚨 Emergency / Govt Order</option>
+                  <option value="LOCAL">🏫 Local / Institutional Break</option>
                 </select>
               </div>
 
@@ -924,7 +958,7 @@ export const HolidayCalendarPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                    Start Date (ప్రారంభ తేదీ) *
+                    Start Date *
                   </label>
                   <input
                     type="date"
@@ -937,7 +971,7 @@ export const HolidayCalendarPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                    End Date (ముగింపు తేదీ)
+                    End Date
                   </label>
                   <input
                     type="date"
@@ -945,14 +979,14 @@ export const HolidayCalendarPage: React.FC = () => {
                     onChange={(e) => setFormEndDate(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-indigo-500 cursor-pointer"
                   />
-                  <span className="text-[10px] text-slate-400">ఒక రోజు మాత్రమే అయితే ఖాళీగా ఉంచండి</span>
+                  <span className="text-[10px] text-slate-400">Leave blank if single-day holiday</span>
                 </div>
               </div>
 
               {/* Optional Description */}
               <div>
                 <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-1">
-                  Description / Remarks (వివరాలు / సూచనలు)
+                  Description / Remarks (Optional)
                 </label>
                 <textarea
                   rows={2}

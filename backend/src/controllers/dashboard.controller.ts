@@ -20,7 +20,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
   try {
     const cacheKey = 'admin_dashboard';
     const nowMs = Date.now();
-    if (cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
+    const isRefresh = req.query.refresh === 'true';
+    if (!isRefresh && cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
       successResponse(res, cache[cacheKey].data, 'Admin dashboard data fetched from cache');
       return;
     }
@@ -87,6 +88,8 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
           rollNo: true,
           dob: true,
           gender: true,
+          fatherPhone: true,
+          motherPhone: true,
           user: { select: { name: true, phone: true, photoUrl: true } },
           class: { select: { name: true, section: true } }
         }
@@ -164,17 +167,28 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       });
     }
 
-    const currentMonth = today.getMonth();
-    const currentDay = today.getDate();
+    // Indian Standard Time (Asia/Kolkata, UTC+05:30) date evaluation
+    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const currentMonthIST = istNow.getMonth();
+    const currentDayIST = istNow.getDate();
 
     const todayBirthdays: any[] = [];
     const upcomingBirthdays: any[] = [];
+    const thisMonthBirthdays: any[] = [];
 
     (studentsWithDob || []).forEach((s: any) => {
       if (!s.dob) return;
       const bDate = new Date(s.dob);
-      const bMonth = bDate.getMonth();
-      const bDay = bDate.getDate();
+      if (isNaN(bDate.getTime())) return;
+
+      // Extract day and month in Indian Standard Time (Asia/Kolkata)
+      const bDateIST = new Date(bDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const bMonthIST = bDateIST.getMonth();
+      const bDayIST = bDateIST.getDate();
+
+      // Also extract day and month in UTC as fallback
+      const bMonthUTC = bDate.getUTCMonth();
+      const bDayUTC = bDate.getUTCDate();
 
       let avatarUrl = s.user?.photoUrl;
       if (avatarUrl && avatarUrl.startsWith('data:image')) {
@@ -185,30 +199,43 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         id: s.id,
         rollNo: s.rollNo,
         name: s.user?.name || 'Student',
-        phone: s.user?.phone || null,
+        phone: s.user?.phone || s.fatherPhone || s.motherPhone || null,
         photoUrl: avatarUrl,
         gender: s.gender,
         dob: s.dob,
         className: s.class ? `${s.class.name}${s.class.section ? ' - ' + s.class.section : ''}` : 'N/A'
       };
 
-      if (bMonth === currentMonth && bDay === currentDay) {
+      // Match today's birthday in IST or UTC
+      const isToday = 
+        (bMonthIST === currentMonthIST && bDayIST === currentDayIST) ||
+        (bMonthUTC === currentMonthIST && bDayUTC === currentDayIST);
+
+      if (isToday) {
         todayBirthdays.push(item);
       } else {
-        const thisYearBirthday = new Date(today.getFullYear(), bMonth, bDay);
-        let diffMs = thisYearBirthday.getTime() - today.getTime();
+        const birthMonth = bMonthIST;
+        const birthDay = bDayIST;
+
+        const thisYearBirthday = new Date(istNow.getFullYear(), birthMonth, birthDay);
+        let diffMs = thisYearBirthday.getTime() - istNow.getTime();
         if (diffMs < 0) {
-          const nextYearBirthday = new Date(today.getFullYear() + 1, bMonth, bDay);
-          diffMs = nextYearBirthday.getTime() - today.getTime();
+          const nextYearBirthday = new Date(istNow.getFullYear() + 1, birthMonth, birthDay);
+          diffMs = nextYearBirthday.getTime() - istNow.getTime();
         }
         const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        if (daysLeft > 0 && daysLeft <= 7) {
+        if (daysLeft > 0 && daysLeft <= 14) {
           upcomingBirthdays.push({ ...item, daysLeft });
+        }
+
+        if (birthMonth === currentMonthIST) {
+          thisMonthBirthdays.push({ ...item, day: birthDay });
         }
       }
     });
 
     upcomingBirthdays.sort((a, b) => a.daysLeft - b.daysLeft);
+    thisMonthBirthdays.sort((a, b) => a.day - b.day);
 
     const responseData = {
       totalStudents,
@@ -241,6 +268,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       attendanceTrend,
       todayBirthdays,
       upcomingBirthdays,
+      thisMonthBirthdays,
       totalAppInstalls,
       studentsWithDob
     };
@@ -248,7 +276,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
     // Cache for 3 minutes (180000 ms) to make dashboard lightning fast
     cache[cacheKey] = {
       data: responseData,
-      expiry: Date.now() + 180000
+      expiry: Date.now() + 45000
     };
 
     successResponse(res, responseData, 'Admin dashboard data fetched successfully');

@@ -31,7 +31,12 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
       orderBy: { startDate: 'asc' }
     });
 
-    successResponse(res, events, 'Events fetched successfully');
+    const sanitizedEvents = events.map(e => ({
+      ...e,
+      title: e.title.replace(/\s*\([\u0C00-\u0C7F\s\-–\.]+\)/g, '').replace(/[\u0C00-\u0C7F]+/g, '').trim()
+    }));
+
+    successResponse(res, sanitizedEvents, 'Events fetched successfully');
   } catch (error) {
     next(error);
   }
@@ -105,27 +110,27 @@ export const populateDefaults = async (req: AuthRequest, res: Response, next: Ne
   try {
     const year = Number(req.body?.year) || 2026;
     const defaultHolidays = [
-      { title: "New Year's Day (నూతన సంవత్సరం)", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-01-01`), endDate: new Date(`${year}-01-01`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Bhogi (భోగి పండుగ)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-13`), endDate: new Date(`${year}-01-13`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Makara Sankranti (మకర సంక్రాంతి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-14`), endDate: new Date(`${year}-01-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Kanuma (కనుమ పండుగ)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-15`), endDate: new Date(`${year}-01-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Republic Day (గణతంత్ర దినోత్సవం)", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-01-26`), endDate: new Date(`${year}-01-26`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Maha Shivaratri (మహా శివరాత్రి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-02-15`), endDate: new Date(`${year}-02-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Holi (హోలీ)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-04`), endDate: new Date(`${year}-03-04`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Ugadi (ఉగాది - తెలుగు నూతన సంవత్సరం)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-19`), endDate: new Date(`${year}-03-19`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Sri Rama Navami (శ్రీరామ నవమి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-27`), endDate: new Date(`${year}-03-27`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Good Friday (గుడ్ ఫ్రైడే)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-04-03`), endDate: new Date(`${year}-04-03`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Dr. B.R. Ambedkar Jayanti (అంబేద్కర్ జయంతి)", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-04-14`), endDate: new Date(`${year}-04-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Summer Vacation (వేసవి సెలవులు)", description: "HOLIDAY:VACATION", startDate: new Date(`${year}-04-24`), endDate: new Date(`${year}-06-11`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Bakrid / Eid al-Adha (బక్రీద్)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-05-27`), endDate: new Date(`${year}-05-27`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Independence Day (స్వాతంత్య్ర దినోత్సవం)", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-08-15`), endDate: new Date(`${year}-08-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Vinayaka Chavithi (వినాయక చవితి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-09-14`), endDate: new Date(`${year}-09-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Milad-un-Nabi (మిలాద్-ఉన్-నబి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-09-25`), endDate: new Date(`${year}-09-25`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Mahatma Gandhi Jayanti (గాంధీ జయంతి)", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-10-02`), endDate: new Date(`${year}-10-02`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Dasara Vacation (దసరా సెలవులు)", description: "HOLIDAY:VACATION", startDate: new Date(`${year}-10-18`), endDate: new Date(`${year}-10-24`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Vijayadasami (విజయదశమి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-10-20`), endDate: new Date(`${year}-10-20`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Deepavali (దీపావళి)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-11-08`), endDate: new Date(`${year}-11-08`), allDay: true, targetRoles: "STUDENT,TEACHER" },
-      { title: "Christmas (క్రిస్మస్)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-12-25`), endDate: new Date(`${year}-12-25`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "New Year's Day", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-01-01`), endDate: new Date(`${year}-01-01`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Bhogi Festival", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-13`), endDate: new Date(`${year}-01-13`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Makara Sankranti", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-14`), endDate: new Date(`${year}-01-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Kanuma Festival", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-01-15`), endDate: new Date(`${year}-01-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Republic Day", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-01-26`), endDate: new Date(`${year}-01-26`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Maha Shivaratri", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-02-15`), endDate: new Date(`${year}-02-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Holi", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-04`), endDate: new Date(`${year}-03-04`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Ugadi (Telugu New Year)", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-19`), endDate: new Date(`${year}-03-19`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Sri Rama Navami", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-03-27`), endDate: new Date(`${year}-03-27`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Good Friday", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-04-03`), endDate: new Date(`${year}-04-03`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Dr. B.R. Ambedkar Jayanti", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-04-14`), endDate: new Date(`${year}-04-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Summer Vacation", description: "HOLIDAY:VACATION", startDate: new Date(`${year}-04-24`), endDate: new Date(`${year}-06-11`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Bakrid / Eid al-Adha", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-05-27`), endDate: new Date(`${year}-05-27`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Independence Day", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-08-15`), endDate: new Date(`${year}-08-15`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Vinayaka Chavithi", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-09-14`), endDate: new Date(`${year}-09-14`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Milad-un-Nabi", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-09-25`), endDate: new Date(`${year}-09-25`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Mahatma Gandhi Jayanti", description: "HOLIDAY:NATIONAL", startDate: new Date(`${year}-10-02`), endDate: new Date(`${year}-10-02`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Dasara Vacation", description: "HOLIDAY:VACATION", startDate: new Date(`${year}-10-18`), endDate: new Date(`${year}-10-24`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Vijayadasami", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-10-20`), endDate: new Date(`${year}-10-20`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Deepavali", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-11-08`), endDate: new Date(`${year}-11-08`), allDay: true, targetRoles: "STUDENT,TEACHER" },
+      { title: "Christmas", description: "HOLIDAY:FESTIVAL", startDate: new Date(`${year}-12-25`), endDate: new Date(`${year}-12-25`), allDay: true, targetRoles: "STUDENT,TEACHER" },
     ];
 
     for (const h of defaultHolidays) {

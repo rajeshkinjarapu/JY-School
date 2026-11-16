@@ -211,15 +211,15 @@
 
 /* ── Unified Professional Tables ────────────────────────── */
 @layer components {
-  .card table:not(.custom-report-table), .table-wrapper table:not(.custom-report-table), table.w-full:not(.custom-report-table) {
+  .card table:not(.custom-report-table):not(.holiday-table), .table-wrapper table:not(.custom-report-table):not(.holiday-table), table.w-full:not(.custom-report-table):not(.holiday-table) {
     @apply !w-full !border-collapse !border-spacing-0;
   }
   
-  .card table:not(.custom-report-table) thead, .table-wrapper table:not(.custom-report-table) thead, table.w-full:not(.custom-report-table) thead {
+  .card table:not(.custom-report-table):not(.holiday-table) thead, .table-wrapper table:not(.custom-report-table):not(.holiday-table) thead, table.w-full:not(.custom-report-table):not(.holiday-table) thead {
     @apply !bg-indigo-50/60 dark:!bg-indigo-950/20;
   }
   
-  .card table:not(.custom-report-table) th, .table-wrapper table:not(.custom-report-table) th, table.w-full:not(.custom-report-table) th {
+  .card table:not(.custom-report-table):not(.holiday-table) th, .table-wrapper table:not(.custom-report-table):not(.holiday-table) th, table.w-full:not(.custom-report-table):not(.holiday-table) th {
     @apply !px-3 !py-2.5 !text-[10px] !font-black !uppercase !tracking-wider !text-indigo-900 dark:!text-indigo-300 !border-b !border-indigo-100 dark:!border-gray-800 !text-left;
   }
   
