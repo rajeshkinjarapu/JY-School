@@ -1,5 +1,44 @@
 # JY School Project State
 
+## చివరి సంభాషణ - హెడర్ క్యాలెండర్ బటన్ నావిగేషన్ ఫిక్స్, సైడ్‌బార్ ట్యాగ్‌లైన్ తొలగింపు & ప్రింట్ స్టూడియో 100% ఇంగ్లీష్ (November 16, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  - "header lo calendar button matrame undali but click cheste timetable open裂avutundi"
+  - "sidebar lo unna Learn • Grow • Excel remove cheyu"
+  - "image 2 lo telugu lo undi total english lo undali"
+- **సమస్య విశ్లేషణ:**
+  1. `Header.tsx` లో క్యాలెండర్ ఐకాన్ బటన్‌కు `onClick={() => navigate('/timetable')}` ఉండటం వల్ల క్యాలెండర్ ఐకాన్ క్లిక్ చేసినప్పుడు టైమ్‌టేబుల్ ఓపెన్ అవుతోంది.
+  2. `Sidebar.tsx` లో స్కూల్ లోగో క్రింద `<p>Learn • Grow • Excel</p>` ట్యాగ్‌లైన్ హార్డ్‌కోడ్ అయి ఉంది.
+  3. `StudentReportPrintPage.tsx` (కస్టమ్ రిపోర్ట్ & ప్రింట్ స్టూడియో) లో తెలుగు లేబుల్స్, సబ్‌టైటిల్స్, రో-హైట్ & స్పేసింగ్ టూల్‌బార్ వివరాలు, చెక్‌బాక్స్‌లు మరియు థీమ్ పేర్లలో తెలుగు టెక్స్ట్ ఉంది.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **హెడర్ క్యాలెండర్ బటన్ ఫిక్స్ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx)):**
+     - క్యాలెండర్ బటన్ క్లిక్ చేసినప్పుడు నేరుగా అకడమిక్ క్యాలెండర్ & హాలిడేస్ పేజీకి (`/attendance/holidays`) నావిగేట్ అయ్యేలా మార్చాము మరియు టైటిల్‌ను "Academic Calendar & Holidays" గా సెట్ చేశాము.
+  2. **సైడ్‌బార్ ట్యాగ్‌లైన్ తొలగింపు ([`Sidebar.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Sidebar.tsx)):**
+     - సైడ్‌బార్ నుండి `Learn • Grow • Excel` టెక్స్ట్‌ను పూర్తిగా తొలగించి, క్లీన్ స్కూల్ లోగో & నేమ్ మాత్రమే ఉండేలా చేశాము.
+  3. **ప్రింట్ స్టూడియో పూర్తి ఇంగ్లీష్ ట్రాన్స్‌లేషన్ ([`StudentReportPrintPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**
+     - పేజీలోని ప్రతి ఒక్క తెలుగు లేబుల్, సబ్‌టైటిల్, బటన్లు (Print Report, Download PDF, Export Excel), రో-హైట్ & స్పేసింగ్ నియంత్రణలు, కలర్ థీమ్ పేర్లు, కేటగిరీ వివరణలు మరియు ప్రింట్ ఫుటర్ సిగ్నేచర్‌లను 100% ప్యూర్ ప్రొఫెషనల్ ఇంగ్లీష్ లోకి మార్చాము.
+
+
+## చివరి సంభాషణ - అడ్మిన్ డాష్‌బోర్డ్ 'On Leave' ఫేక్ కౌంట్ తొలగింపు & టీచర్ అటెండెన్స్ లైవ్ సింక్ (November 16, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  - "on leave assalu veyakunda enduku vastundi okasari check chyeu, teacher attendance veyakunda 100% chupistundi"
+  - అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్: అడ్మిన్ డాష్‌బోర్డ్‌లో Today's Attendance కార్డ్‌లో `ON LEAVE: 13 Students` మరియు బాటమ్ బార్‌లో `Teachers: 34 / 34 Present • 100% Present` అని కనిపించడం.
+- **సమస్య విశ్లేషణ:**
+  1. `frontend/src/pages/dashboard/DashboardPage.tsx` లో `leaveCount = Math.max(1, Math.round(absentCount * 0.4)) || 6;` అనే ఫేక్ అంచనా గణితం ఉండేది. 32 మంది ఆబ్సెంట్ అయితే 40% లెక్కించి 13 అని చూపేది. ఎవరూ లీవ్ పెట్టకపోయినా `Math.max(1, ...)` వల్ల లీవ్ ఎల్లప్పుడూ కనిపించేది.
+  2. `frontend/src/pages/dashboard/DashboardPage.tsx` లో టీచర్ల హాజరు డేటాబేస్ నుండి చెక్ చేయకుండా `Teachers: 34 / 34 Present` మరియు `100% Present` అని స్టాటిక్ హార్డ్‌కోడ్ రాసి ఉంచారు. బ్యాకెండ్ `dashboard.controller.ts` లో టీచర్ అటెండెన్స్ క్వెరీ లేదు.
+  3. `backend/src/controllers/attendance.controller.ts` లో ఆబ్సెంట్ అయిన విద్యార్థులందరినీ `studentsOnLeave` లోకి నెట్టడం వల్ల అటెండెన్స్ పేజీలోని లీవ్ బాక్స్‌లోనూ ఆబ్సెంట్ విద్యార్థుల పేర్లు కనిపించేవి.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **బ్యాకెండ్ రియల్ డేటా అగ్రిగేషన్ ([`dashboard.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+     - నేటి తేదీకి `prisma.teacherAttendance` ను పారలెల్ ప్రామిస్‌లో క్వెరీ చేసి, హాజరు వేశారో లేదో (`isMarked`), ప్రెసెంట్, ఆబ్సెంట్ మరియు నిజమైన శాతాన్ని లెక్కించి `teacherAttendance` ఆబ్జెక్ట్‌లో పంపాము.
+     - విద్యార్థుల నిజమైన ప్రెసెంట్, ఆబ్సెంట్, మరియు లీవ్ (`EXCUSED`) కౌంట్స్‌ను `studentAttendance` ఆబ్జెక్ట్‌లో పంపాము.
+  2. **అటెండెన్స్ కంట్రోలర్ సెపరేషన్ ([`attendance.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/attendance.controller.ts)):**
+     - లీవ్ ఉన్న విద్యార్థులను మాత్రమే `studentsOnLeave` లోకి, ఆబ్సెంట్ విద్యార్థులను `studentsAbsent` లోకి విడివిడిగా విభజించాము.
+  3. **ఫ్రంటెండ్ డాష్‌బోర్డ్ లైవ్ బైండింగ్ ([`DashboardPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx)):**
+     - ఫేక్ 40% గణితాన్ని పూర్తిగా తొలగించి, డేటాబేస్ నుండి వచ్చే నిజమైన `leaveCount` (0 అయితే ఖచ్చితంగా 0) నేరుగా బైండ్ చేశాము.
+     - టీచర్ అటెండెన్స్ వేసి ఉంటే లైవ్ ప్రెసెంట్ సంఖ్య మరియు శాతం కనిపిస్తుంది. ఒకవేళ ఇంకా హాజరు వేయకపోతే **"Today Not Marked (34 Staff)"** బ్యాడ్జ్ మరియు వేయడానికి **"Mark Attendance →"** బటన్ కనిపిస్తుంది.
+  4. **అటెండెన్స్ డాష్‌బోర్డ్ టోగుల్ టాబ్స్ ([`AttendanceDashboard.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/attendance/AttendanceDashboard.tsx)):**
+     - Absent మరియు Leaves కోసం వేర్వేరు టోగుల్ టాబ్స్ చేర్చి, ఆబ్సెంట్ విద్యార్థులు లీవ్ బాక్స్‌లో కనిపించే గందరగోళాన్ని శాశ్వతంగా నివారించాము.
+
+
 ## చివరి సంభాషణ - అటెండెన్స్ హాలిడేస్ మేనేజ్‌మెంట్ & అకడమిక్ క్యాలెండర్ ప్రొఫెషనల్ డెవలప్‌మెంట్ (November 16, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   - "attendance lo holiday page work avvatam ledu oka profeesional developer ga alcohcinchi professional ga design cheyu"

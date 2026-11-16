@@ -93,49 +93,49 @@ export const StudentReportPrintPage: React.FC = () => {
   // Master column definitions list
   const MASTER_COLUMNS: ColumnDef[] = useMemo(() => [
     // 🪪 Basic & Identity
-    { id: 'sno', label: 'S.No', teluguLabel: 'క్రమ సంఖ్య', category: 'basic', defaultSelected: true, widthPt: 14, align: 'center', getValue: (_, idx) => String(idx + 1) },
-    { id: 'photo', label: 'Photo', teluguLabel: 'ఫోటో', category: 'basic', defaultSelected: false, widthPt: 22, align: 'center', getValue: (s) => s.user?.photoUrl || '' },
-    { id: 'rollNo', label: 'Student ID', teluguLabel: 'రోల్ నంబర్ / ఐడీ', category: 'basic', defaultSelected: true, widthPt: 26, align: 'center', getValue: (s) => s.rollNo || s.studentId || '-' },
-    { id: 'admissionNo', label: 'Admission No', teluguLabel: 'అడ్మిషన్ నంబర్', category: 'basic', defaultSelected: false, widthPt: 26, align: 'center', getValue: (s) => s.admissionNo || s.rollNo || '-' },
-    { id: 'name', label: 'Student Name', teluguLabel: 'విద్యార్థి పూర్తి పేరు', category: 'basic', defaultSelected: true, widthPt: 45, align: 'left', getValue: (s) => s.user?.name || s.name || '-' },
-    { id: 'gender', label: 'Gender', teluguLabel: 'లింగం (బాయ్ / గర్ల్)', category: 'basic', defaultSelected: true, widthPt: 18, align: 'center', getValue: (s) => s.gender ? (s.gender.toLowerCase() === 'female' ? 'Girl' : 'Boy') : '-' },
-    { id: 'dob', label: 'Date of Birth', teluguLabel: 'పుట్టిన తేదీ', category: 'basic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.dob ? new Date(s.dob).toLocaleDateString('en-GB') : '-' },
-    { id: 'age', label: 'Age', teluguLabel: 'వయస్సు', category: 'basic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => calculateAge(s.dob) },
-    { id: 'bloodGroup', label: 'Blood Group', teluguLabel: 'రక్త వర్గం', category: 'basic', defaultSelected: false, widthPt: 20, align: 'center', getValue: (s) => s.bloodGroup || '-' },
-    { id: 'aadharNo', label: 'Student Aadhaar', teluguLabel: 'విద్యార్థి ఆధార్ నంబర్', category: 'basic', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.aadharNo) },
+    { id: 'sno', label: 'S.No', teluguLabel: 'Serial Number', category: 'basic', defaultSelected: true, widthPt: 14, align: 'center', getValue: (_, idx) => String(idx + 1) },
+    { id: 'photo', label: 'Photo', teluguLabel: 'Passport Photo', category: 'basic', defaultSelected: false, widthPt: 22, align: 'center', getValue: (s) => s.user?.photoUrl || '' },
+    { id: 'rollNo', label: 'Student ID', teluguLabel: 'Roll No / ID', category: 'basic', defaultSelected: true, widthPt: 26, align: 'center', getValue: (s) => s.rollNo || s.studentId || '-' },
+    { id: 'admissionNo', label: 'Admission No', teluguLabel: 'Admission Number', category: 'basic', defaultSelected: false, widthPt: 26, align: 'center', getValue: (s) => s.admissionNo || s.rollNo || '-' },
+    { id: 'name', label: 'Student Name', teluguLabel: 'Full Student Name', category: 'basic', defaultSelected: true, widthPt: 45, align: 'left', getValue: (s) => s.user?.name || s.name || '-' },
+    { id: 'gender', label: 'Gender', teluguLabel: 'Boy / Girl', category: 'basic', defaultSelected: true, widthPt: 18, align: 'center', getValue: (s) => s.gender ? (s.gender.toLowerCase() === 'female' ? 'Girl' : 'Boy') : '-' },
+    { id: 'dob', label: 'Date of Birth', teluguLabel: 'Birth Date (DD/MM/YYYY)', category: 'basic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.dob ? new Date(s.dob).toLocaleDateString('en-GB') : '-' },
+    { id: 'age', label: 'Age', teluguLabel: 'Calculated Age', category: 'basic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => calculateAge(s.dob) },
+    { id: 'bloodGroup', label: 'Blood Group', teluguLabel: 'Blood Type', category: 'basic', defaultSelected: false, widthPt: 20, align: 'center', getValue: (s) => s.bloodGroup || '-' },
+    { id: 'aadharNo', label: 'Student Aadhaar', teluguLabel: '12-Digit Aadhaar No', category: 'basic', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.aadharNo) },
 
     // 🏛️ Government Registrations
-    { id: 'penNumber', label: 'PEN Number (UDISE+)', teluguLabel: 'PEN నంబర్ (UDISE+)', category: 'govt', defaultSelected: false, widthPt: 34, align: 'center', getValue: (s) => s.penNumber || '-' },
-    { id: 'childId', label: 'Child ID (State)', teluguLabel: 'చైల్డ్ ఐడీ (స్టేట్ పోర్టల్)', category: 'govt', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.childId || '-' },
-    { id: 'apaarId', label: 'APAAR ID (One Nation)', teluguLabel: 'APAAR ID (వన్ నేషన్ ఐడీ)', category: 'govt', defaultSelected: false, widthPt: 32, align: 'center', getValue: (s) => s.apaarId || '-' },
+    { id: 'penNumber', label: 'PEN Number (UDISE+)', teluguLabel: 'National UDISE+ PEN', category: 'govt', defaultSelected: false, widthPt: 34, align: 'center', getValue: (s) => s.penNumber || '-' },
+    { id: 'childId', label: 'Child ID (State)', teluguLabel: 'State Portal Child ID', category: 'govt', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.childId || '-' },
+    { id: 'apaarId', label: 'APAAR ID (One Nation)', teluguLabel: 'One Nation One ID', category: 'govt', defaultSelected: false, widthPt: 32, align: 'center', getValue: (s) => s.apaarId || '-' },
 
     // 🎓 Academic & Institutional
-    { id: 'className', label: 'Class & Section', teluguLabel: 'తరగతి & సెక్షన్', category: 'academic', defaultSelected: true, widthPt: 24, align: 'center', getValue: (s) => s.class ? `${s.class.name}${s.class.section ? ` - ${s.class.section}` : ''}` : '-' },
-    { id: 'academicYear', label: 'Academic Year', teluguLabel: 'విద్యా సంవత్సరం', category: 'academic', defaultSelected: false, widthPt: 24, align: 'center', getValue: (s) => s.class?.academicYear || '2026-2027' },
-    { id: 'admissionDate', label: 'Admission Date', teluguLabel: 'చేరిన తేదీ', category: 'academic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-GB') : '-' },
-    { id: 'medium', label: 'Medium', teluguLabel: 'బోధనా మాధ్యమం', category: 'academic', defaultSelected: false, widthPt: 20, align: 'center', getValue: () => 'English' },
-    { id: 'status', label: 'Status', teluguLabel: 'స్థితి (Active/Inactive)', category: 'academic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => s.user?.isActive !== false ? 'Active' : 'Inactive' },
+    { id: 'className', label: 'Class & Section', teluguLabel: 'Grade & Section', category: 'academic', defaultSelected: true, widthPt: 24, align: 'center', getValue: (s) => s.class ? `${s.class.name}${s.class.section ? ` - ${s.class.section}` : ''}` : '-' },
+    { id: 'academicYear', label: 'Academic Year', teluguLabel: 'Session Year', category: 'academic', defaultSelected: false, widthPt: 24, align: 'center', getValue: (s) => s.class?.academicYear || '2026-2027' },
+    { id: 'admissionDate', label: 'Admission Date', teluguLabel: 'Date of Joining', category: 'academic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-GB') : '-' },
+    { id: 'medium', label: 'Medium', teluguLabel: 'Medium of Instruction', category: 'academic', defaultSelected: false, widthPt: 20, align: 'center', getValue: () => 'English' },
+    { id: 'status', label: 'Status', teluguLabel: 'Active / Inactive', category: 'academic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => s.user?.isActive !== false ? 'Active' : 'Inactive' },
 
     // 👨‍👩‍👧 Parents & Family
-    { id: 'fatherName', label: 'Father Name', teluguLabel: 'తండ్రి పేరు', category: 'family', defaultSelected: true, widthPt: 40, align: 'left', getValue: (s) => s.fatherName || '-' },
-    { id: 'fatherPhone', label: "Father's Phone", teluguLabel: 'తండ్రి మొబైల్ నంబర్', category: 'family', defaultSelected: true, widthPt: 28, align: 'center', getValue: (s) => s.fatherPhone || s.user?.phone || '-' },
-    { id: 'fatherAadhar', label: "Father's Aadhaar", teluguLabel: 'తండ్రి ఆధార్ నంబర్', category: 'family', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.fatherAadhar) },
-    { id: 'motherName', label: 'Mother Name', teluguLabel: 'తల్లి పేరు', category: 'family', defaultSelected: false, widthPt: 38, align: 'left', getValue: (s) => s.motherName || '-' },
-    { id: 'motherPhone', label: "Mother's Phone", teluguLabel: 'తల్లి మొబైల్ నంబర్', category: 'family', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.motherPhone || '-' },
-    { id: 'motherAadhar', label: "Mother's Aadhaar", teluguLabel: 'తల్లి ఆధార్ నంబర్', category: 'family', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.motherAadhar) },
-    { id: 'guardianName', label: 'Guardian Name', teluguLabel: 'గార్డియన్ పేరు', category: 'family', defaultSelected: false, widthPt: 35, align: 'left', getValue: (s) => s.guardianName || '-' },
-    { id: 'guardianPhone', label: 'Guardian Phone', teluguLabel: 'గార్డియన్ ఫోన్', category: 'family', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.guardianPhone || '-' },
+    { id: 'fatherName', label: 'Father Name', teluguLabel: "Father's Full Name", category: 'family', defaultSelected: true, widthPt: 40, align: 'left', getValue: (s) => s.fatherName || '-' },
+    { id: 'fatherPhone', label: "Father's Phone", teluguLabel: "Father's Mobile No", category: 'family', defaultSelected: true, widthPt: 28, align: 'center', getValue: (s) => s.fatherPhone || s.user?.phone || '-' },
+    { id: 'fatherAadhar', label: "Father's Aadhaar", teluguLabel: "Father's Aadhaar No", category: 'family', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.fatherAadhar) },
+    { id: 'motherName', label: 'Mother Name', teluguLabel: "Mother's Full Name", category: 'family', defaultSelected: false, widthPt: 38, align: 'left', getValue: (s) => s.motherName || '-' },
+    { id: 'motherPhone', label: "Mother's Phone", teluguLabel: "Mother's Mobile No", category: 'family', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.motherPhone || '-' },
+    { id: 'motherAadhar', label: "Mother's Aadhaar", teluguLabel: "Mother's Aadhaar No", category: 'family', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.motherAadhar) },
+    { id: 'guardianName', label: 'Guardian Name', teluguLabel: "Guardian's Full Name", category: 'family', defaultSelected: false, widthPt: 35, align: 'left', getValue: (s) => s.guardianName || '-' },
+    { id: 'guardianPhone', label: 'Guardian Phone', teluguLabel: "Guardian's Contact No", category: 'family', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.guardianPhone || '-' },
 
     // 📍 Address
-    { id: 'address', label: 'Residential Address', teluguLabel: 'నివాస చిరునామా / గ్రామం', category: 'address', defaultSelected: false, widthPt: 55, align: 'left', getValue: (s) => s.address || '-' },
+    { id: 'address', label: 'Residential Address', teluguLabel: 'Full Address / Village', category: 'address', defaultSelected: false, widthPt: 55, align: 'left', getValue: (s) => s.address || '-' },
 
     // ✍️ Physical Blank Columns for Writing / Signatures
-    { id: 'parentSignature', label: 'Parent Signature', teluguLabel: 'తల్లిదండ్రుల సంతకం బాక్స్', category: 'custom', defaultSelected: false, widthPt: 45, align: 'center', getValue: () => '' },
-    { id: 'studentSignature', label: 'Student Signature', teluguLabel: 'విద్యార్థి సంతకం బాక్స్', category: 'custom', defaultSelected: false, widthPt: 40, align: 'center', getValue: () => '' },
-    { id: 'remarks', label: 'Remarks / Feedback', teluguLabel: 'రిమార్కులు / సూచనలు', category: 'custom', defaultSelected: false, widthPt: 45, align: 'left', getValue: () => '' },
-    { id: 'attendanceBox', label: 'Attendance Check', teluguLabel: 'హాజరు చెక్ బాక్స్ [ ]', category: 'custom', defaultSelected: false, widthPt: 22, align: 'center', getValue: () => '' },
-    { id: 'feeAmount', label: 'Amount Paid (₹)', teluguLabel: 'చెల్లించిన మొత్తం (₹)', category: 'custom', defaultSelected: false, widthPt: 30, align: 'center', getValue: () => '' },
-    { id: 'receiptNo', label: 'Receipt No', teluguLabel: 'రసీదు నంబర్', category: 'custom', defaultSelected: false, widthPt: 28, align: 'center', getValue: () => '' },
+    { id: 'parentSignature', label: 'Parent Signature', teluguLabel: 'Parent Sign Box', category: 'custom', defaultSelected: false, widthPt: 45, align: 'center', getValue: () => '' },
+    { id: 'studentSignature', label: 'Student Signature', teluguLabel: 'Student Sign Box', category: 'custom', defaultSelected: false, widthPt: 40, align: 'center', getValue: () => '' },
+    { id: 'remarks', label: 'Remarks / Feedback', teluguLabel: 'Teacher Notes / Remarks', category: 'custom', defaultSelected: false, widthPt: 45, align: 'left', getValue: () => '' },
+    { id: 'attendanceBox', label: 'Attendance Check', teluguLabel: 'Check Box [ ]', category: 'custom', defaultSelected: false, widthPt: 22, align: 'center', getValue: () => '' },
+    { id: 'feeAmount', label: 'Amount Paid (₹)', teluguLabel: 'Paid Fee Amount (₹)', category: 'custom', defaultSelected: false, widthPt: 30, align: 'center', getValue: () => '' },
+    { id: 'receiptNo', label: 'Receipt No', teluguLabel: 'Fee Receipt Number', category: 'custom', defaultSelected: false, widthPt: 28, align: 'center', getValue: () => '' },
   ], []);
 
   // Selected column IDs set
@@ -452,7 +452,7 @@ export const StudentReportPrintPage: React.FC = () => {
   const THEME_STYLES = {
     navy: {
       id: 'navy',
-      name: 'Royal Navy (నీలం)',
+      name: 'Royal Navy',
       headerBg: 'bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white',
       border: 'border-blue-900',
       accentText: 'text-blue-950',
@@ -462,7 +462,7 @@ export const StudentReportPrintPage: React.FC = () => {
     },
     purple: {
       id: 'purple',
-      name: 'Imperial Purple (రాయల్ పర్పుల్)',
+      name: 'Imperial Purple',
       headerBg: 'bg-gradient-to-r from-purple-900 via-indigo-900 to-purple-950 text-white',
       border: 'border-purple-900',
       accentText: 'text-purple-950',
@@ -472,7 +472,7 @@ export const StudentReportPrintPage: React.FC = () => {
     },
     emerald: {
       id: 'emerald',
-      name: 'Emerald Green (ఎమరాల్డ్ పచ్చ)',
+      name: 'Emerald Green',
       headerBg: 'bg-gradient-to-r from-emerald-900 via-teal-900 to-emerald-950 text-white',
       border: 'border-emerald-900',
       accentText: 'text-emerald-950',
@@ -482,7 +482,7 @@ export const StudentReportPrintPage: React.FC = () => {
     },
     crimson: {
       id: 'crimson',
-      name: 'Crimson Maroon (మరూన్ ఎరుపు)',
+      name: 'Crimson Maroon',
       headerBg: 'bg-gradient-to-r from-rose-900 via-red-900 to-rose-950 text-white',
       border: 'border-rose-900',
       accentText: 'text-rose-950',
@@ -492,7 +492,7 @@ export const StudentReportPrintPage: React.FC = () => {
     },
     charcoal: {
       id: 'charcoal',
-      name: 'Classic Charcoal (నలుపు/బూడిద)',
+      name: 'Classic Charcoal',
       headerBg: 'bg-gradient-to-r from-slate-900 via-zinc-900 to-slate-950 text-white',
       border: 'border-slate-800',
       accentText: 'text-slate-950',
@@ -654,7 +654,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'basic', 
       title: 'Basic & Identity', 
-      telugu: 'ప్రాథమిక & గుర్తింపు వివరాలు', 
+      telugu: 'Primary Demographics & Identifiers', 
       icon: Users, 
       gradient: 'from-blue-600 via-indigo-600 to-blue-700',
       badgeBg: 'bg-blue-100 text-blue-800',
@@ -664,7 +664,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'govt', 
       title: 'Government & UDISE+', 
-      telugu: 'ప్రభుత్వ రిజిస్ట్రీ (PEN, Child ID)', 
+      telugu: 'Official Portal IDs & Registry', 
       icon: Building, 
       gradient: 'from-emerald-600 via-teal-600 to-emerald-700',
       badgeBg: 'bg-emerald-100 text-emerald-800',
@@ -674,7 +674,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'academic', 
       title: 'Academic & Institutional', 
-      telugu: 'విద్యా & తరగతి వివరాలు', 
+      telugu: 'Grade, Section & Enrollment Info', 
       icon: GraduationCap, 
       gradient: 'from-indigo-600 via-purple-600 to-indigo-700',
       badgeBg: 'bg-indigo-100 text-indigo-800',
@@ -684,7 +684,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'family', 
       title: 'Parents & Family', 
-      telugu: 'తల్లిదండ్రుల వివరాలు', 
+      telugu: 'Parent Names & Mobile Numbers', 
       icon: HeartPulse, 
       gradient: 'from-amber-500 via-orange-600 to-amber-600',
       badgeBg: 'bg-amber-100 text-amber-800',
@@ -694,7 +694,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'address', 
       title: 'Address & Residence', 
-      telugu: 'నివాస చిరునామా / గ్రామం', 
+      telugu: 'Residential Address & Village', 
       icon: MapPin, 
       gradient: 'from-rose-500 via-pink-600 to-rose-600',
       badgeBg: 'bg-rose-100 text-rose-800',
@@ -704,7 +704,7 @@ export const StudentReportPrintPage: React.FC = () => {
     { 
       id: 'custom', 
       title: 'Signatures & Physical Boxes', 
-      telugu: 'సంతకాలు & పెన్నుతో రాసుకునే కాలమ్స్', 
+      telugu: 'Physical Handwriting & Sign Boxes', 
       icon: SlidersHorizontal, 
       gradient: 'from-purple-600 via-fuchsia-600 to-purple-700',
       badgeBg: 'bg-purple-100 text-purple-800',
@@ -775,7 +775,7 @@ export const StudentReportPrintPage: React.FC = () => {
                 </h1>
               </div>
               <p className="text-xs sm:text-sm text-indigo-200/90 font-medium mt-0.5">
-                మీకు నచ్చిన వివరాలు ఎంచుకోండి • వరుసల ఎత్తు, స్పేసింగ్ & కలర్స్ సర్దుబాటు చేసి నేరుగా ప్రింట్ తీయండి
+                Customize student columns • Adjust row height, spacing & theme colors for clean printing
               </p>
             </div>
           </div>
@@ -787,7 +787,7 @@ export const StudentReportPrintPage: React.FC = () => {
               className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-black shadow-lg shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer"
             >
               <Printer className="w-4 h-4" />
-              <span>Print (డైరెక్ట్ ప్రింట్)</span>
+              <span>Print Report</span>
             </button>
 
             <button
@@ -954,10 +954,10 @@ export const StudentReportPrintPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-900 tracking-tight">
-                  Row Height, Spacing & Layout Studio (వరుస ఎత్తు & ఖాళీల నియంత్రణ)
+                  Row Height, Spacing & Layout Studio
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  వరుసల ఎత్తును మిల్లీమీటర్లలో సర్దుబాటు చేయండి • కాలమ్స్ స్పేసింగ్ & కలర్స్ మార్చుకోండి
+                  Fine-tune row height in millimeters • Customize table padding, fonts & theme colors
                 </p>
               </div>
             </div>
@@ -976,7 +976,7 @@ export const StudentReportPrintPage: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                   <Maximize2 className="w-3.5 h-3.5 text-indigo-600" />
-                  <span>Row Height (వరుస ఎత్తు)</span>
+                  <span>Row Height</span>
                 </span>
                 <span className="text-xs font-mono font-black text-indigo-700 bg-white px-2 py-0.5 rounded-lg border border-indigo-100">
                   {rowHeightMm} mm
@@ -1037,14 +1037,14 @@ export const StudentReportPrintPage: React.FC = () => {
             <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
               <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-                <span>Cell Spacing / Padding (ఖాళీలు)</span>
+                <span>Cell Spacing / Padding</span>
               </span>
 
               <div className="grid grid-cols-3 gap-1.5 pt-1">
                 {[
-                  { id: 'compact', label: 'Tight', desc: 'చిన్న ఖాళీ' },
-                  { id: 'normal', label: 'Balanced', desc: 'సాధారణం' },
-                  { id: 'relaxed', label: 'Wide', desc: 'విశాలమైన' },
+                  { id: 'compact', label: 'Tight', desc: 'Compact' },
+                  { id: 'normal', label: 'Balanced', desc: 'Standard' },
+                  { id: 'relaxed', label: 'Wide', desc: 'Spacious' },
                 ].map(p => (
                   <button
                     key={p.id}
@@ -1066,7 +1066,7 @@ export const StudentReportPrintPage: React.FC = () => {
             <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
               <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                 <FileText className="w-3.5 h-3.5 text-emerald-600" />
-                <span>Orientation & Font (అమరిక & ఫాంట్)</span>
+                <span>Orientation & Font</span>
               </span>
 
               <div className="grid grid-cols-2 gap-2">
@@ -1124,7 +1124,7 @@ export const StudentReportPrintPage: React.FC = () => {
             <div className="bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 space-y-2">
               <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
                 <Palette className="w-3.5 h-3.5 text-fuchsia-600" />
-                <span>Table Color Theme (రంగుల థీమ్)</span>
+                <span>Table Color Theme</span>
               </span>
 
               <div className="grid grid-cols-5 gap-1.5 pt-1">
@@ -1152,7 +1152,7 @@ export const StudentReportPrintPage: React.FC = () => {
           {/* Heading Edit Box */}
           <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
             <span className="text-xs font-black text-slate-700 whitespace-nowrap">
-              Report Title (రిపోర్ట్ హెడ్డింగ్):
+              Report Title:
             </span>
             <input
               type="text"
@@ -1181,20 +1181,20 @@ export const StudentReportPrintPage: React.FC = () => {
               </div>
               <div>
                 <h3 className="text-sm font-black tracking-wide flex items-center gap-2">
-                  <span>Select Columns & Student Details (వివరాల చెక్‌బాక్స్‌లు)</span>
+                  <span>Select Columns & Student Details</span>
                   <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 font-bold border border-indigo-400/30">
                     {activeColumns.length} Selected
                   </span>
                 </h3>
                 <p className="text-xs text-slate-300">
-                  ఏ వివరాలు కావాలో టిక్ పెట్టండి • వెంటనే క్రింద లైవ్ ప్రివ్యూలో కనిపిస్తాయి
+                  Choose columns to include • Changes reflect instantly in live preview below
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-indigo-300 hidden sm:inline">
-                {showColumnsSelector ? 'క్లోజ్ చేయండి' : 'వివరాలు తెరవండి'}
+                {showColumnsSelector ? 'Collapse Options' : 'Expand Options'}
               </span>
               <div className="p-1.5 rounded-lg bg-white/10">
                 {showColumnsSelector ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -1357,11 +1357,11 @@ export const StudentReportPrintPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-indigo-600" />
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-800">
-                Live A4 Print Preview (రియల్-టైమ్ ప్రింట్ ప్రివ్యూ)
+                Live A4 Print Preview
               </h3>
             </div>
             <div className="flex items-center gap-3 text-xs font-bold text-slate-500">
-              <span>{orientation === 'landscape' ? 'A4 Landscape (అడ్డంగా)' : 'A4 Portrait (నిలువు)'}</span>
+              <span>{orientation === 'landscape' ? 'A4 Landscape' : 'A4 Portrait'}</span>
               <span>•</span>
               <span className="text-indigo-600 font-extrabold">{rowHeightMm} mm Row Height</span>
               <span>•</span>
@@ -1540,7 +1540,7 @@ export const StudentReportPrintPage: React.FC = () => {
               <div className="text-center">
                 <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
                 <p>Class Teacher Signature</p>
-                <p className="text-[10px] text-slate-400 font-normal">తరగతి ఉపాధ్యాయుని సంతకం</p>
+                <p className="text-[10px] text-slate-400 font-normal">Authorized Class Teacher</p>
               </div>
 
               <div className="text-center">
@@ -1552,7 +1552,7 @@ export const StudentReportPrintPage: React.FC = () => {
               <div className="text-center">
                 <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
                 <p>Headmaster / Principal</p>
-                <p className="text-[10px] text-slate-400 font-normal">శ్రీ వెంకటేశ్వర జేవై ఉన్నత పాఠశాల</p>
+                <p className="text-[10px] text-slate-400 font-normal">Sri Venkateswara JY High School</p>
               </div>
             </div>
 
@@ -1567,10 +1567,10 @@ export const StudentReportPrintPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 print:hidden">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-200">
             <h3 className="text-base font-black text-slate-900 mb-1">
-              Save Current Template (టెంప్లేట్ సేవ్ చేయండి)
+              Save Current Template
             </h3>
             <p className="text-xs text-slate-500 mb-4">
-              ఈ కాలమ్స్, రో-హైట్ ({rowHeightMm}mm) మరియు కలర్ సెట్టింగ్‌లను భవిష్యత్తు కోసం 1-క్లిక్ టెంప్లేట్‌గా సేవ్ చేసుకోండి.
+              Save these columns, row height ({rowHeightMm}mm), and theme settings as a 1-click template for future reports.
             </p>
             <form onSubmit={handleSavePreset} className="space-y-4">
               <input
