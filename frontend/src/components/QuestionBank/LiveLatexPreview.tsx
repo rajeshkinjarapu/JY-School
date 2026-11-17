@@ -278,13 +278,28 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     const rawBlocks = normalizedText.split(/(\n\n+)/);
     
     for (let i = 0; i < rawBlocks.length; i += 2) {
-      const block = rawBlocks[i];
+      let block = rawBlocks[i];
       if (block.trim() === '') continue; // Skip pure whitespace blocks
       
       const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
       const newlineCount = (separator.match(/\n/g) || []).length;
       const extraNewlines = Math.max(0, newlineCount - 2);
       const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 1.5}rem)` : '0.4rem';
+
+      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options
+      const hasUpperOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
+      const hasLowerOptions = (block.includes('(a)') || block.includes('(a).')) &&
+                              (block.includes('(b)') || block.includes('(b).')) &&
+                              (block.includes('(c)') || block.includes('(c).')) &&
+                              (block.includes('(d)') || block.includes('(d).'));
+
+      if (!hasUpperOptions && hasLowerOptions) {
+        block = block
+          .replace(/(?:^|\n|\s{2,}|\t)\(a\)\.?\s*/gi, '\n(A) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(b\)\.?\s*/gi, '\n(B) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(c\)\.?\s*/gi, '\n(C) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/gi, '\n(D) ');
+      }
 
       const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
 
@@ -298,7 +313,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const numStr = qNumMatch2[1];
               const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
               return (
-                <div className={`break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                <div className={`question-block break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
                   <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
@@ -306,7 +321,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }
             return (
               <div 
-                className={`break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
+                className={`question-block break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }} 
               />
             );
@@ -411,8 +426,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
             return (
-              <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="mb-0.5 flex items-start whitespace-pre-wrap">
+              <div className={`question-block break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                <div className="question-text-wrapper mb-0.5 flex items-start whitespace-pre-wrap">
                   {qNumStr ? (
                     <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
                   ) : (
@@ -420,11 +435,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                   )}
                   <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
-                <div className={`ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
-                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                <div className={`question-options-container ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
+                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );
@@ -434,7 +449,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       );
 
       elements.push(
-        <div key={`${subject}-block-${i}`} className="w-full relative group break-inside-avoid" style={{ marginBottom }}>
+        <div key={`${subject}-block-${i}`} className="question-block w-full break-inside-avoid print:static print:relative-none" style={{ marginBottom }}>
           {blockContent}
         </div>
       );
@@ -501,7 +516,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-[210mm] print:min-h-0 print:m-0" 
+      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-full print:max-w-full print:min-h-0 print:m-0 print:p-0" 
       style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
       id="a4-preview-paper"
     >
@@ -523,7 +538,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           overflow-x: visible !important;
           overflow-y: visible !important;
           max-width: 100%;
-          margin: 0.4em 0 !important;
+          margin: 0.3em 0 !important;
         }
         .katex {
           font-size: 1.02em !important;
@@ -548,13 +563,46 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             white-space: normal !important;
             display: inline !important;
           }
+          .question-block {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid-page !important;
+            position: static !important;
+            display: block !important;
+            width: 100% !important;
+          }
+          .question-text-wrapper {
+            break-after: avoid !important;
+            page-break-after: avoid !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .question-options-container {
+            break-before: avoid !important;
+            page-break-before: avoid !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .question-option-item {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .paper-header,
+          .section-header,
+          .paper-instructions {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+            break-after: avoid !important;
+            page-break-after: avoid !important;
+            position: static !important;
+          }
         }
       `}</style>
-      <div className="pt-3 pb-3 px-8 print:px-3 print:py-0 lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-8 print:px-2 print:py-0 lining-nums tabular-nums">
         
         {/* Header Section */}
         {showHeader && (
-          <div className="mb-2 border-b-2 border-black pb-1.5">
+          <div className="paper-header mb-2 border-b-2 border-black pb-1.5 break-inside-avoid">
             <div className="grid grid-cols-[80px_1fr_80px] items-center">
               <div>
                 <img 
@@ -590,7 +638,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
         {/* Instructions Section */}
         {showHeader && instructions.length > 0 && (
-          <div className="mb-3 text-[10pt] leading-snug break-inside-avoid">
+          <div className="paper-instructions mb-3 text-[10pt] leading-snug break-inside-avoid">
             <h3 className="font-bold mb-1 uppercase underline underline-offset-2">General Instructions:</h3>
             <ul className="list-disc pl-5 m-0 space-y-0.5">
               {instructions.map((inst, i) => (

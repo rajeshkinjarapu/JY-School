@@ -1,6 +1,27 @@
 # JY School Project State
 
-## చివరి సంభాషణ - MCQ Paper Generator A4 ప్రింటింగ్ & గణిత/ఫిజిక్స్ ఫార్ములాలు కట్ కాకుండా పరిష్కారం (November 17, 2026)
+## చివరి సంభాషణ - MCQ Paper Generator బహుళ పేజీల ప్రింటింగ్ & ప్రశ్నలు/ఫార్ములాలు పేజీ అంచుల్లో కట్ అవ్వకుండా పూర్తి పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య & రిపోర్ట్:**
+  - "question cut ayi chupistundi live preview lo perfect ga vastundi print lo ravatam ledu"
+  - స్క్రీన్‌షాట్లు (`media_1794907525994_6d52a504.jpg`, `media_1794907541586_96bf4986.jpg`):
+    - ప్రింట్ డైలాగ్‌లో 3 షీట్ల పేపర్ (Multi-page) వస్తున్నప్పటికీ, పేజీ సరిహద్దుల వద్ద **Question 8 (మరియు ఆప్షన్లు A, B / C, D) మధ్యలోకి కట్ అయ్యి** సగం పై పేజీలో, సగం కింద పేజీలో విడిపోతున్నాయి.
+    - Question 7 లోని ఆప్షన్లు చిన్న అక్షరాలతో `(a), (b), (c), (d)` ఉండటం వల్ల అవి గ్రిడ్ లేఅవుట్‌గా కాకుండా నిలువుగా 4 లైన్లలో వచ్చి పేజీలో ఎక్కువ ఎత్తును ఆక్రమించాయి.
+- **సమస్య విశ్లేషణ:**
+  1. Chromium / Cốc Cốc ప్రింట్ ఇంజిన్‌లో CSS Grid (`grid-cols-2`, `grid-cols-4`) లేదా `position: relative` ఉన్న కంటైనర్లు ఉన్నప్పుడు, పేరెంట్ `break-inside: avoid` ని పట్టించుకోకుండా గ్రిడ్ వరుసల మధ్య పేజీని స్ప్లిట్ చేస్తుంది. దీనివల్ల Question 8 లోని ప్రశ్న టెక్స్ట్, ఆప్షన్లు (A, B) ఒక పేజీలో ఉండిపోయి, (C, D) తర్వాతి పేజీలోకి విడిపోయాయి.
+  2. ప్రశ్న టెక్స్ట్‌కి మరియు ఆప్షన్లకు మధ్య విడిపోకుండా ఉండే కచ్చితమైన `break-after: avoid` మరియు ఆప్షన్స్ కంటైనర్‌కి `break-before: avoid` లేకపోవడం.
+  3. `#a4-preview-paper` కి ప్రింట్ సమయంలో `print:w-[210mm]` బదులు `print:w-full` అవసరం, ఎందుకంటే ప్రింటర్ మార్జిన్లు (10mm) తీసివేసిన తర్వాత A4 ప్రింటబుల్ వెడల్పు 190mm మాత్రమే ఉంటుంది.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **[`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):**
+     - ప్రతి ప్రశ్నకు `question-block` మరియు `question-text-wrapper`, `question-options-container`, `question-option-item` క్లాస్‌లు చేర్చాము.
+     - `(a), (b), (c), (d)` స్మాల్ లెటర్స్‌తో ఉన్న ఆప్షన్లను ఆటోమేటిక్‌గా గుర్తించి `(A), (B), (C), (D)` కాంపాక్ట్ గ్రిడ్ లేఅవుట్‌గా మార్చాము (దీనివల్ల Question 7 నాలుగు లైన్ల స్థానంలో ఒకే లైన్‌లో చక్కగా అమరిపోయింది).
+     - ప్రింట్ సమయంలో `#a4-preview-paper` కి `print:w-full print:max-w-full` అమర్చాము.
+     - CSS రూల్స్: `.question-block` కి `break-inside: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; position: static !important; display: block !important;` జోడించాము.
+     - `.question-text-wrapper` కి `break-after: avoid !important; page-break-after: avoid !important;` ద్వారా ప్రశ్న టెక్స్ట్ మరియు ఆప్షన్లు ఎట్టి పరిస్థితుల్లోనూ వేరుపడకుండా లాక్ చేసాము.
+     - `.question-options-container` కి `break-before: avoid !important; page-break-before: avoid !important;` వర్తింపజేసాము.
+  2. **[`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):**
+     - `handlePrint` లోని ప్రింట్ ఐఫ్రేమ్ హెడ్ స్టైల్స్‌లో `.question-block`, `.question-text-wrapper`, `.question-options-container`, `.paper-header`, `.paper-instructions` లకు పూర్తి స్థాయి ప్రింట్ బ్రేక్ నిబంధనలను పొందుపరిచాము.
+     - ఐఫ్రేమ్‌కి `width: 210mm; height: 1000px; position: fixed; left: -10000px; visibility: hidden;` ఇచ్చి లేఅవుట్ క్యాలిక్యులేషన్ పక్కాగా జరిగేలా చేసాము.
+     - క్లోనింగ్ ఎలిమెంట్ నుండి `relative`, `w-[210mm]`, `print:w-[210mm]` తీసివేసి `position: static` నిర్ధారించాము.
 - **యూజర్ సమస్య & రిపోర్ట్:**
   - "print preview lo chupistunnattu print teesaka paper meda ravatam ledu formulas cut avutunnayi"
   - స్క్రీన్‌షాట్ (`media_1794905357077_604d2455.jpg`): లైవ్ ప్రివ్యూలో బాగానే ఉన్నా పేపర్ ప్రింట్ తీసినప్పుడు క్వశ్చన్లు మరియు ఫార్ములాలు (`\vec`, `\hat`, `\sqrt`, `\frac`) కుడి అంచున కట్ అవుతున్నాయి.

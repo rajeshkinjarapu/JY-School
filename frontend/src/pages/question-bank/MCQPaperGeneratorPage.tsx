@@ -670,25 +670,27 @@ export const MCQPaperGeneratorPage = () => {
     if (!paperEl) { window.print(); return; }
     
     const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]');
+    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]', 'print:w-[210mm]', 'relative');
     cloneEl.style.boxShadow = 'none';
     cloneEl.style.border = 'none';
     cloneEl.style.outline = 'none';
     cloneEl.style.minHeight = '0';
     cloneEl.style.width = '100%';
     cloneEl.style.maxWidth = '100%';
+    cloneEl.style.position = 'static';
 
     let oldIframe = document.getElementById('print-iframe');
     if (oldIframe) { oldIframe.remove(); }
 
     const iframe = document.createElement('iframe');
     iframe.id = 'print-iframe';
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
+    iframe.style.position = 'fixed';
+    iframe.style.width = '210mm';
+    iframe.style.height = '1000px';
     iframe.style.border = 'none';
     iframe.style.left = '-10000px';
-    iframe.style.top = '-10000px';
+    iframe.style.top = '0';
+    iframe.style.visibility = 'hidden';
     document.body.appendChild(iframe);
 
     const printDocument = iframe.contentWindow?.document;
@@ -715,14 +717,14 @@ export const MCQPaperGeneratorPage = () => {
         <head>
           <meta charset="utf-8"/>
           <meta name="color-scheme" content="light"/>
-          <title>Print - ${examName}</title>
+          <title>Print - ${examName || 'Question Paper'}</title>
           ${styleLinks}
           ${styleTags}
           <style>
             :root { color-scheme: light !important; }
             @page { 
               size: A4 portrait; 
-              margin: 8mm 10mm; 
+              margin: 8mm 10mm 10mm 10mm; 
             }
             * {
               box-sizing: border-box !important;
@@ -730,20 +732,27 @@ export const MCQPaperGeneratorPage = () => {
               print-color-adjust: exact !important;
             }
             html, body { 
-              margin: 0; padding: 0; 
+              margin: 0 !important; 
+              padding: 0 !important; 
               background-color: #ffffff !important; 
               background: #ffffff !important;
               color: #000000 !important;
               font-family: serif; 
               height: auto !important; 
+              min-height: auto !important;
+              max-height: none !important;
               overflow: visible !important; 
+              position: static !important;
             }
             @media print {
               html, body {
                 background-color: #ffffff !important; 
                 background: #ffffff !important;
                 height: auto !important; 
+                min-height: auto !important;
+                max-height: none !important;
                 overflow: visible !important; 
+                position: static !important;
               }
             }
             #print-root {
@@ -753,16 +762,70 @@ export const MCQPaperGeneratorPage = () => {
               padding: 0 !important;
               background-color: #ffffff !important;
               height: auto !important; 
+              min-height: auto !important;
+              max-height: none !important;
               overflow: visible !important; 
+              position: static !important;
+              display: block !important;
             }
             #a4-preview-paper {
               width: 100% !important;
               max-width: 100% !important;
               min-height: 0 !important;
+              height: auto !important;
               margin: 0 !important;
+              padding: 0 !important;
               box-shadow: none !important;
               border: none !important;
+              position: static !important;
+              display: block !important;
             }
+
+            /* Absolute rule: questions must never be fragmented across page boundary */
+            .question-block,
+            [class*="question-block"],
+            .break-inside-avoid,
+            [class*="break-inside-avoid"] {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid-page !important;
+              position: static !important;
+              display: block !important;
+              width: 100% !important;
+            }
+
+            /* Keep question text glued to options */
+            .question-text-wrapper {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            /* Options container must never split across pages */
+            .question-options-container {
+              break-before: avoid !important;
+              page-break-before: avoid !important;
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            .question-option-item {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+            }
+
+            /* Section and paper headers */
+            .paper-header,
+            .section-header,
+            .paper-instructions {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              position: static !important;
+            }
+
             .katex {
               font-size: 1.02em !important;
               white-space: normal !important;
@@ -776,14 +839,10 @@ export const MCQPaperGeneratorPage = () => {
               overflow-x: visible !important;
               overflow-y: visible !important;
               max-width: 100% !important;
-              margin: 0.4em 0 !important;
+              margin: 0.3em 0 !important;
             }
             .katex-html {
               white-space: normal !important;
-            }
-            .break-inside-avoid {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
             }
           </style>
         </head>
