@@ -725,7 +725,7 @@ export const MCQPaperGeneratorPage = () => {
             :root { color-scheme: light !important; }
             @page { 
               size: A4 portrait; 
-              margin: 8mm 10mm 10mm 10mm; 
+              margin: 8mm 8mm 8mm 8mm; 
             }
             * {
               box-sizing: border-box !important;
@@ -735,6 +735,8 @@ export const MCQPaperGeneratorPage = () => {
             html, body { 
               margin: 0 !important; 
               padding: 0 !important; 
+              width: 100% !important;
+              max-width: 100% !important;
               background-color: #ffffff !important; 
               background: #ffffff !important;
               color: #000000 !important;
@@ -744,6 +746,7 @@ export const MCQPaperGeneratorPage = () => {
               max-height: none !important;
               overflow: visible !important; 
               position: static !important;
+              box-sizing: border-box !important;
             }
             @media print {
               html, body {
@@ -754,6 +757,9 @@ export const MCQPaperGeneratorPage = () => {
                 max-height: none !important;
                 overflow: visible !important; 
                 position: static !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box !important;
               }
             }
             #print-root {
@@ -768,6 +774,7 @@ export const MCQPaperGeneratorPage = () => {
               overflow: visible !important; 
               position: static !important;
               display: block !important;
+              box-sizing: border-box !important;
             }
             #a4-preview-paper {
               width: 100% !important;
@@ -780,6 +787,9 @@ export const MCQPaperGeneratorPage = () => {
               border: none !important;
               position: static !important;
               display: block !important;
+              box-sizing: border-box !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
             }
 
             /* Absolute rule: questions must never be fragmented across page boundary */
@@ -793,6 +803,10 @@ export const MCQPaperGeneratorPage = () => {
               position: static !important;
               display: block !important;
               width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
             }
 
             /* Keep question text glued to options */
@@ -801,6 +815,11 @@ export const MCQPaperGeneratorPage = () => {
               page-break-after: avoid !important;
               break-inside: avoid !important;
               page-break-inside: avoid !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
             }
 
             /* Options container must never split across pages */
@@ -809,11 +828,18 @@ export const MCQPaperGeneratorPage = () => {
               page-break-before: avoid !important;
               break-inside: avoid !important;
               page-break-inside: avoid !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
             }
 
             .question-option-item {
               break-inside: avoid !important;
               page-break-inside: avoid !important;
+              min-width: 0 !important;
+              box-sizing: border-box !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
             }
 
             /* Section and paper headers */

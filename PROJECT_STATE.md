@@ -1,6 +1,25 @@
 # JY School Project State
 
-## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో మ్యాథ్ వేరియబుల్స్ (A, a, b, c) అదృశ్యమయ్యే (Invisible Font) సమస్య పరిష్కారం (November 17, 2026)
+## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో అక్షరాలు & ఆప్షన్లు కుడి వైపున కట్ అవ్వడం (Horizontal Width Cutoff) & మ్యాథ్ వేరియబుల్స్ పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య & రిపోర్ట్:**
+  - "PRINT preview lo aksharalu cut ayipotunnayi"
+  - స్క్రీన్‌షాట్ (`media_1794910019108_83a1e6aa.jpg`):
+    - ప్రింట్ ప్రివ్యూలో ఫిజిక్స్ ప్రశ్నలు (Q26 నుండి Q30) కుడి వైపున అక్షరాలు, వాక్యాలు మరియు ఆప్షన్ (D) పేపర్ అంచు దాటి కట్ అయిపోయాయి (ఉదా: `in 5 s`, `Less tha`, `of inclinatio`, `The accelerat`).
+    - అదే సమయంలో ఫార్ములా వేరియబుల్స్ (`v_1`, `v_2`, `g`, `\theta`, `a`, `F`) మిస్ అయ్యాయి.
+- **సమస్య విశ్లేషణ:**
+  1. **కుడి వైపు 37mm కట్ అవ్వడానికి గల కారణం:** `@page` కి 8mm మార్జిన్ ఉన్నప్పుడు A4 ప్రింటబుల్ వెడల్పు 194mm మాత్రమే. కానీ పేపర్ కంటైనర్‌కి `print:w-[210mm]` మరియు లోపలి ప్యాడింగ్ `px-8` (34mm) ఉండటం వల్ల మొత్తం వెడల్పు 230mm దాటిపోయింది. దీంతో కుడి వైపున ఉన్న 36mm కంటెంట్ (ఆప్షన్ D మరియు లైన్ చివర పదాలు) కట్ అయ్యింది.
+  2. **గ్రిడ్ కాలమ్స్ ఓవర్‌ఫ్లో:** ఆప్షన్లలో మ్యాథ్ ఫార్ములాలు (`\tan^{-1}`, `v_1 + v_2`, `g - a \sin \theta`) ఉన్నప్పటికీ 4 కాలమ్స్‌గా విభజించడం వల్ల కాలమ్ సైజు సరిపోక ఆప్షన్ (D) కుడి అంచు దాటి బయటకు వెళ్లింది.
+  3. **మిస్సయిన వేరియబుల్స్:** ఫాంట్ లోడింగ్ మరియు ఫాల్‌బ్యాక్ సమస్య.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **[`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):**
+     - `@page { size: A4 portrait; margin: 8mm 8mm 8mm 8mm; }` అమర్చాము.
+     - `#print-root`, `#a4-preview-paper`, `.question-block`, `.question-options-container` లకు `width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; word-wrap: break-word !important; overflow-wrap: break-word !important;` నిబంధనలు చేర్చాము.
+     - క్లోనింగ్ ఎలిమెంట్ నుండి `w-[210mm]`, `print:w-[210mm]`, `relative` తొలగించి `100%` వెడల్పు నిర్ధారించాము.
+     - పేరెంట్ విండో ఫాంట్లను ఐఫ్రేమ్‌కి కాపీ చేసి `await printDocument.fonts.ready` ద్వారా ఫాంట్లు రెడీ అయ్యాకే ప్రింట్ అయ్యేలా చేసాము.
+     - `.katex .mathnormal` కి గట్టి సెరిఫ్ ఫాల్‌బ్యాక్ ఇచ్చాము.
+  2. **[`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):**
+     - `#a4-preview-paper` కి `print:w-full print:max-w-full print:px-0` ఇచ్చాము.
+     - ఆప్షన్స్ లేఅవుట్ క్యాలిక్యులేషన్‌లో మ్యాథ్ ఫార్ములాలు లేదా 5 అక్షరాల కంటే ఎక్కువ పొడవు ఉన్నప్పుడు ఆటోమేటిక్‌గా **2 కాలమ్స్ (2x2 లేఅవుట్)** అమరేలా చేసాము. దీనివల్ల ప్రతి ఆప్షన్‌కి 95mm విశాలమైన స్థలం లభించి, ఆప్షన్లు A, B, C, D అన్నీ పేజీ లోపలే పర్ఫెక్ట్‌గా సరిపోతాయి.
 - **యూజర్ సమస్య & రిపోర్ట్:**
   - "live preview ki print preview ki teda chudu"
   - స్క్రీన్‌షాట్లు (`media_1794908483503_19555a14.png`, `media_1794908520362_7e0595f0.png`):

@@ -398,11 +398,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             
             // Check if options contain math notation that needs adequate column width
             const allOptsCombined = optA + optB + optC + optD;
-            const hasComplexMath = /[\\\$]/.test(allOptsCombined) && 
-              /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_)/.test(allOptsCombined);
+            const hasComplexMath = /[\\\$]/.test(allOptsCombined) || 
+              /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_|\\tan|\\sin|\\cos|\\pm)/.test(allOptsCombined);
 
-            const singleLineLimit = isDoubleColumn ? 6 : (hasComplexMath ? 8 : 14);
-            const twoByTwoLimit = isDoubleColumn ? 16 : 34;
+            const singleLineLimit = isDoubleColumn ? 4 : (hasComplexMath ? 5 : 8);
+            const twoByTwoLimit = isDoubleColumn ? 14 : 28;
 
             let optionsLayout = '';
             if (forcedLayout === '1x4') {
@@ -645,7 +645,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           }
         }
       `}</style>
-      <div className="pt-3 pb-3 px-8 print:px-2 print:py-0 lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-8 print:px-0 print:py-0 print:w-full print:max-w-full print:box-border lining-nums tabular-nums">
         
         {/* Header Section */}
         {showHeader && (
