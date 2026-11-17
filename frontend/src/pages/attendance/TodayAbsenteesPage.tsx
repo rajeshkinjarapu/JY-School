@@ -14,6 +14,34 @@ export default function TodayAbsenteesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterTab, setFilterTab] = useState<'all' | 'absent' | 'leave'>('all');
 
+  // Class Hierarchy Sorting: Nursery -> PP1 -> PP2 -> 1st to 10th
+  const getClassRank = (className: string = '') => {
+    const norm = className.toUpperCase().trim();
+    if (norm.includes('NUR')) return 1;
+    if (norm.includes('LKG') || norm.includes('PP1') || norm.includes('PP-1') || norm.includes('PRE-PRIMARY-1')) return 2;
+    if (norm.includes('UKG') || norm.includes('PP2') || norm.includes('PP-2') || norm.includes('PRE-PRIMARY-2')) return 3;
+    
+    const match = norm.match(/(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      return 10 + num; // 1st -> 11, 2nd -> 12, ... 10th -> 20
+    }
+    return 99;
+  };
+
+  const sortStudentsByClass = (list: any[]) => {
+    return [...list].sort((a, b) => {
+      const rankA = getClassRank(a.className);
+      const rankB = getClassRank(b.className);
+      if (rankA !== rankB) return rankA - rankB;
+
+      const classComp = (a.className || '').localeCompare(b.className || '', undefined, { numeric: true });
+      if (classComp !== 0) return classComp;
+
+      return (a.studentName || '').localeCompare(b.studentName || '');
+    });
+  };
+
   const fetchAbsentees = async () => {
     try {
       setLoading(true);
@@ -34,7 +62,8 @@ export default function TodayAbsenteesPage() {
         reason: s.reason || 'Excused Leave'
       }));
 
-      setAbsentees([...absents, ...leaves]);
+      const combined = sortStudentsByClass([...absents, ...leaves]);
+      setAbsentees(combined);
     } catch (e: any) {
       toast.error('Failed to load absentees data');
     } finally {
@@ -49,71 +78,119 @@ export default function TodayAbsenteesPage() {
   const absentList = absentees.filter(s => s.type === 'ABSENT');
   const leaveList = absentees.filter(s => s.type === 'LEAVE');
 
-  const filteredAbsentees = absentees.filter((student) => {
-    const matchesFilter = 
-      filterTab === 'all' ? true : 
-      filterTab === 'absent' ? student.type === 'ABSENT' : 
-      student.type === 'LEAVE';
+  const filteredAbsentees = sortStudentsByClass(
+    absentees.filter((student) => {
+      const matchesFilter = 
+        filterTab === 'all' ? true : 
+        filterTab === 'absent' ? student.type === 'ABSENT' : 
+        student.type === 'LEAVE';
 
-    const matchesSearch =
-      (student.studentName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (student.className || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (student.studentId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (student.mobileNumber || '').includes(searchQuery);
+      const matchesSearch =
+        (student.studentName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.className || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.studentId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (student.mobileNumber || '').includes(searchQuery);
 
-    return matchesFilter && matchesSearch;
-  });
+      return matchesFilter && matchesSearch;
+    })
+  );
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const todayStr = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    const pageWidth = doc.internal.pageSize.getWidth(); // 210 mm
 
-    // Header Branding
+    // 1. Centered School Title
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(30, 41, 59);
-    doc.text('SRI VENKATESWARA JY SCHOOL', 14, 16);
+    doc.setTextColor(15, 23, 42); // slate-900
+    doc.text('SRI VENKATESWARA JY SCHOOL', pageWidth / 2, 14, { align: 'center' });
 
+    // 2. Centered Campus Address
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 116, 139); // slate-500
+    doc.text('Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist., A.P.', pageWidth / 2, 19, { align: 'center' });
+
+    // 3. Centered Report Title
     doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(30, 41, 59); // slate-800
+    doc.text(`Daily Absentees & Leaves Report — ${todayStr}`, pageWidth / 2, 25, { align: 'center' });
+
+    // 4. Centered Summary Stats
+    doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(71, 85, 105);
-    doc.text(`Daily Absentees & Leaves Report — ${todayStr}`, 14, 23);
+    doc.text(`Total Absentees: ${filteredAbsentees.length}   |   Absent Today: ${absentList.length}   |   On Leave: ${leaveList.length}`, pageWidth / 2, 30, { align: 'center' });
 
-    doc.setFontSize(9);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Total Listed: ${filteredAbsentees.length}  |  Absent Today: ${absentList.length}  |  On Leave: ${leaveList.length}`, 14, 29);
+    // Horizontal Accent Line
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.4);
+    doc.line(14, 32.5, 196, 32.5);
 
-    const rows = filteredAbsentees.map((s, idx) => [
+    // Map filtered student rows (without Reason/Remarks column)
+    const rows: any[] = filteredAbsentees.map((s, idx) => [
       idx + 1,
       s.studentId || '-',
-      s.studentName || '-',
+      (s.studentName || '-').toUpperCase(),
       s.className || '-',
       s.mobileNumber || '-',
-      s.statusLabel || (s.type === 'LEAVE' ? 'On Leave' : 'Absent'),
-      s.reason || '-'
+      s.statusLabel || (s.type === 'LEAVE' ? 'On Leave' : 'Absent')
     ]);
 
+    // Pad up to 25 rows per page so the table stretches and fills the page perfectly!
+    const targetRowCount = Math.max(25, Math.ceil(rows.length / 25) * 25);
+    for (let i = rows.length + 1; i <= targetRowCount; i++) {
+      rows.push([i, '', '', '', '', '']);
+    }
+
     autoTable(doc, {
-      startY: 34,
-      head: [['S.No', 'Roll No', 'Student Name', 'Class', 'Phone', 'Status', 'Reason / Remarks']],
+      startY: 35,
+      head: [['S.No', 'Roll No', 'Student Name', 'Class', 'Phone', 'Status']],
       body: rows,
       theme: 'grid',
-      headStyles: { fillColor: [30, 41, 59], textColor: 255, fontStyle: 'bold', halign: 'center' },
-      bodyStyles: { fontSize: 8.5, valign: 'middle' },
-      columnStyles: {
-        0: { cellWidth: 12, halign: 'center' },
-        1: { cellWidth: 26, fontStyle: 'bold' },
-        2: { cellWidth: 50, fontStyle: 'bold' },
-        3: { cellWidth: 22, halign: 'center' },
-        4: { cellWidth: 28, halign: 'center' },
-        5: { cellWidth: 22, halign: 'center' },
-        6: { cellWidth: 25 }
+      headStyles: { 
+        fillColor: [15, 23, 42], 
+        textColor: 255, 
+        fontStyle: 'bold', 
+        halign: 'center', 
+        minCellHeight: 9.8, 
+        valign: 'middle', 
+        fontSize: 9.5 
       },
-      margin: { top: 34, bottom: 12, left: 14, right: 14 },
+      bodyStyles: { 
+        minCellHeight: 9.35, 
+        valign: 'middle', 
+        fontSize: 9, 
+        cellPadding: { top: 2.2, bottom: 2.2, left: 2.5, right: 2.5 } 
+      },
+      alternateRowStyles: { 
+        fillColor: [248, 250, 252] 
+      },
+      columnStyles: {
+        0: { cellWidth: 14, halign: 'center', fontStyle: 'bold' },
+        1: { cellWidth: 32, halign: 'center', fontStyle: 'bold' },
+        2: { cellWidth: 68, fontStyle: 'bold' },
+        3: { cellWidth: 24, halign: 'center', fontStyle: 'bold' },
+        4: { cellWidth: 28, halign: 'center' },
+        5: { cellWidth: 16, halign: 'center', fontStyle: 'bold' }
+      },
+      margin: { top: 35, bottom: 12, left: 14, right: 14 },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 5) {
+          const val = String(data.cell.raw || '');
+          if (val === 'Absent') {
+            data.cell.styles.textColor = [225, 29, 72]; // Rose-600
+          } else if (val === 'On Leave') {
+            data.cell.styles.textColor = [217, 119, 6]; // Amber-600
+          }
+        }
+      },
       didDrawPage: (data) => {
         doc.setFontSize(8);
         doc.setTextColor(148, 163, 184);
-        doc.text(`Printed from JY School ERP • Page ${data.pageNumber}`, 14, doc.internal.pageSize.getHeight() - 6);
+        doc.text(`Printed from JY School ERP • Page ${data.pageNumber}`, pageWidth / 2, doc.internal.pageSize.getHeight() - 5, { align: 'center' });
       }
     });
 
@@ -149,7 +226,7 @@ export default function TodayAbsenteesPage() {
               <div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Not Present</p>
                 <p className="text-2xl font-black text-slate-900 mt-0.5">{absentees.length}</p>
-                <p className="text-[10px] text-slate-500 mt-0.5">Absent + Leaves combined</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Nursery to 10th Class</p>
               </div>
               <div className="w-11 h-11 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
                 <Users className="w-5 h-5" />
@@ -241,7 +318,7 @@ export default function TodayAbsenteesPage() {
                   onClick={downloadPDF} 
                   disabled={filteredAbsentees.length === 0}
                   className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 disabled:opacity-50 transition-all cursor-pointer"
-                  title="Download Clean PDF Report"
+                  title="Download Clean PDF Report (Class Wise)"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download PDF</span>
@@ -260,7 +337,7 @@ export default function TodayAbsenteesPage() {
             </div>
           </div>
 
-          {/* Table Content */}
+          {/* Table Content (Without Reason/Remarks column) */}
           <div className="overflow-x-auto">
             {loading ? (
               <div className="py-20 flex justify-center">
@@ -271,21 +348,20 @@ export default function TodayAbsenteesPage() {
                 <thead>
                   <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-500 uppercase tracking-wider font-extrabold text-[11px]">
                     <th className="py-3 px-4 w-14 text-center">S.No</th>
-                    <th className="py-3 px-4">Roll No</th>
+                    <th className="py-3 px-4 text-center">Roll No</th>
                     <th className="py-3 px-6">Student Name</th>
-                    <th className="py-3 px-4">Class</th>
+                    <th className="py-3 px-4 text-center">Class</th>
                     <th className="py-3 px-4">Contact Phone</th>
                     <th className="py-3 px-4 text-center">Status</th>
-                    <th className="py-3 px-6 text-right">Reason / Remarks</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredAbsentees.map((student, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60 transition-colors">
                       <td className="py-3.5 px-4 text-center font-bold text-slate-400">{idx + 1}</td>
-                      <td className="py-3.5 px-4 font-mono font-black text-indigo-600">{student.studentId || '-'}</td>
+                      <td className="py-3.5 px-4 text-center font-mono font-black text-indigo-600">{student.studentId || '-'}</td>
                       <td className="py-3.5 px-6 font-extrabold text-slate-900">{student.studentName}</td>
-                      <td className="py-3.5 px-4">
+                      <td className="py-3.5 px-4 text-center">
                         <span className="inline-flex px-2 py-0.5 rounded-md font-bold bg-slate-100 text-slate-700">
                           {student.className}
                         </span>
@@ -319,9 +395,6 @@ export default function TodayAbsenteesPage() {
                         <span className={`inline-flex px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-md border ${student.type === 'ABSENT' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                           {student.statusLabel}
                         </span>
-                      </td>
-                      <td className="py-3.5 px-6 text-right text-slate-500 font-medium">
-                        {student.reason || '-'}
                       </td>
                     </tr>
                   ))}

@@ -1,5 +1,22 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Absentees & Leaves PDF & టేబుల్ లేఅవుట్ కస్టమైజేషన్ (November 17, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  1. "page ki pefect ga fit avvali oka page ki 25 varaku ravali" (A4 పేజీ క్రింది వరకు పర్ఫెక్ట్‌గా ఫిట్ అవ్వాలి, పేజీకి 25 రోస్ రావాలి).
+  2. "reason/remarks remove chesi column" ('Reason / Remarks' కాలమ్‌ను తీసివేయాలి).
+  3. "heading center lo ravali" (స్కూల్ పేరు మరియు రిపోర్ట్ హెడ్డింగ్ సెంటర్‌లో రావాలి).
+  4. "class wise ga Nursary, pp1, pp2, 1st - 10th oka order wise ga ravali" (విద్యార్థులు నర్సరీ, పిపి1, పిపి2, 1 నుండి 10వ తరగతి క్రమంలో రావాలి).
+- **పూర్తయిన పనులు & మార్పులు ([`TodayAbsenteesPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/attendance/TodayAbsenteesPage.tsx)):**
+  1. **తరగతుల వారీగా సార్టింగ్ (Class Hierarchy Sorting):**
+     - `getClassRank` మరియు `sortStudentsByClass` ద్వారా విద్యార్థులను Nursery -> PP1 -> PP2 -> 1st -> 2nd -> ... -> 10th క్లాస్ మరియు సెక్షన్స్ వారీగా క్రమబద్ధీకరించాము.
+  2. **సెంట్రల్ హెడ్డింగ్స్:**
+     - స్కూల్ పేరు (`SRI VENKATESWARA JY SCHOOL`), క్యాంపస్ చిరునామా, రిపోర్ట్ టైటిల్, మరియు మెటా సమ్మరీ వివరాలను పేజీ మధ్యలో (`align: center`) అమర్చాము.
+  3. **కాలమ్ తొలగింపు:**
+     - PDF మరియు వెబ్ టేబుల్ రెండింటి నుండి 'Reason / Remarks' కాలమ్‌ను శాశ్వతంగా తొలగించాము.
+  4. **పేజీ పర్ఫెక్ట్ ఫిట్ (25 Rows Per Page):**
+     - రో హైట్ `9.35mm`, హెడర్ `9.8mm` తో 25 రోస్ (Y=35mm నుండి Y=280mm వరకు) A4 పేజీకి సరిగ్గా క్రింది మార్జిన్ వరకు పరిపూర్ణంగా సరిపోయేలా చేసాము.
+     - 25 రోస్ కంటే తక్కువ ఉన్నప్పుడు రిజిస్టర్ తరహాలో ఖాళీ రోలతో 25 వరకు ప్యాడ్ చేయడం ద్వారా పేజీలో సగం ఖాళీగా మిగిలిపోయే లోపం నివారించబడింది.
+
 ## చివరి సంభాషణ - Attendance 'Leaves & Absentees' పేజీ ఫిక్స్ & OpenAI బర్త్‌డే పోస్టర్ల ఆర్కిటెక్చర్ ప్లాన్ (November 17, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   1. "leaves button click cheyagane absents list vachedi pdf download ayyedi ippudu avvatam ledu" (స్క్రీన్‌షాట్: `http://66.116.252.191:19999/attendance` లోని బాటమ్ 'Leaves' షార్ట్‌కట్).
