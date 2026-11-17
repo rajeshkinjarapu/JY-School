@@ -586,29 +586,50 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             visibility: visible !important;
             opacity: 1 !important;
           }
-          .katex .mathnormal {
-            font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+          /* Bulletproof Print Typography: Force local Windows System Fonts so Chromium NEVER drops math variables */
+          .katex .mathnormal,
+          .katex .mathit,
+          .katex .mathdefault,
+          .katex span.mathnormal,
+          .katex span.mathit {
+            font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
             font-style: italic !important;
             color: #000000 !important;
             visibility: visible !important;
             opacity: 1 !important;
+            display: inline !important;
           }
-          .katex .mathit {
-            font-family: KaTeX_Main, 'KaTeX_Math', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+          .katex .mord,
+          .katex .mathrm,
+          .katex .mop,
+          .katex .mbin,
+          .katex .mrel {
+            font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
+            color: #000000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          .katex .mathbf {
+            font-family: 'Times New Roman', serif !important;
+            font-weight: bold !important;
+            font-style: normal !important;
+            color: #000000 !important;
+          }
+          .katex .boldsymbol {
+            font-family: 'Times New Roman', serif !important;
+            font-weight: bold !important;
             font-style: italic !important;
             color: #000000 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
           }
-          .katex .mord {
-            font-family: KaTeX_Main, KaTeX_Math, 'TeX Gyre Schola', 'Times New Roman', serif !important;
+          .katex .mathbb {
+            font-family: 'Cambria Math', 'Times New Roman', serif !important;
+            font-weight: bold !important;
             color: #000000 !important;
-            visibility: visible !important;
-            opacity: 1 !important;
           }
           .katex * {
             visibility: visible !important;
             opacity: 1 !important;
+            color: #000000 !important;
           }
           .question-block {
             break-inside: avoid !important;

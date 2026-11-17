@@ -795,22 +795,61 @@ export const MCQPaperGeneratorPage = () => {
           overflow: visible !important;
           max-width: 100% !important;
         }
-        .katex .mathnormal {
-          font-family: KaTeX_Math, 'Times New Roman', 'Cambria Math', serif !important;
+        /* ---- KaTeX: Force local Windows System Fonts in print so Chromium NEVER drops math variables ---- */
+        .katex, .katex * {
+          visibility: visible !important;
+          opacity: 1 !important;
+          color: #000000 !important;
+        }
+        .katex {
+          font-size: 1.05em !important;
+          white-space: normal !important;
+        }
+        .katex .base { display: inline !important; white-space: normal !important; }
+        .katex-display {
+          overflow: visible !important;
+          max-width: 100% !important;
+        }
+        /* Variables (a, b, x, y, A, B, R, F, m, v, g): Times New Roman Italic ALWAYS renders in Windows/Chrome print */
+        .katex .mathnormal,
+        .katex .mathit,
+        .katex .mathdefault,
+        .katex span.mathnormal,
+        .katex span.mathit {
+          font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
           font-style: italic !important;
           visibility: visible !important;
           opacity: 1 !important;
+          color: #000000 !important;
+          display: inline !important;
         }
-        .katex .mathit {
-          font-family: KaTeX_Main, 'Times New Roman', 'Cambria Math', serif !important;
+        /* Ordinary symbols, numbers, operators: Times New Roman Regular */
+        .katex .mord,
+        .katex .mathrm,
+        .katex .mop,
+        .katex .mbin,
+        .katex .mrel {
+          font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          color: #000000 !important;
+        }
+        .katex .mathbf {
+          font-family: 'Times New Roman', serif !important;
+          font-weight: bold !important;
+          font-style: normal !important;
+          color: #000000 !important;
+        }
+        .katex .boldsymbol {
+          font-family: 'Times New Roman', serif !important;
+          font-weight: bold !important;
           font-style: italic !important;
-          visibility: visible !important;
-          opacity: 1 !important;
+          color: #000000 !important;
         }
-        .katex .mord {
-          font-family: KaTeX_Main, KaTeX_Math, 'Times New Roman', serif !important;
-          visibility: visible !important;
-          opacity: 1 !important;
+        .katex .mathbb {
+          font-family: 'Cambria Math', 'Times New Roman', serif !important;
+          font-weight: bold !important;
+          color: #000000 !important;
         }
 
         /* ---- Global print reset ---- */

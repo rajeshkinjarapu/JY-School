@@ -1,5 +1,29 @@
 # JY School Project State
 
+## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో మ్యాథ్ వేరియబుల్స్ ($A, B, R, a, b, x, y, F, m, a$) BLANK గా రావడంపై శాశ్వత పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య & రిపోర్ట్:**
+  - "okasari kallu daggara pettukoni chudu live preview ela undo and print preview ela ela undo mottam questions lo unna formulas and chala text mottam kanapdatam ledu balnk ga vastundi reason enti assalu"
+  - స్క్రీన్‌షాట్లు (`media_1794911546106_9443c9a8.png`, `media_1794911562501_48fbe58a.png`, `media_1794911582195_8843207f.png`, `media_1794911599294_b4b76afb.png`, `media_1794912016764_81c2b386.jpg`):
+    - ప్రింట్ డైలాగ్‌లో 9 పేజీలు వస్తున్నాయి కానీ:
+      - Q1: `Consider the relation ___ on the set {-2,-1,0,1,2} defined by ( , ) \in ___ if and only if 1 + ___ > 0...` (ఇందులో $R$, $a$, $b$, $ab$ అన్నీ BLANK)
+      - Q2: `Let ___ = {0,1,2,3,4,5}... ( ) The number of elements in ___ is 18...` ($A$, $R$, $x$, $y$, $S_1$ BLANK)
+      - Q11: `If ___ = [matrix] then |adj( ___^2)| =` ($A$ మిస్సింగ్)
+      - Q18: `then ___^T ___^{-1} =` ($A$ మిస్సింగ్)
+      - Physics Q26, Q27, Q28, Q30: $F, m, a, v, g, \theta$ అన్ని వేరియబుల్స్ పూర్తిగా BLANK.
+      - నంబర్లు, బ్రాకెట్లు, సాధారణ సింబల్స్ (`+`, `-`, `=`, `\in`, `\times`, `det`, `log`) అన్నీ కనిపిస్తున్నాయి; కేవలం మ్యాథ్ ఇటాలిక్ వేరియబుల్స్ మాత్రమే ఖాళీగా వస్తున్నాయి.
+- **ఖచ్చితమైన సాంకేతిక కారణం (Technical Root Cause):**
+  1. KaTeX లో గణిత వేరియబుల్స్ అన్నీ `<span class="mord mathnormal">` క్లాస్‌తో రెండర్ అవుతాయి. దీనికి KaTeX `KaTeX_Math` అనే వెబ్ ఫాంట్‌ని (`woff2`) ఉపయోగిస్తుంది.
+  2. Chromium / Cốc Cốc బ్రౌజర్ ప్రింట్ ప్రివ్యూ జనరేట్ చేసేటప్పుడు (Skia PDF Renderer), వెబ్ ఫాంట్ అయిన `KaTeX_Math` ను PDF లో ఎంబెడ్ చేయడంలో ఫెయిల్ అవుతోంది. దీనివల్ల Chromium ఆ అక్షరాలను ఖాళీ స్థలాలుగా (Empty/Transparent Glyphs) రెండర్ చేస్తుంది.
+  3. మన మునుపటి CSS లో `font-family: KaTeX_Math, 'Times New Roman' ...` అని `KaTeX_Math` ను మొదటి స్థానంలో పెట్టడం వల్ల, బ్రౌజర్ `KaTeX_Math` ఉందనుకుని ప్రయత్నించి ఫెయిల్ అయ్యింది, కానీ రెండవ ఫాంట్ అయిన 'Times New Roman' కి ఫాల్‌బ్యాక్ అవ్వలేదు.
+- **శాశ్వత పరిష్కారం (The Permanent Solution):**
+  1. ప్రింట్ మోడ్ (`@media print`) లో `KaTeX_Math` ని పూర్తిగా తొలగించి, విండోస్ లోకల్ సిస్టమ్ ఫాంట్స్ అయిన `'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important` లను ఫస్ట్ ప్రయారిటీగా అమలు చేసాము.
+  2. విండోస్‌లో `Times New Roman` ఇటాలిక్ (`timesi.ttf`) ఇప్పటికే ఉండటం వల్ల, ప్రింట్ ఇంజిన్ ఏ వెబ్ ఫాంట్ కోసమూ వేచి ఉండకుండా వెంటనే డార్క్, క్లియర్ ఇటాలిక్ అక్షరాలతో ప్రింట్ చేస్తుంది.
+  3. Live Preview లో మాత్రం ఒరిజినల్ KaTeX అలాగే ఉంటుంది.
+- **మార్పులు చేసిన ఫైళ్లు:**
+  1. [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): `handlePrint` లోని ప్రింట్ ఇంజెక్షన్ స్టైల్స్‌లో `.katex .mathnormal`, `.katex .mathit`, `.katex .mord`, `.katex .mathbb` లకు విండోస్ లోకల్ సిస్టమ్ ఫాంట్స్ అమర్చాము.
+  2. [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx): `@media print` స్టైల్స్‌లో `KaTeX_Math` స్థానంలో `'Times New Roman', 'Cambria Math'` సిస్టమ్ ఫాంట్స్‌ను చేర్చాము.
+  3. [`index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css): గ్లోబల్ ప్రింట్ రూల్స్‌లో KaTeX సెలెక్టర్లకు సిస్టమ్ ఫాంట్స్ మరియు విజిబిలిటీ నిర్ధారించాము.
+
 ## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో అక్షరాలు & ఆప్షన్లు కుడి వైపున కట్ అవ్వడం (Horizontal Width Cutoff) & మ్యాథ్ వేరియబుల్స్ పరిష్కారం (November 17, 2026)
 - **యూజర్ సమస్య & రిపోర్ట్:**
   - "PRINT preview lo aksharalu cut ayipotunnayi"
