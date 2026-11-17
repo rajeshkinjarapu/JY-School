@@ -13,7 +13,7 @@ import {
   Hash, MapPin, Sparkles, GraduationCap, Camera, CreditCard, FileDown, Trash2, Edit2, X,
   CheckCircle2, AlertCircle, Home, ChevronRight, BookOpen, MessageCircle, ArrowRight,
   Copy, ExternalLink, ShieldCheck, Award, FileText, Activity, HeartPulse, Navigation, Clock, Check, Building, Bus, Heart, Mail, ShieldAlert,
-  ChevronDown, Search, CheckCircle, Info, Plus
+  ChevronDown, Search, CheckCircle, Info, Plus, Percent, Tag, Coins, RotateCcw
 } from 'lucide-react';
 import { FeeReceiptPrint } from '../../components/fees/FeeReceiptPrint';
 
@@ -51,6 +51,8 @@ export const StudentProfilePage: React.FC = () => {
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [discountFee, setDiscountFee] = useState<any>(null);
   const [discountAmount, setDiscountAmount] = useState<number>(0);
+  const [discountFinalFee, setDiscountFinalFee] = useState<number>(0);
+  const [discountRemarks, setDiscountRemarks] = useState<string>('');
   const [selectedFees, setSelectedFees] = useState<{ feeStructureId: string; amountPaid: number }[]>([]);
   const [method, setMethod] = useState('CASH');
   const [remarks, setRemarks] = useState('');
@@ -306,23 +308,75 @@ export const StudentProfilePage: React.FC = () => {
     }
   };
 
-  const handleApplyDiscount = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const openDiscountModal = (s: any) => {
+    const discountRecord = student?.feeDiscounts?.find((d: any) => d.feeStructureId === s.id);
+    const existingConcession = discountRecord ? Number(discountRecord.amount) || 0 : 0;
+    setDiscountFee(s);
+    setDiscountAmount(existingConcession);
+    setDiscountFinalFee(Math.max(0, s.amount - existingConcession));
+    setDiscountRemarks(discountRecord?.remarks || '');
+    setShowDiscountModal(true);
+  };
+
+  const handleDiscountAmountChange = (concession: number) => {
+    const base = discountFee?.amount || 0;
+    const cleanConcession = Math.max(0, Math.min(base, concession));
+    setDiscountAmount(cleanConcession);
+    setDiscountFinalFee(base - cleanConcession);
+  };
+
+  const handleFinalFeeChange = (finalFee: number) => {
+    const base = discountFee?.amount || 0;
+    const cleanFinalFee = Math.max(0, Math.min(base, finalFee));
+    setDiscountFinalFee(cleanFinalFee);
+    setDiscountAmount(base - cleanFinalFee);
+  };
+
+  const handleApplyDiscount = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!discountFee) return;
+    setIsSubmitting(true);
+    const concession = Math.max(0, Number(discountAmount) || 0);
+    try {
+      await api.post(`/api/fees/discounts`, {
+        studentId: student.id,
+        feeStructureId: discountFee.id,
+        discountAmount: concession,
+        remarks: discountRemarks || null
+      });
+      toast.success(concession > 0 ? `₹${concession.toLocaleString('en-IN')} concession applied successfully!` : 'Concession reset successfully!');
+      setShowDiscountModal(false);
+      setDiscountFee(null);
+      setDiscountAmount(0);
+      setDiscountFinalFee(0);
+      setDiscountRemarks('');
+      fetchStudentProfile();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || error.message || 'Error applying discount');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRemoveDiscount = async () => {
     if (!discountFee) return;
     setIsSubmitting(true);
     try {
       await api.post(`/api/fees/discounts`, {
         studentId: student.id,
         feeStructureId: discountFee.id,
-        discountAmount: discountFee.amount - discountAmount
+        discountAmount: 0,
+        remarks: null
       });
-      toast.success('Fee discounted successfully!');
+      toast.success('Fee concession removed successfully!');
       setShowDiscountModal(false);
       setDiscountFee(null);
       setDiscountAmount(0);
+      setDiscountFinalFee(0);
+      setDiscountRemarks('');
       fetchStudentProfile();
     } catch (error: any) {
-      toast.error(error.message || 'Error applying discount');
+      toast.error(error.response?.data?.message || error.message || 'Error removing discount');
     } finally {
       setIsSubmitting(false);
     }
@@ -1740,17 +1794,21 @@ export const StudentProfilePage: React.FC = () => {
                     <div className="p-1.5 bg-emerald-500 rounded-xl text-white shadow-md shadow-emerald-500/20">
                       <CreditCard className="w-4 h-4" />
                     </div>
-                    <h3 className="text-sm font-extrabold text-slate-900">Fee Ledger</h3>
+                    <div>
+                      <h3 className="text-sm font-extrabold text-slate-900">Fee Ledger</h3>
+                    </div>
                   </div>
-                  {(isAdmin || user?.role === 'ACCOUNTANT') && (
-                    <Link 
-                      to={`/students/${student.id}/pay-fee`}
-                      className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-                    >
-                      <span>Pay Fee</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                      <Link 
+                        to={`/students/${student.id}/pay-fee`}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-700 border border-emerald-200/80 transition-all flex items-center gap-1 shadow-2xs"
+                      >
+                        <span>Pay Fee</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="p-4 space-y-3 max-h-[420px] overflow-y-auto">
@@ -1759,26 +1817,60 @@ export const StudentProfilePage: React.FC = () => {
                   ) : (
                     relevantFeeStructures.map((s) => {
                       const discountRecord = student.feeDiscounts?.find((d: any) => d.feeStructureId === s.id);
-                      const discount = discountRecord ? discountRecord.amount : 0;
+                      const discount = discountRecord ? Number(discountRecord.amount) || 0 : 0;
                       const effectiveAmount = Math.max(0, s.amount - discount);
-                      const paidSoFar = student.feePayments?.filter((p: any) => p.feeStructureId === s.id).reduce((sum: number, p: any) => sum + p.amountPaid, 0) || 0;
+                      const paidSoFar = student.feePayments?.filter((p: any) => p.feeStructureId === s.id).reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0) || 0;
                       const pending = Math.max(0, effectiveAmount - paidSoFar);
                       const progress = effectiveAmount > 0 ? Math.min(100, Math.round((paidSoFar / effectiveAmount) * 100)) : 100;
                       
                       return (
-                        <div key={s.id} className="p-3.5 bg-slate-50/70 rounded-xl border border-slate-100 space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs font-bold text-slate-800">{s.name}</span>
-                            <span className="text-xs font-black text-indigo-600">₹{effectiveAmount}</span>
+                        <div key={s.id} className="p-3.5 bg-slate-50/70 hover:bg-slate-50/90 rounded-xl border border-slate-200/70 space-y-2.5 transition-all">
+                          <div className="flex justify-between items-start gap-2">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-xs font-bold text-slate-800">{s.name}</span>
+                                {discount > 0 && (
+                                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-black border border-amber-200 shadow-2xs">
+                                    <Tag className="w-2.5 h-2.5" />
+                                    -₹{discount.toLocaleString('en-IN')} Concession
+                                  </span>
+                                )}
+                              </div>
+                              {discount > 0 && (
+                                <p className="text-[10px] text-slate-400">
+                                  Base: <span className="line-through font-semibold text-slate-500">₹{s.amount.toLocaleString('en-IN')}</span>
+                                  {discountRecord?.remarks && <span className="italic ml-1 text-slate-400">({discountRecord.remarks})</span>}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="text-right flex flex-col items-end gap-1 shrink-0">
+                              <span className="text-xs font-black text-indigo-600">
+                                ₹{effectiveAmount.toLocaleString('en-IN')}
+                              </span>
+                              {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                                <button
+                                  type="button"
+                                  onClick={() => openDiscountModal(s)}
+                                  className="px-2 py-0.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer border border-indigo-200/80 active:scale-95 shadow-2xs"
+                                  title="Edit Fee / Apply Concession or Discount"
+                                >
+                                  <Edit2 className="w-2.5 h-2.5 text-indigo-600" />
+                                  <span>{discount > 0 ? 'Edit Discount' : 'Edit / Discount'}</span>
+                                </button>
+                              )}
+                            </div>
                           </div>
                           
                           <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
                             <div className={`h-2 rounded-full transition-all duration-700 ${progress === 100 ? 'bg-emerald-500' : 'bg-gradient-to-r from-blue-500 to-indigo-600'}`} style={{ width: `${progress}%` }}></div>
                           </div>
                           
-                          <div className="flex justify-between text-[10px] font-bold">
-                            <span className="text-emerald-600">Paid: ₹{paidSoFar}</span>
-                            <span className={pending > 0 ? 'text-rose-500' : 'text-slate-400'}>Pending: ₹{pending}</span>
+                          <div className="flex justify-between items-center text-[10px] font-bold">
+                            <span className="text-emerald-600">Paid: ₹{paidSoFar.toLocaleString('en-IN')} ({progress}%)</span>
+                            <span className={pending > 0 ? 'text-rose-600 font-extrabold' : 'text-slate-400'}>
+                              {pending > 0 ? `Pending: ₹${pending.toLocaleString('en-IN')}` : 'Cleared'}
+                            </span>
                           </div>
                         </div>
                       );
@@ -1809,34 +1901,82 @@ export const StudentProfilePage: React.FC = () => {
                         <th className="px-4 py-2.5">Amount</th>
                         <th className="px-4 py-2.5">Date</th>
                         <th className="px-4 py-2.5">Method</th>
-                        <th className="px-4 py-2.5 text-right">Receipt</th>
+                        <th className="px-4 py-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {student.feePayments?.length === 0 ? (
                         <tr><td colSpan={5} className="px-4 py-6 text-center text-xs font-bold text-slate-400">No payment records found.</td></tr>
                       ) : (
-                        student.feePayments?.map((p: any) => (
-                          <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
-                            <td className="px-4 py-2.5 font-bold text-slate-800">{p.feeStructure?.name}</td>
-                            <td className="px-4 py-2.5 font-black text-emerald-600">₹{p.amountPaid}</td>
-                            <td className="px-4 py-2.5 font-medium text-slate-500">{new Date(p.paymentDate || p.createdAt).toLocaleDateString('en-GB')}</td>
-                            <td className="px-4 py-2.5">
-                              <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                                {p.method}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2.5 text-right">
-                              <button 
-                                onClick={() => handlePrintReceipt(p)} 
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer" 
-                                title="Print Receipt"
-                              >
-                                <FileDown className="w-4 h-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))
+                        student.feePayments?.map((p: any) => {
+                          const dateObj = p.paymentDate ? new Date(p.paymentDate) : (p.createdAt ? new Date(p.createdAt) : null);
+                          const isEpoch1970 = dateObj && dateObj.getFullYear() <= 1970;
+                          const displayDate = isEpoch1970 && p.createdAt 
+                            ? new Date(p.createdAt).toLocaleDateString('en-GB') 
+                            : (dateObj ? dateObj.toLocaleDateString('en-GB') : 'N/A');
+
+                          return (
+                            <tr key={p.id} className="hover:bg-slate-50/60 transition-colors">
+                              <td className="px-4 py-2.5 font-bold text-slate-800">
+                                <div>{p.feeStructure?.name || 'Fee Payment'}</div>
+                                {p.remarks && <div className="text-[10px] text-slate-400 font-normal">{p.remarks}</div>}
+                              </td>
+                              <td className="px-4 py-2.5 font-black text-emerald-600">₹{(p.amountPaid || 0).toLocaleString('en-IN')}</td>
+                              <td className="px-4 py-2.5 font-medium text-slate-500">
+                                <span>{displayDate}</span>
+                                {isEpoch1970 && (
+                                  <span className="block text-[9px] text-amber-600 font-semibold">(auto-corrected)</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-2.5">
+                                <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-black uppercase ${p.method === 'UPI' ? 'bg-purple-100 text-purple-700' : p.method === 'CASH' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                                  {p.method}
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 text-right">
+                                <div className="flex items-center justify-end gap-1">
+                                  <button 
+                                    onClick={() => handlePrintReceipt(p)} 
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer" 
+                                    title="Print Official Receipt"
+                                  >
+                                    <FileDown className="w-4 h-4" />
+                                  </button>
+                                  {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                                    <>
+                                      <button 
+                                        onClick={() => {
+                                          setEditingPayment({
+                                            id: p.id,
+                                            amountPaid: p.amountPaid,
+                                            method: p.method,
+                                            remarks: p.remarks || '',
+                                            paymentDate: p.paymentDate && new Date(p.paymentDate).getFullYear() > 1970 
+                                              ? new Date(p.paymentDate).toISOString().split('T')[0] 
+                                              : (p.createdAt ? new Date(p.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
+                                            feeStructureName: p.feeStructure?.name
+                                          });
+                                          setShowEditModal(true);
+                                        }}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors cursor-pointer" 
+                                        title="Edit Payment Record"
+                                      >
+                                        <Edit2 className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button 
+                                        onClick={() => handleDeletePayment(p.id)}
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer" 
+                                        title="Delete Payment Record"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
                       )}
                     </tbody>
                   </table>
@@ -2533,6 +2673,340 @@ export const StudentProfilePage: React.FC = () => {
                   className="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md transition-all cursor-pointer"
                 >
                   {isSubmitting ? 'Saving...' : 'Save Family Details'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Fee / Discount Concession Modal */}
+      {showDiscountModal && discountFee && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-xs print:hidden animate-fade-in">
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setShowDiscountModal(false)} />
+          <div className="relative card w-full max-w-lg p-6 space-y-5 animate-scale-in z-10 bg-white border border-slate-200 rounded-2xl shadow-2xl max-h-[92vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl shadow-md shadow-indigo-500/20">
+                  <Percent className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Fee Concession & Discount</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {student.user?.name} • <span className="font-bold text-slate-700">{discountFee.name}</span>
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDiscountModal(false)}
+                disabled={isSubmitting}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Financial Overview Cards */}
+            <div className="grid grid-cols-3 gap-2.5 p-3 bg-slate-50 rounded-xl border border-slate-200/70 text-center">
+              <div>
+                <span className="block text-[10px] font-bold text-slate-400 uppercase">Standard Base</span>
+                <span className="text-xs sm:text-sm font-black text-slate-800">₹{(discountFee.amount || 0).toLocaleString('en-IN')}</span>
+              </div>
+              <div className="border-x border-slate-200">
+                <span className="block text-[10px] font-bold text-amber-600 uppercase">Concession</span>
+                <span className="text-xs sm:text-sm font-black text-amber-700">-₹{(Number(discountAmount) || 0).toLocaleString('en-IN')}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-emerald-600 uppercase">New Net Fee</span>
+                <span className="text-xs sm:text-sm font-black text-indigo-700">₹{Math.max(0, (discountFee.amount || 0) - (Number(discountAmount) || 0)).toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            <form onSubmit={handleApplyDiscount} className="space-y-4">
+              {/* Concession Input Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Concession Amount (₹)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-xs">₹</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={discountFee.amount || 0}
+                      value={discountAmount === 0 ? '' : discountAmount}
+                      onChange={(e) => handleDiscountAmountChange(Number(e.target.value) || 0)}
+                      placeholder="0"
+                      className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-amber-700 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Amount deducted from standard fee</p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                    Or New Net Fee (₹)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-xs">₹</span>
+                    <input
+                      type="number"
+                      min={0}
+                      max={discountFee.amount || 0}
+                      value={discountFinalFee === 0 && discountAmount === discountFee.amount ? '0' : (discountFinalFee || (discountFee.amount - discountAmount))}
+                      onChange={(e) => handleFinalFeeChange(Number(e.target.value) || 0)}
+                      placeholder={String(discountFee.amount || 0)}
+                      className="w-full pl-7 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-indigo-700 focus:ring-2 focus:ring-indigo-500 outline-none"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">Final amount student should pay</p>
+                </div>
+              </div>
+
+              {/* Quick Preset Buttons */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Quick Concession Shortcuts
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {[1000, 2000, 3000, 5000].map((amt) => {
+                    if (amt >= (discountFee.amount || 0)) return null;
+                    return (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => handleDiscountAmountChange(amt)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${discountAmount === amt ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}`}
+                      >
+                        ₹{amt.toLocaleString('en-IN')} off
+                      </button>
+                    );
+                  })}
+                  {[10, 20, 50].map((pct) => {
+                    const concession = Math.round(((discountFee.amount || 0) * pct) / 100);
+                    return (
+                      <button
+                        key={pct}
+                        type="button"
+                        onClick={() => handleDiscountAmountChange(concession)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${discountAmount === concession ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'}`}
+                      >
+                        {pct}% off
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => handleDiscountAmountChange(discountFee.amount || 0)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border ${discountAmount === discountFee.amount ? 'bg-rose-600 text-white border-rose-600' : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'}`}
+                  >
+                    100% Free Waiver
+                  </button>
+                </div>
+              </div>
+
+              {/* Remarks / Concession Reason */}
+              <div className="space-y-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                  Reason / Concession Category
+                </label>
+                <input
+                  type="text"
+                  value={discountRemarks}
+                  onChange={(e) => setDiscountRemarks(e.target.value)}
+                  placeholder="e.g., Sibling discount, Staff child, Merit scholarship, Financial concession"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-indigo-500 outline-none"
+                />
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {['Sibling Discount', 'Staff Ward', 'Merit Scholarship', 'Management Concession', 'Special Approval'].map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setDiscountRemarks(cat)}
+                      className={`text-[10px] px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer ${discountRemarks === cat ? 'bg-indigo-100 text-indigo-700 border border-indigo-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
+                    >
+                      +{cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Live Impact Calculation Card */}
+              {(() => {
+                const paidForThis = student.feePayments?.filter((p: any) => p.feeStructureId === discountFee.id).reduce((sum: number, p: any) => sum + (p.amountPaid || 0), 0) || 0;
+                const newEffective = Math.max(0, (discountFee.amount || 0) - (Number(discountAmount) || 0));
+                const newPending = Math.max(0, newEffective - paidForThis);
+                return (
+                  <div className="p-3 bg-indigo-50/60 rounded-xl border border-indigo-100 text-xs space-y-1.5">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Original Base Fee:</span>
+                      <span className="font-bold">₹{(discountFee.amount || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-amber-700 font-bold">
+                      <span>Discount / Concession:</span>
+                      <span>-₹{(Number(discountAmount) || 0).toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-indigo-900 font-black border-t border-indigo-200/60 pt-1">
+                      <span>Adjusted Student Obligation:</span>
+                      <span>₹{newEffective.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-700">
+                      <span>Already Paid So Far:</span>
+                      <span className="font-bold">₹{paidForThis.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between font-black text-rose-600 border-t border-indigo-200/60 pt-1">
+                      <span>Remaining Balance Due:</span>
+                      <span>₹{newPending.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                <div>
+                  {(student.feeDiscounts?.some((d: any) => d.feeStructureId === discountFee.id && Number(d.amount) > 0)) && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDiscount}
+                      disabled={isSubmitting}
+                      className="px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-rose-200"
+                    >
+                      Remove Concession
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowDiscountModal(false)}
+                    disabled={isSubmitting}
+                    className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-5 py-2 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save & Update Fee'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Edit Payment Record Modal */}
+      {showEditModal && editingPayment && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-gray-950/60 backdrop-blur-xs print:hidden animate-fade-in">
+          <div className="fixed inset-0" onClick={() => !isSubmitting && setShowEditModal(false)} />
+          <div className="relative card w-full max-w-md p-6 space-y-5 animate-scale-in z-10 bg-white border border-slate-200 rounded-2xl shadow-2xl">
+            
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-100 text-blue-600 rounded-xl">
+                  <CreditCard className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Edit Payment Record</h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    {editingPayment.feeStructureName || 'Fee Payment'}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                disabled={isSubmitting}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleEditPaymentSubmit} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Amount Paid (₹)
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  value={editingPayment.amountPaid}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, amountPaid: Number(e.target.value) })}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Payment Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={editingPayment.paymentDate}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, paymentDate: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <p className="text-[10px] text-slate-400 mt-0.5">Correct incorrect or 1970 dates</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Payment Method
+                </label>
+                <select
+                  value={editingPayment.method}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })}
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  <option value="CASH">CASH (నగదు)</option>
+                  <option value="UPI">UPI / QR (PhonePe / GPay)</option>
+                  <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
+                  <option value="CHEQUE">Cheque / Demand Draft</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Remarks / Notes
+                </label>
+                <input
+                  type="text"
+                  value={editingPayment.remarks}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, remarks: e.target.value })}
+                  placeholder="Optional remarks"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-5 py-2 text-xs font-black text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition-all cursor-pointer"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Payment'}
                 </button>
               </div>
             </form>
