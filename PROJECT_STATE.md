@@ -1,5 +1,22 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Attendance 'Leaves & Absentees' పేజీ ఫిక్స్ & OpenAI బర్త్‌డే పోస్టర్ల ఆర్కిటెక్చర్ ప్లాన్ (November 17, 2026)
+- **యూజర్ కోరిక & రిపోర్ట్:**
+  1. "leaves button click cheyagane absents list vachedi pdf download ayyedi ippudu avvatam ledu" (స్క్రీన్‌షాట్: `http://66.116.252.191:19999/attendance` లోని బాటమ్ 'Leaves' షార్ట్‌కట్).
+  2. "idil openai api key student birthday kosam vallaki birthday images create cheyali evari birthday ki valladi valla image tho naku oka plan cheppu ela cheddam anedi"
+- **సమస్య విశ్లేషణ:**
+  - `TodayAbsenteesPage.tsx` లో కేవలం `studentsOnLeave` మాత్రమే ఫెచ్ చేసి చూపిస్తున్నారు. కానీ విద్యార్థులను 'ABSENT' గా మార్క్ చేసినప్పుడు వారు `studentsAbsent` లో వస్తారు. ఆబ్సెంట్స్ ఉన్నప్పటికీ లీవ్స్ 0 ఉన్నప్పుడు లిస్ట్ మొత్తం ఖాళీగా కనిపించి, PDF కూడా ఖాళీగా వచ్చేది.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **`TodayAbsenteesPage.tsx` పూర్తి రీడిజైన్ & ఫిక్స్:**
+     - `studentsAbsent` మరియు `studentsOnLeave` రెండింటినీ లోడ్ చేసి కంబైన్ చేసాము.
+     - 3 ఫిల్టర్ ట్యాబ్‌లు చేర్చాము: **All**, **Absent**, **On Leave**.
+     - విద్యార్థుల రోల్ నంబర్, పేరు, క్లాస్, పేరెంట్ కాంటాక్ట్ నంబర్ (డైరెక్ట్ WhatsApp & Phone Call లింకులతో) టేబుల్‌లో అమర్చాము.
+     - స్కూల్ పేరు (`SRI VENKATESWARA JY SCHOOL`), రిపోర్ట్ టైటిల్, సమగ్ర వివరాలతో కూడిన పక్కా PDF డౌన్‌లోడ్ మరియు ప్రింట్ ఆప్షన్ చేర్చాము.
+  2. **`AttendanceDashboard.tsx` షార్ట్‌కట్ అప్‌డేట్:**
+     - బటన్ పేరును 'Leaves' నుండి 'Leaves & Absentees' కు మార్చాము.
+  3. **OpenAI Student Birthday Posters ప్లాన్:**
+     - విద్యార్థి రియల్ ఫోటో పాడవకుండా ఉండేందుకు Hybrid AI + HTML5 Canvas Compositing ఆర్కిటెక్చర్ ప్రతిపాదించబడింది.
+
 ## చివరి సంభాషణ - స్టూడెంట్ ప్రొఫైల్‌లో 'Fee Edit / Discount' ఆప్షన్ మరియు మోడల్ పునరుద్ధరణ (November 17, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   - "intaku mundu fee edit discount option undedi but ippudu kanapdatam ledu"
