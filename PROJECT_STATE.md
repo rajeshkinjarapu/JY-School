@@ -1,5 +1,25 @@
 # JY School Project State
 
+## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో మ్యాథ్ వేరియబుల్స్ (A, a, b, c) అదృశ్యమయ్యే (Invisible Font) సమస్య పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య & రిపోర్ట్:**
+  - "live preview ki print preview ki teda chudu"
+  - స్క్రీన్‌షాట్లు (`media_1794908483503_19555a14.png`, `media_1794908520362_7e0595f0.png`):
+    - Live Preview లో: `If A = [ ... ] then |adj(A^2)| = `, `det A = `, `0, \pm a, \pm b, \pm c` కనిపిస్తున్నాయి.
+    - Print Preview లో: `If     = [ ... ] then |adj(  ^2)| = `, `det    = `, `0, \pm  , \pm  , \pm  ` అని వస్తూ, కేవలం మ్యాథ్ వేరియబుల్స్ `A`, `a`, `b`, `c` పూర్తిగా మాయమై ఖాళీ స్థలాలుగా కనిపిస్తున్నాయి.
+- **సమస్య విశ్లేషణ:**
+  1. KaTeX లో మ్యాథ్ వేరియబుల్స్ `<span class="mord mathnormal">` మరియు `KaTeX_Math-Italic` ఫాంట్ ఉపయోగిస్తాయి.
+  2. ఈ ఫాంట్‌కి `font-display: block` ఉండటం వల్ల, ప్రింట్ ఐఫ్రేమ్‌లో ఫాంట్ డౌన్‌లోడ్ కాకముందే ప్రింట్ అవ్వడం వల్ల బ్రౌజర్ Invisible Glyph (FOIT) రెండర్ చేసింది.
+  3. `.katex .mathnormal` కి ఎటువంటి సెరిఫ్ ఫాల్‌బ్యాక్ ఫాంట్ లేకపోవడం వల్ల ఫాంట్ లోడింగ్ ఆలస్యమైనప్పుడు అక్షరాలు కనిపించకుండా పోయాయి.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **[`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):**
+     - ఐఫ్రేమ్‌కి `<base href="${window.location.origin}/">` జోడించాము.
+     - KaTeX 0.17.0 మ్యాచింగ్ CSS లింక్ చేసాము.
+     - పేరెంట్ డాక్యుమెంట్ లోడ్ చేసిన అన్ని ఫాంట్లను నేరుగా ఐఫ్రేమ్ ఫాంట్ రిజిస్ట్రీకి కాపీ చేసాము (`document.fonts.forEach(...)`).
+     - `await printDocument.fonts.ready` ద్వారా అన్ని ఫాంట్లు రెండర్ అయ్యేంతవరకు ప్రింట్‌ను హోల్డ్ చేసి పక్కాగా ఓపెన్ అయ్యేలా చేసాము.
+     - `.katex .mathnormal` మరియు `.katex .mathit` లకు `font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;` తో పాటు `visibility: visible !important; opacity: 1 !important;` ఫాల్‌బ్యాక్ చేర్చాము.
+  2. **[`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):**
+     - ప్రింట్ మరియు నార్మల్ CSS రెండింటిలోనూ `.katex .mathnormal`, `.katex .mathit`, `.katex .mord` లకు గట్టి ఫాల్‌బ్యాక్ ఫాంట్లను పొందుపరిచాము.
+
 ## చివరి సంభాషణ - MCQ Paper Generator బహుళ పేజీల ప్రింటింగ్ & ప్రశ్నలు/ఫార్ములాలు పేజీ అంచుల్లో కట్ అవ్వకుండా పూర్తి పరిష్కారం (November 17, 2026)
 - **యూజర్ సమస్య & రిపోర్ట్:**
   - "question cut ayi chupistundi live preview lo perfect ga vastundi print lo ravatam ledu"

@@ -551,6 +551,25 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         }
         .katex-html {
           white-space: normal !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .katex .mathnormal {
+          font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+          font-style: italic !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .katex .mathit {
+          font-family: KaTeX_Main, 'KaTeX_Math', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+          font-style: italic !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .katex .mord {
+          font-family: KaTeX_Main, KaTeX_Math, 'TeX Gyre Schola', 'Times New Roman', serif;
+          visibility: visible !important;
+          opacity: 1 !important;
         }
         @media print {
           .katex-display {
@@ -562,6 +581,34 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .katex .base {
             white-space: normal !important;
             display: inline !important;
+          }
+          .katex-html {
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          .katex .mathnormal {
+            font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+            font-style: italic !important;
+            color: #000000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          .katex .mathit {
+            font-family: KaTeX_Main, 'KaTeX_Math', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+            font-style: italic !important;
+            color: #000000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          .katex .mord {
+            font-family: KaTeX_Main, KaTeX_Math, 'TeX Gyre Schola', 'Times New Roman', serif !important;
+            color: #000000 !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+          }
+          .katex * {
+            visibility: visible !important;
+            opacity: 1 !important;
           }
           .question-block {
             break-inside: avoid !important;

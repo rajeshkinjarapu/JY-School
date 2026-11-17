@@ -702,7 +702,7 @@ export const MCQPaperGeneratorPage = () => {
 
       const styleLinks = `
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
         ${dynamicLinks}
       `;
 
@@ -716,6 +716,7 @@ export const MCQPaperGeneratorPage = () => {
         <html>
         <head>
           <meta charset="utf-8"/>
+          <base href="${window.location.origin}/">
           <meta name="color-scheme" content="light"/>
           <title>Print - ${examName || 'Question Paper'}</title>
           ${styleLinks}
@@ -830,6 +831,7 @@ export const MCQPaperGeneratorPage = () => {
               font-size: 1.02em !important;
               white-space: normal !important;
               word-break: normal !important;
+              text-rendering: auto !important;
             }
             .katex .base {
               white-space: normal !important;
@@ -843,6 +845,33 @@ export const MCQPaperGeneratorPage = () => {
             }
             .katex-html {
               white-space: normal !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+            }
+            /* Math variables like A, B, a, b, c must NEVER be invisible */
+            .katex .mathnormal {
+              font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+              font-style: italic !important;
+              color: #000000 !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+            }
+            .katex .mathit {
+              font-family: KaTeX_Main, 'KaTeX_Math', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
+              font-style: italic !important;
+              color: #000000 !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+            }
+            .katex .mord {
+              font-family: KaTeX_Main, KaTeX_Math, 'TeX Gyre Schola', 'Times New Roman', serif !important;
+              color: #000000 !important;
+              visibility: visible !important;
+              opacity: 1 !important;
+            }
+            .katex * {
+              visibility: visible !important;
+              opacity: 1 !important;
             }
           </style>
         </head>
@@ -855,7 +884,16 @@ export const MCQPaperGeneratorPage = () => {
       `);
     printDocument.close();
 
-    setTimeout(() => {
+    // Copy loaded fonts from parent document to ensure all KaTeX glyphs are instantly available
+    if (document.fonts) {
+      document.fonts.forEach(font => {
+        try {
+          (printDocument as any).fonts.add(font);
+        } catch (e) {}
+      });
+    }
+
+    const triggerPrint = () => {
       try {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
@@ -867,9 +905,19 @@ export const MCQPaperGeneratorPage = () => {
           if (document.body.contains(iframe)) {
             document.body.removeChild(iframe);
           }
-        }, 1500);
+        }, 2000);
       }
-    }, 450);
+    };
+
+    if (printDocument.fonts && printDocument.fonts.ready) {
+      printDocument.fonts.ready.then(() => {
+        setTimeout(triggerPrint, 250);
+      }).catch(() => {
+        setTimeout(triggerPrint, 600);
+      });
+    } else {
+      setTimeout(triggerPrint, 600);
+    }
   };
 
   const toggleFullScreen = () => {
