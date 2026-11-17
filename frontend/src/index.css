@@ -281,6 +281,31 @@
     background: transparent !important;
     background-color: transparent !important;
     border-color: currentColor !important;
+    color: #000000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* MCQ Paper print: KaTeX math variables MUST be visible (A, B, a, b, c etc.) */
+  html body #a4-preview-paper .katex .mathnormal,
+  html body #a4-preview-paper .katex .mathit,
+  html body #a4-preview-paper .katex .mord,
+  html body #a4-preview-paper .katex .mbin,
+  html body #a4-preview-paper .katex .mrel,
+  html body #a4-preview-paper .katex .mopen,
+  html body #a4-preview-paper .katex .mclose,
+  html body #a4-preview-paper .katex .mpunct,
+  html body #a4-preview-paper .katex span {
+    color: #000000 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: transparent !important;
+  }
+
+  /* MCQ Paper: mcq-print-override style takes effect — make #a4-preview-paper descendants visible */
+  body:has(#mcq-print-override) #a4-preview-paper,
+  body:has(#mcq-print-override) #a4-preview-paper * {
+    visibility: visible !important;
   }
 
   /* Specific elements that can carry dark backgrounds */

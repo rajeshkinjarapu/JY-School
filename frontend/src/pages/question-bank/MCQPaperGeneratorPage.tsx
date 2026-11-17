@@ -668,282 +668,173 @@ export const MCQPaperGeneratorPage = () => {
   const handlePrint = () => {
     const paperEl = document.getElementById('a4-preview-paper');
     if (!paperEl) { window.print(); return; }
-    
-    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.classList.remove('shadow-2xl', 'min-h-[297mm]', 'w-[210mm]', 'print:w-[210mm]', 'relative');
-    cloneEl.style.boxShadow = 'none';
-    cloneEl.style.border = 'none';
-    cloneEl.style.outline = 'none';
-    cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '100%';
-    cloneEl.style.maxWidth = '100%';
-    cloneEl.style.position = 'static';
 
-    let oldIframe = document.getElementById('print-iframe');
-    if (oldIframe) { oldIframe.remove(); }
+    // Remove any previous print style override
+    const oldStyle = document.getElementById('mcq-print-override');
+    if (oldStyle) oldStyle.remove();
 
-    const iframe = document.createElement('iframe');
-    iframe.id = 'print-iframe';
-    iframe.style.position = 'fixed';
-    iframe.style.width = '210mm';
-    iframe.style.height = '1000px';
-    iframe.style.border = 'none';
-    iframe.style.left = '-10000px';
-    iframe.style.top = '0';
-    iframe.style.visibility = 'hidden';
-    document.body.appendChild(iframe);
+    // Inject print-only CSS — hide ALL UI, show ONLY the paper
+    const styleEl = document.createElement('style');
+    styleEl.id = 'mcq-print-override';
+    styleEl.textContent = `
+      @media print {
+        @page {
+          size: A4 portrait;
+          margin: 10mm 12mm 10mm 12mm;
+        }
 
-    const printDocument = iframe.contentWindow?.document;
-    if (!printDocument) { window.print(); return; }
+        /* ---- Hide everything in the page ---- */
+        body {
+          background: white !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
 
-      const dynamicLinks = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-        .map((l) => l.outerHTML)
-        .join('\n');
+        /* Hide ALL app UI elements */
+        body > *,
+        body > * > * {
+          visibility: hidden !important;
+        }
 
-      const styleLinks = `
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
-        ${dynamicLinks}
-      `;
+        /* ---- Show ONLY the paper by making it fixed/visible ---- */
+        #a4-preview-paper {
+          visibility: visible !important;
+        }
+        #a4-preview-paper * {
+          visibility: visible !important;
+        }
 
-      const styleTags = Array.from(document.querySelectorAll('style'))
-        .map(style => style.outerHTML)
-        .join('\n');
+        /* ---- Zoom reset: paper must print at 100%, not 85% ---- */
+        .dynamic-paper-scale {
+          zoom: 1 !important;
+          transform: none !important;
+          -webkit-transform: none !important;
+          transform-origin: top left !important;
+        }
 
-    printDocument.open();
-    printDocument.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8"/>
-          <base href="${window.location.origin}/">
-          <meta name="color-scheme" content="light"/>
-          <title>Print - ${examName || 'Question Paper'}</title>
-          ${styleLinks}
-          ${styleTags}
-          <style>
-            :root { color-scheme: light !important; }
-            @page { 
-              size: A4 portrait; 
-              margin: 8mm 8mm 8mm 8mm; 
-            }
-            * {
-              box-sizing: border-box !important;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-            html, body { 
-              margin: 0 !important; 
-              padding: 0 !important; 
-              width: 100% !important;
-              max-width: 100% !important;
-              background-color: #ffffff !important; 
-              background: #ffffff !important;
-              color: #000000 !important;
-              font-family: serif; 
-              height: auto !important; 
-              min-height: auto !important;
-              max-height: none !important;
-              overflow: visible !important; 
-              position: static !important;
-              box-sizing: border-box !important;
-            }
-            @media print {
-              html, body {
-                background-color: #ffffff !important; 
-                background: #ffffff !important;
-                height: auto !important; 
-                min-height: auto !important;
-                max-height: none !important;
-                overflow: visible !important; 
-                position: static !important;
-                width: 100% !important;
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-              }
-            }
-            #print-root {
-              width: 100% !important;
-              max-width: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              background-color: #ffffff !important;
-              height: auto !important; 
-              min-height: auto !important;
-              max-height: none !important;
-              overflow: visible !important; 
-              position: static !important;
-              display: block !important;
-              box-sizing: border-box !important;
-            }
-            #a4-preview-paper {
-              width: 100% !important;
-              max-width: 100% !important;
-              min-height: 0 !important;
-              height: auto !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              box-shadow: none !important;
-              border: none !important;
-              position: static !important;
-              display: block !important;
-              box-sizing: border-box !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-            }
+        /* ---- Paper root ---- */
+        #a4-preview-paper {
+          position: static !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: 0 !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-shadow: none !important;
+          border: none !important;
+          box-sizing: border-box !important;
+          background: white !important;
+        }
 
-            /* Absolute rule: questions must never be fragmented across page boundary */
-            .question-block,
-            [class*="question-block"],
-            .break-inside-avoid,
-            [class*="break-inside-avoid"] {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              break-inside: avoid-page !important;
-              position: static !important;
-              display: block !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              box-sizing: border-box !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-            }
+        /* ---- Inner content wrapper (px-8 → 0 for print) ---- */
+        #a4-preview-paper > div:first-child {
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+        }
 
-            /* Keep question text glued to options */
-            .question-text-wrapper {
-              break-after: avoid !important;
-              page-break-after: avoid !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              box-sizing: border-box !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-            }
+        /* ---- Question break rules ---- */
+        .question-block {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          position: static !important;
+          box-sizing: border-box !important;
+        }
+        .question-text-wrapper {
+          break-after: avoid !important;
+          page-break-after: avoid !important;
+          break-inside: avoid !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          box-sizing: border-box !important;
+        }
+        .question-options-container {
+          break-before: avoid !important;
+          page-break-before: avoid !important;
+          break-inside: avoid !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
+        }
+        .question-option-item {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+        }
+        .paper-header, .section-header, .paper-instructions {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+          break-after: avoid !important;
+          page-break-after: avoid !important;
+        }
 
-            /* Options container must never split across pages */
-            .question-options-container {
-              break-before: avoid !important;
-              page-break-before: avoid !important;
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              width: 100% !important;
-              max-width: 100% !important;
-              box-sizing: border-box !important;
-            }
+        /* ---- KaTeX: ALL math must be visible ---- */
+        .katex, .katex * {
+          visibility: visible !important;
+          opacity: 1 !important;
+          color: #000000 !important;
+        }
+        .katex {
+          font-size: 1em !important;
+          white-space: normal !important;
+        }
+        .katex .base { display: inline !important; white-space: normal !important; }
+        .katex-display {
+          overflow: visible !important;
+          max-width: 100% !important;
+        }
+        .katex .mathnormal {
+          font-family: KaTeX_Math, 'Times New Roman', 'Cambria Math', serif !important;
+          font-style: italic !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .katex .mathit {
+          font-family: KaTeX_Main, 'Times New Roman', 'Cambria Math', serif !important;
+          font-style: italic !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .katex .mord {
+          font-family: KaTeX_Main, KaTeX_Math, 'Times New Roman', serif !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
 
-            .question-option-item {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              min-width: 0 !important;
-              box-sizing: border-box !important;
-              word-wrap: break-word !important;
-              overflow-wrap: break-word !important;
-            }
-
-            /* Section and paper headers */
-            .paper-header,
-            .section-header,
-            .paper-instructions {
-              break-inside: avoid !important;
-              page-break-inside: avoid !important;
-              break-after: avoid !important;
-              page-break-after: avoid !important;
-              position: static !important;
-            }
-
-            .katex {
-              font-size: 1.02em !important;
-              white-space: normal !important;
-              word-break: normal !important;
-              text-rendering: auto !important;
-            }
-            .katex .base {
-              white-space: normal !important;
-              display: inline !important;
-            }
-            .katex-display {
-              overflow-x: visible !important;
-              overflow-y: visible !important;
-              max-width: 100% !important;
-              margin: 0.3em 0 !important;
-            }
-            .katex-html {
-              white-space: normal !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-            /* Math variables like A, B, a, b, c must NEVER be invisible */
-            .katex .mathnormal {
-              font-family: KaTeX_Math, 'KaTeX_Main', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
-              font-style: italic !important;
-              color: #000000 !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-            .katex .mathit {
-              font-family: KaTeX_Main, 'KaTeX_Math', 'TeX Gyre Schola', 'Times New Roman', 'Cambria Math', serif !important;
-              font-style: italic !important;
-              color: #000000 !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-            .katex .mord {
-              font-family: KaTeX_Main, KaTeX_Math, 'TeX Gyre Schola', 'Times New Roman', serif !important;
-              color: #000000 !important;
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-            .katex * {
-              visibility: visible !important;
-              opacity: 1 !important;
-            }
-          </style>
-        </head>
-        <body>
-          <div id="print-root">
-            ${cloneEl.outerHTML}
-          </div>
-        </body>
-        </html>
-      `);
-    printDocument.close();
-
-    // Copy loaded fonts from parent document to ensure all KaTeX glyphs are instantly available
-    if (document.fonts) {
-      document.fonts.forEach(font => {
-        try {
-          (printDocument as any).fonts.add(font);
-        } catch (e) {}
-      });
-    }
-
-    const triggerPrint = () => {
-      try {
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-      } catch (err) {
-        console.error('Print iframe error:', err);
-        window.print();
-      } finally {
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-        }, 2000);
+        /* ---- Global print reset ---- */
+        * {
+          box-sizing: border-box !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
       }
+    `;
+    document.head.appendChild(styleEl);
+
+    const cleanup = () => {
+      const el = document.getElementById('mcq-print-override');
+      if (el) el.remove();
     };
 
-    if (printDocument.fonts && printDocument.fonts.ready) {
-      printDocument.fonts.ready.then(() => {
-        setTimeout(triggerPrint, 250);
-      }).catch(() => {
-        setTimeout(triggerPrint, 600);
-      });
-    } else {
-      setTimeout(triggerPrint, 600);
-    }
+    // Remove style after print (or after 8s safety timeout)
+    window.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(cleanup, 8000);
+
+    // Small delay to ensure styles are applied, then print
+    // All KaTeX fonts are ALREADY loaded in this window — no font-load wait needed
+    setTimeout(() => window.print(), 150);
   };
 
   const toggleFullScreen = () => {
