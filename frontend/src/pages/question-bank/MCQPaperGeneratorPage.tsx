@@ -691,223 +691,187 @@ export const MCQPaperGeneratorPage = () => {
     }
   };
 
-  const handlePrint = () => {
-          const paperEl = document.getElementById('a4-preview-paper');
-          if (!paperEl) { window.print(); return; }
+  const handlePrint = async () => {
+    const paperEl = document.getElementById('a4-preview-paper');
+    if (!paperEl) {
+      window.print();
+      return;
+    }
 
-          // Remove any previous print style override
-          const oldStyle = document.getElementById('mcq-print-override');
-          if (oldStyle) oldStyle.remove();
+    // Clean up any previous print iframe
+    const oldIframe = document.getElementById('mcq-print-frame');
+    if (oldIframe) oldIframe.remove();
 
-    // Inject print-only CSS — hide ALL UI, show ONLY the paper with 100% unconstrained width & pagination
-    const styleEl = document.createElement('style');
-    styleEl.id = 'mcq-print-override';
-    styleEl.textContent = `
-      @media print {
-        @page {
-          size: A4 portrait;
-          margin: 8mm 8mm 8mm 8mm;
-        }
+    const iframe = document.createElement('iframe');
+    iframe.id = 'mcq-print-frame';
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    iframe.style.zIndex = '-9999';
+    document.body.appendChild(iframe);
 
-        /* Reset body and html completely */
-        html, body {
-          margin: 0 !important;
-          padding: 0 !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 100% !important;
-          height: auto !important;
-          overflow: visible !important;
-          background: #ffffff !important;
-        }
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
 
-        /* HIDE ALL UI CHROME EXPLICITLY */
-        header, nav, aside, button,
-        .PageHeader, [class*="PageHeader"],
-        .split-left,
-        .sticky,
-        .no-print,
-        [title*="Full Screen"],
-        [title*="Saved Papers"],
-        .fixed.bottom-0 {
-          display: none !important;
-        }
+    // Collect all stylesheets from current document
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(node => node.outerHTML)
+      .join('\n');
 
-        /* FORCE ALL WRAPPER / CONTAINER DIVS TO 100% FULL WIDTH AND UNCONSTRAINED SCROLL */
-        #root,
-        #root > div,
-        .flex-1,
-        .split-right,
-        .dynamic-paper-scale {
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 100% !important;
-          height: auto !important;
-          min-height: 0 !important;
-          max-height: none !important;
-          overflow: visible !important;
-          position: static !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          box-sizing: border-box !important;
-          zoom: 1 !important;
-          transform: none !important;
-          background: #ffffff !important;
-        }
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>${(examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_')}</title>
+          <base href="${window.location.origin}/">
+          <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.17.0/dist/katex.min.css">
+          ${styles}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 8mm 8mm 8mm 8mm;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              min-width: 100% !important;
+              background: #ffffff !important;
+              color: #000000 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              font-family: 'TeX Gyre Schola', 'TeXGyreSchola', serif;
+            }
+            #a4-preview-paper {
+              width: 100% !important;
+              max-width: 100% !important;
+              min-width: 100% !important;
+              height: auto !important;
+              min-height: 0 !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
+              background: #ffffff !important;
+              display: block !important;
+            }
+            #a4-preview-paper > div:first-child {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            .question-block {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              break-inside: avoid-page !important;
+              display: block !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              position: static !important;
+              box-sizing: border-box !important;
+            }
+            .question-text-wrapper {
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+              break-inside: avoid !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              box-sizing: border-box !important;
+            }
+            .question-options-container {
+              break-before: avoid !important;
+              page-break-before: avoid !important;
+              break-inside: avoid !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            .question-option-item {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              min-width: 0 !important;
+              box-sizing: border-box !important;
+            }
+            .paper-header, .section-header, .paper-instructions {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
+              break-after: avoid !important;
+              page-break-after: avoid !important;
+            }
+            .katex, .katex * {
+              visibility: visible !important;
+              opacity: 1 !important;
+              color: #000000 !important;
+            }
+            .katex {
+              font-size: 1.05em !important;
+              white-space: normal !important;
+            }
+            .katex .base {
+              display: inline !important;
+              white-space: normal !important;
+            }
+            .katex-display {
+              overflow: visible !important;
+              max-width: 100% !important;
+            }
+            * {
+              box-sizing: border-box !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+          </style>
+        </head>
+        <body>
+          <div id="a4-preview-paper">
+            ${paperEl.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    doc.close();
 
-        /* Paper root takes 100% printable A4 width */
-        #a4-preview-paper {
-          display: block !important;
-          position: static !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          min-width: 100% !important;
-          height: auto !important;
-          min-height: 0 !important;
-          max-height: none !important;
-          margin: 0 auto !important;
-          padding: 0 !important;
-          box-shadow: none !important;
-          border: none !important;
-          overflow: visible !important;
-          box-sizing: border-box !important;
-          background: #ffffff !important;
-        }
+    // Copy all loaded fonts from parent document into the iframe
+    if (document.fonts) {
+      document.fonts.forEach(font => {
+        try {
+          doc.fonts.add(font);
+        } catch (e) {}
+      });
+    }
 
-        /* Inner content wrapper: zero padding for print */
-        #a4-preview-paper > div:first-child {
-          padding: 0 !important;
-          margin: 0 !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          box-sizing: border-box !important;
-        }
-
-        /* Question break rules */
-        .question-block {
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-          break-inside: avoid-page !important;
-          display: block !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-          position: static !important;
-          box-sizing: border-box !important;
-        }
-        .question-text-wrapper {
-          break-after: avoid !important;
-          page-break-after: avoid !important;
-          break-inside: avoid !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-          box-sizing: border-box !important;
-        }
-        .question-options-container {
-          break-before: avoid !important;
-          page-break-before: avoid !important;
-          break-inside: avoid !important;
-          width: 100% !important;
-          max-width: 100% !important;
-          box-sizing: border-box !important;
-        }
-        .question-option-item {
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-          word-wrap: break-word !important;
-          overflow-wrap: break-word !important;
-          min-width: 0 !important;
-          box-sizing: border-box !important;
-        }
-        .paper-header, .section-header, .paper-instructions {
-          break-inside: avoid !important;
-          page-break-inside: avoid !important;
-          break-after: avoid !important;
-          page-break-after: avoid !important;
-        }
-
-        /* ---- KaTeX: Force local Windows System Fonts in print so Chromium NEVER drops math variables ---- */
-        .katex, .katex * {
-          visibility: visible !important;
-          opacity: 1 !important;
-          color: #000000 !important;
-        }
-        .katex {
-          font-size: 1.05em !important;
-          white-space: normal !important;
-        }
-        .katex .base { display: inline !important; white-space: normal !important; }
-        .katex-display {
-          overflow: visible !important;
-          max-width: 100% !important;
-        }
-        /* Variables (a, b, x, y, A, B, R, F, m, v, g): Times New Roman Italic ALWAYS renders in Windows/Chrome print */
-        .katex .mathnormal,
-        .katex .mathit,
-        .katex .mathdefault,
-        .katex span.mathnormal,
-        .katex span.mathit {
-          font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
-          font-style: italic !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          color: #000000 !important;
-          display: inline !important;
-        }
-        /* Ordinary symbols, numbers, operators: Times New Roman Regular */
-        .katex .mord,
-        .katex .mathrm,
-        .katex .mop,
-        .katex .mbin,
-        .katex .mrel {
-          font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-          color: #000000 !important;
-        }
-        .katex .mathbf {
-          font-family: 'Times New Roman', serif !important;
-          font-weight: bold !important;
-          font-style: normal !important;
-          color: #000000 !important;
-        }
-        .katex .boldsymbol {
-          font-family: 'Times New Roman', serif !important;
-          font-weight: bold !important;
-          font-style: italic !important;
-          color: #000000 !important;
-        }
-        .katex .mathbb {
-          font-family: 'Cambria Math', 'Times New Roman', serif !important;
-          font-weight: bold !important;
-          color: #000000 !important;
-        }
-
-        /* ---- Global print reset ---- */
-        * {
-          box-sizing: border-box !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
+    try {
+      if (doc.fonts && doc.fonts.ready) {
+        await doc.fonts.ready;
       }
-    `;
-          document.head.appendChild(styleEl);
+    } catch (e) {
+      console.warn('doc.fonts.ready wait error:', e);
+    }
 
-          const cleanup = () => {
-            const el = document.getElementById('mcq-print-override');
-            if (el) el.remove();
-          };
-
-          // Remove style after print (or after 8s safety timeout)
-          window.addEventListener('afterprint', cleanup, { once: true });
-          setTimeout(cleanup, 8000);
-
-    // Small delay to ensure styles are applied, then print
-    setTimeout(() => window.print(), 150);
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => {
+        iframe.remove();
+      }, 2000);
+    }, 250);
   };
 
         const toggleFullScreen = () => {
@@ -1396,7 +1360,6 @@ export const MCQPaperGeneratorPage = () => {
                 </button>
 
                 <button
-                  onClick={handlePrint}
                   onClick={handleDownloadPdf}
                   disabled={isDownloadingPdf}
                   className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"

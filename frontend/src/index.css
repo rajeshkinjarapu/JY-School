@@ -286,57 +286,13 @@
     opacity: 1 !important;
   }
 
-  /* MCQ Paper print: KaTeX math variables MUST be visible (A, B, a, b, c, x, y, R etc.) */
+  /* MCQ Paper print: KaTeX math variables MUST be visible */
   html body #a4-preview-paper .katex,
   html body #a4-preview-paper .katex * {
     color: #000000 !important;
     visibility: visible !important;
     opacity: 1 !important;
     background: transparent !important;
-  }
-
-  html body #a4-preview-paper .katex .mathnormal,
-  html body #a4-preview-paper .katex .mathit,
-  html body #a4-preview-paper .katex .mathdefault,
-  html body #a4-preview-paper .katex span.mathnormal,
-  html body #a4-preview-paper .katex span.mathit {
-    font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
-    font-style: italic !important;
-    color: #000000 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    display: inline !important;
-  }
-
-  html body #a4-preview-paper .katex .mord,
-  html body #a4-preview-paper .katex .mathrm,
-  html body #a4-preview-paper .katex .mop,
-  html body #a4-preview-paper .katex .mbin,
-  html body #a4-preview-paper .katex .mrel {
-    font-family: 'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important;
-    color: #000000 !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
-
-  html body #a4-preview-paper .katex .mathbf {
-    font-family: 'Times New Roman', serif !important;
-    font-weight: bold !important;
-    font-style: normal !important;
-    color: #000000 !important;
-  }
-
-  html body #a4-preview-paper .katex .boldsymbol {
-    font-family: 'Times New Roman', serif !important;
-    font-weight: bold !important;
-    font-style: italic !important;
-    color: #000000 !important;
-  }
-
-  html body #a4-preview-paper .katex .mathbb {
-    font-family: 'Cambria Math', 'Times New Roman', serif !important;
-    font-weight: bold !important;
-    color: #000000 !important;
   }
 
   /* MCQ Paper: mcq-print-override style takes effect — make #a4-preview-paper descendants visible */
