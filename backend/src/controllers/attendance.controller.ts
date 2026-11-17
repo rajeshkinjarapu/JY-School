@@ -23,7 +23,7 @@ export const getByClass = async (req: AuthRequest, res: Response, next: NextFunc
           take: 1,
         },
       },
-      orderBy: [{ classId: 'asc' }, { rollNo: 'asc' }],
+      orderBy: [{ classId: 'asc' }, { user: { name: 'asc' } }, { rollNo: 'asc' }],
     });
   } else {
     const cls = await prisma.class.findUnique({ where: { id: classId } });
@@ -38,7 +38,7 @@ export const getByClass = async (req: AuthRequest, res: Response, next: NextFunc
           take: 1,
         },
       },
-      orderBy: { rollNo: 'asc' },
+      orderBy: [{ user: { name: 'asc' } }, { rollNo: 'asc' }],
     });
   }
 

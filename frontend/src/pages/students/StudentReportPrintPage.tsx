@@ -324,7 +324,12 @@ export const StudentReportPrintPage: React.FC = () => {
       );
     }
 
-    return result;
+    // Always sort in alphabetical order (A to Z) by student name
+    return result.sort((a, b) => {
+      const nameA = (a.user?.name || a.name || '').trim();
+      const nameB = (b.user?.name || b.name || '').trim();
+      return nameA.localeCompare(nameB);
+    });
   }, [students, selectedClassId, genderFilter, statusFilter, searchQuery]);
 
   // Active columns in display order

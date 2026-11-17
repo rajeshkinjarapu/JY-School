@@ -564,7 +564,7 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
     const classStudents = await prisma.student.findMany({
       where: { classId },
       include: { user: { select: photoSelect }, class: { select: { name: true, section: true, academicYear: true } } },
-      orderBy: { rollNo: 'asc' }
+      orderBy: [{ user: { name: 'asc' } }, { rollNo: 'asc' }]
     });
     for (const s of classStudents) {
       studentMap.set(s.id, {

@@ -46,7 +46,7 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
     include: {
       students: {
         include: { user: { select: { name: true, email: true } } },
-        orderBy: { rollNo: 'asc' },
+        orderBy: [{ user: { name: 'asc' } }, { rollNo: 'asc' }],
       },
       subjects: true,
       classSubjectTeachers: {

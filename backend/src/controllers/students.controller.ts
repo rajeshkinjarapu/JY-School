@@ -25,7 +25,7 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
     const skip = (page - 1) * limit;
 
     const useCache = limit <= 100;
-    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}`;
+    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}:alpha`;
 
     if (useCache) {
       const cached = await cache.get<any>(cacheKey);
@@ -52,7 +52,10 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
           where,
           skip,
           take: limit,
-          orderBy: { rollNo: 'asc' },
+          orderBy: [
+            { user: { name: 'asc' } },
+            { rollNo: 'asc' },
+          ],
           include: {
             user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
             class: { select: { id: true, name: true, section: true } },
@@ -74,7 +77,10 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
               where,
               skip,
               take: limit,
-              orderBy: { rollNo: 'asc' },
+              orderBy: [
+                { user: { name: 'asc' } },
+                { rollNo: 'asc' },
+              ],
               include: {
                 user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
                 class: { select: { id: true, name: true, section: true } },

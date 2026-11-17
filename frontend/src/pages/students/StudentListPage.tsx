@@ -23,6 +23,15 @@ const avatarColors = [
 const getInitials = (n: string) =>
   n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
+const sortAlphabetically = (list: any[]) => {
+  if (!Array.isArray(list)) return [];
+  return [...list].sort((a, b) => {
+    const nameA = (a.user?.name || a.name || '').trim();
+    const nameB = (b.user?.name || b.name || '').trim();
+    return nameA.localeCompare(nameB);
+  });
+};
+
 // Helper for table avatars
 const StudentAvatar = ({ name, photoUrl, isActive }: { name?: string, photoUrl?: string, isActive?: boolean }) => {
   const safeName = name || "Student";
@@ -49,7 +58,10 @@ export const StudentListPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [students, setStudents] = useState<any[]>(() => {
-    try { return JSON.parse(localStorage.getItem('sl_students_cache') || '[]'); } catch { return []; }
+    try { 
+      const raw = JSON.parse(localStorage.getItem('sl_students_cache') || '[]'); 
+      return sortAlphabetically(raw);
+    } catch { return []; }
   });
   const [classes, setClasses] = useState<any[]>(() => {
     try { return JSON.parse(localStorage.getItem('sl_classes_cache') || '[]'); } catch { return []; }
@@ -85,8 +97,9 @@ export const StudentListPage: React.FC = () => {
       try {
         const cachedStudents = await DataCache.get('students');
         if (cachedStudents && cachedStudents.length > 0) {
-          setStudents(cachedStudents);
-          setTotal(cachedStudents.length > LIMIT ? cachedStudents.length : parseInt(localStorage.getItem('sl_total_cache') || '0'));
+          const sortedCached = sortAlphabetically(cachedStudents);
+          setStudents(sortedCached);
+          setTotal(sortedCached.length > LIMIT ? sortedCached.length : parseInt(localStorage.getItem('sl_total_cache') || '0'));
           setLoading(false);
         }
       } catch (_) {}
@@ -99,14 +112,15 @@ export const StudentListPage: React.FC = () => {
         params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
-      const totalCount = response.data.pagination?.total || response.data.meta?.total || data.length;
+      const sortedData = sortAlphabetically(data);
+      const totalCount = response.data.pagination?.total || response.data.meta?.total || sortedData.length;
       
-      setStudents(data);
+      setStudents(sortedData);
       setTotal(totalCount);
       
       if (!search && !classId && page === 1) {
         localStorage.setItem('sl_total_cache', String(totalCount));
-        DataCache.set('students', data);
+        DataCache.set('students', sortedData);
       }
     } catch (err: any) {
       console.error("Failed to load students:", err);
