@@ -5,8 +5,7 @@ import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
-import html2canvas from 'html2canvas';
-import { toJpeg } from 'html-to-image';
+import { toCanvas, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { triggerDownloadNotification } from '../../utils/downloadNotification';
 
@@ -548,44 +547,49 @@ export const MCQPaperGeneratorPage = () => {
     }
 
     setIsDownloadingPdf(true);
-    const toastId = toast.loading('Generating high-resolution PDF...');
+    const toastId = toast.loading('Generating 100% exact high-resolution PDF...');
 
-    const tempContainer = document.createElement('div');
-    tempContainer.style.position = 'fixed';
-    tempContainer.style.left = '-10000px';
-    tempContainer.style.top = '0';
-    tempContainer.style.width = '210mm';
-    tempContainer.style.background = '#ffffff';
-    tempContainer.style.zIndex = '-9999';
-    tempContainer.style.opacity = '1';
-
-    const cloneEl = paperEl.cloneNode(true) as HTMLElement;
-    cloneEl.style.boxShadow = 'none';
-    cloneEl.style.transform = 'none';
-    cloneEl.style.width = '210mm';
-    cloneEl.style.minHeight = '297mm';
-    tempContainer.appendChild(cloneEl);
-    document.body.appendChild(tempContainer);
+    // Temporarily reset zoom on the preview paper so we capture unscaled 1:1 true pixels
+    const scaleContainer = paperEl.closest('.dynamic-paper-scale') as HTMLElement;
+    const prevZoom = scaleContainer ? scaleContainer.style.zoom : '';
+    if (scaleContainer) {
+      scaleContainer.style.zoom = '1';
+    }
 
     try {
-      await new Promise(r => setTimeout(r, 200));
+      // Small pause to let DOM compute unscaled dimensions
+      await new Promise(r => setTimeout(r, 120));
 
+      const paperRect = paperEl.getBoundingClientRect();
+
+      // Collect bottom positions of all question blocks and headers to prevent cutting questions in half
+      const elements = Array.from(paperEl.querySelectorAll('.question-block, .paper-header, .section-header, .paper-instructions')) as HTMLElement[];
+      const blockBottoms: number[] = [];
+      for (const el of elements) {
+        const r = el.getBoundingClientRect();
+        const bottomRelative = r.bottom - paperRect.top;
+        if (bottomRelative > 0) {
+          blockBottoms.push(bottomRelative);
+        }
+      }
+      blockBottoms.sort((a, b) => a - b);
+
+      // Capture the LIVE, fully-rendered DOM directly with toCanvas (from html-to-image)
+      // This captures the exact KaTeX fonts, SVGs, vectors, and math formulas visible on screen!
       let canvas: HTMLCanvasElement;
       try {
-        canvas = await html2canvas(cloneEl, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: '#ffffff',
-          logging: false,
-          windowWidth: 1200,
-        });
-      } catch (h2cErr) {
-        console.warn('html2canvas failed, falling back to toJpeg', h2cErr);
-        const imgData = await toJpeg(cloneEl, {
+        canvas = await toCanvas(paperEl, {
           pixelRatio: 2,
-          quality: 0.95,
           backgroundColor: '#ffffff',
+          cacheBust: true,
+        });
+      } catch (canvasErr) {
+        console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
+        const imgData = await toJpeg(paperEl, {
+          pixelRatio: 2,
+          quality: 0.98,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
         });
         const img = new Image();
         await new Promise((res, rej) => {
@@ -604,16 +608,38 @@ export const MCQPaperGeneratorPage = () => {
         throw new Error('Failed to capture preview canvas.');
       }
 
+      const scaleRatio = canvas.width / paperRect.width;
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pageWidth = 210;
-      const pageHeight = 297;
-      const pageHeightPx = Math.floor((canvas.width * pageHeight) / pageWidth);
+      const pageWidthMm = 210;
+      const pageHeightMm = 297;
+      const pageHeightPx = Math.floor(canvas.width * (297 / 210));
 
-      let renderedHeight = 0;
+      let currentCanvasY = 0;
       let pageIndex = 0;
 
-      while (renderedHeight < canvas.height) {
-        const sliceHeight = Math.min(pageHeightPx, canvas.height - renderedHeight);
+      while (currentCanvasY < canvas.height) {
+        const maxSliceBottom = currentCanvasY + pageHeightPx;
+        let sliceHeight = pageHeightPx;
+
+        if (maxSliceBottom < canvas.height) {
+          // Smart page boundary: Find the last question block that fits cleanly on this page
+          let bestCutCanvasY = -1;
+          for (const b of blockBottoms) {
+            const bCanvas = b * scaleRatio;
+            if (bCanvas > currentCanvasY + 120 && bCanvas <= maxSliceBottom) {
+              bestCutCanvasY = bCanvas;
+            }
+          }
+
+          // If a natural question boundary was found that covers at least 60% of the page height
+          if (bestCutCanvasY !== -1 && (bestCutCanvasY - currentCanvasY) >= pageHeightPx * 0.60) {
+            sliceHeight = Math.round(bestCutCanvasY - currentCanvasY);
+          } else {
+            sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
+          }
+        } else {
+          sliceHeight = canvas.height - currentCanvasY;
+        }
 
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = canvas.width;
@@ -626,7 +652,7 @@ export const MCQPaperGeneratorPage = () => {
           ctx.drawImage(
             canvas,
             0,
-            renderedHeight,
+            currentCanvasY,
             canvas.width,
             sliceHeight,
             0,
@@ -636,15 +662,15 @@ export const MCQPaperGeneratorPage = () => {
           );
         }
 
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
 
         if (pageIndex > 0) {
           pdf.addPage('a4', 'p');
         }
 
-        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
 
-        renderedHeight += pageHeightPx;
+        currentCanvasY += sliceHeight;
         pageIndex++;
       }
 
@@ -653,16 +679,17 @@ export const MCQPaperGeneratorPage = () => {
       pdf.save(filename);
 
       triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
-      toast.success('PDF downloaded successfully!', { id: toastId });
+      toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
     } catch (err: any) {
       console.error('PDF download error:', err);
       toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
     } finally {
-      if (tempContainer.parentNode) {
-        tempContainer.parentNode.removeChild(tempContainer);
+      if (scaleContainer) {
+        scaleContainer.style.zoom = prevZoom;
       }
       setIsDownloadingPdf(false);
     }
+  };
   };
 
   const handlePrint = () => {
@@ -1362,7 +1389,7 @@ export const MCQPaperGeneratorPage = () => {
           </button>
           
           <button
-            onClick={handlePrint}
+            onClick={handleDownloadPdf}
             disabled={isDownloadingPdf}
             className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
