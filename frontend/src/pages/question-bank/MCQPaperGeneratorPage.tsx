@@ -690,7 +690,6 @@ export const MCQPaperGeneratorPage = () => {
       setIsDownloadingPdf(false);
     }
   };
-  };
 
   const handlePrint = () => {
     const paperEl = document.getElementById('a4-preview-paper');
@@ -700,72 +699,96 @@ export const MCQPaperGeneratorPage = () => {
     const oldStyle = document.getElementById('mcq-print-override');
     if (oldStyle) oldStyle.remove();
 
-    // Inject print-only CSS — hide ALL UI, show ONLY the paper
+    // Inject print-only CSS — hide ALL UI, show ONLY the paper with 100% unconstrained width & pagination
     const styleEl = document.createElement('style');
     styleEl.id = 'mcq-print-override';
     styleEl.textContent = `
       @media print {
         @page {
           size: A4 portrait;
-          margin: 10mm 12mm 10mm 12mm;
+          margin: 8mm 8mm 8mm 8mm;
         }
 
-        /* ---- Hide everything in the page ---- */
-        body {
-          background: white !important;
+        /* Reset body and html completely */
+        html, body {
           margin: 0 !important;
           padding: 0 !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+          background: #ffffff !important;
         }
 
-        /* Hide ALL app UI elements */
-        body > *,
-        body > * > * {
-          visibility: hidden !important;
+        /* HIDE ALL UI CHROME EXPLICITLY */
+        header, nav, aside, button,
+        .PageHeader, [class*="PageHeader"],
+        .split-left,
+        .sticky,
+        .no-print,
+        [title*="Full Screen"],
+        [title*="Saved Papers"],
+        .fixed.bottom-0 {
+          display: none !important;
         }
 
-        /* ---- Show ONLY the paper by making it fixed/visible ---- */
-        #a4-preview-paper {
-          visibility: visible !important;
-        }
-        #a4-preview-paper * {
-          visibility: visible !important;
-        }
-
-        /* ---- Zoom reset: paper must print at 100%, not 85% ---- */
+        /* FORCE ALL WRAPPER / CONTAINER DIVS TO 100% FULL WIDTH AND UNCONSTRAINED SCROLL */
+        #root,
+        #root > div,
+        .flex-1,
+        .split-right,
         .dynamic-paper-scale {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-width: 100% !important;
+          height: auto !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          overflow: visible !important;
+          position: static !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          box-sizing: border-box !important;
           zoom: 1 !important;
           transform: none !important;
-          -webkit-transform: none !important;
-          transform-origin: top left !important;
+          background: #ffffff !important;
         }
 
-        /* ---- Paper root ---- */
+        /* Paper root takes 100% printable A4 width */
         #a4-preview-paper {
+          display: block !important;
           position: static !important;
           width: 100% !important;
           max-width: 100% !important;
-          min-height: 0 !important;
+          min-width: 100% !important;
           height: auto !important;
-          margin: 0 !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          margin: 0 auto !important;
           padding: 0 !important;
           box-shadow: none !important;
           border: none !important;
+          overflow: visible !important;
           box-sizing: border-box !important;
-          background: white !important;
+          background: #ffffff !important;
         }
 
-        /* ---- Inner content wrapper (px-8 → 0 for print) ---- */
+        /* Inner content wrapper: zero padding for print */
         #a4-preview-paper > div:first-child {
-          padding-left: 0 !important;
-          padding-right: 0 !important;
+          padding: 0 !important;
+          margin: 0 !important;
           width: 100% !important;
+          max-width: 100% !important;
           box-sizing: border-box !important;
         }
 
-        /* ---- Question break rules ---- */
+        /* Question break rules */
         .question-block {
           break-inside: avoid !important;
           page-break-inside: avoid !important;
+          break-inside: avoid-page !important;
           display: block !important;
           width: 100% !important;
           max-width: 100% !important;
@@ -807,21 +830,6 @@ export const MCQPaperGeneratorPage = () => {
           page-break-after: avoid !important;
         }
 
-        /* ---- KaTeX: ALL math must be visible ---- */
-        .katex, .katex * {
-          visibility: visible !important;
-          opacity: 1 !important;
-          color: #000000 !important;
-        }
-        .katex {
-          font-size: 1em !important;
-          white-space: normal !important;
-        }
-        .katex .base { display: inline !important; white-space: normal !important; }
-        .katex-display {
-          overflow: visible !important;
-          max-width: 100% !important;
-        }
         /* ---- KaTeX: Force local Windows System Fonts in print so Chromium NEVER drops math variables ---- */
         .katex, .katex * {
           visibility: visible !important;
@@ -899,7 +907,6 @@ export const MCQPaperGeneratorPage = () => {
     setTimeout(cleanup, 8000);
 
     // Small delay to ensure styles are applied, then print
-    // All KaTeX fonts are ALREADY loaded in this window — no font-load wait needed
     setTimeout(() => window.print(), 150);
   };
 

@@ -345,6 +345,19 @@
     visibility: visible !important;
   }
 
+  /* Ensure MCQ paper container expands to full A4 width and unconstrained multi-page height in print */
+  .split-right,
+  .dynamic-paper-scale {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
   /* Specific elements that can carry dark backgrounds */
   html, body, #root,
   .a4-paper, .a4-paper *,
