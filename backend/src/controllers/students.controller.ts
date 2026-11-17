@@ -14,6 +14,7 @@ import path from 'path';
 import fs from 'fs';
 import { clearDashboardCache } from './dashboard.controller';
 import { createSystemNotification } from './notifications.controller';
+import { sortStudentsClassWiseAndAlphabetical } from '../utils/sortClasses';
 
 export const getAll = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -25,7 +26,7 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
     const skip = (page - 1) * limit;
 
     const useCache = limit <= 100;
-    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}:alpha`;
+    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}:class_alpha_v4`;
 
     if (useCache) {
       const cached = await cache.get<any>(cacheKey);
@@ -47,22 +48,36 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
     let students: any[] = [];
     let total = 0;
     try {
-      [students, total] = await Promise.all([
-        prisma.student.findMany({
+      if (!classId) {
+        // When viewing all classes, fetch matching students and sort class-wise (Nursery -> 10th) + alphabetical (A-Z)
+        const allStudents = await prisma.student.findMany({
           where,
-          skip,
-          take: limit,
-          orderBy: [
-            { user: { name: 'asc' } },
-            { rollNo: 'asc' },
-          ],
           include: {
             user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
             class: { select: { id: true, name: true, section: true } },
           },
-        }),
-        prisma.student.count({ where }),
-      ]);
+        });
+        const sorted = sortStudentsClassWiseAndAlphabetical(allStudents);
+        total = sorted.length;
+        students = sorted.slice(skip, skip + limit);
+      } else {
+        [students, total] = await Promise.all([
+          prisma.student.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: [
+              { user: { name: 'asc' } },
+              { rollNo: 'asc' },
+            ],
+            include: {
+              user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+              class: { select: { id: true, name: true, section: true } },
+            },
+          }),
+          prisma.student.count({ where }),
+        ]);
+      }
     } catch (fetchErr: any) {
       if (fetchErr?.message?.includes('childId') || fetchErr?.message?.includes('apaarId')) {
         try {
@@ -72,22 +87,35 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
             CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
             CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
           `);
-          [students, total] = await Promise.all([
-            prisma.student.findMany({
+          if (!classId) {
+            const allStudents = await prisma.student.findMany({
               where,
-              skip,
-              take: limit,
-              orderBy: [
-                { user: { name: 'asc' } },
-                { rollNo: 'asc' },
-              ],
               include: {
                 user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
                 class: { select: { id: true, name: true, section: true } },
               },
-            }),
-            prisma.student.count({ where }),
-          ]);
+            });
+            const sorted = sortStudentsClassWiseAndAlphabetical(allStudents);
+            total = sorted.length;
+            students = sorted.slice(skip, skip + limit);
+          } else {
+            [students, total] = await Promise.all([
+              prisma.student.findMany({
+                where,
+                skip,
+                take: limit,
+                orderBy: [
+                  { user: { name: 'asc' } },
+                  { rollNo: 'asc' },
+                ],
+                include: {
+                  user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true, isActive: true } },
+                  class: { select: { id: true, name: true, section: true } },
+                },
+              }),
+              prisma.student.count({ where }),
+            ]);
+          }
         } catch (retryErr) {
           throw retryErr;
         }

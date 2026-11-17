@@ -23,12 +23,42 @@ const avatarColors = [
 const getInitials = (n: string) =>
   n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase();
 
-const sortAlphabetically = (list: any[]) => {
+const getClassRank = (name: string = ''): number => {
+  if (!name) return 999;
+  const lower = name.toLowerCase().trim();
+  if (lower.includes('nursery') || lower.includes('nursary') || lower.includes('nur') || lower.includes('pre-kg') || lower.includes('playgroup')) return 1;
+  if (lower.includes('pp1') || lower.includes('pp-1') || lower.includes('lkg') || lower.includes('l.k.g') || lower.includes('pre-primary 1')) return 2;
+  if (lower.includes('pp2') || lower.includes('pp-2') || lower.includes('ukg') || lower.includes('u.k.g') || lower.includes('pre-primary 2')) return 3;
+  const match = lower.match(/(\d+)/);
+  if (match) {
+    return 10 + parseInt(match[1], 10);
+  }
+  return 999;
+};
+
+const sortStudentsClassWiseAndAlphabetical = (list: any[]) => {
   if (!Array.isArray(list)) return [];
   return [...list].sort((a, b) => {
+    const classA = a.class || {};
+    const classB = b.class || {};
+    const classNameA = classA.name || a.className || '';
+    const classNameB = classB.name || b.className || '';
+
+    const rankA = getClassRank(classNameA);
+    const rankB = getClassRank(classNameB);
+    if (rankA !== rankB) return rankA - rankB;
+
+    const secA = classA.section || (classNameA.includes('-') ? classNameA.split('-')[1]?.trim() : '') || '';
+    const secB = classB.section || (classNameB.includes('-') ? classNameB.split('-')[1]?.trim() : '') || '';
+    const secComp = secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+    if (secComp !== 0) return secComp;
+
     const nameA = (a.user?.name || a.name || '').trim();
     const nameB = (b.user?.name || b.name || '').trim();
-    return nameA.localeCompare(nameB);
+    const nameComp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    if (nameComp !== 0) return nameComp;
+
+    return (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true });
   });
 };
 
@@ -60,7 +90,7 @@ export const StudentListPage: React.FC = () => {
   const [students, setStudents] = useState<any[]>(() => {
     try { 
       const raw = JSON.parse(localStorage.getItem('sl_students_cache') || '[]'); 
-      return sortAlphabetically(raw);
+      return sortStudentsClassWiseAndAlphabetical(raw);
     } catch { return []; }
   });
   const [classes, setClasses] = useState<any[]>(() => {
@@ -97,7 +127,7 @@ export const StudentListPage: React.FC = () => {
       try {
         const cachedStudents = await DataCache.get('students');
         if (cachedStudents && cachedStudents.length > 0) {
-          const sortedCached = sortAlphabetically(cachedStudents);
+          const sortedCached = sortStudentsClassWiseAndAlphabetical(cachedStudents);
           setStudents(sortedCached);
           setTotal(sortedCached.length > LIMIT ? sortedCached.length : parseInt(localStorage.getItem('sl_total_cache') || '0'));
           setLoading(false);
@@ -112,7 +142,7 @@ export const StudentListPage: React.FC = () => {
         params: { search, classId, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
-      const sortedData = sortAlphabetically(data);
+      const sortedData = sortStudentsClassWiseAndAlphabetical(data);
       const totalCount = response.data.pagination?.total || response.data.meta?.total || sortedData.length;
       
       setStudents(sortedData);

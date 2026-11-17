@@ -324,11 +324,42 @@ export const StudentReportPrintPage: React.FC = () => {
       );
     }
 
-    // Always sort in alphabetical order (A to Z) by student name
+    // Helper for class rank (Nursery -> 10th)
+    const getClassRank = (name: string = ''): number => {
+      if (!name) return 999;
+      const lower = name.toLowerCase().trim();
+      if (lower.includes('nursery') || lower.includes('nursary') || lower.includes('nur') || lower.includes('pre-kg') || lower.includes('playgroup')) return 1;
+      if (lower.includes('pp1') || lower.includes('pp-1') || lower.includes('lkg') || lower.includes('l.k.g') || lower.includes('pre-primary 1')) return 2;
+      if (lower.includes('pp2') || lower.includes('pp-2') || lower.includes('ukg') || lower.includes('u.k.g') || lower.includes('pre-primary 2')) return 3;
+      const match = lower.match(/(\d+)/);
+      if (match) {
+        return 10 + parseInt(match[1], 10);
+      }
+      return 999;
+    };
+
+    // Sort class-wise first (Nursery -> 10th) and within each class alphabetically (A to Z)
     return result.sort((a, b) => {
+      const classA = a.class || {};
+      const classB = b.class || {};
+      const classNameA = classA.name || a.className || '';
+      const classNameB = classB.name || b.className || '';
+
+      const rankA = getClassRank(classNameA);
+      const rankB = getClassRank(classNameB);
+      if (rankA !== rankB) return rankA - rankB;
+
+      const secA = classA.section || (classNameA.includes('-') ? classNameA.split('-')[1]?.trim() : '') || '';
+      const secB = classB.section || (classNameB.includes('-') ? classNameB.split('-')[1]?.trim() : '') || '';
+      const secComp = secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+      if (secComp !== 0) return secComp;
+
       const nameA = (a.user?.name || a.name || '').trim();
       const nameB = (b.user?.name || b.name || '').trim();
-      return nameA.localeCompare(nameB);
+      const nameComp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+      if (nameComp !== 0) return nameComp;
+
+      return (a.rollNo || '').localeCompare(b.rollNo || '', undefined, { numeric: true });
     });
   }, [students, selectedClassId, genderFilter, statusFilter, searchQuery]);
 

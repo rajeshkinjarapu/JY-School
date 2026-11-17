@@ -75,3 +75,38 @@ export const sortClasses = <T extends { name?: string; section?: string | null }
   });
 };
 
+export const sortStudentsClassWiseAndAlphabetical = <T extends any>(students: T[]): T[] => {
+  if (!Array.isArray(students)) return [];
+  return [...students].sort((a: any, b: any) => {
+    const classA = a.class || {};
+    const classB = b.class || {};
+    const classNameA = classA.name || a.className || '';
+    const classNameB = classB.name || b.className || '';
+
+    const rankA = getClassOrderIndex(classNameA);
+    const rankB = getClassOrderIndex(classNameB);
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    const secA = classA.section || (classNameA.includes('-') ? classNameA.split('-')[1]?.trim() : '') || '';
+    const secB = classB.section || (classNameB.includes('-') ? classNameB.split('-')[1]?.trim() : '') || '';
+    const secComp = secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+    if (secComp !== 0) {
+      return secComp;
+    }
+
+    const nameA = (a.user?.name || a.name || a.studentName || '').trim();
+    const nameB = (b.user?.name || b.name || b.studentName || '').trim();
+    const nameComp = nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    if (nameComp !== 0) {
+      return nameComp;
+    }
+
+    const rollA = (a.rollNo || '').trim();
+    const rollB = (b.rollNo || '').trim();
+    return rollA.localeCompare(rollB, undefined, { numeric: true });
+  });
+};
+
+
