@@ -1,5 +1,42 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator A4 ప్రింటింగ్ & గణిత/ఫిజిక్స్ ఫార్ములాలు కట్ కాకుండా పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య & రిపోర్ట్:**
+  - "print preview lo chupistunnattu print teesaka paper meda ravatam ledu formulas cut avutunnayi"
+  - స్క్రీన్‌షాట్ (`media_1794905357077_604d2455.jpg`): లైవ్ ప్రివ్యూలో బాగానే ఉన్నా పేపర్ ప్రింట్ తీసినప్పుడు క్వశ్చన్లు మరియు ఫార్ములాలు (`\vec`, `\hat`, `\sqrt`, `\frac`) కుడి అంచున కట్ అవుతున్నాయి.
+- **సమస్య విశ్లేషణ:**
+  1. `@page { margin: 0; }` మరియు `width: 210mm` వల్ల ఫిజికల్ ప్రింటర్ హార్డ్‌వేర్ మార్జిన్ పరిధిలోకి వెళ్లి పేజీ అంచుల్లో టెక్స్ట్ కట్ అయ్యింది.
+  2. KaTeX డీఫాల్ట్‌గా `.base` కి `white-space: nowrap` పెట్టడం వల్ల పొడవైన ఫార్ములాలు లైన్ చివర వద్ద మడవలేక బయటకు చొచ్చుకుపోయాయి.
+  3. కాంప్లెక్స్ వెక్టార్ ఆప్షన్లను 4 కాలమ్స్ (`grid-cols-4`) లోకి ఇరికించడం వల్ల కుడి వైపు ఆప్షన్లు కట్ అయ్యాయి.
+- **పూర్తయిన పనులు & మార్పులు:**
+  1. **ప్రింట్ మార్జిన్లు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+     - `@page { size: A4 portrait; margin: 8mm 10mm; }` మరియు `width: 100% !important; max-width: 100% !important;` అమర్చాము.
+     - `printDocument.open()`, `doc.write()`, `setTimeout` తో పక్కా ప్రింటింగ్ ఇంజిన్ అమలు చేసాము.
+  2. **KaTeX స్మార్ట్ ర్యాపింగ్ ([`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+     - `.katex .base { white-space: normal !important; display: inline !important; }` ద్వారా ఫార్ములాలు ఆపరేటర్ల వద్ద తర్వాతి లైన్‌కు మడిచేలా చేసాము.
+     - `.katex-display { overflow: visible !important; }` చేసాము.
+  3. **కాంప్లెక్స్ మ్యాథ్ ఆప్షన్స్ స్పేసింగ్:**
+     - ఫార్ములాలు ఉన్నప్పుడు ఆప్షన్లకు తగినంత స్థలం ఇచ్చేలా స్మార్ట్ 2x2 లేఅవుట్ మరియు `min-w-0` ఫ్లెక్స్ ప్రొటెక్షన్ చేర్చాము.
+
+
+## చివరి సంభాషణ - Cartesia AI వాయిస్ జనరేషన్ వ్యవధి & లిమిట్స్ వివరణ (November 17, 2026)
+- **యూజర్ ప్రశ్న:** "idi enni nimishala voice generate cheyochu limit enta"
+- **వివరణ:**
+  1. Cartesia AI లో 1 అక్షరం = 1 క్రెడిట్. 1 నిమిషం ప్రసంగానికి దాదాపు 750 నుండి 800 క్రెడిట్స్ అవసరం.
+  2. Free Plan లో 20,000 క్రెడిట్లు ఉంటాయి (సుమారు 25 - 27 నిమిషాల ఆడియో).
+  3. Pro Plan ($5/mo) లో 100,000 క్రెడిట్లు ఉంటాయి (సుమారు 133 నిమిషాలు / 2 గంటల 15 నిమిషాలు).
+  4. ఒకే రిక్వెస్ట్‌లో దాదాపు 10,000 నుండి 20,000 అక్షరాల వరకు ఒకేసారి ఆడియోగా మార్చవచ్చు.
+
+
+## చివరి సంభాషణ - Cartesia AI API Key పరిశీలన & పూర్తి వివరాల విశ్లేషణ (November 17, 2026)
+- **యూజర్ అందించిన API Key:** `sk_car_VmJaxwjhRyrkvLUCRip9TZ`
+- **యూజర్ కోరిక:** API కీని పరిశీలించి, దీని పూర్తి వివరాలను తెలియజేయడం.
+- **విశ్లేషణ:**
+  1. ఇది **Cartesia AI** (https://cartesia.ai) ప్లాట్‌ఫామ్‌కు చెందిన **Standard Production API Key**.
+  2. ఇది Text-to-Speech (Sonic 3.6, Sonic Multilingual), Voice Cloning, ఆడియో జనరేషన్ మరియు వాయిస్ లైబ్రరీ కోసం ఉపయోగించబడుతుంది.
+  3. కీ లైవ్ వాలిడేషన్ మరియు వాయిస్‌లను తనిఖీ చేయడానికి [`check_cartesia_key.js`](file:///d:/JY%20School/JY-School-main/check_cartesia_key.js) స్క్రిప్ట్‌ను రూపొందించాము.
+
+
 ## చివరి సంభాషణ - తరగతుల వారీగా (Class-wise: Nursery ➔ 10th) మరియు ప్రతి తరగతిలో ఆల్ఫాబెటికల్ (A to Z) ఆర్డర్ అమలు (November 17, 2026)
 - **యూజర్ కోరిక & రిపోర్ట్:**
   - "alphabetical order lo vachindi but class wise ga ravali"

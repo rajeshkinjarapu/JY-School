@@ -675,7 +675,8 @@ export const MCQPaperGeneratorPage = () => {
     cloneEl.style.border = 'none';
     cloneEl.style.outline = 'none';
     cloneEl.style.minHeight = '0';
-    cloneEl.style.width = '210mm';
+    cloneEl.style.width = '100%';
+    cloneEl.style.maxWidth = '100%';
 
     let oldIframe = document.getElementById('print-iframe');
     if (oldIframe) { oldIframe.remove(); }
@@ -707,7 +708,8 @@ export const MCQPaperGeneratorPage = () => {
         .map(style => style.outerHTML)
         .join('\n');
 
-      printDocument.write(`
+    printDocument.open();
+    printDocument.write(`
         <!DOCTYPE html>
         <html>
         <head>
@@ -718,7 +720,15 @@ export const MCQPaperGeneratorPage = () => {
           ${styleTags}
           <style>
             :root { color-scheme: light !important; }
-            @page { margin: 0; size: A4; }
+            @page { 
+              size: A4 portrait; 
+              margin: 8mm 10mm; 
+            }
+            * {
+              box-sizing: border-box !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
             html, body { 
               margin: 0; padding: 0; 
               background-color: #ffffff !important; 
@@ -737,11 +747,43 @@ export const MCQPaperGeneratorPage = () => {
               }
             }
             #print-root {
-              width: 210mm;
-              margin: 0 auto;
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
               background-color: #ffffff !important;
-              height: auto !important;
+              height: auto !important; 
               overflow: visible !important; 
+            }
+            #a4-preview-paper {
+              width: 100% !important;
+              max-width: 100% !important;
+              min-height: 0 !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+              border: none !important;
+            }
+            .katex {
+              font-size: 1.02em !important;
+              white-space: normal !important;
+              word-break: normal !important;
+            }
+            .katex .base {
+              white-space: normal !important;
+              display: inline !important;
+            }
+            .katex-display {
+              overflow-x: visible !important;
+              overflow-y: visible !important;
+              max-width: 100% !important;
+              margin: 0.4em 0 !important;
+            }
+            .katex-html {
+              white-space: normal !important;
+            }
+            .break-inside-avoid {
+              break-inside: avoid !important;
+              page-break-inside: avoid !important;
             }
           </style>
         </head>
@@ -754,13 +796,21 @@ export const MCQPaperGeneratorPage = () => {
       `);
     printDocument.close();
 
-    iframe.onload = () => {
-      setTimeout(() => {
+    setTimeout(() => {
+      try {
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
-        setTimeout(() => iframe.remove(), 1000);
-      }, 500);
-    };
+      } catch (err) {
+        console.error('Print iframe error:', err);
+        window.print();
+      } finally {
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1500);
+      }
+    }, 450);
   };
 
   const toggleFullScreen = () => {

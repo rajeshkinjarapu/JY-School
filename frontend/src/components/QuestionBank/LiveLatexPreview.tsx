@@ -298,15 +298,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const numStr = qNumMatch2[1];
               const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
               return (
-                <div className={`break-inside-avoid flex whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                  <strong className="flex-shrink-0 w-10 text-left">{numStr}.</strong>
-                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                <div className={`break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                  <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
+                  <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
               );
             }
             return (
               <div 
-                className={`break-inside-avoid whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
+                className={`break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }} 
               />
             );
@@ -381,21 +381,26 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               estimateVisualLength(optD)
             );
             
-            const singleLineLimit = isDoubleColumn ? 8 : 17;
-            const twoByTwoLimit = isDoubleColumn ? 18 : 38;
+            // Check if options contain math notation that needs adequate column width
+            const allOptsCombined = optA + optB + optC + optD;
+            const hasComplexMath = /[\\\$]/.test(allOptsCombined) && 
+              /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_)/.test(allOptsCombined);
+
+            const singleLineLimit = isDoubleColumn ? 6 : (hasComplexMath ? 8 : 14);
+            const twoByTwoLimit = isDoubleColumn ? 16 : 34;
 
             let optionsLayout = '';
             if (forcedLayout === '1x4') {
               optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
             } else if (forcedLayout === '2x2') {
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+              optionsLayout = 'grid grid-cols-2 w-full gap-x-3 gap-y-0.5';
             } else if (forcedLayout === '1x1') {
               optionsLayout = 'flex flex-col w-full gap-0.5';
             } else {
               if (maxLen <= singleLineLimit) {
                 optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
               } else if (maxLen <= twoByTwoLimit) {
-                optionsLayout = 'grid grid-cols-2 w-full gap-x-2 gap-y-0.5';
+                optionsLayout = 'grid grid-cols-2 w-full gap-x-3 gap-y-0.5';
               } else {
                 optionsLayout = 'flex flex-col w-full gap-0.5';
               }
@@ -407,19 +412,19 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             return (
               <div className={`break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="mb-0.5 flex whitespace-pre-wrap">
+                <div className="mb-0.5 flex items-start whitespace-pre-wrap">
                   {qNumStr ? (
-                    <strong className="flex-shrink-0 w-10 text-left">{qNumStr}.</strong>
+                    <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
                   ) : (
-                    <div className="flex-shrink-0 w-10"></div>
+                    <div className="flex-shrink-0 w-8 md:w-9"></div>
                   )}
-                  <div className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
-                <div className={`ml-10 pr-4 ${optionsLayout}`}>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="flex items-start whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                <div className={`ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
+                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                  <div className="flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
                 </div>
               </div>
             );
@@ -515,21 +520,37 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       )}
       <style>{`
         .katex-display {
-          overflow-x: auto;
-          overflow-y: hidden;
+          overflow-x: visible !important;
+          overflow-y: visible !important;
           max-width: 100%;
-          margin: 0.5em 0 !important;
+          margin: 0.4em 0 !important;
         }
         .katex {
+          font-size: 1.02em !important;
           white-space: normal !important;
-          word-break: break-word;
+          word-break: normal !important;
+        }
+        .katex .base {
+          white-space: normal !important;
+          display: inline !important;
         }
         .katex-html {
-          display: inline-flex !important;
-          flex-wrap: wrap;
+          white-space: normal !important;
+        }
+        @media print {
+          .katex-display {
+            overflow: visible !important;
+          }
+          .katex {
+            white-space: normal !important;
+          }
+          .katex .base {
+            white-space: normal !important;
+            display: inline !important;
+          }
         }
       `}</style>
-      <div className="pt-3 pb-3 px-8 print:p-0 lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-8 print:px-3 print:py-0 lining-nums tabular-nums">
         
         {/* Header Section */}
         {showHeader && (
