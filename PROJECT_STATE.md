@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator బిల్డ్ ఎర్రర్ (Duplicate Import & Interleaved Syntax) పరిష్కారం (November 17, 2026)
+- **యూజర్ సమస్య:**
+  - `npm run build` ఫెయిల్ అయ్యింది (`vite v8.1.3 building client environment for production... ✗ Build failed in 1.84s`).
+- **సమస్య విశ్లేషణ:**
+  - `MCQPaperGeneratorPage.tsx` లో `toJpeg` రెండుసార్లు ఇంపోర్ట్ అవ్వడం మరియు `handleDownloadPdf` లో పాత-కొత్త కోడ్ ఓవర్‌ల్యాప్ అవ్వడం వల్ల రోల్-అప్ బిల్డ్ ఎర్రర్ ఇచ్చింది.
+- **పరిష్కారం:**
+  - డూప్లికేట్ ఇంపోర్ట్ మరియు ఓవర్‌ల్యాప్ అయిన కోడ్‌ను పూర్తిగా తొలగించి, `handleDownloadPdf` & `handlePrint` లను పర్ఫెక్ట్ గా క్లీన్ చేసాము.
+  - ఇప్పుడు `npm run build` ఎటువంటి ఎర్రర్ లేకుండా సక్సెస్ అవుతుంది.
+
 ## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో కుడి వైపు 50% వెడల్పు కట్ అవ్వడం & కేవలం 2 పేజీలు మాత్రమే రావడంపై పూర్తి పరిష్కారం (November 17, 2026)
 - **యూజర్ సమస్య & రిపోర్ట్:**
   - "chudu print preview lo problem chala clear ga kanipistundi idi cheyatanik ippatiki 1 hr paiga chestunnav but complete cheyaledu"
