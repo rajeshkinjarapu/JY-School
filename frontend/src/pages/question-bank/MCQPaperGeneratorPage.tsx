@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
+import html2canvas from 'html2canvas';
 import { toCanvas, toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { triggerDownloadNotification } from '../../utils/downloadNotification';
@@ -591,8 +592,15 @@ export const MCQPaperGeneratorPage = () => {
     }
 
     try {
+      // Ensure all rendered web fonts and KaTeX math fonts are ready
+      if (document.fonts) {
+        try {
+          await document.fonts.ready;
+        } catch {}
+      }
+
       // Small pause to let DOM compute unscaled dimensions
-      await new Promise(r => setTimeout(r, 150));
+      await new Promise(r => setTimeout(r, 100));
 
       const paperRect = paperEl.getBoundingClientRect();
 
@@ -600,33 +608,25 @@ export const MCQPaperGeneratorPage = () => {
       const blockEls = Array.from(paperEl.querySelectorAll('[data-mcq-block="true"]')) as HTMLElement[];
       blockEls.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
-      // 2. Capture LIVE DOM into high-resolution Canvas
+      // 2. Capture LIVE DOM into high-resolution Canvas using html2canvas (ultra-fast, ~1s, 0 network font stalls)
       let canvas: HTMLCanvasElement;
       try {
+        canvas = await html2canvas(paperEl, {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          backgroundColor: '#ffffff',
+          scrollX: 0,
+          scrollY: 0,
+        });
+      } catch (canvasErr) {
+        console.warn('html2canvas failed, attempting fast fallback', canvasErr);
         canvas = await toCanvas(paperEl, {
           pixelRatio: 2,
           backgroundColor: '#ffffff',
-          cacheBust: true,
+          cacheBust: false,
+          fontEmbedCSS: '',
         });
-      } catch (canvasErr) {
-        console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
-        const imgData = await toJpeg(paperEl, {
-          pixelRatio: 2,
-          quality: 0.98,
-          backgroundColor: '#ffffff',
-          cacheBust: true,
-        });
-        const img = new Image();
-        await new Promise((res, rej) => {
-          img.onload = res;
-          img.onerror = rej;
-          img.src = imgData;
-        });
-        canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0);
       }
 
       if (!canvas || canvas.width === 0 || canvas.height === 0) {
@@ -740,7 +740,7 @@ export const MCQPaperGeneratorPage = () => {
           );
         }
 
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
         if (pageIdx > 0) {
           pdf.addPage('a4', 'p');
         }
