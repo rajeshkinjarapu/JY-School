@@ -717,13 +717,45 @@ export const MCQPaperGeneratorPage = () => {
     }
   };
 
+  useEffect(() => {
+    let savedZoom = '';
+    const onBefore = () => {
+      const el = document.querySelector('.dynamic-paper-scale') as HTMLElement;
+      if (el) {
+        savedZoom = el.style.zoom;
+        el.style.zoom = '1';
+      }
+    };
+    const onAfter = () => {
+      const el = document.querySelector('.dynamic-paper-scale') as HTMLElement;
+      if (el && savedZoom) {
+        el.style.zoom = savedZoom;
+      }
+    };
+    window.addEventListener('beforeprint', onBefore);
+    window.addEventListener('afterprint', onAfter);
+    return () => {
+      window.removeEventListener('beforeprint', onBefore);
+      window.removeEventListener('afterprint', onAfter);
+    };
+  }, []);
+
   const handlePrint = () => {
-    // Add a temporary class to body so print CSS knows to show only the preview
+    const scaleEl = document.querySelector('.dynamic-paper-scale') as HTMLElement;
+    const prevZoom = scaleEl ? scaleEl.style.zoom : '';
+    if (scaleEl) {
+      scaleEl.style.zoom = '1';
+    }
     document.body.classList.add('mcq-printing');
-    window.print();
     setTimeout(() => {
-      document.body.classList.remove('mcq-printing');
-    }, 1500);
+      window.print();
+      setTimeout(() => {
+        if (scaleEl && prevZoom) {
+          scaleEl.style.zoom = prevZoom;
+        }
+        document.body.classList.remove('mcq-printing');
+      }, 500);
+    }, 50);
   };
 
   const toggleFullScreen = () => {
