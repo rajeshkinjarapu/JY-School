@@ -1,5 +1,16 @@
 # JY School Project State
 
+## చివరి సంభాషణ - VPS ఫ్రంటెండ్ బిల్డ్ ఎర్రర్స్ పరిష్కారం (Vite & Tailwind Build Fixes) (November 18, 2026)
+- **ఎదురైన బిల్డ్ ఎర్రర్స్:**
+  1. `[plugin @tailwindcss/vite:generate:build] /root/JY-School/frontend/src/index.css: Error: Cannot apply unknown utility class dark:`
+  2. `[builtin:vite-transform] Unexpected token src/pages/question-bank/MCQPaperGeneratorPage.tsx:745:17 } catch (err: any) {`
+- **ఖచ్చితమైన కారణాలు & పరిష్కారాలు:**
+  1. [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css):
+     - టేబుల్ హెడర్లు మరియు రోస్ కి ఇచ్చిన `@apply` లో `dark: !bg-...`, `dark: !text-...` లలో `dark:` తర్వాత అదనపు స్పేస్ ఉండటం వల్ల Tailwind v4 ఎర్రర్ ఇచ్చింది. అన్నింటినీ `dark:!bg-...`, `dark:!text-...` గా సరిదిద్దాము.
+  2. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+     - `handleDownloadPdf` లోని `for` మరియు `while` లూప్‌ల బ్రాకెట్లు అస్తవ్యస్తంగా ఉండి 5 బ్రాకెట్స్ ఓపెన్ లో ఉండిపోవడం వల్ల `catch` బ్లాక్ వద్ద ఎర్రర్ వచ్చింది. ఫంక్షన్ లూప్‌లు మరియు బ్రాకెట్లను పక్కాగా సరిదిద్ది ఎర్రర్-ఫ్రీగా చేసాము.
+     - `handlePrint` లో డూప్లికేట్ అయిన అదనపు `iframe` డిక్లరేషన్‌ను తొలగించాము.
+
 ## చివరి సంభాషణ - MCQ పేపర్ ప్రింట్ ప్రివ్యూలో మ్యాట్రిక్స్ వరుస కనిపించకపోవడం & ఆప్షన్ (D) కట్ అవ్వడం సమస్యల పరిష్కారం (Print Preview Matrix Clipping & Option (D) Cutoff Fix) (November 18, 2026)
 - **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
   - "print preview lo full matrix padatam ledu, live preview lo perfect ga chupistundi"

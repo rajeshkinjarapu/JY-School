@@ -570,221 +570,191 @@ export const MCQPaperGeneratorPage = () => {
         const bottomRelative = r.bottom - paperRect.top;
         if (bottomRelative > 0) {
           blockBottoms.push(bottomRelative);
-          // Collect all top-level printable content blocks inside #a4-preview-paper
-          // (avoid selecting both outer and inner question-block wrappers)
-          const allCandidateEls = Array.from(paperEl.querySelectorAll(
-            '.paper-header, .paper-instructions, .section-header, .question-block'
-          )) as HTMLElement[];
+        }
+      }
+      blockBottoms.sort((a, b) => a - b);
 
-          const topLevelBlocks: HTMLElement[] = [];
-          for (const el of allCandidateEls) {
-            // Only include if no other candidate element is an ancestor of this one
-            const isNested = allCandidateEls.some(other => other !== el && other.contains(el));
-            if (!isNested && !topLevelBlocks.includes(el)) {
-              topLevelBlocks.push(el);
+      // Collect all top-level printable content blocks inside #a4-preview-paper
+      const allCandidateEls = Array.from(paperEl.querySelectorAll(
+        '.paper-header, .paper-instructions, .section-header, .question-block'
+      )) as HTMLElement[];
+
+      const topLevelBlocks: HTMLElement[] = [];
+      for (const el of allCandidateEls) {
+        const isNested = allCandidateEls.some(other => other !== el && other.contains(el));
+        if (!isNested && !topLevelBlocks.includes(el)) {
+          topLevelBlocks.push(el);
+        }
+      }
+      topLevelBlocks.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+
+      // Capture the LIVE, fully-rendered DOM directly with toCanvas (from html-to-image)
+      let canvas: HTMLCanvasElement;
+      try {
+        canvas = await toCanvas(paperEl, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+        });
+      } catch (canvasErr) {
+        console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
+        const imgData = await toJpeg(paperEl, {
+          pixelRatio: 2,
+          quality: 0.98,
+          backgroundColor: '#ffffff',
+          cacheBust: true,
+        });
+        const img = new Image();
+        await new Promise((res, rej) => {
+          img.onload = res;
+          img.onerror = rej;
+          img.src = imgData;
+        });
+        canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+      }
+
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Failed to capture preview canvas.');
+      }
+
+      const scaleRatio = canvas.width / paperRect.width;
+      const scaleRatioY = canvas.height / paperRect.height;
+
+      interface BlockCoord {
+        el: HTMLElement;
+        type: 'header' | 'instructions' | 'section-header' | 'question';
+        topCanvasY: number;
+        bottomCanvasY: number;
+      }
+
+      const blockCoords: BlockCoord[] = topLevelBlocks.map(el => {
+        const r = el.getBoundingClientRect();
+        const top = Math.round((r.top - paperRect.top) * scaleRatioY);
+        const bottom = Math.round((r.bottom - paperRect.top) * scaleRatioY);
+        let type: BlockCoord['type'] = 'question';
+        if (el.classList.contains('paper-header')) type = 'header';
+        else if (el.classList.contains('paper-instructions')) type = 'instructions';
+        else if (el.classList.contains('section-header')) type = 'section-header';
+        return { el, type, topCanvasY: top, bottomCanvasY: bottom };
+      });
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pageWidthMm = 210;
+      const pageHeightMm = 297;
+      const pageHeightPx = Math.floor(canvas.width * (297 / 210));
+
+      let currentCanvasY = 0;
+      let pageIndex = 0;
+
+      while (currentCanvasY < canvas.height - 10) {
+        const maxSliceBottom = currentCanvasY + pageHeightPx;
+        let sliceHeight = pageHeightPx;
+
+        if (maxSliceBottom < canvas.height) {
+          // Find all blocks that are currently visible on this page (start on/after currentCanvasY)
+          const visibleBlocks = blockCoords.filter(b => b.bottomCanvasY > currentCanvasY + 20);
+
+          // Find blocks that can fit completely before the bottom of the page
+          const fittingBlocks = visibleBlocks.filter(b => b.bottomCanvasY <= maxSliceBottom - 20);
+
+          if (fittingBlocks.length > 0) {
+            let lastFitting = fittingBlocks[fittingBlocks.length - 1];
+
+            // Orphan heading check: If the last fitting item is a subject header (e.g. "PHYSICS"),
+            // and the next question cannot fit on this page, push the heading to the next page!
+            if (lastFitting.type === 'section-header') {
+              if (fittingBlocks.length > 1) {
+                lastFitting = fittingBlocks[fittingBlocks.length - 2];
+                sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
+              } else {
+                sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
+              }
+            } else {
+              sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
             }
+          } else {
+            sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
           }
-          blockBottoms.sort((a, b) => a - b);
+        } else {
+          // Last page: slice remaining height
+          sliceHeight = canvas.height - currentCanvasY;
+        }
 
-          // Sort blocks top-to-bottom
-          topLevelBlocks.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = pageHeightPx;
+        const ctx = pageCanvas.getContext('2d');
 
-          // Capture the LIVE, fully-rendered DOM directly with toCanvas (from html-to-image)
-          // This captures the exact KaTeX fonts, SVGs, vectors, and math formulas visible on screen!
-          let canvas: HTMLCanvasElement;
-          try {
-            canvas = await toCanvas(paperEl, {
-              pixelRatio: 2,
-              backgroundColor: '#ffffff',
-              cacheBust: true,
-            });
-          } catch (canvasErr) {
-            console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
-            const imgData = await toJpeg(paperEl, {
-              pixelRatio: 2,
-              quality: 0.98,
-              backgroundColor: '#ffffff',
-              cacheBust: true,
-            });
-            const img = new Image();
-            await new Promise((res, rej) => {
-              img.onload = res;
-              img.onerror = rej;
-              img.src = imgData;
-            });
-            canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0);
-          }
+        if (ctx) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, pageCanvas.width, pageHeightPx);
+          ctx.drawImage(
+            canvas,
+            0,
+            currentCanvasY,
+            canvas.width,
+            sliceHeight,
+            0,
+            0,
+            canvas.width,
+            sliceHeight
+          );
+        }
 
-          if (!canvas || canvas.width === 0 || canvas.height === 0) {
-            throw new Error('Failed to capture preview canvas.');
-          }
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
 
-          const scaleRatio = canvas.width / paperRect.width;
-          // Precise coordinate mapping from paperRect to canvas pixels
-          const scaleRatioY = canvas.height / paperRect.height;
+        if (pageIndex > 0) {
+          pdf.addPage('a4', 'p');
+        }
 
-          interface BlockCoord {
-            el: HTMLElement;
-            type: 'header' | 'instructions' | 'section-header' | 'question';
-            topCanvasY: number;
-            bottomCanvasY: number;
-          }
+        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
 
-          const blockCoords: BlockCoord[] = topLevelBlocks.map(el => {
-            const r = el.getBoundingClientRect();
-            const top = Math.round((r.top - paperRect.top) * scaleRatioY);
-            const bottom = Math.round((r.bottom - paperRect.top) * scaleRatioY);
-            let type: BlockCoord['type'] = 'question';
-            if (el.classList.contains('paper-header')) type = 'header';
-            else if (el.classList.contains('paper-instructions')) type = 'instructions';
-            else if (el.classList.contains('section-header')) type = 'section-header';
-            return { el, type, topCanvasY: top, bottomCanvasY: bottom };
-          });
+        currentCanvasY += sliceHeight;
+        pageIndex++;
+      }
 
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pageWidthMm = 210;
-          const pageHeightMm = 297;
-          const pageHeightPx = Math.floor(canvas.width * (297 / 210));
+      const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
+      pdf.save(filename);
 
-          let currentCanvasY = 0;
-          let pageIndex = 0;
+      triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
+      toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
+    } catch (err: any) {
+      console.error('PDF download error:', err);
+      toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
+    } finally {
+      if (scaleContainer) {
+        scaleContainer.style.zoom = prevZoom;
+      }
+      setIsDownloadingPdf(false);
+    }
+  };
 
-          while (currentCanvasY < canvas.height) {
-            while (currentCanvasY < canvas.height - 10) {
-              const maxSliceBottom = currentCanvasY + pageHeightPx;
-              let sliceHeight = pageHeightPx;
-
-              if (maxSliceBottom < canvas.height) {
-                // Smart page boundary: Find the last question block that fits cleanly on this page
-                let bestCutCanvasY = -1;
-                for (const b of blockBottoms) {
-                  const bCanvas = b * scaleRatio;
-                  if (bCanvas > currentCanvasY + 120 && bCanvas <= maxSliceBottom) {
-                    bestCutCanvasY = bCanvas;
-                    // Find all blocks that are currently visible on this page (start on/after currentCanvasY)
-                    const visibleBlocks = blockCoords.filter(b => b.bottomCanvasY > currentCanvasY + 20);
-
-                    // Find blocks that can fit completely before the bottom of the page
-                    // 20px safety buffer to prevent touching the page edge
-                    const fittingBlocks = visibleBlocks.filter(b => b.bottomCanvasY <= maxSliceBottom - 20);
-
-                    if (fittingBlocks.length > 0) {
-                      let lastFitting = fittingBlocks[fittingBlocks.length - 1];
-
-                      // Orphan heading check: If the last fitting item is a subject header (e.g. "PHYSICS"),
-                      // and the next question cannot fit on this page, push the heading to the next page!
-                      if (lastFitting.type === 'section-header') {
-                        if (fittingBlocks.length > 1) {
-                          lastFitting = fittingBlocks[fittingBlocks.length - 2];
-                          sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
-                        } else {
-                          // If heading is the only thing on this page, let it take sliceHeight
-                          sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
-                        }
-                      } else {
-                        // Cut cleanly right at the bottom of the last question that fits!
-                        sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
-                      }
-                    }
-
-                    // If a natural question boundary was found that covers at least 60% of the page height
-                    if (bestCutCanvasY !== -1 && (bestCutCanvasY - currentCanvasY) >= pageHeightPx * 0.60) {
-                      sliceHeight = Math.round(bestCutCanvasY - currentCanvasY);
-                    } else {
-                      // Fallback: If a single block is taller than pageHeightPx, slice at pageHeightPx
-                      sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
-                    }
-                  } else {
-                    // Last page: slice remaining height
-                    sliceHeight = canvas.height - currentCanvasY;
-                  }
-
-                  const pageCanvas = document.createElement('canvas');
-                  pageCanvas.width = canvas.width;
-                  pageCanvas.height = pageHeightPx;
-                  const ctx = pageCanvas.getContext('2d');
-
-                  if (ctx) {
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, pageCanvas.width, pageHeightPx);
-                    ctx.drawImage(
-                      canvas,
-                      0,
-                      currentCanvasY,
-                      canvas.width,
-                      sliceHeight,
-                      0,
-                      0,
-                      canvas.width,
-                      sliceHeight
-                    );
-                  }
-
-                  const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
-
-                  if (pageIndex > 0) {
-                    pdf.addPage('a4', 'p');
-                  }
-
-                  pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
-
-                  currentCanvasY += sliceHeight;
-                  pageIndex++;
-                }
-
-                const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
-                const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
-                pdf.save(filename);
-
-                triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
-                toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
-              } catch (err: any) {
-                console.error('PDF download error:', err);
-                toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
-              } finally {
-                if (scaleContainer) {
-                  scaleContainer.style.zoom = prevZoom;
-                }
-                setIsDownloadingPdf(false);
-              }
-            };
-
-            const handlePrint = async () => {
-              const paperEl = document.getElementById('a4-preview-paper');
-              if (!paperEl) {
-                window.print();
-                return;
-              }
-
-    const iframe = document.createElement('iframe');
-    iframe.id = 'mcq-print-frame';
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '210mm';
-    iframe.style.height = '297mm';
-    iframe.style.border = '0';
-    iframe.style.opacity = '0';
-    iframe.style.pointerEvents = 'none';
-    iframe.style.zIndex = '-9999';
-    document.body.appendChild(iframe);
+  const handlePrint = async () => {
+    const paperEl = document.getElementById('a4-preview-paper');
+    if (!paperEl) {
+      window.print();
+      return;
+    }
 
               const iframe = document.createElement('iframe');
               iframe.id = 'mcq-print-frame';
               iframe.style.position = 'fixed';
               iframe.style.right = '0';
               iframe.style.bottom = '0';
-              iframe.style.width = '0';
-              iframe.style.height = '0';
+              iframe.style.width = '210mm';
+              iframe.style.height = '297mm';
               iframe.style.border = '0';
+              iframe.style.opacity = '0';
+              iframe.style.pointerEvents = 'none';
               iframe.style.zIndex = '-9999';
               document.body.appendChild(iframe);
 
-              const doc = iframe.contentWindow?.document;
+    const doc = iframe.contentWindow?.document;
               if (!doc) {
                 window.print();
                 return;
