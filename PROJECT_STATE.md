@@ -5,20 +5,16 @@
   - "533 STUDENTS LO OKARI PHOTOS INKOKARIKI PLACE LO KANIPISTUNNAYI AND OKA STUDENT POORTIGA KANAPDATAM LEDU DELETE AYYINDO LEDO EM AYYINDO KUDA ARDAM KAVATAM LEDU AA AMMAYI OKKA PHOTO INKO AMMAYIKI CHUPISTUNDI, JY26-6022 STUDENT LEDU POORTIGA ASSALU EM AYYINDI DETAIL GA CHEPPU. IDI ERP KI CHALA PEDDA PROBLEM ILA AYITE ERP MAINTAIN CHEYATAM CHALA KASTAM"
 - **VPS డయాగ్నోస్టిక్ ఫలితాలు & ఖచ్చితమైన కారణం (Exact Technical Discovery):**
   1. **రికార్డు డిలీట్ అవ్వలేదు (Student Record Exists):** రోల్ నంబర్ `JY26-6022` డేటాబేస్‌లో ఉంది (`id: adc36d9a-d6cc-4a27-916e-186446154a4e`).
-  2. **రికార్డులో జరిగిన అసలు బగ్:**
-     - **రోల్ నంబర్:** `JY26-6022` (క్లాస్: 6th Class, Section A)
-     - **లింగం:** `FEMALE` (అమ్మాయి!)
-     - **తండ్రి పేరు:** `NADIMANTI GOVINDARAO`
-     - **తల్లి పేరు:** `NADIMANTI RADHA`
-     - **కానీ ప్రస్తుతం ఉన్న పేరు:** `NAKKA NEERAJ VARDHAN`
-     - **అప్‌డేట్ టైమ్‌స్టాంప్:** `2026-11-16T05:52:41.890Z` (సోమవారం ఉదయం 11:22 AM IST నవంబర్ 16న జరిగిన బల్క్ అప్‌డేట్)
+  2. **6వ తరగతిలో 3 వరుసల పేర్లు పక్కకు షిఫ్ట్ అయిన పాటర్న్ బయటపడింది (Shift Collision):**
+     - **`JY26-6018`:** పేరు: `NALLA CHINMAYI` కానీ తండ్రి: `NAKKA PAPA RAO`, తల్లి: `NAKKA BHARGAVI`. (ఇక్కడ ఉండాల్సింది నక్క పాపారావు కొడుకు `NAKKA NEERAJ VARDHAN`!)
+     - **`JY26-6021`:** పేరు: `PAGOTI CHAITHRA` కానీ తండ్రి: `NALLA TARAKESWARARAO`. (ఇక్కడ ఉండాల్సింది నల్ల తారకేశ్వరరావు కుమార్తె `NALLA CHINMAYI`!)
+     - **`JY26-6022`:** పేరు: `NAKKA NEERAJ VARDHAN` కానీ తండ్రి: `NADIMANTI GOVINDARAO`, తల్లి: `NADIMANTI RADHA` (Gender: FEMALE). (ఇక్కడ ఉండాల్సింది నదిమంటి గోవిందరావు కుమార్తె!)
   3. **సమస్య విశ్లేషణ:**
-     - ఈ విద్యార్థిని అసలైన ఇంటిపేరు `NADIMANTI` (తల్లిదండ్రులు నదిమంటి గోవిందరావు & నదిమంటి రాధ).
-     - నవంబర్ 16న 6వ తరగతి ఎక్సెల్ ఇంపోర్ట్ జరిగినప్పుడు, ఈ అమ్మాయి రికార్డులోని పేరు వేరొక అబ్బాయి పేరుతో (`NAKKA NEERAJ VARDHAN`) ఓవర్‌రైట్ అయ్యింది!
-     - ఫలితంగా, ఆ 'నదిమంటి' అమ్మాయి పేరు స్కూల్ లిస్ట్‌లో కనిపించకుండా పోయింది.
-     - కానీ ఆ రికార్డుకు ఉన్న ఒరిజినల్ ఫోటో అలాగే ఉంది. అందుకే ఆ అమ్మాయి ఫోటో ఇప్పుడు `NAKKA NEERAJ VARDHAN` అనే పేరు పక్కన డిస్‌ప్లే అవుతోంది!
+     - ఎక్సెల్ ఫైల్ అప్‌లోడ్ చేసినప్పుడు వరుసలు 1 స్టెప్ పక్కకు జరగడం (Row Shift) వల్ల, ఈ ముగ్గురు విద్యార్థుల పేర్లు వేరే వారి రోల్ నంబర్ల మీద కూర్చున్నాయి!
+     - `NAKKA NEERAJ VARDHAN` పేరు వచ్చి `JY26-6022` మీద పడింది.
+     - దీనివల్ల `JY26-6022` అసలైన నదిమంటి అమ్మాయి పేరు మారిపోయింది, మరియు ఆమె ఫోటో `NAKKA NEERAJ VARDHAN` పక్కన కనిపిస్తోంది!
 - **చేపట్టిన చర్యలు:**
-  - ఆ అమ్మాయి అసలు పేరు ఏమిటి, మరియు పాఠశాలలో ఇంకెక్కడైనా ఇలాంటి సర్నేమ్ మిస్‌మ్యాచ్‌లు ఉన్నాయా అనేది గుర్తించడానికి `find-student-details.js` స్క్రిప్ట్ సిద్ధం చేసాము.
+  - నదిమంటి అమ్మాయి అసలు పేరు ఏమిటి, ఫీజు రసీదులు & మార్కుల చరిత్రను ట్రేస్ చేయడానికి `trace-student-history.js` స్క్రిప్ట్ సిద్ధం చేసాము.
 
 ## చివరి సంభాషణ - MCQ Paper Generator డౌన్‌లోడ్ PDF పేజీ కటింగ్ (Q17, Q33, Q53, Q66), Q17 రా-లాటెక్స్, ఆర్ఫన్ హెడ్డింగ్స్ సంపూర్ణ పరిష్కారం (November 18, 2026)
 - **యూజర్ సమస్య & సమీక్ష:**
