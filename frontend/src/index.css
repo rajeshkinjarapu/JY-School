@@ -635,9 +635,14 @@
   }
 
   /* Page breaks */
-  .question-block {
+  .question-block,
+  [data-mcq-block="true"] {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
+    break-inside: avoid-page !important;
+    display: block !important;
+    position: static !important;
+    box-sizing: border-box !important;
   }
 
   .paper-header,

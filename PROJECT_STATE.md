@@ -1,5 +1,35 @@
 # JY School Project State
 
+## చివరి సంభాషణ - కొత్త PDF లోపాల విశ్లేషణ & సరిదిద్దుబాట్లు (New JEE PDF Mistakes Analysis & Content Fixes) (November 18, 2026)
+- **యూజర్ ప్రశ్న:**
+  - "idi kottaga generate ayina pdf inudlo unna mistakes enti inka em correct cheyali"
+  - అప్‌లోడ్ చేసిన ఫైల్: `JEE__MAINS_MODEL_EXAMINATION__19-11-2026_(4).pdf`
+- **PDF ను క్షుణ్ణంగా పరిశీలించి గుర్తించిన 7 లోపాలు:**
+  1. **Instructions vs మార్కుల వ్యత్యాసం:**
+     - Physics లో `Question No. 26 to 45` అని ఉంది (20 ప్రశ్నలు మాత్రమే). అసలైన పాటర్న్ ప్రకారం `Question No. 26 to 50` (25 ప్రశ్నలు) ఉండాలి.
+     - Chemistry లో `Question No. 51 to 70` అని ఉంది (20 ప్రశ్నలే ఉన్నాయి, 46-50 స్కిప్ అయ్యాయి). అసలైన పాటర్న్ ప్రకారం `Question No. 51 to 75` (25 ప్రశ్నలు) ఉండాలి.
+     - హెడర్ లో `Marks: 300` అని ఉంటే, instructions ప్రకారం లెక్కేస్తే 260 మార్కులు మాత్రమే వస్తాయి (75 ప్రశ్నలు = 300 మార్కులు).
+  2. **పేపర్‌లో సగం కంటే ఎక్కువ ప్రశ్నలు లేకపోవడం (Incomplete Paper):**
+     - Maths లో 25 ప్రశ్నలకు బదులుగా కేవలం 13 ప్రశ్నలు మాత్రమే ఉన్నాయి (14 నుండి 25 వరకు లేవు).
+     - Physics విభాగం (ప్రశ్నలు 26-50) అసలు లేదు.
+     - Chemistry విభాగం (ప్రశ్నలు 51-75) అసలు లేదు.
+  3. **ప్రశ్న 11 (Question 11) - ఆప్షన్లు పూర్తిగా లేకపోవడం:**
+     - పేజీ 1 చివరన: `11. The value of \csc 10^\circ - \sqrt{3}\sec 10^\circ is equal to:` ప్రశ్నకు ఆప్షన్లు (A), (B), (C), (D) లేవు.
+  4. **పేజీ 1 బాటమ్ లో ప్రశ్న 12 కట్ అవ్వడం (Page Break Split Bug):**
+     - పేజీ 1 అడుగున Question 12 మొదటి లైన్ సగం కట్ అయి, మళ్లీ పేజీ 2 టాప్‌లో పునరావృతమైంది.
+  5. **ప్రశ్న 12 (Question 12) - ఆప్షన్లు పూర్తిగా లేకపోవడం:**
+     - `12. Let the range of the function... is:` ప్రశ్నకు ఆప్షన్లు (A), (B), (C), (D) లేవు.
+  6. **ప్రశ్న 13 (Question 13) - ఆప్షన్లు పూర్తిగా లేకపోవడం:**
+     - `13. If \tan 15^\circ + ... is:` ప్రశ్నకు ఆప్షన్లు (A), (B), (C), (D) లేవు.
+  7. **VPS లో ఫ్రంటెండ్ బిల్డ్ & ప్రింట్ ఖాళీగా రావడం:**
+     - లోకల్ లో చేసిన Tailwind v4 CSS మరియు `@media print` మార్పులు VPS లో ఇంకా బిల్డ్ అవ్వలేదు, కాబట్టి బిల్డ్ రన్ చేయాలి.
+- **అమలు చేసిన పరిష్కారాలు:**
+  1. [`backend/scripts/fix-jee-paper-19nov.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/fix-jee-paper-19nov.js):
+     - ఈ పేపర్ ID `a288caf9-a258-4aa4-8e2f-712e1997646e` లో Instructions ని 26 to 50 మరియు 51 to 75 గా మార్చేలా మరియు Q11, Q12, Q13 లకు సరైన లెక్కించిన ఆప్షన్లను డేటాబేస్ లో యాడ్ చేసేలా స్క్రిప్ట్ సిద్ధం చేశాము.
+  2. [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css):
+     - `.question-block, [data-mcq-block="true"]` లకు `break-inside: avoid !important; page-break-inside: avoid !important; break-inside: avoid-page !important; display: block !important;` ఇచ్చి ప్రింట్ లో ప్రశ్నలు సగానికి తెగిపోకుండా పటిష్టం చేసాము.
+
+
 ## చివరి సంభాషణ - ప్రింట్ పూర్తిగా రాకపోవడం సమస్య పరిష్కారం (Print Content Missing Fix) (November 18, 2026)
 - **యూజర్ సమస్య:**
   - "print ippudu poortiga ravatam ledu"
