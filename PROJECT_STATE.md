@@ -1,5 +1,24 @@
 # JY School Project State
 
+## చివరి సంభాషణ - లైవ్ ప్రివ్యూ పునరుద్ధరణ & ప్రింట్ ప్రివ్యూ కరెక్షన్స్ (Live Preview Restoration & Print Preview Alignment) (November 18, 2026)
+- **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
+  - "em chesavu ra live preview mottam maripoyindi"
+  - స్క్రీన్‌షాట్ పరిశీలన (`media_1794984574808_3a3b136f.jpg`):
+    - లైవ్ ప్రివ్యూలో KaTeX ఫార్ములాలు, సెట్స్ `{-2, -1, 0, 1, 2}`, బ్రాకెట్లు `(a, b)` మరియు అసమానతలు `1 + ab > 0` అన్నీ పక్కపక్కన రాకుండా నిలువుగా విరిగిపోయి ఒకదానిపై ఒకటి పడిపోయాయి.
+- **ఖచ్చితమైన సాంకేతిక కారణం (Technical Root Cause):**
+  - [`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx) లోని స్క్రీన్ స్టైల్స్ లో `.katex .vlist`, `.katex .vlist-t`, `.katex .vlist-r`, `.katex .vlist-s` మరియు `.katex .base` లకు బలవంతంగా `display: table-cell !important`, `white-space: normal` లు స్క్రీన్ లెవెల్ లో ఇవ్వబడ్డాయి. KaTeX ఇంటర్నల్ వర్టికల్ లేఅవుట్ (జీరో-హైట్ రిలేటివ్ ఆఫ్‌సెట్స్) దీనివల్ల దెబ్బతిని, ప్రతి అక్షరం ఒక టేబుల్ సెల్ లాగా నిలువుగా స్టాక్ అయింది.
+  - ప్రింట్ ప్రివ్యూలో ఆప్షన్ (D) కట్ అవ్వడానికి కారణం: `index.css` లో `.a4-paper` కి `width: 210mm !important; padding: 15mm 18mm !important;` ఉండటంతో మొత్తం వెడల్పు 226mm అయ్యి A4 మార్జిన్ దాటి కుడివైపుకి కట్ అయింది.
+- **అమలు చేసిన పరిష్కారాలు:**
+  1. [`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):
+     - స్క్రీన్ లెవెల్ స్టైల్స్ నుండి అనవసరమైన `.vlist`, `.mtable`, `.base` CSS ఓవర్‌రైడ్స్ అన్నింటినీ పూర్తిగా తొలగించి KaTeX యొక్క అధికారిక నేటివ్ రెండరింగ్ కు రీస్టోర్ చేశాము. దీనితో లైవ్ ప్రివ్యూ 100% పర్ఫెక్ట్‌గా ఇన్-లైన్‌లో రీస్టోర్ అయ్యింది.
+  2. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+     - `handlePrint` లోని ఐఫ్రేమ్ స్టైల్స్ నుండి కూడా విరిగిన `.vlist` మరియు `.base` ఓవర్‌రైడ్స్‌ను తొలగించి క్లీన్ చేసాము.
+  3. [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css):
+     - ప్రింట్ మోడ్‌లో `#a4-preview-paper` కోసం `width: 100% !important; max-width: 100% !important; padding: 0 !important;` కేటాయించి, కుడివైపు ఆప్షన్ (D) కట్ అవ్వకుండా 100% సరిచేశాము.
+     - `#a4-preview-paper` కింద ఉన్న అన్ని ఎలిమెంట్స్ కు `background: transparent !important;` ఇచ్చి, మ్యాట్రిక్స్ వరుసలు లేదా ఫార్ములాలపై వైట్ బాక్స్‌లు పడకుండా శాశ్వత రక్షణ కల్పించాము.
+  4. [`backend/scripts/fix-jee-paper.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/fix-jee-paper.js):
+     - డేటాబేస్ లోని 3 కంటెంట్ లోపాలు (డూప్లికేట్ Q20 రీప్లేస్‌మెంట్, ఇన్‌స్ట్రక్షన్స్ 26-50 & 51-75, Q35 ఆప్షన్ల టైపో) సరిచేసే స్క్రిప్ట్ సిద్ధంగా ఉంది.
+
 ## చివరి సంభాషణ - MCQ పేపర్ డౌన్‌లోడ్ PDF లోని 4 లోపాల సంపూర్ణ పరిష్కారం (MCQ Download PDF Slicing & Content Fixes) (November 18, 2026)
 - **యూజర్ ఆదేశం & అభ్యర్థన:**
   - "ee 4 loplalu anni update cheyu"

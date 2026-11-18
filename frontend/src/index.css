@@ -471,26 +471,20 @@
     background-color: transparent !important;
   }
 
-  /* MCQ Paper print: Ensure question containers never have opaque white background painting over math */
-  html body #a4-preview-paper .question-block,
-  html body #a4-preview-paper .question-text-wrapper,
-  html body #a4-preview-paper .question-options-container,
-  html body #a4-preview-paper .question-options-container *,
-  html body #a4-preview-paper .question-option-item {
+  /* MCQ Paper print: Ensure question containers and contents never have opaque white background painting over math */
+  html body #a4-preview-paper,
+  html body #a4-preview-paper *,
+  html body .a4-paper .question-block,
+  html body .a4-preview-paper *,
+  html body .question-block,
+  html body .question-text-wrapper,
+  html body .question-text-wrapper *,
+  html body .question-options-container,
+  html body .question-options-container *,
+  html body .question-option-item,
+  html body .question-option-item * {
     background: transparent !important;
     background-color: transparent !important;
-  }
-
-  /* KaTeX matrix and table vertical layout support */
-  html body #a4-preview-paper .katex .base {
-    display: inline-block !important;
-    position: relative !important;
-  }
-
-  html body #a4-preview-paper .katex .mtable {
-    display: inline-table !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
   }
 
   /* MCQ Paper: mcq-print-override style takes effect — make #a4-preview-paper descendants visible */
@@ -540,6 +534,17 @@
     width: 210mm !important;
     min-height: 297mm !important;
     height: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Specific override for MCQ paper so margins and widths do not push Option D out of view */
+  #a4-preview-paper.a4-paper,
+  #a4-preview-paper {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
     box-sizing: border-box !important;
   }
 

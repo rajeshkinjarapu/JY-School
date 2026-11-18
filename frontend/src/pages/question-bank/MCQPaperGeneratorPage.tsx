@@ -847,45 +847,15 @@ export const MCQPaperGeneratorPage = () => {
               break-after: avoid !important;
               page-break-after: avoid !important;
             }
+            .katex {
+              font-size: 1.02em !important;
+            }
             .katex, .katex * {
               visibility: visible !important;
               opacity: 1 !important;
               color: #000000 !important;
               background: transparent !important;
-            }
-            .katex {
-              font-size: 1.02em !important;
-              white-space: normal !important;
-            }
-            .katex .base {
-              position: relative !important;
-              display: inline-block !important;
-              white-space: normal;
-            }
-            .katex .mtable {
-              display: inline-table !important;
-              vertical-align: middle !important;
-              white-space: nowrap !important;
-              margin-top: 0.15em !important;
-              margin-bottom: 0.15em !important;
-            }
-            .katex .vlist-t {
-              display: inline-table !important;
-              table-layout: fixed !important;
-            }
-            .katex .vlist-r {
-              display: table-row !important;
-            }
-            .katex .vlist {
-              display: table-cell !important;
-              vertical-align: bottom !important;
-              position: relative !important;
-            }
-            .katex .vlist-s {
-              display: table-cell !important;
-              vertical-align: bottom !important;
-              font-size: 1px !important;
-              width: 0 !important;
+              background-color: transparent !important;
             }
             .katex-display {
               overflow: visible !important;

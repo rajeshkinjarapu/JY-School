@@ -571,76 +571,17 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         }
         .katex {
           font-size: 1.02em !important;
-          white-space: normal !important;
-          word-break: normal !important;
-        }
-        .katex .base {
-          position: relative !important;
-          display: inline-block !important;
-          white-space: normal;
-        }
-        .katex .mtable {
-          display: inline-table !important;
-          vertical-align: middle !important;
-          white-space: nowrap !important;
-          margin-top: 0.15em !important;
-          margin-bottom: 0.15em !important;
-        }
-        .katex .vlist-t {
-          display: inline-table !important;
-          table-layout: fixed !important;
-        }
-        .katex .vlist-r {
-          display: table-row !important;
-        }
-        .katex .vlist {
-          display: table-cell !important;
-          vertical-align: bottom !important;
-          position: relative !important;
-        }
-        .katex .vlist-s {
-          display: table-cell !important;
-          vertical-align: bottom !important;
-          font-size: 1px !important;
-          width: 0 !important;
-        }
-        .katex-html {
-          white-space: normal !important;
-          visibility: visible !important;
-          opacity: 1 !important;
-        }
-        .katex, .katex * {
-          visibility: visible !important;
-          opacity: 1 !important;
         }
         @media print {
           .katex-display {
             overflow: visible !important;
-          }
-          .katex {
-            white-space: normal !important;
-          }
-          .katex .base {
-            position: relative !important;
-            display: inline-block !important;
-            white-space: normal;
-          }
-          .katex .mtable {
-            display: inline-table !important;
-            vertical-align: middle !important;
-            white-space: nowrap !important;
-            margin-top: 0.15em !important;
-            margin-bottom: 0.15em !important;
-          }
-          .katex-html {
-            visibility: visible !important;
-            opacity: 1 !important;
           }
           .katex, .katex * {
             visibility: visible !important;
             opacity: 1 !important;
             color: #000000 !important;
             background: transparent !important;
+            background-color: transparent !important;
           }
           .question-block {
             break-inside: avoid !important;
@@ -649,6 +590,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             position: static !important;
             display: block !important;
             width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
             background: transparent !important;
           }
           .question-text-wrapper {
@@ -664,7 +607,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             page-break-before: avoid !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
-            width: auto !important;
+            width: 100% !important;
             max-width: 100% !important;
             box-sizing: border-box !important;
             background: transparent !important;
