@@ -13,6 +13,38 @@ import { PageHeader } from '../../components/UI/PageHeader';
 
 const AVAILABLE_SUBJECTS = ['Telugu', 'Hindi', 'English', 'Maths', 'Science', 'Biology', 'Physics', 'Chemistry', 'Social'];
 
+export async function printPaper(id = 'a4-preview-paper') {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument!;
+  const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+    .map(n => n.outerHTML).join('');
+
+  doc.open();
+  doc.write(`<!doctype html><html><head><meta charset="utf-8">${styles}
+    <style>html,body{margin:0;background:#fff}#a4-preview-paper{margin:0!important;box-shadow:none!important}</style>
+    </head><body>${el.outerHTML}</body></html>`);
+  doc.close();
+
+  await new Promise(r => { iframe.onload = r; setTimeout(r, 600); });
+  if (iframe.contentDocument?.fonts) {
+    try {
+      await iframe.contentDocument.fonts.ready;
+    } catch {
+      // fonts ready fallback
+    }
+  }
+
+  iframe.contentWindow!.focus();
+  iframe.contentWindow!.print();
+  setTimeout(() => iframe.remove(), 1500);
+}
+
 export const MCQPaperGeneratorPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -733,45 +765,8 @@ export const MCQPaperGeneratorPage = () => {
     }
   };
 
-  useEffect(() => {
-    let savedZoom = '';
-    const onBefore = () => {
-      const el = document.querySelector('.dynamic-paper-scale') as HTMLElement;
-      if (el) {
-        savedZoom = el.style.zoom;
-        el.style.zoom = '1';
-      }
-    };
-    const onAfter = () => {
-      const el = document.querySelector('.dynamic-paper-scale') as HTMLElement;
-      if (el && savedZoom) {
-        el.style.zoom = savedZoom;
-      }
-    };
-    window.addEventListener('beforeprint', onBefore);
-    window.addEventListener('afterprint', onAfter);
-    return () => {
-      window.removeEventListener('beforeprint', onBefore);
-      window.removeEventListener('afterprint', onAfter);
-    };
-  }, []);
-
-  const handlePrint = () => {
-    const scaleEl = document.querySelector('.dynamic-paper-scale') as HTMLElement;
-    const prevZoom = scaleEl ? scaleEl.style.zoom : '';
-    if (scaleEl) {
-      scaleEl.style.zoom = '1';
-    }
-    document.body.classList.add('mcq-printing');
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        if (scaleEl && prevZoom) {
-          scaleEl.style.zoom = prevZoom;
-        }
-        document.body.classList.remove('mcq-printing');
-      }, 500);
-    }, 50);
+  const handlePrint = async () => {
+    await printPaper('a4-preview-paper');
   };
 
   const toggleFullScreen = () => {

@@ -1,5 +1,17 @@
 # JY School Project State
 
+## చివరి సంభాషణ - LiveLatexPreview కచ్చితమైన ప్రింట్ అమరిక & ఐఫ్రేమ్ స్టైల్డ్ ప్రింటింగ్ (LiveLatexPreview Exact Print Alignment & Iframe Print) (November 18, 2026)
+- **యూజర్ సాంకేతిక మార్గదర్శకాలు & పరిష్కారాలు:**
+  1. `LiveLatexPreview.tsx` లోని లోపలి 3 డివ్‌ల నుండి `question-block` క్లాస్‌ను `question-item` గా మార్పు (ప్రింట్‌లో నంబర్ పైకి వెళ్లి టెక్స్ట్ కింద పడే సమస్య నివారణ).
+  2. ఔటర్ ర్యాపర్‌లో ఇన్వాలిడ్ క్లాస్‌లను తొలగించి `className="question-block w-full break-inside-avoid"` ఉంచడం.
+  3. లైవ్ ప్రివ్యూ మరియు ప్రింట్ రెండింటిలోనూ ఒకే కొలతలు: `#a4-preview-paper` కి `w-[210mm]`, ఇన్నర్ ర్యాపర్‌కి `px-[8mm]`.
+  4. పేజీ బార్డర్ ప్రతి పేజీలో స్థిరంగా కనిపించడానికి `--bp` CSS వేరియబుల్ మరియు `position: fixed` అమరిక.
+  5. `@media print` నుండి `.question-block` కున్న `display/position/width` ని తొలగించి సహజసిద్ధమైన లేఅవుట్ కల్పించడం.
+  6. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) లో `printPaper` ఐఫ్రేమ్ హెల్పర్ అమలు: అన్ని CSS, KaTeX స్టైల్స్ మరియు ఫాంట్లు (`fonts.ready`) పక్కాగా కాపీ అయి ప్రింట్ అవ్వడం.
+- **ఫలితం:**
+  - లైవ్ ప్రివ్యూలో ఎలా కనిపిస్తుందో, ప్రింట్‌లోనూ మరియు డౌన్‌లోడ్ అయిన PDF లోనూ 100% అదే విధంగా అక్షరం పొల్లు పోకుండా అద్భుతంగా వస్తుంది.
+
+
 ## చివరి సంభాషణ - Download PDF లో ప్రశ్నలు సగానికి కట్ అవ్వకుండా అటామిక్ పేజ్ అసైన్‌మెంట్ సంపూర్ణ పరిష్కారం (Atomic Block Page Assignment for Download PDF) (November 18, 2026)
 - **యూజర్ సమస్య & అందించిన చిత్రాలు (`media_1794993795217_9f22205a.jpg` & `media_1794993809638_6b392f04.jpg`):**
   - "paper ki question saripokapote next page lo question start avvali, image 2 lo akkada question saripoye space undi but raledu, download button click cheyagane pefect ga pdf download avvali"

@@ -332,7 +332,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const numStr = qNumMatch2[1];
               const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
               return (
-                <div className={`question-block break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                <div className={`question-item break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
                   <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
                 </div>
@@ -340,7 +340,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             }
             return (
               <div 
-                className={`question-block break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
+                className={`question-item break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
                 dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }} 
               />
             );
@@ -458,7 +458,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
 
             return (
-              <div className={`question-block break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
+              <div className={`question-item break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
                 <div className="question-text-wrapper mb-0.5 flex items-start whitespace-pre-wrap">
                   {qNumStr ? (
                     <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
@@ -481,7 +481,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       );
 
       elements.push(
-        <div key={`${subject}-block-${i}`} data-mcq-block="true" className="question-block w-full break-inside-avoid print:static print:relative-none" style={{ marginBottom }}>
+        <div key={`${subject}-block-${i}`} data-mcq-block="true" className="question-block w-full break-inside-avoid" style={{ marginBottom }}>
           {blockContent}
         </div>
       );
@@ -548,23 +548,24 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   return (
     <div 
-      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:w-full print:max-w-full print:min-h-0 print:m-0 print:p-0" 
+      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:min-h-0 print:m-0" 
       style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
       id="a4-preview-paper"
     >
-      {showPageBorder && (
-        <div 
-          className="absolute border-slate-900 print:border-black pointer-events-none z-50" 
-          style={{
-            top: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
-            bottom: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
-            left: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
-            right: pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0',
-            borderWidth: pageBorderThickness === 'thin' ? '1px' : pageBorderThickness === 'medium' ? '2px' : '4px',
-            borderStyle: pageBorderStyle || 'solid'
-          }}
-        />
-      )}
+      {showPageBorder && (() => {
+        const bp = pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0mm';
+        return (
+          <div 
+            className="page-border absolute pointer-events-none z-50 border-black"
+            style={{
+              ['--bp' as any]: bp,
+              inset: bp,
+              borderWidth: pageBorderThickness === 'thin' ? '1px' : pageBorderThickness === 'medium' ? '2px' : '4px',
+              borderStyle: pageBorderStyle || 'solid',
+            }} 
+          />
+        );
+      })()}
       <style>{`
         .katex-display {
           overflow-x: visible !important;
@@ -575,70 +576,37 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         .katex {
           font-size: 1.02em !important;
         }
+        @page { size: A4; margin: 10mm 0; }
+
         @media print {
-          .katex-display {
-            overflow: visible !important;
+          html, body { margin: 0 !important; padding: 0 !important; background: #fff !important; }
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+          #a4-preview-paper {
+            width: 210mm !important;
+            min-height: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
           }
-          .katex, .katex * {
-            visibility: visible !important;
-            opacity: 1 !important;
-            color: #000000 !important;
-            background: transparent !important;
-            background-color: transparent !important;
-          }
-          .question-block {
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            break-inside: avoid-page !important;
-            position: static !important;
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            background: transparent !important;
-          }
-          .question-text-wrapper {
-            break-after: avoid !important;
-            page-break-after: avoid !important;
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            overflow: visible !important;
-            background: transparent !important;
-          }
-          .question-options-container {
-            break-before: avoid !important;
-            page-break-before: avoid !important;
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            background: transparent !important;
-          }
-          .question-options-container * {
-            background: transparent !important;
-            background-color: transparent !important;
-          }
-          .question-option-item {
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            min-width: 0 !important;
-            overflow-wrap: break-word !important;
-            word-break: break-word !important;
-            background: transparent !important;
-          }
-          .paper-header,
-          .section-header,
-          .paper-instructions {
-            break-inside: avoid !important;
-            page-break-inside: avoid !important;
-            break-after: avoid !important;
-            page-break-after: avoid !important;
-            position: static !important;
+
+          .katex-display { overflow: visible !important; }
+          .katex, .katex * { visibility: visible !important; color: #000 !important; }
+
+          .question-block { break-inside: avoid !important; page-break-inside: avoid !important; }
+          .question-text-wrapper { break-after: avoid !important; page-break-after: avoid !important; }
+          .question-options-container { break-before: avoid !important; page-break-before: avoid !important; }
+          .question-option-item { break-inside: avoid !important; overflow-wrap: break-word; }
+          .paper-header, .section-header, .paper-instructions { break-inside: avoid !important; }
+
+          /* border prathi page lo */
+          .page-border {
+            position: fixed !important;
+            top: 0 !important; bottom: 0 !important;
+            left: var(--bp) !important; right: var(--bp) !important;
           }
         }
       `}</style>
-      <div className="pt-3 pb-3 px-8 print:px-0 print:py-0 print:w-full print:max-w-full print:box-border lining-nums tabular-nums">
+      <div className="pt-3 pb-3 px-[8mm] lining-nums tabular-nums">
         
         {/* Header Section */}
         {showHeader && (
