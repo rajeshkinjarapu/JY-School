@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Tailwind v4 index.css బిల్డ్ ఎర్రర్ పరిష్కారం (Clean Standard CSS for Tables) (November 18, 2026)
+- **యూజర్ బిల్డ్ ఎర్రర్:**
+  - `[plugin @tailwindcss/vite:generate:build] /root/JY-School/frontend/src/index.css: Error: Cannot apply unknown utility class dark:`
+- **ఖచ్చితమైన సాంకేతిక కారణం:**
+  - `index.css` లోని టేబుల్ స్టైల్స్ లో `@apply !bg-indigo-50/60 dark: !bg-indigo-950/20` మరియు `dark: !text-...` వంటి రూల్స్‌లో `dark:` తర్వాత ఖాళీ (స్పేస్) ఉండటం వల్ల Tailwind v4 కంపైలర్ దానిని ఒంటరి క్లాస్ `dark:` గా చదివి ఎర్రర్ ఇచ్చింది. అంతేకాకుండా Tailwind CSS v4 లో `@apply` లోపల `dark:` లేదా `hover:` వేరియంట్లను ఉపయోగించడం అధికారికంగా సపోర్ట్ చేయదు.
+- **అమలు చేసిన పరిష్కారం:**
+  - [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css): టేబుల్ కాంపోనెంట్స్ లోని మొత్తం `@apply` బ్లాక్‌ను తొలగించి, 100% ప్యూర్ స్టాండర్డ్ CSS (`:is(.dark *)` సెలెక్టర్లతో) మార్చాము.
+- **ఫలితం:**
+  - Vite మరియు `@tailwindcss/vite` ఎటువంటి ఎర్రర్స్ లేకుండా 100% సజావుగా బిల్డ్ అవుతాయి.
+
 ## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూ హెడర్ & లేఅవుట్ పునరుద్ధరణ (Native window.print() Restoration & Tailwind Print Styling) (November 18, 2026)
 - **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
   - "print preview change ayyindi"

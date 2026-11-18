@@ -369,43 +369,102 @@
   .card table:not(.custom-report-table):not(.holiday-table),
   .table-wrapper table:not(.custom-report-table):not(.holiday-table),
   table.w-full:not(.custom-report-table):not(.holiday-table) {
-    @apply !w-full !border-collapse !border-spacing-0;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
   }
 
   .card table:not(.custom-report-table):not(.holiday-table) thead,
   .table-wrapper table:not(.custom-report-table):not(.holiday-table) thead,
   table.w-full:not(.custom-report-table):not(.holiday-table) thead {
-    @apply !bg-indigo-50/60 dark: !bg-indigo-950/20;
+    background-color: rgba(238, 242, 255, 0.6) !important;
+  }
+
+  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table) thead,
+  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table) thead,
+  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table) thead {
+    background-color: rgba(30, 27, 75, 0.2) !important;
   }
 
   .card table:not(.custom-report-table):not(.holiday-table) th,
   .table-wrapper table:not(.custom-report-table):not(.holiday-table) th,
   table.w-full:not(.custom-report-table):not(.holiday-table) th {
-    @apply !px-3 !py-2.5 !text-[10px] !font-black !uppercase !tracking-wider !text-indigo-900 dark: !text-indigo-300 !border-b !border-indigo-100 dark: !border-gray-800 !text-left;
+    padding: 0.625rem 0.75rem !important;
+    font-size: 10px !important;
+    font-weight: 900 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: #312e81 !important;
+    border-bottom: 1px solid #e0e7ff !important;
+    text-align: left !important;
+  }
+
+  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table) th,
+  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table) th,
+  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table) th {
+    color: #a5b4fc !important;
+    border-bottom-color: #1f2937 !important;
   }
 
   .card table td,
   .table-wrapper table td,
   table.w-full td {
-    @apply !px-3 !py-2 !text-sm !font-semibold !text-gray-700 dark: !text-gray-300 !border-b !border-gray-100 dark: !border-gray-800/50 !align-middle;
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    color: #374151 !important;
+    border-bottom: 1px solid #f3f4f6 !important;
+    vertical-align: middle !important;
+  }
+
+  :is(.dark *) .card table td,
+  :is(.dark *) .table-wrapper table td,
+  :is(.dark *) table.w-full td {
+    color: #d1d5db !important;
+    border-bottom-color: rgba(31, 41, 55, 0.5) !important;
   }
 
   .card table tbody tr,
   .table-wrapper table tbody tr,
   table.w-full tbody tr {
-    @apply !bg-white dark: !bg-gray-900 hover: !bg-indigo-50/30 dark:hover: !bg-indigo-900/10 !transition-colors;
+    background-color: #ffffff !important;
+    transition: background-color 0.15s ease !important;
+  }
+
+  :is(.dark *) .card table tbody tr,
+  :is(.dark *) .table-wrapper table tbody tr,
+  :is(.dark *) table.w-full tbody tr {
+    background-color: #111827 !important;
+  }
+
+  .card table tbody tr:hover,
+  .table-wrapper table tbody tr:hover,
+  table.w-full tbody tr:hover {
+    background-color: rgba(238, 242, 255, 0.3) !important;
+  }
+
+  :is(.dark *) .card table tbody tr:hover,
+  :is(.dark *) .table-wrapper table tbody tr:hover,
+  :is(.dark *) table.w-full tbody tr:hover {
+    background-color: rgba(49, 46, 129, 0.1) !important;
   }
 
   .card table tbody tr:nth-child(even),
   .table-wrapper table tbody tr:nth-child(even),
   table.w-full tbody tr:nth-child(even) {
-    @apply !bg-slate-50/50 dark: !bg-gray-800/20;
+    background-color: rgba(248, 250, 252, 0.5) !important;
+  }
+
+  :is(.dark *) .card table tbody tr:nth-child(even),
+  :is(.dark *) .table-wrapper table tbody tr:nth-child(even),
+  :is(.dark *) table.w-full tbody tr:nth-child(even) {
+    background-color: rgba(31, 41, 55, 0.2) !important;
   }
 
   .card table tbody tr:last-child td,
   .table-wrapper table tbody tr:last-child td,
   table.w-full tbody tr:last-child td {
-    @apply !border-none;
+    border-bottom: none !important;
   }
 }
 
