@@ -552,13 +552,15 @@ export const MCQPaperGeneratorPage = () => {
     // Temporarily reset zoom on the preview paper so we capture unscaled 1:1 true pixels
     const scaleContainer = paperEl.closest('.dynamic-paper-scale') as HTMLElement;
     const prevZoom = scaleContainer ? scaleContainer.style.zoom : '';
+    const prevTransition = scaleContainer ? scaleContainer.style.transition : '';
     if (scaleContainer) {
+      scaleContainer.style.transition = 'none';
       scaleContainer.style.zoom = '1';
     }
 
     try {
       // Small pause to let DOM compute unscaled dimensions
-      await new Promise(r => setTimeout(r, 120));
+      await new Promise(r => setTimeout(r, 150));
 
       const paperRect = paperEl.getBoundingClientRect();
 
@@ -623,50 +625,64 @@ export const MCQPaperGeneratorPage = () => {
       const pageWidthMm = 210;
       const pageHeightMm = 297;
       const a4HeightPx = Math.floor(canvas.width * (297 / 210));
-      const topMarginPx = Math.round(canvas.width * (8 / 210));
-      const bottomPaddingPx = Math.round(canvas.width * (10 / 210));
+      const topMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm top margin on Page 2+
+      const bottomMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm bottom margin
 
-      let currentCanvasY = 0;
-      let pageIndex = 0;
+      // Group atomic blocks into discrete A4 pages so NO question is ever cut in half
+      interface PageSlice {
+        startY: number;
+        endY: number;
+      }
+      const pageSlices: PageSlice[] = [];
 
-      while (currentCanvasY < canvas.height - 15) {
-        const pageTopMargin = pageIndex === 0 ? 0 : topMarginPx;
-        const availableHeight = a4HeightPx - pageTopMargin - bottomPaddingPx;
-        const maxPageBottom = currentCanvasY + availableHeight;
+      let blockIdx = 0;
+      while (blockIdx < blocks.length) {
+        const isFirstPage = pageSlices.length === 0;
+        const pageTopMargin = isFirstPage ? 0 : topMarginPx;
+        const maxContentHeight = a4HeightPx - pageTopMargin - bottomMarginPx;
 
-        let cutCanvasY = currentCanvasY + availableHeight;
+        // Start Y on canvas for this page
+        // For page 1, start from 0 to include top padding
+        // For page 2+, start exactly at the top of the first block of that page with a tiny 4px buffer
+        const startY = isFirstPage ? 0 : Math.max(0, blocks[blockIdx].topCanvasY - 4);
+        let endY = startY;
+        let lastFittingIdx = blockIdx;
 
-        if (maxPageBottom < canvas.height) {
-          // Find all blocks visible on this page from currentCanvasY
-          const visibleBlocks = blocks.filter(b => b.bottomCanvasY > currentCanvasY + 10);
-          // Find blocks that completely fit before maxPageBottom
-          const fittingBlocks = visibleBlocks.filter(b => b.bottomCanvasY <= maxPageBottom);
+        while (blockIdx < blocks.length) {
+          const block = blocks[blockIdx];
+          const heightIfIncluded = block.bottomCanvasY - startY;
 
-          if (fittingBlocks.length > 0) {
-            let lastFitting = fittingBlocks[fittingBlocks.length - 1];
-
-            // Prevent orphan section header (e.g. "PHYSICS" or "CHEMISTRY") at bottom of page
-            if (lastFitting.type === 'section-header') {
-              if (fittingBlocks.length > 1) {
-                lastFitting = fittingBlocks[fittingBlocks.length - 2];
-                cutCanvasY = lastFitting.bottomCanvasY;
-              } else {
-                cutCanvasY = currentCanvasY + availableHeight;
-              }
-            } else {
-              cutCanvasY = lastFitting.bottomCanvasY;
-            }
+          if (heightIfIncluded <= maxContentHeight) {
+            // Block completely fits on this page!
+            lastFittingIdx = blockIdx;
+            endY = block.bottomCanvasY;
+            blockIdx++;
           } else {
-            // Single oversized block: cut at max available height
-            cutCanvasY = Math.min(canvas.height, currentCanvasY + availableHeight);
+            // Block does NOT fit on this page! It must start cleanly on the NEXT page!
+            // Orphan check: If lastFitting was a section header ("PHYSICS"), don't leave it alone at bottom
+            if (blocks[lastFittingIdx].type === 'section-header' && lastFittingIdx > 0 && lastFittingIdx === blockIdx - 1) {
+              blockIdx = lastFittingIdx;
+              endY = blocks[lastFittingIdx - 1].bottomCanvasY;
+            }
+            break;
           }
-        } else {
-          // Last page
-          cutCanvasY = canvas.height;
         }
 
-        const sliceHeight = Math.max(50, cutCanvasY - currentCanvasY);
+        // Safety fallback if a single oversized block exceeds the entire page height
+        if (endY === startY && blockIdx < blocks.length) {
+          endY = Math.min(canvas.height, startY + maxContentHeight);
+          blockIdx++;
+        }
 
+        // Add 6px bottom cushion below the last block
+        pageSlices.push({
+          startY,
+          endY: Math.min(canvas.height, endY + 6)
+        });
+      }
+
+      // Render each page slice onto its own pristine A4 canvas
+      pageSlices.forEach((slice, pageIdx) => {
         const pageCanvas = document.createElement('canvas');
         pageCanvas.width = canvas.width;
         pageCanvas.height = a4HeightPx;
@@ -675,10 +691,14 @@ export const MCQPaperGeneratorPage = () => {
         if (ctx) {
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, pageCanvas.width, a4HeightPx);
+
+          const pageTopMargin = pageIdx === 0 ? 0 : topMarginPx;
+          const sliceHeight = Math.max(10, slice.endY - slice.startY);
+
           ctx.drawImage(
             canvas,
             0,
-            currentCanvasY,
+            slice.startY,
             canvas.width,
             sliceHeight,
             0,
@@ -689,16 +709,11 @@ export const MCQPaperGeneratorPage = () => {
         }
 
         const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.98);
-
-        if (pageIndex > 0) {
+        if (pageIdx > 0) {
           pdf.addPage('a4', 'p');
         }
-
         pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
-
-        currentCanvasY = cutCanvasY;
-        pageIndex++;
-      }
+      });
 
       const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
       const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
@@ -712,6 +727,7 @@ export const MCQPaperGeneratorPage = () => {
     } finally {
       if (scaleContainer) {
         scaleContainer.style.zoom = prevZoom;
+        scaleContainer.style.transition = prevTransition;
       }
       setIsDownloadingPdf(false);
     }

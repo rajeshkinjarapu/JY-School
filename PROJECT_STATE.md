@@ -1,5 +1,24 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Download PDF లో ప్రశ్నలు సగానికి కట్ అవ్వకుండా అటామిక్ పేజ్ అసైన్‌మెంట్ సంపూర్ణ పరిష్కారం (Atomic Block Page Assignment for Download PDF) (November 18, 2026)
+- **యూజర్ సమస్య & అందించిన చిత్రాలు (`media_1794993795217_9f22205a.jpg` & `media_1794993809638_6b392f04.jpg`):**
+  - "paper ki question saripokapote next page lo question start avvali, image 2 lo akkada question saripoye space undi but raledu, download button click cheyagane pefect ga pdf download avvali"
+  - డౌన్‌లోడ్ అయిన PDF లో పేజీ 1 అడుగున Question 10 సగం కట్ అయి ఉంది. పేజీ 2 అడుగున Question 13 & Question 18 లు సగానికి తెగిపోయి, మిగతా సగం తర్వాతి పేజీకి వెళ్లాయి.
+- **ఖచ్చితమైన సాంకేతిక కారణాలు (Technical Root Causes):**
+  1. `LiveLatexPreview.tsx` లోని `split(/(\n\n+)/)` ఎడిటర్‌లో ప్రశ్నల మధ్య కేవలం `\n` ఉన్నప్పుడు వాటిని వేరు చేయలేకపోయింది. దీనివల్ల Q9-Q10, Q17-Q18 ఒకే బ్లాక్‌గా కలిసిపోయి, ఆ పెద్ద బ్లాక్ పేజీలో సరిపోక మధ్యలోకి కట్ అయింది.
+  2. `MCQPaperGeneratorPage.tsx` లోని పాత స్లైసింగ్ లూప్ బ్లైండ్‌గా `currentCanvasY` ని తీసుకుని కట్ చేయడం వల్ల, చిన్న కోఆర్డినేట్ డ్రిఫ్ట్ వచ్చినా ప్రశ్న లైన్ మధ్యలోకి కట్ అయింది.
+- **అమలు చేసిన ప్రొఫెషనల్ పరిష్కారాలు (Fixes Applied):**
+  1. [`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):
+     - `normalizedText.replace(/([^\n])\n(\s*(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n$2')` తో ప్రతి ప్రశ్నా స్వతంత్రంగా వేరు చేయబడింది. ప్రతి ప్రశ్నా (దాని నంబర్, టెక్స్ట్, KaTeX ఫార్ములాలు, మరియు 4 ఆప్షన్లు) ఒకే అటామిక్ `data-mcq-block="true"` గా స్థిరపరచబడింది.
+  2. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+     - **Atomic Block Page Assignment అల్గారిథమ్:**
+       - ఒక పేజీలో ప్రశ్నలను ఒక్కొక్కటిగా లెక్కిస్తుంది. ఒక ప్రశ్న ఆ పేజీ అందుబాటులో ఉన్న ఎత్తులో (`maxContentHeight`) పూర్తిగా సరిపోకపోతే, **ఆ ప్రశ్నకు సంబంధించి ఒక్క పిక్సెల్ కూడా ప్రస్తుత పేజీలో పడదు!**
+       - ఆ పేజీ అంతటితో ముగుస్తుంది. తర్వాతి పేజీ ఆ ప్రశ్న ప్రారంభం (`topCanvasY`) నుండి 100% ప్యూర్ గా ప్రారంభమవుతుంది!
+       - ఆర్ఫన్ హెడర్ నివారణ (పేజీ చివరన ప్రశ్నలు లేకుండా ఒంటరిగా సెక్షన్ హెడర్ పడకుండా జాగ్రత్త పడ్డాము).
+- **ఫలితం:**
+  - "Download PDF" బటన్ క్లిక్ చేసిన వెంటనే ఏ ఒక్క ప్రశ్నా సగానికి తెగిపోకుండా, సరిపోని ప్రశ్నలు శుభ్రంగా తర్వాతి పేజీకి వెళ్లి హై-రిజల్యూషన్ A4 PDF గా పర్ఫెక్ట్‌గా డౌన్‌లోడ్ అవుతాయి!
+
+
 ## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూ కట్ అవ్వడం & జూమ్ క్లిప్పింగ్ సంపూర్ణ పరిష్కారం (Print Preview 1-Sheet Clipping & Chromium Zoom Fix) (November 18, 2026)
 - **యూజర్ సమస్య & స్క్రీన్‌షాట్ (`media_1794991828058_0d831da7.jpg`):**
   - "print preview ila undi"

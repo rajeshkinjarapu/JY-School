@@ -285,8 +285,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     // Regex to match option layout tags e.g. [2x2], [1x1], [1x4], [vertical], [horizontal]
     const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
 
-    // Normalize text blocks so that empty lines between a question and its options don't detach the options
-    const normalizedText = text.replace(/(\n\s*)\n+(\s*\(A\))/g, '$1$2');
+    // Normalize text blocks so that questions are ALWAYS separated cleanly and options never detach
+    let normalizedText = text.replace(/\r\n/g, '\n');
+    normalizedText = normalizedText.replace(/(\n\s*)\n+(\s*\(A\))/gi, '$1$2');
+    // Ensure every question start (e.g. "\n2. ", "\n10. ", "\n18. ") is preceded by \n\n so questions are never accidentally merged
+    normalizedText = normalizedText.replace(/([^\n])\n(\s*(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n$2');
     const rawBlocks = normalizedText.split(/(\n\n+)/);
     
     for (let i = 0; i < rawBlocks.length; i += 2) {
