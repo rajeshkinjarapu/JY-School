@@ -435,18 +435,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             let optionsLayout = '';
             if (forcedLayout === '1x4') {
-              optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+              optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
             } else if (forcedLayout === '2x2') {
-              optionsLayout = 'grid grid-cols-2 w-full gap-x-3 gap-y-0.5';
+              optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
             } else if (forcedLayout === '1x1') {
-              optionsLayout = 'flex flex-col w-full gap-0.5';
+              optionsLayout = 'flex flex-col w-auto gap-0.5';
             } else {
               if (maxLen <= singleLineLimit) {
-                optionsLayout = 'grid grid-cols-4 w-full gap-x-2 gap-y-0.5';
+                optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
               } else if (maxLen <= twoByTwoLimit) {
-                optionsLayout = 'grid grid-cols-2 w-full gap-x-3 gap-y-0.5';
+                optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
               } else {
-                optionsLayout = 'flex flex-col w-full gap-0.5';
+                optionsLayout = 'flex flex-col w-auto gap-0.5';
               }
             }
 
@@ -575,8 +575,34 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           word-break: normal !important;
         }
         .katex .base {
-          white-space: normal !important;
-          display: inline !important;
+          position: relative !important;
+          display: inline-block !important;
+          white-space: normal;
+        }
+        .katex .mtable {
+          display: inline-table !important;
+          vertical-align: middle !important;
+          white-space: nowrap !important;
+          margin-top: 0.15em !important;
+          margin-bottom: 0.15em !important;
+        }
+        .katex .vlist-t {
+          display: inline-table !important;
+          table-layout: fixed !important;
+        }
+        .katex .vlist-r {
+          display: table-row !important;
+        }
+        .katex .vlist {
+          display: table-cell !important;
+          vertical-align: bottom !important;
+          position: relative !important;
+        }
+        .katex .vlist-s {
+          display: table-cell !important;
+          vertical-align: bottom !important;
+          font-size: 1px !important;
+          width: 0 !important;
         }
         .katex-html {
           white-space: normal !important;
@@ -595,8 +621,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             white-space: normal !important;
           }
           .katex .base {
-            white-space: normal !important;
-            display: inline !important;
+            position: relative !important;
+            display: inline-block !important;
+            white-space: normal;
+          }
+          .katex .mtable {
+            display: inline-table !important;
+            vertical-align: middle !important;
+            white-space: nowrap !important;
+            margin-top: 0.15em !important;
+            margin-bottom: 0.15em !important;
           }
           .katex-html {
             visibility: visible !important;
@@ -606,6 +640,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             visibility: visible !important;
             opacity: 1 !important;
             color: #000000 !important;
+            background: transparent !important;
           }
           .question-block {
             break-inside: avoid !important;
@@ -614,22 +649,37 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             position: static !important;
             display: block !important;
             width: 100% !important;
+            background: transparent !important;
           }
           .question-text-wrapper {
             break-after: avoid !important;
             page-break-after: avoid !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
+            overflow: visible !important;
+            background: transparent !important;
           }
           .question-options-container {
             break-before: avoid !important;
             page-break-before: avoid !important;
             break-inside: avoid !important;
             page-break-inside: avoid !important;
+            width: auto !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            background: transparent !important;
+          }
+          .question-options-container * {
+            background: transparent !important;
+            background-color: transparent !important;
           }
           .question-option-item {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
+            min-width: 0 !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            background: transparent !important;
           }
           .paper-header,
           .section-header,

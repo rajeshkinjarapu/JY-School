@@ -1,5 +1,36 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ పేపర్ ప్రింట్ ప్రివ్యూలో మ్యాట్రిక్స్ వరుస కనిపించకపోవడం & ఆప్షన్ (D) కట్ అవ్వడం సమస్యల పరిష్కారం (Print Preview Matrix Clipping & Option (D) Cutoff Fix) (November 18, 2026)
+- **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
+  - "print preview lo full matrix padatam ledu, live preview lo perfect ga chupistundi"
+  - అటాచ్ చేసిన స్క్రీన్‌షాట్ పరిశీలన:
+    1. Q11, Q12, Q13 (3x3 Matrices) లలో 3వ వరుస (Row 3) ప్రింట్ ప్రివ్యూలో కనిపించకుండా తెల్లటి పట్టీతో కప్పబడిపోయింది. బ్రాకెట్ మొత్తం కనిపిస్తున్నప్పటికీ, 3వ వరుస టెక్స్ట్ కనిపించడం లేదు.
+    2. Q10, Q11, Q12, Q13, Q14 లలో 4వ ఆప్షన్ (D) కుడివైపు మార్జిన్ దాటి కట్ అయిపోయి కేవలం (A), (B), (C) మాత్రమే కనిపిస్తున్నాయి.
+    3. స్క్రీన్ లైవ్ ప్రివ్యూలో మాత్రం అంతా సరిగ్గా కనిపిస్తోంది.
+- **ఖచ్చితమైన సాంకేతిక కారణాలు (Technical Root Causes):**
+  1. **మ్యాట్రిక్స్ వరుస మిస్సింగ్:**
+     - `LiveLatexPreview.tsx` మరియు `MCQPaperGeneratorPage.tsx` లలో `.katex .base { display: inline !important; white-space: normal !important; }` ఉండటం వల్ల KaTeX మ్యాట్రిక్స్ యొక్క నిలువు ఎత్తు (height) సరిగ్గా గణించబడక, `.question-text-wrapper` ఎత్తు కేవలం సింగిల్ లైన్ ఎత్తుకు కుదించుకుపోయింది.
+     - దీనివల్ల మ్యాట్రిక్స్ 3వ వరుస క్రిందికి వేలాడింది. ప్రింట్ మోడ్ లో `index.css` ప్రతి `div` కి `background: #ffffff !important` ఇవ్వడం వల్ల, ఆప్షన్స్ కంటైనర్ (`.question-options-container`) నేరుగా మ్యాట్రిక్స్ 3వ వరుసపై కూర్చుని, దానిని తెల్లటి బ్యాక్‌గ్రౌండ్ తో పూర్తిగా తుడిచిపెట్టేసింది.
+  2. **ఆప్షన్ (D) కట్ అవ్వడం:**
+     - `.question-options-container` కి `ml-8 md:ml-9` (36px మార్జిన్) ఉంది.
+     - అదే సమయంలో ఆప్షన్స్ లేఅవుట్ లో `w-full` (100% వెడల్పు) ఉండటం వల్ల `36px + 100%` వెడల్పుతో మొత్తం పేజీ అంచు దాటి 36px కుడివైపుకు జరిగిపోయింది.
+     - 4-కాలమ్ గ్రిడ్ లోని 4వ కాలమ్ (ఆప్షన్ D) ప్రింటబుల్ మార్జిన్ వెలుపలికి నెట్టివేయబడి కట్ అయింది.
+  3. **ప్రింట్ Iframe వ్యూపోర్ట్:**
+     - ప్రింట్ కోసం వాడిన హిడెన్ ఐఫ్రేమ్‌కు `width: 0; height: 0` ఉండటం వల్ల బ్రౌజర్ వ్యూపోర్ట్ కాలిక్యులేషన్స్ తప్పుగా జరిగాయి.
+- **అమలు చేసిన పరిష్కారాలు:**
+  1. [`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx):
+     - `.katex .base` ను KaTeX అధికారిక స్పెసిఫికేషన్ ప్రకారం `display: inline-block !important; position: relative !important;` గా మార్చాము.
+     - `.katex .mtable` కి `display: inline-table !important; vertical-align: middle !important;` మరియు మార్జిన్లు అందించాము.
+     - `optionsLayout` లోని `w-full` ని తొలగించి `w-auto` గా మార్చడం ద్వారా `ml-8 md:ml-9` తో కంటైనర్ కుడివైపుకు పొడుచుకు రాకుండా సరిచేశాము.
+     - ప్రింట్ స్టైల్స్ లో `.question-options-container`, `.question-option-item`, `.question-text-wrapper` ల బ్యాక్‌గ్రౌండ్‌ను `transparent !important` గా మార్చి, ఏ మ్యాథ్ ఎలిమెంట్‌ను కప్పివేయకుండా చేశాము.
+  2. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+     - ప్రింట్ ఐఫ్రేమ్‌కు ఖచ్చితమైన A4 కొలతలు (`width: 210mm; height: 297mm; opacity: 0; pointerEvents: none;`) కేటాయించాము.
+     - ఐఫ్రేమ్ లోపల ఇంజెక్ట్ చేసే ప్రింట్ స్టైల్స్ లో `.katex .base` ని `inline-block` గా మరియు `.katex .mtable` ని `inline-table` గా సరిదిద్దాము.
+     - `.question-options-container` కి `width: auto !important;` మరియు `background: transparent !important;` అమలు చేశాము.
+  3. [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css):
+     - `@media print` లో `#a4-preview-paper` కింద ఉన్న క్వశ్చన్ బ్లాక్స్ మరియు ఆప్షన్స్ అన్నింటికీ `background: transparent !important;` ఇచ్చి ప్రింట్ వైల్డ్‌కార్డ్ వైట్ బ్యాక్‌గ్రౌండ్ నుండి సంపూర్ణ రక్షణ కల్పించాము.
+     - KaTeX `.base` మరియు `.mtable` వర్టికల్ లేఅవుట్ రూల్స్ చేర్చాము.
+
 ## చివరి సంభాషణ - ఎక్సెల్ బల్క్ ఇంపోర్ట్ బులెట్‌ప్రూఫ్ భద్రతా రక్షణల అమలు (Bulletproof Anti-Row-Shift Safeguards) (November 18, 2026)
 - **యూజర్ ఆదేశం:**
   - "next nunchi excel upload chesina sare ilanti tappulu jaragakunda undataniki emina cheyu"
