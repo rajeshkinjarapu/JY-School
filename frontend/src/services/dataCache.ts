@@ -14,8 +14,8 @@ import api from '../api/axios';
 // TTL per key (milliseconds)
 const TTL: Record<string, number> = {
   students: 5 * 60 * 1000,   // 5 min
-  classes:  3 * 60 * 1000,   // 3 min
-  exams:    5 * 60 * 1000,   // 5 min
+  classes: 3 * 60 * 1000,   // 3 min
+  exams: 5 * 60 * 1000,   // 5 min
   teachers: 5 * 60 * 1000,   // 5 min
   subjects: 10 * 60 * 1000,  // 10 min
   payments: 2 * 60 * 1000,   // 2 min
@@ -23,9 +23,10 @@ const TTL: Record<string, number> = {
 
 // API endpoints per key
 const ENDPOINTS: Record<string, string> = {
+  students: '/api/students?limit=200&page=1',
   students: '/api/students?limit=1000&page=1',
-  classes:  '/api/classes?limit=500',
-  exams:    '/api/exams?limit=500',
+  classes: '/api/classes?limit=500',
+  exams: '/api/exams?limit=500',
   teachers: '/api/teachers?limit=500',
   subjects: '/api/subjects?limit=500',
   payments: '/api/fees/payments?limit=500&page=1',
@@ -45,12 +46,12 @@ function readLocal(name: string): any[] | null {
     if (!raw) return null;
     const { data, ts } = JSON.parse(raw);
     if (Date.now() - ts < TTL[name] && Array.isArray(data) && data.length > 0) return data;
-  } catch (_) {}
+  } catch (_) { }
   return null;
 }
 
 function writeLocal(name: string, data: any[]) {
-  try { localStorage.setItem(lsKey(name), JSON.stringify({ data, ts: Date.now() })); } catch (_) {}
+  try { localStorage.setItem(lsKey(name), JSON.stringify({ data, ts: Date.now() })); } catch (_) { }
 }
 
 async function fetchFromAPI(name: string): Promise<any[]> {
@@ -89,7 +90,7 @@ export const DataCache = {
       if (mem && Date.now() - mem.ts < TTL[name]) {
         // Trigger background refresh if data is >50% through TTL
         if (Date.now() - mem.ts > TTL[name] * 0.5) {
-          fetchFromAPI(name).catch(() => {});
+          fetchFromAPI(name).catch(() => { });
         }
         return mem.data;
       }
@@ -98,7 +99,7 @@ export const DataCache = {
       const local = readLocal(name);
       if (local) {
         memCache[name] = { data: local, ts: Date.now() };
-        fetchFromAPI(name).catch(() => {}); // background refresh
+        fetchFromAPI(name).catch(() => { }); // background refresh
         return local;
       }
     }
@@ -114,7 +115,7 @@ export const DataCache = {
     names.forEach((name, index) => {
       setTimeout(() => {
         if (!memCache[name] && !readLocal(name)) {
-          fetchFromAPI(name).catch(() => {});
+          fetchFromAPI(name).catch(() => { });
         }
       }, index * delayMs);
     });
@@ -123,7 +124,7 @@ export const DataCache = {
   prefetch(names: string[]) {
     names.forEach(name => {
       if (!memCache[name] && !readLocal(name)) {
-        fetchFromAPI(name).catch(() => {});
+        fetchFromAPI(name).catch(() => { });
       }
     });
   },
@@ -131,14 +132,14 @@ export const DataCache = {
   /** Invalidate a key — next .get() will fetch fresh */
   invalidate(name: string) {
     delete memCache[name];
-    try { localStorage.removeItem(lsKey(name)); } catch (_) {}
+    try { localStorage.removeItem(lsKey(name)); } catch (_) { }
   },
 
   /** Invalidate all keys */
   invalidateAll() {
     Object.keys(ENDPOINTS).forEach(name => {
       delete memCache[name];
-      try { localStorage.removeItem(lsKey(name)); } catch (_) {}
+      try { localStorage.removeItem(lsKey(name)); } catch (_) { }
     });
   },
 

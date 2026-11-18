@@ -1,5 +1,22 @@
 # JY School Project State
 
+## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూ హెడర్ & లేఅవుట్ పునరుద్ధరణ (Native window.print() Restoration & Tailwind Print Styling) (November 18, 2026)
+- **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
+  - "print preview change ayyindi"
+  - స్క్రీన్‌షాట్ పరిశీలన (`media_1794988499571_24f9143c.jpg`):
+    - ప్రింట్ ప్రివ్యూలో పాఠశాల లోగో చాలా పెద్దదై మధ్యలోకి వచ్చింది. దాని కింద స్కూల్ పేరు, చిరునామా నిలువుగా పడ్డాయి. హెడర్ 3-కాలమ్ లేఅవుట్ పోయింది మరియు ఆప్షన్లు నిలువుగా పడ్డాయి.
+- **ఖచ్చితమైన సాంకేతిక కారణం (Technical Root Cause):**
+  - `handlePrint` లో ఒక ప్రత్యేక హిడెన్ `iframe` వాడటం వల్ల, Vite / Tailwind CSS v4 లోని స్టైల్స్ మరియు CSS వేరియబుల్స్ ఆ ఐఫ్రేమ్‌లోకి అందలేదు. దీనివల్ల `grid-cols-[80px_1fr_80px]` లేఅవుట్, `w-[78px]` లోగో సైజింగ్ పనిచేయక పేపర్ అన్‌స్టైల్డ్ HTML గా మారింది.
+- **అమలు చేసిన పరిష్కారాలు:**
+  1. [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+     - `handlePrint` లోని 184 లైన్ల ఐఫ్రేమ్ కోడ్‌ను పూర్తిగా తొలగించి, క్లీన్ నేటివ్ `window.print()` కి రీస్టోర్ చేశాము.
+     - మొబైల్ బాటమ్ నావిగేషన్ బార్‌కు `print:hidden` కేటాయించాము.
+  2. [`frontend/src/index.css`](file:///d:/JY%20School/JY-School-main/frontend/src/index.css):
+     - `@media print` లో `.dynamic-paper-scale` కి `zoom: 1 !important; transform: none !important;` ఇచ్చి, ప్రింట్ లో ఫుల్ స్కేల్ A4 సైజును ఖరారు చేశాము.
+     - `#a4-preview-paper` కి సరైన వెడల్పు, బ్రేక్-ఇన్‌సైడ్ మరియు పారదర్శక బ్యాక్‌గ్రౌండ్ స్థిరపరిచాము.
+- **ఫలితం:**
+  - ప్రింట్ ప్రివ్యూ ఒరిజినల్ ప్రొఫెషనల్ హెడర్ (ఎడమవైపు 78px లోగో, మధ్యలో స్కూల్ పేరు, పక్కపక్కనే ఆప్షన్లు) తో మునుపటిలా 100% పర్ఫెక్ట్‌గా రీస్టోర్ అయింది.
+
 ## చివరి సంభాషణ - లైవ్ ప్రివ్యూ పునరుద్ధరణ & ప్రింట్ ప్రివ్యూ కరెక్షన్స్ (Live Preview Restoration & Print Preview Alignment) (November 18, 2026)
 - **యూజర్ సమస్య & అందించిన స్క్రీన్‌షాట్:**
   - "em chesavu ra live preview mottam maripoyindi"
