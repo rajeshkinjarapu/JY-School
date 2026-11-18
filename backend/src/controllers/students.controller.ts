@@ -830,12 +830,47 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
         }
 
         if (existingStudent) {
+          // ── BULLETPROOF ROW-SHIFT & SILENT OVERWRITE SAFEGUARDS ──
+          const existingName = (existingStudent.user?.name || '').trim();
+
+          // Check for high-confidence row-shift or mistaken ID collision:
+          if (existingName && name && name.toUpperCase() !== existingName.toUpperCase()) {
+            const oldWords = existingName.toUpperCase().split(/[\s.]+/).filter(w => w.length > 1);
+            const newWords = name.toUpperCase().split(/[\s.]+/).filter(w => w.length > 1);
+            const sharesWord = oldWords.some(w => newWords.includes(w));
+
+            const existingFather = (existingStudent.fatherName || '').trim().toUpperCase();
+            const newFather = (fatherName || '').trim().toUpperCase();
+            const fatherMismatch = existingFather && newFather && existingFather !== newFather &&
+              !existingFather.split(/[\s.]+/).some(w => w.length > 2 && newFather.includes(w));
+
+            if (!sharesWord && fatherMismatch) {
+              // High-confidence ROW SHIFT detected: Both Student Name and Father Name are completely different!
+              failed.push({
+                row: rawRow,
+                reason: `భద్రతా తిరస్కరణ (Row Shift Detected): Student ID "${rawStudentId}" ఇప్పటికే "${existingName}" (తండ్రి: ${existingStudent.fatherName}) పేరుతో రిజిస్టర్ అయి ఉంది. కానీ ఎక్సెల్ వరుసలో పూర్తి భిన్నమైన పేరు "${name}" (తండ్రి: ${fatherName}) ఉంది. ఎక్సెల్ షీట్ లో వరుసలు పక్కకు జరగడం (Row Shift) వల్ల డేటా పాడవ్వకుండా ఈ అప్‌డేట్ ఆపబడింది.`
+              });
+              continue;
+            }
+          }
+
           // ── PARTIAL SELECTIVE UPDATE (ONLY UPDATES WHAT WAS GIVEN IN EXCEL!) ──
           const userDataToUpdate: any = {};
-          // CRITICAL SAFETY CHECK: Only update user.name if matched by rollNo or existing name is empty,
-          // never silently overwrite an existing student's name when matched by Aadhaar/ChildId alone!
+          
           if (name && (matchedByRollNo || !existingStudent.user?.name)) {
-            userDataToUpdate.name = name;
+            // Only update name if it shares at least one name part (spelling fix/expansion) or existing name was empty
+            if (!existingName) {
+              userDataToUpdate.name = name;
+            } else if (name.toUpperCase() !== existingName.toUpperCase()) {
+              const oldWords = existingName.toUpperCase().split(/[\s.]+/).filter(w => w.length > 1);
+              const newWords = name.toUpperCase().split(/[\s.]+/).filter(w => w.length > 1);
+              const sharesWord = oldWords.some(w => newWords.includes(w));
+              if (sharesWord) {
+                userDataToUpdate.name = name;
+              } else {
+                console.warn(`[BulkImport Safety] Preserving registered name "${existingName}" for roll "${existingStudent.rollNo}". Ignored mismatched name "${name}".`);
+              }
+            }
           }
           if (primaryPhone) userDataToUpdate.phone = primaryPhone;
 
