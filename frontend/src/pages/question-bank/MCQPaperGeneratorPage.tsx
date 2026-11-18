@@ -562,17 +562,23 @@ export const MCQPaperGeneratorPage = () => {
 
       const paperRect = paperEl.getBoundingClientRect();
 
-      // Collect bottom positions of all question blocks and headers to prevent cutting questions in half
-      const elements = Array.from(paperEl.querySelectorAll('.question-block, .paper-header, .section-header, .paper-instructions')) as HTMLElement[];
-      const blockBottoms: number[] = [];
-      for (const el of elements) {
-        const r = el.getBoundingClientRect();
-        const bottomRelative = r.bottom - paperRect.top;
-        if (bottomRelative > 0) {
-          blockBottoms.push(bottomRelative);
+      // Collect all top-level printable content blocks inside #a4-preview-paper
+      // (avoid selecting both outer and inner question-block wrappers)
+      const allCandidateEls = Array.from(paperEl.querySelectorAll(
+        '.paper-header, .paper-instructions, .section-header, .question-block'
+      )) as HTMLElement[];
+
+      const topLevelBlocks: HTMLElement[] = [];
+      for (const el of allCandidateEls) {
+        // Only include if no other candidate element is an ancestor of this one
+        const isNested = allCandidateEls.some(other => other !== el && other.contains(el));
+        if (!isNested && !topLevelBlocks.includes(el)) {
+          topLevelBlocks.push(el);
         }
       }
-      blockBottoms.sort((a, b) => a - b);
+
+      // Sort blocks top-to-bottom
+      topLevelBlocks.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
       // Capture the LIVE, fully-rendered DOM directly with toCanvas (from html-to-image)
       // This captures the exact KaTeX fonts, SVGs, vectors, and math formulas visible on screen!
@@ -608,7 +614,27 @@ export const MCQPaperGeneratorPage = () => {
         throw new Error('Failed to capture preview canvas.');
       }
 
-      const scaleRatio = canvas.width / paperRect.width;
+      // Precise coordinate mapping from paperRect to canvas pixels
+      const scaleRatioY = canvas.height / paperRect.height;
+
+      interface BlockCoord {
+        el: HTMLElement;
+        type: 'header' | 'instructions' | 'section-header' | 'question';
+        topCanvasY: number;
+        bottomCanvasY: number;
+      }
+
+      const blockCoords: BlockCoord[] = topLevelBlocks.map(el => {
+        const r = el.getBoundingClientRect();
+        const top = Math.round((r.top - paperRect.top) * scaleRatioY);
+        const bottom = Math.round((r.bottom - paperRect.top) * scaleRatioY);
+        let type: BlockCoord['type'] = 'question';
+        if (el.classList.contains('paper-header')) type = 'header';
+        else if (el.classList.contains('paper-instructions')) type = 'instructions';
+        else if (el.classList.contains('section-header')) type = 'section-header';
+        return { el, type, topCanvasY: top, bottomCanvasY: bottom };
+      });
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pageWidthMm = 210;
       const pageHeightMm = 297;
@@ -617,27 +643,41 @@ export const MCQPaperGeneratorPage = () => {
       let currentCanvasY = 0;
       let pageIndex = 0;
 
-      while (currentCanvasY < canvas.height) {
+      while (currentCanvasY < canvas.height - 10) {
         const maxSliceBottom = currentCanvasY + pageHeightPx;
         let sliceHeight = pageHeightPx;
 
         if (maxSliceBottom < canvas.height) {
-          // Smart page boundary: Find the last question block that fits cleanly on this page
-          let bestCutCanvasY = -1;
-          for (const b of blockBottoms) {
-            const bCanvas = b * scaleRatio;
-            if (bCanvas > currentCanvasY + 120 && bCanvas <= maxSliceBottom) {
-              bestCutCanvasY = bCanvas;
-            }
-          }
+          // Find all blocks that are currently visible on this page (start on/after currentCanvasY)
+          const visibleBlocks = blockCoords.filter(b => b.bottomCanvasY > currentCanvasY + 20);
 
-          // If a natural question boundary was found that covers at least 60% of the page height
-          if (bestCutCanvasY !== -1 && (bestCutCanvasY - currentCanvasY) >= pageHeightPx * 0.60) {
-            sliceHeight = Math.round(bestCutCanvasY - currentCanvasY);
+          // Find blocks that can fit completely before the bottom of the page
+          // 20px safety buffer to prevent touching the page edge
+          const fittingBlocks = visibleBlocks.filter(b => b.bottomCanvasY <= maxSliceBottom - 20);
+
+          if (fittingBlocks.length > 0) {
+            let lastFitting = fittingBlocks[fittingBlocks.length - 1];
+
+            // Orphan heading check: If the last fitting item is a subject header (e.g. "PHYSICS"),
+            // and the next question cannot fit on this page, push the heading to the next page!
+            if (lastFitting.type === 'section-header') {
+              if (fittingBlocks.length > 1) {
+                lastFitting = fittingBlocks[fittingBlocks.length - 2];
+                sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
+              } else {
+                // If heading is the only thing on this page, let it take sliceHeight
+                sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
+              }
+            } else {
+              // Cut cleanly right at the bottom of the last question that fits!
+              sliceHeight = Math.max(100, lastFitting.bottomCanvasY - currentCanvasY);
+            }
           } else {
+            // Fallback: If a single block is taller than pageHeightPx, slice at pageHeightPx
             sliceHeight = Math.min(pageHeightPx, canvas.height - currentCanvasY);
           }
         } else {
+          // Last page: slice remaining height
           sliceHeight = canvas.height - currentCanvasY;
         }
 

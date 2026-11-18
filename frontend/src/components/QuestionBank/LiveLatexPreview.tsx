@@ -242,6 +242,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           }
           
           let textPart = inlinePart;
+          
+          // Auto-render any bare LaTeX expressions outside $ (e.g. \sqrt{2}, \frac{a}{b}, \vec{a})
+          if (/\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname|alpha|beta|theta|pi|times|pm|le|ge|in)\b/.test(textPart)) {
+            textPart = textPart.replace(/(\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\[a-zA-Z]+(?:\^\{[^{}]*\}|_\{[^{}]*\})*)/g, (match) => {
+              try {
+                return katex.renderToString(match, { displayMode: false, throwOnError: false });
+              } catch {
+                return match;
+              }
+            });
+          }
+
           if (parseMode === 'raw') {
             for(let i=0; i<3; i++) {
               textPart = textPart.replace(/\\textbf{([^{}]*)}/g, '<b>$1</b>');
@@ -286,22 +298,26 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const extraNewlines = Math.max(0, newlineCount - 2);
       const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 1.5}rem)` : '0.4rem';
 
-      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options
-      const hasUpperOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
-      const hasLowerOptions = (block.includes('(a)') || block.includes('(a).')) &&
-                              (block.includes('(b)') || block.includes('(b).')) &&
-                              (block.includes('(c)') || block.includes('(c).')) &&
-                              (block.includes('(d)') || block.includes('(d).'));
+      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
+      const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
+      const optMatchB = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block);
+      const optMatchC = /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block);
+      const optMatchD = /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block);
+      const hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
+      const hasLowerOptions = (/(?:^|\n|\s{2,}|\t)\s*\(a\)\.?\s*/.test(block)) &&
+                              (/(?:^|\n|\s{2,}|\t)\s*\(b\)\.?\s*/.test(block)) &&
+                              (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block)) &&
+                              (/(?:^|\n|\s{2,}|\t)\s*\(d\)\.?\s*/.test(block));
 
       if (!hasUpperOptions && hasLowerOptions) {
         block = block
-          .replace(/(?:^|\n|\s{2,}|\t)\(a\)\.?\s*/gi, '\n(A) ')
-          .replace(/(?:^|\n|\s{2,}|\t)\(b\)\.?\s*/gi, '\n(B) ')
-          .replace(/(?:^|\n|\s{2,}|\t)\(c\)\.?\s*/gi, '\n(C) ')
-          .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/gi, '\n(D) ');
+          .replace(/(?:^|\n|\s{2,}|\t)\(a\)\.?\s*/g, '\n(A) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(b\)\.?\s*/g, '\n(B) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(c\)\.?\s*/g, '\n(C) ')
+          .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/g, '\n(D) ');
       }
 
-      const hasOptions = block.includes('(A)') && block.includes('(B)') && block.includes('(C)') && block.includes('(D)');
+      const hasOptions = hasUpperOptions || (/(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block));
 
       const blockContent = (
         <React.Fragment key={`${subject}-${i}`}>
@@ -348,7 +364,20 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
             const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
 
-            const splitIndexA = block.indexOf('(A)');
+            // Find the TRUE option (A) split point (not inside math functions like trace(A) or f(A))
+            let splitIndexA = -1;
+            const aCandidates = Array.from(block.matchAll(/(?:^|\n|\s{2,}|\t)\s*\(A\)/g));
+            for (const c of aCandidates) {
+              const idx = c.index! + c[0].indexOf('(A)');
+              const after = block.substring(idx);
+              if (/(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(after)) {
+                splitIndexA = idx;
+                break;
+              }
+            }
+            if (splitIndexA === -1) {
+              splitIndexA = block.indexOf('(A)');
+            }
             const rawQuestionText = block.substring(0, splitIndexA);
             const questionText = rawQuestionText.replace(layoutTagRegex, '').trimEnd();
             const optionsText = block.substring(splitIndexA);
@@ -485,7 +514,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         
         if (showSubjectHeadings) {
           elements.push(
-            <div key={`heading-${subject}`} className="w-full mt-4 mb-2 break-inside-avoid text-center">
+            <div key={`heading-${subject}`} className="section-header w-full mt-4 mb-2 break-inside-avoid text-center">
               <h3 className="font-bold text-[12pt] uppercase border-b-2 border-black inline-block px-4 pb-1">
                 {subject}
               </h3>
