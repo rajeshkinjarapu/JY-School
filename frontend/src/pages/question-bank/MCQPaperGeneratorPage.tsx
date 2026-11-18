@@ -718,7 +718,12 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const handlePrint = () => {
+    // Add a temporary class to body so print CSS knows to show only the preview
+    document.body.classList.add('mcq-printing');
     window.print();
+    setTimeout(() => {
+      document.body.classList.remove('mcq-printing');
+    }, 1500);
   };
 
   const toggleFullScreen = () => {
