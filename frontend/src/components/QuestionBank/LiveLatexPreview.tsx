@@ -113,11 +113,14 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const getSpacingClasses = () => {
     switch (questionSpacing) {
-      case 'compact': return 'mb-1 leading-none';
-      case 'relaxed': return 'mb-4 leading-relaxed';
-      default: return 'mb-2 leading-snug';
+      case 'compact': return 'leading-tight';
+      case 'relaxed': return 'leading-normal';
+      default: return 'leading-snug';
     }
   };
+
+  const getBlockGap = () =>
+    questionSpacing === 'compact' ? 0.1 : questionSpacing === 'relaxed' ? 0.7 : 0.3; // rem
 
   const renderLatex = (text: string) => {
     try {
@@ -299,7 +302,10 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
       const newlineCount = (separator.match(/\n/g) || []).length;
       const extraNewlines = Math.max(0, newlineCount - 2);
-      const marginBottom = extraNewlines > 0 ? `calc(0.4rem + ${extraNewlines * 1.5}rem)` : '0.4rem';
+      const baseGap = getBlockGap();
+      const marginBottom = extraNewlines > 0
+        ? `calc(${baseGap}rem + ${extraNewlines * 0.75}rem)`
+        : `${baseGap}rem`;
 
       // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
@@ -332,9 +338,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const numStr = qNumMatch2[1];
               const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
               return (
-                <div className={`question-item break-inside-avoid flex items-start whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                <div className={`question-item break-inside-avoid flex items-baseline whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
                   <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
-                  <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(restText) }} />
+                  <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText.trimEnd()) }} />
                 </div>
               );
             }
@@ -459,13 +465,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             return (
               <div className={`question-item break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="question-text-wrapper mb-0.5 flex items-start whitespace-pre-wrap">
+                <div className="question-text-wrapper mb-0.5 flex items-baseline whitespace-pre-wrap">
                   {qNumStr ? (
                     <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
                   ) : (
                     <div className="flex-shrink-0 w-8 md:w-9"></div>
                   )}
-                  <div className="flex-1 min-w-0 whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
                 </div>
                 <div className={`question-options-container ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
                   <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
@@ -576,6 +582,12 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         .katex {
           font-size: 1.02em !important;
         }
+        .katex .hide-tail {
+          overflow: hidden !important;
+        }
+        .katex svg {
+          overflow: hidden !important;
+        }
         @page { size: A4; margin: 10mm 0; }
 
         @media print {
@@ -584,11 +596,14 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
           #a4-preview-paper {
             width: 210mm !important;
+            max-width: 210mm !important;
             min-height: 0 !important;
             margin: 0 !important;
             box-shadow: none !important;
           }
 
+          .katex .hide-tail { overflow: hidden !important; }
+          .katex svg { overflow: hidden !important; }
           .katex-display { overflow: visible !important; }
           .katex, .katex * { visibility: visible !important; color: #000 !important; }
 
