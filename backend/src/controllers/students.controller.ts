@@ -792,6 +792,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
         // Check if student exists by Student ID (rollNo or User email)
         let existingStudent = null;
+        let matchedByRollNo = false;
         if (rawStudentId) {
           existingStudent = await prisma.student.findFirst({
             where: {
@@ -802,32 +803,40 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
             },
             include: { user: true }
           });
+          if (existingStudent) matchedByRollNo = true;
         }
 
         // If not matched by rollNo, try matching by Child ID, APAAR ID, or Aadhaar No
-        if (!existingStudent && childId) {
-          existingStudent = await prisma.student.findFirst({
-            where: { childId },
-            include: { user: true }
-          });
-        }
-        if (!existingStudent && apaarId) {
-          existingStudent = await prisma.student.findFirst({
-            where: { apaarId },
-            include: { user: true }
-          });
-        }
-        if (!existingStudent && aadharNo) {
-          existingStudent = await prisma.student.findFirst({
-            where: { aadharNo },
-            include: { user: true }
-          });
+        // NOTE: Only match by government IDs if rawStudentId was NOT provided (prevents cross-student collisions!)
+        if (!existingStudent && !rawStudentId) {
+          if (childId) {
+            existingStudent = await prisma.student.findFirst({
+              where: { childId },
+              include: { user: true }
+            });
+          }
+          if (!existingStudent && apaarId) {
+            existingStudent = await prisma.student.findFirst({
+              where: { apaarId },
+              include: { user: true }
+            });
+          }
+          if (!existingStudent && aadharNo) {
+            existingStudent = await prisma.student.findFirst({
+              where: { aadharNo },
+              include: { user: true }
+            });
+          }
         }
 
         if (existingStudent) {
           // ── PARTIAL SELECTIVE UPDATE (ONLY UPDATES WHAT WAS GIVEN IN EXCEL!) ──
           const userDataToUpdate: any = {};
-          if (name) userDataToUpdate.name = name;
+          // CRITICAL SAFETY CHECK: Only update user.name if matched by rollNo or existing name is empty,
+          // never silently overwrite an existing student's name when matched by Aadhaar/ChildId alone!
+          if (name && (matchedByRollNo || !existingStudent.user?.name)) {
+            userDataToUpdate.name = name;
+          }
           if (primaryPhone) userDataToUpdate.phone = primaryPhone;
 
           if (Object.keys(userDataToUpdate).length > 0) {

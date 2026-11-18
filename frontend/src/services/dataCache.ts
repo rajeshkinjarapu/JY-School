@@ -23,7 +23,7 @@ const TTL: Record<string, number> = {
 
 // API endpoints per key
 const ENDPOINTS: Record<string, string> = {
-  students: '/api/students?limit=200&page=1',
+  students: '/api/students?limit=1000&page=1',
   classes:  '/api/classes?limit=500',
   exams:    '/api/exams?limit=500',
   teachers: '/api/teachers?limit=500',

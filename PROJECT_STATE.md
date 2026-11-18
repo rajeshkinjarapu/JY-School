@@ -1,20 +1,27 @@
 # JY School Project State
 
-## చివరి సంభాషణ - విద్యార్థి JY26-6022 గల్లంతు & ఫోటోల మార్పిడి (Photo Swap) సమస్యపై పరిశోధన & పరిష్కార ప్రణాళిక (November 18, 2026)
+## చివరి సంభాషణ - విద్యార్థి JY26-6022 గల్లంతు & ఫోటోల మార్పిడి (Photo Swap) సమస్యపై పరిశోధన & సంపూర్ణ పునరుద్ధరణ (November 18, 2026)
 - **యూజర్ సమస్య & ఆందోళన:**
   - "533 STUDENTS LO OKARI PHOTOS INKOKARIKI PLACE LO KANIPISTUNNAYI AND OKA STUDENT POORTIGA KANAPDATAM LEDU DELETE AYYINDO LEDO EM AYYINDO KUDA ARDAM KAVATAM LEDU AA AMMAYI OKKA PHOTO INKO AMMAYIKI CHUPISTUNDI, JY26-6022 STUDENT LEDU POORTIGA ASSALU EM AYYINDI DETAIL GA CHEPPU. IDI ERP KI CHALA PEDDA PROBLEM ILA AYITE ERP MAINTAIN CHEYATAM CHALA KASTAM"
+  - యూజర్ అందించిన అసలు వివరాలు: `NADIMANTI MOUNIKA JY26-6022`
 - **VPS డయాగ్నోస్టిక్ ఫలితాలు & ఖచ్చితమైన కారణం (Exact Technical Discovery):**
   1. **రికార్డు డిలీట్ అవ్వలేదు (Student Record Exists):** రోల్ నంబర్ `JY26-6022` డేటాబేస్‌లో ఉంది (`id: adc36d9a-d6cc-4a27-916e-186446154a4e`).
   2. **6వ తరగతిలో 3 వరుసల పేర్లు పక్కకు షిఫ్ట్ అయిన పాటర్న్ బయటపడింది (Shift Collision):**
      - **`JY26-6018`:** పేరు: `NALLA CHINMAYI` కానీ తండ్రి: `NAKKA PAPA RAO`, తల్లి: `NAKKA BHARGAVI`. (ఇక్కడ ఉండాల్సింది నక్క పాపారావు కొడుకు `NAKKA NEERAJ VARDHAN`!)
      - **`JY26-6021`:** పేరు: `PAGOTI CHAITHRA` కానీ తండ్రి: `NALLA TARAKESWARARAO`. (ఇక్కడ ఉండాల్సింది నల్ల తారకేశ్వరరావు కుమార్తె `NALLA CHINMAYI`!)
-     - **`JY26-6022`:** పేరు: `NAKKA NEERAJ VARDHAN` కానీ తండ్రి: `NADIMANTI GOVINDARAO`, తల్లి: `NADIMANTI RADHA` (Gender: FEMALE). (ఇక్కడ ఉండాల్సింది నదిమంటి గోవిందరావు కుమార్తె!)
+     - **`JY26-6022`:** పేరు: `NAKKA NEERAJ VARDHAN` కానీ తండ్రి: `NADIMANTI GOVINDARAO`, తల్లి: `NADIMANTI RADHA` (Gender: FEMALE). (ఇక్కడ ఉండాల్సింది నదిమంటి గోవిందరావు కుమార్తె `NADIMANTI MOUNIKA`!)
   3. **సమస్య విశ్లేషణ:**
      - ఎక్సెల్ ఫైల్ అప్‌లోడ్ చేసినప్పుడు వరుసలు 1 స్టెప్ పక్కకు జరగడం (Row Shift) వల్ల, ఈ ముగ్గురు విద్యార్థుల పేర్లు వేరే వారి రోల్ నంబర్ల మీద కూర్చున్నాయి!
      - `NAKKA NEERAJ VARDHAN` పేరు వచ్చి `JY26-6022` మీద పడింది.
      - దీనివల్ల `JY26-6022` అసలైన నదిమంటి అమ్మాయి పేరు మారిపోయింది, మరియు ఆమె ఫోటో `NAKKA NEERAJ VARDHAN` పక్కన కనిపిస్తోంది!
-- **చేపట్టిన చర్యలు:**
-  - నదిమంటి అమ్మాయి అసలు పేరు ఏమిటి, ఫీజు రసీదులు & మార్కుల చరిత్రను ట్రేస్ చేయడానికి `trace-student-history.js` స్క్రిప్ట్ సిద్ధం చేసాము.
+- **శాశ్వత పరిష్కారాలు & అమలు చేసిన మార్పులు:**
+  1. **పునరుద్ధరణ స్క్రిప్ట్స్ (Restoration Scripts):**
+     - [`backend/scripts/restore-student-6022.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/restore-student-6022.js): `JY26-6022` కి `NADIMANTI MOUNIKA` (Gender: FEMALE) పేరును మరియు ఆమె ఫోటోను పునరుద్ధరించడానికి స్క్రిప్ట్ సిద్ధం చేసాము.
+     - [`backend/scripts/restore-all-swapped-students.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/restore-all-swapped-students.js): ముగ్గురు విద్యార్థులనూ (`JY26-6022` మౌనిక, `JY26-6018` నీరజ్ వర్ధన్, `JY26-6021` చిన్మయి) ఒకేసారి వారి అసలైన ఫోటోలు మరియు తల్లిదండ్రుల వివరాలతో సరిచేసే సమగ్ర స్క్రిప్ట్ సిద్ధం చేసాము.
+  2. **బ్యాకెండ్ సైలెంట్ ఓవర్‌రైట్ నిరోధం:**
+     - [`backend/src/controllers/students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts): ఆధార్/చైల్డ్ ID ల ద్వారా పొరపాటున మ్యాచ్ అయినా, పాత విద్యార్థి పేరును మార్చకుండా భద్రతా నిబంధన విధించాము.
+  3. **ఫ్రంటెండ్ క్యాష్ పరిమితి 1000 కి పెంపు:**
+     - [`frontend/src/services/dataCache.ts`](file:///d:/JY%20School/JY-School-main/frontend/src/services/dataCache.ts): పాత 200 లిమిట్ స్థానంలో 1000 కి పెంచాము, తద్వారా మొత్తం 533 మంది విద్యార్థులూ క్లయింట్ సైడ్ శోధనలో పక్కాగా కనిపిస్తారు.
 
 ## చివరి సంభాషణ - MCQ Paper Generator డౌన్‌లోడ్ PDF పేజీ కటింగ్ (Q17, Q33, Q53, Q66), Q17 రా-లాటెక్స్, ఆర్ఫన్ హెడ్డింగ్స్ సంపూర్ణ పరిష్కారం (November 18, 2026)
 - **యూజర్ సమస్య & సమీక్ష:**
