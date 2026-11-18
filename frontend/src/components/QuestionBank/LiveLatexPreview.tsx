@@ -478,7 +478,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       );
 
       elements.push(
-        <div key={`${subject}-block-${i}`} className="question-block w-full break-inside-avoid print:static print:relative-none" style={{ marginBottom }}>
+        <div key={`${subject}-block-${i}`} data-mcq-block="true" className="question-block w-full break-inside-avoid print:static print:relative-none" style={{ marginBottom }}>
           {blockContent}
         </div>
       );
@@ -491,7 +491,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     if (sections && sections.length > 0) {
       sections.forEach((section, index) => {
         elements.push(
-          <div key={`section-header-${section.id}`} className="w-full my-4 break-inside-avoid text-center">
+          <div key={`section-header-${section.id}`} data-mcq-block="true" className="section-header w-full my-4 break-inside-avoid text-center">
              <h3 className="font-bold text-[12pt] uppercase">{section.name}</h3>
              {section.instructions && (
                <div className="text-left mt-2 flex justify-between items-start text-[10pt] font-medium leading-snug">
@@ -514,7 +514,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         
         if (showSubjectHeadings) {
           elements.push(
-            <div key={`heading-${subject}`} className="section-header w-full mt-4 mb-2 break-inside-avoid text-center">
+            <div key={`heading-${subject}`} data-mcq-block="true" className="section-header w-full mt-4 mb-2 break-inside-avoid text-center">
               <h3 className="font-bold text-[12pt] uppercase border-b-2 border-black inline-block px-4 pb-1">
                 {subject}
               </h3>
@@ -696,7 +696,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         
         {/* Header Section */}
         {showHeader && (
-          <div className="paper-header mb-2 border-b-2 border-black pb-1.5 break-inside-avoid">
+          <div data-mcq-block="true" className="paper-header mb-2 border-b-2 border-black pb-1.5 break-inside-avoid">
             <div className="grid grid-cols-[80px_1fr_80px] items-center">
               <div>
                 <img 
@@ -732,7 +732,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
         {/* Instructions Section */}
         {showHeader && instructions.length > 0 && (
-          <div className="paper-instructions mb-3 text-[10pt] leading-snug break-inside-avoid">
+          <div data-mcq-block="true" className="paper-instructions mb-3 text-[10pt] leading-snug break-inside-avoid">
             <h3 className="font-bold mb-1 uppercase underline underline-offset-2">General Instructions:</h3>
             <ul className="list-disc pl-5 m-0 space-y-0.5">
               {instructions.map((inst, i) => (

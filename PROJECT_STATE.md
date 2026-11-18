@@ -1,5 +1,19 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ పేపర్ డౌన్‌లోడ్ PDF లోని 4 లోపాల సంపూర్ణ పరిష్కారం (MCQ Download PDF Slicing & Content Fixes) (November 18, 2026)
+- **యూజర్ ఆదేశం & అభ్యర్థన:**
+  - "ee 4 loplalu anni update cheyu"
+- **సరిచేసిన 4 ప్రధాన లోపాలు & అమలు చేసిన సాంకేతిక పరిష్కారాలు:**
+  1. **లోపం 1: పేజీల మధ్య ప్రశ్నలు సగానికి తెగిపోవడం (Atomic Question Slicing):**
+     - [`frontend/src/components/QuestionBank/LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx): ప్రతి ప్రశ్నకు సంబంధించిన నంబర్, టెక్స్ట్, మ్యాథ్స్ ఫార్ములాలు, డయాగ్రమ్‌లు మరియు 4 ఆప్షన్లను ఒకే అటామిక్ యూనిట్‌గా గుర్తించడానికి `data-mcq-block="true"` కేటాయించాము. అలాగే సెక్షన్ హెడర్లు, పేపర్ హెడర్ మరియు ఇన్‌స్ట్రక్షన్స్ కూడా స్పష్టమైన అటామిక్ బ్లాక్‌లుగా గుర్తించబడ్డాయి.
+     - [`frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): `handleDownloadPdf` లో కాన్వాస్ స్లైసింగ్ అల్గారిథమ్‌ను 100% పక్కాగా మార్చాము. ఒక ప్రశ్న పేజీలో సరిపోకపోతే, దాన్ని సగానికి కట్ చేయకుండా మొత్తం ప్రశ్నను తర్వాతి పేజీకి నెడుతుంది (`cutCanvasY = lastFitting.bottomCanvasY`). దీనితో పాటు పేజీ 2 నుండి ప్రతి పేజీకి పర్ఫెక్ట్ 8mm టాప్ మార్జిన్ అందించబడింది. ఏ ఒక్క ప్రశ్నా సగానికి తెగిపోదు!
+  2. **లోపం 2: డూప్లికేట్ ప్రశ్న (Q13 vs Q20):**
+     - [`backend/scripts/fix-jee-paper.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/fix-jee-paper.js): మ్యాథ్స్ విభాగంలో Q13 మరియు Q20 రెండూ ఒకే ప్రశ్నగా ఉండటాన్ని గుర్తించి, Q20 స్థానంలో ప్రామాణికమైన కొత్త JEE Mains మ్యాట్రిక్స్ ప్రశ్నను అమర్చే స్క్రిప్ట్ సిద్ధం చేసాము.
+  3. **లోపం 3: జనరల్ ఇన్‌స్ట్రక్షన్స్ లో నంబరింగ్ తేడా:**
+     - హెడర్ లో "Physics: Question No. 26 to 45" అని ఉన్నదానిని "Physics: Question No. 26 to 50" గాను, "Chemistry: Question No. 51 to 70" ఉన్నదానిని "Chemistry: Question No. 51 to 75" గాను సరిదిద్దాము.
+  4. **లోపం 4: Question 35 లో ఆప్షన్ల టైపో:**
+     - Q35 లో ఆప్షన్లు `(A) 3 : 2   (B) 3 : 2   (C) 3 : 2   (D) 3 : 2  2` అని తప్పుగా ఉన్నదానిని `(A) $3 : 1$   (B) $3 : 2$   (C) $2 : 1$   (D) $3 : 2\sqrt{2}$` గా సరిదిద్దాము.
+
 ## చివరి సంభాషణ - VPS ఫ్రంటెండ్ బిల్డ్ ఎర్రర్స్ పరిష్కారం (Vite & Tailwind Build Fixes) (November 18, 2026)
 - **ఎదురైన బిల్డ్ ఎర్రర్స్:**
   1. `[plugin @tailwindcss/vite:generate:build] /root/JY-School/frontend/src/index.css: Error: Cannot apply unknown utility class dark:`
