@@ -68,50 +68,6 @@ export async function printPaper(id = 'a4-preview-paper') {
   setTimeout(() => iframe.remove(), 2500);
 }
 
-export async function printPaper(id = 'a4-preview-paper') {
-  const el = document.getElementById(id);
-  if (!el) return;
-
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentDocument!;
-  const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-    .map(n => n.outerHTML).join('');
-
-  doc.open();
-  doc.write(`<!doctype html><html><head><meta charset="utf-8">${styles}
-    <style>html,body{margin:0;background:#fff}#a4-preview-paper{margin:0!important;box-shadow:none!important}</style>
-    </head><body>${el.outerHTML}</body></html>`);
-  <style>
-    @page {size: A4; margin: 10mm 0; }
-    html, body {margin: 0 !important; padding: 0 !important; background: #fff !important; width: 210mm; }
-    #${id} {
-      transform: none !important; zoom: 1 !important;
-    width: 210mm !important; max-width: 210mm !important; min-height: 0 !important;
-    margin: 0 !important; box-shadow: none !important;
-  }
-    .katex .hide-tail {overflow: hidden !important; }
-    .katex svg {overflow: hidden !important; }
-    .katex-display {overflow: visible !important; }
-  </style></head > <body>${el.outerHTML}</body></html > `);
-  doc.close();
-
-  await new Promise(r => { iframe.onload = r; setTimeout(r, 600); });
-  if (iframe.contentDocument?.fonts) {
-    try {
-      await iframe.contentDocument.fonts.ready;
-    } catch {
-      // fonts ready fallback
-    }
-  }
-
-  iframe.contentWindow!.focus();
-  iframe.contentWindow!.print();
-  setTimeout(() => iframe.remove(), 1500);
-}
-
 export const MCQPaperGeneratorPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
