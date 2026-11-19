@@ -80,25 +80,25 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   const balanceMath = (math: string) => {
     let m = math.trim();
     if (m.endsWith('\\')) m = m.slice(0, -1);
-    
+
     let unescapedOpen = 0, unescapedClose = 0;
     let escapedOpen = 0, escapedClose = 0;
-    
+
     for (let i = 0; i < m.length; i++) {
-       if (m[i] === '\\') {
-          if (m[i+1] === '{') escapedOpen++;
-          else if (m[i+1] === '}') escapedClose++;
-          i++;
-       } else if (m[i] === '{') unescapedOpen++;
-       else if (m[i] === '}') unescapedClose++;
+      if (m[i] === '\\') {
+        if (m[i + 1] === '{') escapedOpen++;
+        else if (m[i + 1] === '}') escapedClose++;
+        i++;
+      } else if (m[i] === '{') unescapedOpen++;
+      else if (m[i] === '}') unescapedClose++;
     }
-    
+
     if (escapedOpen > escapedClose) m = m + '\\}'.repeat(escapedOpen - escapedClose);
     else if (escapedClose > escapedOpen) m = '\\{'.repeat(escapedClose - escapedOpen) + m;
-    
+
     if (unescapedOpen > unescapedClose) m = m + '}'.repeat(unescapedOpen - unescapedClose);
     else if (unescapedClose > unescapedOpen) m = '{'.repeat(unescapedClose - unescapedOpen) + m;
-    
+
     return m;
   };
 
@@ -139,8 +139,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
         let src = urlOrId;
         if (inlineImages && inlineImages[urlOrId]) {
-           const imgData = inlineImages[urlOrId];
-           src = typeof imgData === 'string' ? imgData : imgData.dataUrl;
+          const imgData = inlineImages[urlOrId];
+          src = typeof imgData === 'string' ? imgData : imgData.dataUrl;
         }
 
         let maxWidth = '100%';
@@ -225,7 +225,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
       normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
-      
+
       const parts = normalized.split(/(\$\$[\s\S]*?\$\$)/g);
       return parts.map(part => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
@@ -234,7 +234,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           math = math.replace(/ {3,}/g, ' \\quad ').replace(/ {2}/g, ' \\ ');
           return katex.renderToString(math, { displayMode: true, throwOnError: false });
         }
-        
+
         const inlineParts = part.split(/(\$[\s\S]*?\$)/g);
         return inlineParts.map(inlinePart => {
           if (inlinePart.startsWith('$') && inlinePart.endsWith('$')) {
@@ -243,9 +243,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             math = math.replace(/ {3,}/g, ' \\quad ').replace(/ {2}/g, ' \\ ');
             return katex.renderToString(math, { displayMode: false, throwOnError: false });
           }
-          
+
           let textPart = inlinePart;
-          
+
           // Auto-render any bare LaTeX expressions outside $ (e.g. \sqrt{2}, \frac{a}{b}, \vec{a})
           if (/\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname|alpha|beta|theta|pi|times|pm|le|ge|in)\b/.test(textPart)) {
             textPart = textPart.replace(/(\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\[a-zA-Z]+(?:\^\{[^{}]*\}|_\{[^{}]*\})*)/g, (match) => {
@@ -258,7 +258,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           }
 
           if (parseMode === 'raw') {
-            for(let i=0; i<3; i++) {
+            for (let i = 0; i < 3; i++) {
               textPart = textPart.replace(/\\textbf{([^{}]*)}/g, '<b>$1</b>');
               textPart = textPart.replace(/\\textit{([^{}]*)}/g, '<i>$1</i>');
               textPart = textPart.replace(/\\underline{([^{}]*)}/g, '<u>$1</u>');
@@ -270,7 +270,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             textPart = textPart.replace(/\\begin{center}([\s\S]*?)\\end{center}/g, '<div class="text-center w-full flex justify-center">$1</div>');
             textPart = textPart.replace(/\\newpage/g, '<div style="page-break-after: always" class="w-full h-8 border-b-2 border-dashed border-slate-300 my-4 print:border-0 print:h-0"></div>');
           }
-          
+
           // Preserve tabs and multiple spaces 1:1
           textPart = textPart.replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
           textPart = textPart.replace(/ {2,}/g, (match) => '&nbsp;'.repeat(match.length));
@@ -289,16 +289,17 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
 
     // Normalize text blocks so that questions are ALWAYS separated cleanly and options never detach
-    let normalizedText = text.replace(/\r\n/g, '\n');
-    normalizedText = normalizedText.replace(/(\n\s*)\n+(\s*\(A\))/gi, '$1$2');
-    // Ensure every question start (e.g. "\n2. ", "\n10. ", "\n18. ") is preceded by \n\n so questions are never accidentally merged
-    normalizedText = normalizedText.replace(/([^\n])\n(\s*(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n$2');
+    let normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    // Ensure all options (A), (B), (C), (D) or (a), (b), (c), (d) are NEVER detached by double newlines or empty spaces
+    normalizedText = normalizedText.replace(/\n\s*(\(?[A-Da-d][\)\.]\s+)/gi, '\n$1');
+    // Ensure every question start (e.g. "1. ", "14. ", "II. ") is preceded by exactly \n\n (one blank line) even if not given in editor
+    normalizedText = normalizedText.replace(/([^\n])\s*\n+\s*(?=(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n');
     const rawBlocks = normalizedText.split(/(\n\n+)/);
-    
+
     for (let i = 0; i < rawBlocks.length; i += 2) {
       let block = rawBlocks[i];
       if (block.trim() === '') continue; // Skip pure whitespace blocks
-      
+
       const separator = i + 1 < rawBlocks.length ? rawBlocks[i + 1] : '';
       const newlineCount = (separator.match(/\n/g) || []).length;
       const extraNewlines = Math.max(0, newlineCount - 2);
@@ -307,16 +308,20 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         ? `calc(${baseGap}rem + ${extraNewlines * 0.75}rem)`
         : `${baseGap}rem`;
 
-      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
+      // Support uppercase (A) (B) (C) (D), lowercase (a) (b) (c) (d), and dotted A. B. C. D.
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
       const optMatchB = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block);
       const optMatchC = /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block);
       const optMatchD = /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block);
-      const hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
+      let hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
       const hasLowerOptions = (/(?:^|\n|\s{2,}|\t)\s*\(a\)\.?\s*/.test(block)) &&
-                              (/(?:^|\n|\s{2,}|\t)\s*\(b\)\.?\s*/.test(block)) &&
-                              (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block)) &&
-                              (/(?:^|\n|\s{2,}|\t)\s*\(d\)\.?\s*/.test(block));
+        (/(?:^|\n|\s{2,}|\t)\s*\(b\)\.?\s*/.test(block)) &&
+        (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block)) &&
+        (/(?:^|\n|\s{2,}|\t)\s*\(d\)\.?\s*/.test(block));
+      const hasDotOptions = (/(?:^|\n|\s{2,}|\t)\s*A[\.\)]\s+/.test(block)) &&
+        (/(?:^|\n|\s{2,}|\t)\s*B[\.\)]\s+/.test(block)) &&
+        (/(?:^|\n|\s{2,}|\t)\s*C[\.\)]\s+/.test(block)) &&
+        (/(?:^|\n|\s{2,}|\t)\s*D[\.\)]\s+/.test(block));
 
       if (!hasUpperOptions && hasLowerOptions) {
         block = block
@@ -324,165 +329,173 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .replace(/(?:^|\n|\s{2,}|\t)\(b\)\.?\s*/g, '\n(B) ')
           .replace(/(?:^|\n|\s{2,}|\t)\(c\)\.?\s*/g, '\n(C) ')
           .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/g, '\n(D) ');
+        hasUpperOptions = true;
+      } else if (!hasUpperOptions && hasDotOptions) {
+        block = block
+          .replace(/(?:^|\n|\s{2,}|\t)A[\.\)]\s+/g, '\n(A) ')
+          .replace(/(?:^|\n|\s{2,}|\t)B[\.\)]\s+/g, '\n(B) ')
+          .replace(/(?:^|\n|\s{2,}|\t)C[\.\)]\s+/g, '\n(C) ')
+          .replace(/(?:^|\n|\s{2,}|\t)D[\.\)]\s+/g, '\n(D) ');
+        hasUpperOptions = true;
       }
 
       const hasOptions = hasUpperOptions || (/(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block));
 
       const blockContent = (
         <React.Fragment key={`${subject}-${i}`}>
-        {!hasOptions ? (
-          (() => {
-            const cleanBlockNoOpt = block.replace(layoutTagRegex, '');
-            const qNumMatch2 = cleanBlockNoOpt.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
-            if (qNumMatch2) {
-              const numStr = qNumMatch2[1];
-              const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
+          {!hasOptions ? (
+            (() => {
+              const cleanBlockNoOpt = block.replace(layoutTagRegex, '');
+              const qNumMatch2 = cleanBlockNoOpt.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
+              if (qNumMatch2) {
+                const numStr = qNumMatch2[1];
+                const restText = cleanBlockNoOpt.substring(qNumMatch2[0].length);
+                return (
+                  <div className={`question-item break-inside-avoid flex items-baseline whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                    <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
+                    <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText.trimEnd()) }} />
+                  </div>
+                );
+              }
               return (
-                <div className={`question-item break-inside-avoid flex items-baseline whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                  <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{numStr}.</strong>
-                  <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(restText.trimEnd()) }} />
+                <div
+                  className={`question-item break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
+                  dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }}
+                />
+              );
+            })()
+          ) : (
+            (() => {
+              // Check for explicit option layout tag in this question block
+              const tagMatches = Array.from(block.matchAll(layoutTagRegex));
+              let forcedLayout: '1x4' | '2x2' | '1x1' | null = null;
+              if (tagMatches.length > 0) {
+                const lastVal = tagMatches[tagMatches.length - 1][1].toLowerCase().replace('*', 'x');
+                if (lastVal === '1x4' || lastVal.startsWith('4col') || lastVal === 'horizontal') {
+                  forcedLayout = '1x4';
+                } else if (lastVal === '2x2' || lastVal.startsWith('2col')) {
+                  forcedLayout = '2x2';
+                } else if (lastVal === '1x1' || lastVal === '4x1' || lastVal.startsWith('1col') || lastVal === 'vertical') {
+                  forcedLayout = '1x1';
+                }
+              }
+
+              // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
+              const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
+              const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
+              const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
+              const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
+
+              // Find the TRUE option (A) split point (not inside math functions like trace(A) or f(A))
+              let splitIndexA = -1;
+              const aCandidates = Array.from(block.matchAll(/(?:^|\n|\s{2,}|\t)\s*\(A\)/g));
+              for (const c of aCandidates) {
+                const idx = c.index! + c[0].indexOf('(A)');
+                const after = block.substring(idx);
+                if (/(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(after)) {
+                  splitIndexA = idx;
+                  break;
+                }
+              }
+              if (splitIndexA === -1) {
+                splitIndexA = block.indexOf('(A)');
+              }
+              const rawQuestionText = block.substring(0, splitIndexA);
+              const questionText = rawQuestionText.replace(layoutTagRegex, '').trimEnd();
+              const optionsText = block.substring(splitIndexA);
+
+              const matchA = optionsText.match(optARegex);
+              const matchB = optionsText.match(optBRegex);
+              const matchC = optionsText.match(optCRegex);
+              const matchD = optionsText.match(optDRegex);
+
+              const optA = matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '';
+              const optB = matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '';
+              const optC = matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '';
+              const optD = matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '';
+              const estimateVisualLength = (text: string): number => {
+                if (!text) return 0;
+                let s = text.trim();
+                s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
+                s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
+                s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
+                s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
+
+                const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
+                let iterations = 0;
+                while (fracRegex.test(s) && iterations < 5) {
+                  s = s.replace(fracRegex, (_, num, den) => {
+                    const lenN = estimateVisualLength(num);
+                    const lenD = estimateVisualLength(den);
+                    return 'X'.repeat(Math.max(lenN, lenD));
+                  });
+                  iterations++;
+                }
+
+                s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
+                s = s.replace(/\\[a-zA-Z]+/g, 'X');
+                s = s.replace(/[{}]/g, '');
+                s = s.replace(/([+\-=])/g, ' $1 ');
+
+                return s.replace(/\s+/g, ' ').trim().length;
+              };
+
+              const maxLen = Math.max(
+                estimateVisualLength(optA),
+                estimateVisualLength(optB),
+                estimateVisualLength(optC),
+                estimateVisualLength(optD)
+              );
+
+              // Check if options contain math notation that needs adequate column width
+              const allOptsCombined = optA + optB + optC + optD;
+              const hasComplexMath = /[\\\$]/.test(allOptsCombined) ||
+                /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_|\\tan|\\sin|\\cos|\\pm)/.test(allOptsCombined);
+
+              const singleLineLimit = isDoubleColumn ? 4 : (hasComplexMath ? 5 : 8);
+              const twoByTwoLimit = isDoubleColumn ? 14 : 28;
+
+              let optionsLayout = '';
+              if (forcedLayout === '1x4') {
+                optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
+              } else if (forcedLayout === '2x2') {
+                optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
+              } else if (forcedLayout === '1x1') {
+                optionsLayout = 'flex flex-col w-auto gap-0.5';
+              } else {
+                if (maxLen <= singleLineLimit) {
+                  optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
+                } else if (maxLen <= twoByTwoLimit) {
+                  optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
+                } else {
+                  optionsLayout = 'flex flex-col w-auto gap-0.5';
+                }
+              }
+
+              const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
+              const qNumStr = qMatch ? qMatch[1] : '';
+              const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
+
+              return (
+                <div className={`question-item break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
+                  <div className="question-text-wrapper mb-0.5 flex items-baseline whitespace-pre-wrap">
+                    {qNumStr ? (
+                      <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
+                    ) : (
+                      <div className="flex-shrink-0 w-8 md:w-9"></div>
+                    )}
+                    <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
+                  </div>
+                  <div className={`question-options-container ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
+                    <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
+                    <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
+                    <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
+                    <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                  </div>
                 </div>
               );
-            }
-            return (
-              <div 
-                className={`question-item break-inside-avoid min-w-0 whitespace-pre-wrap ${getFontSizeClass()} ${getSpacingClasses()}`}
-                dangerouslySetInnerHTML={{ __html: renderLatex(cleanBlockNoOpt) }} 
-              />
-            );
-          })()
-        ) : (
-          (() => {
-            // Check for explicit option layout tag in this question block
-            const tagMatches = Array.from(block.matchAll(layoutTagRegex));
-            let forcedLayout: '1x4' | '2x2' | '1x1' | null = null;
-            if (tagMatches.length > 0) {
-              const lastVal = tagMatches[tagMatches.length - 1][1].toLowerCase().replace('*', 'x');
-              if (lastVal === '1x4' || lastVal.startsWith('4col') || lastVal === 'horizontal') {
-                forcedLayout = '1x4';
-              } else if (lastVal === '2x2' || lastVal.startsWith('2col')) {
-                forcedLayout = '2x2';
-              } else if (lastVal === '1x1' || lastVal === '4x1' || lastVal.startsWith('1col') || lastVal === 'vertical') {
-                forcedLayout = '1x1';
-              }
-            }
-
-            // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
-            const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
-            const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
-            const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
-            const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
-
-            // Find the TRUE option (A) split point (not inside math functions like trace(A) or f(A))
-            let splitIndexA = -1;
-            const aCandidates = Array.from(block.matchAll(/(?:^|\n|\s{2,}|\t)\s*\(A\)/g));
-            for (const c of aCandidates) {
-              const idx = c.index! + c[0].indexOf('(A)');
-              const after = block.substring(idx);
-              if (/(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(after)) {
-                splitIndexA = idx;
-                break;
-              }
-            }
-            if (splitIndexA === -1) {
-              splitIndexA = block.indexOf('(A)');
-            }
-            const rawQuestionText = block.substring(0, splitIndexA);
-            const questionText = rawQuestionText.replace(layoutTagRegex, '').trimEnd();
-            const optionsText = block.substring(splitIndexA);
-
-            const matchA = optionsText.match(optARegex);
-            const matchB = optionsText.match(optBRegex);
-            const matchC = optionsText.match(optCRegex);
-            const matchD = optionsText.match(optDRegex);
-
-            const optA = matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '';
-            const optB = matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '';
-            const optC = matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '';
-            const optD = matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '';
-            const estimateVisualLength = (text: string): number => {
-              if (!text) return 0;
-              let s = text.trim();
-              s = s.replace(/\\\(|\\\)|\\\[|\\\]|\$/g, '');
-              s = s.replace(/\\(?:mathbb|mathbf|mathrm|text|displaystyle|textstyle|limits|nolimits|left|right)\b/g, '');
-              s = s.replace(/[\^_]\{([^{}]+)\}/g, '$1');
-              s = s.replace(/[\^_]([a-zA-Z0-9])/g, '$1');
-
-              const fracRegex = /\\d?frac\{([^{}]+)\}\{([^{}]+)\}/;
-              let iterations = 0;
-              while (fracRegex.test(s) && iterations < 5) {
-                s = s.replace(fracRegex, (_, num, den) => {
-                  const lenN = estimateVisualLength(num);
-                  const lenD = estimateVisualLength(den);
-                  return 'X'.repeat(Math.max(lenN, lenD));
-                });
-                iterations++;
-              }
-
-              s = s.replace(/\\sqrt\{([^{}]+)\}/g, 'X$1');
-              s = s.replace(/\\[a-zA-Z]+/g, 'X');
-              s = s.replace(/[{}]/g, '');
-              s = s.replace(/([+\-=])/g, ' $1 ');
-
-              return s.replace(/\s+/g, ' ').trim().length;
-            };
-
-            const maxLen = Math.max(
-              estimateVisualLength(optA), 
-              estimateVisualLength(optB), 
-              estimateVisualLength(optC), 
-              estimateVisualLength(optD)
-            );
-            
-            // Check if options contain math notation that needs adequate column width
-            const allOptsCombined = optA + optB + optC + optD;
-            const hasComplexMath = /[\\\$]/.test(allOptsCombined) || 
-              /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_|\\tan|\\sin|\\cos|\\pm)/.test(allOptsCombined);
-
-            const singleLineLimit = isDoubleColumn ? 4 : (hasComplexMath ? 5 : 8);
-            const twoByTwoLimit = isDoubleColumn ? 14 : 28;
-
-            let optionsLayout = '';
-            if (forcedLayout === '1x4') {
-              optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
-            } else if (forcedLayout === '2x2') {
-              optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
-            } else if (forcedLayout === '1x1') {
-              optionsLayout = 'flex flex-col w-auto gap-0.5';
-            } else {
-              if (maxLen <= singleLineLimit) {
-                optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
-              } else if (maxLen <= twoByTwoLimit) {
-                optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
-              } else {
-                optionsLayout = 'flex flex-col w-auto gap-0.5';
-              }
-            }
-
-            const qMatch = questionText.match(/^(\d+|[IVXLCDM]+)\.\s+/i);
-            const qNumStr = qMatch ? qMatch[1] : '';
-            const qRest = qMatch ? questionText.substring(qMatch[0].length) : questionText;
-
-            return (
-              <div className={`question-item break-inside-avoid ${getFontSizeClass()} ${getSpacingClasses()}`}>
-                <div className="question-text-wrapper mb-0.5 flex items-baseline whitespace-pre-wrap">
-                  {qNumStr ? (
-                    <strong className="flex-shrink-0 w-8 md:w-9 text-left font-bold">{qNumStr}.</strong>
-                  ) : (
-                    <div className="flex-shrink-0 w-8 md:w-9"></div>
-                  )}
-                  <div className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(qRest) }} />
-                </div>
-                <div className={`question-options-container ml-8 md:ml-9 pr-2 ${optionsLayout}`}>
-                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
-                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
-                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                  <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
-                </div>
-              </div>
-            );
-          })()
-        )}
+            })()
+          )}
         </React.Fragment>
       );
 
@@ -496,22 +509,22 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const parseBlocks = () => {
     const elements: JSX.Element[] = [];
-    
+
     if (sections && sections.length > 0) {
       sections.forEach((section, index) => {
         elements.push(
           <div key={`section-header-${section.id}`} data-mcq-block="true" className="section-header w-full my-4 break-inside-avoid text-center">
-             <h3 className="font-bold text-[12pt] uppercase">{section.name}</h3>
-             {section.instructions && (
-               <div className="text-left mt-2 flex justify-between items-start text-[10pt] font-medium leading-snug">
-                 <div className="flex-1 mr-4 whitespace-pre-wrap">{section.instructions}</div>
-                 {section.marksPerQuestion && section.totalQuestions && (
-                   <div className="flex-shrink-0 whitespace-nowrap">
-                     {section.totalQuestions} x {section.marksPerQuestion} = {Number(section.totalQuestions) * Number(section.marksPerQuestion)} Marks
-                   </div>
-                 )}
-               </div>
-             )}
+            <h3 className="font-bold text-[12pt] uppercase">{section.name}</h3>
+            {section.instructions && (
+              <div className="text-left mt-2 flex justify-between items-start text-[10pt] font-medium leading-snug">
+                <div className="flex-1 mr-4 whitespace-pre-wrap">{section.instructions}</div>
+                {section.marksPerQuestion && section.totalQuestions && (
+                  <div className="flex-shrink-0 whitespace-nowrap">
+                    {section.totalQuestions} x {section.marksPerQuestion} = {Number(section.totalQuestions) * Number(section.marksPerQuestion)} Marks
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         );
         parseTextToBlocks(section.content, `section-${section.id}`, elements);
@@ -520,7 +533,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       selectedSubjects.forEach(subject => {
         const subjectText = subjectContents[subject];
         if (!subjectText || subjectText.trim() === '') return;
-        
+
         if (showSubjectHeadings) {
           elements.push(
             <div key={`heading-${subject}`} data-mcq-block="true" className="section-header w-full mt-4 mb-2 break-inside-avoid text-center">
@@ -530,7 +543,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             </div>
           );
         }
-        
+
         if (parseMode === 'raw') {
           elements.push(
             <div key={`raw-content-${subject}`} className="w-full whitespace-pre-wrap break-words" dangerouslySetInnerHTML={{ __html: renderLatex(subjectText) }} />
@@ -548,27 +561,27 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         parseTextToBlocks(content, 'single-content', elements);
       }
     }
-    
+
     return elements;
   };
 
   return (
-    <div 
-      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:min-h-0 print:m-0" 
+    <div
+      className="bg-white text-black shadow-2xl print:shadow-none mx-auto relative w-[210mm] min-h-[297mm] print:min-h-0 print:m-0"
       style={{ boxSizing: 'border-box', fontFamily: "'TeX Gyre Schola', 'TeXGyreSchola', serif, 'Mandali'" }}
       id="a4-preview-paper"
     >
       {showPageBorder && (() => {
         const bp = pageBorderPadding === 'small' ? '4mm' : pageBorderPadding === 'medium' ? '8mm' : pageBorderPadding === 'large' ? '12mm' : '0mm';
         return (
-          <div 
+          <div
             className="page-border absolute pointer-events-none z-50 border-black"
             style={{
               ['--bp' as any]: bp,
               inset: bp,
               borderWidth: pageBorderThickness === 'thin' ? '1px' : pageBorderThickness === 'medium' ? '2px' : '4px',
               borderStyle: pageBorderStyle || 'solid',
-            }} 
+            }}
           />
         );
       })()}
@@ -622,15 +635,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         }
       `}</style>
       <div className="pt-3 pb-3 px-[8mm] lining-nums tabular-nums">
-        
+
         {/* Header Section */}
         {showHeader && (
           <div data-mcq-block="true" className="paper-header mb-2 border-b-2 border-black pb-1.5 break-inside-avoid">
             <div className="grid grid-cols-[80px_1fr_80px] items-center">
               <div>
-                <img 
-                  src={logoBase64 || '/logo.png'} 
-                  alt="Logo" 
+                <img
+                  src={logoBase64 || '/logo.png'}
+                  alt="Logo"
                   className="w-[78px] h-[78px] object-contain"
                 />
               </div>
@@ -641,11 +654,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               </div>
               <div />
             </div>
-            
+
             <div className="text-center mt-1 mb-1">
-               <h3 className="text-base font-bold uppercase">{examName || 'EXAMINATION'}</h3>
+              <h3 className="text-base font-bold uppercase">{examName || 'EXAMINATION'}</h3>
             </div>
-            
+
             <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
               <div className="flex justify-between items-center">
                 <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
@@ -681,7 +694,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       {/* Floating Images Layer (For free-floating draggable images on paper) */}
       {Object.entries(inlineImages).map(([id, imgData]) => {
         if (typeof imgData === 'string') return null;
-        
+
         const dataUrl = imgData.dataUrl;
         const x = imgData.x;
         const y = imgData.y;

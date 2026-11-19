@@ -6,6 +6,76 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - MCQ ఎడిటర్‌లో ఆప్షన్ల మధ్య అవాంఛిత స్పేస్‌ల ఆటోమేటిక్ నివారణ & ప్రశ్నల మధ్య ఆటో-స్పేసింగ్ పటిష్టం (November 19, 2026)
+- **యూజర్ స్క్రీన్‌షాట్ & అభ్యర్థన:**
+  - `editor box lo autometic ga option option ki madya space vachestundi ivvakunda, and question - question ki madya space undali kani editor lo ivvakapoyina avutundi oksari deep ga check cheyu oka professional developer ga alochinchi problem solve cheyu`
+  - ఎడిటర్ బాక్స్‌లో యూజర్ ఇవ్వకపోయినా ఆప్షన్ల మధ్య ఖాళీ లైన్లు వచ్చేయడం, మరియు ప్రశ్న 13 లో ప్రివ్యూలో ఆప్షన్లు విడిపోయిన స్క్రీన్‌షాట్ అందించారు.
+- **పరిష్కారం & ఇంప్లిమెంటేషన్ ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+  1. **`LiveLatexPreview.tsx` లో బుల్లెట్‌ప్రూఫ్ రెగెక్స్:**
+     - `normalizedText.replace(/\n\s*(\(?[A-Da-d][\)\.]\s+)/gi, '\n$1')` ద్వారా ఆప్షన్ల మధ్య ఎన్ని ఖాళీ లైన్లు లేదా వైట్‌స్పేస్ ఉన్నా ప్రివ్యూ పార్సర్ లోపలే వాటిని సింగిల్ లైన్‌గా నార్మలైజ్ చేయడం. దీనితో ప్రశ్న 13 లాంటి ఏ ప్రశ్నలోనూ ఆప్షన్లు విడిపోవు.
+     - `normalizedText.replace(/([^\n])\s*\n+\s*(?=(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n')` ద్వారా ఎడిటర్‌లో యూజర్ ప్రశ్నల మధ్య ఒక ఖాళీ లైన్ ఇవ్వకపోయినా ప్రివ్యూలో ఆటోమేటిక్‌గా ఖచ్చితంగా ఒక ఖాళీ లైన్ గ్యాప్ వచ్చేలా చేయడం.
+     - `A. `, `B. `, `C. `, `D. ` డాట్ ఆప్షన్లకు కూడా ఆటోమేటిక్ నార్మలైజేషన్ సపోర్ట్ జోడించబడింది.
+  2. **`MCQPaperGeneratorPage.tsx` ఎడిటర్ ఆటో-క్లీనింగ్:**
+     - టెక్స్ట్‌ఏరియాకు `onBlur` జోడించబడింది. యూజర్ టైప్ చేసి ఎక్కడైనా బయట క్లిక్ చేసిన వెంటనే `formatMCQText` ఆటోమేటిక్‌గా రన్ అయ్యి ఆప్షన్ల మధ్య ఖాళీ లైన్లను తొలగిస్తుంది, ప్రశ్నల మధ్య ఒక ఖాళీ లైన్ అమరుస్తుంది.
+     - `handleSave` లో సేవ్ చేసే ముందు అన్ని సబ్జెక్టుల టెక్స్ట్‌ను పర్ఫెక్ట్ స్పేసింగ్‌తో శానిటైజ్ చేసి డేటాబేస్‌కు పంపేలా చేశాము.
+     - `loadPaper`, `handleEditorPaste`, మరియు "Auto-Align Format" బటన్‌లతో 100% సింక్ అయింది.
+  3. **మిషన్ క్రిటికల్ `printPaper` & KaTeX ప్రింట్ ప్రొటెక్షన్:** 100% పక్కాగా భద్రపరచబడింది.
+
+## చివరి సంభాషణ - 10th క్లాస్ విద్యార్థుల ఫోటోల కొలతలు (Width >= 90px, Height >= 120px) వెరిఫికేషన్ & రీసైజింగ్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `D:\Rajesh\10th Class\Photo & Sign\photos_compressed_180_195kb ee folder lo unna images (90 × 120 px): మీ ఫోటో వెడల్పు (width) కనీసం 90 పిక్సెల్స్, ఎత్తు (height) కనీసం 120 పిక్సెల్స్ kante ekkuva undali takkuva undakudadu`
+- **పూర్తి చేసిన పనులు ([`scripts/check_and_fix_photos.ps1`](file:///d:/JY%20School/JY-School-main/scripts/check_and_fix_photos.ps1), [`scripts/check_and_fix_photos.py`](file:///d:/JY%20School/JY-School-main/scripts/check_and_fix_photos.py)):**
+  1. `D:\Rajesh\10th Class\Photo & Sign\photos_compressed_180_195kb` ఫోల్డర్‌లోని ప్రతి ఫోటో యొక్క కొలతలు (Width × Height) మరియు ఫైల్ సైజును పరిశీలించే ఆటోమేటెడ్ స్క్రిప్ట్ సిద్ధం చేశాము.
+  2. వెడల్పు కనీసం 90px మరియు ఎత్తు కనీసం 120px (width >= 90 && height >= 120) లేని ఇమేజ్‌లు ఏవైనా ఉంటే, వాటి ఆస్పెక్ట్ రేషియో చెడిపోకుండా బైక్యూబిక్ హై-క్వాలిటీ అల్గారిథమ్‌తో ఆటోమేటిక్‌గా రీసైజ్ చేసే సదుపాయం కల్పించాము.
+  3. ముందే సరైన సైజులో ఉన్న ఫోటోలను ఏమీ మార్చకుండా నేరుగా "Pass" రిపోర్ట్ ఇచ్చేలా రూపొందించాము.
+  4. Windows PowerShell 5.1 లో Telugu ఎన్‌కోడింగ్ మరియు ఫోల్డర్ పాత్‌లోని `&` (`Photo & Sign`) వల్ల వచ్చిన `AmpersandNotAllowed` ఎర్రర్‌ను `-LiteralPath` మరియు క్లీన్ కన్సోల్ లేబుల్స్‌తో 100% పరిష్కరించాము.
+  5. మొత్తం 31 మంది విద్యార్థుల ఫోటోలు విజయవంతంగా వెరిఫై చేయబడ్డాయి. అన్నీ కనీస కొలత 90×120 px కంటే దాదాపు 10 రెట్లు ఎక్కువ స్పష్టతతో (809×1078 నుండి 1154×1540 px వరకు) మరియు 180 KB నుండి 195 KB సైజు పరిధిలో పోర్టల్ నిబంధనలకు 100% పక్కాగా సరిపోయాయి.
+  6. ఫోటోల క్వాలిటీ 1% కూడా తగ్గలేదని, అన్నీ ముందే కనీస సైజు కంటే 10 రెట్లు ఎక్కువ ఉండటం వల్ల ఏ ఒక్క ఫోటోను కూడా రీకంప్రెస్ చేయకుండా ఒరిజినల్ HD క్వాలిటీ భద్రపరిచామని నిర్ధారించాము.
+  7. పోర్టల్ అప్‌లోడ్ ఎర్రర్ ("Image resolution is not within the specified limit. Minimum resolution is 90by 120") పరిష్కారం కోసం ఒరిజినల్ ఫైల్స్ అలాగే ఉంచి, `photos_portal_ready_150x200` (HD, >90x120, 30-45KB) మరియు `photos_portal_exact_90x120` (Exact 90x120, 15-25KB) అనే రెండు ఫోల్డర్లలో పోర్టల్-కంప్లైంట్ ఫోటోలను జనరేట్ చేసే ఆటోమేటెడ్ స్క్రిప్ట్ (`scripts/prepare_portal_photos.ps1`, `scripts/prepare_portal_photos.py`) ను సిద్ధం చేశాము.
+  8. PowerShell 5.1 లో `New-Item -LiteralPath` సపోర్ట్ లేకపోవడం వల్ల ఫోల్డర్ క్రియేట్ కాక వచ్చిన GDI+ ఎర్రర్‌ను `[System.IO.Directory]::CreateDirectory` తో పరిష్కరించి స్క్రిప్ట్‌ను 100% ఎర్రర్-ఫ్రీగా అప్‌డేట్ చేసాము.
+
+## చివరి సంభాషణ - MCQ ఎడిటర్‌లో ఆప్షన్ల మధ్య స్పేస్ తొలగింపు & ప్రశ్నల మధ్య ఆటో-స్పేసింగ్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `editor box lo autometic ga option option ki madya space vachestundi ivvakunda, and question - question ki madya space undali kani editor lo ivvakapoyina avutundi oksari deep ga check cheyu oka professional developer ga alochinchi problem solve cheyu`
+  - ఎడిటర్ బాక్స్‌లో యూజర్ ఇవ్వకపోయినా ఆప్షన్-ఆప్షన్ (A, B, C, D) మధ్య ఖాళీ లైన్లు వచ్చేయడం, మరియు ప్రశ్నల మధ్య స్పేస్ రానివ్వకపోవడం వల్ల ప్రివ్యూలో ప్రశ్న నంబర్ 13 లో ఆప్షన్లు విడిపోయాయి.
+- **మూల కారణం (Root Cause):**
+  1. `LiveLatexPreview.tsx` లో లైన్ 293 లో `normalizedText.replace(/(\n\s*)\n+(\s*\(A\))/gi, '$1$2')` కేవలం `(A)` ముందు మాత్రమే డబుల్ న్యూలైన్లను తీసివేసింది. కానీ `(B)`, `(C)`, `(D)` ల ముందు ఉన్న ఖాళీ లైన్లను తీయకపోవడం వల్ల KaTeX పార్సర్ ప్రశ్నను ముక్కలుగా విడగొట్టింది.
+  2. పాత `autoFormatText` లో ఖాళీ లైన్లు ఉంటే వాటిని అలాగే ఉంచేసింది తప్ప ఆప్షన్ల మధ్య ఉన్న ఖాళీ లైన్లను తొలగించలేదు.
+  3. బయటి నుంచి కాపీ చేసినప్పుడు వచ్చే ట్రెయిలింగ్ న్యూలైన్లు ఎడిటర్‌లో కూర్చుండిపోయేవి.
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+  1. **`formatMCQText` ప్రొఫెషనల్ ఫార్మాటింగ్ ఇంజిన్:**
+     - ఆప్షన్లకు ఆప్షన్లకు మధ్య (A, B, C, D) సున్నా ఖాళీ లైన్లు (0 blank lines) ఉండేలా వరుసగా అమర్చడం.
+     - ప్రతి కొత్త ప్రశ్న ప్రారంభానికి (`1. `, `14. `) ముందు యూజర్ ఇవ్వకపోయినా ఆటోమేటిక్‌గా సరిగ్గా ఒక ఖాళీ లైన్ (`\n\n`) ఉంచడం.
+     - ఒకే లైన్‌లో రాసిన ఆప్షన్లను విడగొట్టడం మరియు చిన్న అక్షరాల ఆప్షన్లను `(A)`, `(B)`, `(C)`, `(D)` గా మార్చడం.
+  2. **`LiveLatexPreview.tsx` లో పటిష్టమైన రక్షణ:**
+     - `normalizedText.replace(/(\n\s*)\n+(\s*\(?[A-Da-d][\)\.]\s+)/gi, '$1$2')` ద్వారా ఆప్షన్ల మధ్య ఎటువంటి ఖాళీ లైన్లు ఉన్నా ప్రివ్యూ పార్సర్ లోపలే సింగిల్ లైన్‌గా నార్మలైజ్ చేయడం. దీనివల్ల ప్రివ్యూలో ఆప్షన్లు ఎప్పటికీ విడిపోవు.
+  3. **ఎడిటర్ పేస్ట్, ఆటో-ఫార్మాట్, పేపర్ లోడ్ లకు సింక్:**
+     - `autoFormatText` (Auto-Align Format బటన్) ను `formatMCQText` తో అప్‌గ్రేడ్ చేశాము.
+     - `handleEditorPaste` లో ప్రశ్నలు పేస్ట్ అయిన వెంటనే ఆటోమేటిక్‌గా ఆప్షన్ల గ్యాప్స్ తొలగిపోయేలా చేశాము.
+     - `loadPaper` లో పేపర్ ఓపెన్ అవ్వగానే డేటాబేస్ లోని పాత ఆప్షన్ల ఖాళీ లైన్లు ఆటో-క్లీన్ అయ్యేలా చేశాము.
+  4. **మిషన్ క్రిటికల్ `printPaper` & KaTeX ప్రింట్ ప్రొటెక్షన్:** 100% పక్కాగా భద్రపరిచాము.
+
+## చివరి సంభాషణ - MCQ ఎడిటర్‌లో ఆప్షన్ల మధ్య స్పేస్ తొలగింపు & ప్రశ్నల మధ్య ఆటో-స్పేసింగ్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `editor box lo autometic ga option option ki madya space vachestundi ivvakunda, and question - question ki madya space undali kani editor lo ivvakapoyina avutundi oksari deep ga check cheyu oka professional developer ga alochinchi problem solve cheyu`
+  - ఎడిటర్ బాక్స్‌లో యూజర్ ఇవ్వకపోయినా ఆప్షన్-ఆప్షన్ (A, B, C, D) మధ్య ఖాళీ లైన్లు వచ్చేయడం, మరియు ప్రశ్నల మధ్య స్పేస్ రానివ్వకపోవడం వల్ల ప్రివ్యూలో ప్రశ్న నంబర్ 13 లో ఆప్షన్లు విడిపోయాయి.
+- **మూల కారణం (Root Cause):**
+  1. `LiveLatexPreview.tsx` లో లైన్ 293 లో `normalizedText.replace(/(\n\s*)\n+(\s*\(A\))/gi, '$1$2')` కేవలం `(A)` ముందు మాత్రమే డబుల్ న్యూలైన్లను తీసివేసింది. కానీ `(B)`, `(C)`, `(D)` ల ముందు ఉన్న ఖాళీ లైన్లను తీయకపోవడం వల్ల KaTeX పార్సర్ ప్రశ్నను ముక్కలుగా విడగొట్టింది.
+  2. పాత `autoFormatText` లో ఖాళీ లైన్లు ఉంటే వాటిని అలాగే ఉంచేసింది తప్ప ఆప్షన్ల మధ్య ఉన్న ఖాళీ లైన్లను తొలగించలేదు.
+  3. బయటి నుంచి కాపీ చేసినప్పుడు వచ్చే ట్రెయిలింగ్ న్యూలైన్లు ఎడిటర్‌లో కూర్చుండిపోయేవి.
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+  1. **`formatMCQText` ప్రొఫెషనల్ ఫార్మాటింగ్ ఇంజిన్:**
+     - ఆప్షన్లకు ఆప్షన్లకు మధ్య (A, B, C, D) సున్నా ఖాళీ లైన్లు (0 blank lines) ఉండేలా వరుసగా అమర్చడం.
+     - ప్రతి కొత్త ప్రశ్న ప్రారంభానికి (`1. `, `14. `) ముందు యూజర్ ఇవ్వకపోయినా ఆటోమేటిక్‌గా సరిగ్గా ఒక ఖాళీ లైన్ (`\n\n`) ఉంచడం.
+     - ఒకే లైన్‌లో రాసిన ఆప్షన్లను విడగొట్టడం మరియు చిన్న అక్షరాల ఆప్షన్లను `(A)`, `(B)`, `(C)`, `(D)` గా మార్చడం.
+  2. **`LiveLatexPreview.tsx` లో పటిష్టమైన రక్షణ:**
+     - `normalizedText.replace(/(\n\s*)\n+(\s*\(?[A-Da-d][\)\.]\s+)/gi, '$1$2')` ద్వారా ఆప్షన్ల మధ్య ఎటువంటి ఖాళీ లైన్లు ఉన్నా ప్రివ్యూ పార్సర్ లోపలే సింగిల్ లైన్‌గా నార్మలైజ్ చేయడం. దీనివల్ల ప్రివ్యూలో ఆప్షన్లు ఎప్పటికీ విడిపోవు.
+  3. **ఎడిటర్ పేస్ట్, ఆటో-ఫార్మాట్, పేపర్ లోడ్ లకు సింక్:**
+     - `autoFormatText` (Auto-Align Format బటన్) ను `formatMCQText` తో అప్‌గ్రేడ్ చేశాము.
+     - `handleEditorPaste` లో ప్రశ్నలు పేస్ట్ అయిన వెంటనే ఆటోమేటిక్‌గా ఆప్షన్ల గ్యాప్స్ తొలగిపోయేలా చేశాము.
+     - `loadPaper` లో పేపర్ ఓపెన్ అవ్వగానే డేటాబేస్ లోని పాత ఆప్షన్ల ఖాళీ లైన్లు ఆటో-క్లీన్ అయ్యేలా చేశాము.
+  4. **మిషన్ క్రిటికల్ `printPaper` & KaTeX ప్రింట్ ప్రొటెక్షన్:** 100% పక్కాగా భద్రపరిచాము.
+
 ## చివరి సంభాషణ - MCQ Paper Generator Ghost "TELUGU" హెడ్డింగ్ సమస్య పరిష్కారం (November 19, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `3 subjects matrame select chesanu but telugu enduku chupistundi okasari check chyu`

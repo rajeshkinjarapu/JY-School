@@ -37,3 +37,8 @@
 - **Flutter App Update Pre-approval (Strict Order):** Whenever an update is requested for the Flutter app, BEFORE writing any code, I MUST explicitly inform the user whether the requested changes can be updated via Shorebird (Patch) or if they require building a new APK (Release). I MUST wait for the user's explicit approval before proceeding to write or modify any code.
 
 - **Strict Terminal Execution (No Background Processes):** Never execute ANY background terminal commands or scripts (even for file reading, grep, or simple queries) using `run_command` if the user explicitly says "background lo em cheyakiu" or asks not to run things. Instead, always provide the exact command snippet for the user to copy, paste, and run in their own terminal.
+
+- **Live Print & LaTeX Preview Protection (Strict Order — Zero Regression Policy):** The MCQ Paper Generator's Live Print (`printPaper` iframe mechanism with 210mm A4 width and `@page { size: A4 portrait; margin: 10mm 0; }`), LaTeX Preview (`LiveLatexPreview` with KaTeX math rendering, balanced braces, layout tags, and floating images), and Paper Load/Save API endpoints (`/api/generated-papers/${paperId}`) are mission-critical. In ANY future code updates, refactors, or feature additions:
+  1. NEVER modify or break the `printPaper` function or its clean CSS print rules.
+  2. NEVER introduce spaces or broken regex replacements into template strings or API routes (e.g. keep `/api/generated-papers/${paperId}` clean, never `/ api / ...`).
+  3. ALWAYS verify that math rendering, question blocks, subject tabs, and preview layout remain 100% functional, crisp, and intact before finishing any task.

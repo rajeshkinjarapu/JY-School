@@ -68,6 +68,71 @@ export async function printPaper(id = 'a4-preview-paper') {
   setTimeout(() => iframe.remove(), 2500);
 }
 
+/**
+ * formatMCQText
+ * Formats question bank content so that:
+ * 1. Options (A), (B), (C), (D) NEVER have empty lines between them.
+ * 2. Between Question and Question (before a new question number like "14. "), there is ALWAYS exactly ONE empty line (\n\n).
+ * 3. Multiple options written on the same line are cleanly split to individual lines.
+ * 4. Lowercase or period-based option labels like (a), a., a), A. are normalized to (A).
+ * 5. Simple math without $ is auto-wrapped without breaking KaTeX.
+ */
+export const formatMCQText = (rawText: string): string => {
+  if (!rawText || !rawText.trim()) return rawText || '';
+
+  // 1. Normalize line breaks
+  let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+
+  // 2. Break multiple options placed on a single line into separate lines
+  text = text.replace(/(?:[^\n])\s*(\([A-D]\)|[A-D]\.|\b[a-d]\))\s+/g, (match, opt) => {
+    const letter = opt.replace(/[\(\)\.\s]/g, '').toUpperCase();
+    return `\n(${letter}) `;
+  });
+
+  const lines = text.split('\n');
+  const cleanedLines: string[] = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i].trim();
+    if (!line) continue; // Skip blank lines initially; spacing is controlled below
+
+    // Standardize question numbers: "1) ", "1. ", "Q1. ", "Question 1: " -> "1. "
+    line = line.replace(/^(?:Q(?:uestion)?\s*)?(\d+)[\.\:\)]\s*/i, '$1. ');
+
+    // Standardize option prefixes: "(a)", "a.", "a)", "A.", "A)" -> "(A)"
+    line = line.replace(/^\(?([a-dA-D])[\.\)]\s*/, (_, letter) => `(${letter.toUpperCase()}) `);
+
+    // Auto-wrap common math formulas in LaTeX if not already enclosed in $
+    if (!line.includes('$')) {
+      line = line.replace(/\b(sin|cos|tan|sec|csc|cot)\s+([0-9]+[\^\_\\][a-zA-Z0-9{}]+)/gi, '$$$1 $2$$');
+      line = line.replace(/^(\([A-D]\))\s+([\d\.\-\+\*\/]+)$/g, '$1 $$$2$$');
+    }
+
+    cleanedLines.push(line);
+  }
+
+  // 3. Reconstruct:
+  // - Options and question body follow consecutively (0 blank lines)
+  // - Between questions: exactly ONE blank line (\n\n)
+  const resultLines: string[] = [];
+  const isQuestionStart = (str: string) => /^(?:\d+|[IVXLCDM]+)\.\s+/i.test(str);
+
+  for (let i = 0; i < cleanedLines.length; i++) {
+    const line = cleanedLines[i];
+
+    if (isQuestionStart(line)) {
+      if (resultLines.length > 0) {
+        resultLines.push(''); // Guarantee exactly 1 empty line before this question
+      }
+      resultLines.push(line);
+    } else {
+      resultLines.push(line);
+    }
+  }
+
+  return resultLines.join('\n');
+};
+
 export const MCQPaperGeneratorPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -199,14 +264,14 @@ export const MCQPaperGeneratorPage = () => {
 
     selected.forEach((q, i) => {
       const qNum = maxQ + i + 1;
-      generatedText += `${ qNum }. ${ q.questionText } \n`;
+      generatedText += `${ qNum }. ${ (q.questionText || '').trim() }\n`;
       if (q.imageUrl) {
         generatedText += `[IMAGE:${ q.imageUrl }]\n`;
       }
       try {
         const opts = JSON.parse(q.options || '[]');
         opts.forEach((opt: string, idx: number) => {
-          generatedText += `(${ String.fromCharCode(65 + idx) }) ${ opt } \n`;
+          generatedText += `(${ String.fromCharCode(65 + idx) }) ${ (opt || '').trim() }\n`;
         });
       } catch (e) { }
       generatedText += '\n';
@@ -224,7 +289,7 @@ export const MCQPaperGeneratorPage = () => {
 
     setSubjectContents(prev => ({
       ...prev,
-      [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText
+      [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
     }));
     setAnswerKeys(prev => ({ ...prev, [activeSubjectTab]: newAnswers }));
 
@@ -517,6 +582,33 @@ export const MCQPaperGeneratorPage = () => {
           reader.readAsDataURL(blob);
         }
         return;
+      }
+    }
+
+    // Auto-clean pasted questions text so options are not separated by unwanted empty lines
+    const pastedText = e.clipboardData.getData('text');
+    if (pastedText && (/\([A-D]\)|[a-d]\)|\d+\.\s+/i.test(pastedText))) {
+      e.preventDefault();
+      const formattedPaste = formatMCQText(pastedText);
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const currentVal = subjectContents[activeSubjectTab] || '';
+        let prefix = '';
+        if (start > 0 && currentVal[start - 1] !== '\n') {
+          prefix = '\n\n';
+        }
+        const toInsert = prefix + formattedPaste;
+        const newVal = currentVal.substring(0, start) + toInsert + currentVal.substring(end);
+        setSubjectContents(prev => ({
+          ...prev,
+          [activeSubjectTab]: newVal
+        }));
+        setTimeout(() => {
+          textarea.focus();
+          textarea.selectionStart = textarea.selectionEnd = start + toInsert.length;
+        }, 0);
       }
     }
   };
@@ -894,17 +986,17 @@ export const MCQPaperGeneratorPage = () => {
             }
 
             questions.forEach((q: any, i: number) => {
-              generatedText += `${ maxQ + i + 1 }. ${ q.questionText } \n`;
-              if (q.optionA) generatedText += `(A) ${ q.optionA } \n`;
-              if (q.optionB) generatedText += `(B) ${ q.optionB } \n`;
-              if (q.optionC) generatedText += `(C) ${ q.optionC } \n`;
-              if (q.optionD) generatedText += `(D) ${ q.optionD } \n`;
+              generatedText += `${ maxQ + i + 1 }. ${ (q.questionText || '').trim() }\n`;
+              if (q.optionA) generatedText += `(A) ${ (q.optionA || '').trim() }\n`;
+              if (q.optionB) generatedText += `(B) ${ (q.optionB || '').trim() }\n`;
+              if (q.optionC) generatedText += `(C) ${ (q.optionC || '').trim() }\n`;
+              if (q.optionD) generatedText += `(D) ${ (q.optionD || '').trim() }\n`;
               generatedText += '\n';
             });
 
             setSubjectContents(prev => ({
               ...prev,
-              [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText
+              [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
             }));
             toast.success(`✅ ${ questions.length } questions extracted from Word document!`, { id: toastId });
             setIsAiModalOpen(false);
@@ -1000,17 +1092,17 @@ export const MCQPaperGeneratorPage = () => {
           }
 
           questions.forEach((q: any, i: number) => {
-            generatedText += `${ maxQ + i + 1 }. ${ q.questionText } \n`;
-            if (q.optionA) generatedText += `(A) ${ q.optionA } \n`;
-            if (q.optionB) generatedText += `(B) ${ q.optionB } \n`;
-            if (q.optionC) generatedText += `(C) ${ q.optionC } \n`;
-            if (q.optionD) generatedText += `(D) ${ q.optionD } \n`;
+            generatedText += `${ maxQ + i + 1 }. ${ (q.questionText || '').trim() }\n`;
+            if (q.optionA) generatedText += `(A) ${ (q.optionA || '').trim() }\n`;
+            if (q.optionB) generatedText += `(B) ${ (q.optionB || '').trim() }\n`;
+            if (q.optionC) generatedText += `(C) ${ (q.optionC || '').trim() }\n`;
+            if (q.optionD) generatedText += `(D) ${ (q.optionD || '').trim() }\n`;
             generatedText += '\n';
           });
 
           setSubjectContents(prev => ({
             ...prev,
-            [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + generatedText
+            [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
           }));
           setIsGenerating(false);
           setAiImageBase64('');
@@ -1060,44 +1152,12 @@ export const MCQPaperGeneratorPage = () => {
 
       const autoFormatText = () => {
         const currentContent = subjectContents[activeSubjectTab] || '';
-        const lines = currentContent.split('\n');
-        let formatted = [];
-
-        for (let i = 0; i < lines.length; i++) {
-          let line = lines[i].trim();
-          if (!line) {
-            formatted.push('');
-            continue;
-          }
-
-          const optionRegex = /\b([a-dA-D])[\)\.]\s+/g;
-          if (line.match(optionRegex) && (line.match(optionRegex)?.length ?? 0) > 1) {
-            line = line.replace(/\b([a-dA-D])[\)\.]\s+/g, (match, letter) => `\n(${ letter.toUpperCase() })`);
-            line = line.trim();
-          }
-
-          line = line.replace(/^\b([a-dA-D])[\)\.]\s+/i, (match, letter) => `(${ letter.toUpperCase() })`);
-
-          if (!line.includes('$')) {
-            line = line.replace(/\b(sin|cos|tan|sec|csc|cot)\s+([0-9]+[\^\_\\][a-zA-Z0-9{}]+)/gi, '$$$1 $2$$');
-            line = line.replace(/^(\([A-D]\))\s+([\d\.\-\+\*\/]+)$/g, '$1 $$$2$$');
-          }
-
-          if (/^\d+[\.\)]\s/.test(line)) {
-            if (formatted.length > 0 && formatted[formatted.length - 1] !== '') {
-              formatted.push('');
-            }
-            line = line.replace(/^(\d+)[\.\)]\s/, '$1. ');
-          }
-
-          formatted.push(line);
-        }
-
+        const formatted = formatMCQText(currentContent);
         setSubjectContents(prev => ({
           ...prev,
-          [activeSubjectTab]: formatted.join('\n')
+          [activeSubjectTab]: formatted
         }));
-        toast.success("Auto-formatted text!");
+        toast.success("Auto-formatted text with clean option & question spacing! ✨");
       };
 
       useEffect(() => {
@@ -1172,6 +1232,13 @@ export const MCQPaperGeneratorPage = () => {
             } else if (Object.keys(textData).length > 0) {
               setActiveSubjectTab(Object.keys(textData)[0]);
             }
+
+            // Auto-clean any stray blank lines between options and guarantee proper question spacing
+            Object.keys(textData).forEach(k => {
+              if (textData[k]) {
+                textData[k] = formatMCQText(textData[k]);
+              }
+            });
 
             setSubjectContents(textData);
             setAnswerKeys(keys);
@@ -1253,10 +1320,27 @@ export const MCQPaperGeneratorPage = () => {
           }
         }
 
+        // Clean option and question spacing across all subjects before saving
+        const cleanedSubjectContents: Record<string, string> = {};
+        Object.keys(subjectContents).forEach(k => {
+          cleanedSubjectContents[k] = formatMCQText(subjectContents[k] || '');
+        });
+        setSubjectContents(cleanedSubjectContents);
+
         setIsSaving(true);
         toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
         try {
-          const serializedContent = serializeContent();
+          const dataToSerialize = {
+            subjectContents: cleanedSubjectContents,
+            inlineImages,
+            answerKeys,
+            settings: {
+              fontSize,
+              questionSpacing,
+              showPaperHeader
+            }
+          };
+          const serializedContent = "<!--MCQ_DATA_V2-->\n" + JSON.stringify(dataToSerialize);
           const payload = {
             examName: finalExamName,
             examClass,
@@ -1579,9 +1663,21 @@ export const MCQPaperGeneratorPage = () => {
                   value={subjectContents[activeSubjectTab] || ''}
                   onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
                   onPaste={handleEditorPaste}
+                  onBlur={() => {
+                    const current = subjectContents[activeSubjectTab] || '';
+                    if (current.trim()) {
+                      const formatted = formatMCQText(current);
+                      if (formatted !== current) {
+                        setSubjectContents(prev => ({
+                          ...prev,
+                          [activeSubjectTab]: formatted
+                        }));
+                      }
+                    }
+                  }}
                   onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
                   className="w-full flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[450px] resize-none shadow-inner"
-                  placeholder={`Enter questions for ${ activeSubjectTab }...\n1.Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
+                  placeholder={`Enter questions for ${ activeSubjectTab }...\n1. Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
                 />
               </div>
             </div>
