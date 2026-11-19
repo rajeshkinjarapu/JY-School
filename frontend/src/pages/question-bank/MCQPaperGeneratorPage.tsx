@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
-import { toJpeg, toPng } from 'html-to-image';
+import { toCanvas, toJpeg, toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { triggerDownloadNotification } from '../../utils/downloadNotification';
 
@@ -622,20 +622,26 @@ export const MCQPaperGeneratorPage = () => {
       }
 
       // Small pause to let DOM compute unscaled dimensions
-      await new Promise(r => setTimeout(r, 100));
-
-      const paperRect = paperEl.getBoundingClientRect();
+      await new Promise(r => setTimeout(r, 60));
 
       // 1. Collect all atomic top-level blocks using data-mcq-block="true"
       const blockEls = Array.from(paperEl.querySelectorAll('[data-mcq-block="true"]')) as HTMLElement[];
       blockEls.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
-      // 2. Capture LIVE DOM into high-resolution Canvas using toJpeg with skipFonts: true (ultra-fast, no font network refetch)
+      // 2. Capture LIVE DOM into Canvas directly using toCanvas with skipFonts: true (blazing fast, 0ms intermediate image encoding)
       let canvas: HTMLCanvasElement;
       try {
+        canvas = await toCanvas(paperEl, {
+          pixelRatio: 1.5,
+          backgroundColor: '#ffffff',
+          skipFonts: true,
+          cacheBust: false,
+        });
+      } catch (canvasErr) {
+        console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
         const imgData = await toJpeg(paperEl, {
-          pixelRatio: 2,
-          quality: 0.95,
+          pixelRatio: 1.5,
+          quality: 0.90,
           backgroundColor: '#ffffff',
           skipFonts: true,
         });
@@ -651,162 +657,136 @@ export const MCQPaperGeneratorPage = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('Failed to get canvas 2D context');
         ctx.drawImage(img, 0, 0);
-      } catch (err1) {
-        console.warn('toJpeg with skipFonts failed, trying toPng fallback', err1);
-        const imgData = await toPng(paperEl, {
-          pixelRatio: 2,
-          backgroundColor: '#ffffff',
-          skipFonts: true,
-        });
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load fallback image'));
-          img.src = imgData;
-        });
-        canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Failed to get canvas 2D context');
-        ctx.drawImage(img, 0, 0);
       }
 
       if (!canvas || canvas.width === 0 || canvas.height === 0) {
         throw new Error('Failed to capture preview canvas.');
       }
 
-          const activePaperRect = paperEl.getBoundingClientRect();
-          const scaleRatioY = canvas.height / activePaperRect.height;
+      const activePaperRect = paperEl.getBoundingClientRect();
+      const scaleRatioY = canvas.height / activePaperRect.height;
 
-          interface AtomicBlock {
-            type: 'header' | 'instructions' | 'section-header' | 'question';
-            topCanvasY: number;
-            bottomCanvasY: number;
-          }
+      interface AtomicBlock {
+        type: 'header' | 'instructions' | 'section-header' | 'question';
+        topCanvasY: number;
+        bottomCanvasY: number;
+      }
 
-          const blocks: AtomicBlock[] = blockEls.map(el => {
-            const r = el.getBoundingClientRect();
-            const top = Math.round((r.top - activePaperRect.top) * scaleRatioY);
-            const bottom = Math.round((r.bottom - activePaperRect.top) * scaleRatioY);
-            let type: AtomicBlock['type'] = 'question';
-            if (el.classList.contains('paper-header')) type = 'header';
-            else if (el.classList.contains('paper-instructions')) type = 'instructions';
-            else if (el.classList.contains('section-header')) type = 'section-header';
-            return { type, topCanvasY: top, bottomCanvasY: bottom };
-          });
+      const blocks: AtomicBlock[] = blockEls.map(el => {
+        const r = el.getBoundingClientRect();
+        const top = Math.round((r.top - activePaperRect.top) * scaleRatioY);
+        const bottom = Math.round((r.bottom - activePaperRect.top) * scaleRatioY);
+        let type: AtomicBlock['type'] = 'question';
+        if (el.classList.contains('paper-header')) type = 'header';
+        else if (el.classList.contains('paper-instructions')) type = 'instructions';
+        else if (el.classList.contains('section-header')) type = 'section-header';
+        return { type, topCanvasY: top, bottomCanvasY: bottom };
+      });
 
-          const pdf = new jsPDF('p', 'mm', 'a4');
-          const pageWidthMm = 210;
-          const pageHeightMm = 297;
-          const a4HeightPx = Math.floor(canvas.width * (297 / 210));
-          const topMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm top margin on Page 2+
-          const bottomMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm bottom margin
+      const pdf = new jsPDF('p', 'mm', 'a4', true);
+      const pageWidthMm = 210;
+      const pageHeightMm = 297;
+      const a4HeightPx = Math.floor(canvas.width * (297 / 210));
+      const topMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm top margin on Page 2+
+      const bottomMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm bottom margin
 
-          // Group atomic blocks into discrete A4 pages so NO question is ever cut in half
-          interface PageSlice {
-            startY: number;
-            endY: number;
-          }
-          const pageSlices: PageSlice[] = [];
+      // Group atomic blocks into discrete A4 pages so NO question is ever cut in half
+      interface PageSlice {
+        startY: number;
+        endY: number;
+      }
+      const pageSlices: PageSlice[] = [];
 
-          let blockIdx = 0;
-          while (blockIdx < blocks.length) {
-            const isFirstPage = pageSlices.length === 0;
-            const pageTopMargin = isFirstPage ? 0 : topMarginPx;
-            const maxContentHeight = a4HeightPx - pageTopMargin - bottomMarginPx;
+      let blockIdx = 0;
+      while (blockIdx < blocks.length) {
+        const isFirstPage = pageSlices.length === 0;
+        const pageTopMargin = isFirstPage ? 0 : topMarginPx;
+        const maxContentHeight = a4HeightPx - pageTopMargin - bottomMarginPx;
 
-            // Start Y on canvas for this page
-            // For page 1, start from 0 to include top padding
-            // For page 2+, start exactly at the top of the first block of that page with a tiny 4px buffer
-            const startY = isFirstPage ? 0 : Math.max(0, blocks[blockIdx].topCanvasY - 4);
-            let endY = startY;
-            let lastFittingIdx = blockIdx;
+        // Start Y on canvas for this page
+        const startY = isFirstPage ? 0 : Math.max(0, blocks[blockIdx].topCanvasY - 4);
+        let endY = startY;
+        let lastFittingIdx = blockIdx;
 
-            while (blockIdx < blocks.length) {
-              const block = blocks[blockIdx];
-              const heightIfIncluded = block.bottomCanvasY - startY;
+        while (blockIdx < blocks.length) {
+          const block = blocks[blockIdx];
+          const heightIfIncluded = block.bottomCanvasY - startY;
 
-              if (heightIfIncluded <= maxContentHeight) {
-                // Block completely fits on this page!
-                lastFittingIdx = blockIdx;
-                endY = block.bottomCanvasY;
-                blockIdx++;
-              } else {
-                // Block does NOT fit on this page! It must start cleanly on the NEXT page!
-                // Orphan check: If lastFitting was a section header ("PHYSICS"), don't leave it alone at bottom
-                if (blocks[lastFittingIdx].type === 'section-header' && lastFittingIdx > 0 && lastFittingIdx === blockIdx - 1) {
-                  blockIdx = lastFittingIdx;
-                  endY = blocks[lastFittingIdx - 1].bottomCanvasY;
-                }
-                break;
-              }
+          if (heightIfIncluded <= maxContentHeight) {
+            lastFittingIdx = blockIdx;
+            endY = block.bottomCanvasY;
+            blockIdx++;
+          } else {
+            if (blocks[lastFittingIdx].type === 'section-header' && lastFittingIdx > 0 && lastFittingIdx === blockIdx - 1) {
+              blockIdx = lastFittingIdx;
+              endY = blocks[lastFittingIdx - 1].bottomCanvasY;
             }
-
-            // Safety fallback if a single oversized block exceeds the entire page height
-            if (endY === startY && blockIdx < blocks.length) {
-              endY = Math.min(canvas.height, startY + maxContentHeight);
-              blockIdx++;
-            }
-
-            // Add 6px bottom cushion below the last block
-            pageSlices.push({
-              startY,
-              endY: Math.min(canvas.height, endY + 6)
-            });
+            break;
           }
-
-          // Render each page slice onto its own pristine A4 canvas
-          pageSlices.forEach((slice, pageIdx) => {
-            const pageCanvas = document.createElement('canvas');
-            pageCanvas.width = canvas.width;
-            pageCanvas.height = a4HeightPx;
-            const ctx = pageCanvas.getContext('2d');
-
-            if (ctx) {
-              ctx.fillStyle = '#ffffff';
-              ctx.fillRect(0, 0, pageCanvas.width, a4HeightPx);
-
-              const pageTopMargin = pageIdx === 0 ? 0 : topMarginPx;
-              const sliceHeight = Math.max(10, slice.endY - slice.startY);
-
-              ctx.drawImage(
-                canvas,
-                0,
-                slice.startY,
-                canvas.width,
-                sliceHeight,
-                0,
-                pageTopMargin,
-                canvas.width,
-                sliceHeight
-              );
-            }
-
-            const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.95);
-            if (pageIdx > 0) {
-              pdf.addPage('a4', 'p');
-            }
-            pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
-          });
-
-          const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
-          const filename = `${ cleanExamName }_${ examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper' }.pdf`;
-          pdf.save(filename);
-
-          triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper(${ filename }) downloaded successfully.`);
-          toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
-        } catch (err: any) {
-          console.error('PDF download error:', err);
-          toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
-        } finally {
-          if (scaleContainer) {
-            scaleContainer.style.zoom = prevZoom;
-            scaleContainer.style.transition = prevTransition;
-          }
-          setIsDownloadingPdf(false);
         }
-      };
+
+        if (endY === startY && blockIdx < blocks.length) {
+          endY = Math.min(canvas.height, startY + maxContentHeight);
+          blockIdx++;
+        }
+
+        pageSlices.push({
+          startY,
+          endY: Math.min(canvas.height, endY + 6)
+        });
+      }
+
+      // Pre-allocate a single reusable canvas for page slicing
+      const pageCanvas = document.createElement('canvas');
+      pageCanvas.width = canvas.width;
+      pageCanvas.height = a4HeightPx;
+      const pageCtx = pageCanvas.getContext('2d', { alpha: false });
+
+      pageSlices.forEach((slice, pageIdx) => {
+        if (pageCtx) {
+          pageCtx.fillStyle = '#ffffff';
+          pageCtx.fillRect(0, 0, pageCanvas.width, a4HeightPx);
+
+          const pageTopMargin = pageIdx === 0 ? 0 : topMarginPx;
+          const sliceHeight = Math.max(10, slice.endY - slice.startY);
+
+          pageCtx.drawImage(
+            canvas,
+            0,
+            slice.startY,
+            canvas.width,
+            sliceHeight,
+            0,
+            pageTopMargin,
+            canvas.width,
+            sliceHeight
+          );
+        }
+
+        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.88);
+        if (pageIdx > 0) {
+          pdf.addPage('a4', 'p');
+        }
+        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
+      });
+
+      const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
+      pdf.save(filename);
+
+      triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
+      toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
+    } catch (err: any) {
+      console.error('PDF download error:', err);
+      toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
+    } finally {
+      if (scaleContainer) {
+        scaleContainer.style.zoom = prevZoom;
+        scaleContainer.style.transition = prevTransition;
+      }
+      setIsDownloadingPdf(false);
+    }
+  };
 
       const handlePrint = async () => {
         await printPaper('a4-preview-paper');
@@ -1300,10 +1280,14 @@ export const MCQPaperGeneratorPage = () => {
               <button
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 active:scale-95"
               >
-                <Download className="w-3.5 h-3.5" />
-                {isDownloadingPdf ? '...' : 'PDF'}
+                {isDownloadingPdf ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>{isDownloadingPdf ? 'Wait...' : 'PDF'}</span>
               </button>
 
               <button
@@ -1318,10 +1302,14 @@ export const MCQPaperGeneratorPage = () => {
               <button
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer"
-                title="Download PDF directly to device"
+                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer active:scale-95"
+                title="Download PDF directly to device (Instant generation)"
               >
-                <Download className="w-4 h-4" />
+                {isDownloadingPdf ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
                 <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
               </button>
 
@@ -1349,8 +1337,8 @@ export const MCQPaperGeneratorPage = () => {
               <div className="h-full flex flex-col pb-20">
 
                 {/* Desktop Editor Header Toolbar */}
-                <div className="border-b border-slate-100 pb-2.5 mb-3 hidden md:flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
+                <div className="border-b border-slate-100 pb-3 mb-3 hidden md:flex items-center justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2.5 flex-wrap">
                     <input
                       type="file"
                       ref={imageInputRef}
@@ -1358,52 +1346,72 @@ export const MCQPaperGeneratorPage = () => {
                       onChange={handleImageUploadForEditor}
                       className="hidden"
                     />
+
+                    {/* 1. Insert Image Button */}
                     <button
                       type="button"
                       onClick={() => imageInputRef.current?.click()}
-                      className="px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-purple-200 shadow-xs cursor-pointer hover:shadow-sm"
+                      className="px-3.5 py-2 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-purple-500/25 hover:shadow-md hover:shadow-purple-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-purple-400/30"
                       title="Insert or Upload Image"
                     >
-                      <ImagePlus className="w-3.5 h-3.5 text-purple-600" />
+                      <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
+                        <ImagePlus className="w-3.5 h-3.5 text-white" />
+                      </div>
                       <span>Insert Image</span>
                     </button>
 
-                    {/* Dedicated Separate Image Sizes & Move Button */}
+                    {/* 2. Image Sizes & Move Button */}
                     <button
                       type="button"
                       onClick={() => setIsImageSizeModalOpen(true)}
-                      className={`px - 3.5 py - 1.5 text - xs font - bold rounded - xl transition - all flex items - center gap - 1.5 border shadow - xs cursor - pointer hover: shadow - sm ${
-    (activeImages.length > 0 || floatingImagesList.length > 0)
-      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-indigo-500/20'
-      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-  } `}
+                      className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 border shadow-sm cursor-pointer hover:scale-[1.02] active:scale-95 ${
+                        (activeImages.length > 0 || floatingImagesList.length > 0)
+                          ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white border-indigo-400/30 shadow-indigo-500/25 hover:shadow-md'
+                          : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 border-slate-200 hover:border-indigo-300 shadow-slate-200/50 hover:shadow-xs'
+                      }`}
                       title="Change Image Sizes, Alignments & Question Positions"
                     >
-                      <Sliders className="w-3.5 h-3.5" />
+                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
+                        (activeImages.length > 0 || floatingImagesList.length > 0)
+                          ? 'bg-white/20 text-white'
+                          : 'bg-indigo-50 text-indigo-600'
+                      }`}>
+                        <Sliders className="w-3.5 h-3.5" />
+                      </div>
                       <span>Image Sizes & Move</span>
-                      {(activeImages.length + floatingImagesList.length) > 0 && (
-                        <span className="bg-white text-indigo-700 font-black rounded-full px-1.5 py-0.2 text-[10px] leading-tight shadow-xs">
+                      {(activeImages.length + floatingImagesList.length) > 0 ? (
+                        <span className="bg-white text-indigo-700 font-black rounded-full px-2 py-0.5 text-[10px] leading-tight shadow-xs">
                           {activeImages.length + floatingImagesList.length}
+                        </span>
+                      ) : (
+                        <span className="bg-slate-100 text-slate-500 font-semibold rounded-full px-1.5 py-0.5 text-[10px]">
+                          0
                         </span>
                       )}
                     </button>
 
+                    {/* 3. Auto-Align Format Button */}
                     <button
                       type="button"
                       onClick={autoFormatText}
-                      className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 border border-blue-200 shadow-xs cursor-pointer hover:shadow-sm"
-                      title="Auto-align Options (A), (B), (C), (D)"
+                      className="px-3.5 py-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-cyan-400/30"
+                      title="Auto-align Options (A), (B), (C), (D) and Clean Formatting"
                     >
-                      <Wand2 className="w-3.5 h-3.5 text-blue-600" />
+                      <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
+                        <Wand2 className="w-3.5 h-3.5 text-white" />
+                      </div>
                       <span>Auto-Align Format</span>
                     </button>
                   </div>
 
                   {/* Status / Question Count indicator */}
                   <div className="text-[11px] font-semibold text-slate-400 hidden xl:flex items-center gap-2">
-                    <span className="bg-slate-100 px-2 py-0.5 rounded-md text-slate-600 font-bold">{availableQuestions.length} Questions</span>
-                    <span>•</span>
-                    <span>LaTeX & Math Supported</span>
+                    <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-700 font-bold border border-slate-200/70">{availableQuestions.length} Questions</span>
+                    <span className="text-slate-300">•</span>
+                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      LaTeX & Math Supported
+                    </span>
                   </div>
                 </div>
 
@@ -1413,51 +1421,72 @@ export const MCQPaperGeneratorPage = () => {
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => imageInputRef.current?.click()}
-                      className="px-2.5 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200 flex items-center gap-1"
+                      className="px-2.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
                     >
                       <ImagePlus className="w-3 h-3" /> Image
                     </button>
                     <button
                       type="button"
                       onClick={() => setIsImageSizeModalOpen(true)}
-                      className={`px - 2.5 py - 1 text - xs font - bold rounded - lg border flex items - center gap - 1 ${
-    (activeImages.length + floatingImagesList.length) > 0 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'
-  } `}
+                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg shadow-xs flex items-center gap-1 ${
+                        (activeImages.length + floatingImagesList.length) > 0
+                          ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white'
+                          : 'bg-white text-slate-700 border border-slate-200'
+                      }`}
                     >
-                      <Sliders className="w-3 h-3" /> Sizes & Move {(activeImages.length + floatingImagesList.length) > 0 && `(${ activeImages.length + floatingImagesList.length })`}
+                      <Sliders className="w-3 h-3" /> Sizes {(activeImages.length + floatingImagesList.length) > 0 && `(${activeImages.length + floatingImagesList.length})`}
                     </button>
                     <button
                       onClick={autoFormatText}
-                      className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 flex items-center gap-1"
+                      className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-teal-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
                     >
                       <Wand2 className="w-3 h-3" /> Align
                     </button>
                   </div>
                 </div>
 
-                {/* Subject Buttons Bar - Clear, prominent, never hidden */}
-                <div className="flex items-center gap-1.5 mt-1 md:mt-1 mb-3 overflow-x-auto pb-1.5 custom-scrollbar flex-shrink-0">
-                  <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider flex-shrink-0 mr-1 hidden sm:inline">
-                    Subjects:
-                  </span>
+                {/* Subject Buttons Bar - Premium Executive Styling */}
+                <div className="flex items-center gap-2 mt-1 mb-3.5 p-1.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl overflow-x-auto custom-scrollbar flex-shrink-0 shadow-inner">
+                  <div className="flex items-center gap-1.5 px-2 py-1 text-slate-500 text-[11px] font-black uppercase tracking-wider flex-shrink-0 select-none">
+                    <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Subjects:</span>
+                  </div>
+
                   {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
-                    const hasContent = subjectContents[subj] && subjectContents[subj].trim() !== '';
+                    const content = subjectContents[subj] || '';
+                    const hasContent = content.trim() !== '';
+                    const subjQuestions = (content.match(/^\s*(?:\d+|Q\d+|Question\s*\d+)[\.\)]/gim) || []).length;
+                    const isActive = activeSubjectTab === subj;
+
                     return (
                       <button
                         key={subj}
                         onClick={() => setActiveSubjectTab(subj)}
-                        className={`px - 3 py - 1.5 md: px - 4 md: py - 2 rounded - xl font - bold text - xs md: text - sm transition - all whitespace - nowrap flex - shrink - 0 flex items - center gap - 1.5 border cursor - pointer ${
-    activeSubjectTab === subj
-      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 scale-102'
-      : hasContent
-        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-xs'
-        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
-  } `}
+                        type="button"
+                        className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 flex items-center gap-2 cursor-pointer ${
+                          isActive
+                            ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-md shadow-blue-500/25 border border-indigo-400/40 scale-[1.02]'
+                            : hasContent
+                              ? 'bg-white text-slate-800 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 shadow-2xs hover:shadow-xs'
+                              : 'bg-slate-50/80 text-slate-500 hover:text-slate-800 hover:bg-white border border-transparent hover:border-slate-200'
+                        }`}
                       >
-                        {subj}
-                        {hasContent && (
-                          <span className={`w - 1.5 h - 1.5 rounded - full ${ activeSubjectTab === subj ? 'bg-white' : 'bg-emerald-500' } `} />
-                        )}
+                        <span className="tracking-wide">{subj}</span>
+
+                        {/* Question Count or Status Badge */}
+                        {subjQuestions > 0 ? (
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                            isActive
+                              ? 'bg-white/20 text-white border border-white/30'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}>
+                            {subjQuestions} Qs
+                          </span>
+                        ) : hasContent ? (
+                          <span className={`w-2 h-2 rounded-full ${
+                            isActive ? 'bg-white animate-pulse' : 'bg-emerald-500'
+                          }`} />
+                        ) : null}
                       </button>
                     );
                   })}
@@ -1527,57 +1556,60 @@ export const MCQPaperGeneratorPage = () => {
                 </div>
 
                 {/* Professional Zoom Control Toolbar */}
-                <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-inner">
+                <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                   <button
                     type="button"
                     onClick={() => setZoomLevel(z => Math.max(0.3, Number((z - 0.1).toFixed(2))))}
-                    className="p-1.5 hover:bg-white text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
                     title="Zoom Out (-10%)"
                     disabled={zoomLevel <= 0.3}
                   >
-                    <ZoomOut className="w-4 h-4" />
+                    <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
 
-                  <span className="text-xs font-black text-slate-800 min-w-[50px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200/80 shadow-xs select-none">
+                  <span className="text-xs font-black text-slate-800 min-w-[52px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200/90 shadow-2xs select-none font-mono">
                     {Math.round(zoomLevel * 100)}%
                   </span>
 
                   <button
                     type="button"
                     onClick={() => setZoomLevel(z => Math.min(1.8, Number((z + 0.1).toFixed(2))))}
-                    className="p-1.5 hover:bg-white text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-xs disabled:opacity-30 disabled:cursor-not-allowed"
+                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
                     title="Zoom In (+10%)"
                     disabled={zoomLevel >= 1.8}
                   >
-                    <ZoomIn className="w-4 h-4" />
+                    <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   </button>
 
-                  <div className="h-4 w-[1px] bg-slate-300 mx-1 hidden sm:block" />
+                  <div className="h-5 w-[1px] bg-slate-200 mx-1" />
 
+                  {/* Dedicated 100% Button */}
                   <button
                     type="button"
                     onClick={() => setZoomLevel(1.0)}
-                    className={`px - 2.5 py - 1 text - [11px] font - bold rounded - lg transition - all cursor - pointer hidden sm:block ${
-    Math.round(zoomLevel * 100) === 100
-      ? 'bg-blue-600 text-white shadow-xs'
-      : 'text-slate-600 hover:bg-white hover:text-slate-900'
-  } `}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95 ${
+                      Math.round(zoomLevel * 100) === 100
+                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs border border-indigo-500/50'
+                        : 'bg-white hover:bg-indigo-50/50 text-slate-700 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300'
+                    }`}
                     title="Actual 100% A4 Print Size"
                   >
-                    100%
+                    <span>100%</span>
                   </button>
 
+                  {/* Dedicated Fit Button */}
                   <button
                     type="button"
                     onClick={() => setZoomLevel(window.innerWidth <= 768 ? 0.52 : 0.85)}
-                    className={`px - 2.5 py - 1 text - [11px] font - bold rounded - lg transition - all cursor - pointer hidden sm:block ${
-    (window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
-      ? 'bg-blue-600 text-white shadow-xs'
-      : 'text-slate-600 hover:bg-white hover:text-slate-900'
-  } `}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 ${
+                      (window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-xs border border-blue-500/50'
+                        : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 hover:text-blue-800 border border-blue-200/80'
+                    }`}
                     title="Fit to Screen Width"
                   >
-                    Fit
+                    <Maximize className="w-3 h-3" />
+                    <span>Fit</span>
                   </button>
                 </div>
               </div>
@@ -1630,21 +1662,21 @@ export const MCQPaperGeneratorPage = () => {
           <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-between items-center px-4 py-3 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-3xl print:hidden">
             <button
               onClick={() => setMobileTab('editor')}
-              className={`flex - 1 flex flex - col items - center justify - center p - 2 rounded - 2xl transition - all ${ mobileTab === 'editor' ? 'text-blue-400 bg-blue-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800' } `}
+              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-400 bg-blue-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800'}`}
             >
               <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Edit</span>
             </button>
             <button
               onClick={() => setMobileTab('preview')}
-              className={`flex - 1 flex flex - col items - center justify - center p - 2 rounded - 2xl transition - all ${ mobileTab === 'preview' ? 'text-emerald-400 bg-emerald-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800' } `}
+              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-400 bg-emerald-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800'}`}
             >
               <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Preview</span>
             </button>
             <button
               onClick={() => setIsSettingsOpen(true)}
-              className={`flex - 1 flex flex - col items - center justify - center p - 2 rounded - 2xl transition - all text - slate - 400 hover: bg - slate - 800 hover: text - slate - 300`}
+              className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-300"
             >
               <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Settings</span>
@@ -1854,13 +1886,13 @@ export const MCQPaperGeneratorPage = () => {
                                     type="button"
                                     onClick={() => {
                                       updateImageTag(img.fullMatch, img.id, { size: opt.val });
-                                      toast.success(`Image[${ img.id }] size set to ${ opt.label } !`);
+                                      toast.success(`Image[${img.id}] size set to ${opt.label}!`);
                                     }}
-                                    className={`px - 3 py - 1.5 text - xs font - bold rounded - xl transition - all cursor - pointer ${
-    isActive
-      ? 'bg-purple-600 text-white shadow-xs scale-105'
-      : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
-  } `}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                                      isActive
+                                        ? 'bg-purple-600 text-white shadow-xs scale-105'
+                                        : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                                    }`}
                                   >
                                     {opt.label}
                                   </button>
@@ -1872,9 +1904,9 @@ export const MCQPaperGeneratorPage = () => {
                                 onClick={() => {
                                   const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
                                   if (customWidth) {
-                                    const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${ customWidth.trim() } px`;
+                                    const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
                                     updateImageTag(img.fullMatch, img.id, { size: cleanWidth });
-                                    toast.success(`Image[${ img.id }] width set to ${ cleanWidth } !`);
+                                    toast.success(`Image[${img.id}] width set to ${cleanWidth}!`);
                                   }
                                 }}
                                 className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
@@ -1903,13 +1935,13 @@ export const MCQPaperGeneratorPage = () => {
                                     type="button"
                                     onClick={() => {
                                       updateImageTag(img.fullMatch, img.id, { align: alignOpt.val });
-                                      toast.success(`Image[${ img.id }] aligned ${ alignOpt.label } !`);
+                                      toast.success(`Image[${img.id}] aligned ${alignOpt.label}!`);
                                     }}
-                                    className={`px - 3 py - 1.5 text - xs font - bold rounded - xl transition - all cursor - pointer flex items - center gap - 1.5 ${
-    isAlignActive
-      ? 'bg-indigo-600 text-white shadow-xs scale-105'
-      : 'bg-slate-100 hover:bg-indigo-50 text-slate-700 border border-slate-200'
-  } `}
+                                    className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                                      isAlignActive
+                                        ? 'bg-indigo-600 text-white shadow-xs scale-105'
+                                        : 'bg-slate-100 hover:bg-indigo-50 text-slate-700 border border-slate-200'
+                                    }`}
                                   >
                                     {alignOpt.icon}
                                     <span>{alignOpt.label}</span>
@@ -1926,7 +1958,7 @@ export const MCQPaperGeneratorPage = () => {
                             </span>
                             <div className="flex items-center gap-2 flex-wrap">
                               <select
-                                id={`move - select - ${ img.id } `}
+                                id={`move-select-${img.id}`}
                                 className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
                                 defaultValue=""
                               >
@@ -1943,14 +1975,14 @@ export const MCQPaperGeneratorPage = () => {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const sel = document.getElementById(`move - select - ${ img.id } `) as HTMLSelectElement;
+                                  const sel = document.getElementById(`move-select-${img.id}`) as HTMLSelectElement;
                                   if (!sel || !sel.value) {
                                     toast.error('దయచేసి ఒక ప్రశ్నను ఎంచుకోండి (Please select a question)');
                                     return;
                                   }
                                   const val = sel.value === 'top' || sel.value === 'bottom' ? sel.value : parseInt(sel.value, 10);
                                   moveImageToQuestion(img.fullMatch, val);
-                                  toast.success(`Image[${ img.id }] moved ${ sel.options[sel.selectedIndex].text } !`);
+                                  toast.success(`Image[${img.id}] moved ${sel.options[sel.selectedIndex].text}!`);
                                 }}
                                 className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                               >
@@ -2020,19 +2052,19 @@ export const MCQPaperGeneratorPage = () => {
                   <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
                     <button
                       onClick={() => setAiSourceType('text')}
-                      className={`flex - 1 py - 2 text - sm font - medium rounded - md transition - all cursor - pointer ${ aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800' } `}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                     >
                       📝 Text Prompt
                     </button>
                     <button
                       onClick={() => setAiSourceType('file')}
-                      className={`flex - 1 py - 2 text - sm font - medium rounded - md transition - all cursor - pointer ${ aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800' } `}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                     >
                       📄 Upload File
                     </button>
                     <button
                       onClick={() => setAiSourceType('url')}
-                      className={`flex - 1 py - 2 text - sm font - medium rounded - md transition - all cursor - pointer ${ aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800' } `}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
                     >
                       🔗 Website Link
                     </button>
@@ -2051,7 +2083,7 @@ export const MCQPaperGeneratorPage = () => {
                       />
                       {aiImageBase64 && (
                         <div className="mt-3 relative inline-block">
-                          <img src={`data:${ aiImageMimeType }; base64, ${ aiImageBase64 } `} alt="Pasted" className="h-24 rounded-lg shadow-sm border border-slate-200 object-contain" />
+                          <img src={`data:${aiImageMimeType};base64,${aiImageBase64}`} alt="Pasted" className="h-24 rounded-lg shadow-sm border border-slate-200 object-contain" />
                           <button onClick={() => { setAiImageBase64(''); setAiImageMimeType(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md cursor-pointer">
                             <X className="w-3 h-3" />
                           </button>
@@ -2258,7 +2290,7 @@ export const MCQPaperGeneratorPage = () => {
                     </h4>
 
                     <div className="space-y-4">
-                      <div className={`p - 3 rounded - xl border - 2 transition - all ${ activeAiModel === 'gemini' ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white' } `}>
+                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'gemini' ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}`}>
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="radio"
@@ -2288,7 +2320,7 @@ export const MCQPaperGeneratorPage = () => {
                         )}
                       </div>
 
-                      <div className={`p - 3 rounded - xl border - 2 transition - all ${ activeAiModel === 'claude' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-white' } `}>
+                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'claude' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-white'}`}>
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="radio"
@@ -2318,7 +2350,7 @@ export const MCQPaperGeneratorPage = () => {
                         )}
                       </div>
 
-                      <div className={`p - 3 rounded - xl border - 2 transition - all ${ activeAiModel === 'chatgpt' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white' } `}>
+                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="radio"
@@ -2348,7 +2380,7 @@ export const MCQPaperGeneratorPage = () => {
                         )}
                       </div>
 
-                      <div className={`p - 3 rounded - xl border - 2 transition - all ${ activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white' } `}>
+                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
                         <label className="flex items-center gap-3 cursor-pointer">
                           <input
                             type="radio"
@@ -2537,7 +2569,7 @@ export const MCQPaperGeneratorPage = () => {
                               <div
                                 key={q.id}
                                 onClick={() => toggleBankSelection(q.id)}
-                                className={`p - 4 rounded - xl border - 2 cursor - pointer transition - all flex gap - 4 ${ isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 hover:border-slate-300 bg-white' } `}
+                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex gap-4 ${isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
                               >
                                 <div className="mt-1">
                                   {isSelected ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
@@ -2546,7 +2578,7 @@ export const MCQPaperGeneratorPage = () => {
                                   <div className="flex items-center gap-2 mb-1.5">
                                     <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.subject?.name}</span>
                                     <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.chapterName}</span>
-                                    <span className={`px - 2 py - 0.5 text - [10px] font - bold rounded - md ${ q.difficulty === 'HARD' ? 'bg-rose-50 text-rose-600' : q.difficulty === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600' } `}>{q.difficulty}</span>
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${q.difficulty === 'HARD' ? 'bg-rose-50 text-rose-600' : q.difficulty === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>{q.difficulty}</span>
                                   </div>
                                   <p className="text-sm font-semibold text-slate-800 line-clamp-2">{q.questionText}</p>
                                 </div>
@@ -2657,34 +2689,34 @@ export const MCQPaperGeneratorPage = () => {
           )}
 
           <style>{`
-    .dynamic - paper - scale {
-    zoom: var(--paper - zoom, 0.85);
-    transform - origin: top center;
-  }
-
-  @supports not(zoom: 1) {
-          .dynamic - paper - scale {
-      transform: scale(var(--paper - zoom, 0.85));
-      transform - origin: top center;
+    .dynamic-paper-scale {
+      zoom: var(--paper-zoom, 0.85);
+      transform-origin: top center;
     }
-  }
 
-        .custom - scrollbar:: -webkit - scrollbar { width: 8px; height: 8px; }
-        .custom - scrollbar:: -webkit - scrollbar - track { background: transparent; }
-        .custom - scrollbar:: -webkit - scrollbar - thumb { background: #cbd5e1; border - radius: 10px; }
-        .custom - scrollbar:: -webkit - scrollbar - thumb:hover { background: #94a3b8; }
-
-  @media print {
-          .dynamic - paper - scale { zoom: 1!important; transform: none!important; margin: 0!important; }
-    @page { margin: 10mm; size: A4; }
-    html, body {
-      -webkit - print - color - adjust: exact;
-      background: white!important;
-      min - height: 100 % !important;
-      height: auto!important;
+    @supports not(zoom: 1) {
+      .dynamic-paper-scale {
+        transform: scale(var(--paper-zoom, 0.85));
+        transform-origin: top center;
+      }
     }
-    #root { display: block!important; background: white!important; height: auto!important; min - height: 100 % !important; }
-  }
+
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    @media print {
+      .dynamic-paper-scale { zoom: 1 !important; transform: none !important; margin: 0 !important; }
+      @page { margin: 10mm; size: A4; }
+      html, body {
+        -webkit-print-color-adjust: exact;
+        background: white !important;
+        min-height: 100% !important;
+        height: auto !important;
+      }
+      #root { display: block !important; background: white !important; height: auto !important; min-height: 100% !important; }
+    }
   `}</style>
         </div>
       );

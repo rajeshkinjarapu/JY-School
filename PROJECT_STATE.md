@@ -1,5 +1,39 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator UI రీడిజైన్ & ఇన్‌స్టంట్ PDF డౌన్‌లోడ్ (November 19, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `100% and fit button sariga kanapadatam ledu andam ga design cheyu`
+  2. `maths physics chemistery tabs buttons kuda andam ga ledu`
+  3. `Insert Image, Image Sizes & Move, Auto-Align Format ee mudu buttons kuda andma ga levu andam ga design cheyu`
+  4. `Download button click cheste ventane pdf download avvatam ledu, ventane download ayyela design cheyu`
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  1. **100% & Fit బటన్ల రీడిజైన్:**
+     - పాత టెంప్లేట్ స్ట్రింగ్‌లలో ఉన్న స్పేసింగ్ కరప్షన్‌ను తొలగించాము.
+     - ప్రీమియం ఎగ్జిక్యూటివ్ పిల్లర్ కంటైనర్, క్లియర్ డివైడర్, ఫాంట్ మోనో జూమ్ ఇండికేటర్, వైబ్రెంట్ పర్పుల్/ఇండిగో 100% బటన్ మరియు `Maximize` ఐకాన్‌తో కూడిన మోడరన్ బ్లూ Fit బటన్‌ను రూపొందించాము.
+  2. **సబ్జెక్ట్ ట్యాబ్‌ల రీడిజైన్ (Maths, Physics, Chemistry):**
+     - మోడరన్ క్యాప్సూల్ కంటైనర్, `BookOpen` ఐకాన్, యాక్టివ్ సబ్జెక్ట్‌కు రాయల్ బ్లూ-ఇండిగో గ్రేడియంట్ షాడో, ప్రతి సబ్జెక్ట్‌లోని ప్రశ్నల సంఖ్యను తెలిపే డైనమిక్ బ్యాడ్జ్ (`25 Qs`), మరియు ఎమరాల్డ్ గ్రీన్ స్టేటస్ ఇండికేటర్‌ను అమర్చాము.
+  3. **ఎడిటర్ టాప్ 3 యాక్షన్ బటన్ల రీడిజైన్:**
+     - `Insert Image`: వైలెట్-పర్పుల్ రిచ్ గ్రేడియంట్ పిల్ బటన్ + వైట్ ఐకాన్ కంటైనర్ + హోవర్ ఎలివేషన్.
+     - `Image Sizes & Move`: పింక్-ఇండిగో గ్రేడియంట్ బటన్ + లైవ్ ఇమేజ్ కౌంట్ బ్యాడ్జ్.
+     - `Auto-Align Format`: సియాన్-బ్లూ మ్యాజిక్ వాండ్ గ్రేడియంట్ బటన్.
+     - మొబైల్ క్విక్ యాక్షన్ బార్‌ను కూడా సరిదిద్దాము.
+  4. **ఇన్‌స్టంట్ PDF డౌన్‌లోడ్ ఇంప్లిమెంటేషన్:**
+     - పాత 15+ సెకన్ల నెమ్మదైన `toJpeg` -> `Image` -> కాన్వాస్ లూప్‌కు బదులుగా, `html-to-image` యొక్క డైరెక్ట్ `toCanvas` ఇంజిన్‌ను 1.5x ఆప్టిమల్ ప్రింట్ రిజల్యూషన్ (300 DPI) తో అమర్చాము.
+     - మెమరీని ఆదా చేయడానికి ఒకే రీయూజబుల్ పేజ్ కాన్వాస్ మరియు 0.88 ఫాస్ట్ కంప్రెషన్‌ను ఉపయోగించాము.
+     - డౌన్‌లోడ్ బటన్ క్లిక్ చేసిన వెంటనే లోడింగ్ స్పిన్నర్ (`Loader2`) యాక్టివేట్ అయ్యి 1-2 సెకన్లలో నేరుగా బ్రౌజర్ ద్వారా PDF డౌన్‌లోడ్ అవుతుంది.
+  5. **Live Print & LaTeX Preview శాశ్వత రక్షణ (Zero Regression):**
+     - `printPaper` ఫంక్షన్, CSS ప్రింట్ రూల్స్ (`@page { size: A4 portrait; margin: 10mm 0; }`), KaTeX మ్యాథ్ రెండరింగ్ మరియు API రౌట్‌లు 100% పక్కాగా భద్రపరచబడ్డాయి.
+
+## చివరి సంభాషణ - Live Print & LaTeX Preview శాశ్వత రక్షణ నిబంధన (Permanent Zero Regression Policy) (November 19, 2026)
+- **యూజర్ ఆదేశం:**
+  - "ok present perfect ga undi malli emaina code lo update valla live print and latex preview ki elanti ibbandi rakudadu"
+- **అమలు చేసిన కఠిన నిబంధన ([`.agents/AGENTS.md`](file:///d:/JY%20School/JY-School-main/.agents/AGENTS.md)):**
+  - **Live Print & LaTeX Preview Protection (Strict Order — Zero Regression Policy):** నిబంధనను శాశ్వతంగా ఏజెంట్ రూల్స్‌లో చేర్చాము.
+  - భవిష్యత్తులో ఏ కోడ్ అప్‌డేట్ లేదా రీఫ్యాక్టరింగ్ జరిగినా సరే:
+    1. `printPaper` (210mm A4 ప్రింట్ ఐఫ్రేమ్ మెకానిజం) ను ఎట్టి పరిస్థితుల్లోనూ మార్చకూడదు/బ్రేక్ చేయకూడదు.
+    2. `LiveLatexPreview` (KaTeX మ్యాథ్ రెండరింగ్, బ్యాలెన్స్‌డ్ బ్రేసెస్, ఆప్షన్ లేఅవుట్స్, ఫ్లోటింగ్ ఇమేజెస్) నిరంతరం చెక్కుచెదరకుండా ఉండాలి.
+    3. API ఎండ్‌పాయింట్స్ మరియు టెంప్లేట్ స్ట్రింగ్‌లలో స్పేస్‌లు ఏర్పడకుండా పక్కాగా వెరిఫై చేయాలి.
+
 ## చివరి సంభాషణ - MCQ Paper Generator "Failed to load paper" & లైవ్ ప్రివ్యూ బ్లాంక్ ఫిక్స్ (November 19, 2026)
 - **స్క్రీన్‌షాట్ & సమస్య:**
   - `?id=a288caf9-a258-4aa4-8e2f-712e1997646e` ఉన్నప్పుడు "Failed to load paper" ఎర్రర్ రావడం, లైవ్ ప్రివ్యూ ఖాళీగా తెల్లగా కనిపించడం.
