@@ -550,7 +550,12 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       });
     } else if (selectedSubjects && selectedSubjects.length > 0 && subjectContents) {
       selectedSubjects.forEach(subject => {
-        const subjectText = subjectContents[subject];
+        let subjectText = subjectContents[subject];
+        if (!subjectText || subjectText.trim() === '') {
+          // Synonym fallback between 'Maths' and 'Mathematics'
+          if (subject === 'Maths' && subjectContents['Mathematics']) subjectText = subjectContents['Mathematics'];
+          else if (subject === 'Mathematics' && subjectContents['Maths']) subjectText = subjectContents['Maths'];
+        }
         if (!subjectText || subjectText.trim() === '') return;
 
         if (showSubjectHeadings) {

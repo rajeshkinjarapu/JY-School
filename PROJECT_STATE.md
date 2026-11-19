@@ -6,6 +6,24 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - సింగిల్ పేపర్ సెలెక్షన్ & ప్రింట్ బగ్ ఫిక్స్ మరియు One-Click సబ్జెక్ట్ ప్రింట్ స్విచ్చర్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `single paper select chestunte aa paper lo unna data kanapdatam ledu, sigle paper select chesi print teeddam anna sare avvatam ledu, edo problem undi oksari check cheyu`
+  - సెట్టింగ్స్‌లో సింగిల్ పేపర్ (ఉదా. కేవలం మ్యాథ్స్ లేదా కేవలం ఫిజిక్స్) సెలెక్ట్ చేసి ప్రింట్ తీయాలని చూస్తే డేటా కనిపించకపోవడం మరియు ప్రింట్ రాకపోవడం.
+- **మూల కారణం (Root Cause):**
+  1. `selectedSubjects` మారినప్పుడు ట్రిగ్గర్ అయ్యే `useEffect` మరియు `Save Settings` బటన్‌లలో ఉన్న పాత కోడ్: `unselected.forEach(k => delete updated[k])` రన్ అయ్యి, అన్‌సెలెక్ట్ చేసిన సబ్జెక్టుల ప్రశ్నలను మెమరీ నుండి పూర్తిగా డిలీట్ చేసేసింది.
+  2. దీనివల్ల సింగిల్ సబ్జెక్ట్ సెలెక్ట్ చేయగానే ప్రివ్యూలో ప్రశ్నలు లోడ్ కాక ఎంప్టీగా మారింది, మరియు ప్రింట్ ఇచ్చినప్పుడు వైట్ పేపర్ వచ్చింది.
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+  1. **డిస్ట్రక్టివ్ డిలీషన్ కోడ్ శాశ్వతంగా తొలగింపు:**
+     - ఏ సబ్జెక్టును సెలెక్ట్ చేసినా లేదా అన్‌సెలెక్ట్ చేసినా ఏ ఒక్క ప్రశ్న కూడా డిలీట్ అవ్వకుండా రక్షించాం.
+  2. **లైవ్ ప్రివ్యూలో One-Click Subject Switcher & Single Paper Print:**
+     - ప్రివ్యూ హెడర్ టూల్‌బార్‌లో `All Subjects`, `Maths`, `Physics`, `Chemistry` పిల్స్ జోడించాం.
+     - యూజర్ ఏ సబ్జెక్ట్ బటన్ పై క్లిక్ చేస్తే ప్రివ్యూలో కేవలం ఆ సబ్జెక్ట్ మాత్రమే కనిపిస్తుంది మరియు "Print A4" లేదా "Download PDF" నొక్కినప్పుడు కేవలం ఆ ఒక్క సబ్జెక్ట్ పేపర్ మాత్రమే పక్కాగా ప్రింట్/డౌన్‌లోడ్ అవుతుంది!
+     - `All` పై క్లిక్ చేస్తే మొత్తం అన్ని సబ్జెక్టులతో కూడిన గ్రాండ్ టెస్ట్ పేపర్ ప్రింట్ అవుతుంది.
+  3. **`LiveLatexPreview.tsx` లో సినానిమ్ రక్షణ:**
+     - `Maths` మరియు `Mathematics` సినానిమ్స్ రెండింటికీ ఫాల్‌బ్యాక్ జోడించి డేటా ఎక్కడా మిస్ కాకుండా చేశాం.
+
+
 ## చివరి సంభాషణ - MCQ పేపర్‌లో మ్యాథ్స్ & ఫిజిక్స్ ప్రశ్నలు మిక్స్ అయ్యే బగ్ ఫిక్స్ & రీస్టోరేషన్ (November 19, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `maths paper lo save chesina questions kanapatam ledu physics questions chupistundi ila ayite chala pedda problem avutundi`

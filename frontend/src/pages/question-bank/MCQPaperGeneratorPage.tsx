@@ -336,6 +336,7 @@ export const MCQPaperGeneratorPage = () => {
       return 'Maths';
     }
   });
+  const [previewSubjectFilter, setPreviewSubjectFilter] = useState<'all' | string>('all');
   const [isGenerating, setIsGenerating] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -888,7 +889,7 @@ export const MCQPaperGeneratorPage = () => {
       });
 
       const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `${cleanExamName}_${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
+      const filename = `${cleanExamName}_${previewSubjectFilter !== 'all' ? previewSubjectFilter + '_' : ''}${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
       pdf.save(filename);
 
       triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
@@ -1255,39 +1256,30 @@ export const MCQPaperGeneratorPage = () => {
         loadPaper();
       }, [paperId]);
 
-      // Automatically reconcile subjectContents and activeSubjectTab with selectedSubjects
+      // Safely sync activeSubjectTab with selectedSubjects (NEVER delete any subject's content!)
       useEffect(() => {
         if (selectedSubjects.length > 0) {
           if (!selectedSubjects.includes(activeSubjectTab)) {
-            setActiveSubjectTab(selectedSubjects[0]);
+            const withContent = selectedSubjects.find(s => (subjectContents[s] || '').trim() !== '');
+            setActiveSubjectTab(withContent || selectedSubjects[0]);
           }
           setSubjectContents(prev => {
-            const keys = Object.keys(prev);
-            const hasGhost = keys.some(k => !selectedSubjects.includes(k));
-            const hasMissing = selectedSubjects.some(s => prev[s] === undefined);
-            if (!hasGhost && !hasMissing) return prev;
-
+            let changed = false;
             const updated = { ...prev };
-            const firstSubj = selectedSubjects[0];
-            const unselected = keys.filter(k => !selectedSubjects.includes(k));
-            if (!updated[firstSubj] || updated[firstSubj].trim() === '') {
-              for (const oldKey of unselected) {
-                if (updated[oldKey] && updated[oldKey].trim() !== '') {
-                  updated[firstSubj] = updated[oldKey];
-                  delete updated[oldKey];
-                  break;
-                }
-              }
-            }
-            unselected.forEach(k => {
-              if (!selectedSubjects.includes(k)) {
-                delete updated[k];
-              }
-            });
             selectedSubjects.forEach(s => {
-              if (updated[s] === undefined) updated[s] = '';
+              if (updated[s] === undefined) {
+                updated[s] = '';
+                changed = true;
+              }
             });
-            return updated;
+            if (updated['Mathematics'] && !updated['Maths']) {
+              updated['Maths'] = updated['Mathematics'];
+              changed = true;
+            } else if (updated['Maths'] && !updated['Mathematics']) {
+              updated['Mathematics'] = updated['Maths'];
+              changed = true;
+            }
+            return changed ? updated : prev;
           });
         }
       }, [selectedSubjects]);
@@ -1696,6 +1688,50 @@ export const MCQPaperGeneratorPage = () => {
                   </span>
                 </div>
 
+                {/* Quick Subject / Single Paper Switcher */}
+                {selectedSubjects.length > 1 && (
+                  <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-inner">
+                    <button
+                      type="button"
+                      onClick={() => setPreviewSubjectFilter('all')}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        previewSubjectFilter === 'all'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-blue-600 hover:bg-white'
+                      }`}
+                      title="Preview and Print ALL subjects combined"
+                    >
+                      All ({selectedSubjects.length})
+                    </button>
+                    {selectedSubjects.map(subj => {
+                      const count = (subjectContents[subj]?.match(/^\s*(?:\d+|Q\d+)[\.\)]/gim) || []).length;
+                      const isFilterActive = previewSubjectFilter === subj;
+                      return (
+                        <button
+                          key={subj}
+                          type="button"
+                          onClick={() => setPreviewSubjectFilter(subj)}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                            isFilterActive
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-600 hover:text-indigo-600 hover:bg-white'
+                          }`}
+                          title={`Preview and Print ONLY ${subj} paper`}
+                        >
+                          <span>{subj}</span>
+                          {count > 0 && (
+                            <span className={`text-[10px] px-1 py-0.2 rounded-full font-black ${
+                              isFilterActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}>
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
                 {/* Professional Zoom Control Toolbar */}
                 <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 shadow-inner">
                   <button
@@ -1767,13 +1803,15 @@ export const MCQPaperGeneratorPage = () => {
                     subjectContents={subjectContents}
                     examName={examName}
                     examDate={examDate}
-                    examSubject={examClass}
+                    examSubject={previewSubjectFilter === 'all' ? examClass : `${examClass} - ${previewSubjectFilter}`}
                     selectedSubjects={
-                      selectedSubjects.length > 0
-                        ? selectedSubjects
-                        : Object.keys(subjectContents).length > 0
-                          ? Object.keys(subjectContents)
-                          : ['General']
+                      previewSubjectFilter !== 'all'
+                        ? [previewSubjectFilter]
+                        : selectedSubjects.length > 0
+                          ? selectedSubjects
+                          : Object.keys(subjectContents).length > 0
+                            ? Object.keys(subjectContents)
+                            : ['General']
                     }
                     logoBase64={logoBase64}
                     maxMarks={maxMarks}
@@ -2567,30 +2605,19 @@ export const MCQPaperGeneratorPage = () => {
                       localStorage.setItem('mcq_exam_spacing', questionSpacing);
 
                       if (selectedSubjects.length > 0) {
-                        const firstSubj = selectedSubjects[0];
                         if (!selectedSubjects.includes(activeSubjectTab)) {
-                          setActiveSubjectTab(firstSubj);
+                          setActiveSubjectTab(selectedSubjects[0]);
                         }
                         setSubjectContents(prev => {
                           const updated = { ...prev };
-                          const unselected = Object.keys(updated).filter(k => !selectedSubjects.includes(k));
-                          if (!updated[firstSubj] || updated[firstSubj].trim() === '') {
-                            for (const oldKey of unselected) {
-                              if (updated[oldKey] && updated[oldKey].trim() !== '') {
-                                updated[firstSubj] = updated[oldKey];
-                                delete updated[oldKey];
-                                break;
-                              }
-                            }
-                          }
-                          unselected.forEach(k => {
-                            if (!selectedSubjects.includes(k)) {
-                              delete updated[k];
-                            }
-                          });
                           selectedSubjects.forEach(s => {
                             if (updated[s] === undefined) updated[s] = '';
                           });
+                          if (updated['Mathematics'] && !updated['Maths']) {
+                            updated['Maths'] = updated['Mathematics'];
+                          } else if (updated['Maths'] && !updated['Mathematics']) {
+                            updated['Mathematics'] = updated['Maths'];
+                          }
                           return updated;
                         });
                       }
