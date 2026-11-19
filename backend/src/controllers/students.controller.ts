@@ -1239,6 +1239,30 @@ export const getStudentsCredentialsForExport = async (req: AuthRequest, res: Res
   }
 };
 
+const postersFilePath = path.join(__dirname, '../../uploads/birthday_posters.json');
+
+const getPosterMap = (): Record<string, { posterUrl: string; updatedAt: string }> => {
+  try {
+    if (fs.existsSync(postersFilePath)) {
+      const data = fs.readFileSync(postersFilePath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error('Error reading birthday_posters.json:', err);
+  }
+  return {};
+};
+
+const savePosterMap = (map: Record<string, { posterUrl: string; updatedAt: string }>) => {
+  try {
+    const dir = path.dirname(postersFilePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(postersFilePath, JSON.stringify(map, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Error writing birthday_posters.json:', err);
+  }
+};
+
 export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { classId, search } = req.query;
@@ -1293,6 +1317,7 @@ export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFu
         avatarUrl = `/api/users/${targetUserId}/photo`;
       }
 
+      const posterInfo = getPosterMap()[s.id];
       const item = {
         id: s.id,
         rollNo: s.rollNo,
@@ -1303,6 +1328,7 @@ export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFu
         fatherPhone: s.fatherPhone || null,
         motherPhone: s.motherPhone || null,
         photoUrl: avatarUrl,
+        birthdayPosterUrl: posterInfo?.posterUrl || (s as any).birthdayPosterUrl || null,
         gender: s.gender || 'N/A',
         bloodGroup: s.bloodGroup || null,
         dob: s.dob,
@@ -1369,6 +1395,151 @@ export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFu
       thisMonth: thisMonthBirthdays,
       all: allBirthdays,
     }, 'Birthdays fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const uploadBirthdayPoster = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const studentId = req.params.id;
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+      include: { user: { select: { name: true } }, class: true }
+    });
+
+    if (!student) {
+      return next(createError(404, 'Student not found'));
+    }
+
+    let posterUrl = '';
+
+    if (req.file) {
+      posterUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body.posterBase64) {
+      const base64Data = req.body.posterBase64.replace(/^data:image\/\w+;base64,/, '');
+      const ext = req.body.mimeType?.includes('png') ? 'png' : 'jpg';
+      const filename = `birthday-poster-${studentId}-${Date.now()}.${ext}`;
+      const uploadDir = path.join(__dirname, '../../uploads');
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadDir, filename), Buffer.from(base64Data, 'base64'));
+      posterUrl = `/uploads/${filename}`;
+    } else if (req.body.posterUrl) {
+      posterUrl = req.body.posterUrl;
+    } else {
+      return next(createError(400, 'No poster file or base64 image provided'));
+    }
+
+    // Save in file map
+    const posterMap = getPosterMap();
+    posterMap[studentId] = {
+      posterUrl,
+      updatedAt: new Date().toISOString()
+    };
+    savePosterMap(posterMap);
+
+    // Save in DB if column exists or try to add it
+    try {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Student" ADD COLUMN IF NOT EXISTS "birthdayPosterUrl" TEXT;`);
+      await prisma.$executeRawUnsafe(`UPDATE "Student" SET "birthdayPosterUrl" = $1 WHERE "id" = $2;`, posterUrl, studentId);
+    } catch (dbErr) {
+      console.warn('DB birthdayPosterUrl update notice:', dbErr);
+    }
+
+    successResponse(res, {
+      studentId,
+      studentName: student.user.name,
+      posterUrl,
+    }, 'Birthday poster uploaded successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteBirthdayPoster = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const studentId = req.params.id;
+    const posterMap = getPosterMap();
+    if (posterMap[studentId]) {
+      const oldUrl = posterMap[studentId].posterUrl;
+      try {
+        const oldFile = path.join(__dirname, '../../', oldUrl);
+        if (fs.existsSync(oldFile)) fs.unlinkSync(oldFile);
+      } catch {}
+      delete posterMap[studentId];
+      savePosterMap(posterMap);
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(`UPDATE "Student" SET "birthdayPosterUrl" = NULL WHERE "id" = $1;`, studentId);
+    } catch {}
+
+    successResponse(res, null, 'Birthday poster deleted successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTodayBirthdayPosters = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const now = new Date();
+    const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+    const currentMonthIST = istTime.getUTCMonth();
+    const currentDayIST = istTime.getUTCDate();
+    const currentYear = istTime.getUTCFullYear();
+
+    const students = await prisma.student.findMany({
+      where: {
+        dob: { not: null },
+      },
+      select: {
+        id: true,
+        rollNo: true,
+        dob: true,
+        user: { select: { name: true, photoUrl: true } },
+        class: { select: { name: true, section: true } },
+      }
+    });
+
+    const posterMap = getPosterMap();
+    const activeTodayPosters: any[] = [];
+
+    students.forEach((s) => {
+      if (!s.dob) return;
+      const bDate = new Date(s.dob);
+      const bDateIST = new Date(bDate.getTime() + (5.5 * 60 * 60 * 1000));
+      const bMonthIST = bDateIST.getUTCMonth();
+      const bDayIST = bDateIST.getUTCDate();
+
+      const bMonthUTC = bDate.getUTCMonth();
+      const bDayUTC = bDate.getUTCDate();
+
+      const isToday =
+        (bMonthIST === currentMonthIST && bDayIST === currentDayIST) ||
+        (bMonthUTC === currentMonthIST && bDayUTC === currentDayIST);
+
+      if (isToday) {
+        const posterInfo = posterMap[s.id];
+        const posterUrl = posterInfo?.posterUrl || (s as any).birthdayPosterUrl;
+        if (posterUrl) {
+          const bYear = bDate.getFullYear();
+          const ageTurning = currentYear - bYear;
+          activeTodayPosters.push({
+            studentId: s.id,
+            rollNo: s.rollNo,
+            studentName: s.user?.name || 'Student',
+            className: s.class ? `${s.class.name}${s.class.section ? ' - ' + s.class.section : ''}` : '',
+            posterUrl,
+            ageTurning: ageTurning > 0 ? ageTurning : 0,
+          });
+        }
+      }
+    });
+
+    successResponse(res, {
+      hasPosters: activeTodayPosters.length > 0,
+      posters: activeTodayPosters,
+    }, 'Today birthday posters fetched successfully');
   } catch (error) {
     next(error);
   }

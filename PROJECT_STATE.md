@@ -1,5 +1,31 @@
 # JY School Project State
 
+## చివరి సంభాషణ - బర్త్‌డే పోస్టర్ల మాన్యువల్ అప్‌లోడ్ & మొబైల్ యాప్ ఆటో-పాప్-అప్ (November 19, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `poster ai dwara generate chese option remove cheyu` (AI పోస్టర్ జనరేషన్ మరియు AI సెట్టింగ్స్ పూర్తిగా తొలగించడం).
+  2. `nenu bayata poster generate chesi istanu danni upload chese option ivvu ye student ki aa stuent upload cheste` (బయట Canva/Photoshop లో చేసిన పోస్టర్‌ను ప్రతి స్టూడెంట్‌కు నేరుగా అప్‌లోడ్ చేసే సదుపాయం).
+  3. `flutter app admin, super admin ,teacher and student login lo app open chesina ventane image open avvali` (Flutter మొబైల్ యాప్‌లో Admin, Super Admin, Teacher, Student లాగిన్‌లలో యాప్ ఓపెన్ చేసిన వెంటనే పుట్టినరోజు పోస్టర్ ఆటోమేటిక్‌గా పాప్-అప్ అవ్వడం).
+  4. `idi shorelbird dwara update avutunda leda cheppu` (Shorebird ద్వారా అప్‌డేట్ అవుతుందా లేదా అని నిర్ధారించడం - కొత్త నేటివ్ ప్లగిన్లు లేకుండా ప్యూర్ డార్ట్ కోడ్ కాబట్టి 100% Shorebird PATCH OTA ద్వారా అప్‌డేట్ అవుతుంది).
+- **పూర్తి చేసిన పనులు:**
+  1. **బ్యాకెండ్ డెవలప్‌మెంట్ ([`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts), [`routes/students.ts`](file:///d:/JY%20School/JY-School-main/backend/src/routes/students.ts), [`server.ts`](file:///d:/JY%20School/JY-School-main/backend/src/server.ts)):**
+     - `POST /api/students/:id/birthday-poster`: మల్టీపార్ట్ ఫైల్ లేదా బేస్64 ద్వారా కస్టమ్ పోస్టర్‌ను సేవ్ చేయడం (`backend/uploads/birthday_posters.json` మరియు Postgres DB `birthdayPosterUrl` ఫాల్‌బ్యాక్).
+     - `DELETE /api/students/:id/birthday-poster`: పోస్టర్‌ను డిలీట్ చేయడం.
+     - `GET /api/birthdays/today-poster` & `GET /api/students/birthday-posters/today`: IST టైమ్‌జోన్ ఆధారంగా ఈరోజు పుట్టినరోజు జరుపుకుంటున్న విద్యార్థుల యాక్టివ్ పోస్టర్లను అందించే హై-స్పీడ్ ఎండ్‌పాయింట్.
+     - `getBirthdays` రెస్పాన్స్‌లో ప్రతి విద్యార్థికి `birthdayPosterUrl` ని జోడించాము.
+  2. **వెబ్ యాప్ UI రీడిజైన్ ([`StudentBirthdayPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentBirthdayPage.tsx)):**
+     - AI పోస్టర్ జనరేటర్ మరియు హెడర్‌లోని "AI Settings" బటన్‌ను పూర్తిగా తొలగించాము.
+     - ప్రతి విద్యార్థి కార్డుపై పోస్టర్ ఉంటే "Mobile App Poster Active" గ్రీన్ లైవ్ బ్యాడ్జ్, "Download Poster", మరియు "Change Poster" ఆప్షన్లను అందించాము.
+     - పోస్టర్ లేకుంటే ఒకే క్లిక్‌తో "Upload Poster" బటన్‌ను అందించాము.
+     - మోడల్ విండోలో:
+       - లెఫ్ట్ సైడ్: కస్టమ్ పోస్టర్ ప్రివ్యూ మరియు సిస్టమ్ 9:16 కాన్వాస్ ట్యాబ్ స్విచ్చర్.
+       - రైట్ సైడ్: డ్రాగ్-అండ్-డ్రాప్ / ఫైల్ సెలెక్టర్, లైవ్ ఫైల్ సైజు, "Upload & Set for Mobile App 🚀" బటన్, మరియు కావాలంటే సిస్టమ్ 9:16 కాన్వాస్‌ను కూడా ఒకే క్లిక్‌తో యాప్ పోస్టర్‌గా సెట్ చేసే సదుపాయం.
+  3. **Flutter మొబైల్ యాప్ ఇంప్లిమెంటేషన్ ([`api_service.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/services/api_service.dart), [`birthday_poster_dialog.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/widgets/birthday_poster_dialog.dart), [`dashboard_screen.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/dashboard_screen.dart)):**
+     - `ApiService.getTodayBirthdayPosters()` API మెథడ్‌ను జోడించాము.
+     - `BirthdayPosterDialog`: సెలెబ్రేషన్ గ్రేడియంట్ హెడర్, బర్త్‌డే కేక్ ఐకాన్, విద్యార్థి పేరు, వయస్సు/తరగతి బ్యాడ్జ్‌లు, క్రిస్టల్ క్లియర్ ఇమేజ్, ఫుల్-స్క్రీన్ పిన్చ్-టు-జూమ్, వాట్సాప్ విష్ బటన్, షేర్ బటన్ మరియు తప్పనిసరి `SafeArea(bottom: true)` ప్యాడింగ్‌తో రూపొందించాము.
+     - `DashboardScreen`: యాప్ లాంచ్ సమయంలో డాష్‌బోర్డ్ లోడ్ కాగానే ఆటోమేటిక్‌గా ఈరోజు బర్త్‌డే పోస్టర్లు ఉన్నాయా అని చెక్ చేసి ఆటో-పాప్-అప్ డిస్‌ప్లే అయ్యేలా చేసాము. ఇది Admin, Super Admin, Teacher, Student లాగిన్‌లన్నింటికీ పనిచేస్తుంది.
+  4. **Shorebird ప్యాచ్ తయారీ:**
+     - ఎలాంటి కొత్త నేటివ్ ప్లగిన్లను జోడించకుండా ప్యూర్ డార్ట్ విడ్జెట్ మరియు హెచ్‌టిటిపి కాల్స్‌తో మాత్రమే రూపొందించడం వలన యూజర్లు మళ్ళీ APK ఇన్స్టాల్ చేసుకోవాల్సిన అవసరం లేకుండా Shorebird Patch ద్వారా ఇన్‌స్టంట్‌గా అప్‌డేట్ అవుతుంది.
+
 ## చివరి సంభాషణ - MCQ Paper Generator UI రీడిజైన్ & ఇన్‌స్టంట్ PDF డౌన్‌లోడ్ (November 19, 2026)
 - **యూజర్ అభ్యర్థనలు:**
   1. `100% and fit button sariga kanapadatam ledu andam ga design cheyu`

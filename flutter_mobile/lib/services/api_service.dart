@@ -204,6 +204,10 @@ class ApiService {
     return _performGet('/api/classes', 'Failed to get classes');
   }
 
+  static Future<Map<String, dynamic>> getTodayBirthdayPosters() async {
+    return _performGet('/api/birthdays/today-poster', 'Failed to get today birthday posters');
+  }
+
   static Future<Map<String, dynamic>> updateProfile(Map<String, dynamic> payload) async {
     return _performPut('/api/auth/profile', payload, 'Failed to update profile');
   }

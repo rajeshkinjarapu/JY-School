@@ -20,6 +20,7 @@ import { rateLimiter } from './middlewares/rateLimiter';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import studentRoutes from './routes/students';
+import { getTodayBirthdayPosters } from './controllers/students.controller';
 import teacherRoutes from './routes/teachers';
 import classRoutes from './routes/classes';
 import subjectRoutes from './routes/subjects';
@@ -151,6 +152,7 @@ app.use('/api/admissions', admissionsRoutes);
 app.use('/api/website', websiteRoutes);
 app.use('/api/address-collection', addressCollectionRoutes);
 app.use('/api/promotion', promotionRoutes);
+app.get('/api/birthdays/today-poster', getTodayBirthdayPosters);
 
 // Health check
 app.get('/api/health', (_req, res) => {

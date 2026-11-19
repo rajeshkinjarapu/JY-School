@@ -49,6 +49,7 @@ import 'leave_screen.dart';
 import 'fee_reminder_search_screen.dart';
 import 'student_exams_dashboard_screen.dart';
 import '../services/notification_service.dart';
+import '../widgets/birthday_poster_dialog.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -58,6 +59,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  static bool _hasCheckedBirthdayPosterThisLaunch = false;
   Map<String, dynamic>? _user;
   bool _isLoading = true;
 
@@ -125,6 +127,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await _fetchLiveStats();
     NotificationService().syncDeviceToken();
+    _checkAndShowBirthdayPoster();
+  }
+
+  Future<void> _checkAndShowBirthdayPoster() async {
+    if (_hasCheckedBirthdayPosterThisLaunch) return;
+    _hasCheckedBirthdayPosterThisLaunch = true;
+
+    try {
+      final res = await ApiService.getTodayBirthdayPosters();
+      if (!mounted) return;
+      if (res['success'] == true) {
+        final data = res['data'];
+        final List<dynamic> posters = (data is Map && data['posters'] is List)
+            ? data['posters']
+            : [];
+
+        if (posters.isNotEmpty && mounted) {
+          // Delay briefly so Dashboard UI finishes rendering and animation settles
+          await Future.delayed(const Duration(milliseconds: 650));
+          if (!mounted) return;
+
+          BirthdayPosterDialog.show(context, posters);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error checking today birthday posters: $e');
+    }
   }
 
   Future<void> _fetchLiveStats() async {
