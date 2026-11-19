@@ -1,14 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
+import axios from 'axios';
+import { toPng } from 'html-to-image';
 import {
   Cake, Sparkles, Calendar, Search, Filter, Phone, MessageCircle,
   Printer, Download, RefreshCw, ChevronLeft, ChevronRight,
   PartyPopper, Gift, Award, Star, Clock, User, Heart, Share2,
-  CheckCircle2, AlertCircle, Eye, Settings2, X
+  CheckCircle2, AlertCircle, Eye, Settings2, X, Wand2, Palette,
+  Camera, Sliders, Image as ImageIcon, Check, Key, ShieldCheck
 } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
@@ -49,16 +52,31 @@ export const StudentBirthdayPage: React.FC = () => {
   const [directoryMonth, setDirectoryMonth] = useState<string>('all');
   const [directoryGender, setDirectoryGender] = useState<string>('all');
 
-  // Modals state
-  const [printCardStudent, setPrintCardStudent] = useState<StudentBirthday | null>(null);
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [selectedDateDetails, setSelectedDateDetails] = useState<{ day: number; month: number; students: StudentBirthday[] } | null>(null);
+  // Poster Modal & Designer State
+  const [selectedPosterStudent, setSelectedPosterStudent] = useState<StudentBirthday | null>(null);
+  const [posterTheme, setPosterTheme] = useState<'garden' | 'festive' | 'royal' | 'gold' | 'sky'>('garden');
+  const [aiPortraitUrl, setAiPortraitUrl] = useState<string | null>(null);
+  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
+  const [isDownloadingPoster, setIsDownloadingPoster] = useState(false);
+  const posterRef = useRef<HTMLDivElement>(null);
 
-  // Default WhatsApp wish message template
+  // AI Settings State (ChatGPT & Gemini API Keys)
+  const [isAiSettingsOpen, setIsAiSettingsOpen] = useState(false);
+  const [openAiApiKey, setOpenAiApiKey] = useState<string>(() => localStorage.getItem('jy_openai_api_key') || '');
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('jy_gemini_api_key') || '');
+  const [activeAiProvider, setActiveAiProvider] = useState<'openai' | 'gemini'>(() => {
+    return (localStorage.getItem('jy_birthday_ai_provider') as 'openai' | 'gemini') || 'openai';
+  });
+
+  // WhatsApp Wish Template State
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
   const defaultTemplate = `🎉 *Dear {name}*,\n\nWishing you a very *Happy Birthday!* 🎂✨\nMay God bless you with good health, immense happiness, and great success in all your studies.\n\nWarm wishes & blessings,\n*Management, Principal & Teachers*\n*Sri Venkateswara JY School* 🌟`;
   const [wishTemplate, setWishTemplate] = useState<string>(() => {
     return localStorage.getItem('jy_bday_wish_template') || defaultTemplate;
   });
+
+  // Calendar Date Detail Modal
+  const [selectedDateDetails, setSelectedDateDetails] = useState<{ day: number; month: number; students: StudentBirthday[] } | null>(null);
 
   // Track sent wishes in session
   const [sentWishes, setSentWishes] = useState<Record<string, boolean>>(() => {
@@ -105,6 +123,120 @@ export const StudentBirthdayPage: React.FC = () => {
   const thisMonthList: StudentBirthday[] = bdayResponse?.thisMonth || [];
   const allList: StudentBirthday[] = bdayResponse?.all || [];
 
+  // Open Poster Downloader Modal
+  const handleOpenPosterModal = (student: StudentBirthday) => {
+    setSelectedPosterStudent(student);
+    setAiPortraitUrl(null); // Reset any previous AI portrait
+  };
+
+  // Generate AI Portrait in School Uniform
+  const handleGenerateAiPortrait = async () => {
+    if (!selectedPosterStudent) return;
+
+    if (activeAiProvider === 'openai' && !openAiApiKey.trim()) {
+      toast.error('Please configure your ChatGPT (OpenAI) API Key in AI Settings first!');
+      setIsAiSettingsOpen(true);
+      return;
+    }
+    if (activeAiProvider === 'gemini' && !geminiApiKey.trim()) {
+      toast.error('Please configure your Google Gemini API Key in AI Settings first!');
+      setIsAiSettingsOpen(true);
+      return;
+    }
+
+    setIsGeneratingAi(true);
+    const toastId = toast.loading('AI is generating student portrait in JY School uniform with a sweet smile...');
+
+    try {
+      const isFemale = selectedPosterStudent.gender?.toUpperCase() === 'FEMALE';
+      const childDesc = isFemale ? 'Indian school girl with pigtails' : 'Indian school boy with neatly combed hair';
+
+      const promptText = `A professional high-end studio portrait photograph of a cute ${childDesc}, age around ${selectedPosterStudent.ageTurning} years old, with a sweet gentle smile and straight face looking directly into the camera lens. The student is wearing the clean official uniform of Sri Venkateswara JY School: white and green checkered shirt with collar, dark green pinafore/blazer, and a dark green striped school tie. Soft studio bokeh lighting, warm festive glow, crystal clear 8k resolution, authentic school yearbook studio photography.`;
+
+      if (activeAiProvider === 'openai') {
+        const response = await axios.post(
+          'https://api.openai.com/v1/images/generations',
+          {
+            model: 'dall-e-3',
+            prompt: promptText,
+            n: 1,
+            size: '1024x1024',
+            quality: 'standard',
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${openAiApiKey.trim()}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        const generatedUrl = response.data?.data?.[0]?.url;
+        if (generatedUrl) {
+          setAiPortraitUrl(generatedUrl);
+          toast.success('AI Portrait generated in uniform successfully! ✨', { id: toastId });
+        } else {
+          throw new Error('No image URL returned from OpenAI');
+        }
+      } else {
+        // Gemini Imagen API
+        const response = await axios.post(
+          `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey.trim()}`,
+          {
+            instances: [{ prompt: promptText }],
+            parameters: { sampleCount: 1, aspectRatio: '1:1' },
+          }
+        );
+
+        const b64 = response.data?.predictions?.[0]?.bytesBase64Encoded;
+        if (b64) {
+          setAiPortraitUrl(`data:image/png;base64,${b64}`);
+          toast.success('Gemini AI Portrait generated successfully! ✨', { id: toastId });
+        } else {
+          throw new Error('Gemini did not return image bytes');
+        }
+      }
+    } catch (err: any) {
+      console.error('AI Generation Error:', err);
+      const errMsg = err?.response?.data?.error?.message || err?.message || 'Failed to generate AI portrait';
+      toast.error(`AI Error: ${errMsg}`, { id: toastId });
+    } finally {
+      setIsGeneratingAi(false);
+    }
+  };
+
+  // High Resolution 9:16 Poster Downloader (1080x1920)
+  const handleDownloadPosterImage = async () => {
+    if (!posterRef.current || !selectedPosterStudent) return;
+
+    setIsDownloadingPoster(true);
+    const toastId = toast.loading('Rendering high-resolution 9:16 Birthday Poster (1080x1920)...');
+
+    try {
+      // 3x pixel ratio guarantees crystal clear 1080x1920+ resolution
+      const dataUrl = await toPng(posterRef.current, {
+        pixelRatio: 3,
+        quality: 1.0,
+        cacheBust: true,
+      });
+
+      const safeName = selectedPosterStudent.name.replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `${safeName}_Birthday_Poster_9x16.png`;
+
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      link.click();
+
+      toast.success('Poster downloaded in HD (9:16) for WhatsApp Status! 🎉', { id: toastId });
+    } catch (err: any) {
+      console.error('Poster render error:', err);
+      toast.error('Failed to capture poster image. Please try again.', { id: toastId });
+    } finally {
+      setIsDownloadingPoster(false);
+    }
+  };
+
   // Handle WhatsApp Wish Launch
   const handleSendWish = (student: StudentBirthday) => {
     const rawPhone = student.phone || student.fatherPhone || student.motherPhone || '';
@@ -123,7 +255,6 @@ export const StudentBirthdayPage: React.FC = () => {
 
     window.open(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`, '_blank');
 
-    // Mark as sent
     setSentWishes(prev => {
       const updated = { ...prev, [student.id]: true };
       sessionStorage.setItem('jy_sent_bday_wishes', JSON.stringify(updated));
@@ -132,12 +263,12 @@ export const StudentBirthdayPage: React.FC = () => {
     toast.success(`WhatsApp opened for ${student.name}`);
   };
 
-  // Filtered upcoming list based on 7, 14, 30 days
+  // Filtered upcoming list
   const filteredUpcoming = useMemo(() => {
     return upcomingList.filter(s => (s.daysLeft || 0) <= upcomingDaysFilter);
   }, [upcomingList, upcomingDaysFilter]);
 
-  // Calendar Day Map for active month
+  // Calendar Day Map
   const calendarDayMap = useMemo(() => {
     const map: Record<number, StudentBirthday[]> = {};
     allList.forEach(s => {
@@ -271,80 +402,6 @@ export const StudentBirthdayPage: React.FC = () => {
     }, 500);
   };
 
-  // Printable Birthday Greeting Card Trigger
-  const handlePrintCard = (student: StudentBirthday) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const todayStr = new Date().toLocaleDateString('en-IN', {
-      day: 'numeric', month: 'long', year: 'numeric'
-    });
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Birthday Wish Card - ${student.name}</title>
-          <style>
-            @page { size: A5 landscape; margin: 0; }
-            body {
-              margin: 0; padding: 0; background: #fff;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              display: flex; justify-content: center; align-items: center; min-height: 100vh;
-            }
-            .card-container {
-              width: 190mm; height: 130mm; border: 10px solid #fbcfe8;
-              border-radius: 20px; padding: 25px 30px; box-sizing: border-box;
-              background: linear-gradient(135deg, #fff5f7 0%, #ffffff 50%, #eff6ff 100%);
-              position: relative; overflow: hidden; text-align: center;
-              box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-            }
-            .top-bar { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 12px; }
-            .school-name { font-size: 20px; font-weight: 900; color: #4338ca; text-transform: uppercase; letter-spacing: 1px; }
-            .badge-title { font-size: 28px; font-weight: 900; color: #db2777; margin: 10px 0 5px 0; letter-spacing: 0.5px; }
-            .student-name { font-size: 26px; font-weight: 900; color: #1e1b4b; margin: 10px 0; border-bottom: 3px solid #f472b6; display: inline-block; padding-bottom: 4px; }
-            .details { font-size: 15px; font-weight: 700; color: #475569; margin-bottom: 12px; }
-            .message { font-size: 13px; line-height: 1.6; color: #334155; font-style: italic; max-width: 520px; margin: 0 auto 20px auto; }
-            .signatures { display: flex; justify-content: space-between; padding: 0 40px; margin-top: 25px; font-size: 12px; font-weight: bold; color: #64748b; }
-            .confetti { position: absolute; font-size: 32px; opacity: 0.7; }
-          </style>
-        </head>
-        <body>
-          <div class="card-container">
-            <div class="confetti" style="top: 15px; left: 20px;">🎈</div>
-            <div class="confetti" style="top: 15px; right: 20px;">✨</div>
-            <div class="confetti" style="bottom: 20px; left: 25px;">🎂</div>
-            <div class="confetti" style="bottom: 20px; right: 25px;">🎁</div>
-
-            <div class="top-bar">
-              <div class="school-name">Sri Venkateswara JY School</div>
-            </div>
-
-            <div class="badge-title">🎉 HAPPY BIRTHDAY! 🎂</div>
-            <div class="student-name">${student.name}</div>
-            <div class="details">Class: ${student.className} &nbsp;|&nbsp; Roll No: ${student.rollNo} &nbsp;|&nbsp; Turning ${student.ageTurning} Years</div>
-
-            <div class="message">
-              "Wishing you a glorious birthday filled with infinite joy, happiness, and extraordinary wisdom. 
-              May you achieve flying colors in all your studies and shine as a bright star for our school and nation!"
-            </div>
-
-            <div class="signatures">
-              <div>Date: ${todayStr}</div>
-              <div>Class Teacher</div>
-              <div>Principal</div>
-            </div>
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-  };
-
   return (
     <div className="min-h-screen bg-[#F0F4FA] p-3 sm:p-5 lg:p-7 space-y-5 animate-fade-in pb-16">
       {/* ── 1. Top Header Banner ── */}
@@ -374,12 +431,25 @@ export const StudentBirthdayPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs sm:text-sm text-pink-100 font-medium mt-1">
-                Honor students in morning assembly, send instant WhatsApp blessings & print greeting cards
+                Honor students in morning assembly, create 9:16 WhatsApp posters & send instant blessings
               </p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
+            {/* AI Settings Button */}
+            <button
+              onClick={() => setIsAiSettingsOpen(true)}
+              className="px-3.5 py-2 rounded-xl bg-white/25 hover:bg-white/35 backdrop-blur-md text-white font-black text-xs border border-white/40 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+              title="Configure ChatGPT and Gemini API Keys"
+            >
+              <Sliders className="w-4 h-4 text-amber-300" />
+              <span>AI Settings</span>
+              {(openAiApiKey || geminiApiKey) && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              )}
+            </button>
+
             <button
               onClick={handlePrintAssemblySheet}
               className="px-4 py-2 rounded-xl bg-white text-pink-700 hover:bg-pink-50 font-black text-xs shadow-md transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
@@ -664,7 +734,7 @@ export const StudentBirthdayPage: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons: Wish WhatsApp & Download Poster */}
                         <div className="grid grid-cols-2 gap-2 pt-2 border-t border-pink-100">
                           {/* 1-Click WhatsApp Wish */}
                           <button
@@ -679,13 +749,13 @@ export const StudentBirthdayPage: React.FC = () => {
                             <span>{isWishSent ? 'Wish Sent ✓' : 'Wish WhatsApp'}</span>
                           </button>
 
-                          {/* Print Birthday Greeting Card */}
+                          {/* Download Poster Button (Replaces Print Card) */}
                           <button
-                            onClick={() => handlePrintCard(student)}
-                            className="px-3 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs border border-indigo-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            onClick={() => handleOpenPosterModal(student)}
+                            className="px-3 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-black text-xs shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-95"
                           >
-                            <Printer className="w-4 h-4" />
-                            <span>Print Card</span>
+                            <Palette className="w-4 h-4 text-amber-300" />
+                            <span>Download Poster</span>
                           </button>
                         </div>
                       </div>
@@ -767,13 +837,23 @@ export const StudentBirthdayPage: React.FC = () => {
                             {isTomorrow ? 'Tomorrow 🎂' : `In ${student.daysLeft} days`}
                           </span>
 
-                          <button
-                            onClick={() => handleSendWish(student)}
-                            className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
-                            title="Send Early WhatsApp Wish"
-                          >
-                            <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleSendWish(student)}
+                              className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all cursor-pointer"
+                              title="Send Early WhatsApp Wish"
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
+                            </button>
+
+                            <button
+                              onClick={() => handleOpenPosterModal(student)}
+                              className="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold transition-all cursor-pointer"
+                              title="Download Poster (9:16)"
+                            >
+                              <Palette className="w-3.5 h-3.5 text-indigo-600" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -994,11 +1074,11 @@ export const StudentBirthdayPage: React.FC = () => {
                                 <MessageCircle className="w-4 h-4 text-emerald-600" />
                               </button>
                               <button
-                                onClick={() => handlePrintCard(student)}
+                                onClick={() => handleOpenPosterModal(student)}
                                 className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition-all cursor-pointer"
-                                title="Print Birthday Card"
+                                title="Download Poster (9:16)"
                               >
-                                <Printer className="w-4 h-4 text-indigo-600" />
+                                <Palette className="w-4 h-4 text-indigo-600" />
                               </button>
                             </div>
                           </td>
@@ -1013,63 +1093,423 @@ export const StudentBirthdayPage: React.FC = () => {
         </>
       )}
 
-      {/* ── Modal 1: Date Specific Popup for Calendar ── */}
-      {selectedDateDetails && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── MASTER 9:16 BIRTHDAY POSTER DESIGNER & DOWNLOADER MODAL ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {selectedPosterStudent && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="bg-white rounded-[28px] max-w-4xl w-full shadow-2xl border border-slate-100 overflow-hidden my-auto flex flex-col md:flex-row max-h-[92vh]">
+            
+            {/* Left Column: 9:16 Live Canvas Preview */}
+            <div className="w-full md:w-[420px] bg-slate-900 p-4 sm:p-5 flex flex-col items-center justify-center overflow-y-auto shrink-0">
+              <div className="text-center mb-2">
+                <span className="px-3 py-0.5 rounded-full bg-pink-500/20 text-pink-300 text-[10px] font-black uppercase tracking-wider border border-pink-400/30">
+                  9:16 WhatsApp Status Ratio
+                </span>
+              </div>
+
+              {/* ── THE 9:16 POSTER CANVAS (EXACT MATCH TO USER'S IMAGE 2) ── */}
+              <div
+                ref={posterRef}
+                className="w-[340px] h-[604px] rounded-2xl overflow-hidden relative shadow-2xl flex flex-col justify-between text-slate-800 select-none"
+                style={{
+                  background: posterTheme === 'garden'
+                    ? 'linear-gradient(180deg, #d4fcd7 0%, #ffffff 32%, #fffde7 70%, #dcfce7 100%)'
+                    : posterTheme === 'festive'
+                    ? 'linear-gradient(180deg, #fce7f3 0%, #ffffff 35%, #fff1f2 70%, #ffe4e6 100%)'
+                    : posterTheme === 'gold'
+                    ? 'linear-gradient(180deg, #fef3c7 0%, #ffffff 35%, #fef9c3 70%, #fde68a 100%)'
+                    : posterTheme === 'royal'
+                    ? 'linear-gradient(180deg, #f3e8ff 0%, #ffffff 35%, #ede9fe 70%, #ddd6fe 100%)'
+                    : 'linear-gradient(180deg, #e0f2fe 0%, #ffffff 35%, #e0e7ff 70%, #bae6fd 100%)',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                }}
+              >
+                {/* ── Top Header Section ── */}
+                <div className="pt-3 px-3 text-center relative z-10">
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    {/* Official School Logo (from /logo.png) */}
+                    <div className="w-14 h-14 rounded-full bg-white p-0.5 shadow-md border border-amber-300 overflow-hidden shrink-0">
+                      <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain" />
+                    </div>
+
+                    {/* School Name & Narasannapeta Banner */}
+                    <div className="flex-1 text-center px-1">
+                      <h2 className="text-[15px] font-black text-[#1E1B4B] tracking-tight leading-tight uppercase font-serif drop-shadow-xs">
+                        SRI VENKATESWARA<br />JY SCHOOL
+                      </h2>
+                      <div className="inline-block mt-0.5 px-3 py-0.5 rounded-full bg-[#E11D48] text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                        NARASANNAPETA
+                      </div>
+                    </div>
+
+                    {/* Right Schoolhouse Illustration */}
+                    <div className="w-13 h-13 rounded-2xl bg-amber-50/90 border border-amber-200 flex flex-col items-center justify-center text-center p-1 shadow-xs shrink-0">
+                      <span className="text-xl leading-none">🏫</span>
+                      <span className="text-[8px] font-black text-amber-800 uppercase leading-none mt-0.5">SCHOOL</span>
+                    </div>
+                  </div>
+
+                  {/* 3D "Happy Birthday" Celebratory Banner */}
+                  <div className="relative mt-2 mb-1">
+                    <span className="absolute -top-2 left-4 text-xs">🦋</span>
+                    <span className="absolute -top-1 right-5 text-xs">✨</span>
+                    <div className="text-center">
+                      <span className="block text-[32px] font-black italic tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-[#DB2777] via-[#E11D48] to-[#EA580C] leading-none drop-shadow-[0_2px_4px_rgba(219,39,119,0.35)]"
+                        style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                      >
+                        Happy Birthday
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Middle Section: Student Photo & Badges ── */}
+                <div className="px-3 flex items-center justify-between gap-2.5 my-auto relative z-10">
+                  {/* Left: Student Studio Portrait with Uniform */}
+                  <div className="relative w-38 h-48 rounded-2xl overflow-hidden shadow-xl border-3 border-white bg-slate-100 shrink-0">
+                    <img
+                      src={aiPortraitUrl || selectedPosterStudent.photoUrl || '/logo.png'}
+                      alt={selectedPosterStudent.name}
+                      className="w-full h-full object-cover object-top"
+                    />
+                    {aiPortraitUrl && (
+                      <span className="absolute top-1 left-1 px-1.5 py-0.2 rounded-md bg-pink-600/90 text-white text-[8px] font-black backdrop-blur-xs">
+                        ✨ AI Studio
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Right: Badges & Birth Details */}
+                  <div className="flex-1 min-w-0 flex flex-col items-center text-center space-y-1.5">
+                    {/* Student Name Banner */}
+                    <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-[#831843] via-[#9D174D] to-[#831843] text-white shadow-md border border-amber-300">
+                      <p className="text-[11px] font-black uppercase tracking-wider truncate leading-tight drop-shadow-xs">
+                        # {selectedPosterStudent.name} ★
+                      </p>
+                    </div>
+
+                    {/* Class Badge */}
+                    <div className="w-full py-1 px-2 rounded-lg bg-[#15803D] text-white shadow-xs">
+                      <p className="text-[11px] font-black leading-tight">
+                        Class: {selectedPosterStudent.className}
+                      </p>
+                    </div>
+
+                    {/* Cake & Date of Birth Card */}
+                    <div className="w-full p-1.5 rounded-xl bg-white/95 border-2 border-pink-300 shadow-xs flex flex-col items-center">
+                      <div className="text-lg leading-none">🎂</div>
+                      <span className="text-[9px] font-black text-slate-500 uppercase mt-0.5">Date of Birth</span>
+                      <span className="text-xs font-black text-[#E11D48] leading-tight">
+                        {selectedPosterStudent.birthDay}{' '}
+                        {MONTH_NAMES[selectedPosterStudent.birthMonth - 1]?.slice(0, 3)}{' '}
+                        {selectedPosterStudent.birthYear}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Bottom Section: Blessings, Bouquet & Ribbon ── */}
+                <div className="px-3 pb-3 text-center relative z-10 space-y-1.5">
+                  {/* Blessing Quote */}
+                  <div className="px-2">
+                    <p className="text-[10px] font-extrabold text-[#1E293B] leading-tight">
+                      May God bless you with good health, happiness and success in your life.
+                    </p>
+                    <p className="text-xs font-black text-[#DB2777] italic mt-0.5"
+                      style={{ fontFamily: "'Brush Script MT', cursive, sans-serif" }}
+                    >
+                      Have a Wonderful Birthday!
+                    </p>
+                  </div>
+
+                  {/* Floral Bouquet & Gifts Row */}
+                  <div className="flex items-center justify-between px-2 pt-0.5">
+                    <div className="text-2xl leading-none" title="Rose Bouquet">💐</div>
+                    <div className="text-xs font-bold text-amber-700">🎉 🌟 ✨</div>
+                    <div className="text-2xl leading-none" title="Gift Box">🎁</div>
+                  </div>
+
+                  {/* Bottom Ribbon Banner: Best Wishes */}
+                  <div className="w-full py-1.5 px-2 rounded-xl bg-gradient-to-r from-[#1E3A8A] via-[#1D4ED8] to-[#1E3A8A] text-white shadow-md border border-amber-300">
+                    <p className="text-[9px] font-black text-amber-300 uppercase tracking-wider leading-tight">
+                      Best Wishes from
+                    </p>
+                    <p className="text-[10px] font-black text-white uppercase tracking-wider leading-tight mt-0.2">
+                      ★ JY School Management & Staff ★
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column: Controls & AI Options */}
+            <div className="flex-1 p-5 sm:p-6 flex flex-col justify-between overflow-y-auto space-y-4">
+              <div>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
+                      <Palette className="w-5 h-5 text-pink-600" />
+                      <span>9:16 Birthday Poster Designer</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 font-medium">
+                      Designed for {selectedPosterStudent.name} (Class {selectedPosterStudent.className})
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedPosterStudent(null)}
+                    className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Theme Selector */}
+                <div className="space-y-2 mb-4">
+                  <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                    <span>Background Theme:</span>
+                    <span className="text-[11px] text-pink-600 font-bold capitalize">{posterTheme} Theme</span>
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {[
+                      { id: 'garden', label: 'Garden', color: 'from-emerald-300 to-green-100' },
+                      { id: 'festive', label: 'Festive', color: 'from-pink-300 to-rose-100' },
+                      { id: 'gold', label: 'Gold', color: 'from-amber-300 to-yellow-100' },
+                      { id: 'royal', label: 'Royal', color: 'from-purple-300 to-violet-100' },
+                      { id: 'sky', label: 'Sky', color: 'from-sky-300 to-blue-100' },
+                    ].map((th) => (
+                      <button
+                        key={th.id}
+                        onClick={() => setPosterTheme(th.id as any)}
+                        className={`h-11 rounded-xl bg-gradient-to-br ${th.color} border-2 transition-all flex flex-col items-center justify-center cursor-pointer ${
+                          posterTheme === th.id ? 'border-pink-600 scale-105 shadow-md' : 'border-white'
+                        }`}
+                      >
+                        <span className="text-[10px] font-black text-slate-800">{th.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* AI Student Uniform Portrait Generator Feature */}
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/80 via-purple-50/60 to-pink-50/80 border border-indigo-200/80 space-y-2.5 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 rounded-lg bg-indigo-600 text-white">
+                        <Wand2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-900">AI Student Uniform Portrait</h4>
+                        <p className="text-[10px] text-slate-500 font-medium">Sweet smile, straight face in JY School uniform</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] font-black">
+                      {activeAiProvider.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    ఒకవేళ స్టూడెంట్ ఫోటో సాధారణంగా ఉన్నా, AI ద్వారా స్కూల్ గ్రీన్ యూనిఫాం, టై మరియు చక్కని చిరునవ్వుతో కూడిన స్టూడియో ఫోటోను రూపొందించవచ్చు!
+                  </p>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={handleGenerateAiPortrait}
+                      disabled={isGeneratingAi}
+                      className="flex-1 py-2.5 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white text-xs font-black shadow-md shadow-indigo-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+                    >
+                      <Sparkles className={`w-4 h-4 ${isGeneratingAi ? 'animate-spin' : ''}`} />
+                      <span>{isGeneratingAi ? 'Generating Portrait...' : '✨ AI Generate Portrait in Uniform'}</span>
+                    </button>
+
+                    {aiPortraitUrl && (
+                      <button
+                        onClick={() => setAiPortraitUrl(null)}
+                        className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+                        title="Reset to Original Student Photo"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* API Key Status Notice */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                  <div className="flex items-center gap-2 text-slate-600">
+                    <Key className="w-4 h-4 text-slate-400" />
+                    <span>OpenAI / Gemini Status:</span>
+                  </div>
+                  {(openAiApiKey || geminiApiKey) ? (
+                    <span className="text-emerald-700 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Configured</span>
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => setIsAiSettingsOpen(true)}
+                      className="text-pink-600 font-black hover:underline cursor-pointer"
+                    >
+                      Add API Key →
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom Actions: Download 1080x1920 Poster */}
+              <div className="pt-3 border-t border-slate-100 space-y-2">
+                <button
+                  onClick={handleDownloadPosterImage}
+                  disabled={isDownloadingPoster}
+                  className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-black shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 hover:scale-[1.01] active:scale-95"
+                >
+                  <Download className={`w-4 h-4 ${isDownloadingPoster ? 'animate-bounce' : ''}`} />
+                  <span>{isDownloadingPoster ? 'Downloading HD Poster...' : '📥 Download 9:16 Poster (1080x1920 HD)'}</span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleSendWish(selectedPosterStudent)}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold text-xs border border-emerald-200 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageCircle className="w-4 h-4 text-emerald-600" />
+                    <span>Wish on WhatsApp</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedPosterStudent(null)}
+                    className="py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── MODAL 2: AI SETTINGS (CHATGPT & GEMINI API KEYS) ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {isAiSettingsOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-[26px] p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h3 className="text-base font-black text-slate-900">
-                  🎂 {MONTH_NAMES[selectedDateDetails.month - 1]} {selectedDateDetails.day} Birthdays
-                </h3>
-                <p className="text-xs text-slate-400 font-medium">
-                  {selectedDateDetails.students.length} Student(s) celebrating
-                </p>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-pink-100 text-pink-600">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900">AI Poster & Portrait Settings</h3>
+                  <p className="text-xs text-slate-400 font-medium">Add your ChatGPT (OpenAI) and Gemini API Keys</p>
+                </div>
               </div>
               <button
-                onClick={() => setSelectedDateDetails(null)}
+                onClick={() => setIsAiSettingsOpen(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
-              {selectedDateDetails.students.map((st) => (
-                <div key={st.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0">
-                      {st.name.charAt(0)}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-900">{st.name}</h4>
-                      <p className="text-xs text-slate-500 font-medium">{st.className} • Age: {st.ageTurning}</p>
-                    </div>
+            {/* Provider Switcher */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-slate-700">Preferred AI Model for Portraits:</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveAiProvider('openai')}
+                  className={`p-3 rounded-xl border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    activeAiProvider === 'openai'
+                      ? 'border-indigo-600 bg-indigo-50/80 text-indigo-900'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <div>
+                    <p className="font-black">ChatGPT / DALL-E 3</p>
+                    <p className="text-[10px] text-slate-500">OpenAI Studio Quality</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => handleSendWish(st)}
-                      className="p-2 rounded-xl bg-[#25D366] text-white hover:bg-[#20ba59] transition-all cursor-pointer"
-                      title="Send WhatsApp Wish"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handlePrintCard(st)}
-                      className="p-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer"
-                      title="Print Card"
-                    >
-                      <Printer className="w-4 h-4" />
-                    </button>
+                  {activeAiProvider === 'openai' && <Check className="w-4 h-4 text-indigo-600" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveAiProvider('gemini')}
+                  className={`p-3 rounded-xl border text-xs font-bold transition-all text-left flex items-center justify-between cursor-pointer ${
+                    activeAiProvider === 'gemini'
+                      ? 'border-pink-600 bg-pink-50/80 text-pink-900'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <div>
+                    <p className="font-black">Google Gemini Imagen</p>
+                    <p className="text-[10px] text-slate-500">High Speed Imagen 3</p>
                   </div>
-                </div>
-              ))}
+                  {activeAiProvider === 'gemini' && <Check className="w-4 h-4 text-pink-600" />}
+                </button>
+              </div>
+            </div>
+
+            {/* OpenAI API Key Field */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>ChatGPT (OpenAI) API Key:</span>
+                <span className="text-[10px] text-slate-400">Starts with sk-...</span>
+              </label>
+              <input
+                type="password"
+                value={openAiApiKey}
+                onChange={(e) => setOpenAiApiKey(e.target.value)}
+                placeholder="sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxx"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+            </div>
+
+            {/* Gemini API Key Field */}
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
+                <span>Google Gemini API Key:</span>
+                <span className="text-[10px] text-slate-400">AI Studio Key</span>
+              </label>
+              <input
+                type="password"
+                value={geminiApiKey}
+                onChange={(e) => setGeminiApiKey(e.target.value)}
+                placeholder="AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxx"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+
+            <p className="text-[11px] text-slate-500 italic bg-amber-50 p-2.5 rounded-xl border border-amber-200/80">
+              💡 ఈ API Keys మీ బ్రౌజర్‌లో సురక్షితంగా సేవ్ చేయబడతాయి. వీటిని ఉపయోగించి విద్యార్థుల ఫోటోలను స్కూల్ యూనిఫాంలో మరింత అందంగా రూపొందించవచ్చు.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                onClick={() => setIsAiSettingsOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.setItem('jy_openai_api_key', openAiApiKey.trim());
+                  localStorage.setItem('jy_gemini_api_key', geminiApiKey.trim());
+                  localStorage.setItem('jy_birthday_ai_provider', activeAiProvider);
+                  setIsAiSettingsOpen(false);
+                  toast.success('AI API Keys saved successfully!');
+                }}
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md shadow-indigo-600/20 cursor-pointer"
+              >
+                Save Settings
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Modal 2: Wish Template Customizer ── */}
+      {/* ── MODAL 3: WISH TEMPLATE CUSTOMIZER ── */}
       {isTemplateModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-[26px] p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4">
@@ -1122,6 +1562,65 @@ export const StudentBirthdayPage: React.FC = () => {
               >
                 Save Template
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL 4: DATE SPECIFIC POPUP FOR CALENDAR ── */}
+      {selectedDateDetails && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-[26px] p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-900">
+                  🎂 {MONTH_NAMES[selectedDateDetails.month - 1]} {selectedDateDetails.day} Birthdays
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">
+                  {selectedDateDetails.students.length} Student(s) celebrating
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedDateDetails(null)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+              {selectedDateDetails.students.map((st) => (
+                <div key={st.id} className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-pink-100 text-pink-700 font-bold flex items-center justify-center shrink-0">
+                      {st.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-900">{st.name}</h4>
+                      <p className="text-xs text-slate-500 font-medium">{st.className} • Age: {st.ageTurning}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleSendWish(st)}
+                      className="p-2 rounded-xl bg-[#25D366] text-white hover:bg-[#20ba59] transition-all cursor-pointer"
+                      title="Send WhatsApp Wish"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedDateDetails(null);
+                        handleOpenPosterModal(st);
+                      }}
+                      className="p-2 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all cursor-pointer"
+                      title="Download Poster (9:16)"
+                    >
+                      <Palette className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
