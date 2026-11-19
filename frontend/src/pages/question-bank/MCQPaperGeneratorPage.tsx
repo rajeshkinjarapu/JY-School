@@ -83,10 +83,11 @@ export const formatMCQText = (rawText: string): string => {
   // 1. Normalize line breaks
   let text = rawText.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
-  // 2. Break multiple options placed on a single line into separate lines
-  text = text.replace(/(?:[^\n])\s*(\([A-D]\)|[A-D]\.|\b[a-d]\))\s+/g, (match, opt) => {
+  // 2. Break multiple options placed on a single line into separate lines without deleting any preceding character
+  // Note: we capture charBefore to guarantee closing math signs ($) or text are NEVER eaten
+  text = text.replace(/([^\n\s])\s*(\([A-Da-d]\)|[A-Da-d]\.)\s+/g, (match, charBefore, opt) => {
     const letter = opt.replace(/[\(\)\.\s]/g, '').toUpperCase();
-    return `\n(${letter}) `;
+    return `${charBefore}\n(${letter}) `;
   });
 
   const lines = text.split('\n');
@@ -102,10 +103,15 @@ export const formatMCQText = (rawText: string): string => {
     // Standardize option prefixes: "(a)", "a.", "a)", "A.", "A)" -> "(A)"
     line = line.replace(/^\(?([a-dA-D])[\.\)]\s*/, (_, letter) => `(${letter.toUpperCase()}) `);
 
-    // Auto-wrap common math formulas in LaTeX if not already enclosed in $
-    if (!line.includes('$')) {
-      line = line.replace(/\b(sin|cos|tan|sec|csc|cot)\s+([0-9]+[\^\_\\][a-zA-Z0-9{}]+)/gi, '$$$1 $2$$');
-      line = line.replace(/^(\([A-D]\))\s+([\d\.\-\+\*\/]+)$/g, '$1 $$$2$$');
+    // Auto-heal unclosed single dollars in this line so KaTeX doesn't fail
+    const singleDollars = (line.replace(/\$\$[\s\S]*?\$\$/g, '').match(/(?<!\\)\$/g) || []).length;
+    if (singleDollars % 2 !== 0) {
+      line = line + '$';
+    } else if (singleDollars === 0) {
+      // If an option contains raw LaTeX commands like \frac, \sqrt, \Delta without dollars, auto-wrap in $
+      if (/^\([A-D]\)\s+/.test(line) && /\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|vec|hat|left|right)/.test(line)) {
+        line = line.replace(/^(\([A-D]\)\s+)(.+)$/, '$1$$$2$$');
+      }
     }
 
     cleanedLines.push(line);
@@ -115,7 +121,7 @@ export const formatMCQText = (rawText: string): string => {
   // - Options and question body follow consecutively (0 blank lines)
   // - Between questions: exactly ONE blank line (\n\n)
   const resultLines: string[] = [];
-  const isQuestionStart = (str: string) => /^(?:\d+|[IVXLCDM]+)\.\s+/i.test(str);
+  const isQuestionStart = (str: string) => /^\d+\.\s+/.test(str);
 
   for (let i = 0; i < cleanedLines.length; i++) {
     const line = cleanedLines[i];
@@ -1233,13 +1239,6 @@ export const MCQPaperGeneratorPage = () => {
               setActiveSubjectTab(Object.keys(textData)[0]);
             }
 
-            // Auto-clean any stray blank lines between options and guarantee proper question spacing
-            Object.keys(textData).forEach(k => {
-              if (textData[k]) {
-                textData[k] = formatMCQText(textData[k]);
-              }
-            });
-
             setSubjectContents(textData);
             setAnswerKeys(keys);
 
@@ -1320,27 +1319,10 @@ export const MCQPaperGeneratorPage = () => {
           }
         }
 
-        // Clean option and question spacing across all subjects before saving
-        const cleanedSubjectContents: Record<string, string> = {};
-        Object.keys(subjectContents).forEach(k => {
-          cleanedSubjectContents[k] = formatMCQText(subjectContents[k] || '');
-        });
-        setSubjectContents(cleanedSubjectContents);
-
         setIsSaving(true);
         toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
         try {
-          const dataToSerialize = {
-            subjectContents: cleanedSubjectContents,
-            inlineImages,
-            answerKeys,
-            settings: {
-              fontSize,
-              questionSpacing,
-              showPaperHeader
-            }
-          };
-          const serializedContent = "<!--MCQ_DATA_V2-->\n" + JSON.stringify(dataToSerialize);
+          const serializedContent = serializeContent();
           const payload = {
             examName: finalExamName,
             examClass,
@@ -1663,21 +1645,9 @@ export const MCQPaperGeneratorPage = () => {
                   value={subjectContents[activeSubjectTab] || ''}
                   onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
                   onPaste={handleEditorPaste}
-                  onBlur={() => {
-                    const current = subjectContents[activeSubjectTab] || '';
-                    if (current.trim()) {
-                      const formatted = formatMCQText(current);
-                      if (formatted !== current) {
-                        setSubjectContents(prev => ({
-                          ...prev,
-                          [activeSubjectTab]: formatted
-                        }));
-                      }
-                    }
-                  }}
                   onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
                   className="w-full flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[450px] resize-none shadow-inner"
-                  placeholder={`Enter questions for ${ activeSubjectTab }...\n1. Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
+                  placeholder={`Enter questions for ${ activeSubjectTab }...\n1.Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
                 />
               </div>
             </div>

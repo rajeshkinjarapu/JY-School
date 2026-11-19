@@ -226,6 +226,18 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
       let normalized = withImages.replace(/\\\[([\s\S]*?)\\\]/g, '$$$$$1$$$$');
       normalized = normalized.replace(/\\\(([\s\S]*?)\\\)/g, '$$$1$$');
 
+      // Auto-balance single $ line-by-line so an unclosed $ on one line never spans into subsequent lines
+      const normLines = normalized.split('\n');
+      const balancedLines = normLines.map(line => {
+        const withoutDouble = line.replace(/\$\$[\s\S]*?\$\$/g, '');
+        const dollars = (withoutDouble.match(/(?<!\\)\$/g) || []).length;
+        if (dollars % 2 !== 0) {
+          return line + '$';
+        }
+        return line;
+      });
+      normalized = balancedLines.join('\n');
+
       const parts = normalized.split(/(\$\$[\s\S]*?\$\$)/g);
       return parts.map(part => {
         if (part.startsWith('$$') && part.endsWith('$$')) {
@@ -241,7 +253,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             let math = balanceMath(inlinePart.slice(1, -1));
             // Smart Math Spacing: auto-convert 3+ spaces to \quad and 2 spaces to \ 
             math = math.replace(/ {3,}/g, ' \\quad ').replace(/ {2}/g, ' \\ ');
-            return katex.renderToString(math, { displayMode: false, throwOnError: false });
+            try {
+              return katex.renderToString(math, { displayMode: false, throwOnError: false });
+            } catch {
+              return inlinePart;
+            }
           }
 
           let textPart = inlinePart;
@@ -289,11 +305,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
     const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
 
     // Normalize text blocks so that questions are ALWAYS separated cleanly and options never detach
-    let normalizedText = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    // Ensure all options (A), (B), (C), (D) or (a), (b), (c), (d) are NEVER detached by double newlines or empty spaces
-    normalizedText = normalizedText.replace(/\n\s*(\(?[A-Da-d][\)\.]\s+)/gi, '\n$1');
-    // Ensure every question start (e.g. "1. ", "14. ", "II. ") is preceded by exactly \n\n (one blank line) even if not given in editor
-    normalizedText = normalizedText.replace(/([^\n])\s*\n+\s*(?=(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n');
+    let normalizedText = text.replace(/\r\n/g, '\n');
+    // Ensure all options (A), (B), (C), (D) or (a), (b), (c), (d) are NEVER detached by double newlines
+    normalizedText = normalizedText.replace(/(\n\s*)\n+(\s*\(?[A-Da-d][\)\.]\s+)/gi, '$1$2');
+    // Ensure every question start (e.g. "\n2. ", "\n10. ", "\n18. ") is preceded by \n\n so questions are never accidentally merged
+    normalizedText = normalizedText.replace(/([^\n])\n+(\s*(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n$2');
     const rawBlocks = normalizedText.split(/(\n\n+)/);
 
     for (let i = 0; i < rawBlocks.length; i += 2) {
@@ -308,20 +324,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         ? `calc(${baseGap}rem + ${extraNewlines * 0.75}rem)`
         : `${baseGap}rem`;
 
-      // Support uppercase (A) (B) (C) (D), lowercase (a) (b) (c) (d), and dotted A. B. C. D.
+      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
       const optMatchB = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block);
       const optMatchC = /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block);
       const optMatchD = /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block);
-      let hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
+      const hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
       const hasLowerOptions = (/(?:^|\n|\s{2,}|\t)\s*\(a\)\.?\s*/.test(block)) &&
         (/(?:^|\n|\s{2,}|\t)\s*\(b\)\.?\s*/.test(block)) &&
         (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block)) &&
         (/(?:^|\n|\s{2,}|\t)\s*\(d\)\.?\s*/.test(block));
-      const hasDotOptions = (/(?:^|\n|\s{2,}|\t)\s*A[\.\)]\s+/.test(block)) &&
-        (/(?:^|\n|\s{2,}|\t)\s*B[\.\)]\s+/.test(block)) &&
-        (/(?:^|\n|\s{2,}|\t)\s*C[\.\)]\s+/.test(block)) &&
-        (/(?:^|\n|\s{2,}|\t)\s*D[\.\)]\s+/.test(block));
 
       if (!hasUpperOptions && hasLowerOptions) {
         block = block
@@ -329,14 +341,6 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .replace(/(?:^|\n|\s{2,}|\t)\(b\)\.?\s*/g, '\n(B) ')
           .replace(/(?:^|\n|\s{2,}|\t)\(c\)\.?\s*/g, '\n(C) ')
           .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/g, '\n(D) ');
-        hasUpperOptions = true;
-      } else if (!hasUpperOptions && hasDotOptions) {
-        block = block
-          .replace(/(?:^|\n|\s{2,}|\t)A[\.\)]\s+/g, '\n(A) ')
-          .replace(/(?:^|\n|\s{2,}|\t)B[\.\)]\s+/g, '\n(B) ')
-          .replace(/(?:^|\n|\s{2,}|\t)C[\.\)]\s+/g, '\n(C) ')
-          .replace(/(?:^|\n|\s{2,}|\t)D[\.\)]\s+/g, '\n(D) ');
-        hasUpperOptions = true;
       }
 
       const hasOptions = hasUpperOptions || (/(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block));
@@ -409,10 +413,25 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const matchC = optionsText.match(optCRegex);
               const matchD = optionsText.match(optDRegex);
 
-              const optA = matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '';
-              const optB = matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '';
-              const optC = matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '';
-              const optD = matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '';
+              const balanceOptionDollars = (s: string) => {
+                if (!s) return s;
+                let trimmed = s.trim();
+                if (!trimmed) return trimmed;
+                const dollars = (trimmed.match(/(?<!\\)\$/g) || []).length;
+                if (dollars % 2 !== 0) {
+                  trimmed = trimmed + '$';
+                } else if (dollars === 0) {
+                  if (/\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|ne|approx|infty|vec|hat|left|right|dots|ldots|cdots)\b/.test(trimmed)) {
+                    trimmed = `$${trimmed}$`;
+                  }
+                }
+                return trimmed;
+              };
+
+              const optA = balanceOptionDollars(matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '');
+              const optB = balanceOptionDollars(matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '');
+              const optC = balanceOptionDollars(matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '');
+              const optD = balanceOptionDollars(matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '');
               const estimateVisualLength = (text: string): number => {
                 if (!text) return 0;
                 let s = text.trim();
@@ -601,6 +620,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         .katex svg {
           overflow: hidden !important;
         }
+        .katex-error {
+          color: inherit !important;
+          border-bottom: 1px dotted #999;
+          font-family: inherit !important;
+        }
         @page { size: A4; margin: 10mm 0; }
 
         @media print {
@@ -619,6 +643,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .katex svg { overflow: hidden !important; }
           .katex-display { overflow: visible !important; }
           .katex, .katex * { visibility: visible !important; color: #000 !important; }
+          .katex-error { color: #000 !important; border-bottom: none !important; font-family: inherit !important; }
 
           .question-block { break-inside: avoid !important; page-break-inside: avoid !important; }
           .question-text-wrapper { break-after: avoid !important; page-break-after: avoid !important; }

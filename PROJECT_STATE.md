@@ -6,20 +6,28 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
-## చివరి సంభాషణ - MCQ ఎడిటర్‌లో ఆప్షన్ల మధ్య అవాంఛిత స్పేస్‌ల ఆటోమేటిక్ నివారణ & ప్రశ్నల మధ్య ఆటో-స్పేసింగ్ పటిష్టం (November 19, 2026)
-- **యూజర్ స్క్రీన్‌షాట్ & అభ్యర్థన:**
-  - `editor box lo autometic ga option option ki madya space vachestundi ivvakunda, and question - question ki madya space undali kani editor lo ivvakapoyina avutundi oksari deep ga check cheyu oka professional developer ga alochinchi problem solve cheyu`
-  - ఎడిటర్ బాక్స్‌లో యూజర్ ఇవ్వకపోయినా ఆప్షన్ల మధ్య ఖాళీ లైన్లు వచ్చేయడం, మరియు ప్రశ్న 13 లో ప్రివ్యూలో ఆప్షన్లు విడిపోయిన స్క్రీన్‌షాట్ అందించారు.
-- **పరిష్కారం & ఇంప్లిమెంటేషన్ ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
-  1. **`LiveLatexPreview.tsx` లో బుల్లెట్‌ప్రూఫ్ రెగెక్స్:**
-     - `normalizedText.replace(/\n\s*(\(?[A-Da-d][\)\.]\s+)/gi, '\n$1')` ద్వారా ఆప్షన్ల మధ్య ఎన్ని ఖాళీ లైన్లు లేదా వైట్‌స్పేస్ ఉన్నా ప్రివ్యూ పార్సర్ లోపలే వాటిని సింగిల్ లైన్‌గా నార్మలైజ్ చేయడం. దీనితో ప్రశ్న 13 లాంటి ఏ ప్రశ్నలోనూ ఆప్షన్లు విడిపోవు.
-     - `normalizedText.replace(/([^\n])\s*\n+\s*(?=(?:\d+|[IVXLCDM]+)\.\s+)/gi, '$1\n\n')` ద్వారా ఎడిటర్‌లో యూజర్ ప్రశ్నల మధ్య ఒక ఖాళీ లైన్ ఇవ్వకపోయినా ప్రివ్యూలో ఆటోమేటిక్‌గా ఖచ్చితంగా ఒక ఖాళీ లైన్ గ్యాప్ వచ్చేలా చేయడం.
-     - `A. `, `B. `, `C. `, `D. ` డాట్ ఆప్షన్లకు కూడా ఆటోమేటిక్ నార్మలైజేషన్ సపోర్ట్ జోడించబడింది.
-  2. **`MCQPaperGeneratorPage.tsx` ఎడిటర్ ఆటో-క్లీనింగ్:**
-     - టెక్స్ట్‌ఏరియాకు `onBlur` జోడించబడింది. యూజర్ టైప్ చేసి ఎక్కడైనా బయట క్లిక్ చేసిన వెంటనే `formatMCQText` ఆటోమేటిక్‌గా రన్ అయ్యి ఆప్షన్ల మధ్య ఖాళీ లైన్లను తొలగిస్తుంది, ప్రశ్నల మధ్య ఒక ఖాళీ లైన్ అమరుస్తుంది.
-     - `handleSave` లో సేవ్ చేసే ముందు అన్ని సబ్జెక్టుల టెక్స్ట్‌ను పర్ఫెక్ట్ స్పేసింగ్‌తో శానిటైజ్ చేసి డేటాబేస్‌కు పంపేలా చేశాము.
-     - `loadPaper`, `handleEditorPaste`, మరియు "Auto-Align Format" బటన్‌లతో 100% సింక్ అయింది.
-  3. **మిషన్ క్రిటికల్ `printPaper` & KaTeX ప్రింట్ ప్రొటెక్షన్:** 100% పక్కాగా భద్రపరచబడింది.
+## చివరి సంభాషణ - MCQ Paper Generator LaTeX సమీకరణాలు & డాలర్ గుర్తు బ్యాలెన్సింగ్ ఫిక్స్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `latex preview lo equation tappulu chupistunnayi check cheyu preview mottam change ayyindi tappu chupistundi`
+  - లైవ్ ప్రివ్యూలో సమీకరణాలు రెడ్ ఎర్రర్‌గా లేదా `$2^n - n - 1` వంటి రా డాలర్ గుర్తులుగా కనిపించడం, మరియు కంపైలేషన్ సరిగ్గా రాకపోవడంపై ఫిర్యాదు.
+- **మూల కారణం (Root Cause):**
+  1. ఎడిటర్‌లో ఒకే లైన్‌లో ఉన్న ఆప్షన్లను విడగొట్టేందుకు వాడిన పాత regex `(?:[^\n])\s*(\([A-D]\))` ఆప్షన్ ముందున్న ముగింపు డాలర్ `$` గుర్తును తొలగించివేసింది.
+  2. దీనివల్ల `(A) $2^n - n - 1`, `(B) $1 - 2^{-n}`, `(C) $n + 2^{-n} - 1`, `(A) $\frac{1}{12}...` లలో ముగింపు `$` పోయి అన్‌క్లోజ్డ్ డాలర్ గుర్తులు ఏర్పడ్డాయి.
+  3. `LiveLatexPreview` లో అన్‌క్లోజ్డ్ డాలర్ ఉండడం వల్ల KaTeX కంపైలేషన్ ఫెయిల్ అయ్యి రా టెక్స్ట్ లేదా KaTeX రెడ్ కలర్ ఎర్రర్ స్పాన్‌గా మారింది.
+  4. `loadPaper` లో ఆటోమేటిక్‌గా `formatMCQText` రన్ అవ్వడం వల్ల డేటాబేస్ నుండి లోడ్ అయినప్పుడు ఒరిజినల్ టెక్స్ట్ మార్పుకు గురైంది.
+- **పూర్తి చేసిన పనులు ([`LiveLatexPreview.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx), [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  1. **`LiveLatexPreview.tsx` లో లైన్-బై-లైన్ డాలర్ ఆటో-బ్యాలెన్సింగ్:**
+     - ప్రతి లైన్ మరియు ప్రతి ఆప్షన్ (`optA`, `optB`, `optC`, `optD`) లలో బేసి సంఖ్యలో (odd count) డాలర్ గుర్తులు ఉంటే ఆటోమేటిక్‌గా క్లోజింగ్ డాలర్ `$` ను జోడించి KaTeX కి పంపించడం జరిగింది.
+     - రా LaTeX కమాండ్స్ (`\frac`, `\sqrt`, `\Delta` మొదలైనవి) డాలర్లు లేకుండా ఉన్నా ఆటో-ర్యాప్ చేసి గణిత సమీకరణాలుగా రెండర్ చేయడం జరిగింది.
+  2. **KaTeX ఎర్రర్ స్టైల్ క్లీన్ చేయడం:**
+     - `.katex-error` కి `color: inherit` అప్లై చేసి రెడ్ కలర్ వార్నింగ్‌లు కనిపించకుండా క్లీన్‌గా సరిదిద్దాం.
+  3. **`MCQPaperGeneratorPage.tsx` లో `formatMCQText` ను నాన్-డిస్ట్రక్టివ్‌గా మార్చడం:**
+     - ఆప్షన్లకు ముందున్న అక్షరాన్ని (`charBefore`) భద్రపరిచి, ముగింపు డాలర్ గుర్తులు కట్ కాకుండా కాపాడాం.
+     - ఆప్షన్లలో ఉన్న అన్‌క్లోజ్డ్ డాలర్లను ఆటోమేటిక్‌గా హీల్ చేసేలా లాజిక్ జోడించాం.
+  4. **`loadPaper` నుండి ఆటోమేటిక్ మ్యుటేషన్ తొలగింపు:**
+     - డేటాబేస్ నుండి పేపర్ లోడ్ అయినప్పుడు ఒరిజినల్ టెక్స్ట్ ఏ మార్పు లేకుండా నేరుగా లోడ్ అయ్యేలా చేసాం.
+  5. **మిషన్ క్రిటికల్ `printPaper` & KaTeX ప్రింట్ ప్రొటెక్షన్:** 100% పక్కాగా భద్రపరిచాము.
+
 
 ## చివరి సంభాషణ - 10th క్లాస్ విద్యార్థుల ఫోటోల కొలతలు (Width >= 90px, Height >= 120px) వెరిఫికేషన్ & రీసైజింగ్ (November 19, 2026)
 - **యూజర్ అభ్యర్థన:**
