@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import type { FloatingImage } from '../../components/QuestionBank/LiveLatexPreview';
 import { api } from '../../api/axios';
-import html2canvas from 'html2canvas';
 import { toJpeg, toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import { triggerDownloadNotification } from '../../utils/downloadNotification';
@@ -666,13 +665,6 @@ export const MCQPaperGeneratorPage = () => {
         } catch { }
       }
 
-      // Ensure all rendered web fonts and KaTeX math fonts are ready
-      if (document.fonts) {
-        try {
-          await document.fonts.ready;
-        } catch { }
-      }
-
       // Small pause to let DOM compute unscaled dimensions
       await new Promise(r => setTimeout(r, 100));
 
@@ -683,62 +675,50 @@ export const MCQPaperGeneratorPage = () => {
       blockEls.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
 
       // 2. Capture LIVE DOM into high-resolution Canvas using toJpeg with skipFonts: true (ultra-fast, no font network refetch)
-      // 2. Capture LIVE DOM into high-resolution Canvas using html2canvas (ultra-fast, ~1s, 0 network font stalls)
       let canvas: HTMLCanvasElement;
       try {
         const imgData = await toJpeg(paperEl, {
           pixelRatio: 2,
-          canvas = await html2canvas(paperEl, {
-            scale: 2,
-            useCORS: true,
-            logging: false,
-            quality: 0.95,
-            backgroundColor: '#ffffff',
-            skipFonts: true,
-            scrollX: 0,
-            scrollY: 0,
-          });
-          const img = new Image();
-          await new Promise<void>((resolve, reject) => {
-            img.onload = () => resolve();
-            img.onerror = () => reject(new Error('Failed to load rendered preview image'));
-            img.src = imgData;
-          });
-          canvas = document.createElement('canvas');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          const ctx = canvas.getContext('2d');
-          if(!ctx) throw new Error('Failed to get canvas 2D context');
-          ctx.drawImage(img, 0, 0);
-        } catch (err1) {
-          console.warn('toJpeg with skipFonts failed, trying toPng fallback', err1);
-          const imgData = await toPng(paperEl, {
-          } catch (canvasErr) {
-            console.warn('html2canvas failed, attempting fast fallback', canvasErr);
-            canvas = await toCanvas(paperEl, {
-              pixelRatio: 2,
-              backgroundColor: '#ffffff',
-              skipFonts: true,
-              cacheBust: false,
-              fontEmbedCSS: '',
-            });
-            const img = new Image();
-            await new Promise<void>((resolve, reject) => {
-              img.onload = () => resolve();
-              img.onerror = () => reject(new Error('Failed to load fallback image'));
-              img.src = imgData;
-            });
-            canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            if (!ctx) throw new Error('Failed to get canvas 2D context');
-            ctx.drawImage(img, 0, 0);
-          }
+          quality: 0.95,
+          backgroundColor: '#ffffff',
+          skipFonts: true,
+        });
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Failed to load rendered preview image'));
+          img.src = imgData;
+        });
+        canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Failed to get canvas 2D context');
+        ctx.drawImage(img, 0, 0);
+      } catch (err1) {
+        console.warn('toJpeg with skipFonts failed, trying toPng fallback', err1);
+        const imgData = await toPng(paperEl, {
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          skipFonts: true,
+        });
+        const img = new Image();
+        await new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
+          img.onerror = () => reject(new Error('Failed to load fallback image'));
+          img.src = imgData;
+        });
+        canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Failed to get canvas 2D context');
+        ctx.drawImage(img, 0, 0);
+      }
 
-          if (!canvas || canvas.width === 0 || canvas.height === 0) {
-            throw new Error('Failed to capture preview canvas.');
-          }
+      if (!canvas || canvas.width === 0 || canvas.height === 0) {
+        throw new Error('Failed to capture preview canvas.');
+      }
 
           const activePaperRect = paperEl.getBoundingClientRect();
           const scaleRatioY = canvas.height / activePaperRect.height;
@@ -1438,8 +1418,8 @@ export const MCQPaperGeneratorPage = () => {
                       onClick={() => setIsImageSizeModalOpen(true)}
                       className={`px - 3.5 py - 1.5 text - xs font - bold rounded - xl transition - all flex items - center gap - 1.5 border shadow - xs cursor - pointer hover: shadow - sm ${
     (activeImages.length > 0 || floatingImagesList.length > 0)
-    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-indigo-500/20'
-    : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
+      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-transparent hover:shadow-indigo-500/20'
+      : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
   } `}
                       title="Change Image Sizes, Alignments & Question Positions"
                     >
@@ -1512,10 +1492,10 @@ export const MCQPaperGeneratorPage = () => {
                         onClick={() => setActiveSubjectTab(subj)}
                         className={`px - 3 py - 1.5 md: px - 4 md: py - 2 rounded - xl font - bold text - xs md: text - sm transition - all whitespace - nowrap flex - shrink - 0 flex items - center gap - 1.5 border cursor - pointer ${
     activeSubjectTab === subj
-    ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 scale-102'
-    : hasContent
-      ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-xs'
-      : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
+      ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20 scale-102'
+      : hasContent
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/80 shadow-xs'
+        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200'
   } `}
                       >
                         {subj}
@@ -1623,8 +1603,8 @@ export const MCQPaperGeneratorPage = () => {
                     onClick={() => setZoomLevel(1.0)}
                     className={`px - 2.5 py - 1 text - [11px] font - bold rounded - lg transition - all cursor - pointer hidden sm:block ${
     Math.round(zoomLevel * 100) === 100
-    ? 'bg-blue-600 text-white shadow-xs'
-    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+      ? 'bg-blue-600 text-white shadow-xs'
+      : 'text-slate-600 hover:bg-white hover:text-slate-900'
   } `}
                     title="Actual 100% A4 Print Size"
                   >
@@ -1636,8 +1616,8 @@ export const MCQPaperGeneratorPage = () => {
                     onClick={() => setZoomLevel(window.innerWidth <= 768 ? 0.52 : 0.85)}
                     className={`px - 2.5 py - 1 text - [11px] font - bold rounded - lg transition - all cursor - pointer hidden sm:block ${
     (window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
-    ? 'bg-blue-600 text-white shadow-xs'
-    : 'text-slate-600 hover:bg-white hover:text-slate-900'
+      ? 'bg-blue-600 text-white shadow-xs'
+      : 'text-slate-600 hover:bg-white hover:text-slate-900'
   } `}
                     title="Fit to Screen Width"
                   >
