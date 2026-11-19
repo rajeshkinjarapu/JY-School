@@ -59,6 +59,7 @@ const AppInstallsPage = lazy(routeImports['/app-installs']);
 const AddressCollectionAdminPage = lazy(routeImports['/address-collection/admin']);
 const AddressCollectionTeacherPage = lazy(routeImports['/address-collection/teacher']);
 const StudentListPage = lazy(routeImports['/students']);
+const StudentBirthdayPage = lazy(routeImports['/students/birthdays']);
 const StudentReportPrintPage = lazy(() => import('../pages/students/StudentReportPrintPage'));
 const StudentPromotionPage = lazy(routeImports['/students/promotion']);
 const StudentFormPage = lazy(() => import('../pages/students/StudentFormPage'));
@@ -255,6 +256,18 @@ export const router = createBrowserRouter([
             <StudentListPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'students/birthdays',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <StudentBirthdayPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'birthdays',
+        element: <Navigate to="/students/birthdays" replace />,
       },
       {
         path: 'students/custom-report',

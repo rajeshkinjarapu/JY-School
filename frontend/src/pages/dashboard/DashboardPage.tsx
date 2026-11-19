@@ -725,12 +725,20 @@ const AdminView: React.FC<{ data: any; user?: any; onRefresh?: () => void }> = (
               <Cake className="w-4 h-4 text-pink-600" />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight flex items-center gap-2">
-                <span>Student Birthdays</span>
-                {(data.todayBirthdays || []).length > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
-                )}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 leading-tight flex items-center gap-2">
+                  <span>Student Birthdays</span>
+                  {(data.todayBirthdays || []).length > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-pink-500 animate-ping" />
+                  )}
+                </h3>
+                <Link
+                  to="/students/birthdays"
+                  className="px-2 py-0.5 rounded-full bg-pink-50 hover:bg-pink-100 text-[10px] font-black text-pink-700 border border-pink-200 transition-all flex items-center gap-1"
+                >
+                  <span>Open Hub →</span>
+                </Link>
+              </div>
               <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">
                 Celebrate students, preview upcoming birthdays & send WhatsApp blessings
               </p>

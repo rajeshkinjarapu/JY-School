@@ -44,6 +44,7 @@ export const DashboardLayout: React.FC = () => {
     
     // Exact Matches First
     if (pathname === '/dashboard') return 'Dashboard';
+    if (pathname === '/students/birthdays' || pathname === '/birthdays') return 'Student Birthdays';
     if (pathname === '/students') return 'Student Directory';
     if (pathname === '/students/new') return 'Add New Student';
     if (pathname.match(/^\/students\/[^\/]+$/)) return 'Student Profile';

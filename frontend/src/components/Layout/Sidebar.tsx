@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, ChevronRight, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus
+  Shield, FileText, UserCheck, X, ChevronDown, ChevronRight, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus, Cake
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -24,6 +24,8 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   Admissions:    { text: '#38bdf8', bg: 'rgba(56,189,248,0.18)',  glow: '0 0 12px rgba(56,189,248,.5)'  },
   Forms:         { text: '#93c5fd', bg: 'rgba(59,130,246,0.18)',  glow: '0 0 12px rgba(59,130,246,.5)'  },
   Students:      { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
+  Birthdays:     { text: '#f472b6', bg: 'rgba(244,114,182,0.18)', glow: '0 0 12px rgba(244,114,182,.5)' },
+  'Student Birthdays': { text: '#f472b6', bg: 'rgba(244,114,182,0.18)', glow: '0 0 12px rgba(244,114,182,.5)' },
   Promotion:     { text: '#f43f5e', bg: 'rgba(244,63,94,0.18)',   glow: '0 0 12px rgba(244,63,94,.5)'   },
   Teachers:      { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)',  glow: '0 0 12px rgba(16,185,129,.5)'  },
   Classes:       { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
@@ -96,6 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'SUPER_ADMIN' || role === 'ADMIN') return [...base,
       { to: '/students',      label: 'Students',      icon: Users         },
+      { to: '/students/birthdays', label: 'Birthdays', icon: Cake         },
       { to: '/students/promotion', label: 'Promotion', icon: GraduationCap },
       { to: '/admissions',    label: 'Admissions',    icon: UserPlus      },
       { to: '/teachers',      label: 'Teachers',      icon: GraduationCap },
@@ -131,6 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     if (role === 'TEACHER') return [...base, 
       { to: '/admissions/register', label: 'Admissions', icon: UserPlus },
       { to: '/students',          label: 'Total Students', icon: Users         },
+      { to: '/students/birthdays', label: 'Birthdays', icon: Cake              },
       { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
       { to: '/address-collection/teacher', label: 'Address Data', icon: Users },
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },

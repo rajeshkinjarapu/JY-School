@@ -1238,3 +1238,138 @@ export const getStudentsCredentialsForExport = async (req: AuthRequest, res: Res
     next(error);
   }
 };
+
+export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { classId, search } = req.query;
+
+    const where: any = {
+      dob: { not: null },
+      user: { isActive: true },
+    };
+    if (classId) where.classId = String(classId);
+
+    const students = await prisma.student.findMany({
+      where,
+      include: {
+        user: { select: { id: true, name: true, phone: true, photoUrl: true } },
+        class: { select: { id: true, name: true, section: true } },
+      },
+    });
+
+    // Indian Standard Time (Asia/Kolkata, UTC+05:30) date evaluation
+    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const currentMonthIST = istNow.getMonth(); // 0-indexed (0 = Jan)
+    const currentDayIST = istNow.getDate();
+    const currentYear = istNow.getFullYear();
+
+    const todayBirthdays: any[] = [];
+    const upcomingBirthdays: any[] = [];
+    const thisMonthBirthdays: any[] = [];
+    const allBirthdays: any[] = [];
+
+    let tomorrowCount = 0;
+    let upcomingWeekCount = 0;
+
+    students.forEach((s: any) => {
+      if (!s.dob) return;
+      const bDate = new Date(s.dob);
+      if (isNaN(bDate.getTime())) return;
+
+      const bDateIST = new Date(bDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+      const bMonthIST = bDateIST.getMonth();
+      const bDayIST = bDateIST.getDate();
+      const bYear = bDate.getFullYear();
+
+      const bMonthUTC = bDate.getUTCMonth();
+      const bDayUTC = bDate.getUTCDate();
+
+      // Age turning calculation
+      const ageTurning = currentYear - bYear;
+
+      let avatarUrl = s.user?.photoUrl;
+      if (avatarUrl && avatarUrl.startsWith('data:image')) {
+        avatarUrl = `/api/users/${s.id}/photo`;
+      }
+
+      const item = {
+        id: s.id,
+        rollNo: s.rollNo,
+        name: s.user?.name || 'Student',
+        phone: s.user?.phone || s.fatherPhone || s.motherPhone || null,
+        fatherName: s.fatherName || null,
+        motherName: s.motherName || null,
+        fatherPhone: s.fatherPhone || null,
+        motherPhone: s.motherPhone || null,
+        photoUrl: avatarUrl,
+        gender: s.gender || 'N/A',
+        bloodGroup: s.bloodGroup || null,
+        dob: s.dob,
+        birthMonth: bMonthIST + 1,
+        birthDay: bDayIST,
+        birthYear: bYear,
+        ageTurning: ageTurning > 0 ? ageTurning : 0,
+        classId: s.classId,
+        className: s.class ? `${s.class.name}${s.class.section ? ' - ' + s.class.section : ''}` : 'N/A',
+      };
+
+      if (search) {
+        const sLower = String(search).toLowerCase();
+        const nameMatch = item.name.toLowerCase().includes(sLower);
+        const rollMatch = item.rollNo.toLowerCase().includes(sLower);
+        if (!nameMatch && !rollMatch) return;
+      }
+
+      allBirthdays.push(item);
+
+      // Match today's birthday in IST or UTC
+      const isToday =
+        (bMonthIST === currentMonthIST && bDayIST === currentDayIST) ||
+        (bMonthUTC === currentMonthIST && bDayUTC === currentDayIST);
+
+      if (isToday) {
+        todayBirthdays.push(item);
+      } else {
+        const thisYearBirthday = new Date(currentYear, bMonthIST, bDayIST);
+        let diffMs = thisYearBirthday.getTime() - istNow.getTime();
+        if (diffMs < 0) {
+          const nextYearBirthday = new Date(currentYear + 1, bMonthIST, bDayIST);
+          diffMs = nextYearBirthday.getTime() - istNow.getTime();
+        }
+        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        if (daysLeft === 1) tomorrowCount++;
+        if (daysLeft > 0 && daysLeft <= 7) upcomingWeekCount++;
+
+        if (daysLeft > 0 && daysLeft <= 30) {
+          upcomingBirthdays.push({ ...item, daysLeft });
+        }
+
+        if (bMonthIST === currentMonthIST) {
+          thisMonthBirthdays.push({ ...item, day: bDayIST });
+        }
+      }
+    });
+
+    upcomingBirthdays.sort((a, b) => a.daysLeft - b.daysLeft);
+    thisMonthBirthdays.sort((a, b) => a.day - b.day);
+    allBirthdays.sort((a, b) => a.birthMonth - b.birthMonth || a.birthDay - b.birthDay);
+
+    successResponse(res, {
+      stats: {
+        todayCount: todayBirthdays.length,
+        tomorrowCount,
+        upcomingWeekCount,
+        monthCount: thisMonthBirthdays.length + todayBirthdays.length,
+        totalRegistered: students.length,
+      },
+      today: todayBirthdays,
+      upcoming: upcomingBirthdays,
+      thisMonth: thisMonthBirthdays,
+      all: allBirthdays,
+    }, 'Birthdays fetched successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
