@@ -161,7 +161,7 @@ export const MCQPaperGeneratorPage = () => {
     if (bankFilters.subjectId) params.append('subjectId', bankFilters.subjectId);
     if (bankFilters.difficulty) params.append('difficulty', bankFilters.difficulty);
 
-    api.get(`/ api / master - questions ? ${ params.toString() } `)
+    api.get(`/api/master-questions?${params.toString()}`)
       .then(res => setBankQuestions(res.data?.data || []))
       .catch(console.error)
       .finally(() => setBankLoading(false));
@@ -242,10 +242,29 @@ export const MCQPaperGeneratorPage = () => {
   const [deepseekApiKey, setDeepseekApiKey] = useState<string>(() => localStorage.getItem('jy_deepseek_api_key') || '');
 
   // Editor State
-  const [subjectContents, setSubjectContents] = useState<Record<string, string>>({
-    'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+  const [subjectContents, setSubjectContents] = useState<Record<string, string>>(() => {
+    try {
+      const stored = localStorage.getItem('mcq_exam_subjects');
+      const parsed = stored ? JSON.parse(stored) : [];
+      const firstSubj = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : 'Maths';
+      return {
+        [firstSubj]: '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+      };
+    } catch {
+      return {
+        'Maths': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+      };
+    }
   });
-  const [activeSubjectTab, setActiveSubjectTab] = useState<string>('Telugu');
+  const [activeSubjectTab, setActiveSubjectTab] = useState<string>(() => {
+    try {
+      const stored = localStorage.getItem('mcq_exam_subjects');
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : 'Maths';
+    } catch {
+      return 'Maths';
+    }
+  });
   const [isGenerating, setIsGenerating] = useState(false);
   const [mobileTab, setMobileTab] = useState<'editor' | 'preview'>('editor');
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -1085,12 +1104,15 @@ export const MCQPaperGeneratorPage = () => {
         if (!paperId) {
           setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
           setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
+          let currentSubjs: string[] = [];
           try {
             const stored = localStorage.getItem('mcq_exam_subjects');
-            setSelectedSubjects(stored ? JSON.parse(stored) : []);
+            currentSubjs = stored ? JSON.parse(stored) : [];
           } catch {
-            setSelectedSubjects([]);
+            currentSubjs = [];
           }
+          setSelectedSubjects(currentSubjs);
+          const firstSubj = currentSubjs.length > 0 ? currentSubjs[0] : 'Maths';
           setExamDate(localStorage.getItem('mcq_exam_date') || '');
           setTime(localStorage.getItem('mcq_exam_marks') || '75');
           setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
@@ -1098,10 +1120,10 @@ export const MCQPaperGeneratorPage = () => {
           setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
           setShowPaperHeader(localStorage.getItem('mcq_exam_show_header') !== 'false');
           setSubjectContents({
-            'Telugu': '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+            [firstSubj]: '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
           });
           setAnswerKeys({});
-          setActiveSubjectTab('Telugu');
+          setActiveSubjectTab(firstSubj);
           setInlineImages({});
           return;
         }
@@ -1112,13 +1134,45 @@ export const MCQPaperGeneratorPage = () => {
             const p = res.data;
             setExamName(p.examName || '');
             setExamClass(p.examClass ?? '');
+            let loadedSubjects: string[] = [];
             if (p.examSubject) {
-              setSelectedSubjects(p.examSubject.split(', '));
+              loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
+              setSelectedSubjects(loadedSubjects);
             }
             setExamDate(p.examDate || '');
             setTime(p.time || '');
             setInstructions(p.instructions || '');
             const { textData, images, keys, settings } = deserializeContent(p.content || '');
+
+            // Ensure content belongs to selected subjects, not ghost/unselected subjects
+            if (loadedSubjects.length > 0) {
+              const firstSubj = loadedSubjects[0];
+              const unselected = Object.keys(textData).filter(k => !loadedSubjects.includes(k));
+              // If the first selected subject is empty, move text from any unselected key to it
+              if (!textData[firstSubj] || textData[firstSubj].trim() === '') {
+                for (const oldKey of unselected) {
+                  if (textData[oldKey] && textData[oldKey].trim() !== '') {
+                    textData[firstSubj] = textData[oldKey];
+                    delete textData[oldKey];
+                    break;
+                  }
+                }
+              }
+              // Delete remaining unselected keys so ghost headers never appear
+              unselected.forEach(k => {
+                if (!loadedSubjects.includes(k)) {
+                  delete textData[k];
+                }
+              });
+              // Ensure all loaded subjects have an entry
+              loadedSubjects.forEach(s => {
+                if (textData[s] === undefined) textData[s] = '';
+              });
+              setActiveSubjectTab(firstSubj);
+            } else if (Object.keys(textData).length > 0) {
+              setActiveSubjectTab(Object.keys(textData)[0]);
+            }
+
             setSubjectContents(textData);
             setAnswerKeys(keys);
 
@@ -1132,16 +1186,6 @@ export const MCQPaperGeneratorPage = () => {
               setShowPaperHeader(true);
             }
 
-            if (p.examSubject) {
-              const loadedSubjects = p.examSubject.split(', ');
-              if (loadedSubjects.length > 0 && loadedSubjects[0] !== '') {
-                setActiveSubjectTab(loadedSubjects[0]);
-              } else if (Object.keys(textData).length > 0) {
-                setActiveSubjectTab(Object.keys(textData)[0]);
-              }
-            } else if (Object.keys(textData).length > 0) {
-              setActiveSubjectTab(Object.keys(textData)[0]);
-            }
             setInlineImages(images);
             toast.success('Paper loaded!', { id: 'load' });
           } catch {
@@ -1150,6 +1194,43 @@ export const MCQPaperGeneratorPage = () => {
         };
         loadPaper();
       }, [paperId]);
+
+      // Automatically reconcile subjectContents and activeSubjectTab with selectedSubjects
+      useEffect(() => {
+        if (selectedSubjects.length > 0) {
+          if (!selectedSubjects.includes(activeSubjectTab)) {
+            setActiveSubjectTab(selectedSubjects[0]);
+          }
+          setSubjectContents(prev => {
+            const keys = Object.keys(prev);
+            const hasGhost = keys.some(k => !selectedSubjects.includes(k));
+            const hasMissing = selectedSubjects.some(s => prev[s] === undefined);
+            if (!hasGhost && !hasMissing) return prev;
+
+            const updated = { ...prev };
+            const firstSubj = selectedSubjects[0];
+            const unselected = keys.filter(k => !selectedSubjects.includes(k));
+            if (!updated[firstSubj] || updated[firstSubj].trim() === '') {
+              for (const oldKey of unselected) {
+                if (updated[oldKey] && updated[oldKey].trim() !== '') {
+                  updated[firstSubj] = updated[oldKey];
+                  delete updated[oldKey];
+                  break;
+                }
+              }
+            }
+            unselected.forEach(k => {
+              if (!selectedSubjects.includes(k)) {
+                delete updated[k];
+              }
+            });
+            selectedSubjects.forEach(s => {
+              if (updated[s] === undefined) updated[s] = '';
+            });
+            return updated;
+          });
+        }
+      }, [selectedSubjects]);
 
       // Auto-scroll Live Preview to active subject when tab changes
       useEffect(() => {
@@ -1628,7 +1709,7 @@ export const MCQPaperGeneratorPage = () => {
                     examDate={examDate}
                     examSubject={examClass}
                     selectedSubjects={
-                      selectedSubjects.length > 0 && selectedSubjects.some(s => subjectContents[s]?.trim())
+                      selectedSubjects.length > 0
                         ? selectedSubjects
                         : Object.keys(subjectContents).length > 0
                           ? Object.keys(subjectContents)
@@ -2424,6 +2505,36 @@ export const MCQPaperGeneratorPage = () => {
                       localStorage.setItem('mcq_exam_instructions', instructions);
                       localStorage.setItem('mcq_exam_font_size', fontSize);
                       localStorage.setItem('mcq_exam_spacing', questionSpacing);
+
+                      if (selectedSubjects.length > 0) {
+                        const firstSubj = selectedSubjects[0];
+                        if (!selectedSubjects.includes(activeSubjectTab)) {
+                          setActiveSubjectTab(firstSubj);
+                        }
+                        setSubjectContents(prev => {
+                          const updated = { ...prev };
+                          const unselected = Object.keys(updated).filter(k => !selectedSubjects.includes(k));
+                          if (!updated[firstSubj] || updated[firstSubj].trim() === '') {
+                            for (const oldKey of unselected) {
+                              if (updated[oldKey] && updated[oldKey].trim() !== '') {
+                                updated[firstSubj] = updated[oldKey];
+                                delete updated[oldKey];
+                                break;
+                              }
+                            }
+                          }
+                          unselected.forEach(k => {
+                            if (!selectedSubjects.includes(k)) {
+                              delete updated[k];
+                            }
+                          });
+                          selectedSubjects.forEach(s => {
+                            if (updated[s] === undefined) updated[s] = '';
+                          });
+                          return updated;
+                        });
+                      }
+
                       setIsSettingsOpen(false);
                       toast.success('Settings saved!');
                     }}

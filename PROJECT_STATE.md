@@ -1,5 +1,26 @@
 # JY School Project State
 
+## VPS Hosting & PM2 Process Names Reference:
+- **Backend (Node.js API):** Runs on VPS at `http://66.116.252.191:19998` under PM2 name `backend` (ID: 0).
+  - Command: `pm2 restart backend`
+- **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
+  - Command: `pm2 restart frontend`
+
+## చివరి సంభాషణ - MCQ Paper Generator Ghost "TELUGU" హెడ్డింగ్ సమస్య పరిష్కారం (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `3 subjects matrame select chesanu but telugu enduku chupistundi okasari check chyu`
+  - యూజర్ పేపర్ సెట్టింగ్స్‌లో కేవలం `Maths`, `Physics`, `Chemistry` మాత్రమే ఎంచుకున్నప్పటికీ, ప్రివ్యూలో 'TELUGU' అనే హెడ్డింగ్ డిస్‌ప్లే అవుతోంది.
+- **మూల కారణం (Root Cause):**
+  1. `MCQPaperGeneratorPage.tsx` లో `useState` మరియు `!paperId` రీసెట్ లాజిక్‌లో `subjectContents` డిఫాల్ట్‌గా `{ 'Telugu': '...' }` గా హార్డ్‌కోడ్ చేయబడి ఉండటం.
+  2. డేటాబేస్ నుండి లోడ్ అయిన పేపర్‌లలో పాత కంటెంట్ `'Telugu'` కీ కింద ఉండటం, యూజర్ సెట్టింగ్స్‌లో `Maths, Physics, Chemistry` సెలెక్ట్ చేసినప్పటికీ `subjectContents['Maths']` లో కంటెంట్ లేకపోవడం.
+  3. `LiveLatexPreview` కాల్‌లో `selectedSubjects.some(s => subjectContents[s]?.trim())` చెక్ ఫెయిల్ అయినప్పుడు, అది ఫాల్‌బ్యాక్ అయి `Object.keys(subjectContents)` (అందులో `Telugu` ఉంది) ను ప్రివ్యూకి పంపించడం.
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  1. `LiveLatexPreview` ఇన్వొకేషన్‌లో `selectedSubjects={selectedSubjects.length > 0 ? selectedSubjects : Object.keys(subjectContents).length > 0 ? Object.keys(subjectContents) : ['General']}` గా మార్చాము. దీనివల్ల యూజర్ ఎంచుకున్న సబ్జెక్టులు మాత్రమే ప్రివ్యూకు వెళ్తాయి; అన్‌సెలెక్టెడ్ ఘోస్ట్ సబ్జెక్టులు ఎప్పటికీ ప్రివ్యూలో రావు.
+  2. `loadPaper` మరియు "Save Settings" లాజిక్‌లలో, ఎంచుకున్న సబ్జెక్టులకు సంబంధం లేని పాత ఘోస్ట్ సబ్జెక్టుల నుండి కంటెంట్‌ను మొదటి సెలెక్టెడ్ సబ్జెక్ట్‌కు (`Maths`) మైగ్రేట్ చేసి, పాత ఘోస్ట్ కీలను తొలగించాము.
+  3. `selectedSubjects` లో మార్పు వచ్చిన ప్రతిసారీ `subjectContents` మరియు `activeSubjectTab` లను సింక్ చేసే ఆటోమేటిక్ రికన్సిలియేషన్ `useEffect` ను జోడించాము.
+  4. మాస్టర్ బ్యాంక్ API కాల్‌లో స్పేస్‌లు లేకుండా `/api/master-questions` గా సరిదిద్దాము.
+  5. మిషన్ క్రిటికల్ `printPaper`, KaTeX ఫార్మాటింగ్, మరియు A4 ప్రింట్ స్టైల్స్‌ను 100% భద్రపరిచాము.
+
 ## చివరి సంభాషణ - బర్త్‌డే పోస్టర్ల మాన్యువల్ అప్‌లోడ్ & మొబైల్ యాప్ ఆటో-పాప్-అప్ (November 19, 2026)
 - **టైప్‌స్క్రిప్ట్ కంపైలేషన్ ఫిక్స్ ([`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts)):**
   - `createError(404, 'Student not found')` -> `createError('Student not found', 404)` మరియు `createError(400, '...')` -> `createError('...', 400)` గా సరిదిద్దాము (`createError(message: string, statusCode: number)` సిగ్నేచర్ ప్రకారం).
