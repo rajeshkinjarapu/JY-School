@@ -1,6 +1,8 @@
 # JY School Project State
 
 ## చివరి సంభాషణ - బర్త్‌డే పోస్టర్ల మాన్యువల్ అప్‌లోడ్ & మొబైల్ యాప్ ఆటో-పాప్-అప్ (November 19, 2026)
+- **టైప్‌స్క్రిప్ట్ కంపైలేషన్ ఫిక్స్ ([`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts)):**
+  - `createError(404, 'Student not found')` -> `createError('Student not found', 404)` మరియు `createError(400, '...')` -> `createError('...', 400)` గా సరిదిద్దాము (`createError(message: string, statusCode: number)` సిగ్నేచర్ ప్రకారం).
 - **యూజర్ అభ్యర్థనలు:**
   1. `poster ai dwara generate chese option remove cheyu` (AI పోస్టర్ జనరేషన్ మరియు AI సెట్టింగ్స్ పూర్తిగా తొలగించడం).
   2. `nenu bayata poster generate chesi istanu danni upload chese option ivvu ye student ki aa stuent upload cheste` (బయట Canva/Photoshop లో చేసిన పోస్టర్‌ను ప్రతి స్టూడెంట్‌కు నేరుగా అప్‌లోడ్ చేసే సదుపాయం).

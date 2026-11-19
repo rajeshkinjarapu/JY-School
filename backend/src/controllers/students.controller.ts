@@ -1409,7 +1409,7 @@ export const uploadBirthdayPoster = async (req: AuthRequest, res: Response, next
     });
 
     if (!student) {
-      return next(createError(404, 'Student not found'));
+      return next(createError('Student not found', 404));
     }
 
     let posterUrl = '';
@@ -1427,7 +1427,7 @@ export const uploadBirthdayPoster = async (req: AuthRequest, res: Response, next
     } else if (req.body.posterUrl) {
       posterUrl = req.body.posterUrl;
     } else {
-      return next(createError(400, 'No poster file or base64 image provided'));
+      return next(createError('No poster file or base64 image provided', 400));
     }
 
     // Save in file map
