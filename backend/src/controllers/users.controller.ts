@@ -128,16 +128,30 @@ export const getById = async (req: AuthRequest, res: Response, next: NextFunctio
 export const getUserPhoto = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   try {
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { id },
       select: { photoUrl: true }
     });
+
+    // Fallback: If not found by User ID, check if id is a Student ID
+    if (!user || !user.photoUrl) {
+      const student = await prisma.student.findUnique({
+        where: { id },
+        select: { user: { select: { photoUrl: true } } }
+      });
+      if (student?.user?.photoUrl) {
+        user = { photoUrl: student.user.photoUrl };
+      }
+    }
 
     if (!user || !user.photoUrl) {
       return next(createError('Photo not found', 404));
     }
 
     const photoUrl = user.photoUrl;
+
+    // Enable CORS for poster generation & multi-port access
+    res.set('Access-Control-Allow-Origin', '*');
 
     if (photoUrl.startsWith('data:image')) {
       const matches = photoUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);

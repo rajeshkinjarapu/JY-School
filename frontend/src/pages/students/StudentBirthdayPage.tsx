@@ -14,6 +14,7 @@ import {
   Camera, Sliders, Image as ImageIcon, Check, Key, ShieldCheck
 } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface StudentBirthday {
   id: string;
@@ -42,6 +43,69 @@ const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
 ];
+
+// Modern Student Birthday Avatar Component with Resilient Image & Initials Fallback
+const StudentBirthdayAvatar: React.FC<{
+  photoUrl?: string | null;
+  name: string;
+  sizeClass?: string;
+  badge?: string;
+  textSize?: string;
+}> = ({
+  photoUrl,
+  name,
+  sizeClass = "w-13 h-13 rounded-2xl",
+  badge,
+  textSize = "text-sm",
+}) => {
+  const [hasError, setHasError] = useState(false);
+  const resolvedUrl = useMemo(() => getPhotoUrl(photoUrl), [photoUrl]);
+
+  const initial = useMemo(() => {
+    return (name || 'S').trim().charAt(0).toUpperCase();
+  }, [name]);
+
+  const gradientClass = useMemo(() => {
+    const gradients = [
+      'from-pink-500 to-rose-600',
+      'from-indigo-500 to-purple-600',
+      'from-blue-500 to-cyan-600',
+      'from-emerald-500 to-teal-600',
+      'from-amber-500 to-orange-600',
+      'from-violet-500 to-fuchsia-600',
+    ];
+    let hash = 0;
+    for (let i = 0; i < (name || '').length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return gradients[Math.abs(hash) % gradients.length];
+  }, [name]);
+
+  const canShowImage = Boolean(resolvedUrl && !hasError);
+
+  return (
+    <div className={`relative ${sizeClass} overflow-hidden bg-slate-100 border border-slate-200/90 shadow-2xs shrink-0 flex items-center justify-center`}>
+      {canShowImage ? (
+        <img
+          src={resolvedUrl}
+          alt={name}
+          onError={() => setHasError(true)}
+          className="w-full h-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div className={`w-full h-full bg-gradient-to-br ${gradientClass} flex items-center justify-center text-white font-black ${textSize}`}>
+          {initial}
+        </div>
+      )}
+      {badge && (
+        <div className="absolute bottom-0 inset-x-0 bg-pink-600/90 text-white text-[9px] font-black text-center py-0.2">
+          {badge}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const StudentBirthdayPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'today' | 'upcoming' | 'calendar' | 'directory'>('today');
@@ -689,18 +753,13 @@ export const StudentBirthdayPage: React.FC = () => {
 
                         {/* Student Details */}
                         <div className="flex items-center gap-4 mb-4">
-                          <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 border-2 border-pink-300 shadow-sm shrink-0 flex items-center justify-center">
-                            {student.photoUrl ? (
-                              <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-xl font-black text-pink-600">
-                                {student.name.charAt(0)}
-                              </span>
-                            )}
-                            <div className="absolute bottom-0 inset-x-0 bg-pink-600/90 text-white text-[9px] font-black text-center py-0.2">
-                              JY
-                            </div>
-                          </div>
+                          <StudentBirthdayAvatar
+                            photoUrl={student.photoUrl}
+                            name={student.name}
+                            sizeClass="w-16 h-16 rounded-2xl border-2 border-pink-300 shadow-sm"
+                            badge="JY"
+                            textSize="text-xl"
+                          />
 
                           <div className="min-w-0 flex-1">
                             <h4 className="text-base font-black text-slate-900 leading-tight truncate">
@@ -810,15 +869,12 @@ export const StudentBirthdayPage: React.FC = () => {
                         className="bg-white rounded-[24px] p-4.5 shadow-sm border border-slate-200/80 hover:shadow-md transition-all flex items-center justify-between gap-3 group"
                       >
                         <div className="flex items-center gap-3.5 min-w-0">
-                          <div className="w-13 h-13 rounded-2xl bg-indigo-50 border border-indigo-200 overflow-hidden flex items-center justify-center shrink-0">
-                            {student.photoUrl ? (
-                              <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-sm font-bold text-indigo-600">
-                                {student.name.charAt(0)}
-                              </span>
-                            )}
-                          </div>
+                          <StudentBirthdayAvatar
+                            photoUrl={student.photoUrl}
+                            name={student.name}
+                            sizeClass="w-13 h-13 rounded-2xl border border-indigo-200"
+                            textSize="text-sm"
+                          />
                           <div className="min-w-0">
                             <h4 className="text-sm font-black text-slate-900 truncate">{student.name}</h4>
                             <p className="text-xs text-slate-500 font-semibold">{student.className} • ID: {student.rollNo}</p>
@@ -1036,15 +1092,12 @@ export const StudentBirthdayPage: React.FC = () => {
                         <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
-                                {student.photoUrl ? (
-                                  <img src={student.photoUrl} alt={student.name} className="w-full h-full object-cover" />
-                                ) : (
-                                  <span className="text-xs font-bold text-indigo-600">
-                                    {student.name.charAt(0)}
-                                  </span>
-                                )}
-                              </div>
+                              <StudentBirthdayAvatar
+                                photoUrl={student.photoUrl}
+                                name={student.name}
+                                sizeClass="w-8 h-8 rounded-full border border-slate-200"
+                                textSize="text-xs"
+                              />
                               <span className="font-bold text-slate-900">{student.name}</span>
                             </div>
                           </td>
@@ -1169,8 +1222,12 @@ export const StudentBirthdayPage: React.FC = () => {
                   {/* Left: Student Studio Portrait with Uniform */}
                   <div className="relative w-38 h-48 rounded-2xl overflow-hidden shadow-xl border-3 border-white bg-slate-100 shrink-0">
                     <img
-                      src={aiPortraitUrl || selectedPosterStudent.photoUrl || '/logo.png'}
+                      src={aiPortraitUrl || getPhotoUrl(selectedPosterStudent.photoUrl) || '/logo.png'}
                       alt={selectedPosterStudent.name}
+                      crossOrigin="anonymous"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                      }}
                       className="w-full h-full object-cover object-top"
                     />
                     {aiPortraitUrl && (

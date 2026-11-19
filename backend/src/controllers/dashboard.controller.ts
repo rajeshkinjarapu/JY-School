@@ -85,12 +85,13 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         where: { dob: { not: null } },
         select: {
           id: true,
+          userId: true,
           rollNo: true,
           dob: true,
           gender: true,
           fatherPhone: true,
           motherPhone: true,
-          user: { select: { name: true, phone: true, photoUrl: true } },
+          user: { select: { id: true, name: true, phone: true, photoUrl: true } },
           class: { select: { name: true, section: true } }
         }
       })
@@ -190,9 +191,10 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       const bMonthUTC = bDate.getUTCMonth();
       const bDayUTC = bDate.getUTCDate();
 
+      const targetUserId = s.user?.id || s.userId || s.id;
       let avatarUrl = s.user?.photoUrl;
       if (avatarUrl && avatarUrl.startsWith('data:image')) {
-        avatarUrl = `/api/users/${s.id}/photo`;
+        avatarUrl = `/api/users/${targetUserId}/photo`;
       }
 
       const item = {

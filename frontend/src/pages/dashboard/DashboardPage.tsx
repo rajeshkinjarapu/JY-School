@@ -236,6 +236,7 @@ interface ActionCardData {
 const AdminView: React.FC<{ data: any; user?: any; onRefresh?: () => void }> = ({ data, user, onRefresh }) => {
   const [birthdayTab, setBirthdayTab] = useState<'today' | 'upcoming' | 'month'>('today');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [bdayImgErrors, setBdayImgErrors] = useState<Record<string, boolean>>({});
   const h = new Date().getHours();
   const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
   const todayFormatted = new Date().toLocaleDateString('en-IN', {
@@ -825,8 +826,14 @@ const AdminView: React.FC<{ data: any; user?: any; onRefresh?: () => void }> = (
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="relative shrink-0">
                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-white border border-pink-200 shadow-2xs flex items-center justify-center">
-                          {student.photoUrl ? (
-                            <img src={getPhotoUrl(student.photoUrl)} alt={student.name} className="w-full h-full object-cover" />
+                          {student.photoUrl && !bdayImgErrors[student.id] ? (
+                            <img
+                              src={getPhotoUrl(student.photoUrl)}
+                              alt={student.name}
+                              onError={() => setBdayImgErrors(prev => ({ ...prev, [student.id]: true }))}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center font-black text-pink-600 bg-pink-100 text-sm">
                               {student.name.charAt(0)}

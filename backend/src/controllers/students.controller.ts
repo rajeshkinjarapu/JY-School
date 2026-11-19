@@ -1287,9 +1287,10 @@ export const getBirthdays = async (req: AuthRequest, res: Response, next: NextFu
       // Age turning calculation
       const ageTurning = currentYear - bYear;
 
+      const targetUserId = s.user?.id || s.userId || s.id;
       let avatarUrl = s.user?.photoUrl;
       if (avatarUrl && avatarUrl.startsWith('data:image')) {
-        avatarUrl = `/api/users/${s.id}/photo`;
+        avatarUrl = `/api/users/${targetUserId}/photo`;
       }
 
       const item = {
