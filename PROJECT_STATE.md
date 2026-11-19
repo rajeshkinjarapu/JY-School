@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Failed to Load Paper (Backend Recovery) & Line 88 Cleanup (November 19, 2026)
+- **యూజర్ సమస్య & స్క్రీన్‌షాట్ (`media_1795059310708_72a90efa.jpg`):**
+  - స్క్రీన్‌పై "Failed to load paper." ఎర్రర్ రావడం, లైవ్ ప్రివ్యూ ఖాళీగా కనిపించడం.
+- **ఖచ్చితమైన సాంకేతిక కారణాలు:**
+  1. VPS సర్వర్ రీబూట్ అయినందున PM2 డీమన్ రీసెట్ అయ్యి `backend` (పోర్ట్ 19998/5000 API) ఆగిపోయింది. దీనివల్ల ఫ్రంటెండ్ డేటాబేస్ నుండి పేపర్ వివరాలను తెచ్చుకోలేకపోయింది.
+  2. గతంలో ఉన్న లైన్ 88 ఎర్రర్ తొలగించిన తర్వాత కొత్త కోడ్ ఇంకా సర్వర్‌కు వెళ్లలేదు.
+- **అమలు చేసిన పరిష్కారం:**
+  1. [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) లో లైన్ 88 డూప్లికేట్ కోడ్‌ను పూర్తిగా క్లీన్ చేసి సిద్ధం చేశాము.
+  2. సర్వర్‌లో బ్యాకెండ్ మరియు ఫ్రంటెండ్ రెండింటినీ పక్కాగా రన్ చేసి `pm2 save` చేసే పూర్తి సింగిల్-బ్లాక్ SSH కమాండ్లను సిద్ధం చేశాము.
+
 ## చివరి సంభాషణ - Vite Transform సింటాక్స్ ఎర్రర్ పరిష్కారం & క్లీన్ బిల్డ్ (Vite Transform Syntax Error Fix & Clean Build) (November 19, 2026)
 - **యూజర్ టెర్మినల్ ఎర్రర్:**
   - `[builtin:vite-transform] Expected '}' but found ':' in MCQPaperGeneratorPage.tsx:89:16`
