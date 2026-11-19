@@ -6,6 +6,22 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - MCQ పేపర్‌లో మ్యాథ్స్ & ఫిజిక్స్ ప్రశ్నలు మిక్స్ అయ్యే బగ్ ఫిక్స్ & రీస్టోరేషన్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `maths paper lo save chesina questions kanapatam ledu physics questions chupistundi ila ayite chala pedda problem avutundi`
+  - ఎడిటర్‌లో మ్యాథ్స్ ట్యాబ్‌లో గతంలో సేవ్ చేసిన 20 మ్యాథ్స్ ప్రశ్నలకు బదులుగా ఫిజిక్స్ ప్రశ్నలు (Q26-Q38) కనిపించడం మరియు ఫిజిక్స్, కెమిస్ట్రీ ట్యాబ్‌లు కనబడకపోవడం.
+- **మూల కారణం (Root Cause):**
+  1. `loadPaper` లో గతంలో జోడించిన `unselected = Object.keys(textData).filter(k => !loadedSubjects.includes(k))` లాజిక్: డేటాబేస్ `examSubject` లో కేవలం `"Maths"` మాత్రమే ఉండటం వల్ల, కంటెంట్‌లో ఉన్న `Physics` మరియు `Chemistry` లను అన్‌సెలెక్టెడ్ సబ్జెక్టులుగా గుర్తించి డిలీట్ చేసేసింది.
+  2. `!textData[firstSubj]` చెక్ జరిగినప్పుడు, పాత కోడ్ అన్‌సెలెక్టెడ్ లిస్ట్ నుండి `Physics` కంటెంట్‌ను `Maths` లోకి కాపీ చేసి, మిగిలిన సబ్జెక్టులను డిలీట్ చేసింది.
+- **పూర్తి చేసిన పనులు ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx), [`backend/scripts/restore_paper_maths.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/restore_paper_maths.js)):**
+  1. **`loadPaper` లో నాన్-డిస్ట్రక్టివ్ సబ్జెక్ట్ డిస్కవరీ:**
+     - ఎట్టి పరిస్థితుల్లోనూ ఏ సబ్జెక్ట్‌ను కూడా డిలీట్ చేయకుండా, కంటెంట్‌లో ఉన్న ప్రతి సబ్జెక్ట్‌ను ఆటోమేటిక్‌గా గుర్తించి ట్యాబ్‌లుగా చూపించేలా చేసాం.
+     - `"Mathematics"` మరియు `"Maths"` లను సింక్ చేసి ఏ రకంగా ఉన్నా కంటెంట్ మిస్ కాకుండా చేసాం.
+  2. **డేటాబేస్ రీస్టోరేషన్ స్క్రిప్ట్ (`backend/scripts/restore_paper_maths.js`):**
+     - పేపర్ `056bd2a7-89cf-40d4-bbe4-8282837148be` ను రీస్టోర్ చేస్తూ: మ్యాథ్స్‌లో కూర్చున్న ఫిజిక్స్ ప్రశ్నలను (Q26-Q38) `Physics` ట్యాబ్‌లోకి తరలించి, ఒరిజినల్ 20 మ్యాథ్స్ ప్రశ్నలను (Q1-Q20) పూర్తి KaTeX మ్యాథ్ కోడ్‌తో `Maths` ట్యాబ్‌లోకి రీస్టోర్ చేసే ఆటోమేటెడ్ స్క్రిప్ట్ సిద్ధం చేశాము.
+     - `examSubject` ను `"Maths, Physics, Chemistry"` గా అప్‌డేట్ చేసాము.
+
+
 ## చివరి సంభాషణ - MCQ Paper Generator LaTeX సమీకరణాలు & డాలర్ గుర్తు బ్యాలెన్సింగ్ ఫిక్స్ (November 19, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `latex preview lo equation tappulu chupistunnayi check cheyu preview mottam change ayyindi tappu chupistundi`

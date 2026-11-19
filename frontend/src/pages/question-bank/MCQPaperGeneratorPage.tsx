@@ -1203,42 +1203,36 @@ export const MCQPaperGeneratorPage = () => {
             let loadedSubjects: string[] = [];
             if (p.examSubject) {
               loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
-              setSelectedSubjects(loadedSubjects);
             }
             setExamDate(p.examDate || '');
             setTime(p.time || '');
             setInstructions(p.instructions || '');
             const { textData, images, keys, settings } = deserializeContent(p.content || '');
 
-            // Ensure content belongs to selected subjects, not ghost/unselected subjects
-            if (loadedSubjects.length > 0) {
-              const firstSubj = loadedSubjects[0];
-              const unselected = Object.keys(textData).filter(k => !loadedSubjects.includes(k));
-              // If the first selected subject is empty, move text from any unselected key to it
-              if (!textData[firstSubj] || textData[firstSubj].trim() === '') {
-                for (const oldKey of unselected) {
-                  if (textData[oldKey] && textData[oldKey].trim() !== '') {
-                    textData[firstSubj] = textData[oldKey];
-                    delete textData[oldKey];
-                    break;
-                  }
-                }
-              }
-              // Delete remaining unselected keys so ghost headers never appear
-              unselected.forEach(k => {
-                if (!loadedSubjects.includes(k)) {
-                  delete textData[k];
-                }
-              });
-              // Ensure all loaded subjects have an entry
-              loadedSubjects.forEach(s => {
-                if (textData[s] === undefined) textData[s] = '';
-              });
-              setActiveSubjectTab(firstSubj);
-            } else if (Object.keys(textData).length > 0) {
-              setActiveSubjectTab(Object.keys(textData)[0]);
+            // 1. Synonym matching: normalize "Mathematics" and "Maths" so they share the same content
+            if (textData['Mathematics'] && !textData['Maths']) {
+              textData['Maths'] = textData['Mathematics'];
+            } else if (textData['Maths'] && !textData['Mathematics']) {
+              textData['Mathematics'] = textData['Maths'];
             }
 
+            // 2. Discover ALL subjects: combine subjects from p.examSubject AND all non-empty subjects present in textData
+            const contentSubjects = Object.keys(textData).filter(s => s && textData[s]?.trim() !== '');
+
+            // Normalize 'Mathematics' to 'Maths' for tab display
+            const normalizedContentSubjects = contentSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+            const normalizedDbSubjects = loadedSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+
+            const allSubjects = Array.from(new Set([...normalizedDbSubjects, ...normalizedContentSubjects]));
+            const finalSubjects = allSubjects.length > 0 ? allSubjects : ['Maths'];
+
+            // 3. Ensure every subject in finalSubjects has an entry in textData
+            finalSubjects.forEach(s => {
+              if (textData[s] === undefined) textData[s] = '';
+            });
+
+            setSelectedSubjects(finalSubjects);
+            setActiveSubjectTab(finalSubjects[0]);
             setSubjectContents(textData);
             setAnswerKeys(keys);
 
