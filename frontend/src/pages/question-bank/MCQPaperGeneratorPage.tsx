@@ -1128,7 +1128,7 @@ export const MCQPaperGeneratorPage = () => {
         const loadPaper = async () => {
           try {
             toast.loading('Loading paper...', { id: 'load' });
-            const res = await api.get(`/ api / generated - papers / ${ paperId } `);
+            const res = await api.get(`/api/generated-papers/${paperId}`);
             const p = res.data;
             setExamName(p.examName || '');
             setExamClass(p.examClass ?? '');
@@ -1174,7 +1174,7 @@ export const MCQPaperGeneratorPage = () => {
       // Auto-scroll Live Preview to active subject when tab changes
       useEffect(() => {
         if (activeSubjectTab) {
-          const el = document.getElementById(`preview - subject - ${ activeSubjectTab } `);
+          const el = document.getElementById(`preview-subject-${activeSubjectTab}`);
           if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
@@ -1207,12 +1207,12 @@ export const MCQPaperGeneratorPage = () => {
           };
 
           if (paperId) {
-            await api.put(`/ api / generated - papers / ${ paperId } `, payload);
+            await api.put(`/api/generated-papers/${paperId}`, payload);
             toast.success('Paper updated successfully!', { id: 'save' });
           } else {
             const res = await api.post('/api/generated-papers', payload);
             toast.success('Paper saved! You can now find it in Saved Papers.', { id: 'save' });
-            navigate(`/ question - bank / mcq - generator ? id = ${ res.data.id } `, { replace: true });
+            navigate(`/question-bank/mcq-generator?id=${res.data.id}`, { replace: true });
           }
         } catch (err) {
           toast.error('Failed to save paper.', { id: 'save' });
@@ -1339,13 +1339,13 @@ export const MCQPaperGeneratorPage = () => {
           {/* Main Dual Layout Content */}
           <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
             <style>{`
-  @media screen and(min - width: 768px) {
-            .split - left { width: ${ leftWidth }% !important; }
-            .split - right { width: ${ 100 - leftWidth }% !important; }
+  @media screen and (min-width: 768px) {
+    .split-left { width: ${leftWidth}% !important; }
+    .split-right { width: ${100 - leftWidth}% !important; }
   }
-  `}</style>
+`}</style>
             {/* Left Side: Editor (Hidden on Print) */}
-            <div className={`w - full split - left p - 4 md: p - 6 overflow - y - auto border - slate - 200 bg - white print:hidden custom - scrollbar pb - 24 md: pb - 6 ${ mobileTab === 'editor' ? 'block' : 'hidden md:block' } `}>
+            <div className={`w-full split-left p-4 md:p-6 overflow-y-auto border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
               <div className="h-full flex flex-col pb-20">
 
                 {/* Desktop Editor Header Toolbar */}
@@ -1509,7 +1509,7 @@ export const MCQPaperGeneratorPage = () => {
             </div>
 
             {/* Right Side: Live Preview */}
-            <div className={`w - full split - right overflow - y - auto bg - slate - 100 print: w - full print: bg - white custom - scrollbar flex flex - col relative print: overflow - visible print:block pb - 40 md: pb - 0 ${ mobileTab === 'preview' ? 'block' : 'hidden md:block' } `}>
+            <div className={`w-full split-right overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
 
               {/* Unified Executive Header Toolbar with Zoom Controls (Desktop + Mobile) */}
               <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center print:hidden shadow-xs">
@@ -1595,7 +1595,13 @@ export const MCQPaperGeneratorPage = () => {
                     examName={examName}
                     examDate={examDate}
                     examSubject={examClass}
-                    selectedSubjects={selectedSubjects.length > 0 ? selectedSubjects : ['General']}
+                    selectedSubjects={
+                      selectedSubjects.length > 0 && selectedSubjects.some(s => subjectContents[s]?.trim())
+                        ? selectedSubjects
+                        : Object.keys(subjectContents).length > 0
+                          ? Object.keys(subjectContents)
+                          : ['General']
+                    }
                     logoBase64={logoBase64}
                     maxMarks={maxMarks}
                     time={time}

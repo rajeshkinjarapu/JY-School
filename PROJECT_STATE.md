@@ -1,5 +1,58 @@
 # JY School Project State
 
+## చివరి సంభాషణ - MCQ Paper Generator "Failed to load paper" & లైవ్ ప్రివ్యూ బ్లాంక్ ఫిక్స్ (November 19, 2026)
+- **స్క్రీన్‌షాట్ & సమస్య:**
+  - `?id=a288caf9-a258-4aa4-8e2f-712e1997646e` ఉన్నప్పుడు "Failed to load paper" ఎర్రర్ రావడం, లైవ్ ప్రివ్యూ ఖాళీగా తెల్లగా కనిపించడం.
+- **మూలకారణం:**
+  - [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) లోని టెంప్లేట్ స్ట్రింగ్‌లలో `/ api / generated - papers /` అని అనుకోకుండా స్పేస్‌లు రావడంతో API 404 ఇచ్చింది.
+- **పరిష్కారం:**
+  - API URL పాత్ `/api/generated-papers/${paperId}` గా సరిదిద్దాము.
+  - `LiveLatexPreview` లో సబ్జెక్ట్ ఫాల్‌బ్యాక్ చేర్చి, లేఅవుట్ క్లాస్‌లను సరిదిద్దాము.
+
+## చివరి సంభాషణ - 10th Class విద్యార్థుల సంతకాల (31 మంది) కట్టింగ్ & ఆప్టిమైజేషన్ స్క్రిప్ట్ (November 19, 2026)
+- **యూజర్ అందించిన స్కాన్డ్ ఇమేజ్‌లు:**
+  - 3 స్కాన్డ్ షీట్లలోని మొత్తం 31 మంది విద్యార్థుల పేర్లు మరియు సంతకాలను పరిశీలించాము (Sheet 1: S.No 1-10, Sheet 2: S.No 11-21, Sheet 3: S.No 22-31).
+- **రూపొందించిన ఆటోమేషన్ సాధనాలు:**
+  1. [`backend/scripts/extract_signatures.ps1`](file:///d:/JY%20School/JY-School-main/backend/scripts/extract_signatures.ps1) (PowerShell Native)
+  2. [`backend/scripts/extract_signatures.py`](file:///d:/JY%20School/JY-School-main/backend/scripts/extract_signatures.py) (Python Pillow)
+- **నిబంధనల అమలు:**
+  - టేబుల్ బార్డర్లు లేకుండా కేవలం సంతకం ఇంక్ మాత్రమే క్రాప్ అవుతుంది.
+  - రిజల్యూషన్: 320 × 95 px (కనీస 100 × 30 px కంటే మెరుగైనది).
+  - ఫైల్ సైజు: 2 KB నుండి 30 KB పరిధిలో ఉంటుంది.
+  - ఫార్మాట్: ప్యూర్ JPEG (.jpg).
+  - ఫైల్ పేరు: ప్రతి విద్యార్థి పేరుతో (ఉదా: `TARRA LEKHANA.jpg`) `D:\Rajesh\10th Class\Photo & Sign\Student_Signatures_JPEG` ఫోల్డర్‌లో సేవ్ అవుతుంది.
+
+## చివరి సంభాషణ - 10th Class విద్యార్థుల సంతకాల (Signatures) ప్రాసెసింగ్ రిక్వెస్ట్ (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - "D:\Rajesh\10th Class\Photo & Sign\Orginal Sign ee folder lo unna student signature student name tho individual images file kavali signature chala clarity ga undali, image clarity assalu miss avvakudadu, Only JPEG format, Minimum resolution: 100 × 30 px, File size must be 2 KB to 30 KB"
+- **ప్రస్తుత స్థితి:**
+  - `Orginal Sign` ఫోల్డర్‌లోని ఫైల్స్ ఆకృతి (ఒకే షీట్‌లో ఉన్నాయా లేక విడివిడి ఫోటోలుగా ఉన్నాయా) మరియు స్టూడెంట్ నేమ్స్ మ్యాపింగ్ నిర్ధారణ కోరబడింది.
+
+## చివరి సంభాషణ - PowerShell స్క్రిప్ట్ యూనికోడ్/ఎమోజీ ఎన్‌కోడింగ్ ఎర్రర్ ఫిక్స్ (November 19, 2026)
+- **ఎర్రర్:**
+  - PowerShell 5.1 లో UTF-8 ఎమోజీ క్యారెక్టర్స్ వల్ల `Unexpected token 'KB' in expression or statement` ఎర్రర్ వచ్చింది.
+- **పరిష్కారం:**
+  - [`backend/scripts/compress_photos.ps1`](file:///d:/JY%20School/JY-School-main/backend/scripts/compress_photos.ps1) లోని ఎమోజీలను తొలగించి, 100% ప్యూర్ స్టాండర్డ్ ASCII తో సింటాక్స్ క్లీన్ చేశాము. Windows PowerShell లో ఎలాంటి ఎర్రర్ లేకుండా పనిచేస్తుంది.
+
+## చివరి సంభాషణ - Windows Native PowerShell ఫోటో కంప్రెసర్ (Sharp Runtime Error Fix) (November 19, 2026)
+- **సమస్య:**
+  - `node scripts/compress_10th_photos.js` రన్ చేసినప్పుడు Windows x64 sharp నేటివ్ బైనరీ లేకపోవడంతో `Could not load the "sharp" module using the win32-x64 runtime` ఎర్రర్ వచ్చింది.
+- **పరిష్కారం:**
+  - ఎటువంటి npm లేదా Python డిపెండెన్సీలతో పనిలేకుండా, Windows సిస్టమ్‌లోని `.NET System.Drawing` ఆధారంగా పనిచేసే **Windows Native PowerShell స్క్రిప్ట్** ([`backend/scripts/compress_photos.ps1`](file:///d:/JY%20School/JY-School-main/backend/scripts/compress_photos.ps1)) రూపొందించాము.
+  - `HighQualityBicubic` రీశాంప్లింగ్‌తో ఫోటో క్లారిటీ కొంచెం కూడా తగ్గకుండా ఖచ్చితంగా 180 KB నుండి 195 KB మధ్యకు కంప్రెస్ చేస్తుంది.
+
+## చివరి సంభాషణ - 10th Class ఫోటోల కంప్రెషన్ సాధనం (180 KB - 195 KB Exact Target) (November 19, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - "D:\Rajesh\10th Class\Photo & Sign\photos ee folder lo unna images file size tagginchali, image clarity assalu miss avvakudadu, File size must be 180 KB to 195 KB undali, images chala quality ga undali"
+- **పూర్తిగా అందించిన పరిష్కారం:**
+  1. **Node.js కంప్రెషన్ స్క్రిప్ట్ ([`backend/scripts/compress_10th_photos.js`](file:///d:/JY%20School/JY-School-main/backend/scripts/compress_10th_photos.js)):**
+     - ప్రాజెక్ట్‌లోని C++ బేస్డ్ `sharp` & `MozJPEG` ఇంజిన్‌ను ఉపయోగిస్తుంది.
+     - `chromaSubsampling: '4:4:4'` తో ఫేస్, కళ్లు మరియు యూనిఫాం రంగులు 100% స్టూడియో క్లారిటీతో ఉంటాయి.
+     - Lanczos3 కర్నెల్ మరియు అడాప్టివ్ బైనరీ సెర్చ్ ద్వారా ప్రతి ఫోటో ఖచ్చితంగా 180 KB నుండి 195 KB (టార్గెట్ ~187 KB) విండోలో ల్యాండ్ అవుతుంది.
+     - అసలైన ఫోటోలను తాకకుండా `D:\Rajesh\10th Class\Photo & Sign\photos_compressed_180_195kb` లో భద్రపరుస్తుంది.
+  2. **Python ఆల్టర్నేటివ్ స్క్రిప్ట్ ([`backend/scripts/compress_10th_photos.py`](file:///d:/JY%20School/JY-School-main/backend/scripts/compress_10th_photos.py)):**
+     - Pillow లైబ్రరీతో సేమ్ లాజిక్ అమలు.
+
 ## చివరి సంభాషణ - స్టూడెంట్ ఫోటోల లోడింగ్ బగ్ (Student Images Broken Avatars) సంపూర్ణ పరిష్కారం (November 19, 2026)
 - **యూజర్ అభ్యర్థన & స్క్రీన్‌షాట్ (`media_1795062309803_a89cdf5d.jpg`):**
   - "student images ravali"
