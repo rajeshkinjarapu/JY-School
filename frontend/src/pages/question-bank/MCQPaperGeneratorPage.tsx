@@ -168,8 +168,8 @@ export const MCQPaperGeneratorPage = () => {
     }
   });
   const [examDate, setExamDate] = useState<string>(() => localStorage.getItem('mcq_exam_date') || '');
-  const [maxMarks, setMaxMarks] = useState('100');
-  const [time, setTime] = useState<string>(() => localStorage.getItem('mcq_exam_marks') || '75');
+  const [maxMarks, setMaxMarks] = useState<string>(() => localStorage.getItem('mcq_exam_max_marks') || '100');
+  const [time, setTime] = useState<string>(() => localStorage.getItem('mcq_exam_marks') || '3 Hours');
   const [instructions, setInstructions] = useState<string>(() =>
     localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.'
   );
@@ -538,6 +538,22 @@ export const MCQPaperGeneratorPage = () => {
 
   const generateImageId = () => Math.random().toString(36).substring(2, 8);
 
+  const uploadImageToServer = async (fileOrBlob: Blob): Promise<string | null> => {
+    try {
+      const formData = new FormData();
+      formData.append('image', fileOrBlob, 'paper_image.png');
+      const res = await api.post('/api/questions/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      if (res.data?.imageUrl) {
+        return res.data.imageUrl;
+      }
+    } catch (err) {
+      console.warn('Server image upload failed, falling back to base64', err);
+    }
+    return null;
+  };
+
   const insertImageAtCursor = (dataUrl: string) => {
     const id = generateImageId();
     setInlineImages(prev => ({
@@ -582,9 +598,10 @@ export const MCQPaperGeneratorPage = () => {
         const blob = items[i].getAsFile();
         if (blob) {
           const reader = new FileReader();
-          reader.onload = (ev) => {
+          reader.onload = async (ev) => {
             const dataUrl = ev.target?.result as string;
-            insertImageAtCursor(dataUrl);
+            const serverUrl = await uploadImageToServer(blob);
+            insertImageAtCursor(serverUrl || dataUrl);
           };
           reader.readAsDataURL(blob);
         }
@@ -651,9 +668,10 @@ export const MCQPaperGeneratorPage = () => {
       return;
     }
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
-      insertImageAtCursor(dataUrl);
+      const serverUrl = await uploadImageToServer(file);
+      insertImageAtCursor(serverUrl || dataUrl);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -667,7 +685,9 @@ export const MCQPaperGeneratorPage = () => {
       settings: {
         fontSize,
         questionSpacing,
-        showPaperHeader
+        showPaperHeader,
+        maxMarks,
+        time
       }
     };
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
@@ -1181,7 +1201,8 @@ export const MCQPaperGeneratorPage = () => {
           setSelectedSubjects(currentSubjs);
           const firstSubj = currentSubjs.length > 0 ? currentSubjs[0] : 'Maths';
           setExamDate(localStorage.getItem('mcq_exam_date') || '');
-          setTime(localStorage.getItem('mcq_exam_marks') || '75');
+          setMaxMarks(localStorage.getItem('mcq_exam_max_marks') || '100');
+          setTime(localStorage.getItem('mcq_exam_marks') || '3 Hours');
           setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
           setFontSize(localStorage.getItem('mcq_exam_font_size') || 'medium');
           setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
@@ -1206,7 +1227,8 @@ export const MCQPaperGeneratorPage = () => {
               loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
             }
             setExamDate(p.examDate || '');
-            setTime(p.time || '');
+            setTime(p.time || settings?.time || '3 Hours');
+            setMaxMarks(settings?.maxMarks || (p.time && !isNaN(Number(p.time)) ? p.time : '100'));
             setInstructions(p.instructions || '');
             const { textData, images, keys, settings } = deserializeContent(p.content || '');
 
@@ -1241,6 +1263,8 @@ export const MCQPaperGeneratorPage = () => {
               if (settings.fontSize) setFontSize(settings.fontSize);
               if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
               if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
+              if (settings.maxMarks) setMaxMarks(settings.maxMarks);
+              if (settings.time) setTime(settings.time);
             } else {
               setFontSize('medium');
               setQuestionSpacing('normal');
@@ -1803,7 +1827,9 @@ export const MCQPaperGeneratorPage = () => {
                     subjectContents={subjectContents}
                     examName={examName}
                     examDate={examDate}
-                    examSubject={previewSubjectFilter === 'all' ? examClass : `${examClass} - ${previewSubjectFilter}`}
+                    examClass={examClass}
+                    realSubject={previewSubjectFilter !== 'all' ? previewSubjectFilter : (selectedSubjects.length === 1 ? selectedSubjects[0] : (selectedSubjects.length > 1 ? selectedSubjects.join(', ') : ''))}
+                    examSubject={selectedSubjects.join(', ')}
                     selectedSubjects={
                       previewSubjectFilter !== 'all'
                         ? [previewSubjectFilter]
@@ -2383,7 +2409,7 @@ export const MCQPaperGeneratorPage = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6 pt-2 border-t border-slate-100">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">Exam Name</label>
                       <input
@@ -2394,11 +2420,22 @@ export const MCQPaperGeneratorPage = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Marks</label>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Total Marks</label>
+                      <input
+                        type="text"
+                        value={maxMarks}
+                        onChange={(e) => setMaxMarks(e.target.value)}
+                        placeholder="100"
+                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Time / Duration</label>
                       <input
                         type="text"
                         value={time}
                         onChange={(e) => setTime(e.target.value)}
+                        placeholder="3 Hours"
                         className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
                       />
                     </div>
@@ -2599,6 +2636,7 @@ export const MCQPaperGeneratorPage = () => {
                       localStorage.setItem('mcq_exam_class', examClass);
                       localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
                       localStorage.setItem('mcq_exam_date', examDate);
+                      localStorage.setItem('mcq_exam_max_marks', maxMarks);
                       localStorage.setItem('mcq_exam_marks', time);
                       localStorage.setItem('mcq_exam_instructions', instructions);
                       localStorage.setItem('mcq_exam_font_size', fontSize);

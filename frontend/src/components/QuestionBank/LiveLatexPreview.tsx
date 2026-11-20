@@ -3,6 +3,7 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 import { Rnd } from 'react-rnd';
+import { getPhotoUrl } from '../../utils/photo';
 
 export interface FloatingImage {
   dataUrl: string;
@@ -30,6 +31,7 @@ export interface LiveLatexPreviewProps {
   time: string;
   instructions: string[];
   examDate?: string;
+  examClass?: string;
   examSubject?: string;
   selectedSubjects?: string[];
   logoBase64?: string;
@@ -58,6 +60,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   time,
   instructions,
   examDate = '',
+  examClass = '',
   examSubject = '',
   selectedSubjects = [],
   logoBase64 = '',
@@ -141,6 +144,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         if (inlineImages && inlineImages[urlOrId]) {
           const imgData = inlineImages[urlOrId];
           src = typeof imgData === 'string' ? imgData : imgData.dataUrl;
+        }
+        if (src && !src.startsWith('data:') && !src.startsWith('http')) {
+          src = getPhotoUrl(src) || src;
         }
 
         let maxWidth = '100%';
@@ -324,6 +330,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         ? `calc(${baseGap}rem + ${extraNewlines * 0.75}rem)`
         : `${baseGap}rem`;
 
+      // Ensure single-line options (A), (B), (C), (D) or (a), (b), (c), (d) are cleanly split to newlines
+      block = block.replace(/([^\n\s])\s*(\([B-Db-d]\)|[B-Db-d]\.)\s+/g, '$1\n$2 ');
+
       // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
       const optMatchB = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block);
@@ -384,11 +393,11 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 }
               }
 
-              // Make regex robust to avoid matching (B) inside math formulas like $n(A) - n(B)$
-              const optARegex = /(?:^|\n|\s{2,}|\t)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s{2,}\(B\)|\t\(B\)|$)/s;
-              const optBRegex = /(?:^|\n|\s{2,}|\t)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s{2,}\(C\)|\t\(C\)|$)/s;
-              const optCRegex = /(?:^|\n|\s{2,}|\t)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s{2,}\(D\)|\t\(D\)|$)/s;
-              const optDRegex = /(?:^|\n|\s{2,}|\t)\(D\)\s*(.*)/s;
+              // Make regex robust: match options separated by newline or whitespace
+              const optARegex = /(?:^|\n|\s+)\(A\)\s*(.*?)(?=\n\s*\(B\)|\s+\(B\)|\t\(B\)|$)/s;
+              const optBRegex = /(?:^|\n|\s+)\(B\)\s*(.*?)(?=\n\s*\(C\)|\s+\(C\)|\t\(C\)|$)/s;
+              const optCRegex = /(?:^|\n|\s+)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s+\(D\)|\t\(D\)|$)/s;
+              const optDRegex = /(?:^|\n|\s+)\(D\)\s*(.*)/s;
 
               // Find the TRUE option (A) split point (not inside math functions like trace(A) or f(A))
               let splitIndexA = -1;
@@ -472,7 +481,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_|\\tan|\\sin|\\cos|\\pm)/.test(allOptsCombined);
 
               const singleLineLimit = isDoubleColumn ? 4 : (hasComplexMath ? 5 : 8);
-              const twoByTwoLimit = isDoubleColumn ? 14 : 28;
+              const twoByTwoLimit = isDoubleColumn ? 12 : (hasComplexMath ? 16 : 28);
 
               let optionsLayout = '';
               if (forcedLayout === '1x4') {
@@ -691,12 +700,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
             <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
               <div className="flex justify-between items-center">
-                <div><span className="font-bold">Class:</span> {examSubject || '_______________'}</div>
-                {realSubject && <div><span className="font-bold">Subject:</span> {realSubject}</div>}
-                <div><span className="font-bold">Marks:</span> {time || '75'}</div>
+                <div><span className="font-bold">Class:</span> {examClass || examSubject || '_______________'}</div>
+                <div><span className="font-bold">Subject:</span> {realSubject || (selectedSubjects?.length === 1 ? selectedSubjects[0] : (selectedSubjects && selectedSubjects.length > 1 ? selectedSubjects.join(', ') : '')) || examSubject || '_______________'}</div>
+                <div><span className="font-bold">Marks:</span> {maxMarks || '100'}</div>
               </div>
               <div className="flex justify-between items-center">
                 <div><span className="font-bold">Date:</span> {examDate || '___/___/20__'}</div>
+                {time && <div><span className="font-bold">Time:</span> {time}</div>}
               </div>
             </div>
           </div>
@@ -750,7 +760,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             style={{}}
           >
             <div className="relative w-full h-full bg-white/50 backdrop-blur-[1px] hover:bg-transparent transition-all border border-blue-400 group-hover:border-blue-600 border-dashed print:border-none print:bg-transparent !print:border-none shadow-sm">
-              <img src={dataUrl} className="w-full h-full object-contain pointer-events-none print:max-w-full" />
+              <img src={(dataUrl && !dataUrl.startsWith('data:') && !dataUrl.startsWith('http') ? getPhotoUrl(dataUrl) : dataUrl) || dataUrl} className="w-full h-full object-contain pointer-events-none print:max-w-full" />
               {onImageDelete && (
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
