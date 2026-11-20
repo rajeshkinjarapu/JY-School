@@ -407,7 +407,12 @@ class _StudentsScreenState extends State<StudentsScreen> {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: () {
-            Navigator.push(context, MaterialPageRoute(builder: (context) => StudentProfileScreen(student: student)));
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => StudentProfileScreen(student: student)),
+            ).then((_) {
+              if (mounted) _fetchStudents(_selectedClassId, _searchQuery);
+            });
           },
           child: Padding(
             padding: const EdgeInsets.all(12),

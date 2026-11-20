@@ -6,6 +6,20 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Flutter యాప్‌లో విద్యార్థి ప్రొఫైల్ ఫోటో అప్‌లోడ్ & ఆటో-కంప్రెషన్ ఫీచర్ పూర్తి (November 20, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `flutter app lo admin / super admin login lo student image upload chese option kavali upload chesina image autometic file size tagginchu kovali`
+  - Flutter మొబైల్ యాప్‌లో Admin / Super Admin రోల్స్‌లో స్టూడెంట్ ప్రొఫైల్ ఫోటో అప్‌లోడ్ చేసే సదుపాయం మరియు ఎంచుకున్న ఫోటో క్వాలిటీ తగ్గకుండా ఆటోమేటిక్‌గా ఫైల్ సైజ్ తగ్గిపోవడం (Auto Compression).
+- **పూర్తి చేసిన పనులు ([`student_profile_screen.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/student_profile_screen.dart), [`api_service.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/services/api_service.dart), [`students_screen.dart`](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/students_screen.dart)):**
+  1. **`ApiService.uploadStudentPhoto`:** బ్యాకెండ్ `/api/uploads/image` కి మల్టీపార్ట్ రిక్వెస్ట్ పంపి ఇమేజ్ URL ను పొందే మెథడ్ జోడించాము.
+  2. **ఇంటరాక్టివ్ అవతార్ & ఫ్లోటింగ్ కెమెరా బ్యాడ్జ్:** `StudentProfileScreen` లో Admin/Super Admin లకు విద్యార్థి ఫోటోపై ప్రీమియం గ్రేడియంట్ కెమెరా ఐకాన్ మరియు అప్‌లోడింగ్ లోడింగ్ ఇండికేటర్ జోడించాము.
+  3. **ఆటోమేటిక్ ఫైల్ సైజ్ కంప్రెషన్:** `ImagePicker` లో `maxWidth: 1000`, `maxHeight: 1000`, `imageQuality: 75` ద్వారా 5MB-10MB మొబైల్ ఫోటోలను సైతం క్రిస్ప్ క్లారిటీతో **~100KB-150KB** కి ఆటోమేటిక్‌గా కంప్రెస్ చేసేలా అమలు చేశాము.
+  4. **ప్రీమియం బాటమ్ షీట్:** Camera, Gallery, మరియు Remove Photo ఆప్షన్లతో `SafeArea(bottom: true)` పాడింగ్‌తో కూడిన మోడల్ షీట్ అందించాము.
+  5. **ఎడిట్ ప్రొఫైల్ మోడల్:** ఎడిట్ షీట్ లోపల కూడా ఫోటో కార్డ్ మరియు "Change" బటన్ ఏర్పాటు చేశాము.
+  6. **స్టూడెంట్స్ లిస్ట్ సింక్:** ప్రొఫైల్ నుండి వెనక్కి రాగానే లిస్ట్‌లోనూ కొత్త ఫోటో ఆటోమేటిక్‌గా రిఫ్రెష్ అయ్యేలా చేసాము.
+  7. **యూనివర్సల్ & ఫ్లేవర్ యాప్స్ అనుకూలత:** కోడ్‌లోని `canEdit` రోల్ చెక్ ద్వారా అడ్మిన్, సూపర్ అడ్మిన్ ఫ్లేవర్లు మరియు యూనివర్సల్ యాప్‌లో సరిగ్గా పనిచేసేలా నిర్ధారించాము.
+- **డిప్లాయ్‌మెంట్:** ఇది ప్యూర్ డార్ట్ కోడ్ మార్పు కాబట్టి **Shorebird PATCH (OTA)** ద్వారా ప్యాచ్ అవుతుంది. కొత్త APK అవసరం లేదు.
+
 ## చివరి సంభాషణ - సింగిల్ పేపర్ సెలెక్షన్ & ప్రింట్ బగ్ ఫిక్స్ మరియు One-Click సబ్జెక్ట్ ప్రింట్ స్విచ్చర్ (November 19, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `single paper select chestunte aa paper lo unna data kanapdatam ledu, sigle paper select chesi print teeddam anna sare avvatam ledu, edo problem undi oksari check cheyu`

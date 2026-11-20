@@ -72,6 +72,23 @@ class ApiService {
     return await request.send();
   }
 
+  static Future<Map<String, dynamic>> uploadStudentPhoto(dynamic file) async {
+    try {
+      final streamedResponse = await uploadFile('/api/uploads/image', file);
+      final response = await http.Response.fromStream(streamedResponse);
+      final data = jsonDecode(response.body);
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final url = data['url'] ?? data['data']?['url'];
+        if (url != null && url.toString().isNotEmpty) {
+          return {'success': true, 'url': url.toString()};
+        }
+      }
+      return {'success': false, 'message': data['message'] ?? 'Failed to upload photo'};
+    } catch (e) {
+      return {'success': false, 'message': 'Upload error: $e'};
+    }
+  }
+
   static Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('accessToken');

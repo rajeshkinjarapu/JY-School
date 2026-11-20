@@ -108,8 +108,8 @@ export const formatMCQText = (rawText: string): string => {
     if (singleDollars % 2 !== 0) {
       line = line + '$';
     } else if (singleDollars === 0) {
-      // If an option contains raw LaTeX commands like \frac, \sqrt, \Delta without dollars, auto-wrap in $
-      if (/^\([A-D]\)\s+/.test(line) && /\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|vec|hat|left|right)/.test(line)) {
+      // If an option contains raw LaTeX commands like \frac, \sqrt, \Delta, \ln without dollars, auto-wrap in $
+      if (/^\([A-D]\)\s+/.test(line) && /\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|ne|vec|hat|left|right|dots|ln|log|sin|cos|tan)/.test(line)) {
         line = line.replace(/^(\([A-D]\)\s+)(.+)$/, '$1$$$2$$');
       }
     }

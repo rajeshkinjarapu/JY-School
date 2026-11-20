@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import '../widgets/custom_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,6 +28,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
   bool _canViewAllStudents = false;
   bool _canEditStudents = false;
   bool _isClassTeacher = false;
+  bool _isUploadingPhoto = false;
 
   @override
   void initState() {
@@ -238,24 +241,88 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
               child: Row(
                 children: [
-                  Container(
-                    width: 84, height: 84,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: const Color(0xFFEEF2FF), width: 4),
-                      boxShadow: [BoxShadow(color: const Color(0xFF4F46E5).withOpacity(0.2), blurRadius: 16, offset: const Offset(0, 6))],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: (photoUrl != null && (photoUrl as String).isNotEmpty)
-                          ? CustomNetworkImage(
-                              ApiService.getImageUrl(photoUrl as String),
-                              fit: BoxFit.cover,
-                              headers: const {'ngrok-skip-browser-warning': '69420'},
-                              errorBuilder: (c, e, s) => _avatarFallback(name),
-                            )
-                          : _avatarFallback(name),
-                    ),
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      GestureDetector(
+                        onTap: canEdit && !_isUploadingPhoto
+                            ? () => _showPhotoPickerSheet(s['id']?.toString() ?? '', name)
+                            : null,
+                        child: Container(
+                          width: 84,
+                          height: 84,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: const Color(0xFFEEF2FF), width: 4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF4F46E5).withOpacity(0.2),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              )
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                (photoUrl != null && (photoUrl as String).isNotEmpty)
+                                    ? CustomNetworkImage(
+                                        ApiService.getImageUrl(photoUrl as String),
+                                        fit: BoxFit.cover,
+                                        headers: const {'ngrok-skip-browser-warning': '69420'},
+                                        errorBuilder: (c, e, s) => _avatarFallback(name),
+                                      )
+                                    : _avatarFallback(name),
+                                if (_isUploadingPhoto)
+                                  Container(
+                                    color: Colors.black.withOpacity(0.55),
+                                    child: const Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2.5,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (canEdit && !_isUploadingPhoto)
+                        Positioned(
+                          bottom: -2,
+                          right: -2,
+                          child: GestureDetector(
+                            onTap: () => _showPhotoPickerSheet(s['id']?.toString() ?? '', name),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFF4F46E5), Color(0xFF6366F1)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white, width: 2.5),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF4F46E5).withOpacity(0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(Icons.camera_alt_rounded, size: 14, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -1066,6 +1133,81 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 controller: sc,
                 padding: EdgeInsets.fromLTRB(20, 24, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
                 child: Column(children: [
+                  // Photo Card inside Edit Sheet
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFEEF2FF), width: 2),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: (s['user']?['photoUrl'] != null && (s['user']['photoUrl'] as String).isNotEmpty)
+                                ? CustomNetworkImage(
+                                    ApiService.getImageUrl(s['user']['photoUrl'] as String),
+                                    fit: BoxFit.cover,
+                                    headers: const {'ngrok-skip-browser-warning': '69420'},
+                                    errorBuilder: (c, e, st) => _avatarFallback(s['user']?['name'] ?? 'Student'),
+                                  )
+                                : _avatarFallback(s['user']?['name'] ?? 'Student'),
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Student Photo',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF1E293B),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Tap to update profile photo',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 11.5,
+                                  color: const Color(0xFF64748B),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _showPhotoPickerSheet(s['id']?.toString() ?? '', s['user']?['name'] ?? 'Student');
+                          },
+                          icon: const Icon(Icons.camera_alt_rounded, size: 14),
+                          label: Text(
+                            'Change',
+                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F46E5),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   _editSection('Personal', [
                     _editField('Date of Birth', dobC, hint: 'YYYY-MM-DD', icon: Icons.cake_rounded),
                     _editField('Gender', genderC, hint: 'MALE / FEMALE', icon: Icons.person_rounded),
@@ -1320,6 +1462,360 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
             },
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFF43F5E), foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             child: Text('Delete', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // STUDENT PHOTO PICKER & AUTO-COMPRESSION
+  // ==========================================
+
+  void _showPhotoPickerSheet(String studentId, String studentName) {
+    final s = _studentDetails ?? widget.student;
+    final user = s['user'] ?? {};
+    final existingPhoto = user['photoUrl']?.toString() ?? '';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => SafeArea(
+        bottom: true,
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE2E8F0),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4F46E5).withOpacity(0.12),
+                          const Color(0xFF6366F1).withOpacity(0.06),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.add_a_photo_rounded, color: Color(0xFF4F46E5), size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Student Photo (విద్యార్థి ఫోటో)',
+                          style: GoogleFonts.outfit(
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF1E293B),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Auto-compressed HD photo upload',
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)),
+                    splashRadius: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _buildPhotoPickerOption(
+                icon: Icons.camera_alt_rounded,
+                iconColor: const Color(0xFF4F46E5),
+                title: 'Take Photo with Camera',
+                subtitle: 'కెమెరాతో కొత్త ఫోటో తీయండి (Auto Compressed)',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUploadPhoto(ImageSource.camera, studentId, studentName);
+                },
+              ),
+              const SizedBox(height: 12),
+              _buildPhotoPickerOption(
+                icon: Icons.photo_library_rounded,
+                iconColor: const Color(0xFF10B981),
+                title: 'Choose from Gallery',
+                subtitle: 'మొబైల్ గ్యాలరీ నుండి ఫోటో ఎంచుకోండి',
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _pickAndUploadPhoto(ImageSource.gallery, studentId, studentName);
+                },
+              ),
+              if (existingPhoto.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _buildPhotoPickerOption(
+                  icon: Icons.delete_outline_rounded,
+                  iconColor: const Color(0xFFF43F5E),
+                  title: 'Remove Photo',
+                  subtitle: 'ప్రస్తుత ఫోటోను తొలగించండి',
+                  isDestructive: true,
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _confirmRemovePhoto(studentId, studentName);
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPhotoPickerOption({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: isDestructive ? const Color(0xFFFFF1F2) : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDestructive ? const Color(0xFFFECDD3) : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isDestructive ? const Color(0xFFFFE4E6) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isDestructive ? Colors.red.withOpacity(0.08) : Colors.black.withOpacity(0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: isDestructive ? const Color(0xFFE11D48) : const Color(0xFF1E293B),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.poppins(
+                        fontSize: 11.5,
+                        color: isDestructive ? const Color(0xFFFB7185) : const Color(0xFF64748B),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: isDestructive ? const Color(0xFFFDA4AF) : const Color(0xFF94A3B8),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadPhoto(ImageSource source, String studentId, String studentName) async {
+    try {
+      final picker = ImagePicker();
+      // Auto file size reduction:
+      // maxWidth: 1000, maxHeight: 1000, imageQuality: 75
+      // Compresses 5MB-10MB mobile camera photos down to ~100KB-150KB while retaining high visual fidelity
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1000,
+        maxHeight: 1000,
+        imageQuality: 75,
+      );
+
+      if (pickedFile == null) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      final file = File(pickedFile.path);
+      final uploadRes = await ApiService.uploadStudentPhoto(file);
+
+      if (uploadRes['success'] == true && uploadRes['url'] != null) {
+        final uploadedUrl = uploadRes['url'].toString();
+        final updateRes = await ApiService.updateStudent(studentId, {
+          'name': studentName,
+          'photoUrl': uploadedUrl,
+        });
+
+        if (updateRes['success'] == true) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Student photo updated successfully! ✨'),
+                backgroundColor: Color(0xFF10B981),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+            _fetchProfile();
+          }
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(updateRes['message'] ?? 'Failed to update student profile'),
+                backgroundColor: const Color(0xFFF43F5E),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(uploadRes['message'] ?? 'Failed to upload photo'),
+              backgroundColor: const Color(0xFFF43F5E),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error picking/uploading photo: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: const Color(0xFFF43F5E),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingPhoto = false);
+      }
+    }
+  }
+
+  void _confirmRemovePhoto(String studentId, String studentName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(Icons.delete_rounded, color: Color(0xFFF43F5E), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Text('Remove Photo?', style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to remove this student\'s photo? The profile will display their initials fallback.',
+          style: GoogleFonts.poppins(fontSize: 13, color: const Color(0xFF64748B)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: GoogleFonts.poppins(color: const Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              setState(() => _isUploadingPhoto = true);
+              try {
+                final updateRes = await ApiService.updateStudent(studentId, {
+                  'name': studentName,
+                  'photoUrl': '',
+                });
+                if (mounted) {
+                  if (updateRes['success'] == true) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Photo removed successfully'),
+                        backgroundColor: Color(0xFF10B981),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                    _fetchProfile();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(updateRes['message'] ?? 'Failed to remove photo'),
+                        backgroundColor: const Color(0xFFF43F5E),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: const Color(0xFFF43F5E)),
+                  );
+                }
+              } finally {
+                if (mounted) setState(() => _isUploadingPhoto = false);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF43F5E),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: Text('Remove', style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
           ),
         ],
       ),

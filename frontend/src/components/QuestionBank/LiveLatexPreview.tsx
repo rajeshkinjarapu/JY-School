@@ -262,8 +262,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
           let textPart = inlinePart;
 
-          // Auto-render any bare LaTeX expressions outside $ (e.g. \sqrt{2}, \frac{a}{b}, \vec{a})
-          if (/\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname|alpha|beta|theta|pi|times|pm|le|ge|in)\b/.test(textPart)) {
+          // Auto-render any bare LaTeX expressions outside $ (e.g. \sqrt{2}, \frac{a}{b}, \vec{a}, \ln, \Delta)
+          if (/\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname|alpha|beta|theta|pi|times|pm|le|ge|in|ln|log|sin|cos|tan|cot|sec|csc|dots|cdots|ldots|Delta|neq|ne)\b/.test(textPart)) {
             textPart = textPart.replace(/(\\(?:sqrt|frac|vec|hat|mathbf|mathrm|text|operatorname)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\[a-zA-Z]+(?:\^\{[^{}]*\}|_\{[^{}]*\})*)/g, (match) => {
               try {
                 return katex.renderToString(match, { displayMode: false, throwOnError: false });
@@ -421,7 +421,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 if (dollars % 2 !== 0) {
                   trimmed = trimmed + '$';
                 } else if (dollars === 0) {
-                  if (/\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|ne|approx|infty|vec|hat|left|right|dots|ldots|cdots)\b/.test(trimmed)) {
+                  if (/\\(?:frac|sqrt|Delta|pm|times|alpha|beta|theta|pi|le|ge|neq|ne|approx|infty|vec|hat|left|right|dots|ldots|cdots|ln|log|sin|cos|tan)\b/.test(trimmed)) {
                     trimmed = `$${trimmed}$`;
                   }
                 }
