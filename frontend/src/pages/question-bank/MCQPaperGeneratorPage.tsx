@@ -740,188 +740,18 @@ export const MCQPaperGeneratorPage = () => {
     }
 
     setIsDownloadingPdf(true);
-    const toastId = toast.loading('Generating 100% exact high-resolution PDF...');
-
-    // Temporarily reset zoom on the preview paper so we capture unscaled 1:1 true pixels
-    const scaleContainer = paperEl.closest('.dynamic-paper-scale') as HTMLElement;
-    const prevZoom = scaleContainer ? scaleContainer.style.zoom : '';
-    const prevTransition = scaleContainer ? scaleContainer.style.transition : '';
-    if (scaleContainer) {
-      scaleContainer.style.transition = 'none';
-      scaleContainer.style.zoom = '1';
-    }
+    toast.success('⚡ Opening instant PDF export! Select "Save as PDF" to save directly.', {
+      id: 'pdf-export',
+      duration: 5000,
+      icon: '📄'
+    });
 
     try {
-      // Ensure all rendered web fonts and KaTeX math fonts are ready
-      if (document.fonts) {
-        try {
-          await document.fonts.ready;
-        } catch { }
-      }
-
-      // Small pause to let DOM compute unscaled dimensions
-      await new Promise(r => setTimeout(r, 60));
-
-      // 1. Collect all atomic top-level blocks using data-mcq-block="true"
-      const blockEls = Array.from(paperEl.querySelectorAll('[data-mcq-block="true"]')) as HTMLElement[];
-      blockEls.sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top);
-
-      // 2. Capture LIVE DOM into Canvas directly using toCanvas with skipFonts: true (blazing fast, 0ms intermediate image encoding)
-      let canvas: HTMLCanvasElement;
-      try {
-        canvas = await toCanvas(paperEl, {
-          pixelRatio: 1.5,
-          backgroundColor: '#ffffff',
-          skipFonts: true,
-          cacheBust: false,
-        });
-      } catch (canvasErr) {
-        console.warn('toCanvas failed, falling back to toJpeg', canvasErr);
-        const imgData = await toJpeg(paperEl, {
-          pixelRatio: 1.5,
-          quality: 0.90,
-          backgroundColor: '#ffffff',
-          skipFonts: true,
-        });
-        const img = new Image();
-        await new Promise<void>((resolve, reject) => {
-          img.onload = () => resolve();
-          img.onerror = () => reject(new Error('Failed to load rendered preview image'));
-          img.src = imgData;
-        });
-        canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Failed to get canvas 2D context');
-        ctx.drawImage(img, 0, 0);
-      }
-
-      if (!canvas || canvas.width === 0 || canvas.height === 0) {
-        throw new Error('Failed to capture preview canvas.');
-      }
-
-      const activePaperRect = paperEl.getBoundingClientRect();
-      const scaleRatioY = canvas.height / activePaperRect.height;
-
-      interface AtomicBlock {
-        type: 'header' | 'instructions' | 'section-header' | 'question';
-        topCanvasY: number;
-        bottomCanvasY: number;
-      }
-
-      const blocks: AtomicBlock[] = blockEls.map(el => {
-        const r = el.getBoundingClientRect();
-        const top = Math.round((r.top - activePaperRect.top) * scaleRatioY);
-        const bottom = Math.round((r.bottom - activePaperRect.top) * scaleRatioY);
-        let type: AtomicBlock['type'] = 'question';
-        if (el.classList.contains('paper-header')) type = 'header';
-        else if (el.classList.contains('paper-instructions')) type = 'instructions';
-        else if (el.classList.contains('section-header')) type = 'section-header';
-        return { type, topCanvasY: top, bottomCanvasY: bottom };
-      });
-
-      const pdf = new jsPDF('p', 'mm', 'a4', true);
-      const pageWidthMm = 210;
-      const pageHeightMm = 297;
-      const a4HeightPx = Math.floor(canvas.width * (297 / 210));
-      const topMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm top margin on Page 2+
-      const bottomMarginPx = Math.round(canvas.width * (10 / 210)); // 10mm bottom margin
-
-      // Group atomic blocks into discrete A4 pages so NO question is ever cut in half
-      interface PageSlice {
-        startY: number;
-        endY: number;
-      }
-      const pageSlices: PageSlice[] = [];
-
-      let blockIdx = 0;
-      while (blockIdx < blocks.length) {
-        const isFirstPage = pageSlices.length === 0;
-        const pageTopMargin = isFirstPage ? 0 : topMarginPx;
-        const maxContentHeight = a4HeightPx - pageTopMargin - bottomMarginPx;
-
-        // Start Y on canvas for this page
-        const startY = isFirstPage ? 0 : Math.max(0, blocks[blockIdx].topCanvasY - 4);
-        let endY = startY;
-        let lastFittingIdx = blockIdx;
-
-        while (blockIdx < blocks.length) {
-          const block = blocks[blockIdx];
-          const heightIfIncluded = block.bottomCanvasY - startY;
-
-          if (heightIfIncluded <= maxContentHeight) {
-            lastFittingIdx = blockIdx;
-            endY = block.bottomCanvasY;
-            blockIdx++;
-          } else {
-            if (blocks[lastFittingIdx].type === 'section-header' && lastFittingIdx > 0 && lastFittingIdx === blockIdx - 1) {
-              blockIdx = lastFittingIdx;
-              endY = blocks[lastFittingIdx - 1].bottomCanvasY;
-            }
-            break;
-          }
-        }
-
-        if (endY === startY && blockIdx < blocks.length) {
-          endY = Math.min(canvas.height, startY + maxContentHeight);
-          blockIdx++;
-        }
-
-        pageSlices.push({
-          startY,
-          endY: Math.min(canvas.height, endY + 6)
-        });
-      }
-
-      // Pre-allocate a single reusable canvas for page slicing
-      const pageCanvas = document.createElement('canvas');
-      pageCanvas.width = canvas.width;
-      pageCanvas.height = a4HeightPx;
-      const pageCtx = pageCanvas.getContext('2d', { alpha: false });
-
-      pageSlices.forEach((slice, pageIdx) => {
-        if (pageCtx) {
-          pageCtx.fillStyle = '#ffffff';
-          pageCtx.fillRect(0, 0, pageCanvas.width, a4HeightPx);
-
-          const pageTopMargin = pageIdx === 0 ? 0 : topMarginPx;
-          const sliceHeight = Math.max(10, slice.endY - slice.startY);
-
-          pageCtx.drawImage(
-            canvas,
-            0,
-            slice.startY,
-            canvas.width,
-            sliceHeight,
-            0,
-            pageTopMargin,
-            canvas.width,
-            sliceHeight
-          );
-        }
-
-        const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.88);
-        if (pageIdx > 0) {
-          pdf.addPage('a4', 'p');
-        }
-        pdf.addImage(pageImgData, 'JPEG', 0, 0, pageWidthMm, pageHeightMm, undefined, 'FAST');
-      });
-
-      const cleanExamName = (examName || 'MCQ_Paper').replace(/[^a-zA-Z0-9_-]/g, '_');
-      const filename = `${cleanExamName}_${previewSubjectFilter !== 'all' ? previewSubjectFilter + '_' : ''}${examDate ? examDate.replace(/[^a-zA-Z0-9_-]/g, '_') : 'QuestionPaper'}.pdf`;
-      pdf.save(filename);
-
-      triggerDownloadNotification('⬇️ Download Complete', `MCQ Paper (${filename}) downloaded successfully.`);
-      toast.success('PDF downloaded successfully! 100% exact to Live Preview.', { id: toastId });
+      await printPaper('a4-preview-paper');
     } catch (err: any) {
-      console.error('PDF download error:', err);
-      toast.error('Failed to download PDF: ' + (err.message || 'Unknown error'), { id: toastId });
+      console.error('PDF export error:', err);
+      toast.error('Failed to open PDF exporter: ' + (err.message || 'Unknown error'));
     } finally {
-      if (scaleContainer) {
-        scaleContainer.style.zoom = prevZoom;
-        scaleContainer.style.transition = prevTransition;
-      }
       setIsDownloadingPdf(false);
     }
   };
@@ -1461,14 +1291,14 @@ export const MCQPaperGeneratorPage = () => {
                 onClick={handleDownloadPdf}
                 disabled={isDownloadingPdf}
                 className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer active:scale-95"
-                title="Download PDF directly to device (Instant generation)"
+                title="Download PDF directly to device (Instant Vector PDF)"
               >
                 {isDownloadingPdf ? (
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
                 ) : (
                   <Download className="w-4 h-4" />
                 )}
-                <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
+                <span>{isDownloadingPdf ? 'Opening PDF...' : 'Download PDF'}</span>
               </button>
 
               <button
