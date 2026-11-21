@@ -48,7 +48,7 @@ class ApiService {
   // Get active session token
   static Future<dynamic> get(String endpoint) async {
     final token = await getToken();
-    final res = await http.get(Uri.parse('\$baseUrl\$endpoint'), headers: _getHeaders(token: token));
+    final res = await http.get(Uri.parse('$baseUrl$endpoint'), headers: _getHeaders(token: token));
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return jsonDecode(res.body);
     }
@@ -57,7 +57,7 @@ class ApiService {
 
   static Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
     final token = await getToken();
-    final res = await http.post(Uri.parse('\$baseUrl\$endpoint'), headers: _getHeaders(token: token), body: jsonEncode(body));
+    final res = await http.post(Uri.parse('$baseUrl$endpoint'), headers: _getHeaders(token: token), body: jsonEncode(body));
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return jsonDecode(res.body);
     }
@@ -66,7 +66,7 @@ class ApiService {
 
   static Future<http.StreamedResponse> uploadFile(String endpoint, dynamic file, {String fieldName = 'file'}) async {
     final token = await getToken();
-    var request = http.MultipartRequest('POST', Uri.parse('\$baseUrl\$endpoint'));
+    var request = http.MultipartRequest('POST', Uri.parse('$baseUrl$endpoint'));
     request.headers.addAll(_getHeaders(token: token, isMultipart: true));
     request.files.add(await http.MultipartFile.fromPath(fieldName, file.path));
     return await request.send();

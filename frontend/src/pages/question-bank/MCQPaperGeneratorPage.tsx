@@ -429,19 +429,19 @@ export const MCQPaperGeneratorPage = () => {
     text = text.replace(imgMatch, '').replace(/\n{3,}/g, '\n\n').trim();
 
     if (targetQNum === 'top') {
-      text = `${ imgMatch } \n\n${ text } `;
+      text = `${imgMatch}\n\n${text}`;
     } else if (targetQNum === 'bottom') {
-      text = `${ text } \n\n${ imgMatch } `;
+      text = `${text}\n\n${imgMatch}`;
     } else {
       // Find question regex e.g. "32. "
-      const qRegex = new RegExp(`(^|\\n)(${ targetQNum }\\.\\s + [\\s\\S] *?)(?=(?: \\n\\d +\\.\\s +) | $)`, 'i');
+      const qRegex = new RegExp(`(^|\\n)(${targetQNum}\\.\\s+[\\s\\S]*?)(?=(?:\\n\\d+\\.\\s+)|$)`, 'i');
       const match = text.match(qRegex);
       if (match) {
         const fullQBlock = match[0];
-        const replacement = `${ fullQBlock.trim() } \n${ imgMatch } \n`;
+        const replacement = `${fullQBlock.trim()}\n${imgMatch}\n`;
         text = text.replace(fullQBlock, replacement);
       } else {
-        text = `${ text } \n\n${ imgMatch } `;
+        text = `${text}\n\n${imgMatch}`;
       }
     }
 

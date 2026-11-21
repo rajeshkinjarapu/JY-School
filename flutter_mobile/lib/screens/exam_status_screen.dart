@@ -144,7 +144,7 @@ class _ExamStatusScreenState extends State<ExamStatusScreen> {
     final isPublished = activeExam['admitCardSettings']?['progressCardPublished'] == true;
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(context).padding.bottom + 24),
       itemCount: classes.length,
       itemBuilder: (context, index) {
         final cls = classes[index];
