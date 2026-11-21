@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2 } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2, Plus } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -678,8 +678,17 @@ export const MCQPaperGeneratorPage = () => {
   };
 
   const serializeContent = (): string => {
+    // Only serialize subjects that are actually selected/active for this paper
+    const filteredContents: Record<string, string> = {};
+    const activeSubs = selectedSubjects.length > 0 ? selectedSubjects : Object.keys(subjectContents);
+    activeSubs.forEach(s => {
+      if (subjectContents[s] !== undefined) {
+        filteredContents[s] = subjectContents[s];
+      }
+    });
+
     const data = {
-      subjectContents,
+      subjectContents: filteredContents,
       inlineImages,
       answerKeys,
       settings: {
@@ -1069,24 +1078,31 @@ export const MCQPaperGeneratorPage = () => {
               textData['Mathematics'] = textData['Maths'];
             }
 
-            // 2. Discover ALL subjects: combine subjects from p.examSubject AND all non-empty subjects present in textData
-            const contentSubjects = Object.keys(textData).filter(s => s && textData[s]?.trim() !== '');
-
-            // Normalize 'Mathematics' to 'Maths' for tab display
-            const normalizedContentSubjects = contentSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+            // 2. Determine subjects:
+            // If p.examSubject is present in DB, that is the definitive list of subjects chosen for this paper!
+            // Never force-resurrect old unselected subjects from textData.
             const normalizedDbSubjects = loadedSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+            const contentSubjects = Object.keys(textData).filter(s => s && textData[s]?.trim() !== '');
+            const normalizedContentSubjects = contentSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
 
-            const allSubjects = Array.from(new Set([...normalizedDbSubjects, ...normalizedContentSubjects]));
-            const finalSubjects = allSubjects.length > 0 ? allSubjects : ['Maths'];
+            let finalSubjects: string[] = [];
+            if (normalizedDbSubjects.length > 0) {
+              finalSubjects = normalizedDbSubjects;
+            } else if (normalizedContentSubjects.length > 0) {
+              finalSubjects = normalizedContentSubjects;
+            } else {
+              finalSubjects = ['Physics'];
+            }
 
-            // 3. Ensure every subject in finalSubjects has an entry in textData
+            // 3. Keep only subjects that are in finalSubjects so unselected subjects are purged
+            const cleanedTextData: Record<string, string> = {};
             finalSubjects.forEach(s => {
-              if (textData[s] === undefined) textData[s] = '';
+              cleanedTextData[s] = textData[s] || (s === 'Maths' && textData['Mathematics'] ? textData['Mathematics'] : '');
             });
 
             setSelectedSubjects(finalSubjects);
             setActiveSubjectTab(finalSubjects[0]);
-            setSubjectContents(textData);
+            setSubjectContents(cleanedTextData);
             setAnswerKeys(keys);
 
             if (settings) {
@@ -1111,12 +1127,15 @@ export const MCQPaperGeneratorPage = () => {
         loadPaper();
       }, [paperId]);
 
-      // Safely sync activeSubjectTab with selectedSubjects (NEVER delete any subject's content!)
+      // Safely sync activeSubjectTab with selectedSubjects
       useEffect(() => {
         if (selectedSubjects.length > 0) {
           if (!selectedSubjects.includes(activeSubjectTab)) {
             const withContent = selectedSubjects.find(s => (subjectContents[s] || '').trim() !== '');
             setActiveSubjectTab(withContent || selectedSubjects[0]);
+          }
+          if (previewSubjectFilter !== 'all' && !selectedSubjects.includes(previewSubjectFilter)) {
+            setPreviewSubjectFilter('all');
           }
           setSubjectContents(prev => {
             let changed = false;
@@ -1127,13 +1146,6 @@ export const MCQPaperGeneratorPage = () => {
                 changed = true;
               }
             });
-            if (updated['Mathematics'] && !updated['Maths']) {
-              updated['Maths'] = updated['Mathematics'];
-              changed = true;
-            } else if (updated['Maths'] && !updated['Mathematics']) {
-              updated['Mathematics'] = updated['Maths'];
-              changed = true;
-            }
             return changed ? updated : prev;
           });
         }
@@ -1193,6 +1205,33 @@ export const MCQPaperGeneratorPage = () => {
         setSelectedSubjects(prev =>
           prev.includes(subj) ? prev.filter(s => s !== subj) : [...prev, subj]
         );
+      };
+
+      const handleRemoveSubject = (subjToRemove: string) => {
+        if (selectedSubjects.length <= 1) {
+          toast.error('Cannot remove the only subject in the paper. Change the subject in Paper Settings instead.');
+          return;
+        }
+        const confirmed = window.confirm(`Are you sure you want to remove "${subjToRemove}" from this paper?`);
+        if (!confirmed) return;
+
+        const nextSubjs = selectedSubjects.filter(s => s !== subjToRemove);
+        setSelectedSubjects(nextSubjs);
+        localStorage.setItem('mcq_exam_subjects', JSON.stringify(nextSubjs));
+
+        setSubjectContents(prev => {
+          const updated = { ...prev };
+          delete updated[subjToRemove];
+          if (subjToRemove === 'Maths') delete updated['Mathematics'];
+          if (subjToRemove === 'Mathematics') delete updated['Maths'];
+          return updated;
+        });
+
+        if (activeSubjectTab === subjToRemove) {
+          setActiveSubjectTab(nextSubjs[0] || 'Physics');
+        }
+
+        toast.success(`Removed ${subjToRemove} from this paper!`);
       };
 
       // Get list of floating images (not inline)
@@ -1475,9 +1514,36 @@ export const MCQPaperGeneratorPage = () => {
                             isActive ? 'bg-white animate-pulse' : 'bg-emerald-500'
                           }`} />
                         ) : null}
+
+                        {/* Remove Subject Button (X) if multiple subjects exist */}
+                        {selectedSubjects.length > 1 && (
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveSubject(subj);
+                            }}
+                            className={`ml-1 p-0.5 rounded-md transition-colors hover:bg-rose-500 hover:text-white ${
+                              isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-white'
+                            }`}
+                            title={`Remove ${subj} from paper`}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </span>
+                        )}
                       </button>
                     );
                   })}
+
+                  {/* Add / Manage Subjects Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsSettingsOpen(true)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 border border-dashed border-slate-300 hover:border-indigo-400 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-2xs flex-shrink-0"
+                    title="Add or manage subjects in Paper Settings"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Manage Subjects</span>
+                  </button>
                 </div>
 
                 {/* Clean Editor Textarea - Full vertical space */}
@@ -2478,15 +2544,11 @@ export const MCQPaperGeneratorPage = () => {
                           setActiveSubjectTab(selectedSubjects[0]);
                         }
                         setSubjectContents(prev => {
-                          const updated = { ...prev };
+                          // Only keep subjects that are currently checked in selectedSubjects
+                          const updated: Record<string, string> = {};
                           selectedSubjects.forEach(s => {
-                            if (updated[s] === undefined) updated[s] = '';
+                            updated[s] = prev[s] || (s === 'Maths' && prev['Mathematics'] ? prev['Mathematics'] : (s === 'Mathematics' && prev['Maths'] ? prev['Maths'] : ''));
                           });
-                          if (updated['Mathematics'] && !updated['Maths']) {
-                            updated['Maths'] = updated['Mathematics'];
-                          } else if (updated['Maths'] && !updated['Mathematics']) {
-                            updated['Mathematics'] = updated['Maths'];
-                          }
                           return updated;
                         });
                       }

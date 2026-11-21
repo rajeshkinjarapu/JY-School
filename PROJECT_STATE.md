@@ -6,6 +6,21 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - MCQ Paper Generator లో అన్‌సెలెక్టెడ్ సబ్జెక్ట్ (Maths) రిసరెక్షన్ బగ్ సవరణ & One-Click Remove (November 21, 2026)
+- **యూజర్ అభ్యర్థన & సమస్య:**
+  - `maths select cheyakunda maths chupistundi, physics questions add cheste mat, phy kanipistunnayi bug edo undi clera cheyu` (స్క్రీన్‌షాట్‌తో పాటు: `IMPORTANT PHYSICS MCQS` పేపర్‌లో సబ్జెక్ట్ `Chemistry, Maths` అని రావడం మరియు Maths 25 ప్రశ్నలు వదలకపోవడం)
+- **మూల కారణం (Root Cause):**
+  1. [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) లోని `loadPaper` ఫంక్షన్‌లో `allSubjects = Array.from(new Set([...normalizedDbSubjects, ...normalizedContentSubjects]))` అనే లైన్ ఉంది. పేపర్‌లో గతంలో మ్యాథ్స్ ప్రశ్నలు ఉన్నప్పుడు, యూజర్ పేపర్ సెట్టింగ్స్‌లో మ్యాథ్స్‌ను అన్‌చెక్ చేసినప్పటికీ, `loadPaper` మ్యాథ్స్ కంటెంట్‌ను చూసి మ్యాథ్స్‌ను బలవంతంగా మళ్లీ `selectedSubjects` లోకి చొప్పించేది.
+  2. పేపర్ సెట్టింగ్స్ లో "Save Settings" చేసినప్పుడు అన్‌సెలెక్ట్ చేసిన సబ్జెక్టులను `subjectContents` నుండి తొలగించకపోవడం వల్ల డేటాబేస్‌కు పాత సబ్జెక్ట్ అలాగే వెళ్లిపోయేది.
+  3. ఎడిటర్ ట్యాబ్స్‌లో యూజర్‌కు అవాంఛిత సబ్జెక్ట్‌ను డిలీట్ చేసే '×' బటన్ లేదు.
+- **సవరణలు & పరిష్కారం ([`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  1. `loadPaper` లో డేటాబేస్ `p.examSubject` కు సంపూర్ణ ప్రాధాన్యత ఇచ్చాము. యూజర్ ఎంచుకున్న సబ్జెక్టులను మాత్రమే లోడ్ చేస్తుంది, అన్‌సెలెక్టెడ్ సబ్జెక్టులను బలవంతంగా లోడ్ చేయదు.
+  2. `serializeContent` లో కేవలం `selectedSubjects` లో ఉన్న సబ్జెక్టులను మాత్రమే సేవ్ చేసేలా ఫిల్టర్ చేసాము.
+  3. ఎడిటర్ సబ్జెక్ట్ ట్యాబ్స్ పక్కన **'×' (Remove Subject)** బటన్ ఏర్పాటు చేసాము. ఒక క్లిక్‌తో యూజర్ అనవసరమైన సబ్జెక్ట్‌ను మరియు దాని ప్రశ్నలను శాశ్వతంగా తొలగించవచ్చు.
+  4. ట్యాబ్స్ బార్‌లోనే నేరుగా **'+ Manage Subjects'** బటన్ జోడించాము.
+  5. పేపర్ సెట్టింగ్స్‌లో అన్‌చెక్ చేసిన సబ్జెక్ట్ `subjectContents` నుండి ఆటోమేటిక్‌గా క్లీనప్ అయ్యేలా సవరించాము.
+- **డిప్లాయ్‌మెంట్:** ఫ్రంటెండ్ మార్పులు కాబట్టి VPS లో `git pull`, `npm run build` చేసి `pm2 restart frontend` రన్ చేయాలి.
+
 ## చివరి సంభాషణ - MCQ Paper Generator లో 2x2 ఆప్షన్స్ లేఅవుట్ క్యాలిక్యులేషన్ ఆప్టిమైజేషన్ (November 21, 2026)
 - **యూజర్ అభ్యర్థన & సమస్య:**
   - `konni questions 2*2 vache avakasam unna sare one by one vachindi endku` (స్క్రీన్‌షాట్‌తో పాటు Q49 మరియు Q50)
