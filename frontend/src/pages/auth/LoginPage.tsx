@@ -421,8 +421,19 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
 
+          {/* University Demo Portal Shortcut */}
+          <div className="mt-4 text-center">
+            <Link
+              to="/university-demo"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-50 to-purple-50 hover:from-indigo-100 hover:to-purple-100 text-indigo-700 text-xs font-extrabold border border-indigo-200/80 shadow-sm transition-all hover:scale-105"
+            >
+              <span>🏛️ Explore University & Multi-Wing ERP Demo</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
           {/* Below-card hint */}
-          <p className="text-center text-xs text-slate-400 font-medium mt-5">
+          <p className="text-center text-xs text-slate-400 font-medium mt-3">
             Protected by JY School Security System
           </p>
         </div>

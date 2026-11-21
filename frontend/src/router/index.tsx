@@ -141,6 +141,7 @@ const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiv
 const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
 const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
+const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -153,6 +154,14 @@ const AttendanceWrapper = () => {
 };
 
 export const router = createBrowserRouter([
+  {
+    path: '/university-demo',
+    element: withSuspense(<UniversityDemoPage />),
+  },
+  {
+    path: '/demo/university-erp',
+    element: withSuspense(<UniversityDemoPage />),
+  },
   {
     path: '/login',
     element: withSuspense(<LoginPage />),
