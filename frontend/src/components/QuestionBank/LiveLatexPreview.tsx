@@ -475,13 +475,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 estimateVisualLength(optD)
               );
 
-              // Check if options contain math notation that needs adequate column width
+              // Check if options contain tall/bulky math notation that requires extra vertical space (fractions, roots, matrices)
               const allOptsCombined = optA + optB + optC + optD;
-              const hasComplexMath = /[\\\$]/.test(allOptsCombined) ||
-                /(\\frac|\\sqrt|\\hat|\\vec|\\times|\^|_|\\tan|\\sin|\\cos|\\pm)/.test(allOptsCombined);
+              const hasTallMath = /(\\frac|\\dfrac|\\sqrt|\\int|\\sum|\\prod|\\begin\{|\\matrix)/.test(allOptsCombined);
 
-              const singleLineLimit = isDoubleColumn ? 4 : (hasComplexMath ? 5 : 8);
-              const twoByTwoLimit = isDoubleColumn ? 12 : (hasComplexMath ? 16 : 28);
+              // Single Column A4 width gives ~350px per option in 2x2, easily holding up to 38-40 characters
+              const singleLineLimit = isDoubleColumn ? 4 : (hasTallMath ? 5 : 8);
+              const twoByTwoLimit = isDoubleColumn ? 14 : (hasTallMath ? 22 : 38);
 
               let optionsLayout = '';
               if (forcedLayout === '1x4') {
