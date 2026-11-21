@@ -6,6 +6,15 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - 'Failed to load paper' ReferenceError ఫిక్స్ (November 21, 2026)
+- **యూజర్ స్క్రీన్‌షాట్ సమస్య:**
+  - పేపర్ URL (`?id=abcdeec9-7928-4927-a0e5-32cacc30a7a6`) ఓపెన్ చేసినప్పుడు స్క్రీన్‌పై ఎర్రర్ టోస్ట్: `Failed to load paper.` అని వచ్చి ప్రశ్నలు లోడ్ కాకపోవడం.
+- **మూల కారణం (Root Cause):**
+  - [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx) లోని `loadPaper` ఫంక్షన్‌లో `setTime(p.time || settings?.time)` మరియు `setMaxMarks(settings?.maxMarks)` లైన్లు `const { ..., settings } = deserializeContent(...)` లైన్‌కు ముందే ఉండటం వల్ల జావాస్క్రిప్ట్ `ReferenceError: Cannot access 'settings' before initialization` (TDZ) త్రో చేసి `catch` బ్లాక్‌లోకి వెళ్ళింది.
+- **పరిష్కారం:**
+  - `deserializeContent` డిక్లరేషన్‌ను పైకి తరలించి, `settings` వేరియబుల్ సిద్ధమైన తర్వాతే `setTime`, `setMaxMarks` లో యాక్సెస్ అయ్యేలా సవరించాం.
+- **డిప్లాయ్‌మెంట్:** లోకల్‌లో `git push`, ఆపై VPS లో `git pull`, `npm run build`, `pm2 restart frontend`.
+
 ## చివరి సంభాషణ - MCQ Paper Generator లోతైన బగ్స్ & ఎర్రర్స్ సవరణ పూర్తి (November 20, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `mcq paper generator mottaom lo chala errors and bugs unnayi okasari deep ga check chesi naku explain cheyu` -> `OK PROCEED`

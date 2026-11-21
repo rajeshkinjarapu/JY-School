@@ -1226,11 +1226,11 @@ export const MCQPaperGeneratorPage = () => {
             if (p.examSubject) {
               loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
             }
+            const { textData, images, keys, settings } = deserializeContent(p.content || '');
             setExamDate(p.examDate || '');
             setTime(p.time || settings?.time || '3 Hours');
             setMaxMarks(settings?.maxMarks || (p.time && !isNaN(Number(p.time)) ? p.time : '100'));
             setInstructions(p.instructions || '');
-            const { textData, images, keys, settings } = deserializeContent(p.content || '');
 
             // 1. Synonym matching: normalize "Mathematics" and "Maths" so they share the same content
             if (textData['Mathematics'] && !textData['Maths']) {
@@ -1273,7 +1273,8 @@ export const MCQPaperGeneratorPage = () => {
 
             setInlineImages(images);
             toast.success('Paper loaded!', { id: 'load' });
-          } catch {
+          } catch (loadErr) {
+            console.error('Failed to load paper error:', loadErr);
             toast.error('Failed to load paper.', { id: 'load' });
           }
         };
