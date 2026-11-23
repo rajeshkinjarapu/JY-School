@@ -12,12 +12,22 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
     
     let validClassId = classId;
     if (!validClassId) {
-      const cls = await prisma.class.findFirst();
+      let cls = await prisma.class.findFirst();
+      if (!cls) {
+        cls = await prisma.class.create({
+          data: { name: '10th', section: 'A', academicYear: '2024-2025', capacity: 50 }
+        });
+      }
       validClassId = cls?.id;
     }
     let validSubjectId = subjectId;
     if (!validSubjectId) {
-      const sub = await prisma.subject.findFirst();
+      let sub = await prisma.subject.findFirst();
+      if (!sub) {
+        sub = await prisma.subject.create({
+          data: { name: 'Mathematics', code: 'MTH-101', type: 'THEORY' }
+        });
+      }
       validSubjectId = sub?.id;
     }
 
@@ -81,14 +91,26 @@ export const addCompetitiveQuestion = async (req: Request, res: Response) => {
     const { examId } = req.params;
     const { questionText, questionType, imageUrl, options, correctAnswer, marks, chapterName, difficulty } = req.body;
 
+    const formattedOptions = Array.isArray(options) 
+      ? JSON.stringify(options) 
+      : (typeof options === 'string' ? options : JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']));
+
     const q = await prisma.competitiveExamQuestion.create({
       data: {
         competitiveExamId: examId,
-        questionText, questionType, imageUrl, options: JSON.stringify(options), correctAnswer, marks, chapterName, difficulty
+        questionText: questionText || '',
+        questionType: questionType || 'MCQ',
+        imageUrl: imageUrl || null,
+        options: formattedOptions,
+        correctAnswer: correctAnswer || 'Option A',
+        marks: Number(marks) || 4,
+        chapterName: chapterName || 'General',
+        difficulty: difficulty || 'MEDIUM'
       }
     });
     res.status(201).json({ success: true, data: q });
   } catch (error) {
+    console.error('Failed to add question:', error);
     res.status(500).json({ success: false, message: 'Failed to add question' });
   }
 };

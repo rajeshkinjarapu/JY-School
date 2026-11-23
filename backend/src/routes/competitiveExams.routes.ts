@@ -28,6 +28,7 @@ router.get("/:id/result", authenticate, getStudentResult);
 
 // Admin/Teacher Routes
 router.get("/admin", authenticate, getAllCompetitiveExams);
+router.get("/:id", authenticate, getCompetitiveExamDetails);
 router.post("/", authenticate, createCompetitiveExam);
 router.put("/:id", authenticate, updateCompetitiveExam);
 router.delete("/:id", authenticate, deleteCompetitiveExam);

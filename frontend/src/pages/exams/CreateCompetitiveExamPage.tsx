@@ -3,6 +3,7 @@ import api from '../../api/axios';
 import { Calendar, Clock, AlertCircle, ArrowLeft, Plus, FileText, Target, Award, Timer, Hash, Zap, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '../../components/UI/PageHeader';
+import toast from 'react-hot-toast';
 
 const CreateCompetitiveExamPage = () => {
   const navigate = useNavigate();
@@ -92,10 +93,10 @@ const CreateCompetitiveExamPage = () => {
         isPublished: true
       });
       
-      alert("Exam Created Successfully!");
+      toast.success("Exam Created Successfully!");
       navigate('/competitive-exams');
     } catch (error) {
-      alert('Failed to create competitive exam');
+      toast.error('Failed to create competitive exam');
     } finally {
       setLoading(false);
     }
