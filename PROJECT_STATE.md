@@ -6,6 +6,18 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Examination పేజీ నుండి OMR Scanner ఆప్షన్ పూర్తి తొలగింపు (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `examination lo unna omr option poortiga remove cheyu, student exams ki marks em touch cheyakunda code distrub lekunda perfect ga safee ga remove cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో Examination పేజీలోని Examinations List హెడర్‌లో ఉన్న `OMR Scanner` గ్రీన్ బటన్‌ను కోడ్ డిస్టర్బ్ అవ్వకుండా, విద్యార్థుల మార్కులు లేదా పరీక్షలకు ఎలాంటి ఎఫెక్ట్ పడకుండా సురక్షితంగా తొలగించాలని కోరారు).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **OMR Scanner బటన్ సురక్షిత తొలగింపు ([`frontend/src/pages/exams/ExamListPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/ExamListPage.tsx)):**
+     - `Examinations List` ట్యాబ్‌లోని హెడర్ బార్‌లో ఉన్న `<Link to="/exams/omr-scanner">... OMR Scanner ...</Link>` బటన్‌ను పూర్తిగా తొలగించాము.
+     - `lucide-react` నుండి ఉపయోగించని `Scan` ఐకాన్ ఇంపోర్ట్‌ను క్లీన్ చేసాము.
+  2. **విద్యార్థుల పరీక్షలు & మార్కుల భద్రత:**
+     - ఎగ్జామ్ డేటాబేస్, విద్యార్థుల మార్కులు, రిజల్ట్స్, ప్రోగ్రెస్ కార్డులు లేదా క్రియేట్ ఎగ్జామ్ ప్రాసెస్ ఎలాంటి మార్పులకు గురికాలేదు.
+     - `+ Create Exam` బటన్ యధావిధిగా పక్కాగా పనిచేస్తూ క్లీన్‌గా కనిపిస్తుంది.
+
+
 ## చివరి సంభాషణ - Dedicated Question Studio, Unified Options Editor, & డయాగ్రమ్/ఇమేజ్ ఆర్కిటెక్చర్ (November 23, 2026)
 - **యూజర్ అభ్యర్థనలు:**
   1. `separate ga oka page open avvali` (ప్రశ్నలు యాడ్ చేసేటప్పుడు చిన్న పాప్-అప్ మోడల్ కాకుండా, పూర్తి ప్రత్యేక పేజీ/స్టూడియో ఓపెన్ అవ్వాలి).
