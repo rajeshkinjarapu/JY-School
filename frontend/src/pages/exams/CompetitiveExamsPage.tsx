@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -69,6 +69,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [aiModalExam, setAiModalExam] = useState<any | null>(null);
   const [selectedExamIdForQB, setSelectedExamIdForQB] = useState<string>('');
   const [createdExamModal, setCreatedExamModal] = useState<any | null>(null);
+  const [previewExamPaper, setPreviewExamPaper] = useState<any | null>(null);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -267,6 +268,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             onExamCreated={(newExam: any) => {
               setCreatedExamModal(newExam);
             }}
+            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
             onSeedDefaults={handleSeedDefaults}
             navigate={navigate}
           />
@@ -313,6 +315,15 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           }}
         />
       )}
+
+      {/* Exam Paper Full Preview Modal */}
+      {previewExamPaper && (
+        <ExamPaperPreviewModal
+          exam={previewExamPaper}
+          onClose={() => setPreviewExamPaper(null)}
+          navigate={navigate}
+        />
+      )}
     </div>
   );
 };
@@ -331,11 +342,42 @@ const ManageExamsTab = ({
   onOpenQuestionBank, 
   onDelete, 
   onExamCreated,
+  onPreviewPaper,
   onSeedDefaults,
   navigate 
 }: any) => {
   return (
     <div className="space-y-6">
+      {/* Quick Guide Card */}
+      <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+            <Zap className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <h4 className="font-black text-slate-900 text-sm">పరీక్షను ఎలా చూడాలి & ఎలా ఓపెన్ చేయాలి? (Live CBT Exam Guide)</h4>
+            <p className="text-xs text-slate-600 mt-0.5">
+              1. <strong>"View Exam Paper"</strong> క్లిక్ చేసి ప్రశ్నలు, ఆప్షన్లు, మ్యాథ్స్ ఈక్వేషన్లు, కరెక్ట్ ఆన్సర్ కీ ప్రివ్యూ చూడవచ్చు లేదా ప్రింట్ చేయవచ్చు. &nbsp;|&nbsp;
+              2. <strong>"Launch CBT Exam"</strong> క్లిక్ చేసి NTA Eduracle కంప్యూటర్ స్క్రీన్‌ను లైవ్‌గా ఓపెన్ చేసి టెస్ట్ రాయవచ్చు.
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={onSeedDefaults}
+            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4 text-amber-500" /> 1-Click Load NTA Papers
+          </button>
+          <button
+            onClick={() => setShowInlineCreate(true)}
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Create Exam
+          </button>
+        </div>
+      </div>
+
       {/* Eduracle Exam Creation Wizard */}
       {showInlineCreate && (
         <EduracleCreateExamWizard 
@@ -492,14 +534,23 @@ const ManageExamsTab = ({
 
                 {/* Action Buttons */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  {/* Primary Launch CBT Exam Button */}
-                  <button
-                    onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
-                    className="w-full py-3 px-4 rounded-xl text-white font-extrabold text-xs shadow-md bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer group-hover:scale-[1.01]"
-                  >
-                    <Play className="w-4 h-4 fill-white" />
-                    Launch Eduracle CBT Exam Simulator
-                  </button>
+                  {/* Primary Launch CBT Exam & View Paper Buttons */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => onPreviewPaper(exam)}
+                      className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-cyan-400" />
+                      View Exam Paper
+                    </button>
+                    <button
+                      onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
+                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-white" />
+                      Launch CBT Exam
+                    </button>
+                  </div>
 
                   <div className="grid grid-cols-3 gap-2">
                     <button
@@ -1078,6 +1129,274 @@ const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBan
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// EXAM PAPER FULL PREVIEW MODAL (OFFICIAL QUESTION PAPER VIEW)
+// ═══════════════════════════════════════════════════════════════
+
+const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate: any }> = ({ exam, onClose, navigate }) => {
+  const [loading, setLoading] = useState(true);
+  const [examData, setExamData] = useState<any>(exam);
+  const [activeSection, setActiveSection] = useState<string>('ALL');
+
+  useEffect(() => {
+    const loadDetails = async () => {
+      try {
+        const res = await api.get(`/api/competitive-exams/${exam.id}`);
+        if (res.data?.data) {
+          setExamData(res.data.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load full exam paper details:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadDetails();
+  }, [exam.id]);
+
+  const questions: any[] = examData?.questions || [];
+
+  // Group chapters / subjects into sections
+  const sections = Array.from(new Set(questions.map((q: any) => {
+    if (!q.chapterName) return 'General';
+    if (q.chapterName.includes(':')) return q.chapterName.split(':')[0].trim();
+    return q.chapterName;
+  })));
+
+  const filteredQuestions = activeSection === 'ALL'
+    ? questions
+    : questions.filter((q: any) => {
+        if (!q.chapterName) return activeSection === 'General';
+        return q.chapterName.startsWith(activeSection) || q.chapterName.includes(activeSection);
+      });
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        
+        {/* Modal Header */}
+        <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between gap-4 shrink-0 border-b border-white/10">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-3 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 text-[10px] font-black uppercase tracking-wider border border-indigo-400/30">
+                Official NTA CBT Question Paper
+              </span>
+              <span className="text-xs text-slate-400 font-bold">Class: {examData.class?.name || '10th Standard'}</span>
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white line-clamp-1">
+              {examData.title}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/10"
+              title="Print Question Paper"
+            >
+              <Printer className="w-4 h-4 text-amber-300" />
+              <span className="hidden sm:inline">Print Paper</span>
+            </button>
+            <button
+              onClick={() => {
+                onClose();
+                navigate(`/take-competitive-exam/${examData.id}`);
+              }}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              <span>Launch CBT Exam</span>
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Paper Metadata Ribbon */}
+        <div className="bg-slate-100 px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600 shrink-0">
+          <div className="flex items-center gap-4 sm:gap-6">
+            <span>⏱️ Duration: <strong className="text-slate-900">{examData.duration} Mins</strong></span>
+            <span>🎯 Total Marks: <strong className="text-indigo-600">{examData.totalMarks}</strong></span>
+            <span>📝 Questions: <strong className="text-emerald-600">{questions.length}</strong></span>
+            <span>⚖️ Marking: <strong className="text-rose-600">+{examData.totalMarks > 400 ? '4' : '4'} / -{examData.negativeMarks || 1}</strong></span>
+          </div>
+
+          {/* Section filter tabs */}
+          {sections.length > 1 && (
+            <div className="flex items-center gap-1 overflow-x-auto py-1">
+              <button
+                onClick={() => setActiveSection('ALL')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  activeSection === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                }`}
+              >
+                All Sections ({questions.length})
+              </button>
+              {sections.map((sec, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setActiveSection(sec)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    activeSection === sec
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                  }`}
+                >
+                  {sec}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Paper Content / Questions List */}
+        <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50">
+          {loading ? (
+            <div className="py-20 text-center">
+              <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
+              <p className="text-slate-500 font-bold text-sm">Loading complete question paper with KaTeX math rendering...</p>
+            </div>
+          ) : filteredQuestions.length === 0 ? (
+            <div className="py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300">
+              <FileQuestion className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <h4 className="font-black text-slate-700 text-base">No questions in this section yet</h4>
+              <p className="text-slate-400 text-xs mt-1">Questions will appear here once added to this exam.</p>
+            </div>
+          ) : (
+            filteredQuestions.map((q: any, qIdx: number) => {
+              let parsedOptions: string[] = [];
+              try {
+                parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+              } catch {
+                parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+              }
+
+              const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+              return (
+                <div
+                  key={q.id || qIdx}
+                  className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4 hover:border-indigo-200 transition"
+                >
+                  {/* Question Header */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
+                        Q{qIdx + 1}
+                      </span>
+                      {q.chapterName && (
+                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200">
+                          {q.chapterName}
+                        </span>
+                      )}
+                      <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                        {q.difficulty || 'MEDIUM'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
+                        +{q.marks || 4} Marks
+                      </span>
+                      <span className="text-xs font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
+                        -{examData.negativeMarks || 1} Neg
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Question Text */}
+                  <div className="text-slate-800 text-sm sm:text-base font-semibold leading-relaxed pl-1">
+                    <LatexRenderer text={q.questionText} />
+                  </div>
+
+                  {/* Question Image if present */}
+                  {q.imageUrl && (
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl inline-block">
+                      <img src={q.imageUrl} alt="Question Diagram" className="max-h-60 object-contain rounded-lg" />
+                    </div>
+                  )}
+
+                  {/* 4 Options Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {parsedOptions.map((opt: string, optIdx: number) => {
+                      const isCorrect = String(opt).trim() === String(q.correctAnswer).trim() || optLetters[optIdx] === String(q.correctAnswer).trim();
+
+                      return (
+                        <div
+                          key={optIdx}
+                          className={`p-3.5 rounded-xl border flex items-start gap-3 transition ${
+                            isCorrect
+                              ? 'bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-300'
+                              : 'bg-slate-50/60 border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span
+                            className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${
+                              isCorrect
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {optLetters[optIdx]}
+                          </span>
+                          <div className="flex-1 text-xs sm:text-sm font-medium text-slate-800 leading-snug">
+                            <LatexRenderer text={opt} />
+                          </div>
+                          {isCorrect && (
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-extrabold text-[10px] shrink-0 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-emerald-700" /> Correct
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 bg-white border-t border-slate-200 flex items-center justify-between shrink-0">
+          <p className="text-xs text-slate-500 font-medium">
+            Showing <strong className="text-slate-800">{filteredQuestions.length}</strong> of {questions.length} questions
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+            >
+              Close Preview
+            </button>
+            <button
+              onClick={() => {
+                onClose();
+                navigate(`/take-competitive-exam/${examData.id}`);
+              }}
+              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-1.5"
+            >
+              <Play className="w-3.5 h-3.5 fill-white" />
+              Launch CBT Exam Now
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
   );
