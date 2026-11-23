@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, GraduationCap, School, BookOpen,
   CalendarCheck, ClipboardList, PenTool, Calendar, CreditCard,
   Megaphone, MessageSquare, BarChart3, Settings, LogOut,
-  Shield, FileText, UserCheck, X, ChevronDown, ChevronRight, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus, Cake
+  Shield, FileText, UserCheck, X, ChevronDown, ChevronRight, Smartphone, MapPin, Target, Briefcase, Bus, Database, Key, IdCard, UserPlus, Cake, Crown
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
@@ -14,6 +14,7 @@ import { getPhotoUrl } from '../../utils/photo';
 interface SidebarProps { isOpen: boolean; setIsOpen: (v: boolean) => void; }
 
 const roleLabels: Record<string, string> = {
+  GROUP_CHAIRMAN: 'Group Chairman',
   SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', TEACHER: 'Teacher',
   STUDENT: 'Student', ACCOUNTANT: 'Accountant',
 };
@@ -63,6 +64,8 @@ const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
   'HR Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
   'Staff Attendance': { text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)' },
   'Address Data': { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)', glow: '0 0 12px rgba(16,185,129,.5)' },
+  'Chairman Portal': { text: '#fbbf24', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
+  'University View': { text: '#38bdf8', bg: 'rgba(56,189,248,0.18)', glow: '0 0 12px rgba(56,189,248,.5)' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -96,7 +99,18 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     const base = [
       { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ];
+    if (role === 'GROUP_CHAIRMAN') return [
+      { to: '/chairman', label: 'Chairman Portal', icon: Crown },
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/finance', label: 'Finance', icon: CreditCard },
+      { to: '/students', label: 'Students', icon: Users },
+      { to: '/teachers', label: 'Teachers', icon: GraduationCap },
+      { to: '/reports', label: 'Reports', icon: BarChart3 },
+      { to: '/announcements', label: 'Announcements', icon: Megaphone },
+      { to: '/university-demo', label: 'University View', icon: School },
+    ];
     if (role === 'SUPER_ADMIN' || role === 'ADMIN') return [...base,
+      ...(role === 'SUPER_ADMIN' ? [{ to: '/chairman', label: 'Chairman Portal', icon: Crown }] : []),
       { to: '/students',      label: 'Students',      icon: Users         },
       { to: '/students/birthdays', label: 'Birthdays', icon: Cake         },
       { to: '/students/promotion', label: 'Promotion', icon: GraduationCap },

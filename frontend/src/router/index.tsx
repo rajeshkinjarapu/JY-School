@@ -142,6 +142,7 @@ const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveE
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
 const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
 const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
+const ChairmanDashboardPage = lazy(routeImports['/chairman']);
 const AttendanceWrapper = () => {
   const { user } = useAuth();
   if (user?.role === 'STUDENT') {
@@ -233,6 +234,14 @@ export const router = createBrowserRouter([
       {
         path: 'dashboard',
         element: withSuspense(<DashboardPage />),
+      },
+      {
+        path: 'chairman',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'GROUP_CHAIRMAN']}>
+            <ChairmanDashboardPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'address-collection/admin',

@@ -57,6 +57,7 @@ import admissionsRoutes from './routes/admissions.routes';
 import websiteRoutes from './routes/website.routes';
 import addressCollectionRoutes from './routes/addressCollection.routes';
 import promotionRoutes from './routes/promotion';
+import chairmanRoutes from './routes/chairman.routes';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -152,6 +153,7 @@ app.use('/api/admissions', admissionsRoutes);
 app.use('/api/website', websiteRoutes);
 app.use('/api/address-collection', addressCollectionRoutes);
 app.use('/api/promotion', promotionRoutes);
+app.use('/api/chairman', chairmanRoutes);
 app.get('/api/birthdays/today-poster', getTodayBirthdayPosters);
 
 // Health check

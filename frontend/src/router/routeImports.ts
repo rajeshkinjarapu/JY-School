@@ -32,4 +32,5 @@ export const routeImports: Record<string, () => Promise<any>> = {
   '/holidays': () => import('../pages/attendance/HolidayCalendarPage'),
   '/address-collection/admin': () => import('../pages/address-collection/AddressCollectionAdminPage'),
   '/address-collection/teacher': () => import('../pages/address-collection/AddressCollectionTeacherPage'),
+  '/chairman': () => import('../pages/chairman/ChairmanDashboardPage'),
 };
