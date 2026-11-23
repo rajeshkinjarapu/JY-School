@@ -125,7 +125,7 @@ const TakeCompetitiveExamPage = () => {
     // Track time spent on active question
     activeQuestionTimerRef.current = setInterval(() => {
       setAnswers(prev => {
-        if (!exam || !exam.questions[currentQuestionIndex]) return prev;
+        if (!exam || !exam.questions || !exam.questions[currentQuestionIndex]) return prev;
         const qId = exam.questions[currentQuestionIndex].id;
         const currentAns = prev[qId] || { option: '', timeSpent: 0 };
         return {

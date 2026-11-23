@@ -1,7 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { generateQuizQuestions } from '../utils/gemini';
-import { ensureCompetitiveExams } from '../utils/ensureCompetitiveExams';
 
 // ==========================================
 // SAMPLE QUESTIONS REPOSITORY (NTA / EDURACLE PATTERNS)
@@ -289,8 +288,8 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
         }).catch(() => {});
         createdQuestionsCount++;
       }
-    } else if (autoPopulateSample || !questions || questions.length === 0) {
-      // Auto-populate authentic sample questions based on pattern
+    } else if (Boolean(autoPopulateSample)) {
+      // Auto-populate sample questions ONLY if explicitly requested
       const sampleSet = (pattern === 'NEET' || (title && title.toUpperCase().includes('NEET')))
         ? SAMPLE_NEET_QUESTIONS
         : SAMPLE_JEE_QUESTIONS;
@@ -329,7 +328,7 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
   try {
     await ensureTablesExist();
 
-    let exams = await prisma.competitiveExam.findMany({
+    const exams = await prisma.competitiveExam.findMany({
       include: { 
         subject: true, 
         class: true, 
@@ -340,23 +339,6 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
       },
       orderBy: { createdAt: 'desc' }
     });
-
-    // Auto-seed if database has 0 competitive exams
-    if (exams.length === 0) {
-      console.log('🌱 No competitive exams found, auto-seeding NTA standard mock tests...');
-      await ensureCompetitiveExams().catch(() => {});
-      exams = await prisma.competitiveExam.findMany({
-        include: { 
-          subject: true, 
-          class: true, 
-          _count: { select: { questions: true, submissions: true } },
-          submissions: {
-            select: { marksObtained: true }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      });
-    }
 
     res.json({ success: true, data: exams });
   } catch (error) {
@@ -370,6 +352,30 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
       console.error('getAllCompetitiveExams fallback error:', e2);
       res.status(200).json({ success: true, data: [] });
     }
+  }
+};
+
+export const clearDummyExams = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+
+    // Delete any exams with dummy/mock test titles
+    const deleted = await prisma.competitiveExam.deleteMany({
+      where: {
+        OR: [
+          { title: { contains: 'Mock Test', mode: 'insensitive' } },
+          { title: { contains: 'Speed Practice', mode: 'insensitive' } },
+          { title: { contains: 'Sample', mode: 'insensitive' } },
+          { title: { contains: 'Dummy', mode: 'insensitive' } },
+          { title: { contains: 'Test #', mode: 'insensitive' } }
+        ]
+      }
+    });
+
+    res.json({ success: true, message: `Successfully removed ${deleted.count} dummy mock tests. Database is clean.`, count: deleted.count });
+  } catch (error: any) {
+    console.error('clearDummyExams error:', error);
+    res.status(500).json({ success: false, message: 'Failed to purge dummy exams' });
   }
 };
 
@@ -715,5 +721,53 @@ export const deleteCompetitiveQuestion = async (req: Request, res: Response) => 
     res.json({ success: true, message: "Question deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Failed to delete question" });
+  }
+};
+
+export const clearDummyExams = async (req: Request, res: Response) => {
+  try {
+    // Find all mock/sample/dummy exams by keyword
+    const dummyExams = await prisma.competitiveExam.findMany({
+      where: {
+        OR: [
+          { title: { contains: 'Mock', mode: 'insensitive' } },
+          { title: { contains: 'Speed Practice', mode: 'insensitive' } },
+          { title: { contains: 'Sample', mode: 'insensitive' } },
+          { title: { contains: 'Dummy', mode: 'insensitive' } },
+          { title: { contains: 'Test #', mode: 'insensitive' } },
+          { title: { contains: 'Grand Mock', mode: 'insensitive' } },
+          { title: { contains: 'All India', mode: 'insensitive' } },
+        ]
+      },
+      select: { id: true }
+    });
+
+    const dummyIds = dummyExams.map(e => e.id);
+
+    if (dummyIds.length > 0) {
+      for (const id of dummyIds) {
+        await prisma.competitiveExamResponse.deleteMany({
+          where: { submission: { competitiveExamId: id } }
+        }).catch(() => {});
+        await prisma.competitiveExamSubmission.deleteMany({
+          where: { competitiveExamId: id }
+        }).catch(() => {});
+        await prisma.competitiveExamQuestion.deleteMany({
+          where: { competitiveExamId: id }
+        }).catch(() => {});
+        await prisma.competitiveExam.delete({
+          where: { id }
+        }).catch(() => {});
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: `Cleared ${dummyIds.length} dummy/mock exam records. Database is now 100% clean.`,
+      deletedCount: dummyIds.length
+    });
+  } catch (error: any) {
+    console.error('clearDummyExams error:', error);
+    return res.status(500).json({ success: false, message: error?.message || 'Failed to clear dummy exams' });
   }
 };

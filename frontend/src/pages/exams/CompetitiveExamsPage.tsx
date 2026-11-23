@@ -70,7 +70,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'QUESTION_BANK' | 'RESULTS'>('MANAGE_EXAMS');
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [seedingLoading, setSeedingLoading] = useState(false);
   
   // Inline Create Form & Modals
   const [showInlineCreate, setShowInlineCreate] = useState(false);
@@ -125,39 +124,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     setActiveTab('QUESTION_BANK');
   };
 
-  const handleSeedDefaults = async () => {
-    setSeedingLoading(true);
+  const handleClearDummyExams = async () => {
+    if (!window.confirm('Are you sure you want to remove all dummy/sample test data? Only real school exams will remain.')) return;
     try {
-      // Create a full JEE Mains exam with sample questions
-      await api.post('/api/competitive-exams', {
-        title: 'JEE Mains 2026 - All India Grand Mock Test #1',
-        pattern: 'JEE_MAINS',
-        totalMarks: 300,
-        duration: 180,
-        passMarks: 100,
-        negativeMarks: 1,
-        autoPopulateSample: true,
-        isPublished: true,
-      });
-
-      // Create a NEET UG exam with sample questions
-      await api.post('/api/competitive-exams', {
-        title: 'NEET UG 2026 - National Speed Practice Test',
-        pattern: 'NEET',
-        totalMarks: 720,
-        duration: 200,
-        passMarks: 250,
-        negativeMarks: 1,
-        autoPopulateSample: true,
-        isPublished: true,
-      });
-
-      toast.success('Eduracle standard JEE Mains & NEET exams populated successfully!');
+      const res = await api.delete('/api/competitive-exams/purge-dummy/all');
+      toast.success(res.data?.message || 'Dummy tests purged successfully!');
       fetchExams();
-    } catch (err: any) {
-      toast.error('Failed to seed default exams');
-    } finally {
-      setSeedingLoading(false);
+    } catch (e) {
+      toast.error('Failed to clear dummy tests');
     }
   };
 
@@ -188,14 +162,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
-          {exams.length === 0 && (
+          {exams.length > 0 && (
             <button
-              onClick={handleSeedDefaults}
-              disabled={seedingLoading}
-              className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+              onClick={handleClearDummyExams}
+              className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-extrabold text-xs flex items-center gap-2 transition cursor-pointer"
+              title="Purge all mock/dummy test records"
             >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              {seedingLoading ? 'Seeding Exams...' : '🚀 Load NTA Standard Tests'}
+              <Trash2 className="w-4 h-4 text-rose-300" />
+              🧹 Clear Dummy Data
             </button>
           )}
 
@@ -259,7 +233,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setShowInlineCreate(true);
             }}
             onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            onSeedDefaults={handleSeedDefaults}
+            onClearDummy={handleClearDummyExams}
             navigate={navigate}
           />
         )}
@@ -278,7 +252,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setCreatedExamModal(newExam);
             }}
             onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            onSeedDefaults={handleSeedDefaults}
+            onClearDummy={handleClearDummyExams}
             navigate={navigate}
           />
         )}
@@ -352,7 +326,7 @@ const ManageExamsTab = ({
   onDelete, 
   onExamCreated,
   onPreviewPaper,
-  onSeedDefaults,
+  onClearDummy,
   navigate 
 }: any) => {
   return (
@@ -372,12 +346,14 @@ const ManageExamsTab = ({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={onSeedDefaults}
-            className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-indigo-700 border border-indigo-200 text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <Sparkles className="w-4 h-4 text-amber-500" /> 1-Click Load NTA Papers
-          </button>
+          {exams.length > 0 && (
+            <button
+              onClick={onClearDummy}
+              className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" /> 🧹 Clear Dummy Data
+            </button>
+          )}
           <button
             onClick={() => setShowInlineCreate(true)}
             className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
@@ -402,7 +378,7 @@ const ManageExamsTab = ({
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h2 className="text-lg font-black text-slate-800">Available NTA Mock Tests & Online Exams</h2>
+          <h2 className="text-lg font-black text-slate-800">Available Online Exams & Mock Papers</h2>
           <p className="text-xs text-slate-500 font-medium">Real-time CBT simulated test suite for students with instant scorecards</p>
         </div>
         
@@ -421,30 +397,23 @@ const ManageExamsTab = ({
       {loading ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-200 shadow-sm">
           <RefreshCw className="w-10 h-10 animate-spin text-indigo-600 mb-3" />
-          <p className="text-slate-600 font-bold">Loading NTA Competitive Exams...</p>
+          <p className="text-slate-600 font-bold">Loading Competitive Exams...</p>
         </div>
       ) : exams.length === 0 ? (
         <div className="p-16 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
           <div className="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
-            <Zap className="w-10 h-10 text-amber-500" />
+            <BookOpen className="w-10 h-10 text-indigo-600" />
           </div>
-          <h3 className="text-xl font-black text-slate-800">No Competitive Exams Available Yet</h3>
+          <h3 className="text-xl font-black text-slate-800">No Online Exams Created Yet</h3>
           <p className="text-slate-500 max-w-md mt-2 text-sm">
-            Create your first JEE Mains, NEET, or Navodaya pattern mock test with automated negative marking, or load authentic pre-configured test papers with one click.
+            Create an objective CBT exam for your school classes (10th, 9th, 8th). Configure questions, answer options, time duration, and marking scheme.
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
-            <button
-              onClick={onSeedDefaults}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md flex items-center gap-2 cursor-pointer transition hover:scale-105"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              1-Click Load NTA Standard Sample Tests
-            </button>
+          <div className="flex items-center justify-center gap-3 mt-6">
             <button
               onClick={() => setShowInlineCreate(true)}
-              className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
+              className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-md transition cursor-pointer hover:scale-105"
             >
-              <Plus size={16} /> Create New Exam Wizard
+              <Plus size={16} /> Create School Online Exam
             </button>
           </div>
         </div>
@@ -618,17 +587,53 @@ const ManageExamsTab = ({
 
 const PATTERN_PRESETS = [
   {
+    id: 'SCHOOL_GRAND_TEST',
+    badge: 'SCHOOL GRAND TEST',
+    title: 'School Grand Test (పాఠశాల గ్రాండ్ టెస్ట్)',
+    defaultTitle: '10th Class Grand Test - Mathematics',
+    description: 'School Curriculum Assessment • 100 Marks • 120 Mins • Zero Negative',
+    duration: 120,
+    totalMarks: 100,
+    passMarks: 35,
+    negativeMarks: 0,
+    color: 'from-blue-600 to-indigo-700',
+    tagColor: 'bg-blue-100 text-blue-800',
+    sections: [
+      { name: 'Section 1: Objective MCQs', count: 20, marks: 40 },
+      { name: 'Section 2: Conceptual Questions', count: 10, marks: 30 },
+      { name: 'Section 3: Problem Solving', count: 6, marks: 30 },
+    ],
+  },
+  {
+    id: 'SSC_BOARD',
+    badge: 'SSC BOARD PATTERN',
+    title: 'SSC Board Model Paper',
+    defaultTitle: 'SSC Board Practice Examination',
+    description: 'State Board Objective Evaluation • 50 Marks • 60 Mins • Zero Negative',
+    duration: 60,
+    totalMarks: 50,
+    passMarks: 18,
+    negativeMarks: 0,
+    color: 'from-emerald-600 to-teal-700',
+    tagColor: 'bg-emerald-100 text-emerald-800',
+    sections: [
+      { name: 'Section A: Multiple Choice', count: 20, marks: 20 },
+      { name: 'Section B: Fill in Blanks & Match', count: 15, marks: 15 },
+      { name: 'Section C: Very Short Questions', count: 15, marks: 15 },
+    ],
+  },
+  {
     id: 'JEE_MAINS',
-    badge: 'JEE MAINS 2026',
-    title: 'JEE Mains Pattern',
-    defaultTitle: 'JEE MAINS 2026 - ALL INDIA GRAND MOCK TEST #01',
-    description: '3 Sections (Physics, Chemistry, Maths) • 300 Marks • +4 / -1 Marking',
+    badge: 'JEE FOUNDATION',
+    title: 'IIT-JEE Foundation Pattern',
+    defaultTitle: '10th Standard JEE Foundation Objective Test',
+    description: 'Physics, Chemistry, Mathematics • 300 Marks • 180 Mins • +4 / -1 Marking',
     duration: 180,
     totalMarks: 300,
     passMarks: 100,
     negativeMarks: 1,
-    color: 'from-blue-600 to-indigo-700',
-    tagColor: 'bg-blue-100 text-blue-800',
+    color: 'from-indigo-600 to-purple-700',
+    tagColor: 'bg-indigo-100 text-indigo-800',
     sections: [
       { name: 'Section 1: Physics', count: 25, marks: 100 },
       { name: 'Section 2: Chemistry', count: 25, marks: 100 },
@@ -637,64 +642,28 @@ const PATTERN_PRESETS = [
   },
   {
     id: 'NEET',
-    badge: 'NEET UG 2026',
-    title: 'NEET UG Pattern',
-    defaultTitle: 'NEET UG 2026 - NATIONAL SPEED MOCK TEST #01',
-    description: '4 Sections (Physics, Chemistry, Botany, Zoology) • 720 Marks • +4 / -1 Marking',
+    badge: 'NEET FOUNDATION',
+    title: 'NEET Medical Foundation',
+    defaultTitle: 'NEET Medical Foundation Objective Test',
+    description: 'Physics, Chemistry, Botany, Zoology • 720 Marks • 200 Mins • +4 / -1 Marking',
     duration: 200,
     totalMarks: 720,
     passMarks: 250,
     negativeMarks: 1,
-    color: 'from-emerald-600 to-teal-700',
-    tagColor: 'bg-emerald-100 text-emerald-800',
+    color: 'from-teal-600 to-emerald-700',
+    tagColor: 'bg-teal-100 text-teal-800',
     sections: [
-      { name: 'Section 1: Physics', count: 45, marks: 180 },
-      { name: 'Section 2: Chemistry', count: 45, marks: 180 },
-      { name: 'Section 3: Botany', count: 45, marks: 180 },
-      { name: 'Section 4: Zoology', count: 45, marks: 180 },
-    ],
-  },
-  {
-    id: 'EAMCET',
-    badge: 'AP/TS EAMCET',
-    title: 'State EAMCET / EAPCET',
-    defaultTitle: 'AP / TS EAMCET 2026 - ENGINEERING GRAND PRACTICE TEST #01',
-    description: '160 Questions • 160 Marks • Mathematics (80Q), Physics (40Q), Chemistry (40Q) • 0 Negative',
-    duration: 180,
-    totalMarks: 160,
-    passMarks: 40,
-    negativeMarks: 0,
-    color: 'from-cyan-600 to-blue-700',
-    tagColor: 'bg-cyan-100 text-cyan-800',
-    sections: [
-      { name: 'Mathematics', count: 80, marks: 80 },
-      { name: 'Physics', count: 40, marks: 40 },
-      { name: 'Chemistry', count: 40, marks: 40 },
-    ],
-  },
-  {
-    id: 'FOUNDATION',
-    badge: 'CLASSES 6-10',
-    title: 'IIT/NEET Foundation & Olympiad',
-    defaultTitle: 'IIT/NEET FOUNDATION OLYMPIAD & NTSE MOCK EXAM',
-    description: 'Physics, Chemistry, Biology, Mathematics & Mental Ability (MAT)',
-    duration: 120,
-    totalMarks: 100,
-    passMarks: 40,
-    negativeMarks: 1,
-    color: 'from-purple-600 to-violet-700',
-    tagColor: 'bg-purple-100 text-purple-800',
-    sections: [
-      { name: 'Physics & Chemistry', count: 10, marks: 40 },
-      { name: 'Mathematics', count: 10, marks: 40 },
-      { name: 'Mental Ability (MAT)', count: 5, marks: 20 },
+      { name: 'Physics', count: 45, marks: 180 },
+      { name: 'Chemistry', count: 45, marks: 180 },
+      { name: 'Botany', count: 45, marks: 180 },
+      { name: 'Zoology', count: 45, marks: 180 },
     ],
   },
   {
     id: 'NAVODAYA',
-    badge: 'CLASS 6 ENTRANCE',
-    title: 'Navodaya / Sainik School',
-    defaultTitle: 'NAVODAYA CLASS 6 ENTRANCE FULL LENGTH MODEL EXAM #01',
+    badge: 'NAVODAYA / OLYMPIAD',
+    title: 'Navodaya & Sainik School',
+    defaultTitle: 'Navodaya Entrance Examination Practice Test',
     description: 'Mental Ability (50M), Arithmetic (25M), Language (25M) • No Negative',
     duration: 120,
     totalMarks: 100,
@@ -710,18 +679,18 @@ const PATTERN_PRESETS = [
   },
   {
     id: 'CUSTOM',
-    badge: 'CUSTOM TEST',
-    title: 'Custom Subject Chapter Test',
-    defaultTitle: 'CLASSROOM OBJECTIVE SLIP TEST #01',
-    description: 'Single subject chapter-wise objective evaluation',
-    duration: 60,
-    totalMarks: 50,
-    passMarks: 20,
+    badge: 'CUSTOM SLIP TEST',
+    title: 'Classroom Objective Slip Test',
+    defaultTitle: 'Weekly Objective Slip Test',
+    description: 'Custom duration, total marks, and questions for weekly testing',
+    duration: 45,
+    totalMarks: 25,
+    passMarks: 10,
     negativeMarks: 0,
     color: 'from-slate-700 to-slate-900',
     tagColor: 'bg-slate-100 text-slate-800',
     sections: [
-      { name: 'Subject MCQs', count: 25, marks: 50 },
+      { name: 'General Objective Section', count: 25, marks: 25 },
     ],
   },
 ];
@@ -731,16 +700,15 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [selectedPattern, setSelectedPattern] = useState<string>('JEE_MAINS');
-  const [autoPopulateSample, setAutoPopulateSample] = useState(true);
+  const [selectedPattern, setSelectedPattern] = useState<string>('SCHOOL_GRAND_TEST');
 
   const [formData, setFormData] = useState({
     title: PATTERN_PRESETS[0].defaultTitle,
-    pattern: 'JEE_MAINS',
-    duration: 180,
-    totalMarks: 300,
-    passMarks: 100,
-    negativeMarks: 1,
+    pattern: 'SCHOOL_GRAND_TEST',
+    duration: 120,
+    totalMarks: 100,
+    passMarks: 35,
+    negativeMarks: 0,
     examDate: new Date().toISOString().split('T')[0],
     startTime: '09:00',
     classId: '',
@@ -808,21 +776,20 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       const payload = {
         title: formData.title,
         pattern: formData.pattern,
-        duration: Number(formData.duration) || 180,
-        totalMarks: Number(formData.totalMarks) || 300,
-        passMarks: Number(formData.passMarks) || 100,
+        duration: Number(formData.duration) || 120,
+        totalMarks: Number(formData.totalMarks) || 100,
+        passMarks: Number(formData.passMarks) || 35,
         negativeMarks: Number(formData.negativeMarks) || 0,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
         classId: formData.classId || undefined,
         subjectId: formData.subjectId || undefined,
-        autoPopulateSample: autoPopulateSample,
         isPublished: true,
       };
 
       const res = await api.post('/api/competitive-exams', payload);
-      toast.success('Exam created successfully with questions!');
-      const newExam = res.data?.data;
+      toast.success('Exam created successfully! Now add questions in Question Bank.');
+      const newExam = res.data?.data || res.data;
       onCreated(newExam);
     } catch (err: any) {
       console.error(err);
@@ -1032,25 +999,17 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
           </div>
         </div>
 
-        {/* STEP 3: QUESTION SEEDING ENGINE */}
-        <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoPopulateSample}
-              onChange={e => setAutoPopulateSample(e.target.checked)}
-              className="w-5 h-5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 mt-0.5 cursor-pointer"
-            />
-            <div>
-              <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                Auto-Populate Authentic NTA Standard Questions (Recommended - Instant Ready)
-              </span>
-              <p className="text-[11px] text-indigo-800 font-medium mt-0.5">
-                Pre-loads authentic questions with LaTeX math formulas (kinematics, redox, calculus, matrices, electrostatics), 4 options, and solutions. Your exam is ready to attempt immediately after creation!
-              </p>
-            </div>
-          </label>
+        {/* Original Exam Setup Info */}
+        <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex items-center gap-3">
+          <FileQuestion className="w-6 h-6 text-indigo-600 shrink-0" />
+          <div>
+            <span className="text-xs font-black text-indigo-950">
+              Original School Exam Creation
+            </span>
+            <p className="text-[11px] text-indigo-800 font-medium mt-0.5">
+              This will create your school's official online exam. After creation, you can add questions manually or synthesize questions for your curriculum in the Question Bank.
+            </p>
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -1070,11 +1029,11 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
           >
             {loading ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Creating & Populating Exam...
+                <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
               </>
             ) : (
               <>
-                <Zap className="w-4 h-4 text-amber-300" /> Publish Eduracle CBT Exam
+                <Zap className="w-4 h-4 text-amber-300" /> Publish School Online Exam
               </>
             )}
           </button>
@@ -1862,22 +1821,22 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
 // DASHBOARD OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 
-const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onPreviewPaper, onSeedDefaults, navigate }: any) => {
+const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onPreviewPaper, onClearDummy, navigate }: any) => {
   return (
     <div className="space-y-6">
       {/* Quick Launch Hero */}
       <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-          <h2 className="text-xl font-black text-slate-900">Eduracle CBT Simulator & Automated Ranking</h2>
+          <h2 className="text-xl font-black text-slate-900">Eduracle CBT Simulator & School Online Exams</h2>
           <p className="text-sm text-slate-500 mt-1 max-w-xl">
-            Conduct JEE Mains, NEET UG & EAMCET objective exams online with automated timers, negative marks deduction, and live leaderboards.
+            Conduct authentic School Grand Tests, SSC Board, and IIT-JEE / NEET Foundation objective exams online with automated timers, negative marks deduction, and live leaderboards.
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-4">
             <button
               onClick={onOpenCreate}
               className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
             >
-              <Plus size={16} /> Create Competitive Exam
+              <Plus size={16} /> + Create School Online Exam
             </button>
             {exams.length > 0 && (
               <button
@@ -1887,23 +1846,25 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
                 <Play size={16} className="fill-white" /> Launch CBT Simulator
               </button>
             )}
-            <button
-              onClick={onSeedDefaults}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
-            >
-              <Sparkles size={16} className="text-amber-300" /> {exams.length > 0 ? 'Re-Load Standard Tests' : 'Load NTA Standard Tests'}
-            </button>
+            {exams.length > 0 && (
+              <button
+                onClick={onClearDummy}
+                className="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
+              >
+                <Trash2 size={16} className="text-rose-600" /> 🧹 Clear Dummy Data
+              </button>
+            )}
           </div>
         </div>
 
         <div className="w-full md:w-auto p-4 rounded-2xl bg-slate-50 border border-slate-100 grid grid-cols-2 gap-4 text-center">
           <div>
             <div className="text-2xl font-black text-indigo-600">{exams.length}</div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase">Mock Tests</div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase">Scheduled Exams</div>
           </div>
           <div>
             <div className="text-2xl font-black text-emerald-600">{totalQuestions}</div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase">Bank MCQs</div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase">Total MCQs</div>
           </div>
         </div>
       </div>
@@ -1912,7 +1873,7 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-lg font-black text-slate-900">Active Online Exams & Mock Papers ({exams.length})</h3>
+            <h3 className="text-lg font-black text-slate-900">Active Online Exams & Papers ({exams.length})</h3>
             <p className="text-xs text-slate-500 font-medium">Click "Launch CBT Exam" to start the computer-based test or "View Paper" to preview questions</p>
           </div>
           {exams.length > 0 && (
@@ -1927,17 +1888,25 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
 
         {exams.length === 0 ? (
           <div className="p-10 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
-            <Zap className="w-12 h-12 text-amber-500 mx-auto mb-3" />
-            <h4 className="text-lg font-black text-slate-800">No Exams Loaded Yet</h4>
+            <Award className="w-12 h-12 text-indigo-500 mx-auto mb-3" />
+            <h4 className="text-lg font-black text-slate-800">No School Online Exams Created Yet</h4>
             <p className="text-slate-500 text-xs mt-1 max-w-md mx-auto">
-              Click the button below to immediately load authentic NTA JEE Mains & NEET standard test papers with full question bank:
+              Create an authentic online examination for your school classes. Configure custom subjects, add question blueprints, and launch live computer-based tests.
             </p>
-            <button
-              onClick={onSeedDefaults}
-              className="mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer inline-flex items-center gap-2 transition hover:scale-105"
-            >
-              <Sparkles className="w-4 h-4 text-amber-300" /> 1-Click Load NTA Standard Tests
-            </button>
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                onClick={onOpenCreate}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer inline-flex items-center gap-2 transition hover:scale-105"
+              >
+                <Plus className="w-4 h-4" /> + Create First School Exam
+              </button>
+              <button
+                onClick={onClearDummy}
+                className="px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <Trash2 className="w-4 h-4 text-rose-600" /> 🧹 Clear Any Dummy Data
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

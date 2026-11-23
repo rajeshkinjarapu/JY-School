@@ -5,6 +5,7 @@ import {
   createCompetitiveExam,
   getCompetitiveExamsByClass,
   getAllCompetitiveExams,
+  clearDummyExams,
   addCompetitiveQuestion,
   generateCompetitiveQuestionsAI,
   getStudentCompetitiveExams,
@@ -28,6 +29,7 @@ router.get("/:id/result", authenticate, getStudentResult);
 
 // Admin/Teacher Routes
 router.get("/admin", authenticate, getAllCompetitiveExams);
+router.delete("/purge-dummy/all", authenticate, clearDummyExams);
 router.get("/:id", authenticate, getCompetitiveExamDetails);
 router.post("/", authenticate, createCompetitiveExam);
 router.put("/:id", authenticate, updateCompetitiveExam);
