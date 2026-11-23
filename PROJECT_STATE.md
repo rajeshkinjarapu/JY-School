@@ -6,6 +6,37 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Paste Exam Text (AI Smart Parser - Gemini 2.5 Flash) పూర్తి నిర్మాణం (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `"📄 Paste Exam Text (AI Parser)" సదుపాయాన్ని మనం Question Bank లో జోడించవచ్చు. దీనివల్ల టీచర్ తన వద్ద ఉన్న 20 ప్రశ్నల పేపర్‌ను కాపీ-పేస్ట్ చేస్తే చాలు, 5 సెకన్లలో మొత్తం ఎగ్జామ్ రెడీ అవుతుంది!} idi kavali`
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **Google Gemini 2.5 Flash AI Parser ఇంజిన్ ([`backend/src/utils/gemini.ts`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/utils/gemini.ts)):**
+     - `parseRawExamTextToMCQs` ఫంక్షన్‌ను రూపొందించాము.
+     - Word, PDF లేదా చాట్ మెసేజ్‌లలోని రా టెక్స్ట్ నుంచి ప్రశ్నలు, KaTeX మ్యాథ్ ఫార్ములాలు ($LaTeX$), 4 ఆప్షన్లు (A, B, C, D) మరియు ఆన్సర్ కీలను Gemini 2.5 Flash ఆర్టిఫిషియల్ ఇంటెలిజెన్స్ స్వయంచాలకంగా డిజిటైజ్ చేసి JSON ఎరేగా మారుస్తుంది.
+  2. **బ్యాకెండ్ కంట్రోలర్ & రూట్స్ ([`backend/src/controllers/competitiveExams.controller.ts`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/competitiveExams.controller.ts) & [`backend/src/routes/competitiveExams.routes.ts`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/routes/competitiveExams.routes.ts)):**
+     - `POST /api/competitive-exams/:examId/ai-parse-text`: `previewOnly: true` తో ప్రశ్నలను లైవ్ ప్రివ్యూ కోసం అందిస్తుంది.
+     - `POST /api/competitive-exams/:examId/bulk-add-questions`: ఉపాధ్యాయుడు ఆమోదించిన ప్రశ్నలన్నింటినీ ఒకే క్లిక్‌తో డేటాబేస్‌లో సేవ్ చేస్తుంది.
+  3. **ఫ్రంటెండ్ ఇంటరాక్టివ్ మోడల్ & క్వశ్చన్ బ్యాంక్ అనుసంధానం ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - `AiTextParserModal`: పెద్ద టెక్స్ట్ ఏరియా, డీఫాల్ట్ మార్క్స్ (+4), సబ్జెక్ట్/చాప్టర్ హింట్ ఇన్‌పుట్‌లు.
+     - లైవ్ KaTeX మ్యాథ్ రెండరింగ్, ఆప్షన్ల బ్యాడ్జ్ గ్రిడ్, ఆన్సర్ కీ చేంజర్ డ్రాప్‌డౌన్, మరియు అవాంఛిత ప్రశ్నలను డిలీట్ చేసే సదుపాయం.
+     - `QuestionBankTab` లోని టాప్ యాక్షన్ బటన్స్ బార్‌లో మరియు ప్రశ్నలు లేని ఖాళీ స్క్రీన్‌లో **`📄 Paste Exam Text (AI Parser)`** బటన్‌ను ప్రతిష్టించాము.
+- **ఫలితం:**
+  - ఉపాధ్యాయులు లేదా ప్రిన్సిపాల్ టైప్ చేసే శ్రమ లేకుండా, తమ వద్ద ఉన్న 20 లేదా 30 ప్రశ్నల పేపర్‌ను కాపీ చేసి పేస్ట్ చేస్తే 5 సెకన్లలో ఎగ్జామ్ రెడీ అవుతుంది.
+
+
+## చివరి సంభాషణ - వెబ్‌సైట్ 404 Not Found సమస్య & PM2 SPA రీరైట్ శాశ్వత పరిష్కారం (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `website aagipoyindi` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో `http://66.116.252.191:19999/competitive-exams` ఓపెన్ చేసినప్పుడు స్క్రీన్‌పై `404 Not Found` అని వచ్చింది).
+- **సమస్య మూలకారణ విశ్లేషణ:**
+  1. వెబ్‌సైట్ లేదా సర్వర్ ఆగిపోలేదు (PM2 లో `frontend` ఆన్‌లైన్‌లోనే ఉంది).
+  2. రియాక్ట్ సింగిల్ పేజ్ అప్లికేషన్ (SPA) లో బ్రౌజర్‌లో నేరుగా `/competitive-exams` యూఆర్‌ఎల్‌ను రీఫ్రెష్ చేసినప్పుడు, స్టాటిక్ వెబ్ సర్వర్ ఆ పేరుతో డిస్క్‌లో ఫైల్ లేనందున `404 Not Found` ఇస్తుంది.
+  3. మెయిన్ లింక్ `http://66.116.252.191:19999/` ఓపెన్ చేస్తే సైట్ నార్మల్‌గా పనిచేస్తుంది.
+- **శాశ్వత పరిష్కారం:**
+  1. PM2 లో ఫ్రంటెండ్‌ను `--spa` ఫ్లాగ్‌తో రన్ చేయడం:
+     `pm2 delete frontend && pm2 serve /root/JY-School/frontend/dist 19999 --name frontend --spa && pm2 save`
+  2. దీనివల్ల యూజర్ ఏ సబ్-పేజీని రీఫ్రెష్ చేసినా సర్వర్ ఆటోమేటిక్‌గా `index.html` కి రీడైరెక్ట్ చేస్తుంది. 404 ఎర్రర్ శాశ్వతంగా రాదు.
+  3. బ్యాకెండ్‌లో డూప్లికేట్ `clearDummyExams` తీసివేసిన మార్పులను పుల్ చేసి `npm run build` తో కంపైల్ చేయడం.
+
 ## చివరి సంభాషణ - Backend TypeScript డూప్లికేట్ 'clearDummyExams' ఎర్రర్ పరిష్కారం (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - యూజర్ VPS టెర్మినల్ లాగ్ పంపారు. అందులో `backend` లో `npm run build` చేసినప్పుడు TypeScript `tsc` క్రింది ఎర్రర్‌తో ఆగింది:

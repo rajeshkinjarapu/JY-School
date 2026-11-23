@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
-import { generateQuizQuestions } from '../utils/gemini';
+import { generateQuizQuestions, parseRawExamTextToMCQs } from '../utils/gemini';
 
 // ==========================================
 // SAMPLE QUESTIONS REPOSITORY (NTA / EDURACLE PATTERNS)
@@ -456,6 +456,121 @@ Return ONLY a valid JSON array of objects with keys: "questionText", "options" (
   } catch (error) {
     console.error('AI Generation Error:', error);
     res.status(500).json({ success: false, message: 'Failed to generate competitive questions with AI' });
+  }
+};
+
+export const parseTextQuestionsAI = async (req: Request, res: Response) => {
+  try {
+    const { examId } = req.params;
+    const { rawText, defaultMarks = 4, chapterName = 'General', previewOnly = true } = req.body;
+
+    if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
+      return res.status(400).json({ success: false, message: 'Please provide exam text to parse' });
+    }
+
+    const exam = await prisma.competitiveExam.findUnique({ where: { id: examId } });
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Competitive exam not found' });
+    }
+
+    const parsedQuestions = await parseRawExamTextToMCQs(
+      rawText, 
+      Number(defaultMarks) || 4, 
+      chapterName || 'General'
+    );
+
+    if (!Array.isArray(parsedQuestions) || parsedQuestions.length === 0) {
+      return res.status(422).json({ success: false, message: 'Could not extract valid questions from the provided text' });
+    }
+
+    // If previewOnly is true, return parsed questions for user review/editing in the UI
+    if (previewOnly) {
+      return res.status(200).json({
+        success: true,
+        count: parsedQuestions.length,
+        questions: parsedQuestions
+      });
+    }
+
+    // Otherwise, immediately insert into database
+    const savedList = [];
+    for (const q of parsedQuestions) {
+      const formattedOptions = Array.isArray(q.options) 
+        ? JSON.stringify(q.options) 
+        : (typeof q.options === 'string' ? q.options : JSON.stringify(['A', 'B', 'C', 'D']));
+
+      const saved = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          questionText: q.questionText || '',
+          questionType: 'MCQ',
+          options: formattedOptions,
+          correctAnswer: q.correctAnswer || (Array.isArray(q.options) ? q.options[0] : 'A'),
+          marks: Number(q.marks) || Number(defaultMarks) || 4,
+          chapterName: q.chapterName || chapterName || 'General',
+          difficulty: q.difficulty || 'MEDIUM'
+        }
+      });
+      savedList.push(saved);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully parsed and saved ${savedList.length} questions`,
+      count: savedList.length,
+      data: savedList
+    });
+  } catch (error: any) {
+    console.error('parseTextQuestionsAI error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to parse text questions' });
+  }
+};
+
+export const bulkAddQuestions = async (req: Request, res: Response) => {
+  try {
+    const { examId } = req.params;
+    const { questions } = req.body;
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(400).json({ success: false, message: 'No questions provided' });
+    }
+
+    const exam = await prisma.competitiveExam.findUnique({ where: { id: examId } });
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Competitive exam not found' });
+    }
+
+    const savedQuestions = [];
+    for (const q of questions) {
+      const formattedOptions = Array.isArray(q.options) 
+        ? JSON.stringify(q.options) 
+        : (typeof q.options === 'string' ? q.options : JSON.stringify(['A', 'B', 'C', 'D']));
+
+      const saved = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          questionText: q.questionText || '',
+          questionType: q.questionType || 'MCQ',
+          imageUrl: q.imageUrl || null,
+          options: formattedOptions,
+          correctAnswer: q.correctAnswer || (Array.isArray(q.options) ? q.options[0] : 'A'),
+          marks: Number(q.marks) || 4,
+          chapterName: q.chapterName || 'General',
+          difficulty: q.difficulty || 'MEDIUM'
+        }
+      });
+      savedQuestions.push(saved);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully added ${savedQuestions.length} questions to exam`,
+      count: savedQuestions.length,
+      data: savedQuestions
+    });
+  } catch (error: any) {
+    console.error('bulkAddQuestions error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to bulk add questions' });
   }
 };
 
