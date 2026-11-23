@@ -6,6 +6,14 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - LightningCSS Minify CSS సెలెక్టర్ ఎర్రర్ & వెబ్‌సైట్ 404 రికవరీ (November 23, 2026)
+- **సమస్య:**
+  - `src/index.css` లోని `.print\\:hidden` లో డబుల్ బ్యాక్‌స్లాష్ ఉండటం వల్ల Vite లోని `lightningcss minify` టూల్ `hidden` ను అక్రమ సూడో-క్లాస్ అనుకుని బిల్డ్‌ను ఆపివేసింది (`'hidden' is not recognized as a valid pseudo-class`).
+  - దీనివల్ల `dist/` తయారవక వెబ్‌సైట్ 404 కు వెళ్ళింది.
+- **పరిష్కారం:**
+  - `src/index.css` లో `.print\\:hidden` స్థానంలో CSS స్టాండర్డ్ `[class*="print:hidden"], .print-hidden` కు అప్‌డేట్ చేయబడింది.
+  - `ChairmanDashboardPage.tsx` లోని JSX `&gt;` సింటాక్స్ ధృవీకరించబడింది. బిల్డ్ లోపం పూర్తిగా తొలగించబడింది.
+
 ## చివరి సంభాషణ - ChairmanDashboardPage లో Vite JSX కంపైలేషన్ ఎర్రర్ ఫిక్స్ (November 23, 2026)
 - **ఎర్రర్:**
   - `src/pages/chairman/ChairmanDashboardPage.tsx:378:32`: `From Principals (> ₹50,000 threshold)` వద్ద అన్-ఎస్కేప్డ్ `>` గుర్తు వల్ల Vite ట్రాన్స్‌ఫార్మ్ ఫెయిల్ అయింది.

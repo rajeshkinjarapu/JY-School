@@ -681,7 +681,8 @@
   .sidebar,
   .topbar,
   [class*="sticky"],
-  .print\\:hidden {
+  [class*="print:hidden"],
+  .print-hidden {
     display: none !important;
   }
 
