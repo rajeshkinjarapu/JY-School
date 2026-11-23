@@ -6,6 +6,32 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Dedicated Question Studio, Unified Options Editor, & డయాగ్రమ్/ఇమేజ్ ఆర్కిటెక్చర్ (November 23, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `separate ga oka page open avvali` (ప్రశ్నలు యాడ్ చేసేటప్పుడు చిన్న పాప్-అప్ మోడల్ కాకుండా, పూర్తి ప్రత్యేక పేజీ/స్టూడియో ఓపెన్ అవ్వాలి).
+  2. `image 2 lo answer separate boxs kakunda oke text editor lo kavali` (యూజర్ అందించిన ఇమేజ్ 2 లోని 4 విడివిడి ఆప్షన్ బాక్సులను తీసివేసి, ఒకే సింగిల్ టెక్స్ట్ ఎడిటర్‌లో 4 ఆప్షన్లను టైప్/పేస్ట్ చేసే సదుపాయం కావాలి).
+  3. `naku inko doubt enti ante okavela question ki image unte ela ela save avutundi options kuda image unte ela explain cheyu` (ప్రశ్నలకు మరియు ఆప్షన్లకు ఇమేజ్/డయాగ్రమ్స్ ఉంటే డేటాబేస్‌లో ఎలా సేవ్ అవుతాయి, పరీక్షలో విద్యార్థికి ఎలా కనిపిస్తాయో వివరించాలి).
+  4. `telugu lo assalu ekkada undakudadu` (UI లో ఎక్కడా తెలుగు భాష ఉండకూడదు, అంతర్జాతీయ ప్రమాణాల ఇంగ్లీష్ ఉండాలి).
+  5. `idi gemini api key: AQ.Ab8RN6JFFmCszmMUOW_gxQXKbGHy55bLM5RtQ7xeiW2S7RRzlA` (Gemini API Key అప్‌డేట్).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **Dedicated Question Studio ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - పాత చిన్న మోడల్ (`ManualAddQuestionModal`) స్థానంలో సరికొత్త `DedicatedQuestionEditorView` ను సిద్ధం చేసాము.
+     - క్వశ్చన్ బ్యాంక్ లో "+ Add Manually" క్లిక్ చేయగానే పూర్తి స్క్రీన్‌తో కూడిన స్టూడియో ఓపెన్ అవుతుంది. "← Back to Question Bank" బటన్, ఎగ్జామ్ ఇన్ఫో బ్యాడ్జ్, "Save & Add Another" (ఒకదాని తర్వాత ఒకటి చకచకా యాడ్ చేయడానికి) మరియు "Save & Back to Bank" బటన్లు ఉంటాయి.
+  2. **Unified Single Options Text Editor (సింగిల్ టెక్స్ట్ ఎడిటర్):**
+     - విడివిడిగా 4 ఇన్పుట్ బాక్స్‌లు నింపే శ్రమ లేకుండా, ఒకే టెక్స్ట్ ఏరియాలో `(A) ... (B) ... (C) ... (D) ...` అని టైప్ లేదా పేస్ట్ చేస్తే ఆటోమేటిక్‌గా పార్స్ చేస్తుంది.
+     - క్రింద కనిపించే A, B, C, D కార్డులలో ఆప్షన్‌ను ప్రివ్యూ చూసి, కరెక్ట్ ఆన్సర్ పై క్లిక్ చేయగానే ఆకుపచ్చ రంగులో హైలైట్ అవుతుంది.
+  3. **డయాగ్రమ్ & ఇమేజ్ స్టోరేజ్ ఆర్కిటెక్చర్ (ప్రశ్నలు & ఆప్షన్లు):**
+     - **ప్రశ్నకు డయాగ్రమ్:** కంప్యూటర్ నుండి ఇమేజ్ అప్‌లోడ్ బటన్ లేదా ఆన్‌లైన్ ఇమేజ్ URL ఇన్‌పుట్ ద్వారా నేరుగా `imageUrl` గా సేవ్ అవుతుంది.
+     - **ఆప్షన్లకు డయాగ్రమ్‌లు:** ప్రతి ఆప్షన్ కార్డు వద్ద 'Add Diagram' బటన్ ద్వారా ఇమేజ్ అటాచ్ చేయవచ్చు. ఇది సేవ్ అయ్యేటప్పుడు `![Option Diagram](url)` రూపంలో భద్రపరచబడుతుంది.
+     - అసలైన CBT పరీక్షలో ([`TakeCompetitiveExamPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/TakeCompetitiveExamPage.tsx)) మరియు క్వశ్చన్ బ్యాంక్‌లో `LatexRenderer` KaTeX సూత్రాలతో పాటు ఈ డయాగ్రమ్‌లను కూడా హై-క్వాలిటీలో రెండర్ చేస్తుంది.
+  4. **NTA CBT Real-Time Student Preview సైడ్ ప్యానెల్:**
+     - ఉపాధ్యాయుడు ప్రశ్న, సూత్రాలు, డయాగ్రమ్, ఆప్షన్లను టైప్ చేస్తుండగానే కుడివైపు లైవ్ CBT స్క్రీన్ సిమ్యులేటర్‌లో విద్యార్థికి పరీక్షలో ఎలా కనిపిస్తుందో రియల్-టైమ్‌లో లైవ్‌గా కనిపిస్తుంది.
+  5. **Gemini API Key అప్‌డేట్ ([`backend/.env`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/.env)):**
+     - యూజర్ ఇచ్చిన API కీని బ్యాకెండ్ `.env` లో కాన్ఫిగర్ చేసాము.
+  6. **Zero Telugu UI (100% English):**
+     - వెబ్‌సైట్ UI లో ఎక్కడా తెలుగు లేకుండా ప్యూర్ ఎంటర్‌ప్రైజ్ ఇంగ్లీష్ ఇంటర్‌ఫేస్ నిర్వహించబడుతోంది.
+
+
 ## చివరి సంభాషణ - UI క్లీనప్: తెలుగు టెక్స్ట్ తొలగింపు, 'Clear Dummy Data' బటన్స్ తొలగింపు & ప్రీమియం ప్రొఫెషనల్ లుక్ (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `telugu lo undakudadu, clear dummy data buttons remove cheyu, oka professional look undali` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో Manage Exams ట్యాబ్‌పై ఉన్న తెలుగు గైడ్ బ్యానర్ మరియు స్క్రీన్‌పై ఉన్న 'Clear Dummy Data' బటన్లను తొలగించి, క్లీన్ ప్రొఫెషనల్ సాఫ్ట్‌వేర్ లుక్ ఇవ్వాలని కోరారు).

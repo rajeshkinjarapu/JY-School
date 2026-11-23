@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -15,6 +15,37 @@ import 'katex/dist/katex.min.css';
 // ═══════════════════════════════════════════════════════════════
 export const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
   if (!text) return null;
+  const trimmed = text.trim();
+
+  // If text is purely an image URL or data URI
+  if (trimmed.startsWith('data:image/') || trimmed.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp|svg)($|\?)/i)) {
+    return (
+      <div className="my-1.5 inline-block">
+        <img src={trimmed} alt="Diagram" className="max-h-44 max-w-full rounded-xl object-contain border border-slate-200 shadow-xs" />
+      </div>
+    );
+  }
+
+  // Handle markdown images: ![alt](url)
+  if (trimmed.includes('![') && trimmed.includes('](')) {
+    const mdParts = trimmed.split(/(!\[.*?\]\(.*?\))/g);
+    return (
+      <span className={className}>
+        {mdParts.map((part, pIdx) => {
+          const match = part.match(/^!\[(.*?)\]\((.*?)\)$/);
+          if (match) {
+            return (
+              <span key={pIdx} className="block my-2">
+                <img src={match[2]} alt={match[1] || 'Diagram'} className="max-h-48 max-w-full rounded-xl object-contain border border-slate-200 shadow-xs" />
+              </span>
+            );
+          }
+          return <LatexRenderer key={pIdx} text={part} />;
+        })}
+      </span>
+    );
+  }
+
   const parts = [];
   const regex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g;
   let lastIndex = 0;
@@ -1354,7 +1385,7 @@ const QuestionBankTab = ({
 }: any) => {
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [showAiTextParserModal, setShowAiTextParserModal] = useState(false);
 
   const fetchQuestions = async (examId: string) => {
@@ -1388,6 +1419,23 @@ const QuestionBankTab = ({
   }, [selectedExamId, exams]);
 
   const activeExam = exams.find((e: any) => e.id === selectedExamId) || exams[0];
+
+  // If authoring mode is active, render the Dedicated Full Question Studio view
+  if (isAddingQuestion && activeExam) {
+    return (
+      <DedicatedQuestionEditorView
+        exam={activeExam}
+        onBack={() => setIsAddingQuestion(false)}
+        onSaved={(addAnother: boolean) => {
+          fetchQuestions(selectedExamId);
+          onExamsUpdated();
+          if (!addAnother) {
+            setIsAddingQuestion(false);
+          }
+        }}
+      />
+    );
+  }
 
   const handleDeleteQuestion = async (qId: string) => {
     if (!window.confirm('Are you sure you want to delete this question?')) return;
@@ -1461,7 +1509,7 @@ const QuestionBankTab = ({
           </button>
 
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={() => setIsAddingQuestion(true)}
             className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <Plus size={16} /> Add Manually
@@ -1512,7 +1560,7 @@ const QuestionBankTab = ({
               <Sparkles size={14} className="text-amber-300" /> ✨ AI Generate Now
             </button>
             <button
-              onClick={() => setShowAddModal(true)}
+              onClick={() => setIsAddingQuestion(true)}
               className="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition cursor-pointer"
             >
               + Add Manually
@@ -1605,18 +1653,7 @@ const QuestionBankTab = ({
         </div>
       )}
 
-      {/* Manual Add Question Modal */}
-      {showAddModal && (
-        <ManualAddQuestionModal
-          exam={activeExam}
-          onClose={() => setShowAddModal(false)}
-          onAdded={() => {
-            setShowAddModal(false);
-            fetchQuestions(selectedExamId);
-            onExamsUpdated();
-          }}
-        />
-      )}
+
 
       {/* AI Text Parser Modal */}
       {showAiTextParserModal && (
@@ -1635,182 +1672,561 @@ const QuestionBankTab = ({
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MANUAL ADD QUESTION MODAL WITH LIVE KATEX MATH PREVIEW
+// DEDICATED QUESTION STUDIO & UNIFIED OPTIONS EDITOR
 // ═══════════════════════════════════════════════════════════════
 
-const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
-  const [formData, setFormData] = useState({
-    chapterName: 'Physics: Kinematics',
-    difficulty: 'MEDIUM',
-    marks: 4,
-    questionText: '',
-    optionA: '',
-    optionB: '',
-    optionC: '',
-    optionD: '',
-    correctAnswer: 'A',
-  });
+const parseOptionsFromRawText = (text: string): string[] => {
+  if (!text) return ['', '', '', ''];
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+
+  // Match standard prefixes like (A), (B), [A], A), A., etc.
+  const regex = /^\s*(?:\(?([A-Da-d])\)?[\.\:\-\)]|\b([A-Da-d])[\.\:\-\)])\s*(.*)$/;
+  const letterMap: Record<string, string> = {};
+  let currentKey = '';
+
+  for (const line of lines) {
+    const match = line.match(regex);
+    if (match) {
+      const letter = (match[1] || match[2]).toUpperCase();
+      currentKey = letter;
+      letterMap[currentKey] = match[3] || '';
+    } else if (currentKey) {
+      letterMap[currentKey] += ' ' + line;
+    }
+  }
+
+  if (letterMap['A'] || letterMap['B'] || letterMap['C'] || letterMap['D']) {
+    return [
+      (letterMap['A'] || '').trim(),
+      (letterMap['B'] || '').trim(),
+      (letterMap['C'] || '').trim(),
+      (letterMap['D'] || '').trim(),
+    ];
+  }
+
+  // Fallback: line-by-line if at least 2 lines exist
+  return [
+    lines[0] || '',
+    lines[1] || '',
+    lines[2] || '',
+    lines[3] || '',
+  ];
+};
+
+const DedicatedQuestionEditorView = ({ exam, onBack, onSaved }: any) => {
+  const [chapterName, setChapterName] = useState(exam?.subject?.name ? `${exam.subject.name}: Unit Test Topic` : 'Physics: Kinematics');
+  const [difficulty, setDifficulty] = useState('MEDIUM');
+  const [marks, setMarks] = useState(4);
+  const [questionText, setQuestionText] = useState('');
+  const [questionImageUrl, setQuestionImageUrl] = useState('');
+  
+  // Single options unified editor
+  const defaultOptionsText = `(A) Option A text / formula
+(B) Option B text / formula
+(C) Option C text / formula
+(D) Option D text / formula`;
+  const [optionsRawText, setOptionsRawText] = useState(defaultOptionsText);
+  
+  // Option specific image attachments (for diagrams in options A, B, C, D)
+  const [optionImages, setOptionImages] = useState<[string, string, string, string]>(['', '', '', '']);
+  const [correctAnswerIndex, setCorrectAnswerIndex] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.questionText.trim()) return toast.error('Please enter question text');
-    if (!formData.optionA.trim() || !formData.optionB.trim()) return toast.error('Please enter at least options A and B');
+  // File input refs
+  const questionFileRef = React.useRef<HTMLInputElement | null>(null);
+  const optionFileRefs = [
+    React.useRef<HTMLInputElement | null>(null),
+    React.useRef<HTMLInputElement | null>(null),
+    React.useRef<HTMLInputElement | null>(null),
+    React.useRef<HTMLInputElement | null>(null),
+  ];
+
+  const parsedOptions = parseOptionsFromRawText(optionsRawText);
+
+  const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>, target: 'question' | number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target?.result as string;
+      if (target === 'question') {
+        setQuestionImageUrl(base64);
+        toast.success('Question diagram attached');
+      } else {
+        const updated = [...optionImages] as [string, string, string, string];
+        updated[target] = base64;
+        setOptionImages(updated);
+        toast.success(`Diagram attached to Option ${String.fromCharCode(65 + target)}`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async (addAnother: boolean) => {
+    if (!questionText.trim()) {
+      return toast.error('Please enter question text or problem statement');
+    }
+    if (!parsedOptions[0] && !parsedOptions[1]) {
+      return toast.error('Please provide at least Option A and Option B in the editor');
+    }
 
     setLoading(true);
     try {
-      const options = [formData.optionA, formData.optionB, formData.optionC || 'None', formData.optionD || 'All of the above'];
-      let correctOptValue = formData.optionA;
-      if (formData.correctAnswer === 'B') correctOptValue = formData.optionB;
-      else if (formData.correctAnswer === 'C') correctOptValue = formData.optionC;
-      else if (formData.correctAnswer === 'D') correctOptValue = formData.optionD;
-
-      await api.post(`/api/competitive-exams/${exam.id}/questions`, {
-        questionText: formData.questionText,
-        options,
-        correctAnswer: correctOptValue,
-        marks: Number(formData.marks) || 4,
-        chapterName: formData.chapterName,
-        difficulty: formData.difficulty,
+      // Compose 4 options with their respective diagrams (if any)
+      const finalOptions = [0, 1, 2, 3].map(i => {
+        const text = parsedOptions[i] || `Option ${String.fromCharCode(65 + i)}`;
+        const img = optionImages[i];
+        if (img) {
+          return `${text} ![Option ${String.fromCharCode(65 + i)} Diagram](${img})`.trim();
+        }
+        return text;
       });
 
-      toast.success('Question added successfully!');
-      onAdded();
+      const correctOptionValue = finalOptions[correctAnswerIndex] || finalOptions[0];
+
+      await api.post(`/api/competitive-exams/${exam.id}/questions`, {
+        questionText: questionText.trim(),
+        imageUrl: questionImageUrl || null,
+        options: finalOptions,
+        correctAnswer: correctOptionValue,
+        marks: Number(marks) || 4,
+        chapterName: chapterName.trim() || 'General',
+        difficulty,
+      });
+
+      toast.success(addAnother ? 'Question added! Ready for next question.' : 'Question saved to Question Bank!');
+
+      if (addAnother) {
+        setQuestionText('');
+        setQuestionImageUrl('');
+        setOptionsRawText(defaultOptionsText);
+        setOptionImages(['', '', '', '']);
+        setCorrectAnswerIndex(0);
+        onSaved(true);
+      } else {
+        onSaved(false);
+      }
     } catch (err: any) {
-      toast.error('Failed to add question');
+      console.error('Failed to add question:', err);
+      toast.error('Failed to save question to exam');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl border border-slate-200">
-        <div className="bg-slate-900 text-white p-6 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg font-black">Add Question to Question Bank</h3>
-            <p className="text-xs text-slate-300">{exam?.title}</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full cursor-pointer">
-            <X size={20} />
+    <div className="space-y-6 animate-fadeIn pb-12">
+      {/* Top Header Navigation */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-2 font-bold text-xs cursor-pointer shadow-xs"
+            title="Return to Question Bank"
+          >
+            <ArrowLeft size={16} /> Back to Question Bank
           </button>
+          <div>
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <span>Question Authoring Studio</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold">
+                {exam?.title}
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Duration: {exam?.duration} mins • Total Marks: {exam?.totalMarks} • Negative: -{exam?.negativeMarks || 0}
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="col-span-2">
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Chapter / Subject Section</label>
-              <input
-                type="text"
-                required
-                value={formData.chapterName}
-                onChange={e => setFormData({ ...formData, chapterName: e.target.value })}
-                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold outline-none focus:border-indigo-500"
-                placeholder="e.g. Physics: Motion in a Straight Line"
-              />
+        {/* Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => handleSave(true)}
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer disabled:opacity-50"
+          >
+            <Plus size={16} /> Save & Add Another
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => handleSave(false)}
+            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer disabled:opacity-50"
+          >
+            <Check size={16} /> {loading ? 'Saving...' : 'Save & Back to Bank'}
+          </button>
+        </div>
+      </div>
+
+      {/* Main 2-Column Studio Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Authoring Controls */}
+        <div className="lg:col-span-7 space-y-6">
+          {/* Classification Card */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-wider">Classification & Marks</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                  Chapter / Subject Section
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={chapterName}
+                  onChange={e => setChapterName(e.target.value)}
+                  placeholder="e.g. Physics: Kinematics or Mathematics: Calculus"
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Difficulty</label>
+                <select
+                  value={difficulty}
+                  onChange={e => setDifficulty(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 bg-white"
+                >
+                  <option value="EASY">Easy</option>
+                  <option value="MEDIUM">Medium (JEE / NEET)</option>
+                  <option value="HARD">Hard (Advanced)</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Difficulty</label>
-              <select
-                value={formData.difficulty}
-                onChange={e => setFormData({ ...formData, difficulty: e.target.value })}
-                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold outline-none focus:border-indigo-500 bg-white"
-              >
-                <option value="EASY">Easy</option>
-                <option value="MEDIUM">Medium (JEE Level)</option>
-                <option value="HARD">Hard (Advanced)</option>
-              </select>
+
+            <div className="flex items-center gap-4 pt-1 border-t border-slate-100">
+              <div className="w-36">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Marks (+)</label>
+                <input
+                  type="number"
+                  value={marks}
+                  onChange={e => setMarks(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-xl p-2 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div className="text-xs text-slate-500 pt-5">
+                Negative Marks for this exam: <b className="text-rose-600">-{exam?.negativeMarks || 0}</b>
+              </div>
             </div>
           </div>
 
-          <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="block text-xs font-bold text-slate-700 uppercase">Question Text (LaTeX Supported with $...$)</label>
+          {/* Question Text & Diagram Card */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex justify-between items-center">
+              <label className="block text-xs font-black text-slate-900 uppercase">
+                1. Question Problem Statement (LaTeX Supported with $...$)
+              </label>
             </div>
+
             <textarea
-              required
-              rows={3}
-              value={formData.questionText}
-              onChange={e => setFormData({ ...formData, questionText: e.target.value })}
-              className="w-full border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500 resize-none"
-              placeholder="e.g. A projectile is launched with velocity $v = 20\text{ m/s}$ at an angle $\theta = 45^\circ$..."
+              rows={4}
+              value={questionText}
+              onChange={e => setQuestionText(e.target.value)}
+              placeholder="Type your question statement here. Math formulas like $v = 20\text{ m/s}$, $x^2 + y^2 = r^2$, or $\int_0^1 f(x)dx$ will render automatically."
+              className="w-full border border-slate-200 rounded-2xl p-4 text-sm font-semibold text-slate-800 outline-none focus:border-indigo-500 resize-y leading-relaxed shadow-xs"
             />
-            {formData.questionText && (
-              <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
-                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">KaTeX Real-Time Preview:</p>
-                <LatexRenderer text={formData.questionText} className="text-slate-800 font-semibold" />
+
+            {/* KaTeX Live Preview for Question */}
+            {questionText && (
+              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                <p className="text-[10px] font-black text-indigo-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <Sparkles size={12} /> Live LaTeX Formula Preview
+                </p>
+                <div className="text-sm font-bold text-slate-800 leading-relaxed">
+                  <LatexRenderer text={questionText} />
+                </div>
               </div>
             )}
-          </div>
 
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-700 uppercase">Answer Options</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {(['A', 'B', 'C', 'D'] as const).map(opt => (
-                <div key={opt} className="flex items-center gap-2">
-                  <span className={`w-7 h-7 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${
-                    formData.correctAnswer === opt ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
-                  }`}>
-                    {opt}
-                  </span>
+            {/* Diagram / Image for Question */}
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                  <ImageIcon size={14} className="text-indigo-600" /> Question Diagram / Graphic (Optional)
+                </label>
+                {questionImageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setQuestionImageUrl('')}
+                    className="text-xs text-rose-500 font-bold hover:underline cursor-pointer"
+                  >
+                    Remove Image
+                  </button>
+                )}
+              </div>
+
+              {/* Upload & URL input controls */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={questionFileRef}
+                  onChange={e => handleImageFileChange(e, 'question')}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => questionFileRef.current?.click()}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 hover:border-indigo-400 bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer shrink-0"
+                >
+                  <Upload size={14} /> Upload Diagram from PC
+                </button>
+
+                <div className="w-full flex-1">
                   <input
                     type="text"
-                    required
-                    value={(formData as any)[`option${opt}`]}
-                    onChange={e => setFormData({ ...formData, [`option${opt}`]: e.target.value })}
-                    placeholder={`Option ${opt} text`}
-                    className="w-full border border-slate-200 rounded-xl p-2 text-xs font-medium outline-none focus:border-indigo-500"
+                    value={questionImageUrl.startsWith('data:') ? 'Image attached from computer' : questionImageUrl}
+                    onChange={e => setQuestionImageUrl(e.target.value)}
+                    placeholder="Or paste online image URL (https://...)"
+                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 outline-none focus:border-indigo-500"
                   />
                 </div>
-              ))}
+              </div>
+
+              {/* Image Preview */}
+              {questionImageUrl && (
+                <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-center">
+                  <img
+                    src={questionImageUrl}
+                    alt="Question Diagram Preview"
+                    className="max-h-48 max-w-full rounded-xl object-contain border border-slate-200 shadow-xs"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          {/* Unified Options Text Editor Card */}
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Correct Option</label>
-              <select
-                value={formData.correctAnswer}
-                onChange={e => setFormData({ ...formData, correctAnswer: e.target.value })}
-                className="w-full border border-emerald-300 bg-emerald-50 text-emerald-900 font-black rounded-xl p-2.5 text-sm outline-none"
-              >
-                <option value="A">Option A is Correct</option>
-                <option value="B">Option B is Correct</option>
-                <option value="C">Option C is Correct</option>
-                <option value="D">Option D is Correct</option>
-              </select>
+              <label className="block text-xs font-black text-slate-900 uppercase">
+                2. Answer Options (Single Unified Text Editor)
+              </label>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Type or paste all 4 options here. Prefixes like <b>(A), (B), (C), (D)</b> or separate lines are parsed automatically in real time.
+              </p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Marks (+)</label>
-              <input
-                type="number"
-                value={formData.marks}
-                onChange={e => setFormData({ ...formData, marks: Number(e.target.value) })}
-                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-bold outline-none focus:border-indigo-500"
-              />
+            <textarea
+              rows={5}
+              value={optionsRawText}
+              onChange={e => setOptionsRawText(e.target.value)}
+              placeholder={`(A) First option text / formula\n(B) Second option text / formula\n(C) Third option text / formula\n(D) Fourth option text / formula`}
+              className="w-full border border-slate-200 rounded-2xl p-4 text-xs font-mono font-medium text-slate-800 outline-none focus:border-indigo-500 leading-relaxed shadow-xs"
+            />
+
+            {/* Parsed 4 Options & Correct Answer Selector */}
+            <div className="pt-2 border-t border-slate-100 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-black text-slate-700 uppercase">
+                  Select Correct Answer & Attach Option Diagrams:
+                </span>
+                <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  Option {String.fromCharCode(65 + correctAnswerIndex)} is marked correct
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {([0, 1, 2, 3] as const).map(idx => {
+                  const letter = String.fromCharCode(65 + idx);
+                  const isCorrect = correctAnswerIndex === idx;
+                  const optText = parsedOptions[idx] || `[Option ${letter} empty]`;
+                  const optImg = optionImages[idx];
+
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setCorrectAnswerIndex(idx)}
+                      className={`p-3.5 rounded-2xl border-2 transition cursor-pointer relative ${
+                        isCorrect
+                          ? 'border-emerald-500 bg-emerald-50/60 shadow-sm'
+                          : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-6 h-6 rounded-lg text-xs font-black flex items-center justify-center shrink-0 ${
+                              isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {letter}
+                          </span>
+                          <span className="text-xs font-bold text-slate-800">
+                            Option {letter}
+                          </span>
+                        </div>
+
+                        {isCorrect && (
+                          <span className="text-[10px] font-black uppercase text-emerald-800 bg-emerald-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <Check size={10} /> Correct
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Option text preview */}
+                      <div className="text-xs font-semibold text-slate-700 min-h-[1.5rem] mb-2 leading-relaxed">
+                        <LatexRenderer text={optText} />
+                      </div>
+
+                      {/* Option diagram preview if any */}
+                      {optImg && (
+                        <div className="mb-2 p-1.5 bg-white border border-slate-200 rounded-xl inline-block">
+                          <img src={optImg} alt={`Option ${letter} Diagram`} className="max-h-24 max-w-full rounded-lg object-contain" />
+                        </div>
+                      )}
+
+                      {/* Image attachment button for option */}
+                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={optionFileRefs[idx]}
+                          onChange={e => handleImageFileChange(e, idx)}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => optionFileRefs[idx].current?.click()}
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Upload size={12} /> {optImg ? 'Change Diagram' : 'Add Diagram'}
+                        </button>
+                        {optImg && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...optionImages] as [string, string, string, string];
+                              updated[idx] = '';
+                              setOptionImages(updated);
+                            }}
+                            className="text-[11px] font-bold text-rose-500 hover:text-rose-700 cursor-pointer"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2.5 rounded-xl font-extrabold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition cursor-pointer disabled:opacity-50"
-            >
-              {loading ? 'Saving...' : 'Save Question'}
-            </button>
+        {/* Right Column: Live NTA CBT Student Screen Preview */}
+        <div className="lg:col-span-5 sticky top-6 space-y-4">
+          <div className="bg-slate-900 text-white p-4 rounded-3xl shadow-xl border border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <span className="text-xs font-black uppercase text-indigo-300 flex items-center gap-1.5">
+                <Eye size={14} /> NTA CBT Real-Time Student Preview
+              </span>
+              <span className="text-[10px] font-mono bg-indigo-950 px-2.5 py-0.5 rounded text-indigo-300 border border-indigo-800">
+                Live Simulation
+              </span>
+            </div>
+
+            {/* Simulated Question Card */}
+            <div className="bg-white text-slate-800 rounded-2xl p-5 mt-4 shadow-inner space-y-4">
+              {/* Question Meta Header */}
+              <div className="flex justify-between items-center text-xs pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">
+                    Q1
+                  </span>
+                  <span className="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
+                    {chapterName || 'General'}
+                  </span>
+                </div>
+                <span className="font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                  +{marks} / -{exam?.negativeMarks || 0} Marks
+                </span>
+              </div>
+
+              {/* Question Statement */}
+              <div className="text-sm font-bold text-slate-800 leading-relaxed min-h-[2.5rem]">
+                {questionText ? (
+                  <LatexRenderer text={questionText} />
+                ) : (
+                  <span className="text-slate-400 italic font-normal">
+                    Question statement will render here with KaTeX formulas...
+                  </span>
+                )}
+              </div>
+
+              {/* Render Question Diagram if any */}
+              {questionImageUrl && (
+                <div className="p-2 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center">
+                  <img
+                    src={questionImageUrl}
+                    alt="Simulated Diagram"
+                    className="max-h-40 max-w-full rounded-lg object-contain"
+                  />
+                </div>
+              )}
+
+              {/* Simulated Student Option Choices */}
+              <div className="space-y-2 pt-2">
+                {([0, 1, 2, 3] as const).map(idx => {
+                  const letter = String.fromCharCode(65 + idx);
+                  const isCorrect = correctAnswerIndex === idx;
+                  const text = parsedOptions[idx] || `Option ${letter}`;
+                  const img = optionImages[idx];
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 transition ${
+                        isCorrect
+                          ? 'border-emerald-500 bg-emerald-50/50 text-slate-900 font-bold'
+                          : 'border-slate-200 bg-slate-50 text-slate-700 font-medium'
+                      }`}
+                    >
+                      <span
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
+                          isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
+                        }`}
+                      >
+                        {letter}
+                      </span>
+                      <div className="flex-1 space-y-1">
+                        <div>
+                          <LatexRenderer text={text} />
+                        </div>
+                        {img && (
+                          <div className="mt-1">
+                            <img src={img} alt={`Diagram ${letter}`} className="max-h-20 max-w-full rounded border border-slate-200" />
+                          </div>
+                        )}
+                      </div>
+                      {isCorrect && (
+                        <span className="text-[10px] uppercase font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0">
+                          Correct
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 mt-3 text-center">
+              This preview matches what students will see on their CBT testing screen.
+            </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
+  );
+};
   );
 };
 

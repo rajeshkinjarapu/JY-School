@@ -5,9 +5,40 @@ import { Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
-// KaTeX LaTeX renderer for math and scientific equations in CBT interface
+// KaTeX LaTeX renderer with Diagram & Image support for CBT interface
 const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ content, className = '' }) => {
   if (!content) return null;
+  const trimmed = content.trim();
+
+  // If content is purely an image URL or data URI
+  if (trimmed.startsWith('data:image/') || trimmed.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp|svg)($|\?)/i)) {
+    return (
+      <div className="my-1.5 inline-block">
+        <img src={trimmed} alt="Diagram" className="max-h-52 max-w-full rounded-xl object-contain border border-slate-200 shadow-xs" />
+      </div>
+    );
+  }
+
+  // Handle markdown images: ![alt](url)
+  if (trimmed.includes('![') && trimmed.includes('](')) {
+    const mdParts = trimmed.split(/(!\[.*?\]\(.*?\))/g);
+    return (
+      <span className={`inline-latex-content ${className}`}>
+        {mdParts.map((part, pIdx) => {
+          const match = part.match(/^!\[(.*?)\]\((.*?)\)$/);
+          if (match) {
+            return (
+              <span key={pIdx} className="block my-2">
+                <img src={match[2]} alt={match[1] || 'Diagram'} className="max-h-52 max-w-full rounded-xl object-contain border border-slate-200 shadow-xs" />
+              </span>
+            );
+          }
+          return <LatexRenderer key={pIdx} content={part} />;
+        })}
+      </span>
+    );
+  }
+
   const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g);
   return (
     <span className={`inline-latex-content ${className}`}>
