@@ -6,6 +6,23 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Backend TypeScript కంపైలేషన్ ఎర్రర్స్ (3 Errors) పూర్తి పరిష్కారం (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - యూజర్ VPS టెర్మినల్ లాగ్ పేస్ట్ చేశారు. అందులో `backend` లో `npm run build` రన్ చేసినప్పుడు `Found 3 errors in 3 files` తో TypeScript `tsc` కంపైలేషన్ ఆగింది:
+    1. `src/controllers/chairman.controller.ts:244`: `authorId does not exist in type AnnouncementCreateInput`
+    2. `src/controllers/competitiveExams.controller.ts:37`: `type does not exist in type SubjectCreateInput`
+    3. `src/utils/ensureCompetitiveExams.ts:92`: `type does not exist in type SubjectCreateInput`
+- **పూర్తయిన సవరణలు:**
+  1. [`backend/src/controllers/chairman.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/chairman.controller.ts):
+     - `authorId` స్థానంలో Prisma స్కీమా ప్రకారం `createdById: req.user?.id || adminUser?.id` మరియు `targetRoles: 'STUDENT,TEACHER,ADMIN'` గా సరిదిద్దాము.
+  2. [`backend/src/controllers/competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts):
+     - `Subject` క్రియేషన్‌లో లేని `type: 'THEORY'` ని తీసివేసి సరైన `classId: validClassId` ను సెట్ చేశాము.
+  3. [`backend/src/utils/ensureCompetitiveExams.ts`](file:///d:/JY%20School/JY-School-main/backend/src/utils/ensureCompetitiveExams.ts):
+     - `Subject` క్రియేషన్‌లో `type: 'THEORY'` తీసివేసి `classId: defaultClass.id` ను సెట్ చేశాము.
+- **ఫలితం:**
+  - `backend` లో `npm run build` ఇప్పుడు 0 ఎర్రర్స్‌తో విజయవంతంగా కంపైల్ అవుతుంది.
+  - `prisma db push` ఇప్పటికే విజయవంతంగా పూర్తయినందున, బ్యాకెండ్ బిల్డ్ మరియు రీస్టార్ట్‌తో కాంపిటీటివ్ ఎగ్జామ్స్ మాడ్యూల్ 100% లైవ్ అవుతుంది.
+
 ## చివరి సంభాషణ - "Failed to create competitive exam" పరిష్కారం & Prisma DB Push (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `asssalu work avvatam ledu` (స్క్రీన్‌షాట్‌లో ఇన్‌లైన్ ఫారమ్‌లో వివరాలు ఇచ్చి [Create Exam] క్లిక్ చేసినప్పుడు `Failed to create competitive exam` అనే ఎర్రర్ టోస్ట్ వస్తున్నట్లు రిపోర్ట్ చేశారు).

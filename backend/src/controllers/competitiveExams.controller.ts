@@ -34,7 +34,7 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       let sub = await prisma.subject.findFirst();
       if (!sub) {
         sub = await prisma.subject.create({
-          data: { name: 'Mathematics', code: 'MTH-101', type: 'THEORY' }
+          data: { name: 'Mathematics', code: 'MTH-101', classId: validClassId }
         });
       }
       validSubjectId = sub?.id;

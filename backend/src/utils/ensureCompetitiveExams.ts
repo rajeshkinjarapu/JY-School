@@ -89,7 +89,7 @@ export async function ensureCompetitiveExams(): Promise<void> {
           data: {
             name: 'Mathematics',
             code: 'MTH-101',
-            type: 'THEORY',
+            classId: defaultClass.id,
           },
         });
       }

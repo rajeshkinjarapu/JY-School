@@ -237,13 +237,14 @@ export const broadcastGroupCircular = async (req: AuthRequest, res: Response, ne
     if (!title || !content) return next(createError('Title and content are required', 400));
 
     // Create an announcement in DB as well so users see it
+    const adminUser = await prisma.user.findFirst({ where: { role: { in: ['SUPER_ADMIN', 'ADMIN'] } } });
     await prisma.announcement.create({
       data: {
         title: `[CHAIRMAN CIRCULAR] ${title}`,
         content,
-        authorId: req.user?.id || (await prisma.user.findFirst({ where: { role: { in: ['SUPER_ADMIN', 'ADMIN'] } } }))?.id || '',
+        createdById: req.user?.id || adminUser?.id || '',
         priority: priority || 'HIGH',
-        targetAudience: 'ALL',
+        targetRoles: 'STUDENT,TEACHER,ADMIN',
       },
     }).catch(err => console.log('Notice saving chairman announcement to local table:', err.message));
 
