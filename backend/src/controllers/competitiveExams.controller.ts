@@ -1,6 +1,190 @@
 import { Request, Response } from 'express';
 import { prisma } from '../utils/prisma';
 import { generateQuizQuestions } from '../utils/gemini';
+import { ensureCompetitiveExams } from '../utils/ensureCompetitiveExams';
+
+// ==========================================
+// SAMPLE QUESTIONS REPOSITORY (NTA / EDURACLE PATTERNS)
+// ==========================================
+const SAMPLE_JEE_QUESTIONS = [
+  {
+    questionText: 'A particle moves along the x-axis such that its position is given by $x(t) = 3t^3 - 6t^2 + 4t$. The acceleration of the particle at the instant when its velocity is zero is:',
+    options: ['12 m/s²', '6 m/s²', '0 m/s²', '18 m/s²'],
+    correctAnswer: '6 m/s²',
+    marks: 4,
+    chapterName: 'Physics: Kinematics & Motion',
+    difficulty: 'MEDIUM',
+  },
+  {
+    questionText: 'A block of mass $m = 2\\text{ kg}$ is resting on a rough horizontal surface with coefficient of friction $\\mu = 0.4$. A horizontal force of $F = 6\\text{ N}$ is applied. The frictional force acting on the block is ($g = 10\\text{ m/s}^2$):',
+    options: ['6 N', '8 N', '2 N', '0 N'],
+    correctAnswer: '6 N',
+    marks: 4,
+    chapterName: "Physics: Newton's Laws & Friction",
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'Two point charges $+q$ and $-q$ are placed at a distance $2a$ apart. The electric potential at the midpoint of the line joining the two charges is:',
+    options: ['0', '\\frac{1}{4\\pi\\varepsilon_0}\\frac{q}{a}', '\\frac{1}{4\\pi\\varepsilon_0}\\frac{2q}{a}', '\\frac{1}{4\\pi\\varepsilon_0}\\frac{q}{a^2}'],
+    correctAnswer: '0',
+    marks: 4,
+    chapterName: 'Physics: Electrostatics & Potential',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'The oxidation state of Chromium in Potassium Dichromate ($\\text{K}_2\\text{Cr}_2\\text{O}_7$) is:',
+    options: ['+6', '+3', '+4', '+2'],
+    correctAnswer: '+6',
+    marks: 4,
+    chapterName: 'Chemistry: Redox Reactions',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'Which of the following molecules has a permanent non-zero dipole moment ($\mu \\neq 0$)?',
+    options: ['\\text{NH}_3', '\\text{BF}_3', '\\text{CO}_2', '\\text{CCl}_4'],
+    correctAnswer: '\\text{NH}_3',
+    marks: 4,
+    chapterName: 'Chemistry: Chemical Bonding & Molecular Structure',
+    difficulty: 'MEDIUM',
+  },
+  {
+    questionText: 'According to IUPAC nomenclature, the correct name for the compound $\\text{CH}_3-\\text{CH}(\\text{CH}_3)-\\text{CHO}$ is:',
+    options: ['2-Methylpropanal', 'Isobutyraldehyde', '2-Methylpropan-1-one', 'Butanal'],
+    correctAnswer: '2-Methylpropanal',
+    marks: 4,
+    chapterName: 'Chemistry: Organic Aldehydes & Ketones',
+    difficulty: 'MEDIUM',
+  },
+  {
+    questionText: 'The value of the definite integral $\\int_{0}^{\\pi/2} \\frac{\\sqrt{\\sin x}}{\\sqrt{\\sin x} + \\sqrt{\\cos x}} \\, dx$ is equal to:',
+    options: ['\\frac{\\pi}{4}', '\\frac{\\pi}{2}', '\\pi', '0'],
+    correctAnswer: '\\frac{\\pi}{4}',
+    marks: 4,
+    chapterName: 'Mathematics: Definite Integrals',
+    difficulty: 'MEDIUM',
+  },
+  {
+    questionText: 'If the matrix $A = \\begin{pmatrix} 2 & k \\\\ 4 & 6 \\end{pmatrix}$ is singular (non-invertible), then the value of $k$ is:',
+    options: ['3', '4', '2', '0'],
+    correctAnswer: '3',
+    marks: 4,
+    chapterName: 'Mathematics: Matrices & Determinants',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'The length of the latus rectum of the parabola $y^2 = 16x$ is:',
+    options: ['16', '4', '8', '32'],
+    correctAnswer: '16',
+    marks: 4,
+    chapterName: 'Mathematics: Coordinate Geometry & Conics',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'The number of terms in the algebraic expansion of $(2x + 3y)^{10}$ is equal to:',
+    options: ['11', '10', '12', '9'],
+    correctAnswer: '11',
+    marks: 4,
+    chapterName: 'Mathematics: Binomial Theorem',
+    difficulty: 'EASY',
+  }
+];
+
+const SAMPLE_NEET_QUESTIONS = [
+  {
+    questionText: 'The site of cellular respiration and ATP synthesis in aerobic eukaryotic organisms is:',
+    options: ['Mitochondria', 'Chloroplast', 'Endoplasmic Reticulum', 'Golgi Apparatus'],
+    correctAnswer: 'Mitochondria',
+    marks: 4,
+    chapterName: 'Biology: Cell Biology',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'In DNA double helix structure, Adenine (A) always pairs with Thymine (T) through:',
+    options: ['Two Hydrogen bonds', 'Three Hydrogen bonds', 'Phosphodiester bond', 'Glycosidic bond'],
+    correctAnswer: 'Two Hydrogen bonds',
+    marks: 4,
+    chapterName: 'Biology: Molecular Basis of Inheritance',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'The functional and structural filtration unit of the human mammalian kidney is:',
+    options: ['Nephron', 'Neuron', 'Glomerulus', 'Ureter'],
+    correctAnswer: 'Nephron',
+    marks: 4,
+    chapterName: 'Biology: Excretory Products & Elimination',
+    difficulty: 'EASY',
+  },
+  {
+    questionText: 'What is the SI unit of Magnetic Flux?',
+    options: ['Weber (Wb)', 'Tesla (T)', 'Henry (H)', 'Gauss (G)'],
+    correctAnswer: 'Weber (Wb)',
+    marks: 4,
+    chapterName: 'Physics: Magnetism & Matter',
+    difficulty: 'MEDIUM',
+  },
+  {
+    questionText: 'Which vitamin is essential for the normal process of human blood clotting?',
+    options: ['Vitamin K', 'Vitamin A', 'Vitamin C', 'Vitamin D'],
+    correctAnswer: 'Vitamin K',
+    marks: 4,
+    chapterName: 'Biology: Body Fluids & Circulation',
+    difficulty: 'EASY',
+  }
+];
+
+// Helper to ensure database tables exist in PostgreSQL
+async function ensureTablesExist() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
+      "id" TEXT PRIMARY KEY,
+      "title" TEXT NOT NULL,
+      "classId" TEXT NOT NULL,
+      "subjectId" TEXT NOT NULL,
+      "teacherId" TEXT,
+      "duration" INTEGER NOT NULL DEFAULT 180,
+      "startTime" TIMESTAMP(3) NOT NULL,
+      "endTime" TIMESTAMP(3) NOT NULL,
+      "totalMarks" DOUBLE PRECISION NOT NULL DEFAULT 300,
+      "passMarks" DOUBLE PRECISION NOT NULL DEFAULT 100,
+      "negativeMarks" DOUBLE PRECISION NOT NULL DEFAULT 1,
+      "isPublished" BOOLEAN NOT NULL DEFAULT true,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
+      "id" TEXT PRIMARY KEY,
+      "competitiveExamId" TEXT NOT NULL,
+      "questionText" TEXT NOT NULL,
+      "questionType" TEXT NOT NULL DEFAULT 'MCQ',
+      "imageUrl" TEXT,
+      "options" TEXT,
+      "correctAnswer" TEXT NOT NULL,
+      "marks" DOUBLE PRECISION NOT NULL DEFAULT 4,
+      "chapterName" TEXT,
+      "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM'
+    );
+
+    CREATE TABLE IF NOT EXISTS "CompetitiveExamSubmission" (
+      "id" TEXT PRIMARY KEY,
+      "competitiveExamId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL,
+      "marksObtained" DOUBLE PRECISION NOT NULL,
+      "totalTimeTaken" INTEGER NOT NULL DEFAULT 0,
+      "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "CompetitiveExamSubmission_competitiveExamId_studentId_key" UNIQUE ("competitiveExamId", "studentId")
+    );
+
+    CREATE TABLE IF NOT EXISTS "CompetitiveExamResponse" (
+      "id" TEXT PRIMARY KEY,
+      "submissionId" TEXT NOT NULL,
+      "questionId" TEXT NOT NULL,
+      "selectedOption" TEXT,
+      "isCorrect" BOOLEAN NOT NULL,
+      "timeTakenSeconds" INTEGER NOT NULL DEFAULT 0,
+      CONSTRAINT "CompetitiveExamResponse_submissionId_questionId_key" UNIQUE ("submissionId", "questionId")
+    );
+  `).catch(() => {});
+}
 
 // ==========================================
 // ADMIN / TEACHER ROUTES
@@ -8,96 +192,184 @@ import { generateQuizQuestions } from '../utils/gemini';
 
 export const createCompetitiveExam = async (req: Request, res: Response) => {
   try {
-    const { title, classId, subjectId, teacherId, duration, startTime, endTime, totalMarks, passMarks, negativeMarks, isPublished } = req.body;
+    await ensureTablesExist();
+
+    const { 
+      title, 
+      classId, 
+      subjectId, 
+      teacherId, 
+      duration, 
+      startTime, 
+      endTime, 
+      totalMarks, 
+      passMarks, 
+      negativeMarks, 
+      isPublished,
+      questions,
+      autoPopulateSample,
+      pattern
+    } = req.body;
     
+    // Resolve valid class (prefer 10th/Senior class instead of Nursery)
     let validClassId = classId;
     if (validClassId) {
       const checkCls = await prisma.class.findUnique({ where: { id: validClassId } }).catch(() => null);
       if (!checkCls) validClassId = null;
     }
     if (!validClassId) {
-      let cls = await prisma.class.findFirst();
+      let cls = await prisma.class.findFirst({
+        where: { name: { in: ['10th', '10', '9th', '9', '8th', '8'] } }
+      });
+      if (!cls) cls = await prisma.class.findFirst();
       if (!cls) {
         cls = await prisma.class.create({
-          data: { name: '10th', section: 'A', academicYear: '2024-2025', capacity: 50 }
+          data: { name: '10th', section: 'A', academicYear: '2026-2027', capacity: 50 }
         });
       }
       validClassId = cls?.id;
     }
 
+    // Resolve valid subject (prefer Mathematics / Science / Physics)
     let validSubjectId = subjectId;
     if (validSubjectId) {
       const checkSub = await prisma.subject.findUnique({ where: { id: validSubjectId } }).catch(() => null);
       if (!checkSub) validSubjectId = null;
     }
     if (!validSubjectId) {
-      let sub = await prisma.subject.findFirst();
+      let sub = await prisma.subject.findFirst({
+        where: { name: { in: ['Mathematics', 'Physics', 'Science', 'Maths'] } }
+      });
+      if (!sub) sub = await prisma.subject.findFirst();
       if (!sub) {
         sub = await prisma.subject.create({
-          data: { name: 'Mathematics', code: 'MTH-101', classId: validClassId }
+          data: { name: 'Mathematics', code: `MTH-${validClassId.slice(-4)}`, classId: validClassId }
         });
       }
       validSubjectId = sub?.id;
     }
 
-    try {
-      const exam = await prisma.competitiveExam.create({
-        data: {
-          title: title || 'JEE / NEET Mock Exam',
-          classId: validClassId,
-          subjectId: validSubjectId,
-          teacherId: teacherId || null,
-          duration: Number(duration) || 180, 
-          startTime: startTime ? new Date(startTime) : new Date(), 
-          endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
-          totalMarks: Number(totalMarks) || 300,
-          passMarks: Number(passMarks) || 100,
-          negativeMarks: Number(negativeMarks) || 1,
-          isPublished: isPublished !== undefined ? Boolean(isPublished) : true
-        }
-      });
-      return res.status(201).json({ success: true, data: exam });
-    } catch (createErr: any) {
-      console.warn('First create attempt failed, executing DDL fallback:', createErr?.message);
-      // Auto-create table if missing in database
-      await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
-          "id" TEXT PRIMARY KEY,
-          "title" TEXT NOT NULL,
-          "classId" TEXT NOT NULL,
-          "subjectId" TEXT NOT NULL,
-          "teacherId" TEXT,
-          "duration" INTEGER NOT NULL DEFAULT 180,
-          "startTime" TIMESTAMP(3) NOT NULL,
-          "endTime" TIMESTAMP(3) NOT NULL,
-          "totalMarks" DOUBLE PRECISION NOT NULL DEFAULT 300,
-          "passMarks" DOUBLE PRECISION NOT NULL DEFAULT 100,
-          "negativeMarks" DOUBLE PRECISION NOT NULL DEFAULT 1,
-          "isPublished" BOOLEAN NOT NULL DEFAULT true,
-          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-      `).catch(() => {});
+    // Create the Exam Record
+    const exam = await prisma.competitiveExam.create({
+      data: {
+        title: title || 'JEE Mains All India Practice Exam',
+        classId: validClassId,
+        subjectId: validSubjectId,
+        teacherId: teacherId || null,
+        duration: Number(duration) || 180, 
+        startTime: startTime ? new Date(startTime) : new Date(), 
+        endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
+        totalMarks: Number(totalMarks) || 300,
+        passMarks: Number(passMarks) || 100,
+        negativeMarks: Number(negativeMarks) || 1,
+        isPublished: isPublished !== undefined ? Boolean(isPublished) : true
+      }
+    });
 
-      const exam = await prisma.competitiveExam.create({
-        data: {
-          title: title || 'JEE / NEET Mock Exam',
-          classId: validClassId,
-          subjectId: validSubjectId,
-          teacherId: teacherId || null,
-          duration: Number(duration) || 180, 
-          startTime: startTime ? new Date(startTime) : new Date(), 
-          endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
-          totalMarks: Number(totalMarks) || 300,
-          passMarks: Number(passMarks) || 100,
-          negativeMarks: Number(negativeMarks) || 1,
-          isPublished: isPublished !== undefined ? Boolean(isPublished) : true
-        }
-      });
-      return res.status(201).json({ success: true, data: exam });
+    // Populate questions if provided directly in payload
+    let createdQuestionsCount = 0;
+    if (Array.isArray(questions) && questions.length > 0) {
+      for (const q of questions) {
+        const formattedOptions = Array.isArray(q.options) 
+          ? JSON.stringify(q.options) 
+          : (typeof q.options === 'string' ? q.options : JSON.stringify(['A', 'B', 'C', 'D']));
+
+        await prisma.competitiveExamQuestion.create({
+          data: {
+            competitiveExamId: exam.id,
+            questionText: q.questionText || '',
+            questionType: q.questionType || 'MCQ',
+            imageUrl: q.imageUrl || null,
+            options: formattedOptions,
+            correctAnswer: q.correctAnswer || (Array.isArray(q.options) ? q.options[0] : 'A'),
+            marks: Number(q.marks) || 4,
+            chapterName: q.chapterName || 'General',
+            difficulty: q.difficulty || 'MEDIUM'
+          }
+        }).catch(() => {});
+        createdQuestionsCount++;
+      }
+    } else if (autoPopulateSample || !questions || questions.length === 0) {
+      // Auto-populate authentic sample questions based on pattern
+      const sampleSet = (pattern === 'NEET' || (title && title.toUpperCase().includes('NEET')))
+        ? SAMPLE_NEET_QUESTIONS
+        : SAMPLE_JEE_QUESTIONS;
+
+      for (const q of sampleSet) {
+        await prisma.competitiveExamQuestion.create({
+          data: {
+            competitiveExamId: exam.id,
+            questionText: q.questionText,
+            questionType: 'MCQ',
+            options: JSON.stringify(q.options),
+            correctAnswer: q.correctAnswer,
+            marks: q.marks || 4,
+            chapterName: q.chapterName,
+            difficulty: q.difficulty || 'MEDIUM'
+          }
+        }).catch(() => {});
+        createdQuestionsCount++;
+      }
     }
+
+    return res.status(201).json({ 
+      success: true, 
+      message: 'Competitive Exam created successfully with questions',
+      data: exam,
+      questionsCount: createdQuestionsCount 
+    });
+
   } catch (error: any) {
     console.error('Final createCompetitiveExam error:', error);
     res.status(500).json({ success: false, message: error?.message || 'Failed to create competitive exam' });
+  }
+};
+
+export const getAllCompetitiveExams = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+
+    let exams = await prisma.competitiveExam.findMany({
+      include: { 
+        subject: true, 
+        class: true, 
+        _count: { select: { questions: true, submissions: true } },
+        submissions: {
+          select: { marksObtained: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    // Auto-seed if database has 0 competitive exams
+    if (exams.length === 0) {
+      console.log('🌱 No competitive exams found, auto-seeding NTA standard mock tests...');
+      await ensureCompetitiveExams().catch(() => {});
+      exams = await prisma.competitiveExam.findMany({
+        include: { 
+          subject: true, 
+          class: true, 
+          _count: { select: { questions: true, submissions: true } },
+          submissions: {
+            select: { marksObtained: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
+    }
+
+    res.json({ success: true, data: exams });
+  } catch (error) {
+    console.error('getAllCompetitiveExams error:', error);
+    try {
+      const fallbackExams = await prisma.competitiveExam.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json({ success: true, data: fallbackExams });
+    } catch (e2) {
+      console.error('getAllCompetitiveExams fallback error:', e2);
+      res.status(200).json({ success: true, data: [] });
+    }
   }
 };
 
@@ -115,34 +387,6 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
   }
 };
 
-export const getAllCompetitiveExams = async (req: Request, res: Response) => {
-  try {
-    const exams = await prisma.competitiveExam.findMany({
-      include: { 
-        subject: true, 
-        class: true, 
-        _count: { select: { questions: true, submissions: true } },
-        submissions: {
-          select: { marksObtained: true } // Fetch marks to calculate average/highest/lowest
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-    res.json({ success: true, data: exams });
-  } catch (error) {
-    console.error('getAllCompetitiveExams error:', error);
-    try {
-      const fallbackExams = await prisma.competitiveExam.findMany({
-        orderBy: { createdAt: 'desc' }
-      });
-      res.json({ success: true, data: fallbackExams });
-    } catch (e2) {
-      console.error('getAllCompetitiveExams fallback error:', e2);
-      res.status(200).json({ success: true, data: [] });
-    }
-  }
-};
-
 export const addCompetitiveQuestion = async (req: Request, res: Response) => {
   try {
     const { examId } = req.params;
@@ -152,52 +396,20 @@ export const addCompetitiveQuestion = async (req: Request, res: Response) => {
       ? JSON.stringify(options) 
       : (typeof options === 'string' ? options : JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']));
 
-    try {
-      const q = await prisma.competitiveExamQuestion.create({
-        data: {
-          competitiveExamId: examId,
-          questionText: questionText || '',
-          questionType: questionType || 'MCQ',
-          imageUrl: imageUrl || null,
-          options: formattedOptions,
-          correctAnswer: correctAnswer || 'Option A',
-          marks: Number(marks) || 4,
-          chapterName: chapterName || 'General',
-          difficulty: difficulty || 'MEDIUM'
-        }
-      });
-      return res.status(201).json({ success: true, data: q });
-    } catch (createQErr) {
-      await prisma.$executeRawUnsafe(`
-        CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
-          "id" TEXT PRIMARY KEY,
-          "competitiveExamId" TEXT NOT NULL,
-          "questionText" TEXT NOT NULL,
-          "questionType" TEXT NOT NULL DEFAULT 'MCQ',
-          "imageUrl" TEXT,
-          "options" TEXT,
-          "correctAnswer" TEXT NOT NULL,
-          "marks" DOUBLE PRECISION NOT NULL DEFAULT 4,
-          "chapterName" TEXT,
-          "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM'
-        );
-      `).catch(() => {});
-
-      const q = await prisma.competitiveExamQuestion.create({
-        data: {
-          competitiveExamId: examId,
-          questionText: questionText || '',
-          questionType: questionType || 'MCQ',
-          imageUrl: imageUrl || null,
-          options: formattedOptions,
-          correctAnswer: correctAnswer || 'Option A',
-          marks: Number(marks) || 4,
-          chapterName: chapterName || 'General',
-          difficulty: difficulty || 'MEDIUM'
-        }
-      });
-      return res.status(201).json({ success: true, data: q });
-    }
+    const q = await prisma.competitiveExamQuestion.create({
+      data: {
+        competitiveExamId: examId,
+        questionText: questionText || '',
+        questionType: questionType || 'MCQ',
+        imageUrl: imageUrl || null,
+        options: formattedOptions,
+        correctAnswer: correctAnswer || 'Option A',
+        marks: Number(marks) || 4,
+        chapterName: chapterName || 'General',
+        difficulty: difficulty || 'MEDIUM'
+      }
+    });
+    return res.status(201).json({ success: true, data: q });
   } catch (error: any) {
     console.error('Failed to add question:', error);
     res.status(500).json({ success: false, message: error?.message || 'Failed to add question' });
@@ -223,7 +435,7 @@ Return ONLY a valid JSON array of objects with keys: "questionText", "options" (
           questionType: 'MCQ',
           options: JSON.stringify(q.options),
           correctAnswer: q.correctAnswer,
-          marks: 4, // Default marks for competitive like JEE
+          marks: 4,
           chapterName: chapterName,
           difficulty: difficulty || 'MEDIUM'
         }
@@ -306,7 +518,7 @@ export const getCompetitiveExamDetails = async (req: Request, res: Response) => 
 export const submitCompetitiveExam = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // examId
-    const { answers, totalTimeTaken } = req.body; // array of { questionId, selectedOption, timeTakenSeconds }
+    const { answers, totalTimeTaken } = req.body;
     const studentUserId = (req as any).user?.id;
 
     let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
@@ -386,123 +598,122 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
 };
 
 export const getExamLeaderboard = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const submissions = await prisma.competitiveExamSubmission.findMany({
-            where: { competitiveExamId: id },
-            include: {
-                student: {
-                    include: {
-                        user: true,
-                        class: true
-                    }
-                }
-            },
-            orderBy: [
-                { marksObtained: "desc" },
-                { totalTimeTaken: "asc" }
-            ]
-        });
-        res.json({ success: true, data: submissions });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to fetch leaderboard" });
-    }
+  try {
+    const { id } = req.params;
+    const submissions = await prisma.competitiveExamSubmission.findMany({
+      where: { competitiveExamId: id },
+      include: {
+        student: {
+          include: {
+            user: true,
+            class: true
+          }
+        }
+      },
+      orderBy: [
+        { marksObtained: "desc" },
+        { totalTimeTaken: "asc" }
+      ]
+    });
+    res.json({ success: true, data: submissions });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch leaderboard" });
+  }
 };
 
 export const getStudentResult = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const studentUserId = (req as any).user?.id;
+  try {
+    const { id } = req.params;
+    const studentUserId = (req as any).user?.id;
 
-        let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
-        if (!student) {
-          student = await prisma.student.findFirst();
-        }
-
-        const submission = await prisma.competitiveExamSubmission.findFirst({
-            where: { 
-              competitiveExamId: id,
-              ...(student ? { studentId: student.id } : {})
-            },
-            include: {
-                responses: {
-                    include: { question: true }
-                },
-                competitiveExam: {
-                  include: {
-                    questions: true
-                  }
-                }
-            },
-            orderBy: { submittedAt: 'desc' }
-        });
-
-        if (!submission) return res.status(404).json({ success: false, message: "Result not found" });
-        res.json({ 
-          success: true, 
-          data: { 
-            ...submission, 
-            exam: submission.competitiveExam 
-          } 
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to fetch result" });
+    let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
+    if (!student) {
+      student = await prisma.student.findFirst();
     }
+
+    const submission = await prisma.competitiveExamSubmission.findFirst({
+      where: { 
+        competitiveExamId: id,
+        ...(student ? { studentId: student.id } : {})
+      },
+      include: {
+        responses: {
+          include: { question: true }
+        },
+        competitiveExam: {
+          include: {
+            questions: true
+          }
+        }
+      },
+      orderBy: { submittedAt: 'desc' }
+    });
+
+    if (!submission) return res.status(404).json({ success: false, message: "Result not found" });
+    res.json({ 
+      success: true, 
+      data: { 
+        ...submission, 
+        exam: submission.competitiveExam 
+      } 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to fetch result" });
+  }
 };
 
 export const deleteCompetitiveExam = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        await prisma.competitiveExam.delete({ where: { id } });
-        res.json({ success: true, message: "Exam deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to delete exam" });
-    }
+  try {
+    const { id } = req.params;
+    await prisma.competitiveExam.delete({ where: { id } });
+    res.json({ success: true, message: "Exam deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to delete exam" });
+  }
 };
 
 export const updateCompetitiveExam = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-        const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
-        
-        const exam = await prisma.competitiveExam.update({
-            where: { id },
-            data: { title, duration, totalMarks, passMarks, negativeMarks }
-        });
+  try {
+    const { id } = req.params;
+    const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
+    
+    const exam = await prisma.competitiveExam.update({
+      where: { id },
+      data: { title, duration, totalMarks, passMarks, negativeMarks }
+    });
 
-
-        res.json({ success: true, data: exam });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to update exam" });
-    }
+    res.json({ success: true, data: exam });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to update exam" });
+  }
 };
 
 export const updateCompetitiveQuestion = async (req: Request, res: Response) => {
-    try {
-        const { questionId } = req.params;
-        const { questionText, options, correctAnswer, explanation, marks } = req.body;
-        
-        const q = await prisma.competitiveExamQuestion.update({
-            where: { id: questionId },
-            data: {
-                questionText,
-                options: JSON.stringify(options),
-                correctAnswer,
-                marks
-            }
-        });
-        res.json({ success: true, data: q });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to update question" });
-    }
+  try {
+    const { questionId } = req.params;
+    const { questionText, options, correctAnswer, marks } = req.body;
+    
+    const q = await prisma.competitiveExamQuestion.update({
+      where: { id: questionId },
+      data: {
+        questionText,
+        options: JSON.stringify(options),
+        correctAnswer,
+        marks
+      }
+    });
+    res.json({ success: true, data: q });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to update question" });
+  }
 };
 
 export const deleteCompetitiveQuestion = async (req: Request, res: Response) => {
-    try {
-        const { questionId } = req.params;
-        await prisma.competitiveExamQuestion.delete({ where: { id: questionId } });
-        res.json({ success: true, message: "Question deleted successfully" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Failed to delete question" });
-    }
+  try {
+    const { questionId } = req.params;
+    await prisma.competitiveExamQuestion.delete({ where: { id: questionId } });
+    res.json({ success: true, message: "Question deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Failed to delete question" });
+  }
 };

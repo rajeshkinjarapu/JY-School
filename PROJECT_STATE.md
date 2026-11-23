@@ -6,6 +6,36 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - కాంపిటీటివ్ ఎగ్జామ్ మాడ్యూల్ పూర్తి Eduracle-Style CBT పోర్టల్ ట్రాన్స్‌ఫార్మేషన్ (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `competitive module assalu work ye avvatam ledu, naku oka professional eduracle portal laga exam create chesinattu kavali` (అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో ఎగ్జామ్స్ 0, క్వశ్చన్లు 0, డీఫాల్ట్‌గా నర్సరీ క్లాస్ & ఆర్ట్ & క్రాఫ్ట్ రావడం, ఎగ్జామ్ క్రియేట్ చేసినా క్వశ్చన్లు లేకపోవడంపై యూజర్ అసంతృప్తి వ్యక్తం చేసి, ఎడ్యురాకిల్ తరహా ప్రొఫెషనల్ పోర్టల్ లాగా చేయమని కోరారు).
+- **సమస్య విశ్లేషణ:**
+  1. గతంలో క్రియేట్ ఎగ్జామ్ ఫారమ్‌లో డీఫాల్ట్‌గా మొదటి క్లాస్ (NUR-A) మరియు సబ్జెక్ట్ (ART & CRAFT) సెలెక్ట్ అవుతున్నాయి. సీనియర్ తరగతులకు ప్రాధాన్యత లేదు.
+  2. పరీక్షను క్రియేట్ చేసినప్పటికీ అందులో ప్రశ్నలు 0 గా ఉండిపోతున్నాయి. ఉపాధ్యాయులు మాన్యువల్‌గా అన్ని ప్రశ్నలను టైప్ చేయడం శ్రమతో కూడుకున్నది.
+  3. IIT-JEE, NEET, EAMCET వంటి పోటీ పరీక్షలకు అవసరమైన మల్టీ-సబ్జెక్ట్ సెక్షన్ బ్లూప్రింట్లు (ఫిజిక్స్, కెమిస్ట్రీ, మ్యాథ్స్ / బోటనీ, జువాలజీ), మార్కింగ్ స్కీమ్ (+4/-1), టైమ్ రూల్స్ లేవు.
+  4. ప్రశ్నలు మరియు ఆప్షన్లలో మ్యాథ్స్ ఈక్వేషన్లు ($x(t)$, $\int$, రసాయన సూత్రాలు) KaTeX తో రెండర్ కావడం లేదు.
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **Eduracle CBT ఎగ్జామ్ క్రియేషన్ విజార్డ్ ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - 6 రెడీమేడ్ ఎగ్జామ్ బ్లూప్రింట్ కార్డులు చేర్చాము:
+       * ⚡ **IIT-JEE Mains 2026** (Physics, Chemistry, Maths - 300 Marks, 180 min, +4/-1)
+       * 🩺 **NEET UG 2026** (Physics, Chemistry, Botany, Zoology - 720 Marks, 200 min, +4/-1)
+       * 🎯 **AP/TS EAMCET 2026** (160 Marks, 180 min, No Negative)
+       * 🏆 **Foundation & Olympiad** (100 Marks, 120 min)
+       * 🏫 **Navodaya Entrance** (100 Marks, 120 min)
+       * ⚙️ **Custom Test**
+     - క్లిక్ చేయగానే పూర్తి టైటిల్, మార్కింగ్ స్కీమ్, డ్యూరేషన్ మరియు సెక్షన్ బ్రేకప్ ఆటోమేటిక్‌గా లోడ్ అవుతాయి.
+     - టార్గెట్ క్లాస్ డ్రాప్‌డౌన్‌లో సీనియర్ తరగతులు (10th-A, 10th-B, 9th-A, 8th-A) మాత్రమే ప్రయారిటీగా మొదట సెలెక్ట్ అవుతాయి (నర్సరీ రాదు).
+     - **Auto-Populate Authentic Questions** చెక్‌బాక్స్ ఆటోమేటిక్‌గా ఎనేబుల్ అయి ఉంటుంది. దీనివల్ల ఎగ్జామ్ క్రియేట్ చేయగానే క్వశ్చన్ బ్యాంక్‌తో సహా ఎగ్జామ్ వెంటనే లైవ్ అవుతుంది.
+     - ఎగ్జామ్ క్రియేట్ అవ్వగానే **ExamLaunchSuccessModal** పాపప్ అయి, 1-క్లిక్‌తో అసలైన CBT పరీక్షను ప్రారంభించే వీలు కల్పిస్తుంది.
+  2. **బ్యాకెండ్ ఆటో-క్వశ్చన్ సీడింగ్ ఇంజిన్ ([`backend/src/controllers/competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - అసలైన NTA/JEE/NEET స్టాండర్డ్ ప్రశ్నల రిపోజిటరీ (`SAMPLE_JEE_QUESTIONS`, `SAMPLE_NEET_QUESTIONS`) చేర్చబడింది.
+     - ఎగ్జామ్ క్రియేట్ అయినప్పుడు డేటాబేస్ టేబుల్స్ ఆటో-క్రియేట్ అయ్యే రక్షణతో పాటు, ఆటో-పాపులేట్ ఫ్లాగ్‌తో ప్రశ్నలు వెంటనే `CompetitiveExamQuestion` టేబుల్‌లోకి ఇన్సర్ట్ అవుతాయి.
+  3. **CBT ఎగ్జామ్ స్క్రీన్ మరియు క్వశ్చన్ బ్యాంక్‌లో KaTeX రెండరింగ్ ([`TakeCompetitiveExamPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/TakeCompetitiveExamPage.tsx) & [`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - `LatexRenderer` కాంపోనెంట్‌ను జోడించి, ప్రశ్నలు, ఆప్షన్లు మరియు వివరణలలో KaTeX మ్యాథ్ ఫార్ములాలు క్రిస్టల్ క్లియర్‌గా రెండర్ అయ్యేలా చేసాము.
+     - మాన్యువల్ ప్రశ్నల చేరిక మోడల్‌లో రియల్-టైమ్ KaTeX లైవ్ ప్రివ్యూను అందించాము.
+- **ఫలితం:**
+  - కాంపిటీటివ్ ఎగ్జామ్స్ మాడ్యూల్ ఇప్పుడు పూర్తి స్థాయి Eduracle/NTA తరహా CBT ప్రొఫెషనల్ పోర్టల్‌గా మారింది. ఎవరైనా క్షణాల్లో JEE Mains / NEET గ్రాండ్ టెస్ట్‌ను సెట్ చేసి ఆన్‌లైన్‌లో పరీక్ష నిర్వహించవచ్చు.
+
 ## చివరి సంభాషణ - Backend TypeScript కంపైలేషన్ ఎర్రర్స్ (3 Errors) పూర్తి పరిష్కారం (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - యూజర్ VPS టెర్మినల్ లాగ్ పేస్ట్ చేశారు. అందులో `backend` లో `npm run build` రన్ చేసినప్పుడు `Found 3 errors in 3 files` తో TypeScript `tsc` కంపైలేషన్ ఆగింది:

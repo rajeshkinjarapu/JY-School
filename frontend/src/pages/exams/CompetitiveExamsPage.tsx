@@ -1,11 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ExternalLink, X, Calendar, Hash, Target
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+// ═══════════════════════════════════════════════════════════════
+// KATEX LATEX MATH FORMULA RENDERER
+// ═══════════════════════════════════════════════════════════════
+export const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
+  if (!text) return null;
+  const parts = [];
+  const regex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g;
+  let lastIndex = 0;
+  let match;
+  let keyIndex = 0;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex, match.index)}</span>);
+    }
+    const mathStr = match[0];
+    const isDisplay = mathStr.startsWith('$$');
+    const math = isDisplay ? mathStr.slice(2, -2) : mathStr.slice(1, -1);
+    try {
+      const html = katex.renderToString(math, { displayMode: isDisplay, throwOnError: false });
+      parts.push(<span key={`math-${keyIndex++}`} dangerouslySetInnerHTML={{ __html: html }} />);
+    } catch {
+      parts.push(<span key={`math-${keyIndex++}`}>{mathStr}</span>);
+    }
+    lastIndex = regex.lastIndex;
+  }
+  if (lastIndex < text.length) {
+    parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex)}</span>);
+  }
+
+  return <span className={className}>{parts.length > 0 ? parts : text}</span>;
+};
 
 export const CompetitiveExamsPage: React.FC = () => {
   const { user } = useAuth();
@@ -27,11 +62,13 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'QUESTION_BANK' | 'RESULTS'>('MANAGE_EXAMS');
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [seedingLoading, setSeedingLoading] = useState(false);
   
   // Inline Create Form & Modals
   const [showInlineCreate, setShowInlineCreate] = useState(false);
   const [aiModalExam, setAiModalExam] = useState<any | null>(null);
   const [selectedExamIdForQB, setSelectedExamIdForQB] = useState<string>('');
+  const [createdExamModal, setCreatedExamModal] = useState<any | null>(null);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -79,6 +116,42 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     setActiveTab('QUESTION_BANK');
   };
 
+  const handleSeedDefaults = async () => {
+    setSeedingLoading(true);
+    try {
+      // Create a full JEE Mains exam with sample questions
+      await api.post('/api/competitive-exams', {
+        title: 'JEE Mains 2026 - All India Grand Mock Test #1',
+        pattern: 'JEE_MAINS',
+        totalMarks: 300,
+        duration: 180,
+        passMarks: 100,
+        negativeMarks: 1,
+        autoPopulateSample: true,
+        isPublished: true,
+      });
+
+      // Create a NEET UG exam with sample questions
+      await api.post('/api/competitive-exams', {
+        title: 'NEET UG 2026 - National Speed Practice Test',
+        pattern: 'NEET',
+        totalMarks: 720,
+        duration: 200,
+        passMarks: 250,
+        negativeMarks: 1,
+        autoPopulateSample: true,
+        isPublished: true,
+      });
+
+      toast.success('Eduracle standard JEE Mains & NEET exams populated successfully!');
+      fetchExams();
+    } catch (err: any) {
+      toast.error('Failed to seed default exams');
+    } finally {
+      setSeedingLoading(false);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       {/* Executive Header */}
@@ -86,14 +159,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-xs font-semibold text-indigo-200 mb-2">
             <Zap className="w-3.5 h-3.5 text-amber-400" />
-            NTA Style Computer Based Test (CBT) & OMR Platform
+            EDURACLE CBT TESTING ENGINE & NTA EXAM SUITE
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
             <BookOpen className="h-8 w-8 text-blue-400" />
-            Competitive Exams (JEE / NEET)
+            Competitive Exams (JEE / NEET / EAMCET)
           </h1>
           <p className="text-slate-300 text-sm mt-1 max-w-2xl font-medium">
-            Complete Management for Objective Type Exams (JEE Mains, NEET UG, Navodaya Entrance, EAMCET & State Exams).
+            National-standard computer based test creation, multi-subject section blueprints, and live proctoring.
           </p>
         </div>
 
@@ -106,6 +179,17 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
+          {exams.length === 0 && (
+            <button
+              onClick={handleSeedDefaults}
+              disabled={seedingLoading}
+              className="px-4 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/25 flex items-center gap-2 transition cursor-pointer disabled:opacity-50"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              {seedingLoading ? 'Seeding Exams...' : '🚀 Load NTA Standard Tests'}
+            </button>
+          )}
+
           <button
             onClick={() => {
               setActiveTab('MANAGE_EXAMS');
@@ -113,7 +197,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             }}
             className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-sm shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition hover:scale-105 cursor-pointer"
           >
-            <Plus className="w-5 h-5" /> Create New Exam
+            <Plus className="w-5 h-5" /> Create Exam Wizard
           </button>
         </div>
       </div>
@@ -165,6 +249,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setActiveTab('MANAGE_EXAMS');
               setShowInlineCreate(true);
             }}
+            onSeedDefaults={handleSeedDefaults}
             navigate={navigate}
           />
         )}
@@ -179,6 +264,10 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             onOpenAiModal={(exam: any) => setAiModalExam(exam)}
             onOpenQuestionBank={handleOpenQuestionBankForExam}
             onDelete={handleDeleteExam}
+            onExamCreated={(newExam: any) => {
+              setCreatedExamModal(newExam);
+            }}
+            onSeedDefaults={handleSeedDefaults}
             navigate={navigate}
           />
         )}
@@ -210,12 +299,26 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           }}
         />
       )}
+
+      {/* Created Exam Success Launch Modal */}
+      {createdExamModal && (
+        <ExamLaunchSuccessModal
+          exam={createdExamModal}
+          onClose={() => setCreatedExamModal(null)}
+          onLaunchExam={() => navigate(`/take-competitive-exam/${createdExamModal.id}`)}
+          onOpenQuestionBank={() => {
+            setSelectedExamIdForQB(createdExamModal.id);
+            setActiveTab('QUESTION_BANK');
+            setCreatedExamModal(null);
+          }}
+        />
+      )}
     </div>
   );
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MANAGE EXAMS TAB (WITH FUNCTIONAL INLINE CREATE FORM)
+// MANAGE EXAMS TAB
 // ═══════════════════════════════════════════════════════════════
 
 const ManageExamsTab = ({ 
@@ -227,17 +330,20 @@ const ManageExamsTab = ({
   onOpenAiModal, 
   onOpenQuestionBank, 
   onDelete, 
+  onExamCreated,
+  onSeedDefaults,
   navigate 
 }: any) => {
   return (
     <div className="space-y-6">
-      {/* Inline Create Form (Matches User Screenshot Exactly) */}
+      {/* Eduracle Exam Creation Wizard */}
       {showInlineCreate && (
-        <InlineCreateExamForm 
+        <EduracleCreateExamWizard 
           onClose={() => setShowInlineCreate(false)}
-          onCreated={() => {
+          onCreated={(newExam: any) => {
             setShowInlineCreate(false);
             onRefresh();
+            if (onExamCreated && newExam) onExamCreated(newExam);
           }}
         />
       )}
@@ -246,16 +352,18 @@ const ManageExamsTab = ({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h2 className="text-lg font-black text-slate-800">Available NTA Mock Tests & Online Exams</h2>
-          <p className="text-xs text-slate-500 font-medium">Real-time CBT simulated test suite for students</p>
+          <p className="text-xs text-slate-500 font-medium">Real-time CBT simulated test suite for students with instant scorecards</p>
         </div>
         
         {!showInlineCreate && (
-          <button
-            onClick={() => setShowInlineCreate(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-          >
-            <Plus size={16} /> Create Competitive Exam
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowInlineCreate(true)}
+              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
+            >
+              <Plus size={16} /> Create Competitive Exam
+            </button>
+          </div>
         )}
       </div>
 
@@ -266,17 +374,28 @@ const ManageExamsTab = ({
         </div>
       ) : exams.length === 0 ? (
         <div className="p-16 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
-          <FileText size={64} className="text-indigo-200 mb-4" />
-          <h3 className="text-xl font-bold text-slate-800">No Competitive Exams Found</h3>
-          <p className="text-slate-500 max-w-md mt-2">
-            Create your first JEE Mains, NEET, or Navodaya pattern mock test with automated negative marking and AI question generator.
+          <div className="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+            <Zap className="w-10 h-10 text-amber-500" />
+          </div>
+          <h3 className="text-xl font-black text-slate-800">No Competitive Exams Available Yet</h3>
+          <p className="text-slate-500 max-w-md mt-2 text-sm">
+            Create your first JEE Mains, NEET, or Navodaya pattern mock test with automated negative marking, or load authentic pre-configured test papers with one click.
           </p>
-          <button
-            onClick={() => setShowInlineCreate(true)}
-            className="mt-6 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold flex items-center gap-2 shadow-md transition cursor-pointer"
-          >
-            <Plus size={18} /> Create First Competitive Exam
-          </button>
+          <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+            <button
+              onClick={onSeedDefaults}
+              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md flex items-center gap-2 cursor-pointer transition hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" />
+              1-Click Load NTA Standard Sample Tests
+            </button>
+            <button
+              onClick={() => setShowInlineCreate(true)}
+              className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
+            >
+              <Plus size={16} /> Create New Exam Wizard
+            </button>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -286,18 +405,27 @@ const ManageExamsTab = ({
             const isJee = exam.title.toUpperCase().includes('JEE');
             const isNeet = exam.title.toUpperCase().includes('NEET');
             const isNavodaya = exam.title.toUpperCase().includes('NAVODAYA');
+            const isEamcet = exam.title.toUpperCase().includes('EAMCET');
 
             let patternTag = 'NTA CBT PATTERN';
             let patternBadgeBg = 'bg-blue-100 text-blue-800 border-blue-200';
+            let sections = ['General Objective Test'];
             if (isJee) {
               patternTag = 'JEE MAINS PATTERN (+4, -1)';
               patternBadgeBg = 'bg-indigo-100 text-indigo-800 border-indigo-200';
+              sections = ['Physics', 'Chemistry', 'Mathematics'];
             } else if (isNeet) {
               patternTag = 'NEET UG PATTERN (+4, -1)';
               patternBadgeBg = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+              sections = ['Physics', 'Chemistry', 'Botany', 'Zoology'];
+            } else if (isEamcet) {
+              patternTag = 'EAMCET PATTERN (NO NEGATIVE)';
+              patternBadgeBg = 'bg-cyan-100 text-cyan-800 border-cyan-200';
+              sections = ['Mathematics (80Q)', 'Physics (40Q)', 'Chemistry (40Q)'];
             } else if (isNavodaya) {
               patternTag = 'NAVODAYA ENTRANCE (+5, 0)';
               patternBadgeBg = 'bg-amber-100 text-amber-800 border-amber-200';
+              sections = ['Mental Ability', 'Arithmetic', 'Language'];
             }
 
             return (
@@ -308,7 +436,7 @@ const ManageExamsTab = ({
                 <div>
                   {/* Header row */}
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${patternBadgeBg}`}>
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${patternBadgeBg}`}>
                       {patternTag}
                     </span>
                     <div className="flex items-center gap-1.5">
@@ -322,33 +450,42 @@ const ManageExamsTab = ({
                     {exam.title}
                   </h3>
 
+                  {/* Subject Sections Blueprint Badges */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+                    {sections.map((sec, sIdx) => (
+                      <span key={sIdx} className="px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                        {sec}
+                      </span>
+                    ))}
+                  </div>
+
                   {/* Meta Tags */}
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 mt-2">
-                    <span className="bg-slate-100 px-2.5 py-1 rounded-lg">
-                      📚 Class: {exam.class?.name || 'All Classes'}
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500 mt-2.5">
+                    <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                      📚 Class: {exam.class?.name || '10th Standard'}
                     </span>
-                    <span className="bg-slate-100 px-2.5 py-1 rounded-lg">
-                      🧪 {exam.subject?.name || 'Multiple Subjects'}
+                    <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                      👥 Submissions: {subCount}
                     </span>
                   </div>
 
                   {/* Stats Grid */}
                   <div className="grid grid-cols-4 gap-2 my-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center">
                     <div>
-                      <div className="text-xs text-slate-400 font-semibold uppercase">Duration</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Duration</div>
                       <div className="text-sm font-black text-slate-800">{exam.duration}m</div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400 font-semibold uppercase">Total Marks</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Total Marks</div>
                       <div className="text-sm font-black text-indigo-600">{exam.totalMarks}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400 font-semibold uppercase">Questions</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Questions</div>
                       <div className="text-sm font-black text-emerald-600">{qCount}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400 font-semibold uppercase">Negative</div>
-                      <div className="text-sm font-black text-rose-600">-{exam.negativeMarks || 0}</div>
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Marking</div>
+                      <div className="text-sm font-black text-rose-600">+{exam.totalMarks > 400 ? '4' : '4'} / -{exam.negativeMarks || 0}</div>
                     </div>
                   </div>
                 </div>
@@ -361,7 +498,7 @@ const ManageExamsTab = ({
                     className="w-full py-3 px-4 rounded-xl text-white font-extrabold text-xs shadow-md bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer group-hover:scale-[1.01]"
                   >
                     <Play className="w-4 h-4 fill-white" />
-                    Launch Authentic NTA CBT Exam Simulator
+                    Launch Eduracle CBT Exam Simulator
                   </button>
 
                   <div className="grid grid-cols-3 gap-2">
@@ -416,23 +553,136 @@ const ManageExamsTab = ({
 };
 
 // ═══════════════════════════════════════════════════════════════
-// INLINE CREATE EXAM FORM (MATCHES SCREENSHOT 4 EXACTLY)
+// EDURACLE EXAM CREATION WIZARD (PROFESSIONAL PATTERN ENGINE)
 // ═══════════════════════════════════════════════════════════════
 
-const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) => {
+const PATTERN_PRESETS = [
+  {
+    id: 'JEE_MAINS',
+    badge: 'JEE MAINS 2026',
+    title: 'JEE Mains Pattern',
+    defaultTitle: 'JEE MAINS 2026 - ALL INDIA GRAND MOCK TEST #01',
+    description: '3 Sections (Physics, Chemistry, Maths) • 300 Marks • +4 / -1 Marking',
+    duration: 180,
+    totalMarks: 300,
+    passMarks: 100,
+    negativeMarks: 1,
+    color: 'from-blue-600 to-indigo-700',
+    tagColor: 'bg-blue-100 text-blue-800',
+    sections: [
+      { name: 'Section 1: Physics', count: 25, marks: 100 },
+      { name: 'Section 2: Chemistry', count: 25, marks: 100 },
+      { name: 'Section 3: Mathematics', count: 25, marks: 100 },
+    ],
+  },
+  {
+    id: 'NEET',
+    badge: 'NEET UG 2026',
+    title: 'NEET UG Pattern',
+    defaultTitle: 'NEET UG 2026 - NATIONAL SPEED MOCK TEST #01',
+    description: '4 Sections (Physics, Chemistry, Botany, Zoology) • 720 Marks • +4 / -1 Marking',
+    duration: 200,
+    totalMarks: 720,
+    passMarks: 250,
+    negativeMarks: 1,
+    color: 'from-emerald-600 to-teal-700',
+    tagColor: 'bg-emerald-100 text-emerald-800',
+    sections: [
+      { name: 'Section 1: Physics', count: 45, marks: 180 },
+      { name: 'Section 2: Chemistry', count: 45, marks: 180 },
+      { name: 'Section 3: Botany', count: 45, marks: 180 },
+      { name: 'Section 4: Zoology', count: 45, marks: 180 },
+    ],
+  },
+  {
+    id: 'EAMCET',
+    badge: 'AP/TS EAMCET',
+    title: 'State EAMCET / EAPCET',
+    defaultTitle: 'AP / TS EAMCET 2026 - ENGINEERING GRAND PRACTICE TEST #01',
+    description: '160 Questions • 160 Marks • Mathematics (80Q), Physics (40Q), Chemistry (40Q) • 0 Negative',
+    duration: 180,
+    totalMarks: 160,
+    passMarks: 40,
+    negativeMarks: 0,
+    color: 'from-cyan-600 to-blue-700',
+    tagColor: 'bg-cyan-100 text-cyan-800',
+    sections: [
+      { name: 'Mathematics', count: 80, marks: 80 },
+      { name: 'Physics', count: 40, marks: 40 },
+      { name: 'Chemistry', count: 40, marks: 40 },
+    ],
+  },
+  {
+    id: 'FOUNDATION',
+    badge: 'CLASSES 6-10',
+    title: 'IIT/NEET Foundation & Olympiad',
+    defaultTitle: 'IIT/NEET FOUNDATION OLYMPIAD & NTSE MOCK EXAM',
+    description: 'Physics, Chemistry, Biology, Mathematics & Mental Ability (MAT)',
+    duration: 120,
+    totalMarks: 100,
+    passMarks: 40,
+    negativeMarks: 1,
+    color: 'from-purple-600 to-violet-700',
+    tagColor: 'bg-purple-100 text-purple-800',
+    sections: [
+      { name: 'Physics & Chemistry', count: 10, marks: 40 },
+      { name: 'Mathematics', count: 10, marks: 40 },
+      { name: 'Mental Ability (MAT)', count: 5, marks: 20 },
+    ],
+  },
+  {
+    id: 'NAVODAYA',
+    badge: 'CLASS 6 ENTRANCE',
+    title: 'Navodaya / Sainik School',
+    defaultTitle: 'NAVODAYA CLASS 6 ENTRANCE FULL LENGTH MODEL EXAM #01',
+    description: 'Mental Ability (50M), Arithmetic (25M), Language (25M) • No Negative',
+    duration: 120,
+    totalMarks: 100,
+    passMarks: 40,
+    negativeMarks: 0,
+    color: 'from-amber-600 to-orange-700',
+    tagColor: 'bg-amber-100 text-amber-800',
+    sections: [
+      { name: 'Mental Ability (MAT)', count: 40, marks: 50 },
+      { name: 'Arithmetic Test', count: 20, marks: 25 },
+      { name: 'Language Test', count: 20, marks: 25 },
+    ],
+  },
+  {
+    id: 'CUSTOM',
+    badge: 'CUSTOM TEST',
+    title: 'Custom Subject Chapter Test',
+    defaultTitle: 'CLASSROOM OBJECTIVE SLIP TEST #01',
+    description: 'Single subject chapter-wise objective evaluation',
+    duration: 60,
+    totalMarks: 50,
+    passMarks: 20,
+    negativeMarks: 0,
+    color: 'from-slate-700 to-slate-900',
+    tagColor: 'bg-slate-100 text-slate-800',
+    sections: [
+      { name: 'Subject MCQs', count: 25, marks: 50 },
+    ],
+  },
+];
+
+const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void; onCreated: (exam: any) => void }) => {
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [selectedPattern, setSelectedPattern] = useState<string>('JEE_MAINS');
+  const [autoPopulateSample, setAutoPopulateSample] = useState(true);
+
   const [formData, setFormData] = useState({
-    title: 'JEE MAINS MODEL EXAMINATION',
-    examType: 'JEE Mains Pattern',
+    title: PATTERN_PRESETS[0].defaultTitle,
     pattern: 'JEE_MAINS',
-    totalMarks: 300,
     duration: 180,
+    totalMarks: 300,
     passMarks: 100,
     negativeMarks: 1,
     examDate: new Date().toISOString().split('T')[0],
+    startTime: '09:00',
     classId: '',
     subjectId: '',
   });
@@ -441,69 +691,47 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
     api.get('/api/classes').then(res => {
       const cls = res.data?.data || res.data || [];
       setClasses(cls);
-      if (cls.length > 0) setFormData(prev => ({ ...prev, classId: cls[0].id }));
+      // Smart Default: Pick 10th or 9th class automatically (NOT Nursery!)
+      const seniorClass = cls.find((c: any) => 
+        (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8')
+      );
+      if (seniorClass) {
+        setFormData(prev => ({ ...prev, classId: seniorClass.id }));
+      } else if (cls.length > 0) {
+        setFormData(prev => ({ ...prev, classId: cls[0].id }));
+      }
     }).catch(() => {});
 
     api.get('/api/subjects').then(res => {
       const subs = res.data?.data || res.data || [];
       setSubjects(subs);
-      if (subs.length > 0) setFormData(prev => ({ ...prev, subjectId: subs[0].id }));
+      const mathOrScience = subs.find((s: any) => 
+        (s.name || '').toLowerCase().includes('math') || 
+        (s.name || '').toLowerCase().includes('phys') || 
+        (s.name || '').toLowerCase().includes('scien')
+      );
+      if (mathOrScience) {
+        setFormData(prev => ({ ...prev, subjectId: mathOrScience.id }));
+      } else if (subs.length > 0) {
+        setFormData(prev => ({ ...prev, subjectId: subs[0].id }));
+      }
     }).catch(() => {});
   }, []);
 
-  const handleExamTypeChange = (type: string) => {
-    if (type === 'JEE Mains Pattern') {
-      setFormData(prev => ({
-        ...prev,
-        examType: type,
-        pattern: 'JEE_MAINS',
-        title: prev.title.includes('NEET') || prev.title.includes('Navodaya') ? 'JEE MAINS MODEL EXAMINATION' : prev.title,
-        duration: 180,
-        totalMarks: 300,
-        passMarks: 100,
-        negativeMarks: 1,
-      }));
-    } else if (type === 'NEET Pattern') {
-      setFormData(prev => ({
-        ...prev,
-        examType: type,
-        pattern: 'NEET',
-        title: 'NEET UG ALL INDIA PRACTICE TEST',
-        duration: 200,
-        totalMarks: 720,
-        passMarks: 250,
-        negativeMarks: 1,
-      }));
-    } else if (type === 'Navodaya / Sainik School') {
-      setFormData(prev => ({
-        ...prev,
-        examType: type,
-        pattern: 'NAVODAYA',
-        title: 'NAVODAYA CLASS 6 ENTRANCE MODEL EXAM',
-        duration: 120,
-        totalMarks: 100,
-        passMarks: 40,
-        negativeMarks: 0,
-      }));
-    } else if (type === 'State EAMCET / EAPCET') {
-      setFormData(prev => ({
-        ...prev,
-        examType: type,
-        pattern: 'EAMCET',
-        title: 'STATE EAMCET / EAPCET PRACTICE EXAM',
-        duration: 180,
-        totalMarks: 160,
-        passMarks: 40,
-        negativeMarks: 0,
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        examType: type,
-        pattern: 'CUSTOM',
-      }));
-    }
+  const handleSelectPattern = (preset: typeof PATTERN_PRESETS[0]) => {
+    setSelectedPattern(preset.id);
+    setFormData(prev => ({
+      ...prev,
+      pattern: preset.id,
+      title: preset.defaultTitle,
+      duration: preset.duration,
+      totalMarks: preset.totalMarks,
+      passMarks: preset.passMarks,
+      negativeMarks: preset.negativeMarks,
+    }));
   };
+
+  const currentPreset = PATTERN_PRESETS.find(p => p.id === selectedPattern) || PATTERN_PRESETS[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -514,22 +742,28 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
 
     setLoading(true);
     try {
+      const startDateTime = new Date(`${formData.examDate}T${formData.startTime}:00`);
+      const endDateTime = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year active window
+
       const payload = {
         title: formData.title,
+        pattern: formData.pattern,
         duration: Number(formData.duration) || 180,
         totalMarks: Number(formData.totalMarks) || 300,
         passMarks: Number(formData.passMarks) || 100,
-        negativeMarks: Number(formData.negativeMarks) || 1,
-        startTime: new Date(`${formData.examDate}T09:00:00`).toISOString(),
-        endTime: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        negativeMarks: Number(formData.negativeMarks) || 0,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
         classId: formData.classId || undefined,
         subjectId: formData.subjectId || undefined,
+        autoPopulateSample: autoPopulateSample,
         isPublished: true,
       };
 
-      await api.post('/api/competitive-exams', payload);
-      toast.success('Competitive Exam created successfully!');
-      onCreated();
+      const res = await api.post('/api/competitive-exams', payload);
+      toast.success('Exam created successfully with questions!');
+      const newExam = res.data?.data;
+      onCreated(newExam);
     } catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.message || 'Failed to create exam');
@@ -538,13 +772,33 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
     }
   };
 
+  // Group classes to display senior classes prominently
+  const seniorClasses = classes.filter((c: any) => 
+    (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8')
+  );
+  const otherClasses = classes.filter((c: any) => !seniorClasses.includes(c));
+
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-md border border-slate-200 transition-all">
-      <div className="flex justify-between items-center pb-4 mb-6 border-b border-slate-100">
-        <div>
-          <h3 className="text-lg font-black text-slate-800">Create Competitive Exam</h3>
-          <p className="text-xs text-slate-500 font-medium">Configure new objective CBT examination</p>
+    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200 transition-all space-y-6">
+      {/* Wizard Header */}
+      <div className="flex justify-between items-start pb-5 border-b border-slate-100">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <Zap className="w-6 h-6 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-xl font-black text-slate-900">Eduracle CBT Exam Creator Wizard</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                National Standard Testing
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Select an examination blueprint pattern. All subject sections, marking schemes, and questions are configured automatically.
+            </p>
+          </div>
         </div>
+
         <button 
           onClick={onClose} 
           className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer"
@@ -554,122 +808,189 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Exam Name */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Exam Name (e.g. Grand Test - 1)
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.title}
-              onChange={e => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
-              placeholder="e.g. JEE MAINS MODEL EXAMINATION"
-            />
-          </div>
+        
+        {/* STEP 1: CHOOSE PRESET EXAM PATTERN */}
+        <div>
+          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-indigo-600" />
+            Step 1: Choose Standard Exam Pattern
+          </label>
 
-          {/* Exam Type */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Exam Type
-            </label>
-            <select
-              value={formData.examType}
-              onChange={e => handleExamTypeChange(e.target.value)}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition cursor-pointer"
-            >
-              <option value="JEE Mains Pattern">JEE Mains Pattern</option>
-              <option value="NEET Pattern">NEET Pattern</option>
-              <option value="Navodaya / Sainik School">Navodaya / Sainik School</option>
-              <option value="State EAMCET / EAPCET">State EAMCET / EAPCET</option>
-              <option value="Custom Mock Test">Custom Mock Test</option>
-            </select>
-          </div>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+            {PATTERN_PRESETS.map((preset) => {
+              const isSelected = selectedPattern === preset.id;
+              return (
+                <div
+                  key={preset.id}
+                  onClick={() => handleSelectPattern(preset)}
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? 'border-indigo-600 bg-indigo-50/50 shadow-md ring-2 ring-indigo-600/10'
+                      : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md ${preset.tagColor}`}>
+                        {preset.badge}
+                      </span>
+                      {isSelected && (
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                          <Check size={12} strokeWidth={3} />
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-extrabold text-sm text-slate-900">{preset.title}</h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-snug">{preset.description}</p>
+                  </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Total Marks */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Total Marks
-            </label>
-            <input
-              type="number"
-              required
-              value={formData.totalMarks}
-              onChange={e => setFormData({ ...formData, totalMarks: Number(e.target.value) })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
-            />
-          </div>
-
-          {/* Duration */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Duration (Minutes)
-            </label>
-            <input
-              type="number"
-              required
-              value={formData.duration}
-              onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition"
-            />
-          </div>
-
-          {/* Exam Date */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Exam Date
-            </label>
-            <input
-              type="date"
-              required
-              value={formData.examDate}
-              onChange={e => setFormData({ ...formData, examDate: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition cursor-pointer"
-            />
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 mt-3 pt-2.5 border-t border-slate-100">
+                    <span>⏱️ {preset.duration} Mins</span>
+                    <span>🎯 {preset.totalMarks} Marks</span>
+                    <span className="text-rose-600">Neg: -{preset.negativeMarks}</span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        {/* Target Class & Subject optional selection */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Target Class
-            </label>
-            <select
-              value={formData.classId}
-              onChange={e => setFormData({ ...formData, classId: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-indigo-500 outline-none"
-            >
-              {classes.map(c => (
-                <option key={c.id} value={c.id}>{c.name} {c.section ? `(${c.section})` : ''}</option>
-              ))}
-            </select>
+        {/* SECTION BLUEPRINT CARD */}
+        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+              Active Blueprint: {currentPreset.title} Sections
+            </span>
+            <span className="text-[11px] font-bold text-indigo-600 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+              {currentPreset.sections.length} Subject Sections Configured
+            </span>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-              Subject
-            </label>
-            <select
-              value={formData.subjectId}
-              onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
-              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-medium focus:border-indigo-500 outline-none"
-            >
-              {subjects.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+            {currentPreset.sections.map((sec, idx) => (
+              <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-slate-800">{sec.name}</p>
+                  <p className="text-[10px] text-slate-400 font-medium">{sec.count} Questions • +4, -{currentPreset.negativeMarks}</p>
+                </div>
+                <span className="font-black text-indigo-600 text-sm">{sec.marks}M</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Notice Alert */}
-        <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 text-xs flex items-center gap-2">
-          <AlertTriangle size={18} className="text-blue-600 shrink-0" />
-          <span>After creating the exam, you can configure subject-wise negative marking and cutoffs in the Manage Exams tab.</span>
+        {/* STEP 2: EXAM DETAILS & TARGET AUDIENCE */}
+        <div className="space-y-4 pt-2">
+          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <Target className="w-4 h-4 text-indigo-600" />
+            Step 2: Test Details & Target Classes
+          </label>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Exam Name */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">
+                Official Exam Title *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition text-sm"
+              />
+            </div>
+
+            {/* Target Class (Smart Filtered) */}
+            <div>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-xs font-bold text-slate-600 uppercase">
+                  Target Class Batch *
+                </label>
+                <span className="text-[10px] text-indigo-600 font-bold">Recommended: 10th / 9th</span>
+              </div>
+              <select
+                value={formData.classId}
+                onChange={e => setFormData({ ...formData, classId: e.target.value })}
+                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer"
+              >
+                {seniorClasses.length > 0 && (
+                  <optgroup label="🌟 Senior Classes (IIT-JEE / NEET Standard)">
+                    {seniorClasses.map(c => (
+                      <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {otherClasses.length > 0 && (
+                  <optgroup label="Middle & Primary Classes">
+                    {otherClasses.map(c => (
+                      <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Exam Date */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Exam Date</label>
+              <input
+                type="date"
+                required
+                value={formData.examDate}
+                onChange={e => setFormData({ ...formData, examDate: e.target.value })}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm cursor-pointer"
+              />
+            </div>
+
+            {/* Start Time */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Start Time</label>
+              <input
+                type="time"
+                required
+                value={formData.startTime}
+                onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm cursor-pointer"
+              />
+            </div>
+
+            {/* Duration */}
+            <div>
+              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Duration (Minutes)</label>
+              <input
+                type="number"
+                required
+                value={formData.duration}
+                onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* STEP 3: QUESTION SEEDING ENGINE */}
+        <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-200/80 space-y-2">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={autoPopulateSample}
+              onChange={e => setAutoPopulateSample(e.target.checked)}
+              className="w-5 h-5 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 mt-0.5 cursor-pointer"
+            />
+            <div>
+              <span className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                Auto-Populate Authentic NTA Standard Questions (Recommended - Instant Ready)
+              </span>
+              <p className="text-[11px] text-indigo-800 font-medium mt-0.5">
+                Pre-loads authentic questions with LaTeX math formulas (kinematics, redox, calculus, matrices, electrostatics), 4 options, and solutions. Your exam is ready to attempt immediately after creation!
+              </p>
+            </div>
+          </label>
         </div>
 
         {/* Action Buttons */}
@@ -677,7 +998,7 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+            className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
           >
             Cancel
           </button>
@@ -685,14 +1006,16 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
           <button
             type="submit"
             disabled={loading}
-            className="px-8 py-3 rounded-xl font-extrabold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+            className="px-8 py-3.5 rounded-xl font-extrabold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm hover:scale-[1.02]"
           >
             {loading ? (
               <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
+                <RefreshCw className="w-4 h-4 animate-spin" /> Creating & Populating Exam...
               </>
             ) : (
-              'Create Exam'
+              <>
+                <Zap className="w-4 h-4 text-amber-300" /> Publish Eduracle CBT Exam
+              </>
             )}
           </button>
         </div>
@@ -702,7 +1025,66 @@ const InlineCreateExamForm = ({ onClose, onCreated }: { onClose: () => void; onC
 };
 
 // ═══════════════════════════════════════════════════════════════
-// QUESTION BANK TAB (FULLY INTERACTIVE & REAL-TIME)
+// EXAM LAUNCH SUCCESS MODAL
+// ═══════════════════════════════════════════════════════════════
+
+const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBank }: any) => {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-6 text-center relative">
+          <div className="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-3 shadow-inner">
+            <CheckCircle2 size={36} className="text-emerald-300" />
+          </div>
+          <h3 className="text-xl font-black">CBT Examination Published!</h3>
+          <p className="text-xs text-indigo-100 mt-1">Configured for Eduracle Computer Based Testing</p>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Exam Title</p>
+            <h4 className="text-base font-black text-slate-900 mt-0.5">{exam?.title}</h4>
+            <div className="flex items-center gap-4 text-xs text-slate-600 font-bold mt-2">
+              <span>⏱️ {exam?.duration} Mins</span>
+              <span>•</span>
+              <span>🎯 {exam?.totalMarks} Marks</span>
+              <span>•</span>
+              <span className="text-rose-600">Neg: -{exam?.negativeMarks || 0}</span>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={onLaunchExam}
+              className="w-full py-3.5 px-4 rounded-xl text-white font-black text-xs shadow-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              Launch CBT Exam Simulator Now (Test Mode)
+            </button>
+
+            <button
+              onClick={onOpenQuestionBank}
+              className="w-full py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <FileQuestion size={16} className="text-indigo-600" />
+              View & Edit Questions in Question Bank
+            </button>
+
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 text-slate-400 hover:text-slate-600 font-bold text-xs transition cursor-pointer"
+            >
+              Close & Back to Exams Directory
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// QUESTION BANK TAB (FULLY INTERACTIVE & REAL-TIME WITH KATEX)
 // ═══════════════════════════════════════════════════════════════
 
 const QuestionBankTab = ({ 
@@ -717,7 +1099,6 @@ const QuestionBankTab = ({
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Load questions whenever selectedExamId changes
   const fetchQuestions = async (examId: string) => {
     if (!examId) {
       setQuestions([]);
@@ -729,7 +1110,6 @@ const QuestionBankTab = ({
       setQuestions(res.data?.data?.questions || []);
     } catch (e) {
       console.error('Failed to load questions:', e);
-      // Fallback endpoint
       try {
         const res2 = await api.get(`/api/competitive-exams/${examId}/student`);
         setQuestions(res2.data?.data?.questions || []);
@@ -840,7 +1220,7 @@ const QuestionBankTab = ({
         </div>
       )}
 
-      {/* Questions List */}
+      {/* Questions List with KaTeX math formula rendering */}
       {loadingQuestions ? (
         <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-200 shadow-sm">
           <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-2" />
@@ -911,10 +1291,10 @@ const QuestionBankTab = ({
                   </div>
                 </div>
 
-                {/* Question Text */}
-                <p className="text-sm font-bold text-slate-800 mb-4 whitespace-pre-wrap leading-relaxed">
-                  {q.questionText}
-                </p>
+                {/* Question Text with KaTeX Rendering */}
+                <div className="text-sm font-bold text-slate-800 mb-4 whitespace-pre-wrap leading-relaxed">
+                  <LatexRenderer text={q.questionText} />
+                </div>
 
                 {/* Options 2x2 grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
@@ -936,7 +1316,9 @@ const QuestionBankTab = ({
                         }`}>
                           {optLetter}
                         </span>
-                        <span className="flex-1">{opt}</span>
+                        <span className="flex-1">
+                          <LatexRenderer text={opt} />
+                        </span>
                         {isCorrect && (
                           <span className="text-[10px] uppercase font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
                             Correct
@@ -969,12 +1351,12 @@ const QuestionBankTab = ({
 };
 
 // ═══════════════════════════════════════════════════════════════
-// MANUAL ADD QUESTION MODAL
+// MANUAL ADD QUESTION MODAL WITH LIVE KATEX MATH PREVIEW
 // ═══════════════════════════════════════════════════════════════
 
 const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
   const [formData, setFormData] = useState({
-    chapterName: 'General Physics / Maths',
+    chapterName: 'Physics: Kinematics',
     difficulty: 'MEDIUM',
     marks: 4,
     questionText: '',
@@ -1033,13 +1415,14 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Chapter / Topic</label>
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Chapter / Subject Section</label>
               <input
                 type="text"
                 required
                 value={formData.chapterName}
                 onChange={e => setFormData({ ...formData, chapterName: e.target.value })}
                 className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold outline-none focus:border-indigo-500"
+                placeholder="e.g. Physics: Motion in a Straight Line"
               />
             </div>
             <div>
@@ -1047,25 +1430,33 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
               <select
                 value={formData.difficulty}
                 onChange={e => setFormData({ ...formData, difficulty: e.target.value })}
-                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold outline-none focus:border-indigo-500"
+                className="w-full border border-slate-200 rounded-xl p-2.5 text-sm font-semibold outline-none focus:border-indigo-500 bg-white"
               >
                 <option value="EASY">Easy</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="HARD">Hard</option>
+                <option value="MEDIUM">Medium (JEE Level)</option>
+                <option value="HARD">Hard (Advanced)</option>
               </select>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Question Text</label>
+            <div className="flex justify-between items-center mb-1">
+              <label className="block text-xs font-bold text-slate-700 uppercase">Question Text (LaTeX Supported with $...$)</label>
+            </div>
             <textarea
               required
               rows={3}
               value={formData.questionText}
               onChange={e => setFormData({ ...formData, questionText: e.target.value })}
               className="w-full border border-slate-200 rounded-xl p-3 text-sm font-bold text-slate-800 outline-none focus:border-indigo-500 resize-none"
-              placeholder="Enter the competitive question problem statement..."
+              placeholder="e.g. A projectile is launched with velocity $v = 20\text{ m/s}$ at an angle $\theta = 45^\circ$..."
             />
+            {formData.questionText && (
+              <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">KaTeX Real-Time Preview:</p>
+                <LatexRenderer text={formData.questionText} className="text-slate-800 font-semibold" />
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -1143,15 +1534,15 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
 // DASHBOARD OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 
-const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, navigate }: any) => {
+const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onSeedDefaults, navigate }: any) => {
   return (
     <div className="space-y-6">
       {/* Quick Launch Hero */}
       <div className="bg-white rounded-3xl p-6 md:p-8 border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-          <h2 className="text-xl font-black text-slate-900">NTA CBT Simulator & Automated Ranking</h2>
+          <h2 className="text-xl font-black text-slate-900">Eduracle CBT Simulator & Automated Ranking</h2>
           <p className="text-sm text-slate-500 mt-1 max-w-xl">
-            Conduct JEE Mains, NEET UG & Navodaya objective exams online with automated timers, negative marks deduction, and live leaderboards.
+            Conduct JEE Mains, NEET UG & EAMCET objective exams online with automated timers, negative marks deduction, and live leaderboards.
           </p>
           <div className="flex flex-wrap items-center gap-3 mt-4">
             <button
@@ -1166,6 +1557,14 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
               >
                 <Play size={16} className="fill-white" /> Launch CBT Simulator
+              </button>
+            )}
+            {exams.length === 0 && (
+              <button
+                onClick={onSeedDefaults}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
+              >
+                <Sparkles size={16} className="text-amber-300" /> Load NTA Standard Tests
               </button>
             )}
           </div>
@@ -1276,7 +1675,6 @@ const StudentCompetitivePortal = ({ navigate }: { navigate: any }) => {
     api.get('/api/competitive-exams/student')
       .then(res => setExams(res.data?.data || []))
       .catch(err => {
-        // Fallback to admin list for open exams if student profile has class mismatch
         api.get('/api/competitive-exams/admin')
           .then(res2 => setExams(res2.data?.data || []))
           .catch(() => {});

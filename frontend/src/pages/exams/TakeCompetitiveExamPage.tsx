@@ -2,6 +2,40 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+
+// KaTeX LaTeX renderer for math and scientific equations in CBT interface
+const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ content, className = '' }) => {
+  if (!content) return null;
+  const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g);
+  return (
+    <span className={`inline-latex-content ${className}`}>
+      {parts.map((part, index) => {
+        if (!part) return null;
+        if (part.startsWith('$$') && part.endsWith('$$')) {
+          const math = part.slice(2, -2).trim();
+          try {
+            const html = katex.renderToString(math, { displayMode: true, throwOnError: false });
+            return <span key={index} dangerouslySetInnerHTML={{ __html: html }} className="block my-2" />;
+          } catch {
+            return <code key={index} className="block my-2 bg-slate-100 p-2 rounded">{math}</code>;
+          }
+        }
+        if (part.startsWith('$') && part.endsWith('$')) {
+          const math = part.slice(1, -1).trim();
+          try {
+            const html = katex.renderToString(math, { displayMode: false, throwOnError: false });
+            return <span key={index} dangerouslySetInnerHTML={{ __html: html }} className="inline-block px-0.5" />;
+          } catch {
+            return <code key={index} className="bg-slate-100 px-1 rounded">{math}</code>;
+          }
+        }
+        return <span key={index}>{part}</span>;
+      })}
+    </span>
+  );
+};
 
 const TakeCompetitiveExamPage = () => {
   const { id } = useParams();
@@ -386,13 +420,20 @@ const TakeCompetitiveExamPage = () => {
         {/* Left Area: Question */}
         <div className="flex-1 flex flex-col border-r border-gray-300 overflow-hidden">
           <div className="bg-gray-100 p-3 border-b border-gray-300 flex justify-between items-center font-bold text-gray-700">
-            <span>Question No. {currentQuestionIndex + 1}</span>
+            <div className="flex items-center gap-2">
+              <span>Question No. {currentQuestionIndex + 1}</span>
+              {currentQuestion.chapterName && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
+                  {currentQuestion.chapterName}
+                </span>
+              )}
+            </div>
             <span className="text-sm text-gray-500 font-normal">Marks: +{currentQuestion.marks} / -{exam.negativeMarks}</span>
           </div>
           
           <div className="flex-1 overflow-y-auto p-8">
-            <div className="text-lg font-medium text-gray-800 mb-6 whitespace-pre-wrap">
-              {currentQuestion.questionText}
+            <div className="text-lg font-medium text-gray-800 mb-6 leading-relaxed">
+              <LatexRenderer content={currentQuestion.questionText} />
             </div>
             
             {currentQuestion.imageUrl && (
@@ -405,7 +446,7 @@ const TakeCompetitiveExamPage = () => {
               {currentQuestion.options.map((opt: string, idx: number) => {
                 const isSelected = answers[qId]?.option === opt;
                 return (
-                  <label key={idx} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50 border-indigo-500' : 'hover:bg-gray-50 border-gray-300'}`}>
+                  <label key={idx} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'hover:bg-gray-50 border-gray-300'}`}>
                     <div className="flex items-center h-6">
                       <input
                         type="radio"
@@ -415,8 +456,10 @@ const TakeCompetitiveExamPage = () => {
                         className="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                       />
                     </div>
-                    <div className="ml-3">
-                      <span className="text-gray-700 text-base">{opt}</span>
+                    <div className="ml-3 flex-1">
+                      <span className="text-gray-800 text-base font-normal">
+                        <LatexRenderer content={opt} />
+                      </span>
                     </div>
                   </label>
                 );
