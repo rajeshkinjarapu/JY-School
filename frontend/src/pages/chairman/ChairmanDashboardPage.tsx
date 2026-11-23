@@ -375,7 +375,7 @@ export const ChairmanDashboardPage: React.FC = () => {
               {approvals.filter(a => a.status === 'PENDING').length} Requests
             </div>
             <div className="mt-2 text-xs text-slate-500">
-              From Principals (> ₹50,000 threshold)
+              From Principals (&gt; ₹50,000 threshold)
             </div>
             <button
               onClick={() => setActiveTab('approvals')}

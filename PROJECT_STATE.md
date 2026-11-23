@@ -6,6 +6,12 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - ChairmanDashboardPage లో Vite JSX కంపైలేషన్ ఎర్రర్ ఫిక్స్ (November 23, 2026)
+- **ఎర్రర్:**
+  - `src/pages/chairman/ChairmanDashboardPage.tsx:378:32`: `From Principals (> ₹50,000 threshold)` వద్ద అన్-ఎస్కేప్డ్ `>` గుర్తు వల్ల Vite ట్రాన్స్‌ఫార్మ్ ఫెయిల్ అయింది.
+- **పరిష్కారం:**
+  - JSX స్టాండర్డ్ ప్రకారం `(&gt; ₹50,000 threshold)` గా మార్చబడింది. బిల్డ్ లోపం పరిష్కరించబడింది.
+
 ## చివరి సంభాషణ - క్లాస్-వైజ్ ఫీజు రిపోర్ట్‌లో "All Classes" ఆప్షన్ & పర్సంటేజ్ ఫిల్టరింగ్ / సార్టింగ్ ఇంప్లిమెంటేషన్ (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `class wise fee report lo all classes option kuda kavali and % short chesukone option kuda kavali inta percent below kaval inta percent ekkuva evaru kattaro valla list kavali ila kavali`
