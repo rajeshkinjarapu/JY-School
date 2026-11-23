@@ -6,6 +6,15 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - ఎగ్జామ్ డ్యాష్‌బోర్డ్, ప్రశ్నలు & ఆప్షన్ల ప్రత్యక్ష విజువల్ ఇంటరాక్టివ్ షోకేస్ (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `exam dashboard ela undo naku kanapadali questions and options ela vachayo kanapdali naku telidyali`
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **ప్రత్యక్ష విజువల్ ఇంటరాక్టివ్ ఆర్టిఫ్యాక్ట్ (`cbt_exam_showcase.html`):**
+     - డ్యాష్‌బోర్డ్ లుక్, అధికారిక ప్రశ్న పత్రం (KaTeX మ్యాథ్స్ ఈక్వేషన్లు, 4 ఆప్షన్లు, గ్రీన్ కలర్ కరెక్ట్ ఆన్సర్ బ్యాడ్జ్), మరియు లైవ్ NTA Eduracle CBT కంప్యూటర్ టెస్ట్ స్క్రీన్ (3 గంటల రివర్స్ టైమర్, 5-కలర్ క్వశ్చన్ ప్యాలెట్, సేవ్ & నెక్స్ట్) ఎలా ఉంటాయో ప్రత్యక్షంగా చాట్‌లో క్లిక్ చేసి చూసేలా ఇంటరాక్టివ్ విడ్జెట్‌ను నిర్మించాము.
+  2. **స్పష్టమైన తెలుగు వివరణ:**
+     - అసలైన ప్రశ్నలు మరియు 4 ఆప్షన్లు ఎలా రెండర్ అవుతున్నాయో ఉదాహరణలతో సహా యూజర్‌కు కళ్లెదుట ఉంచాము.
+
 ## చివరి సంభాషణ - "Total Exams: 0" సమస్య పరిష్కారం & ఆన్‌లైన్ ఎగ్జామ్స్ పూర్తి ప్రత్యక్ష ప్రదర్శన (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `assalu enti ra idi, neku assalu cheytam vocha raada, assalu ee project lo online exams conduct chese option unda leda` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో "Load NTA Standard Tests" బటన్ క్లిక్ చేసినప్పుడు "Eduracle standard JEE Mains & NEET exams populated successfully!" అనే సక్సెస్ టోస్ట్ వచ్చినప్పటికీ, స్క్రీన్‌పై TOTAL EXAMS: 0, TOTAL QUESTIONS: 0 అని కనిపించడం వల్ల తీవ్ర అసంతృప్తి వ్యక్తం చేశారు).
