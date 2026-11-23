@@ -382,30 +382,6 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
   }
 };
 
-export const clearDummyExams = async (req: Request, res: Response) => {
-  try {
-    await ensureTablesExist();
-
-    // Delete any exams with dummy/mock test titles
-    const deleted = await prisma.competitiveExam.deleteMany({
-      where: {
-        OR: [
-          { title: { contains: 'Mock Test', mode: 'insensitive' } },
-          { title: { contains: 'Speed Practice', mode: 'insensitive' } },
-          { title: { contains: 'Sample', mode: 'insensitive' } },
-          { title: { contains: 'Dummy', mode: 'insensitive' } },
-          { title: { contains: 'Test #', mode: 'insensitive' } }
-        ]
-      }
-    });
-
-    res.json({ success: true, message: `Successfully removed ${deleted.count} dummy mock tests. Database is clean.`, count: deleted.count });
-  } catch (error: any) {
-    console.error('clearDummyExams error:', error);
-    res.status(500).json({ success: false, message: 'Failed to purge dummy exams' });
-  }
-};
-
 export const getCompetitiveExamsByClass = async (req: Request, res: Response) => {
   try {
     const { classId } = req.params;

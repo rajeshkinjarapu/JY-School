@@ -6,6 +6,16 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Backend TypeScript డూప్లికేట్ 'clearDummyExams' ఎర్రర్ పరిష్కారం (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - యూజర్ VPS టెర్మినల్ లాగ్ పంపారు. అందులో `backend` లో `npm run build` చేసినప్పుడు TypeScript `tsc` క్రింది ఎర్రర్‌తో ఆగింది:
+    `src/controllers/competitiveExams.controller.ts:385:14 - error TS2451: Cannot redeclare block-scoped variable 'clearDummyExams'`
+- **సమస్య మూలకారణం & పరిష్కారం:**
+  - `competitiveExams.controller.ts` లో లైన్ 385 వద్ద పాత సింపుల్ `clearDummyExams` మరియు లైన్ 754 వద్ద క్యాస్కేడ్-డిలీట్ `clearDummyExams` రెండూ ఉండడం వల్ల డూప్లికేట్ డిక్లరేషన్ ఎర్రర్ వచ్చింది.
+  - లైన్ 385 వద్ద ఉన్న డూప్లికేట్ డిక్లరేషన్‌ను తొలగించి, ఫైల్ చివరిలో ఉన్న పూర్తి స్థాయి క్యాస్కేడ్ పర్జ్ ఫంక్షన్‌ను మాత్రమే ఉంచాము.
+- **ఫలితం:**
+  - `backend` లో `npm run build` ఇప్పుడు 0 ఎర్రర్స్‌తో పక్కాగా కంపైల్ అవుతుంది మరియు `dist` ఫోల్డర్ సరిగ్గా అప్‌డేట్ అవుతుంది.
+
 ## చివరి సంభాషణ - "Failed to create exam" ఎర్రర్ పరిష్కారం & క్లాస్ లోడర్ బుల్లెట్‌ప్రూఫ్ చేయడం (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో కుడివైపు పైభాగంలో ఎరుపు రంగులో `Failed to create exam` అనే ఎర్రర్ టోస్ట్ మరియు విజార్డ్‌లో `TARGET CLASS BATCH *` డ్రాప్‌డౌన్ ఖాళీగా కనిపించింది.
