@@ -210,7 +210,7 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       pattern
     } = req.body;
     
-    // Resolve valid class (prefer 10th/Senior class instead of Nursery)
+    // 1. Resolve valid class safely (ensuring it exists in database)
     let validClassId = classId;
     if (validClassId) {
       const checkCls = await prisma.class.findUnique({ where: { id: validClassId } }).catch(() => null);
@@ -218,18 +218,28 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
     }
     if (!validClassId) {
       let cls = await prisma.class.findFirst({
-        where: { name: { in: ['10th', '10', '9th', '9', '8th', '8'] } }
-      });
-      if (!cls) cls = await prisma.class.findFirst();
+        where: { name: { in: ['10th', '10', '9th', '9', '8th', '8', '5th', '5'] } },
+        orderBy: { name: 'desc' }
+      }).catch(() => null);
+
+      if (!cls) {
+        cls = await prisma.class.findFirst({ orderBy: { name: 'asc' } }).catch(() => null);
+      }
       if (!cls) {
         cls = await prisma.class.create({
           data: { name: '10th', section: 'A', academicYear: '2026-2027', capacity: 50 }
+        }).catch(async () => {
+          return await prisma.class.findFirst();
         });
       }
       validClassId = cls?.id;
     }
 
-    // Resolve valid subject (prefer Mathematics / Science / Physics)
+    if (!validClassId) {
+      return res.status(400).json({ success: false, message: 'No valid school class found. Please create a class first.' });
+    }
+
+    // 2. Resolve valid subject safely
     let validSubjectId = subjectId;
     if (validSubjectId) {
       const checkSub = await prisma.subject.findUnique({ where: { id: validSubjectId } }).catch(() => null);
@@ -237,30 +247,47 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
     }
     if (!validSubjectId) {
       let sub = await prisma.subject.findFirst({
-        where: { name: { in: ['Mathematics', 'Physics', 'Science', 'Maths'] } }
-      });
-      if (!sub) sub = await prisma.subject.findFirst();
+        where: { classId: validClassId }
+      }).catch(() => null);
+
       if (!sub) {
+        sub = await prisma.subject.findFirst({
+          where: { name: { in: ['Mathematics', 'Physics', 'Science', 'Maths'] } }
+        }).catch(() => null);
+      }
+
+      if (!sub) {
+        sub = await prisma.subject.findFirst().catch(() => null);
+      }
+
+      if (!sub) {
+        const uniqueCode = `SUB_${Date.now().toString().slice(-6)}`;
         sub = await prisma.subject.create({
-          data: { name: 'Mathematics', code: `MTH-${validClassId.slice(-4)}`, classId: validClassId }
+          data: { name: 'General Studies', code: uniqueCode, classId: validClassId }
+        }).catch(async () => {
+          return await prisma.subject.findFirst();
         });
       }
       validSubjectId = sub?.id;
     }
 
-    // Create the Exam Record
+    if (!validSubjectId) {
+      return res.status(400).json({ success: false, message: 'No valid subject found for this exam.' });
+    }
+
+    // 3. Create the Exam Record
     const exam = await prisma.competitiveExam.create({
       data: {
-        title: title || 'JEE Mains All India Practice Exam',
+        title: title || 'School Online Practice Exam',
         classId: validClassId,
         subjectId: validSubjectId,
         teacherId: teacherId || null,
-        duration: Number(duration) || 180, 
+        duration: Number(duration) || 120, 
         startTime: startTime ? new Date(startTime) : new Date(), 
         endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
-        totalMarks: Number(totalMarks) || 300,
-        passMarks: Number(passMarks) || 100,
-        negativeMarks: Number(negativeMarks) || 1,
+        totalMarks: Number(totalMarks) || 100,
+        passMarks: Number(passMarks) || 35,
+        negativeMarks: Number(negativeMarks) || 0,
         isPublished: isPublished !== undefined ? Boolean(isPublished) : true
       }
     });

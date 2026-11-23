@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
+import { DataCache } from '../../services/dataCache';
 import toast from 'react-hot-toast';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
@@ -716,34 +717,53 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   });
 
   useEffect(() => {
-    api.get('/api/classes').then(res => {
-      const cls = res.data?.data || res.data || [];
-      setClasses(cls);
-      // Smart Default: Pick 10th or 9th class automatically (NOT Nursery!)
-      const seniorClass = cls.find((c: any) => 
-        (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8')
-      );
-      if (seniorClass) {
-        setFormData(prev => ({ ...prev, classId: seniorClass.id }));
-      } else if (cls.length > 0) {
-        setFormData(prev => ({ ...prev, classId: cls[0].id }));
+    const loadClassesAndSubjects = async () => {
+      try {
+        let clsList: any[] = [];
+        try {
+          clsList = await DataCache.get('classes');
+        } catch {
+          const res = await api.get('/api/classes');
+          clsList = res.data?.data || res.data || [];
+        }
+        if (Array.isArray(clsList) && clsList.length > 0) {
+          setClasses(clsList);
+          const seniorClass = clsList.find((c: any) => 
+            (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8') || (c.name || '').includes('5')
+          ) || clsList[0];
+          if (seniorClass) {
+            setFormData(prev => ({ ...prev, classId: seniorClass.id }));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load classes in wizard:', e);
       }
-    }).catch(() => {});
 
-    api.get('/api/subjects').then(res => {
-      const subs = res.data?.data || res.data || [];
-      setSubjects(subs);
-      const mathOrScience = subs.find((s: any) => 
-        (s.name || '').toLowerCase().includes('math') || 
-        (s.name || '').toLowerCase().includes('phys') || 
-        (s.name || '').toLowerCase().includes('scien')
-      );
-      if (mathOrScience) {
-        setFormData(prev => ({ ...prev, subjectId: mathOrScience.id }));
-      } else if (subs.length > 0) {
-        setFormData(prev => ({ ...prev, subjectId: subs[0].id }));
+      try {
+        let subList: any[] = [];
+        try {
+          subList = await DataCache.get('subjects');
+        } catch {
+          const res2 = await api.get('/api/subjects');
+          subList = res2.data?.data || res2.data || [];
+        }
+        if (Array.isArray(subList) && subList.length > 0) {
+          setSubjects(subList);
+          const mathOrScience = subList.find((s: any) => 
+            (s.name || '').toLowerCase().includes('math') || 
+            (s.name || '').toLowerCase().includes('phys') || 
+            (s.name || '').toLowerCase().includes('scien')
+          ) || subList[0];
+          if (mathOrScience) {
+            setFormData(prev => ({ ...prev, subjectId: mathOrScience.id }));
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load subjects in wizard:', e);
       }
-    }).catch(() => {});
+    };
+
+    loadClassesAndSubjects();
   }, []);
 
   const handleSelectPattern = (preset: typeof PATTERN_PRESETS[0]) => {
@@ -773,6 +793,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       const startDateTime = new Date(`${formData.examDate}T${formData.startTime}:00`);
       const endDateTime = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year active window
 
+      const resolvedClassId = formData.classId || (classes.length > 0 ? classes[0].id : undefined);
+      const resolvedSubjectId = formData.subjectId || (subjects.length > 0 ? subjects[0].id : undefined);
+
       const payload = {
         title: formData.title,
         pattern: formData.pattern,
@@ -782,8 +805,8 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
         negativeMarks: Number(formData.negativeMarks) || 0,
         startTime: startDateTime.toISOString(),
         endTime: endDateTime.toISOString(),
-        classId: formData.classId || undefined,
-        subjectId: formData.subjectId || undefined,
+        classId: resolvedClassId,
+        subjectId: resolvedSubjectId,
         isPublished: true,
       };
 
@@ -792,8 +815,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       const newExam = res.data?.data || res.data;
       onCreated(newExam);
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.response?.data?.message || 'Failed to create exam');
+      console.error('Create exam error:', err);
+      const msg = err.response?.data?.message || err.message || 'Failed to create exam';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -801,7 +825,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 
   // Group classes to display senior classes prominently
   const seniorClasses = classes.filter((c: any) => 
-    (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8')
+    (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8') || (c.name || '').includes('5')
   );
   const otherClasses = classes.filter((c: any) => !seniorClasses.includes(c));
 
@@ -942,6 +966,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                 onChange={e => setFormData({ ...formData, classId: e.target.value })}
                 className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer"
               >
+                {classes.length === 0 && (
+                  <option value="">⏳ Loading classes from school...</option>
+                )}
                 {seniorClasses.length > 0 && (
                   <optgroup label="🌟 Senior Classes (IIT-JEE / NEET Standard)">
                     {seniorClasses.map(c => (
