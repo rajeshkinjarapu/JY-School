@@ -6,6 +6,15 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - లాగిన్ స్క్రీన్ నుండి రోల్ స్విచ్చర్ & యూనివర్సిటీ డెమో లింక్స్ తొలగింపు (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `login lo ivi kanapdakudadu remove cheyu mundu ela undedo alane undani` (స్క్రీన్‌షాట్‌లో మార్క్ చేసిన రోల్ స్విచ్చర్ బటన్లు మరియు యూనివర్సిటీ డెమో లింక్‌ను తొలగించమని అభ్యర్థన).
+- **పూర్తయిన కీలక మార్పులు ([`frontend/src/pages/auth/LoginPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/auth/LoginPage.tsx)):**
+  1. లాగిన్ కార్డు లోపల జోడించిన `Group Chairman` మరియు `Super Admin` క్విక్ సెలెక్షన్ బాక్స్‌ను పూర్తిగా తొలగించాము.
+  2. కార్డ్ క్రింద ఉన్న `Explore University & Multi-Wing ERP Demo` లింక్‌ను పూర్తిగా తొలగించాము.
+  3. లాగిన్ పేజీని మొదట్లో ఎలా క్లీన్‌గా మరియు ప్రొఫెషనల్‌గా ఉందో అదే డిజైన్‌కు పునరుద్ధరించాము.
+  4. బ్యాకెండ్ ఆటోమేటిక్ రోల్ రికగ్నిషన్ యథావిధిగా పనిచేస్తుంది: యూజర్ ఏ క్రెడెన్షియల్స్ ఎంటర్ చేస్తే ఆ రోల్‌కు తగిన డాష్‌బోర్డ్ (ఛైర్మన్ అయితే `/chairman`, ప్రిన్సిపాల్/ఇతరులు అయితే `/dashboard`) ఓపెన్ అవుతుంది.
+
 ## చివరి సంభాషణ - Group Chairman ప్రత్యేక రోల్ లాగిన్ (Dedicated Role Login) పూర్తి ఇంప్లిమెంటేషన్ (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `nenu adigindi chairman sidebar lo adagaledu super admin login ela ayite undo ala separate role login kavali`
