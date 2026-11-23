@@ -19,7 +19,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = React.useState(false);
 
-  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
+  const isDashboard = location.pathname === '/dashboard' || location.pathname === '/' || location.pathname === '/chairman';
   const showBackButton = !isDashboard;
 
   if (!isDashboard && !forceShow) {

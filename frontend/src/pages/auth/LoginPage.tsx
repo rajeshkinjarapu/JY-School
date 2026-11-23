@@ -9,7 +9,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Eye, EyeOff, Lock, User, ArrowRight,
-  GraduationCap, Shield, Users, BookOpen, Award, ChevronRight, CheckCircle2
+  GraduationCap, Shield, Users, BookOpen, Award, ChevronRight, CheckCircle2, Crown
 } from 'lucide-react';
 
 const loginSchema = z.object({
@@ -20,7 +20,7 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export const LoginPage: React.FC = () => {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
@@ -28,13 +28,18 @@ export const LoginPage: React.FC = () => {
 
   React.useEffect(() => {
     if (isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      if (user?.role === 'GROUP_CHAIRMAN') {
+        navigate('/chairman', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, user, navigate]);
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -55,24 +60,28 @@ export const LoginPage: React.FC = () => {
         response?.data?.refreshToken ||
         response?.data?.data?.refreshToken;
 
-      let user =
+      let authUser =
         response?.user ||
         response?.data?.user ||
         response?.data?.data?.user;
 
       if (accessToken) {
-        if (!user) {
+        if (!authUser) {
           try {
             const meRes: any = await api.get('/api/auth/me');
-            user = meRes?.data?.data || meRes?.data || meRes;
+            authUser = meRes?.data?.data || meRes?.data || meRes;
           } catch (e) {
             console.warn('Failed to fetch user profile after login:', e);
           }
         }
 
-        login(accessToken, refreshToken, user || { role: 'STUDENT', name: 'User' });
-        toast.success(`Welcome back, ${user?.name || 'User'}!`);
-        navigate('/dashboard', { replace: true });
+        login(accessToken, refreshToken, authUser || { role: 'STUDENT', name: 'User' });
+        toast.success(`Welcome back, ${authUser?.name || 'User'}!`);
+        if (authUser?.role === 'GROUP_CHAIRMAN') {
+          navigate('/chairman', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         toast.error(response?.message || 'Login response format error. Please try again.');
       }
@@ -256,15 +265,60 @@ export const LoginPage: React.FC = () => {
             <div className="p-8">
 
               {/* Icon + Title */}
-              <div className="flex flex-col items-center mb-8">
+              <div className="flex flex-col items-center mb-6">
                 <div
-                  className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center shadow-lg"
+                  className="w-16 h-16 rounded-2xl mb-3 flex items-center justify-center shadow-lg"
                   style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
                 >
                   <GraduationCap className="w-8 h-8 text-white drop-shadow" />
                 </div>
                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
-                <p className="text-slate-400 text-sm font-medium mt-1">Sign in to your JY School account</p>
+                <p className="text-slate-400 text-xs font-medium mt-1">Sign in to your dedicated role portal</p>
+              </div>
+
+              {/* Dedicated Role Login Switcher */}
+              <div className="mb-6 p-3 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2 px-1 flex items-center justify-between">
+                  <span>Select Role Login:</span>
+                  <span className="text-indigo-600 font-extrabold">Instant Fill</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue('email', 'chairman@jyschool.com');
+                      setValue('password', 'Chairman@123');
+                      toast.success('Filled Group Chairman credentials');
+                    }}
+                    className="flex items-center gap-2 p-2 rounded-xl border border-amber-300/80 bg-gradient-to-br from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-950 transition-all text-xs font-bold text-left group shadow-xs hover:shadow-sm cursor-pointer"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Crown className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[11px] font-black text-amber-900">Group Chairman</div>
+                      <div className="text-[9px] text-amber-700/80 font-medium">Boardroom Login</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setValue('email', 'admin@rajacademy.com');
+                      setValue('password', 'Admin@123');
+                      toast.success('Filled Super Admin credentials');
+                    }}
+                    className="flex items-center gap-2 p-2 rounded-xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-indigo-950 transition-all text-xs font-bold text-left group shadow-xs hover:shadow-sm cursor-pointer"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                      <Shield className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="truncate text-[11px] font-black text-indigo-900">Super Admin</div>
+                      <div className="text-[9px] text-indigo-700/80 font-medium">Principal & Campus</div>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               {/* Form */}

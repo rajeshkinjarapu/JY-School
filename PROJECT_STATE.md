@@ -6,6 +6,31 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Group Chairman ప్రత్యేక రోల్ లాగిన్ (Dedicated Role Login) పూర్తి ఇంప్లిమెంటేషన్ (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `nenu adigindi chairman sidebar lo adagaledu super admin login ela ayite undo ala separate role login kavali`
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **సూపర్ అడ్మిన్ సైడ్‌బార్ నుండి తొలగింపు ([`frontend/src/components/Layout/Sidebar.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx)):**
+     - Super Admin సైడ్‌బార్ నుండి `Chairman Portal` పూర్తిగా తీసివేయబడింది. Super Admin కేవలం తన స్కూల్ వరకు మాత్రమే ప్రిన్సిపాల్ బాధ్యతలను చూస్తారు.
+  2. **Group Chairman కోసం ప్రత్యేక ఎగ్జిక్యూటివ్ సైడ్‌బార్ ([`frontend/src/components/Layout/Sidebar.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx)):**
+     - `GROUP_CHAIRMAN` యూజర్ లాగిన్ అయినప్పుడు మాత్రమే బోర్డ్‌రూమ్ ఎగ్జిక్యూటివ్ సైడ్‌బార్ కనిపిస్తుంది:
+       - 👑 `Executive Dashboard` (`/chairman`)
+       - 💳 `Consolidated Finance` (`/finance`)
+       - 📊 `Group Analytics` (`/reports`)
+       - 👨‍🏫 `Faculty Directory` (`/teachers`)
+       - 🎓 `Student Directory` (`/students`)
+       - 📢 `Group Broadcasts` (`/announcements`)
+       - 🏛️ `University View` (`/university-demo`)
+  3. **లాగిన్ పేజీ స్విచ్చర్ & ఆటో-రీడైరెక్షన్ ([`frontend/src/pages/auth/LoginPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/auth/LoginPage.tsx)):**
+     - లాగిన్ పేజీలో `Group Chairman` మరియు `Super Admin` ల కోసం ప్రత్యేకమైన ఇన్స్టంట్ ఫిల్ బటన్లు అందించబడ్డాయి.
+     - ఛైర్మన్ లాగిన్ అయినప్పుడు నేరుగా `/chairman` కు రీడైరెక్ట్ అవుతారు.
+  4. **రక్షిత రూటింగ్ ([`frontend/src/router/index.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/router/index.tsx)):**
+     - `/chairman` రూట్ కేవలం `['GROUP_CHAIRMAN']` రోల్ ఉన్నవారికి మాత్రమే ప్రత్యేకించబడింది.
+  5. **బ్యాకెండ్ ఆటో-క్రియేషన్ ఇంజిన్ & స్క్రిప్ట్స్:**
+     - [`backend/src/utils/ensureChairmanUser.ts`](file:///d:/JY%20School/JY-School-main/backend/src/utils/ensureChairmanUser.ts): సర్వర్ బూట్ అప్పుడు `chairman@jyschool.com` (పాస్‌వర్డ్: `Chairman@123`, రోల్: `GROUP_CHAIRMAN`) ఖాతాను ఆటోమేటిక్‌గా డేటాబేస్‌లో క్రియేట్ చేస్తుంది.
+     - [`backend/scripts/create_chairman.ts`](file:///d:/JY%20School/JY-School-main/backend/scripts/create_chairman.ts): టెర్మినల్ ద్వారా ఛైర్మన్ వివరాలు సెట్ చేయడానికి స్క్రిప్ట్ సిద్ధం చేయబడింది.
+     - [`backend/src/server.ts`](file:///d:/JY%20School/JY-School-main/backend/src/server.ts): సర్వర్ స్టార్టప్‌లో ఆటో-కాల్ జోడించబడింది.
+
 ## చివరి సంభాషణ - Rolldown Type Export ఎర్రర్ ఫిక్స్ & వెబ్‌సైట్ ఫుల్ డిప్లాయ్‌మెంట్ (November 23, 2026)
 - **సమస్య (Vite v8 / Rolldown Build Failure):**
   - Vite v8 లోని Rolldown బండ్లర్ TypeScript `interface` ను runtime JS export గా వెతకడం వల్ల `[MISSING_EXPORT] "InstitutionWing" is not exported by "src/pages/university-demo/data/universityMockData.ts"` అనే ఎర్రర్‌తో బిల్డ్ ఫెయిల్ అయింది.

@@ -238,7 +238,7 @@ export const router = createBrowserRouter([
       {
         path: 'chairman',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'GROUP_CHAIRMAN']}>
+          <ProtectedRoute allowedRoles={['GROUP_CHAIRMAN']}>
             <ChairmanDashboardPage />
           </ProtectedRoute>
         ),

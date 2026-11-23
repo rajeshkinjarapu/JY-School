@@ -170,6 +170,7 @@ app.use('*', (_req, res) => {
 app.use(errorHandler);
 
 import { autoCleanDuplicateSubjectsAndMarks } from './utils/cleanupDuplicateSubjects';
+import { ensureChairmanUser } from './utils/ensureChairmanUser';
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 if (!process.env.VERCEL) {
@@ -183,6 +184,11 @@ if (!process.env.VERCEL) {
       CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
       CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
     `).catch(err => console.log('Auto-sync student columns notice:', err?.message));
+
+    // Ensure dedicated Group Chairman user account exists
+    ensureChairmanUser().catch(err => {
+      console.warn('Failed ensureChairmanUser on boot:', err);
+    });
 
     // Run subject and mark deduplication in background on boot
     if (process.env.RUN_CLEANUP_ON_BOOT === 'true') autoCleanDuplicateSubjectsAndMarks().catch(err => {

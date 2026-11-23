@@ -28,6 +28,12 @@ export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (user?.role === 'GROUP_CHAIRMAN') {
+      navigate('/chairman', { replace: true });
+    }
+  }, [user, navigate]);
+
   const roleMap: Record<string, string> = {
     super_admin: 'admin',
     admin: 'admin',
