@@ -11,6 +11,10 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
     const { title, classId, subjectId, teacherId, duration, startTime, endTime, totalMarks, passMarks, negativeMarks, isPublished } = req.body;
     
     let validClassId = classId;
+    if (validClassId) {
+      const checkCls = await prisma.class.findUnique({ where: { id: validClassId } }).catch(() => null);
+      if (!checkCls) validClassId = null;
+    }
     if (!validClassId) {
       let cls = await prisma.class.findFirst();
       if (!cls) {
@@ -20,7 +24,12 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       }
       validClassId = cls?.id;
     }
+
     let validSubjectId = subjectId;
+    if (validSubjectId) {
+      const checkSub = await prisma.subject.findUnique({ where: { id: validSubjectId } }).catch(() => null);
+      if (!checkSub) validSubjectId = null;
+    }
     if (!validSubjectId) {
       let sub = await prisma.subject.findFirst();
       if (!sub) {
@@ -31,25 +40,64 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       validSubjectId = sub?.id;
     }
 
-    const exam = await prisma.competitiveExam.create({
-      data: {
-        title: title || 'JEE / NEET Mock Exam',
-        classId: validClassId,
-        subjectId: validSubjectId,
-        teacherId: teacherId || null,
-        duration: Number(duration) || 180, 
-        startTime: startTime ? new Date(startTime) : new Date(), 
-        endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
-        totalMarks: Number(totalMarks) || 300,
-        passMarks: Number(passMarks) || 100,
-        negativeMarks: Number(negativeMarks) || 1,
-        isPublished: isPublished !== undefined ? Boolean(isPublished) : true
-      }
-    });
-    res.status(201).json({ success: true, data: exam });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to create competitive exam' });
+    try {
+      const exam = await prisma.competitiveExam.create({
+        data: {
+          title: title || 'JEE / NEET Mock Exam',
+          classId: validClassId,
+          subjectId: validSubjectId,
+          teacherId: teacherId || null,
+          duration: Number(duration) || 180, 
+          startTime: startTime ? new Date(startTime) : new Date(), 
+          endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
+          totalMarks: Number(totalMarks) || 300,
+          passMarks: Number(passMarks) || 100,
+          negativeMarks: Number(negativeMarks) || 1,
+          isPublished: isPublished !== undefined ? Boolean(isPublished) : true
+        }
+      });
+      return res.status(201).json({ success: true, data: exam });
+    } catch (createErr: any) {
+      console.warn('First create attempt failed, executing DDL fallback:', createErr?.message);
+      // Auto-create table if missing in database
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
+          "id" TEXT PRIMARY KEY,
+          "title" TEXT NOT NULL,
+          "classId" TEXT NOT NULL,
+          "subjectId" TEXT NOT NULL,
+          "teacherId" TEXT,
+          "duration" INTEGER NOT NULL DEFAULT 180,
+          "startTime" TIMESTAMP(3) NOT NULL,
+          "endTime" TIMESTAMP(3) NOT NULL,
+          "totalMarks" DOUBLE PRECISION NOT NULL DEFAULT 300,
+          "passMarks" DOUBLE PRECISION NOT NULL DEFAULT 100,
+          "negativeMarks" DOUBLE PRECISION NOT NULL DEFAULT 1,
+          "isPublished" BOOLEAN NOT NULL DEFAULT true,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `).catch(() => {});
+
+      const exam = await prisma.competitiveExam.create({
+        data: {
+          title: title || 'JEE / NEET Mock Exam',
+          classId: validClassId,
+          subjectId: validSubjectId,
+          teacherId: teacherId || null,
+          duration: Number(duration) || 180, 
+          startTime: startTime ? new Date(startTime) : new Date(), 
+          endTime: endTime ? new Date(endTime) : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), 
+          totalMarks: Number(totalMarks) || 300,
+          passMarks: Number(passMarks) || 100,
+          negativeMarks: Number(negativeMarks) || 1,
+          isPublished: isPublished !== undefined ? Boolean(isPublished) : true
+        }
+      });
+      return res.status(201).json({ success: true, data: exam });
+    }
+  } catch (error: any) {
+    console.error('Final createCompetitiveExam error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to create competitive exam' });
   }
 };
 
@@ -104,23 +152,55 @@ export const addCompetitiveQuestion = async (req: Request, res: Response) => {
       ? JSON.stringify(options) 
       : (typeof options === 'string' ? options : JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']));
 
-    const q = await prisma.competitiveExamQuestion.create({
-      data: {
-        competitiveExamId: examId,
-        questionText: questionText || '',
-        questionType: questionType || 'MCQ',
-        imageUrl: imageUrl || null,
-        options: formattedOptions,
-        correctAnswer: correctAnswer || 'Option A',
-        marks: Number(marks) || 4,
-        chapterName: chapterName || 'General',
-        difficulty: difficulty || 'MEDIUM'
-      }
-    });
-    res.status(201).json({ success: true, data: q });
-  } catch (error) {
+    try {
+      const q = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          questionText: questionText || '',
+          questionType: questionType || 'MCQ',
+          imageUrl: imageUrl || null,
+          options: formattedOptions,
+          correctAnswer: correctAnswer || 'Option A',
+          marks: Number(marks) || 4,
+          chapterName: chapterName || 'General',
+          difficulty: difficulty || 'MEDIUM'
+        }
+      });
+      return res.status(201).json({ success: true, data: q });
+    } catch (createQErr) {
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
+          "id" TEXT PRIMARY KEY,
+          "competitiveExamId" TEXT NOT NULL,
+          "questionText" TEXT NOT NULL,
+          "questionType" TEXT NOT NULL DEFAULT 'MCQ',
+          "imageUrl" TEXT,
+          "options" TEXT,
+          "correctAnswer" TEXT NOT NULL,
+          "marks" DOUBLE PRECISION NOT NULL DEFAULT 4,
+          "chapterName" TEXT,
+          "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM'
+        );
+      `).catch(() => {});
+
+      const q = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          questionText: questionText || '',
+          questionType: questionType || 'MCQ',
+          imageUrl: imageUrl || null,
+          options: formattedOptions,
+          correctAnswer: correctAnswer || 'Option A',
+          marks: Number(marks) || 4,
+          chapterName: chapterName || 'General',
+          difficulty: difficulty || 'MEDIUM'
+        }
+      });
+      return res.status(201).json({ success: true, data: q });
+    }
+  } catch (error: any) {
     console.error('Failed to add question:', error);
-    res.status(500).json({ success: false, message: 'Failed to add question' });
+    res.status(500).json({ success: false, message: error?.message || 'Failed to add question' });
   }
 };
 

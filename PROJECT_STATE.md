@@ -6,6 +6,20 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - "Failed to create competitive exam" పరిష్కారం & Prisma DB Push (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `asssalu work avvatam ledu` (స్క్రీన్‌షాట్‌లో ఇన్‌లైన్ ఫారమ్‌లో వివరాలు ఇచ్చి [Create Exam] క్లిక్ చేసినప్పుడు `Failed to create competitive exam` అనే ఎర్రర్ టోస్ట్ వస్తున్నట్లు రిపోర్ట్ చేశారు).
+- **సమస్య మూలకారణ విశ్లేషణ:**
+  1. PostgreSQL డేటాబేస్ (Supabase) లో `CompetitiveExam`, `CompetitiveExamQuestion`, `CompetitiveExamSubmission`, `CompetitiveExamResponse` టేబుల్స్ ఇంకా ఫిజికల్‌గా క్రియేట్ కాలేదు.
+  2. కేవలం `npm run build` (`prisma generate`) రన్ చేయడం వల్ల క్లయింట్ మాత్రమే అప్‌డేట్ అవుతుంది కానీ డేటాబేస్‌లో టేబుల్స్ క్రియేట్ కావు. దీనికోసం `npx prisma db push --accept-data-loss` రన్ చేయాలి.
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **కంట్రోలర్ ఆటో-హీలింగ్ & DDL రికవరీ ([`backend/src/controllers/competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - `createCompetitiveExam` లో మొదటి ప్రయత్నం విఫలమైతే, వెంటనే `CREATE TABLE IF NOT EXISTS "CompetitiveExam"` DDL రన్ చేసి తిరిగి పరీక్షను క్రియేట్ చేసే డబుల్-అటెంప్ట్ రక్షణ చేర్చాము.
+     - `addCompetitiveQuestion` లో కూడా అదే తరహా ఆటో-క్రియేషన్ రక్షణ చేర్చాము.
+     - ఫ్రంటెండ్ నుండి వచ్చిన `classId` లేదా `subjectId` డేటాబేస్‌లో నిజంగా ఉందో లేదో ముందే చెక్ చేసి, లేకపోతే ఆటో-ఫాల్‌బ్యాక్ అయ్యేలా చేసాము.
+  2. **డేటాబేస్ పుష్ & రీబిల్డ్ కమాండ్స్:**
+     - VPS డిప్లాయ్‌మెంట్ కమాండ్స్‌లో `npx prisma db push --accept-data-loss` ను చేర్చి, డేటాబేస్ టేబుల్స్ వెంటనే లైవ్ అయ్యేలా చేశాము.
+
 ## చివరి సంభాషణ - "Failed to load competitive exams" ఎర్రర్ పరిష్కారం & బ్యాకెండ్ బిల్డ్ (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - యూజర్ అప్‌లోడ్ చేసిన తాజా స్క్రీన్‌షాట్‌లో కుడివైపు పైభాగంలో ఎరుపు రంగులో `Failed to load competitive exams` ఎర్రర్ టోస్ట్ మరియు ఎగ్జామ్స్ లిస్ట్ 0 లో ఉన్నట్లు కనిపించింది.
