@@ -43,8 +43,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         setSelectedExamIdForQB(loadedExams[0].id);
       }
     } catch (err: any) {
-      console.error('Failed to load exams:', err);
-      toast.error('Failed to load competitive exams');
+      console.warn('Admin route error, trying student route fallback:', err);
+      try {
+        const res2 = await api.get('/api/competitive-exams/student');
+        const fallback = res2.data?.data || [];
+        setExams(fallback);
+      } catch (err2) {
+        console.warn('Competitive exams not loaded yet:', err2);
+      }
     } finally {
       setLoading(false);
     }

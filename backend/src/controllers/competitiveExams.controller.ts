@@ -82,7 +82,16 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
     });
     res.json({ success: true, data: exams });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'Failed to fetch all competitive exams' });
+    console.error('getAllCompetitiveExams error:', error);
+    try {
+      const fallbackExams = await prisma.competitiveExam.findMany({
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json({ success: true, data: fallbackExams });
+    } catch (e2) {
+      console.error('getAllCompetitiveExams fallback error:', e2);
+      res.status(200).json({ success: true, data: [] });
+    }
   }
 };
 

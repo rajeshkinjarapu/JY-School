@@ -6,6 +6,58 @@ import { prisma } from './prisma';
  */
 export async function ensureCompetitiveExams(): Promise<void> {
   try {
+    // Ensure tables exist in PostgreSQL
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
+        "id" TEXT PRIMARY KEY,
+        "title" TEXT NOT NULL,
+        "classId" TEXT NOT NULL,
+        "subjectId" TEXT NOT NULL,
+        "teacherId" TEXT,
+        "duration" INTEGER NOT NULL DEFAULT 180,
+        "startTime" TIMESTAMP(3) NOT NULL,
+        "endTime" TIMESTAMP(3) NOT NULL,
+        "totalMarks" DOUBLE PRECISION NOT NULL DEFAULT 300,
+        "passMarks" DOUBLE PRECISION NOT NULL DEFAULT 100,
+        "negativeMarks" DOUBLE PRECISION NOT NULL DEFAULT 1,
+        "isPublished" BOOLEAN NOT NULL DEFAULT true,
+        "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
+        "id" TEXT PRIMARY KEY,
+        "competitiveExamId" TEXT NOT NULL,
+        "questionText" TEXT NOT NULL,
+        "questionType" TEXT NOT NULL DEFAULT 'MCQ',
+        "imageUrl" TEXT,
+        "options" TEXT,
+        "correctAnswer" TEXT NOT NULL,
+        "marks" DOUBLE PRECISION NOT NULL DEFAULT 4,
+        "chapterName" TEXT,
+        "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM'
+      );
+
+      CREATE TABLE IF NOT EXISTS "CompetitiveExamSubmission" (
+        "id" TEXT PRIMARY KEY,
+        "competitiveExamId" TEXT NOT NULL,
+        "studentId" TEXT NOT NULL,
+        "marksObtained" DOUBLE PRECISION NOT NULL,
+        "totalTimeTaken" INTEGER NOT NULL DEFAULT 0,
+        "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT "CompetitiveExamSubmission_competitiveExamId_studentId_key" UNIQUE ("competitiveExamId", "studentId")
+      );
+
+      CREATE TABLE IF NOT EXISTS "CompetitiveExamResponse" (
+        "id" TEXT PRIMARY KEY,
+        "submissionId" TEXT NOT NULL,
+        "questionId" TEXT NOT NULL,
+        "selectedOption" TEXT,
+        "isCorrect" BOOLEAN NOT NULL,
+        "timeTakenSeconds" INTEGER NOT NULL DEFAULT 0,
+        CONSTRAINT "CompetitiveExamResponse_submissionId_questionId_key" UNIQUE ("submissionId", "questionId")
+      );
+    `).catch(err => console.log('CompetitiveExam table verify notice:', err?.message));
+
     const existingCount = await prisma.competitiveExam.count();
     if (existingCount > 0) {
       console.log(`✅ [CompetitiveExams] Already populated with ${existingCount} exams.`);
