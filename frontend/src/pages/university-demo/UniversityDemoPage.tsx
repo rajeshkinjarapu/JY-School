@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { INSTITUTION_WINGS, InstitutionWing } from './data/universityMockData';
+import { INSTITUTION_WINGS } from './data/universityMockData';
+import type { InstitutionWing } from './data/universityMockData';
 import { ChairmanDashboard } from './components/ChairmanDashboard';
 import { PrincipalDashboard } from './components/PrincipalDashboard';
 import { FacultyAttendance } from './components/FacultyAttendance';

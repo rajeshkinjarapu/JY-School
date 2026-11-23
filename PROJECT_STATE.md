@@ -6,6 +6,15 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Rolldown Type Export ఎర్రర్ ఫిక్స్ & వెబ్‌సైట్ ఫుల్ డిప్లాయ్‌మెంట్ (November 23, 2026)
+- **సమస్య (Vite v8 / Rolldown Build Failure):**
+  - Vite v8 లోని Rolldown బండ్లర్ TypeScript `interface` ను runtime JS export గా వెతకడం వల్ల `[MISSING_EXPORT] "InstitutionWing" is not exported by "src/pages/university-demo/data/universityMockData.ts"` అనే ఎర్రర్‌తో బిల్డ్ ఫెయిల్ అయింది.
+  - దీనివల్ల `dist/` ఫైల్స్ జనరేట్ కాక వెబ్‌సైట్ 404 లో ఉండిపోయింది.
+- **పరిష్కారం:**
+  - [`frontend/src/pages/university-demo/UniversityDemoPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/university-demo/UniversityDemoPage.tsx) మరియు [`frontend/src/pages/university-demo/components/PrincipalDashboard.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/university-demo/components/PrincipalDashboard.tsx) లలో `import { InstitutionWing }` స్థానంలో explicit type-only import `import type { InstitutionWing }` గా మార్చబడింది.
+  - దీంతో Rolldown కంపైలర్ runtime JS లో ఎగుమతిని వెతకకుండా కేవలం టైప్-చెక్‌గా గుర్తించి బిల్డ్‌ను విజయవంతంగా పూర్తి చేస్తుంది.
+  - `progress_log.md` మరియు `PROJECT_STATE.md` అప్‌డేట్ చేయబడ్డాయి.
+
 ## చివరి సంభాషణ - LightningCSS Minify CSS సెలెక్టర్ ఎర్రర్ & వెబ్‌సైట్ 404 రికవరీ (November 23, 2026)
 - **సమస్య:**
   - `src/index.css` లోని `.print\\:hidden` లో డబుల్ బ్యాక్‌స్లాష్ ఉండటం వల్ల Vite లోని `lightningcss minify` టూల్ `hidden` ను అక్రమ సూడో-క్లాస్ అనుకుని బిల్డ్‌ను ఆపివేసింది (`'hidden' is not recognized as a valid pseudo-class`).

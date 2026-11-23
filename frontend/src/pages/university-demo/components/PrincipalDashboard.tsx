@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { DEGREE_PROGRAMS, INSTITUTION_WINGS, InstitutionWing } from '../data/universityMockData';
+import { DEGREE_PROGRAMS, INSTITUTION_WINGS } from '../data/universityMockData';
+import type { InstitutionWing } from '../data/universityMockData';
 import {
   BookOpen, Users, Calendar, Award, CheckCircle2,
   Clock, ArrowRight, Shield, Layers, FileText, Sparkles
