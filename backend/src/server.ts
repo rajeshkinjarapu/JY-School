@@ -171,6 +171,7 @@ app.use(errorHandler);
 
 import { autoCleanDuplicateSubjectsAndMarks } from './utils/cleanupDuplicateSubjects';
 import { ensureChairmanUser } from './utils/ensureChairmanUser';
+import { ensureCompetitiveExams } from './utils/ensureCompetitiveExams';
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 if (!process.env.VERCEL) {
@@ -188,6 +189,11 @@ if (!process.env.VERCEL) {
     // Ensure dedicated Group Chairman user account exists
     ensureChairmanUser().catch(err => {
       console.warn('Failed ensureChairmanUser on boot:', err);
+    });
+
+    // Ensure NTA style competitive mock exams are populated
+    ensureCompetitiveExams().catch(err => {
+      console.warn('Failed ensureCompetitiveExams on boot:', err);
     });
 
     // Run subject and mark deduplication in background on boot

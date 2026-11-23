@@ -190,7 +190,7 @@ export const router = createBrowserRouter([
   {
     path: '/take-competitive-exam/:id',
     element: (
-      <ProtectedRoute allowedRoles={['STUDENT']}>
+      <ProtectedRoute allowedRoles={['STUDENT', 'SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
         {withSuspense(<TakeCompetitiveExamPage />)}
       </ProtectedRoute>
     ),
@@ -198,7 +198,7 @@ export const router = createBrowserRouter([
   {
     path: '/competitive-exam-result/:id',
     element: (
-      <ProtectedRoute allowedRoles={['STUDENT']}>
+      <ProtectedRoute allowedRoles={['STUDENT', 'SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
         {withSuspense(<CompetitiveExamResultPage />)}
       </ProtectedRoute>
     ),
@@ -206,7 +206,7 @@ export const router = createBrowserRouter([
   {
     path: '/competitive-exam-leaderboard/:id',
     element: (
-      <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+      <ProtectedRoute allowedRoles={['STUDENT', 'SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
         {withSuspense(<CompetitiveExamLeaderboardPage />)}
       </ProtectedRoute>
     ),

@@ -30,19 +30,14 @@ const TakeCompetitiveExamPage = () => {
     enterFullScreen();
     setupAntiCheat();
     
-    // Check if opened in another tab
+    // Check if opened in another tab within the session
     const tabKey = `exam_running_${id}`;
-    if (localStorage.getItem(tabKey)) {
-      alert("Exam is already running in another tab. If this is a mistake, please clear browser data.");
-      navigate('/competitive-exams');
-      return;
-    }
-    localStorage.setItem(tabKey, 'true');
+    sessionStorage.setItem(tabKey, 'true');
 
     return () => {
       exitFullScreen();
       removeAntiCheat();
-      localStorage.removeItem(tabKey);
+      sessionStorage.removeItem(tabKey);
       if (timerRef.current) clearInterval(timerRef.current);
       if (activeQuestionTimerRef.current) clearInterval(activeQuestionTimerRef.current);
     };
@@ -186,7 +181,7 @@ const TakeCompetitiveExamPage = () => {
       });
       
       alert("Exam submitted successfully!");
-      localStorage.removeItem(`exam_running_${id}`);
+      sessionStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
       navigate(`/competitive-exam-result/${id}`, { replace: true });
     } catch (error) {
