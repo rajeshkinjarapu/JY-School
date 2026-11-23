@@ -2227,8 +2227,6 @@ const DedicatedQuestionEditorView = ({ exam, onBack, onSaved }: any) => {
     </div>
   );
 };
-  );
-};
 
 // ═══════════════════════════════════════════════════════════════
 // DASHBOARD OVERVIEW TAB
