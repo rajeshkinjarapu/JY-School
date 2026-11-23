@@ -125,17 +125,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     setActiveTab('QUESTION_BANK');
   };
 
-  const handleClearDummyExams = async () => {
-    if (!window.confirm('Are you sure you want to remove all dummy/sample test data? Only real school exams will remain.')) return;
-    try {
-      const res = await api.delete('/api/competitive-exams/purge-dummy/all');
-      toast.success(res.data?.message || 'Dummy tests purged successfully!');
-      fetchExams();
-    } catch (e) {
-      toast.error('Failed to clear dummy tests');
-    }
-  };
-
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
       {/* Executive Header */}
@@ -162,17 +151,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           >
             <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </button>
-
-          {exams.length > 0 && (
-            <button
-              onClick={handleClearDummyExams}
-              className="px-4 py-3 rounded-2xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-500/30 font-extrabold text-xs flex items-center gap-2 transition cursor-pointer"
-              title="Purge all mock/dummy test records"
-            >
-              <Trash2 className="w-4 h-4 text-rose-300" />
-              🧹 Clear Dummy Data
-            </button>
-          )}
 
           <button
             onClick={() => {
@@ -234,7 +212,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setShowInlineCreate(true);
             }}
             onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            onClearDummy={handleClearDummyExams}
             navigate={navigate}
           />
         )}
@@ -253,7 +230,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setCreatedExamModal(newExam);
             }}
             onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            onClearDummy={handleClearDummyExams}
             navigate={navigate}
           />
         )}
@@ -327,43 +303,10 @@ const ManageExamsTab = ({
   onDelete, 
   onExamCreated,
   onPreviewPaper,
-  onClearDummy,
   navigate 
 }: any) => {
   return (
     <div className="space-y-6">
-      {/* Quick Guide Card */}
-      <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-purple-50 p-4 rounded-2xl border border-indigo-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-            <Zap className="w-5 h-5 text-amber-300" />
-          </div>
-          <div>
-            <h4 className="font-black text-slate-900 text-sm">పరీక్షను ఎలా చూడాలి & ఎలా ఓపెన్ చేయాలి? (Live CBT Exam Guide)</h4>
-            <p className="text-xs text-slate-600 mt-0.5">
-              1. <strong>"View Exam Paper"</strong> క్లిక్ చేసి ప్రశ్నలు, ఆప్షన్లు, మ్యాథ్స్ ఈక్వేషన్లు, కరెక్ట్ ఆన్సర్ కీ ప్రివ్యూ చూడవచ్చు లేదా ప్రింట్ చేయవచ్చు. &nbsp;|&nbsp;
-              2. <strong>"Launch CBT Exam"</strong> క్లిక్ చేసి NTA Eduracle కంప్యూటర్ స్క్రీన్‌ను లైవ్‌గా ఓపెన్ చేసి టెస్ట్ రాయవచ్చు.
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {exams.length > 0 && (
-            <button
-              onClick={onClearDummy}
-              className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" /> 🧹 Clear Dummy Data
-            </button>
-          )}
-          <button
-            onClick={() => setShowInlineCreate(true)}
-            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Create Exam
-          </button>
-        </div>
-      </div>
-
       {/* Eduracle Exam Creation Wizard */}
       {showInlineCreate && (
         <EduracleCreateExamWizard 
@@ -590,7 +533,7 @@ const PATTERN_PRESETS = [
   {
     id: 'SCHOOL_GRAND_TEST',
     badge: 'SCHOOL GRAND TEST',
-    title: 'School Grand Test (పాఠశాల గ్రాండ్ టెస్ట్)',
+    title: 'School Grand Test',
     defaultTitle: '10th Class Grand Test - Mathematics',
     description: 'School Curriculum Assessment • 100 Marks • 120 Mins • Zero Negative',
     duration: 120,
@@ -1875,7 +1818,7 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
 // DASHBOARD OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 
-const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onPreviewPaper, onClearDummy, navigate }: any) => {
+const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onPreviewPaper, navigate }: any) => {
   return (
     <div className="space-y-6">
       {/* Quick Launch Hero */}
@@ -1898,14 +1841,6 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
               >
                 <Play size={16} className="fill-white" /> Launch CBT Simulator
-              </button>
-            )}
-            {exams.length > 0 && (
-              <button
-                onClick={onClearDummy}
-                className="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-extrabold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-              >
-                <Trash2 size={16} className="text-rose-600" /> 🧹 Clear Dummy Data
               </button>
             )}
           </div>
@@ -1953,12 +1888,6 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer inline-flex items-center gap-2 transition hover:scale-105"
               >
                 <Plus className="w-4 h-4" /> + Create First School Exam
-              </button>
-              <button
-                onClick={onClearDummy}
-                className="px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs rounded-xl cursor-pointer inline-flex items-center gap-1.5"
-              >
-                <Trash2 className="w-4 h-4 text-rose-600" /> 🧹 Clear Any Dummy Data
               </button>
             </div>
           </div>
@@ -2327,7 +2256,7 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
   const handleParseText = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rawText.trim()) {
-      toast.error('దయచేసి మీ ఎగ్జామ్ పేపర్ టెక్స్ట్‌ను పేస్ట్ చేయండి');
+      toast.error('Please paste your exam questions text');
       return;
     }
 
@@ -2342,14 +2271,14 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
 
       const extracted = res.data?.questions || [];
       if (extracted.length === 0) {
-        toast.error('టెక్స్ట్ నుంచి ప్రశ్నలు గుర్తించబడలేదు. దయచేసి సరైన ఫార్మాట్ టెక్స్ట్ పేస్ట్ చేయండి.');
+        toast.error('No questions detected. Please verify your text format.');
       } else {
         setParsedQuestions(extracted);
-        toast.success(`🎉 ${extracted.length} ప్రశ్నలను Gemini AI విజయవంతంగా గుర్తించింది!`);
+        toast.success(`🎉 Successfully extracted ${extracted.length} questions with Gemini AI!`);
       }
     } catch (err: any) {
       console.error('AI text parse error:', err);
-      toast.error(err.response?.data?.message || 'టెక్స్ట్ పార్సింగ్ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి.');
+      toast.error(err.response?.data?.message || 'Failed to parse text questions.');
     } finally {
       setParsing(false);
     }
@@ -2362,11 +2291,11 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
       await api.post(`/api/competitive-exams/${exam.id}/bulk-add-questions`, {
         questions: parsedQuestions,
       });
-      toast.success(`✅ ${parsedQuestions.length} ప్రశ్నలు ఎగ్జామ్‌లో విజయవంతంగా యాడ్ అయ్యాయి!`);
+      toast.success(`✅ Successfully added ${parsedQuestions.length} questions to exam!`);
       onParsedAndAdded();
     } catch (err: any) {
       console.error('Bulk save error:', err);
-      toast.error(err.response?.data?.message || 'ప్రశ్నలు సేవ్ చేయడంలో లోపం తలెత్తింది.');
+      toast.error(err.response?.data?.message || 'Failed to save questions to exam.');
     } finally {
       setSaving(false);
     }
@@ -2411,7 +2340,7 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
                   💡 How it works:
                 </p>
                 <p className="leading-relaxed">
-                  మీ వద్ద ఉన్న Word, PDF లేదా వాట్సాప్ మెసేజ్‌లలోని క్వశ్చన్ పేపర్‌ను ఇక్కడ కాపీ-పేస్ట్ చేయండి. గూగుల్ జెమిని AI మ్యాథ్ ఫార్ములాలు ($LaTeX$), 4 ఆప్షన్లు (A, B, C, D) మరియు ఆన్సర్ కీలను ఆటోమేటిక్‌గా గుర్తించి కొన్ని సెకన్లలో ఎగ్జామ్‌గా మారుస్తుంది.
+                  Paste raw exam questions from Word, PDF, or text notes. Google Gemini 2.5 Flash AI automatically recognizes math equations ($LaTeX$), organizes 4 options (A, B, C, D), and detects answer keys in seconds.
                 </p>
               </div>
 
@@ -2425,7 +2354,7 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
                   onChange={e => setRawText(e.target.value)}
                   rows={10}
                   className="w-full border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm font-mono text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-slate-50 focus:bg-white transition"
-                  placeholder={`ఉదాహరణకు ఇలా పేస్ట్ చేయండి:
+                  placeholder={`Example format:
 
 1. A particle starts from rest and moves with acceleration a = 4 m/s². What is its velocity after 5 seconds?
 (A) 20 m/s
@@ -2508,7 +2437,7 @@ Correct: A`}
                     AI Review: {parsedQuestions.length} Questions Ready to Add
                   </h4>
                   <p className="text-xs text-emerald-700 mt-0.5">
-                    ప్రతి ప్రశ్నను మరియు ఆప్షన్లను కింద రివ్యూ చేయండి. ఏవైనా తప్పులుంటే మార్చుకోవచ్చు లేదా డిలీట్ చేయవచ్చు.
+                    Review parsed questions and options below. You can edit the correct answer or remove questions before saving.
                   </p>
                 </div>
                 <button
