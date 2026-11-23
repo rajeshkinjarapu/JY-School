@@ -80,18 +80,20 @@ const TakeCompetitiveExamPage = () => {
   const fetchExam = async () => {
     try {
       const res = await api.get(`/api/competitive-exams/${id}/student`);
-      const examData = res.data.data;
+      const examData = res.data?.data || res.data;
+      if (!examData) throw new Error('No exam data received');
       setExam(examData);
       
       // Calculate remaining time synced with server end time ideally.
       // For simplicity here, we use duration in seconds
-      setTimeLeft(examData.duration * 60);
+      setTimeLeft((examData.duration || 180) * 60);
       
       // Init statuses
       const initStatuses: any = {};
-      examData.questions.forEach((q: any) => initStatuses[q.id] = 'not_visited');
-      if (examData.questions.length > 0) {
-        initStatuses[examData.questions[0].id] = 'not_answered';
+      const qs = examData.questions || [];
+      qs.forEach((q: any) => initStatuses[q.id] = 'not_visited');
+      if (qs.length > 0) {
+        initStatuses[qs[0].id] = 'not_answered';
       }
       setQuestionStatuses(initStatuses);
     } catch (err) {
@@ -305,7 +307,22 @@ const TakeCompetitiveExamPage = () => {
   };
 
   if (loading || !exam) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center">Loading Exam Environment...</div>;
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center font-bold text-slate-700">Loading Exam Environment...</div>;
+  }
+
+  if (!exam.questions || exam.questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md border border-slate-200">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-xl font-black text-slate-800">No Questions Found</h2>
+          <p className="text-sm text-slate-500 mt-2">This exam does not have any questions populated yet. Please add questions from the Question Bank first.</p>
+          <button onClick={() => navigate('/competitive-exams')} className="mt-6 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-sm shadow cursor-pointer">
+            Back to Competitive Exams
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const currentQuestion = exam.questions[currentQuestionIndex];

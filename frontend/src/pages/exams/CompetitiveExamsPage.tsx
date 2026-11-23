@@ -58,6 +58,14 @@ export const CompetitiveExamsPage: React.FC = () => {
 // ADMIN / TEACHER DASHBOARD
 // ═══════════════════════════════════════════════════════════════
 
+// Helper to safely extract exams array from various API response formats
+const extractExams = (payload: any): any[] => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.exams)) return payload.exams;
+  return [];
+};
+
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'QUESTION_BANK' | 'RESULTS'>('MANAGE_EXAMS');
   const [exams, setExams] = useState<any[]>([]);
@@ -75,7 +83,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     setLoading(true);
     try {
       const res = await api.get('/api/competitive-exams/admin');
-      const loadedExams = res.data?.data || [];
+      const loadedExams = extractExams(res.data);
       setExams(loadedExams);
       if (loadedExams.length > 0 && !selectedExamIdForQB) {
         setSelectedExamIdForQB(loadedExams[0].id);
@@ -84,7 +92,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       console.warn('Admin route error, trying student route fallback:', err);
       try {
         const res2 = await api.get('/api/competitive-exams/student');
-        const fallback = res2.data?.data || [];
+        const fallback = extractExams(res2.data);
         setExams(fallback);
       } catch (err2) {
         console.warn('Competitive exams not loaded yet:', err2);
@@ -250,6 +258,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               setActiveTab('MANAGE_EXAMS');
               setShowInlineCreate(true);
             }}
+            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
             onSeedDefaults={handleSeedDefaults}
             navigate={navigate}
           />
@@ -1853,7 +1862,7 @@ const ManualAddQuestionModal = ({ exam, onClose, onAdded }: any) => {
 // DASHBOARD OVERVIEW TAB
 // ═══════════════════════════════════════════════════════════════
 
-const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onSeedDefaults, navigate }: any) => {
+const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenCreate, onPreviewPaper, onSeedDefaults, navigate }: any) => {
   return (
     <div className="space-y-6">
       {/* Quick Launch Hero */}
@@ -1878,14 +1887,12 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
                 <Play size={16} className="fill-white" /> Launch CBT Simulator
               </button>
             )}
-            {exams.length === 0 && (
-              <button
-                onClick={onSeedDefaults}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
-              >
-                <Sparkles size={16} className="text-amber-300" /> Load NTA Standard Tests
-              </button>
-            )}
+            <button
+              onClick={onSeedDefaults}
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-2 shadow-md transition cursor-pointer"
+            >
+              <Sparkles size={16} className="text-amber-300" /> {exams.length > 0 ? 'Re-Load Standard Tests' : 'Load NTA Standard Tests'}
+            </button>
           </div>
         </div>
 
@@ -1899,6 +1906,86 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
             <div className="text-[11px] font-bold text-slate-500 uppercase">Bank MCQs</div>
           </div>
         </div>
+      </div>
+
+      {/* Live Available Exams Grid */}
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-black text-slate-900">Active Online Exams & Mock Papers ({exams.length})</h3>
+            <p className="text-xs text-slate-500 font-medium">Click "Launch CBT Exam" to start the computer-based test or "View Paper" to preview questions</p>
+          </div>
+          {exams.length > 0 && (
+            <button
+              onClick={onOpenCreate}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow flex items-center gap-1.5 cursor-pointer"
+            >
+              <Plus size={14} /> New Exam
+            </button>
+          )}
+        </div>
+
+        {exams.length === 0 ? (
+          <div className="p-10 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+            <Zap className="w-12 h-12 text-amber-500 mx-auto mb-3" />
+            <h4 className="text-lg font-black text-slate-800">No Exams Loaded Yet</h4>
+            <p className="text-slate-500 text-xs mt-1 max-w-md mx-auto">
+              Click the button below to immediately load authentic NTA JEE Mains & NEET standard test papers with full question bank:
+            </p>
+            <button
+              onClick={onSeedDefaults}
+              className="mt-4 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md cursor-pointer inline-flex items-center gap-2 transition hover:scale-105"
+            >
+              <Sparkles className="w-4 h-4 text-amber-300" /> 1-Click Load NTA Standard Tests
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {exams.map((exam: any) => {
+              const qCount = exam._count?.questions || exam.questions?.length || 0;
+              const isNeet = (exam.title || '').toUpperCase().includes('NEET');
+
+              return (
+                <div key={exam.id} className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
+                        isNeet ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-indigo-100 text-indigo-800 border-indigo-200'
+                      }`}>
+                        {isNeet ? 'NEET UG PATTERN (+4, -1)' : 'JEE MAINS PATTERN (+4, -1)'}
+                      </span>
+                      <span className="text-xs font-extrabold text-emerald-600 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                      </span>
+                    </div>
+                    <h4 className="text-base font-black text-slate-900">{exam.title}</h4>
+                    <div className="flex items-center gap-4 text-xs font-bold text-slate-500 my-3">
+                      <span>⏱️ {exam.duration}m</span>
+                      <span>🎯 {exam.totalMarks} Marks</span>
+                      <span>📝 {qCount} Questions</span>
+                      <span className="text-rose-600">Neg: -{exam.negativeMarks || 1}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => onPreviewPaper(exam)}
+                      className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-cyan-400" /> View Paper
+                    </button>
+                    <button
+                      onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
+                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                    >
+                      <Play className="w-4 h-4 fill-white" /> Launch CBT Exam
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Feature Pillars */}
@@ -1992,10 +2079,10 @@ const StudentCompetitivePortal = ({ navigate }: { navigate: any }) => {
 
   useEffect(() => {
     api.get('/api/competitive-exams/student')
-      .then(res => setExams(res.data?.data || []))
+      .then(res => setExams(extractExams(res.data)))
       .catch(err => {
         api.get('/api/competitive-exams/admin')
-          .then(res2 => setExams(res2.data?.data || []))
+          .then(res2 => setExams(extractExams(res2.data)))
           .catch(() => {});
       })
       .finally(() => setLoading(false));
