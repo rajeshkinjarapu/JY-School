@@ -6,6 +6,26 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - సింగిల్ రా బాక్స్ స్టూడియో & ప్రత్యేక క్వశ్చన్ బ్యాంక్ పేజీ (November 24, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `question ki separate box answer ki separate box kakunda oke box lo raw text question and answer vacheyla kavali` (ప్రశ్న స్టేట్‌మెంట్‌కు ఒక బాక్స్, ఆన్సర్‌కు వేరొక బాక్స్ కాకుండా... ఒకే ఒక్క రా టెక్స్ట్ బాక్స్‌లో మొత్తం ప్రశ్న, ఆప్షన్లు A, B, C, D మరియు ఆన్సర్ కీ పేస్ట్ చేసే సదుపాయం కావాలి).
+  2. `Question bank click cheste separate page open avvali` (క్వశ్చన్ బ్యాంక్ క్లిక్ చేసినప్పుడు ఇన్-లైన్ ట్యాబ్ లాగా కాకుండా ప్రత్యేక డెడికేటెడ్ ఫుల్ పేజీ ఓపెన్ అవ్వాలి).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **సింగిల్ యూనిఫైడ్ రా బాక్స్ క్వశ్చన్ స్టూడియో ([`SingleRawBoxQuestionStudio`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveQuestionBankDashboard.tsx)):**
+     - గతంలో ఉన్న రెండు వేర్వేరు ఇన్పుట్ బాక్సులను (Box 1: Question Statement, Box 2: Unified Options Editor) పూర్తిగా తొలగించి, కేవలం **ఒకే ఒక్క రా టెక్స్ట్ ఎడిటర్ బాక్స్** ను అందించాము.
+     - ఉపాధ్యాయుడు పూర్తి ప్రశ్న, (A), (B), (C), (D) ఆప్షన్లు మరియు `Ans: B` లేదా `Key: 2` ని ఈ సింగిల్ బాక్స్‌లో పేస్ట్ చేస్తే చాలు:
+       - `(A)` కి ముందు ఉన్న టెక్స్ట్ మొత్తం ఆటోమేటిక్‌గా `Question Statement` గా మారుతుంది (KaTeX `$formula$` సపోర్ట్‌తో).
+       - `(A)`, `(B)`, `(C)`, `(D)` లు 4 ప్రత్యేక ఆప్షన్లుగా ఎక్స్‌ట్రాక్ట్ అవుతాయి.
+       - `Ans: B` లేదా `Key: B` ఆధారంగా ఆప్షన్ B ఆటోమేటిక్‌గా సరైన సమాధానంగా ఎంపిక చేయబడుతుంది.
+     - క్రింద 4 ఆప్షన్ల కార్డులు ఆటో-డిటెక్ట్ అయి కనిపిస్తాయి. ఉపాధ్యాయుడు ఏ కార్డునైనా క్లిక్ చేసి సరైన సమాధానాన్ని మార్చవచ్చు లేదా ఆప్షన్లకు డయాగ్రమ్‌లను అటాచ్ చేయవచ్చు.
+     - కుడివైపున **NTA CBT Real-Time Student Preview** లో విద్యార్థికి పరీక్షలో ఎలా కనిపిస్తుందో లైవ్‌గా KaTeX మ్యాథ్ ఫార్ములాలతో రెండర్ అవుతుంది.
+     - `CompetitiveExamsPage.tsx` లోని పాత `DedicatedQuestionEditorView` స్థానంలో కూడా ఈ సరికొత్త `SingleRawBoxQuestionStudio` ని అనుసంధానించాము.
+  2. **ప్రత్యేక క్వశ్చన్ బ్యాంక్ డెడికేటెడ్ పేజీ ([`CompetitiveQuestionBankDashboard.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveQuestionBankDashboard.tsx)):**
+     - క్వశ్చన్ బ్యాంక్ ఇప్పుడు ఇన్-లైన్ సబ్-ట్యాబ్ లాగా కాకుండా పూర్తి స్థాయి ప్రత్యేక పేజీగా (`/competitive-question-bank` మరియు `/competitive-question-bank?examId=...`) ఓపెన్ అవుతుంది.
+     - Competitive Exams పేజీలోని "Question Bank (N) ↗" ట్యాబ్ క్లిక్ చేసినా లేదా ఎగ్జామ్ కార్డులోని "Questions (N)" క్లిక్ చేసినా నేరుగా ఈ ప్రత్యేక పేజీకి నావిగేట్ అవుతుంది.
+     - ఈ పేజీలో ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్, టార్గెట్ ఎగ్జామ్ బ్లూప్రింట్, సెర్చ్ బార్, ప్రశ్నల కార్డులు, లైవ్ KaTeX ప్రివ్యూ, డిలీట్ ఆప్షన్, మరియు "+ Add Question (Single Box Studio)" లేదా "📄 Paste Exam Text (AI Parser)" బటన్లు ఉంటాయి.
+
+
 ## చివరి సంభాషణ - CBT Exam ట్యాబ్ స్విచ్ అలర్ట్ & ప్రొక్టరింగ్ రిఫ్యాక్టరింగ్ (November 24, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `ila vastundi okasari check cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో `take-competitive-exam` పేజీలో `WARNING: You have switched tabs or lost window focus. Attempt 1/3. Exam will be auto-submitted if you continue.` అనే బ్రౌజర్ నేటివ్ అలర్ట్ పాపప్ వచ్చింది).
