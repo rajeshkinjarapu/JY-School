@@ -531,13 +531,23 @@ const ManageExamsTab = ({
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-1">
-                    <button
-                      onClick={() => onOpenAiModal(exam)}
-                      className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-500" /> ✨ AI Generate Questions
-                    </button>
+                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => navigate(`/competitive-exams/${exam.id}/paste-ai`)}
+                        className="text-xs font-extrabold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                        title="Open Dedicated AI Text Parser Workspace"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-emerald-500" /> 📄 Paste Exam Text (AI Parser)
+                      </button>
+
+                      <button
+                        onClick={() => onOpenAiModal(exam)}
+                        className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> ✨ AI Generate
+                      </button>
+                    </div>
 
                     <button
                       onClick={() => onDelete(exam.id, exam.title)}
@@ -1495,8 +1505,9 @@ const QuestionBankTab = ({
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
           <button
-            onClick={() => setShowAiTextParserModal(true)}
+            onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 cursor-pointer"
+            title="Open Dedicated Full Page AI Text Parser"
           >
             <FileText size={16} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
           </button>
@@ -1548,7 +1559,7 @@ const QuestionBankTab = ({
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
             <button
-              onClick={() => setShowAiTextParserModal(true)}
+              onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
             >
               <FileText size={15} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)

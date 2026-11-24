@@ -6,6 +6,24 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Paste Exam Text (AI Smart Parser) ప్రత్యేక ఫుల్ పేజ్ వర్క్‌స్పేస్‌గా మార్పు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `separate ga oka page open avvali` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో Competitive Exams పేజీలో "Paste Exam Text (AI Smart Parser)" మోడల్ పాపప్ ఉంది. దాన్ని ఒక చిన్న డైలాగ్ బాక్స్ లాగా కాకుండా ప్రత్యేక ఫుల్ పేజీగా ఓపెన్ అయ్యేలా మార్చాలని కోరారు).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **ప్రత్యేక ఫుల్ పేజ్ వర్క్‌స్పేస్ నిర్మాణం ([`frontend/src/pages/exams/PasteCompetitiveExamTextPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/PasteCompetitiveExamTextPage.tsx)):**
+     - చిన్న మోడల్ స్థానంలో పూర్తి స్థాయి డెడికేటెడ్ పేజీని నిర్మించాము.
+     - **హెడర్ & నావిగేషన్:** `< Back to Competitive Exams` బటన్, టార్గెట్ ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్, ఎగ్జామ్ బ్లూప్రింట్ బ్యానర్ (సబ్జెక్ట్, క్లాస్, డ్యూరేషన్, టోటల్ మార్క్స్, నెగెటివ్ మార్కింగ్, ఇప్పటికే ఉన్న ప్రశ్నల సంఖ్య).
+     - **స్ప్లిట్ 2-కాలమ్ వర్క్‌స్పేస్:**
+       - **ఎడమ కాలమ్ (ఇన్‌పుట్ & సెట్టింగ్స్):** పెద్ద రా టెక్స్ట్ ఏరియా, "Load Sample Text" క్విక్ టెంప్లేట్ బటన్, సబ్జెక్ట్/చాప్టర్ హింట్, డిఫికల్టీ లెవెల్, డీఫాల్ట్ మార్క్స్, క్లియర్ బటన్, మరియు `⚡ Parse with AI (Gemini 2.5 Flash)` యాక్షన్ బటన్.
+       - **కుడి కాలమ్ (లైవ్ KaTeX ప్రివ్యూ & రివ్యూ):** ఖాళీగా ఉన్నప్పుడు హెల్ప్‌ఫుల్ గైడెన్స్ కార్డ్; ప్రశ్నలు పార్స్ అయిన తర్వాత ప్రతి ప్రశ్నకు కార్డ్ నంబర్, చాప్టర్ ట్యాగ్, మార్కులు, లైవ్ KaTeX మ్యాథ్ రెండరింగ్, ఆప్షన్లు (A, B, C, D) గ్రిడ్, ఆన్సర్ కీ చేంజర్ డ్రాప్‌డౌన్, ఇన్-లైన్ ఎడిట్ మోడ్, మరియు డిలీట్ బటన్లు.
+     - **స్టిక్కీ సేవ్ బార్:** క్రింద ఉన్న బార్‌లో ఒకే క్లిక్‌తో అన్ని ప్రశ్నలను ఎగ్జామ్‌లోకి బల్క్ సేవ్ చేసి (`/api/competitive-exams/:id/bulk-add-questions`) నేరుగా ఎగ్జామ్స్ పేజీకి రిటర్న్ చేసే సదుపాయం.
+  2. **రౌటింగ్ రిజిస్ట్రేషన్ ([`frontend/src/router/index.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/router/index.tsx)):**
+     - `DashboardLayout` క్రింద `/competitive-exams/paste-ai` మరియు `/competitive-exams/:id/paste-ai` రౌట్లను జోడించాము.
+  3. **CompetitiveExamsPage లింకింగ్ ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - క్వశ్చన్ బ్యాంక్ ట్యాబ్ హెడర్ బార్‌లో మరియు ఎంప్టీ స్టేట్‌లో ఉన్న "📄 Paste Exam Text (AI Parser)" బటన్లను క్లిక్ చేయగానే మోడల్ తెరవకుండా నేరుగా ఈ ప్రత్యేక ఫుల్ పేజీకి నావిగేట్ అయ్యేలా చేసాము (`navigate('/competitive-exams/' + activeExam.id + '/paste-ai')`).
+     - మేనేజ్ ఎగ్జామ్స్ ట్యాబ్‌లోని ప్రతి ఎగ్జామ్ కార్డుపై కూడా నేరుగా "📄 Paste Exam Text" బటన్‌ను యాడ్ చేసాము.
+
+
 ## చివరి సంభాషణ - Examination పేజీ నుండి OMR Scanner ఆప్షన్ పూర్తి తొలగింపు (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `examination lo unna omr option poortiga remove cheyu, student exams ki marks em touch cheyakunda code distrub lekunda perfect ga safee ga remove cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో Examination పేజీలోని Examinations List హెడర్‌లో ఉన్న `OMR Scanner` గ్రీన్ బటన్‌ను కోడ్ డిస్టర్బ్ అవ్వకుండా, విద్యార్థుల మార్కులు లేదా పరీక్షలకు ఎలాంటి ఎఫెక్ట్ పడకుండా సురక్షితంగా తొలగించాలని కోరారు).

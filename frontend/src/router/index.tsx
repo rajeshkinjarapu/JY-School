@@ -141,6 +141,7 @@ const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiv
 const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
 const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
+const PasteCompetitiveExamTextPage = lazy(() => import('../pages/exams/PasteCompetitiveExamTextPage'));
 const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
 const ChairmanDashboardPage = lazy(routeImports['/chairman']);
 const AttendanceWrapper = () => {
@@ -520,6 +521,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
             <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/paste-ai',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <PasteCompetitiveExamTextPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/:id/paste-ai',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <PasteCompetitiveExamTextPage />
           </ProtectedRoute>
         ),
       },
