@@ -331,7 +331,12 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         : `${baseGap}rem`;
 
       // Ensure single-line options (A), (B), (C), (D) or (a), (b), (c), (d) are cleanly split to newlines
-      block = block.replace(/([^\n\s])\s*(\([B-Db-d]\)|[B-Db-d]\.)\s+/g, '$1\n$2 ');
+      // IMPORTANT: NEVER eat English words ending in d., b., c., a. like "land. ", "sound. ", "food. ", "mind. "
+      block = block.replace(/([^\n\s])\s+(\([B-Db-d]\))\s*/g, '$1\n$2 ');
+      block = block.replace(/([^\n\s])(?:\s{2,}|\t)([B-Db-d]\.)\s+/g, (match, charBefore, opt) => {
+        if (/[a-zA-Z0-9]/.test(charBefore)) return match; // Belongs to an English word like "land."
+        return `${charBefore}\n${opt} `;
+      });
 
       // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
@@ -479,24 +484,24 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const allOptsCombined = optA + optB + optC + optD;
               const hasTallMath = /(\\frac|\\dfrac|\\sqrt|\\int|\\sum|\\prod|\\begin\{|\\matrix)/.test(allOptsCombined);
 
-              // Single Column A4 width gives ~350px per option in 2x2, easily holding up to 38-40 characters
-              const singleLineLimit = isDoubleColumn ? 4 : (hasTallMath ? 5 : 8);
-              const twoByTwoLimit = isDoubleColumn ? 14 : (hasTallMath ? 22 : 38);
+              // Single Column A4 width gives ~350px per option in 2x2, holding up to 32 characters cleanly
+              const singleLineLimit = isDoubleColumn ? 3 : (hasTallMath ? 4 : 6);
+              const twoByTwoLimit = isDoubleColumn ? 14 : (hasTallMath ? 20 : 32);
 
               let optionsLayout = '';
               if (forcedLayout === '1x4') {
-                optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
+                optionsLayout = 'grid grid-cols-4 w-auto gap-x-4 gap-y-1';
               } else if (forcedLayout === '2x2') {
-                optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
+                optionsLayout = 'grid grid-cols-2 w-auto gap-x-6 gap-y-1';
               } else if (forcedLayout === '1x1') {
-                optionsLayout = 'flex flex-col w-auto gap-0.5';
+                optionsLayout = 'flex flex-col w-auto gap-1';
               } else {
                 if (maxLen <= singleLineLimit) {
-                  optionsLayout = 'grid grid-cols-4 w-auto gap-x-2 gap-y-0.5';
+                  optionsLayout = 'grid grid-cols-4 w-auto gap-x-4 gap-y-1';
                 } else if (maxLen <= twoByTwoLimit) {
-                  optionsLayout = 'grid grid-cols-2 w-auto gap-x-3 gap-y-0.5';
+                  optionsLayout = 'grid grid-cols-2 w-auto gap-x-6 gap-y-1';
                 } else {
-                  optionsLayout = 'flex flex-col w-auto gap-0.5';
+                  optionsLayout = 'flex flex-col w-auto gap-1';
                 }
               }
 

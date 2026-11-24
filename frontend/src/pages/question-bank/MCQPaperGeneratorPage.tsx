@@ -85,8 +85,14 @@ export const formatMCQText = (rawText: string): string => {
 
   // 2. Break multiple options placed on a single line into separate lines without deleting any preceding character
   // Note: we capture charBefore to guarantee closing math signs ($) or text are NEVER eaten
-  text = text.replace(/([^\n\s])\s*(\([A-Da-d]\)|[A-Da-d]\.)\s+/g, (match, charBefore, opt) => {
+  // IMPORTANT: NEVER match words ending in a., b., c., d. like "land. ", "food. ", "sound. ", "mind. "
+  text = text.replace(/([^\n\s])\s+(\([B-Db-d]\))\s*/g, (match, charBefore, opt) => {
     const letter = opt.replace(/[\(\)\.\s]/g, '').toUpperCase();
+    return `${charBefore}\n(${letter}) `;
+  });
+  text = text.replace(/([^\n\s])(?:\s{2,}|\t)([B-Db-d]\.)\s+/g, (match, charBefore, opt) => {
+    if (/[a-zA-Z0-9]/.test(charBefore)) return match; // Belongs to an English word like "land."
+    const letter = opt.replace(/[\.\s]/g, '').toUpperCase();
     return `${charBefore}\n(${letter}) `;
   });
 
