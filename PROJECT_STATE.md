@@ -1,5 +1,50 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Backend Competitive Exams TS ఎర్రర్ ఫిక్స్ & PM2 ప్రాసెస్ సరిదిద్దుబాటు (November 24, 2026)
+- **యూజర్ టెర్మినల్ ఎర్రర్ రిపోర్ట్:**
+  1. `src/controllers/competitiveExams.controller.ts:369:13 - error TS2353: Object literal may only specify known properties, and 'createdAt' does not exist in type 'CompetitiveExamSubmissionSelect<DefaultArgs>'.`
+  2. `[PM2][ERROR] Process or Namespace jy-school-backend not found`
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `CompetitiveExamSubmission` ప్రిస్మా స్కీమా మోడల్‌లో ఫీల్డ్ పేరు `submittedAt`, కానీ కంట్రోలర్‌లో `createdAt: true` అని ఉండటం వల్ల TypeScript కంపైలేషన్ ఎర్రర్ ఇచ్చింది.
+  - VPS లో PM2 ప్రాసెస్ పేర్లు `backend` మరియు `frontend` (లేదా `pm2 restart all`).
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `backend/src/controllers/competitiveExams.controller.ts` లోని లైన్ 369 లో `createdAt: true` స్థానంలో సరైన `submittedAt: true` గా మార్చాము.
+  2. PM2 రీస్టార్ట్ కోసం `pm2 restart all` లేదా `pm2 restart backend frontend` కమాండ్‌ను అందించాము.
+
+
+
+## చివరి సంభాషణ - Office Tools డ్యాష్‌బోర్డ్ నుండి "Admissions" కార్డ్ తొలగింపు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  - `ee dashboard lo unna admissions kuda remove cheyu` (`/office-tools` స్క్రీన్‌షాట్ జతచేసి అందులో ఉన్న "ADMISSIONS" కార్డ్‌ను తొలగించమని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `OfficeToolsDashboard.tsx` లో "ADMISSIONS - Manage website admission inquiries" కార్డ్ ఉండేది. ఆఫీస్ టూల్స్ సెక్షన్‌లో ఇది అవసరం లేనందున తొలగించాల్సి వచ్చింది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx` లోని `tools` అర్రే నుండి `ADMISSIONS` కార్డ్ ఆబ్జెక్ట్ పూర్తిగా తీసివేయబడింది.
+  2. `onClick` నావిగేషన్ లాజిక్ నుండి `ADMISSIONS` రూట్ హ్యాండ్లర్ తొలగించబడింది.
+  3. ఇప్పుడు Office Tools డ్యాష్‌బోర్డ్ లో కేవలం 4 అధికారిక ఆఫీస్ టూల్స్ మాత్రమే నీట్‌గా ఉంటాయి:
+     - **STUDY CERTIFICATE**
+     - **ACADEMIC PROGRESS CARD** (FA1-FA4 & SA1-SA2 క్యుములేటివ్ రిపోర్ట్ కార్డ్)
+     - **TRANSFER CERTIFICATE**
+     - **PAYSLIP**
+
+
+
+## చివరి సంభాషణ - Office Tools డ్యాష్‌బోర్డ్ నుండి "Admissions" కార్డ్ తొలగింపు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  - `ee dashboard lo unna admissions kuda remove cheyu` (`/office-tools` స్క్రీన్‌షాట్ జతచేసి అందులో ఉన్న "ADMISSIONS" కార్డ్‌ను తొలగించమని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `OfficeToolsDashboard.tsx` లో "ADMISSIONS - Manage website admission inquiries" కార్డ్ ఉండేది. ఆఫీస్ టూల్స్ సెక్షన్‌లో ఇది అవసరం లేనందున తొలగించాల్సి వచ్చింది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx` లోని `tools` అర్రే నుండి `ADMISSIONS` కార్డ్ ఆబ్జెక్ట్ పూర్తిగా తీసివేయబడింది.
+  2. `onClick` నావిగేషన్ లాజిక్ నుండి `ADMISSIONS` రూట్ హ్యాండ్లర్ తొలగించబడింది.
+  3. ఇప్పుడు Office Tools డ్యాష్‌బోర్డ్ లో కేవలం 4 అధికారిక ఆఫీస్ టూల్స్ మాత్రమే నీట్‌గా ఉంటాయి:
+     - **STUDY CERTIFICATE**
+     - **ACADEMIC PROGRESS CARD** (FA1-FA4 & SA1-SA2 క్యుములేటివ్ రిపోర్ట్ కార్డ్)
+     - **TRANSFER CERTIFICATE**
+     - **PAYSLIP**
+
+
+
 ## చివరి సంభాషణ - Staff Attendance Manager (`/teacher-attendance`) పూర్తి స్థాయి లిస్ట్ / టేబుల్ లేఅవుట్ రీడిజైన్ (November 24, 2026)
 - **యూజర్ సమస్యలు & అవసరాలు:**
   1. `entire page mottam complete ui change cheyu` (మొత్తం పేజీ UI పూర్తి ప్రొఫెషనల్‌గా మార్చాలి).

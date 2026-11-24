@@ -366,7 +366,7 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
             studentId: true,
             marksObtained: true,
             totalTimeTaken: true,
-            createdAt: true,
+            submittedAt: true,
             student: {
               select: {
                 id: true,

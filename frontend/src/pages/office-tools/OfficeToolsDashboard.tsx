@@ -28,13 +28,6 @@ export const OfficeToolsDashboard = () => {
       gradient: 'from-rose-500 to-orange-400',
       shadow: 'shadow-rose-500/30'
     },
-    { 
-      title: 'ADMISSIONS', 
-      description: 'Manage website admission inquiries', 
-      icon: Book, 
-      gradient: 'from-emerald-500 to-teal-400',
-      shadow: 'shadow-emerald-500/30'
-    },
     {
       title: 'PAYSLIP',
       description: 'Generate staff payslips',
@@ -66,8 +59,6 @@ export const OfficeToolsDashboard = () => {
                     navigate('/office-tools/study-certificate');
                   } else if (tool.title === 'ACADEMIC PROGRESS CARD') {
                     navigate('/office-tools/academic-progress-card');
-                  } else if (tool.title === 'ADMISSIONS') {
-                    navigate('/office-tools/admissions');
                   } else if (tool.title === 'PAYSLIP') {
                     navigate('/hr/salary');
                   }
