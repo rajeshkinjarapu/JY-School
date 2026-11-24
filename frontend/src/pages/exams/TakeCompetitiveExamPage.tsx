@@ -76,6 +76,11 @@ const TakeCompetitiveExamPage = () => {
   const { user } = useAuth();
   const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes((user?.role || '').toUpperCase());
   
+  const [schoolInfo, setSchoolInfo] = useState<{ schoolName: string; logoUrl?: string }>({
+    schoolName: 'SRI VENKATESWARA JY SCHOOL',
+    logoUrl: '/logo.png?v=1'
+  });
+
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -95,6 +100,18 @@ const TakeCompetitiveExamPage = () => {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const activeQuestionTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    api.get('/api/settings').then(res => {
+      const data = res.data?.data || res.data;
+      if (data) {
+        setSchoolInfo({
+          schoolName: data.schoolName || 'SRI VENKATESWARA JY SCHOOL',
+          logoUrl: data.schoolLogoUrl || data.logoUrl || '/logo.png?v=1'
+        });
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetchExam();
@@ -247,11 +264,11 @@ const TakeCompetitiveExamPage = () => {
 
     const formattedAnswers = Object.entries(answers).map(([questionId, data]) => ({
       questionId,
-      selectedOption: data.option,
-      timeTakenSeconds: data.timeSpent
+      selectedOption: data.option ? String(data.option).trim() : null,
+      timeTakenSeconds: Math.max(0, Number(data.timeSpent) || 0)
     }));
 
-    const totalTimeTaken = Math.floor((Date.now() - startTimeRef.current) / 1000);
+    const totalTimeTaken = Math.max(0, Math.floor((Date.now() - startTimeRef.current) / 1000));
 
     try {
       const res = await api.post(`/api/competitive-exams/${id}/submit`, {
@@ -259,13 +276,13 @@ const TakeCompetitiveExamPage = () => {
         totalTimeTaken
       });
       
-      const submissionId = res.data?.data?.id;
+      const submissionId = res.data?.submissionId || res.data?.data?.id;
       toast.success("Exam submitted successfully!");
       sessionStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
       navigate(`/competitive-exam-result/${id}${submissionId ? `?submissionId=${submissionId}` : ''}`, { replace: true });
-    } catch (error) {
-      toast.error("Failed to submit exam. Please contact admin.");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to submit exam. Please contact admin.");
       setIsSubmitting(false);
     }
   };
@@ -384,11 +401,46 @@ const TakeCompetitiveExamPage = () => {
 
   if (!hasStartedExam) {
     return (
-      <div className="min-h-screen bg-slate-50 p-4 md:p-8 flex justify-center font-sans">
-        <div className="max-w-4xl w-full bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-100 flex flex-col h-full max-h-[90vh]">
-          <div className="bg-indigo-900 text-white p-6 shrink-0">
-             <h1 className="text-2xl font-bold uppercase">{exam.title}</h1>
-             <p className="text-indigo-200 mt-1">Please read the instructions carefully before starting the exam.</p>
+      <div className="min-h-screen bg-slate-900 flex flex-col font-sans select-none p-3 sm:p-6 md:p-8">
+        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col min-h-[92vh]">
+          {/* Institutional School Branding Header */}
+          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 border-b border-indigo-500/20 shrink-0">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+              <div className="flex items-center gap-4 sm:gap-5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center shrink-0 border border-white/20">
+                  <img 
+                    src={schoolInfo.logoUrl || '/logo.png?v=1'} 
+                    alt="School Logo" 
+                    className="w-full h-full object-contain" 
+                    onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-black tracking-widest uppercase bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-xs">
+                      CBT ONLINE ASSESSMENT PORTAL
+                    </span>
+                    {isStaff && (
+                      <span className="text-[10px] font-bold bg-indigo-500/30 text-indigo-200 px-2.5 py-0.5 rounded-full border border-indigo-400/30">
+                        Staff Preview Mode
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-wide text-white mt-1 uppercase">
+                    {schoolInfo.schoolName}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-indigo-200 font-medium mt-0.5">
+                    Computer Based Examination System &bull; Secure Digital Assessment
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-md px-5 py-3.5 rounded-2xl border border-white/15 text-left md:text-right shrink-0">
+                <p className="text-[10px] font-black uppercase text-indigo-300 tracking-wider">Exam Title</p>
+                <p className="text-lg sm:text-xl font-black text-amber-300 truncate max-w-sm">{exam.title}</p>
+                <p className="text-xs text-white/80 font-bold mt-0.5">Subject: {exam.subject?.name || 'General'}</p>
+              </div>
+            </div>
           </div>
           <div className="p-6 md:p-8 flex-1 overflow-y-auto">
              <h2 className="text-xl font-bold text-slate-800 mb-6 border-b pb-2">Exam Instructions</h2>
@@ -459,17 +511,38 @@ const TakeCompetitiveExamPage = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none" style={{ height: '100vh', overflow: 'hidden' }}>
-      {/* Header */}
-      <header className="bg-indigo-900 text-white p-3 flex justify-between items-center shadow-md shrink-0">
-        <div className="flex items-center gap-3">
-          <h1 className="text-base sm:text-xl font-bold truncate max-w-sm sm:max-w-md">{exam.title}</h1>
-          {isStaff && (
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-bold">
-              <Eye size={13} /> Staff Preview Mode (Proctoring Off)
-            </span>
-          )}
+      {/* Institutional School Branding Header */}
+      <header className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 flex justify-between items-center shadow-lg shrink-0 border-b border-indigo-500/20 w-full">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 shadow-md flex items-center justify-center shrink-0 border border-white/20">
+            <img 
+              src={schoolInfo.logoUrl || '/logo.png?v=1'} 
+              alt="School Logo" 
+              className="w-full h-full object-contain" 
+              onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black tracking-wide text-white uppercase leading-tight">
+                {schoolInfo.schoolName}
+              </h2>
+              {isStaff && (
+                <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-bold">
+                  <Eye size={11} /> Staff Preview
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <p className="text-xs sm:text-sm font-bold text-amber-300 truncate max-w-xs sm:max-w-md">
+                {exam.title}
+              </p>
+              <span className="text-[11px] text-indigo-200 hidden sm:inline">&bull; {exam.subject?.name || 'General'}</span>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-3 sm:gap-6">
+
+        <div className="flex items-center gap-3 sm:gap-4">
           {isStaff && (
             <button
               onClick={() => {
@@ -482,61 +555,78 @@ const TakeCompetitiveExamPage = () => {
             </button>
           )}
           {warnings > 0 && !isStaff && (
-            <div className="flex items-center gap-2 text-yellow-300 font-bold bg-red-900/30 px-3 py-1 rounded">
-              <ShieldAlert size={18} /> Warnings: {warnings}/3
+            <div className="flex items-center gap-2 text-yellow-300 font-bold bg-red-900/40 border border-red-500/30 px-3 py-1 rounded-xl text-xs">
+              <ShieldAlert size={16} /> Warnings: {warnings}/3
             </div>
           )}
-          <div className="flex items-center gap-2 bg-indigo-800 px-4 py-1.5 rounded-lg border border-indigo-700">
-            <Clock size={20} className={timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-indigo-300'} />
-            <span className={`text-xl font-mono font-bold ${timeLeft < 300 ? 'text-red-400' : 'text-white'}`}>
+          <div className="flex items-center gap-2 bg-indigo-950/80 px-3.5 py-1.5 rounded-xl border border-indigo-400/30 shadow-inner">
+            <Clock size={18} className={timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-indigo-300'} />
+            <span className={`text-lg sm:text-xl font-mono font-black ${timeLeft < 300 ? 'text-red-400' : 'text-white'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden w-full">
         {/* Left Area: Question */}
-        <div className="flex-1 flex flex-col border-r border-gray-300 overflow-hidden">
-          <div className="bg-gray-100 p-3 border-b border-gray-300 flex justify-between items-center font-bold text-gray-700">
-            <div className="flex items-center gap-2">
-              <span>Question No. {currentQuestionIndex + 1}</span>
+        <div className="flex-1 flex flex-col border-r border-slate-200 overflow-hidden bg-white">
+          <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between items-center font-bold text-slate-800 shrink-0">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base font-black text-slate-900">Question No. {currentQuestionIndex + 1}</span>
               {currentQuestion.chapterName && (
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold border border-indigo-200">
+                <span className="text-xs px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
                   {currentQuestion.chapterName}
                 </span>
               )}
             </div>
-            <span className="text-sm text-gray-500 font-normal">Marks: +{currentQuestion.marks} / -{exam.negativeMarks}</span>
+            <span className="text-xs font-extrabold text-slate-600 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-xs">
+              Marks: <span className="text-emerald-600">+{currentQuestion.marks}</span> / <span className="text-rose-500">-{exam.negativeMarks}</span>
+            </span>
           </div>
           
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="text-lg font-medium text-gray-800 mb-6 leading-relaxed">
+          <div className="flex-1 overflow-y-auto p-6 md:p-8">
+            <div className="text-xl md:text-2xl font-bold text-slate-900 mb-6 leading-relaxed">
               <LatexRenderer content={currentQuestion.questionText} />
             </div>
             
             {currentQuestion.imageUrl && (
-              <div className="mb-8 p-4 bg-white border border-gray-200 rounded-lg inline-block">
-                <img src={currentQuestion.imageUrl} alt="Question Graphic" className="max-w-full max-h-80 object-contain" />
+              <div className="mb-8 p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
+                <img src={currentQuestion.imageUrl} alt="Question Graphic" className="max-w-full max-h-80 object-contain rounded-xl" />
               </div>
             )}
             
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-4xl">
               {currentQuestion.options.map((opt: string, idx: number) => {
                 const isSelected = answers[qId]?.option === opt;
+                const optionLabel = String.fromCharCode(65 + idx);
                 return (
-                  <label key={idx} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50 border-indigo-500 shadow-sm' : 'hover:bg-gray-50 border-gray-300'}`}>
-                    <div className="flex items-center h-6">
+                  <label 
+                    key={idx} 
+                    className={`flex items-start p-4 md:p-5 border-2 rounded-2xl cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'bg-indigo-50/80 border-indigo-600 shadow-md ring-2 ring-indigo-500/20' 
+                        : 'hover:bg-slate-50 border-slate-200 hover:border-slate-300 bg-white shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 shrink-0 mr-3">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm transition-all ${
+                        isSelected 
+                          ? 'bg-indigo-600 text-white shadow-sm' 
+                          : 'bg-slate-100 text-slate-700 border border-slate-300'
+                      }`}>
+                        {optionLabel}
+                      </div>
                       <input
                         type="radio"
                         name={`question-${qId}`}
                         checked={isSelected}
                         onChange={() => handleOptionSelect(qId, opt)}
-                        className="w-5 h-5 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                        className="w-5 h-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"
                       />
                     </div>
-                    <div className="ml-3 flex-1">
-                      <span className="text-gray-800 text-base font-normal">
+                    <div className="flex-1 pt-0.5">
+                      <span className="text-slate-900 text-lg md:text-xl font-bold leading-relaxed">
                         <LatexRenderer content={opt} />
                       </span>
                     </div>
