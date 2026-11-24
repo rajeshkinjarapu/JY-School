@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import { Clock, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { Clock, AlertTriangle, ShieldAlert, Eye, LogOut, CheckCircle2 } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import toast from 'react-hot-toast';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
@@ -71,6 +73,8 @@ const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ cont
 const TakeCompetitiveExamPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes((user?.role || '').toUpperCase());
   
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -85,6 +89,8 @@ const TakeCompetitiveExamPage = () => {
   const [hasStartedExam, setHasStartedExam] = useState(false);
   const [instructionsAccepted, setInstructionsAccepted] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -93,7 +99,6 @@ const TakeCompetitiveExamPage = () => {
   useEffect(() => {
     fetchExam();
     enterFullScreen();
-    setupAntiCheat();
     
     // Check if opened in another tab within the session
     const tabKey = `exam_running_${id}`;
@@ -107,6 +112,15 @@ const TakeCompetitiveExamPage = () => {
       if (activeQuestionTimerRef.current) clearInterval(activeQuestionTimerRef.current);
     };
   }, [id]);
+
+  useEffect(() => {
+    if (hasStartedExam && !isStaff) {
+      setupAntiCheat();
+    }
+    return () => {
+      removeAntiCheat();
+    };
+  }, [hasStartedExam, isStaff]);
 
   const fetchExam = async () => {
     try {
@@ -128,7 +142,7 @@ const TakeCompetitiveExamPage = () => {
       }
       setQuestionStatuses(initStatuses);
     } catch (err) {
-      alert('Failed to load exam or unauthorized.');
+      toast.error('Failed to load exam or unauthorized.');
       navigate('/competitive-exams');
     } finally {
       setLoading(false);
@@ -168,34 +182,32 @@ const TakeCompetitiveExamPage = () => {
   };
 
   const setupAntiCheat = () => {
+    if (isStaff) return; // Completely disabled for staff previewing exams
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleWindowBlur);
   };
 
   const removeAntiCheat = () => {
     document.removeEventListener('visibilitychange', handleVisibilityChange);
-    window.removeEventListener('blur', handleWindowBlur);
   };
 
   const handleVisibilityChange = () => {
+    if (isStaff || !hasStartedExam || isSubmitting) return;
     if (document.visibilityState === 'hidden') {
       triggerWarning();
     }
   };
 
-  const handleWindowBlur = () => {
-    triggerWarning();
-  };
-
   const triggerWarning = () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isStaff) return;
     setWarnings(w => {
       const newWarnings = w + 1;
       if (newWarnings >= 3) {
-        alert("Maximum tab switches reached. Exam auto-submitting for suspicious activity.");
-        autoSubmit();
+        setWarningMessage("Maximum tab switches reached (3/3). Your exam is being automatically submitted for suspicious activity.");
+        setShowWarningModal(true);
+        setTimeout(() => autoSubmit(), 2000);
       } else {
-        alert(`WARNING: You have switched tabs or lost window focus. Attempt ${newWarnings}/3. Exam will be auto-submitted if you continue.`);
+        setWarningMessage(`Tab switch or window minimizing detected (Attempt ${newWarnings}/3). Please remain on the exam screen. Further attempts will lead to auto-submission.`);
+        setShowWarningModal(true);
       }
       return newWarnings;
     });
@@ -247,12 +259,12 @@ const TakeCompetitiveExamPage = () => {
         totalTimeTaken
       });
       
-      alert("Exam submitted successfully!");
+      toast.success("Exam submitted successfully!");
       sessionStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
       navigate(`/competitive-exam-result/${id}`, { replace: true });
     } catch (error) {
-      alert("Failed to submit exam. Please contact admin.");
+      toast.error("Failed to submit exam. Please contact admin.");
       setIsSubmitting(false);
     }
   };
@@ -448,9 +460,27 @@ const TakeCompetitiveExamPage = () => {
     <div className="min-h-screen bg-white flex flex-col font-sans select-none" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* Header */}
       <header className="bg-indigo-900 text-white p-3 flex justify-between items-center shadow-md shrink-0">
-        <h1 className="text-xl font-bold">{exam.title}</h1>
-        <div className="flex items-center gap-6">
-          {warnings > 0 && (
+        <div className="flex items-center gap-3">
+          <h1 className="text-base sm:text-xl font-bold truncate max-w-sm sm:max-w-md">{exam.title}</h1>
+          {isStaff && (
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-xs font-bold">
+              <Eye size={13} /> Staff Preview Mode (Proctoring Off)
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3 sm:gap-6">
+          {isStaff && (
+            <button
+              onClick={() => {
+                exitFullScreen();
+                navigate('/competitive-exams');
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold border border-white/20 transition cursor-pointer flex items-center gap-1"
+            >
+              <LogOut size={13} /> Exit Preview
+            </button>
+          )}
+          {warnings > 0 && !isStaff && (
             <div className="flex items-center gap-2 text-yellow-300 font-bold bg-red-900/30 px-3 py-1 rounded">
               <ShieldAlert size={18} /> Warnings: {warnings}/3
             </div>
@@ -555,7 +585,7 @@ const TakeCompetitiveExamPage = () => {
 
           {/* Palette Grid */}
           <div className="flex-1 overflow-y-auto p-4 bg-[#e5f1f8]">
-            <h3 className="font-bold text-gray-700 mb-3">{exam.subject.name}</h3>
+            <h3 className="font-bold text-gray-700 mb-3">{exam.subject?.name || 'General Subject'}</h3>
             <div className="grid grid-cols-5 gap-3">
               {exam.questions.map((q: any, idx: number) => {
                 const status = questionStatuses[q.id];
@@ -622,6 +652,33 @@ const TakeCompetitiveExamPage = () => {
                  SUBMIT EXAM
                </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modern In-App Warning Modal (Replaces native browser alert) */}
+      {showWarningModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl text-center space-y-4 border border-rose-200 animate-in fade-in zoom-in-95">
+            <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-xs">
+              <ShieldAlert size={36} />
+            </div>
+            <h3 className="text-xl font-black text-slate-900">Proctoring Alert</h3>
+            <p className="text-sm text-slate-600 leading-relaxed font-medium">
+              {warningMessage}
+            </p>
+            {warnings < 3 ? (
+              <button
+                onClick={() => setShowWarningModal(false)}
+                className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md transition cursor-pointer"
+              >
+                I Understand & Return to Exam
+              </button>
+            ) : (
+              <div className="p-3 bg-rose-50 text-rose-700 font-bold text-xs rounded-xl">
+                Auto-submitting exam now...
+              </div>
+            )}
           </div>
         </div>
       )}

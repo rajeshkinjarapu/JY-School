@@ -6,6 +6,16 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - CBT Exam ట్యాబ్ స్విచ్ అలర్ట్ & ప్రొక్టరింగ్ రిఫ్యాక్టరింగ్ (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `ila vastundi okasari check cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో `take-competitive-exam` పేజీలో `WARNING: You have switched tabs or lost window focus. Attempt 1/3. Exam will be auto-submitted if you continue.` అనే బ్రౌజర్ నేటివ్ అలర్ట్ పాపప్ వచ్చింది).
+- **సమస్య మూలకారణం & పరిష్కారం ([`frontend/src/pages/exams/TakeCompetitiveExamPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/TakeCompetitiveExamPage.tsx)):**
+  1. **అడ్మిన్లు & టీచర్లకు ప్రొక్టరింగ్ డిసేబుల్:** అడ్మిన్లు/టీచర్లు ఎగ్జామ్‌ను ప్రివ్యూ చూస్తున్నప్పుడు ట్యాబ్ స్విచ్ వార్నింగ్‌లు లేదా ఆటో-సబ్మిట్ సమస్యలు రాకుండా బైపాస్ చేసాము. హెడర్‌లో `Staff Preview Mode (Proctoring Off)` బ్యాడ్జ్ మరియు `Exit Preview` బటన్ అందించాము.
+  2. **అవాంఛిత `window.blur` తొలగింపు:** విద్యార్థి స్క్రీన్ పక్కన క్లిక్ చేసినా లేదా స్క్రీన్‌షాట్ తీసినా వచ్చే ఫాల్స్ వార్నింగ్‌లను అరికట్టడానికి `window.blur` తీసివేసి, కేవలం నిజమైన ట్యాబ్ మార్పిడికి మాత్రమే (`document.visibilityState === 'hidden'`) పరిమితం చేసాము.
+  3. **నేటివ్ అలర్ట్‌ల స్థానంలో ఇన్-యాప్ ప్రొక్టరింగ్ మోడల్:** బ్రౌజర్‌ను ఫ్రీజ్ చేసే పాత `alert()` స్థానంలో ఆధునిక ఇన్-యాప్ `Proctoring Alert` మోడల్ మరియు `react-hot-toast` నోటిఫికేషన్లను చేర్చాము.
+  4. **ఎగ్జామ్ స్టార్ట్ అవ్వకముందు వార్నింగ్‌లు బంద్:** ఎగ్జామ్ ఇన్‌స్ట్రక్షన్స్ చదివే సమయంలో యాంటీ-చీట్ లిజనర్లు యాక్టివేట్ కాకుండా, విద్యార్థి "Start Exam" క్లిక్ చేసిన తర్వాతే రన్ అయ్యేలా చేసాము.
+
+
 ## చివరి సంభాషణ - Paste Exam Text (AI Smart Parser) ప్రత్యేక ఫుల్ పేజ్ వర్క్‌స్పేస్‌గా మార్పు (November 24, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `separate ga oka page open avvali` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో Competitive Exams పేజీలో "Paste Exam Text (AI Smart Parser)" మోడల్ పాపప్ ఉంది. దాన్ని ఒక చిన్న డైలాగ్ బాక్స్ లాగా కాకుండా ప్రత్యేక ఫుల్ పేజీగా ఓపెన్ అయ్యేలా మార్చాలని కోరారు).
