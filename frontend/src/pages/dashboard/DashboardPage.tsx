@@ -22,6 +22,7 @@ import {
   LineChart, Line, PieChart, Pie, Cell, BarChart, Bar, Legend
 } from 'recharts';
 import { getPhotoUrl } from '../../utils/photo';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 
 /* ─────────────────────────────────────────────────────────── */
 export const DashboardPage: React.FC = () => {
@@ -44,11 +45,14 @@ export const DashboardPage: React.FC = () => {
   };
 
   const endpoint = roleMap[user?.role?.toLowerCase() || ''] || 'admin';
+  const { selectedYear } = useAcademicYear();
 
   const { data, isLoading: loading, refetch } = useQuery({
-    queryKey: ['dashboard', endpoint],
+    queryKey: ['dashboard', endpoint, selectedYear],
     queryFn: async () => {
-      const res = await api.get(`/api/dashboard/${endpoint}`);
+      const res = await api.get(`/api/dashboard/${endpoint}`, {
+        params: { academicYear: selectedYear }
+      });
       return res.data || res;
     },
     enabled: !!user && user.role !== 'ACCOUNTANT',

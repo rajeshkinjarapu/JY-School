@@ -6,7 +6,30 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
-## చివరి సంభాషణ - View Paper ప్రశ్నల లోడింగ్, అందమైన ప్రింట్ & Result Not Found పరిష్కారాలు (November 24, 2026)
+## చివరి సంభాషణ - Academic Year గ్లోబల్ సెలెక్టర్, స్టూడెంట్ ఫిల్టరింగ్ & యాడ్ ఇయర్ ఇంప్లిమెంటేషన్ (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `paina academic year lo ye year select cheste aa year students kanapdali naku sariga teliyadu professional developer ga alochinchi ela cheyalo naku cheppu, academic year ela add chestam ivvani kavali`
+  - `ok start cheyu`
+- **పూర్తయిన పనులు & ఆర్కిటెక్చర్ మార్పులు (100% Complete):**
+  1. **గ్లోబల్ అకడమిక్ ఇయర్ కాంటెక్స్ట్ ([`AcademicYearContext.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/contexts/AcademicYearContext.tsx)):**
+     - యాప్ అంతటా అకడమిక్ ఇయర్ స్టేట్‌ను నిల్వ చేయడానికి `AcademicYearProvider` ను సృష్టించాము.
+     - `selectedYear` ను `localStorage` లో భద్రపరిచి, యూజర్ మారినప్పుడు `window.dispatchEvent` ద్వారా తక్షణ నోటిఫికేషన్ అందిస్తుంది.
+     - కొత్త అకడమిక్ ఇయర్ జోడించేటప్పుడు గత సంవత్సరం క్లాసులు & సబ్జెక్టులను కొత్త సంవత్సరానికి క్లోన్ చేయడానికి `createAcademicYear` మెథడ్‌ను అనుసంధానించాము.
+  2. **రూట్ ప్రొవైడర్స్ అనుసంధానం ([`main.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/main.tsx)):**
+     - `<AcademicYearProvider>` ను `<AuthProvider>` లోపల మౌంట్ చేసి యాప్ మొత్తం యాక్సెస్ కల్పించాము.
+  3. **ఇంటరాక్టివ్ హెడర్ డ్రాప్‌డౌన్ & మోడల్ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx)):**
+     - పాత స్టాటిక్ `2026 – 27` పిల్ స్థానంలో అధునాతన `AcademicYearSelector` ను రూపొందించాము.
+     - అన్ని అకడమిక్ ఇయర్లు డ్రాప్‌డౌన్‌లో కనిపిస్తాయి; యాక్టివ్ ఇయర్‌కు గ్రీన్ చెక్‌మార్క్ ఉంటుంది.
+     - క్రింద `+ Add Academic Year` బటన్ ద్వారా క్లాసులను ఆటోమేటిక్‌గా క్లోన్ చేసే మోడల్ పనిచేస్తుంది.
+  4. **విద్యార్థుల లిస్ట్ ఆటో-ఫిల్టరింగ్ ([`StudentListPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentListPage.tsx) & [`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts)):**
+     - `/api/students?academicYear=...` ద్వారా సెలెక్ట్ చేసిన ఇయర్ విద్యార్థులు మాత్రమే ఫిల్టర్ అవుతారు.
+     - `StudentListPage` లో "Total Students" పక్కన డెస్క్‌టాప్ మరియు మొబైల్ ఫిల్టర్లలో అకడమిక్ ఇయర్ సెలెక్టర్‌ను జోడించాము. ఇయర్ మార్చగానే తక్షణమే రికార్డులు రీఫ్రెష్ అవుతాయి.
+  5. **డాష్‌బోర్డ్ సింక్ ([`DashboardPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx) & [`dashboard.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+     - `/api/dashboard/admin?academicYear=...` ద్వారా Total Students, Total Classes మరియు క్లాసుల జాబితా ఎంచుకున్న అకడమిక్ ఇయర్‌కు తగ్గట్టు మారుతుంది.
+  6. **తరగతుల నిర్వహణ సింక్ ([`ClassManagementPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/classes/ClassManagementPage.tsx)):**
+     - క్లాసెస్ పేజీలో కూడా అకడమిక్ ఇయర్ మారగానే ఆ సంవత్సరపు క్లాసులు మాత్రమే లోడ్ అవుతాయి.
+
+## మునుపటి సంభాషణ - View Paper ప్రశ్నల లోడింగ్, అందమైన ప్రింట్ & Result Not Found పరిష్కారాలు (November 24, 2026)
 - **యూజర్ అభ్యర్థనలు:**
   1. `view paper lo question kanapadatam ledu and print kuda ravali andam ga` (View Paper లో ప్రశ్నలు కనిపించడం లేదు, మరియు ప్రింట్ క్లిక్ చేసినప్పుడు చాలా అందంగా A4 పేపర్ ప్రింట్ రావాలి).
   2. `result not found antundi chudu` (ఎగ్జామ్ సబ్మిట్ చేసిన తర్వాత లేదా రిజల్ట్ పేజీలో "Result not found. Did you submit the exam?" అని వస్తోంది).

@@ -18,7 +18,8 @@ export const clearDashboardCache = () => {
 
 export const getAdminDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const cacheKey = 'admin_dashboard';
+    const academicYear = (req.query.academicYear as string) || '';
+    const cacheKey = `admin_dashboard_${academicYear || 'all'}`;
     const nowMs = Date.now();
     const isRefresh = req.query.refresh === 'true';
     if (!isRefresh && cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
@@ -40,6 +41,9 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    const studentCountWhere = academicYear ? { class: { academicYear } } : {};
+    const classCountWhere = academicYear ? { academicYear } : {};
+
     // Run independent database queries in parallel
     const [
       totalStudents,
@@ -57,11 +61,14 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       totalAppInstalls,
       studentsWithDob
     ] = await Promise.all([
-      prisma.student.count(),
+      prisma.student.count({ where: studentCountWhere }),
       prisma.teacher.count(),
-      prisma.class.count(),
+      prisma.class.count({ where: classCountWhere }),
       prisma.feePayment.aggregate({ _sum: { amountPaid: true } }),
-      prisma.class.findMany({ select: { id: true, name: true, section: true, _count: { select: { students: true } } } }).then(sortClasses),
+      prisma.class.findMany({ 
+        where: classCountWhere,
+        select: { id: true, name: true, section: true, academicYear: true, _count: { select: { students: true } } } 
+      }).then(sortClasses),
       prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
       prisma.teacherAttendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
       prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } }, select: { paymentDate: true, amountPaid: true } }),

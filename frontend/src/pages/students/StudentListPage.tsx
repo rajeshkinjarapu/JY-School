@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer } from "lucide-react";
+import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { DataCache } from '../../services/dataCache';
 import { getPhotoUrl } from "../../utils/photo";
 import { StudentListExportModal } from "./StudentListExportModal";
+import { useAcademicYear } from "../../contexts/AcademicYearContext";
 
 const LIMIT = 50;
 
@@ -86,6 +87,7 @@ export const StudentListPage: React.FC = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const navigate = useNavigate();
+  const { selectedYear, setSelectedYear, academicYears } = useAcademicYear();
 
   const [students, setStudents] = useState<any[]>(() => {
     try { 
@@ -116,30 +118,23 @@ export const StudentListPage: React.FC = () => {
 
   const fetchClasses = useCallback(async () => {
     try {
-      const classList = await DataCache.get('classes');
+      const res = await api.get('/api/classes', { params: { academicYear: selectedYear, limit: 100 } });
+      const classList = res.data?.data || res.data || [];
       setClasses(classList);
-    } catch {}
-  }, []);
+    } catch {
+      try {
+        const classList = await DataCache.get('classes');
+        setClasses(classList);
+      } catch {}
+    }
+  }, [selectedYear]);
 
   const fetchStudents = useCallback(async () => {
-    // If no filters and page 1, try cache first for instant load
-    if (!search && !classId && page === 1) {
-      try {
-        const cachedStudents = await DataCache.get('students');
-        if (cachedStudents && cachedStudents.length > 0) {
-          const sortedCached = sortStudentsClassWiseAndAlphabetical(cachedStudents);
-          setStudents(sortedCached);
-          setTotal(sortedCached.length > LIMIT ? sortedCached.length : parseInt(localStorage.getItem('sl_total_cache') || '0'));
-          setLoading(false);
-        }
-      } catch (_) {}
-    }
-
     if (students.length === 0) setLoading(true);
     
     try {
       const response: any = await api.get("/api/students", {
-        params: { search, classId, limit: LIMIT, page },
+        params: { search, classId, academicYear: selectedYear, limit: LIMIT, page },
       });
       const data = response.data.data || response.data || [];
       const sortedData = sortStudentsClassWiseAndAlphabetical(data);
@@ -149,7 +144,7 @@ export const StudentListPage: React.FC = () => {
       setTotal(totalCount);
       
       if (!search && !classId && page === 1) {
-        localStorage.setItem('sl_total_cache', String(totalCount));
+        localStorage.setItem(`sl_total_${selectedYear}`, String(totalCount));
         DataCache.set('students', sortedData);
       }
     } catch (err: any) {
@@ -158,7 +153,12 @@ export const StudentListPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, classId, page]);
+  }, [search, classId, page, selectedYear]);
+
+  useEffect(() => {
+    setPage(1);
+    setClassId("");
+  }, [selectedYear]);
 
   useEffect(() => { fetchClasses(); }, [fetchClasses]);
 
@@ -279,9 +279,29 @@ export const StudentListPage: React.FC = () => {
       {/* ── Colorful Hero Header ── */}
       <div className="px-3.5 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
         <div className="hidden md:flex items-center justify-between mb-3">
-          <div>
-            <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
-            <p className="text-2xl font-black text-white">{total} Students</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
+              <p className="text-2xl font-black text-white">{total} Students</p>
+            </div>
+            {/* Academic Year Selector Pill */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-white text-xs font-bold shadow-xs">
+              <Calendar className="w-4 h-4 text-white/80" />
+              <span>Year:</span>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                className="bg-transparent text-white font-black focus:outline-none cursor-pointer pr-1"
+                style={{ colorScheme: 'dark' }}
+                title="Select Academic Year"
+              >
+                {academicYears.map((yr) => (
+                  <option key={yr} value={yr} className="text-gray-900 bg-white">
+                    {yr}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
           <div className="hidden md:flex gap-2">
             {isSuperAdmin && (
@@ -368,6 +388,22 @@ export const StudentListPage: React.FC = () => {
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id} className="text-gray-900 bg-white">
                   {cls.name} {cls.section}
+                </option>
+              ))}
+            </select>
+          </div>
+          {/* Mobile Academic Year Selector */}
+          <div className="relative md:hidden shrink-0">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="px-2 py-2.5 text-xs bg-white/15 border border-white/25 rounded-xl text-white font-bold focus:outline-none appearance-none cursor-pointer"
+              style={{ colorScheme: 'dark' }}
+              title="Academic Year (విద్యా సంవత్సరం)"
+            >
+              {academicYears.map((yr) => (
+                <option key={yr} value={yr} className="text-gray-900 bg-white">
+                  {yr}
                 </option>
               ))}
             </select>

@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { DataCache } from '../../services/dataCache';
+import { useAcademicYear } from '../../contexts/AcademicYearContext';
 
 // Dynamic Color Theme Generator per Class/Grade
 const getClassTheme = (name: string) => {
@@ -79,6 +80,7 @@ const getClassTheme = (name: string) => {
 export const ClassManagementPage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const { selectedYear, setSelectedYear, academicYears } = useAcademicYear();
 
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,7 @@ export const ClassManagementPage: React.FC = () => {
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [section, setSection] = useState('');
-  const [academicYear, setAcademicYear] = useState('2026-2027');
+  const [academicYear, setAcademicYear] = useState(selectedYear);
   const [classTeacherId, setClassTeacherId] = useState('');
   const [capacity, setCapacity] = useState(40);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,13 +102,12 @@ export const ClassManagementPage: React.FC = () => {
   const fetchInitialData = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      const [cachedClasses, cachedTeachers] = await Promise.all([
-        DataCache.get('classes', forceRefresh),
+      const [resClasses, cachedTeachers] = await Promise.all([
+        api.get('/api/classes', { params: { academicYear: selectedYear, limit: 100 } }),
         DataCache.get('teachers', forceRefresh)
       ]);
-      if (cachedClasses) {
-        setClasses(Array.isArray(cachedClasses) ? cachedClasses : (cachedClasses.data || []));
-      }
+      const classList = resClasses.data?.data || resClasses.data || [];
+      setClasses(classList);
       if (cachedTeachers) {
         setTeachers(Array.isArray(cachedTeachers) ? cachedTeachers : (cachedTeachers.data || []));
       }
@@ -119,8 +120,8 @@ export const ClassManagementPage: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    fetchInitialData(true);
+  }, [selectedYear]);
 
   // Filtered classes calculation
   const filteredClasses = useMemo(() => {
@@ -162,7 +163,7 @@ export const ClassManagementPage: React.FC = () => {
     setEditingClassId(null);
     setName('');
     setSection('A');
-    setAcademicYear(stats.activeAcademicYear || '2026-2027');
+    setAcademicYear(selectedYear || stats.activeAcademicYear || '2026-2027');
     setClassTeacherId('');
     setCapacity(40);
     setShowModal(true);
@@ -249,9 +250,22 @@ export const ClassManagementPage: React.FC = () => {
                     <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
                       Classes Directory
                     </h1>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 backdrop-blur-md">
-                      Academic Year {stats.activeAcademicYear}
-                    </span>
+                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/30 backdrop-blur-md">
+                      <span className="text-xs text-emerald-200 font-bold">Year:</span>
+                      <select
+                        value={selectedYear}
+                        onChange={(e) => setSelectedYear(e.target.value)}
+                        className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer"
+                        style={{ colorScheme: 'dark' }}
+                        title="Select Academic Year"
+                      >
+                        {academicYears.map((yr) => (
+                          <option key={yr} value={yr} className="text-gray-900 bg-white">
+                            {yr}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </div>
                   <p className="text-xs sm:text-sm text-blue-100/80 font-medium mt-1">
                     Manage grades, sections, student capacity, and assigned class teachers
