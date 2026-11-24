@@ -6,6 +6,39 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - View Paper ప్రశ్నల లోడింగ్, అందమైన ప్రింట్ & Result Not Found పరిష్కారాలు (November 24, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `view paper lo question kanapadatam ledu and print kuda ravali andam ga` (View Paper లో ప్రశ్నలు కనిపించడం లేదు, మరియు ప్రింట్ క్లిక్ చేసినప్పుడు చాలా అందంగా A4 పేపర్ ప్రింట్ రావాలి).
+  2. `result not found antundi chudu` (ఎగ్జామ్ సబ్మిట్ చేసిన తర్వాత లేదా రిజల్ట్ పేజీలో "Result not found. Did you submit the exam?" అని వస్తోంది).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **View Paper ఇంటరాక్టివ్ ఎంటి-స్టేట్ & ఆటో-శాంపిల్ పాపులేషన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - యూజర్ సృష్టించిన ఎగ్జామ్‌లో ఇంకా ప్రశ్నలు యాడ్ చేయనప్పుడు (0 Questions ఉన్నప్పుడు), ఖాళీగా కనిపించకుండా ఒక అందమైన యాక్షన్ కార్డును అందించాము:
+       - `✨ Auto-Fill Sample NTA Questions` బటన్: ఒకే క్లిక్‌తో 10 హై-క్వాలిటీ జేఈఈ/నీట్ ప్రశ్నలను డేటాబేస్‌లో చేర్చి తక్షణమే పేపర్‌ను లోడ్ చేస్తుంది (`POST /api/competitive-exams/:id/populate-sample`).
+       - `📄 Paste Exam Text (AI Parser)` మరియు `+ Add Questions in Studio` బటన్లు.
+  2. **అందమైన A4 క్వశ్చన్ పేపర్ ప్రింట్ ఇంజిన్ (`printCompetitivePaper`):**
+     - పాత `window.print()` (ఇది వెబ్‌సైట్ స్క్రీన్ మొత్తాన్ని వికృతంగా ప్రింట్ చేసేది) స్థానంలో `iframe` ఆధారిత ప్రొఫెషనల్ ప్రింట్ మెకానిజాన్ని రూపొందించాము.
+     - ప్రింట్‌లో వచ్చే అంశాలు:
+       - **అధికారిక హెడర్:** `JY SCHOOL`, `EDURACLE CBT TESTING`, పరీక్ష పేరు, క్లాస్, సబ్జెక్ట్, సమయం, గరిష్ట మార్కులు, నెగెటివ్ మార్కింగ్.
+       - **ఇన్స్ట్రక్షన్స్ బాక్స్:** అభ్యర్థులకు స్పష్టమైన నిబంధనలు.
+       - **ప్రశ్నలు & మ్యాథ్ సూత్రాలు:** KaTeX రెండరింగ్‌తో కూడిన మ్యాథ్ ఫార్ములాలు, డయాగ్రమ్‌లు మరియు (A), (B), (C), (D) ఆప్షన్లతో కూడిన క్లీన్ 2-కాలమ్ గ్రిడ్.
+       - `@page { size: A4 portrait; margin: 12mm 10mm; }` మరియు `break-inside: avoid` తో ప్రశ్నలు పేజీ మధ్యలో కట్ అవ్వకుండా శుభ్రంగా ప్రింట్ అవుతాయి.
+  3. **"Result Not Found" బగ్ పరిష్కారం & స్కోర్‌కార్డ్ అప్‌గ్రేడ్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts) & [`CompetitiveExamResultPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamResultPage.tsx)):**
+     - **బ్యాకెండ్ ఫిక్స్:** `getStudentResult` లో పాత కోడ్ కేవలం మొదటి విద్యార్థి ID తో మాత్రమే ఫిల్టర్ చేయడం వల్ల వచ్చిన ఫాల్స్ 404 బగ్‌ను సరిదిద్దాము. ఇప్పుడు `submissionId` ని నేరుగా సపోర్ట్ చేస్తుంది; అడ్మిన్/టీచర్ స్టాఫ్ పరీక్షించినప్పుడు కూడా లేటెస్ట్ సబ్మిషన్‌ను సరిగ్గా చూపిస్తుంది.
+     - **సబ్మిట్ హ్యాండ్లర్:** `TakeCompetitiveExamPage.tsx` ఎగ్జామ్ సబ్మిట్ కాగానే జనరేట్ అయిన `submissionId` తో రిజల్ట్ పేజీకి నావిగేట్ చేస్తుంది.
+     - **ఫ్రంటెండ్ స్కోర్‌కార్డ్:** రిజల్ట్ పేజీలో KaTeX ఫార్ములా రెండరింగ్, అక్యురసీ పర్సంటేజ్, టైమ్ టేకెన్, మరియు ఒకవేళ ఇంకా ఎగ్జామ్ రాయని పక్షంలో అందమైన "No Exam Submission Found" కార్డును అందించాము.
+
+
+## చివరి సంభాషణ - Student Exam Tab Restriction & Kiosk Lockdown ఆర్కిటెక్చర్ వివరణ (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `student login lo assalu inko tab kuda open avvakudadu ala cheyocha emaina options unnaya detail ga explain cheyu` (స్టూడెంట్ లాగిన్‌లో లేదా ఎగ్జామ్ రాస్తున్నప్పుడు విద్యార్థి వేరే ట్యాబ్ ఓపెన్ చేయకుండా పూర్తిగా లాక్ చేయవచ్చా? అందుబాటులో ఉన్న సాంకేతిక ఆప్షన్లు ఏమిటి?).
+- **వివరించిన కీలక అంశాలు & పరిష్కార మార్గాలు:**
+  1. **బ్రౌజర్ సెక్యూరిటీ పరిమితి & రియాలిటీ:** సాధారణ బ్రౌజర్లు (Chrome, Edge) సెక్యూరిటీ శాండ్‌బాక్స్ కారణంగా ఏ వెబ్‌సైట్‌కు కూడా యూజర్ యొక్క మొత్తం బ్రౌజర్‌ను (OS లెవల్ బటన్లను) బలవంతంగా కంట్రోల్ చేసే అనుమతి ఇవ్వవు.
+  2. **సాధ్యమయ్యే 4 ప్రాక్టికల్ ప్రొఫెషనల్ సొల్యూషన్లు:**
+     - **Option 1 (స్ట్రిక్ట్ ఫుల్‌స్క్రీన్ + షార్ట్‌కట్ లాక్ + ఆటో సబ్మిట్):** HTML5 Fullscreen API తో స్క్రీన్ లాక్, `Ctrl+T`, `Ctrl+N`, `Ctrl+W`, `Alt+Tab`, రైట్ క్లిక్ బ్లాకింగ్, మరియు ట్యాబ్ స్విచ్ లేదా ఫుల్‌స్క్రీన్ ఎగ్జిట్ అయితే తక్షణ ఆటో-సబ్మిట్ పెనాల్టీ.
+     - **Option 2 (PWA Standalone App):** వెబ్‌సైట్‌ను PWA యాప్ లాగా ఇన్‌స్టాల్ చేసుకుని ఓపెన్ చేస్తే బ్రౌజర్ URL బార్, టాబ్‌లు ఏవీ ఉండవు.
+     - **Option 3 (Flutter Mobile App Kiosk Lock):** మొబైల్ యాప్‌లో స్క్రీన్ పిన్నింగ్ ద్వారా ఇతర యాప్‌లకు లేదా హోమ్ స్క్రీన్‌కి వెళ్లకుండా లాక్ చేయడం.
+     - **Option 4 (NTA / TCS iON తరహా Safe Exam Browser - SEB):** కాలేజీ / స్కూల్ కంప్యూటర్ ల్యాబ్‌ల కోసం డెడికేటెడ్ కియోస్క్ బ్రౌజర్.
+
 ## చివరి సంభాషణ - సింగిల్ రా బాక్స్ స్టూడియో & ప్రత్యేక క్వశ్చన్ బ్యాంక్ పేజీ (November 24, 2026)
 - **యూజర్ అభ్యర్థనలు:**
   1. `question ki separate box answer ki separate box kakunda oke box lo raw text question and answer vacheyla kavali` (ప్రశ్న స్టేట్‌మెంట్‌కు ఒక బాక్స్, ఆన్సర్‌కు వేరొక బాక్స్ కాకుండా... ఒకే ఒక్క రా టెక్స్ట్ బాక్స్‌లో మొత్తం ప్రశ్న, ఆప్షన్లు A, B, C, D మరియు ఆన్సర్ కీ పేస్ట్ చేసే సదుపాయం కావాలి).

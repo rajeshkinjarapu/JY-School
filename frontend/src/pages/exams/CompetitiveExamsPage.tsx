@@ -1119,22 +1119,24 @@ const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBan
 
 const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate: any }> = ({ exam, onClose, navigate }) => {
   const [loading, setLoading] = useState(true);
+  const [populating, setPopulating] = useState(false);
   const [examData, setExamData] = useState<any>(exam);
   const [activeSection, setActiveSection] = useState<string>('ALL');
 
-  useEffect(() => {
-    const loadDetails = async () => {
-      try {
-        const res = await api.get(`/api/competitive-exams/${exam.id}`);
-        if (res.data?.data) {
-          setExamData(res.data.data);
-        }
-      } catch (err) {
-        console.warn('Failed to load full exam paper details:', err);
-      } finally {
-        setLoading(false);
+  const loadDetails = async () => {
+    try {
+      const res = await api.get(`/api/competitive-exams/${exam.id}`);
+      if (res.data?.data) {
+        setExamData(res.data.data);
       }
-    };
+    } catch (err) {
+      console.warn('Failed to load full exam paper details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadDetails();
   }, [exam.id]);
 
@@ -1154,8 +1156,161 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
         return q.chapterName.startsWith(activeSection) || q.chapterName.includes(activeSection);
       });
 
+  const handlePopulateSample = async () => {
+    setPopulating(true);
+    try {
+      await api.post(`/api/competitive-exams/${examData.id}/populate-sample`);
+      toast.success('Sample NTA questions added successfully!');
+      await loadDetails();
+    } catch (e) {
+      toast.error('Failed to auto-populate questions');
+    } finally {
+      setPopulating(false);
+    }
+  };
+
   const handlePrint = () => {
-    window.print();
+    if (filteredQuestions.length === 0) {
+      toast.error('No questions in paper to print');
+      return;
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:210mm;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-9999;';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument!;
+    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
+      .map(n => n.outerHTML).join('');
+
+    const printableEl = document.getElementById('competitive-paper-printable');
+    const contentHtml = printableEl ? printableEl.innerHTML : '';
+
+    doc.open();
+    doc.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${examData.title || 'Official Question Paper'}</title>
+  ${styles}
+  <style>
+    @page { size: A4 portrait; margin: 12mm 10mm; }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      width: 210mm !important;
+      color: #0f172a !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .print-header-box {
+      text-align: center;
+      border-bottom: 2.5px solid #0f172a;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .print-badge {
+      font-size: 8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #4f46e5;
+      margin-bottom: 2px;
+    }
+    .print-school-name {
+      font-size: 20pt;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      margin: 0;
+      text-transform: uppercase;
+      color: #0f172a;
+    }
+    .print-exam-name {
+      font-size: 13pt;
+      font-weight: 800;
+      margin: 3px 0;
+      color: #1e293b;
+    }
+    .print-meta-row {
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid #cbd5e1;
+      padding-top: 6px;
+      margin-top: 6px;
+      font-size: 9pt;
+      font-weight: 700;
+      color: #334155;
+    }
+    .print-instructions-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-bottom: 14px;
+      font-size: 8.5pt;
+      line-height: 1.4;
+    }
+    .print-instructions-box ol {
+      margin: 4px 0 0 16px;
+      padding: 0;
+    }
+    .question-block {
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      background: #ffffff;
+    }
+    .katex .hide-tail { overflow: hidden !important; }
+    .katex svg { overflow: hidden !important; }
+    .katex-display { overflow: visible !important; }
+    .no-print { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="print-header-box">
+    <div class="print-badge">Official NTA Computer Based Test Question Paper</div>
+    <h1 class="print-school-name">JY SCHOOL</h1>
+    <h2 class="print-exam-name">${examData.title}</h2>
+    <div class="print-meta-row">
+      <span>CLASS: ${examData.class?.name || '10th Standard'}</span>
+      <span>SUBJECT: ${examData.subject?.name || 'General'}</span>
+      <span>DURATION: ${examData.duration} MINS</span>
+      <span>TOTAL MARKS: ${examData.totalMarks}</span>
+      <span>MARKING: +4 / -${examData.negativeMarks || 1}</span>
+    </div>
+  </div>
+
+  <div class="print-instructions-box">
+    <strong>INSTRUCTIONS TO CANDIDATES:</strong>
+    <ol>
+      <li>This paper contains <strong>${filteredQuestions.length}</strong> objective multiple choice questions.</li>
+      <li>Each correct answer earns <strong>4 marks</strong>. For each wrong answer, <strong>${examData.negativeMarks || 1} mark</strong> is deducted.</li>
+      <li>Rough calculations must be carried out on rough sheets only.</li>
+    </ol>
+  </div>
+
+  <div id="print-body">
+    ${contentHtml}
+  </div>
+</body>
+</html>`);
+    doc.close();
+
+    setTimeout(async () => {
+      if (iframe.contentDocument?.fonts) {
+        try {
+          await iframe.contentDocument.fonts.ready;
+        } catch (e) {}
+      }
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      setTimeout(() => iframe.remove(), 2500);
+    }, 400);
   };
 
   return (
@@ -1179,11 +1334,12 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/10"
-              title="Print Question Paper"
+              disabled={filteredQuestions.length === 0}
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/10 disabled:opacity-50"
+              title="Print Clean A4 Question Paper"
             >
               <Printer className="w-4 h-4 text-amber-300" />
-              <span className="hidden sm:inline">Print Paper</span>
+              <span>Print Paper</span>
             </button>
             <button
               onClick={() => {
@@ -1193,7 +1349,7 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
-              <span>Launch CBT Exam</span>
+              <span className="hidden sm:inline">Launch CBT Exam</span>
             </button>
             <button
               onClick={onClose}
@@ -1251,103 +1407,140 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
               <p className="text-slate-500 font-bold text-sm">Loading complete question paper with KaTeX math rendering...</p>
             </div>
           ) : filteredQuestions.length === 0 ? (
-            <div className="py-16 text-center bg-white rounded-2xl border border-dashed border-slate-300">
-              <FileQuestion className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-              <h4 className="font-black text-slate-700 text-base">No questions in this section yet</h4>
-              <p className="text-slate-400 text-xs mt-1">Questions will appear here once added to this exam.</p>
+            <div className="py-12 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-300 max-w-xl mx-auto space-y-4">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-xs">
+                <FileQuestion className="w-7 h-7" />
+              </div>
+              <div>
+                <h4 className="font-black text-slate-800 text-base sm:text-lg">No Questions in this Exam Paper Yet</h4>
+                <p className="text-slate-500 text-xs mt-1 max-w-md mx-auto leading-relaxed">
+                  This exam currently has 0 questions. You can auto-fill sample NTA questions, paste text from Word/PDF with Gemini AI, or add questions manually in the Studio.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2.5 pt-2">
+                <button
+                  disabled={populating}
+                  onClick={handlePopulateSample}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer disabled:opacity-50"
+                >
+                  {populating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles size={14} className="fill-white" />}
+                  {populating ? 'Populating Questions...' : '✨ Auto-Fill Sample NTA Questions'}
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate(`/competitive-exams/${examData.id}/paste-ai`);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
+                >
+                  <FileText size={14} /> 📄 Paste Exam Text (AI Parser)
+                </button>
+                <button
+                  onClick={() => {
+                    onClose();
+                    navigate(`/competitive-question-bank?examId=${examData.id}`);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
+                >
+                  <Plus size={14} /> + Add Questions in Studio
+                </button>
+              </div>
             </div>
           ) : (
-            filteredQuestions.map((q: any, qIdx: number) => {
-              let parsedOptions: string[] = [];
-              try {
-                parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
-              } catch {
-                parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
-              }
+            <div id="competitive-paper-printable" className="space-y-4">
+              {filteredQuestions.map((q: any, qIdx: number) => {
+                let parsedOptions: string[] = [];
+                try {
+                  parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+                } catch {
+                  parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+                }
 
-              const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-              return (
-                <div
-                  key={q.id || qIdx}
-                  className="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-200 space-y-4 hover:border-indigo-200 transition"
-                >
-                  {/* Question Header */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-sm">
-                        Q{qIdx + 1}
-                      </span>
-                      {q.chapterName && (
-                        <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200">
-                          {q.chapterName}
+                return (
+                  <div
+                    key={q.id || qIdx}
+                    className="question-block bg-white rounded-2xl p-5 sm:p-6 shadow-xs border border-slate-200 space-y-3.5"
+                  >
+                    {/* Question Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
+                          Q{qIdx + 1}
                         </span>
-                      )}
-                      <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[10px]">
-                        {q.difficulty || 'MEDIUM'}
-                      </span>
+                        {q.chapterName && (
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
+                            {q.chapterName}
+                          </span>
+                        )}
+                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                          {q.difficulty || 'MEDIUM'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                          +{q.marks || 4} Marks
+                        </span>
+                        <span className="text-xs font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
+                          -{examData.negativeMarks || 1} Neg
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100">
-                        +{q.marks || 4} Marks
-                      </span>
-                      <span className="text-xs font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-lg border border-rose-100">
-                        -{examData.negativeMarks || 1} Neg
-                      </span>
+                    {/* Question Statement */}
+                    <div className="text-slate-900 text-sm sm:text-base font-semibold leading-relaxed pl-1">
+                      <LatexRenderer text={q.questionText} />
                     </div>
-                  </div>
 
-                  {/* Question Text */}
-                  <div className="text-slate-800 text-sm sm:text-base font-semibold leading-relaxed pl-1">
-                    <LatexRenderer text={q.questionText} />
-                  </div>
+                    {/* Question Diagram if present */}
+                    {q.imageUrl && (
+                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl inline-block">
+                        <img src={q.imageUrl} alt="Question Diagram" className="max-h-56 object-contain rounded" />
+                      </div>
+                    )}
 
-                  {/* Question Image if present */}
-                  {q.imageUrl && (
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl inline-block">
-                      <img src={q.imageUrl} alt="Question Diagram" className="max-h-60 object-contain rounded-lg" />
-                    </div>
-                  )}
+                    {/* 4 Options Grid */}
+                    <div className="options-grid grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                      {parsedOptions.map((opt: string, optIdx: number) => {
+                        const isCorrect = String(opt).trim() === String(q.correctAnswer).trim() || optLetters[optIdx] === String(q.correctAnswer).trim();
 
-                  {/* 4 Options Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    {parsedOptions.map((opt: string, optIdx: number) => {
-                      const isCorrect = String(opt).trim() === String(q.correctAnswer).trim() || optLetters[optIdx] === String(q.correctAnswer).trim();
-
-                      return (
-                        <div
-                          key={optIdx}
-                          className={`p-3.5 rounded-xl border flex items-start gap-3 transition ${
-                            isCorrect
-                              ? 'bg-emerald-50/80 border-emerald-300 ring-1 ring-emerald-300'
-                              : 'bg-slate-50/60 border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span
-                            className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${
+                        return (
+                          <div
+                            key={optIdx}
+                            className={`option-cell p-3 rounded-xl border flex items-start gap-2.5 transition ${
                               isCorrect
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-slate-200 text-slate-700'
+                                ? 'bg-emerald-50/80 border-emerald-400 ring-1 ring-emerald-400'
+                                : 'bg-slate-50/70 border-slate-200'
                             }`}
                           >
-                            {optLetters[optIdx]}
-                          </span>
-                          <div className="flex-1 text-xs sm:text-sm font-medium text-slate-800 leading-snug">
-                            <LatexRenderer text={opt} />
-                          </div>
-                          {isCorrect && (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-extrabold text-[10px] shrink-0 flex items-center gap-1">
-                              <Check className="w-3 h-3 text-emerald-700" /> Correct
+                            <span
+                              className={`option-letter w-5 h-5 rounded-md font-black text-[10px] flex items-center justify-center shrink-0 ${
+                                isCorrect
+                                  ? 'bg-emerald-600 text-white'
+                                  : 'bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {optLetters[optIdx]}
                             </span>
-                          )}
-                        </div>
-                      );
-                    })}
+                            <div className="flex-1 text-xs sm:text-sm font-medium text-slate-800 leading-snug">
+                              <LatexRenderer text={opt} />
+                            </div>
+                            {isCorrect && (
+                              <span className="no-print px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[9px] shrink-0 flex items-center gap-0.5">
+                                <Check size={10} className="text-emerald-700" /> Correct
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
 

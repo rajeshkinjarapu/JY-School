@@ -254,15 +254,16 @@ const TakeCompetitiveExamPage = () => {
     const totalTimeTaken = Math.floor((Date.now() - startTimeRef.current) / 1000);
 
     try {
-      await api.post(`/api/competitive-exams/${id}/submit`, {
+      const res = await api.post(`/api/competitive-exams/${id}/submit`, {
         answers: formattedAnswers,
         totalTimeTaken
       });
       
+      const submissionId = res.data?.data?.id;
       toast.success("Exam submitted successfully!");
       sessionStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
-      navigate(`/competitive-exam-result/${id}`, { replace: true });
+      navigate(`/competitive-exam-result/${id}${submissionId ? `?submissionId=${submissionId}` : ''}`, { replace: true });
     } catch (error) {
       toast.error("Failed to submit exam. Please contact admin.");
       setIsSubmitting(false);

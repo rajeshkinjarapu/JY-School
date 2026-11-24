@@ -18,7 +18,8 @@ import {
   deleteCompetitiveQuestion,
   updateCompetitiveQuestion,
   parseTextQuestionsAI,
-  bulkAddQuestions
+  bulkAddQuestions,
+  populateSampleQuestions
 } from "../controllers/competitiveExams.controller";
 
 const router = Router();
@@ -40,6 +41,7 @@ router.delete("/:id", authenticate, deleteCompetitiveExam);
 router.get("/class/:classId", authenticate, getCompetitiveExamsByClass);
 router.get("/:id/leaderboard", authenticate, getExamLeaderboard);
 
+router.post("/:id/populate-sample", authenticate, populateSampleQuestions);
 router.post("/:examId/questions", authenticate, addCompetitiveQuestion);
 router.post("/:examId/generate-ai", authenticate, generateCompetitiveQuestionsAI);
 router.post("/:examId/ai-parse-text", authenticate, parseTextQuestionsAI);
