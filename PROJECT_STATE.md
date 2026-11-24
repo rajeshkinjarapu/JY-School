@@ -35,6 +35,17 @@
   1. `MCQPaperGeneratorPage.tsx` మరియు `LiveLatexPreview.tsx` లోని ఆప్షన్ స్ప్లిట్టింగ్ Regex ను సరిదిద్దాము. ఇంగ్లీష్ పదాల చివర వచ్చే డాట్‌లను (`land.`, `food.`, మొదలైనవి) ఆప్షన్లుగా మార్చకుండా ప్రొటెక్షన్ జోడించాము.
   2. `LiveLatexPreview.tsx` లో ఆప్షన్ల మధ్య ఖాళీని `gap-x-4`, `gap-x-6` కి పెంచి, ఆటో-కాలమ్ లిమిట్‌ను సరిచేసి ఆప్షన్లు ఒకదానితో ఒకటి కలిసిపోకుండా స్పష్టమైన స్పేసింగ్ ఇచ్చాము.
 
+## చివరి సంభాషణ - Examination Dashboard నుండి Slip Test Rank Card తొలగింపు (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `slip test rank card exam ki marks ki elanti ibbandi lekunda remove cheyu poortiga` (/exams స్క్రీన్‌షాట్ పంపిస్తూ, Examination Dashboard లోని Slip Test Rank Card ను ఎగ్జామ్స్ మరియు మార్క్స్‌కు ఎటువంటి ఆటంకం లేకుండా పూర్తిగా తీసేయమని కోరారు).
+- **సమస్య విశ్లేషణ:**
+  - `ExamListPage.tsx` లోని టూల్స్ గ్రిడ్‌లో `Slip Test Rank Card` అనేది కేవలం పాత మాన్యువల్ పేజీ `/office-tools/slip-test` కు వెళ్లే సింపుల్ లింక్ కార్డ్ మాత్రమే.
+  - ప్రధాన ఎగ్జామ్స్, మార్క్స్ ఎంట్రీ, గ్రేడ్ షీట్లు లేదా రిపోర్ట్ కార్డులు ఏవీ దీనిపై ఆధారపడలేదు.
+- **చేసిన పరిష్కారం (100% Safe & Complete):**
+  - `frontend/src/pages/exams/ExamListPage.tsx` లోని కార్డ్స్ గ్రిడ్ నుండి `Slip Test Rank Card` ను పూర్తిగా తొలగించాము.
+  - ఉపయోగించని పాత `SlipTestsTab` ఇంపోర్ట్‌ను క్లీన్ చేసాము.
+  - ఇప్పుడు ఎగ్జామినేషన్ డ్యాష్‌బోర్డ్‌లో ఎగ్జామ్స్ లిస్ట్, అడ్మిట్ కార్డ్, క్వశ్చన్ పేపర్స్, మార్క్స్ అప్‌లోడ్, రిజల్ట్స్, ప్రోగ్రెస్ కార్డ్, ఎస్సెమ్మెస్, స్టేటస్ ఓవర్‌వ్యూ, సెట్టింగ్స్ మాత్రమే అత్యంత ప్రొఫెషనల్‌గా కనిపిస్తాయి.
+
 ## VPS Hosting & PM2 Process Names Reference:
 - **Backend (Node.js API):** Runs on VPS at `http://66.116.252.191:19998` under PM2 name `backend` (ID: 0).
   - Command: `pm2 restart backend`

@@ -34,7 +34,7 @@ export const CreateCompetitiveQuestionPage = () => {
         setExams(loaded);
         if (loaded.length > 0) setSelectedExamId(loaded[0].id);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const handleChange = (e: any) => {
@@ -107,14 +107,14 @@ export const CreateCompetitiveQuestionPage = () => {
         </div>
 
         <div className="p-6 md:p-8 space-y-8">
-          
+
           {/* Metadata Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Target Competitive Exam</label>
-              <select 
-                value={selectedExamId} 
-                onChange={e => setSelectedExamId(e.target.value)} 
+              <select
+                value={selectedExamId}
+                onChange={e => setSelectedExamId(e.target.value)}
                 className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none focus:border-indigo-500 cursor-pointer"
               >
                 {exams.map(e => (
@@ -166,7 +166,7 @@ export const CreateCompetitiveQuestionPage = () => {
             <div className="flex justify-between items-end mb-2">
               <label className="block text-sm font-bold text-slate-800 uppercase">Question Text</label>
             </div>
-            <textarea 
+            <textarea
               name="questionText"
               rows={4}
               value={formData.questionText}
@@ -181,21 +181,21 @@ export const CreateCompetitiveQuestionPage = () => {
             <div className="flex justify-between items-center mb-4">
               <label className="block text-sm font-bold text-slate-800 uppercase">Options (Click letter to select correct answer)</label>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['A', 'B', 'C', 'D'].map(opt => (
                 <div key={opt} className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${formData.correctAnswer === opt ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
-                  <div 
-                    onClick={() => setFormData({...formData, correctAnswer: opt})}
+                  <div
+                    onClick={() => setFormData({ ...formData, correctAnswer: opt })}
                     className={`w-8 h-8 rounded-full flex items-center justify-center font-bold cursor-pointer transition-all ${formData.correctAnswer === opt ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'}`}
                   >
                     {opt}
                   </div>
-                  <input 
-                    type="text" 
-                    name={`option${opt}`} 
-                    value={(formData as any)[`option${opt}`]} 
-                    onChange={handleChange} 
+                  <input
+                    type="text"
+                    name={`option${opt}`}
+                    value={(formData as any)[`option${opt}`]}
+                    onChange={handleChange}
                     placeholder={`Option ${opt} text`}
                     className="flex-1 bg-transparent outline-none font-medium text-slate-800"
                   />
@@ -207,19 +207,19 @@ export const CreateCompetitiveQuestionPage = () => {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-4 pt-4 border-t border-slate-100">
-            <button 
+            <button
               type="button"
               disabled={loading}
-              onClick={() => handleSave(false)} 
+              onClick={() => handleSave(false)}
               className="flex-1 md:flex-none px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Save size={18} />}
               SAVE QUESTION
             </button>
-            <button 
+            <button
               type="button"
               disabled={loading}
-              onClick={() => handleSave(true)} 
+              onClick={() => handleSave(true)}
               className="flex-1 md:flex-none px-8 py-4 bg-white text-indigo-700 border-2 border-indigo-200 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Plus size={18} /> SAVE & ADD ANOTHER
