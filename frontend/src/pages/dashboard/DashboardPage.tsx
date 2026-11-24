@@ -266,21 +266,21 @@ const AdminView: React.FC<{ data: any; user?: any; onRefresh?: () => void }> = (
   };
   const roleDisplay = roleTitleMap[user?.role || ''] || user?.role || 'Super Admin';
 
-  const totalStudentsCount = data.totalStudents || 533;
-  const totalTeachersCount = data.totalTeachers || 34;
-  const totalClassesCount = data.totalClasses || 24;
-  const totalRevenueFormatted = data.totalRevenue
+  const totalStudentsCount = data.totalStudents ?? 0;
+  const totalTeachersCount = data.totalTeachers ?? 0;
+  const totalClassesCount = data.totalClasses ?? 0;
+  const totalRevenueFormatted = data.totalRevenue !== undefined && data.totalRevenue !== null
     ? `₹${Number(data.totalRevenue).toLocaleString('en-IN')}`
-    : '₹1,00,53,850';
-  const appInstallsStr = `${data.totalAppInstalls || 17} / ${totalStudentsCount}`;
+    : '₹0';
+  const appInstallsStr = `${data.totalAppInstalls ?? 0} / ${totalStudentsCount}`;
 
   // Live Attendance metrics from real database
   const studentAtt = data.studentAttendance;
   const isStudentAttMarked = studentAtt ? studentAtt.isMarked : (data.attendanceToday !== undefined && data.attendanceToday > 0);
-  const displayAttendancePct = studentAtt ? studentAtt.percentage : (data.attendanceToday || 0);
-  const presentCount = studentAtt ? studentAtt.present : (isStudentAttMarked ? Math.round(totalStudentsCount * (displayAttendancePct / 100)) : 0);
-  const absentCount = studentAtt ? studentAtt.absent : 0;
-  const leaveCount = studentAtt ? studentAtt.leave : 0;
+  const displayAttendancePct = totalStudentsCount > 0 ? (studentAtt ? studentAtt.percentage : (data.attendanceToday || 0)) : 0;
+  const presentCount = totalStudentsCount > 0 ? (studentAtt ? studentAtt.present : (isStudentAttMarked ? Math.round(totalStudentsCount * (displayAttendancePct / 100)) : 0)) : 0;
+  const absentCount = totalStudentsCount > 0 ? (studentAtt ? studentAtt.absent : (isStudentAttMarked ? Math.max(0, totalStudentsCount - presentCount) : 0)) : 0;
+  const leaveCount = totalStudentsCount > 0 ? (studentAtt ? studentAtt.leave : 0) : 0;
 
   const teacherAtt = data.teacherAttendance;
   const isTeacherAttMarked = teacherAtt ? teacherAtt.isMarked : false;

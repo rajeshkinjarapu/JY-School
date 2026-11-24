@@ -6,6 +6,92 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Academic Year సెలెక్టర్ ఇంగ్లీష్ టెక్స్ట్ మార్పు & డాష్‌బోర్డ్ ఇయర్ ఫిల్టరింగ్ పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్నలు & సందేహాలు:**
+  1. `telugu lo enduku vastundi text`: వెబ్‌సైట్ టోస్ట్ మరియు మోడల్‌లో తెలుగు టెక్స్ట్ రావడం గమనించి ఇంగ్లీష్ లో ఉండాలని అడిగారు.
+  2. `2027-28 select chesinappudu malli 2026-27 dashboard ye chudpistundi naku assalu emi ardam kavatam ledu plan unte cheppu`: 2027-28 సెలెక్ట్ చేసినప్పుడు కూడా 533 విద్యార్థులు, 2026-27 డాష్‌బోర్డ్ ఎందుకు చూపిస్తోంది, అకడమిక్ ఇయర్ ప్లాన్ ఏమిటి అని అడిగారు.
+- **రూట్ కాజ్ విశ్లేషణ & పరిష్కారాలు (100% Fixed):**
+  1. **వెబ్‌సైట్ UI టెక్స్ట్ ఆంగ్లంలోకి మార్పు ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx)):**
+     - టోస్ట్ నోటిఫికేషన్‌ను `Academic Year 2027-2028 selected!` గాను, మోడల్ సబ్‌హెడర్‌ను `Create and initialize a new academic session` గాను మార్చాము.
+  2. **డాష్‌బోర్డ్ హార్డ్‌కోడెడ్ ఫాల్‌బ్యాక్ తొలగింపు ([`DashboardPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx)):**
+     - గతంలో ఉన్న `data.totalStudents || 533` మరియు `data.totalClasses || 24` ల వలన 2027-28 లో 0 విద్యార్థులు ఉన్నప్పటికీ జావాస్క్రిప్ట్ `0 || 533` ను `533` గా చూపించింది.
+     - దానిని `data.totalStudents ?? 0` మరియు `data.totalClasses ?? 0`, `totalRevenueFormatted` ను `?? 0` గా మార్చాము.
+  3. **బ్యాకెండ్ డాష్‌బోర్డ్ ఫిల్టరింగ్ ([`dashboard.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+     - ఫీజు వసూళ్లు (Revenue), రీసెంట్ పేమెంట్స్, ఈరోజు అటెండెన్స్, జెండర్ గ్రూపింగ్, బర్త్‌డే లిస్ట్ అన్నింటికీ `academicYear` ఫిల్టర్ వర్తించేలా అప్‌డేట్ చేశాము.
+  4. **స్కూల్ ERP అకడమిక్ ఇయర్ లైఫ్‌సైకిల్ ప్లాన్:**
+     - 2026-2027 (ప్రస్తుత సంవత్సరం): 533 మంది విద్యార్థులు.
+     - 2027-2028 (కొత్త సంవత్సరం): ప్రమోషన్ లేదా కొత్త అడ్మిషన్లు జరిగే వరకు 0 విద్యార్థులు, 0 ఫీజుగా ఫ్రెష్‌గా ప్రారంభమవుతుంది.
+
+## చివరి సంభాషణ - Competitive Exams UI రీడిజైన్, సబ్జెక్ట్-వైజ్ ప్రశ్నల బ్యాంక్, ఫలితాలు & యాక్టివ్ స్టూడెంట్స్ ట్యాబ్‌లు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `anni pages ki unnatte simple top header undali`
+  - `ee page kuda UI complete ga andam ga change cheyu. over cheyavalasina avasram ledu`
+  - `total exams click cheste exams list open avvali`
+  - `total questions click cheste subject wise questions chusukunela undali`
+  - `result meda click cheste aa exam ki taggattu result list ravali`
+  - `Active students kuda ravali`
+  - `oka professional develoepr ga alochinchi professional ga design cheyu. okkokka page chala andam ga undali`
+- **పూర్తయిన పనులు & మార్పులు (100% Complete):**
+  1. **టాప్ హెడర్ ఏకీకరణ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx) & [`DashboardLayout.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/DashboardLayout.tsx)):**
+     - అన్ని పేజీలలాగే సింపుల్, నీట్ మరియు ఆధునిక వైట్ టాప్ హెడర్ (`bg-white/95`, బ్యాక్‌డ్రాప్ బ్లర్, హాంబర్గర్ మెనూ, బ్యాక్ బటన్, పేజీ టైటిల్ 'Competitive Exams', నోటిఫికేషన్ బెల్, క్యాలెండర్, అకడమిక్ ఇయర్ సెలెక్టర్) ఏకీకృతం చేయబడింది.
+  2. **Competitive Exams పేజీ రీడిజైన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - గతంలో ఉన్న భారీ డార్క్ బ్యానర్ తొలగించబడి, సొగసైన మరియు ప్రొఫెషనల్ స్కూల్ ERP హెడర్ అందించబడింది.
+     - 4 ఇంటరాక్టివ్ క్లిక్ చేయగల స్టాట్ కార్డులు అనుసంధానించబడ్డాయి:
+       - **TOTAL EXAMS:** క్లిక్ చేయగానే అందుబాటులో ఉన్న ఆన్‌లైన్ ఎగ్జామ్స్ లిస్ట్ ఓపెన్ అవుతుంది.
+       - **TOTAL QUESTIONS:** క్లిక్ చేయగానే సబ్జెక్ట్‌ల వారీగా ప్రశ్నల బ్యాంక్ ఓపెన్ అవుతుంది.
+       - **RESULTS PUBLISHED:** క్లిక్ చేయగానే ఎగ్జామ్ వారీగా విద్యార్థుల ఫలితాలు మరియు ర్యాంకుల జాబితా వస్తుంది.
+       - **ACTIVE STUDENTS:** క్లిక్ చేయగానే పరీక్షలు రాసిన విద్యార్థుల వివరాలు వస్తాయి.
+  3. **సబ్జెక్ట్-వైజ్ క్వశ్చన్ బ్యాంక్ ట్యాబ్ (`SubjectWiseQuestionBankTab`):**
+     - ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్ (All Exams లేదా నిర్దిష్ట ఎగ్జామ్ ఎంచుకోవచ్చు).
+     - సబ్జెక్ట్ ఫిల్టర్ పిల్స్: All Subjects, Mathematics, Physics, Chemistry, Biology, Mental Ability, General తో కూడిన లైవ్ కౌంట్లు.
+     - శోధన (Search bar) మరియు డిఫికల్టీ ఫిల్టర్ (Easy, Medium, Hard).
+     - KaTeX మ్యాథ్ రెండరింగ్, డయాగ్రమ్ సపోర్ట్ మరియు సరైన సమాధానం గ్రీన్ కలర్ బ్యాడ్జ్‌తో హైలైట్ చేయబడిన 4 ఆప్షన్ల గ్రిడ్.
+  4. **ఫలితాలు & ర్యాంకుల ట్యాబ్ (`ResultsAndRanksTab`):**
+     - ఎగ్జామ్ ఫిల్టర్ సెలెక్టర్ & విద్యార్థుల శోధన బార్.
+     - సమ్మరీ KPI కార్డులు: Total Submissions, Highest Score, Average Score, Top Student.
+     - ఫలితాల జాబితా: #1 గోల్డ్ ట్రోఫీ, #2 సిల్వర్, #3 బ్రాంజ్ ర్యాంక్ బ్యాడ్జ్‌లు, విద్యార్థి ప్రొఫైల్, రోల్ నంబర్, క్లాస్, మార్కులు, పర్సంటేజ్, టైమ్ టేకెన్ మరియు 'View Scorecard' బటన్.
+  5. **యాక్టివ్ స్టూడెంట్స్ ట్యాబ్ (`ActiveStudentsTab`):**
+     - పరీక్షలు రాసిన యాక్టివ్ విద్యార్థుల డైరెక్టరీ.
+     - విద్యార్థి పేరు, రోల్ నంబర్, క్లాస్ ఫిల్టర్.
+     - విద్యార్థి రాసిన పరీక్షల సంఖ్య (Attempts), బెస్ట్ స్కోర్, లేటెస్ట్ ఎగ్జామ్ వివరాలు మరియు లేటెస్ట్ స్కోర్‌కార్డ్ లింక్.
+  6. **బ్యాకెండ్ డేటా ఎన్‌రిచ్‌మెంట్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - `getAllCompetitiveExams` లో విద్యార్థుల సబ్మిషన్లు (student user, class, marks, time) మరియు ప్రశ్నల ఆబ్జెక్టులను ఒకే రిక్వెస్ట్‌లో పూర్తి వివరాలతో లోడ్ అయ్యేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Competitive Exams UI రీడిజైన్, సబ్జెక్ట్-వైజ్ ప్రశ్నల బ్యాంక్, ఫలితాలు & యాక్టివ్ స్టూడెంట్స్ ట్యాబ్‌లు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `anni pages ki unnatte simple top header undali`
+  - `ee page kuda UI complete ga andam ga change cheyu. over cheyavalasina avasram ledu`
+  - `total exams click cheste exams list open avvali`
+  - `total questions click cheste subject wise questions chusukunela undali`
+  - `result meda click cheste aa exam ki taggattu result list ravali`
+  - `Active students kuda ravali`
+  - `oka professional develoepr ga alochinchi professional ga design cheyu. okkokka page chala andam ga undali`
+- **పూర్తయిన పనులు & మార్పులు (100% Complete):**
+  1. **టాప్ హెడర్ ఏకీకరణ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx) & [`DashboardLayout.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/DashboardLayout.tsx)):**
+     - అన్ని పేజీలలాగే సింపుల్, నీట్ మరియు ఆధునిక వైట్ టాప్ హెడర్ (`bg-white/95`, బ్యాక్‌డ్రాప్ బ్లర్, హాంబర్గర్ మెనూ, బ్యాక్ బటన్, పేజీ టైటిల్ 'Competitive Exams', నోటిఫికేషన్ బెల్, క్యాలెండర్, అకడమిక్ ఇయర్ సెలెక్టర్) ఏకీకృతం చేయబడింది.
+  2. **Competitive Exams పేజీ రీడిజైన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - గతంలో ఉన్న భారీ డార్క్ బ్యానర్ తొలగించబడి, సొగసైన మరియు ప్రొఫెషనల్ స్కూల్ ERP హెడర్ అందించబడింది.
+     - 4 ఇంటరాక్టివ్ క్లిక్ చేయగల స్టాట్ కార్డులు అనుసంధానించబడ్డాయి:
+       - **TOTAL EXAMS:** క్లిక్ చేయగానే అందుబాటులో ఉన్న ఆన్‌లైన్ ఎగ్జామ్స్ లిస్ట్ ఓపెన్ అవుతుంది.
+       - **TOTAL QUESTIONS:** క్లిక్ చేయగానే సబ్జెక్ట్‌ల వారీగా ప్రశ్నల బ్యాంక్ ఓపెన్ అవుతుంది.
+       - **RESULTS PUBLISHED:** క్లిక్ చేయగానే ఎగ్జామ్ వారీగా విద్యార్థుల ఫలితాలు మరియు ర్యాంకుల జాబితా వస్తుంది.
+       - **ACTIVE STUDENTS:** క్లిక్ చేయగానే పరీక్షలు రాసిన విద్యార్థుల వివరాలు వస్తాయి.
+  3. **సబ్జెక్ట్-వైజ్ క్వశ్చన్ బ్యాంక్ ట్యాబ్ (`SubjectWiseQuestionBankTab`):**
+     - ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్ (All Exams లేదా నిర్దిష్ట ఎగ్జామ్ ఎంచుకోవచ్చు).
+     - సబ్జెక్ట్ ఫిల్టర్ పిల్స్: All Subjects, Mathematics, Physics, Chemistry, Biology, Mental Ability, General తో కూడిన లైవ్ కౌంట్లు.
+     - శోధన (Search bar) మరియు డిఫికల్టీ ఫిల్టర్ (Easy, Medium, Hard).
+     - KaTeX మ్యాథ్ రెండరింగ్, డయాగ్రమ్ సపోర్ట్ మరియు సరైన సమాధానం గ్రీన్ కలర్ బ్యాడ్జ్‌తో హైలైట్ చేయబడిన 4 ఆప్షన్ల గ్రిడ్.
+  4. **ఫలితాలు & ర్యాంకుల ట్యాబ్ (`ResultsAndRanksTab`):**
+     - ఎగ్జామ్ ఫిల్టర్ సెలెక్టర్ & విద్యార్థుల శోధన బార్.
+     - సమ్మరీ KPI కార్డులు: Total Submissions, Highest Score, Average Score, Top Student.
+     - ఫలితాల జాబితా: #1 గోల్డ్ ట్రోఫీ, #2 సిల్వర్, #3 బ్రాంజ్ ర్యాంక్ బ్యాడ్జ్‌లు, విద్యార్థి ప్రొఫైల్, రోల్ నంబర్, క్లాస్, మార్కులు, పర్సంటేజ్, టైమ్ టేకెన్ మరియు 'View Scorecard' బటన్.
+  5. **యాక్టివ్ స్టూడెంట్స్ ట్యాబ్ (`ActiveStudentsTab`):**
+     - పరీక్షలు రాసిన యాక్టివ్ విద్యార్థుల డైరెక్టరీ.
+     - విద్యార్థి పేరు, రోల్ నంబర్, క్లాస్ ఫిల్టర్.
+     - విద్యార్థి రాసిన పరీక్షల సంఖ్య (Attempts), బెస్ట్ స్కోర్, లేటెస్ట్ ఎగ్జామ్ వివరాలు మరియు లేటెస్ట్ స్కోర్‌కార్డ్ లింక్.
+  6. **బ్యాకెండ్ డేటా ఎన్‌రిచ్‌మెంట్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - `getAllCompetitiveExams` లో విద్యార్థుల సబ్మిషన్లు (student user, class, marks, time) మరియు ప్రశ్నల ఆబ్జెక్టులను ఒకే రిక్వెస్ట్‌లో పూర్తి వివరాలతో లోడ్ అయ్యేలా అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Academic Year గ్లోబల్ సెలెక్టర్, స్టూడెంట్ ఫిల్టరింగ్ & యాడ్ ఇయర్ ఇంప్లిమెంటేషన్ (November 24, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `paina academic year lo ye year select cheste aa year students kanapdali naku sariga teliyadu professional developer ga alochinchi ela cheyalo naku cheppu, academic year ela add chestam ivvani kavali`

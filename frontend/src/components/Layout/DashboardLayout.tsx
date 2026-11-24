@@ -69,6 +69,12 @@ export const DashboardLayout: React.FC = () => {
     if (pathname === '/attendance/daily-report') return 'Daily Attendance Report';
     
     // Exams
+    if (pathname === '/competitive-exams' || pathname.startsWith('/competitive-exams')) return 'Competitive Exams';
+    if (pathname.startsWith('/competitive-question-bank')) return 'Question Bank';
+    if (pathname.startsWith('/take-competitive-exam')) return 'CBT Examination';
+    if (pathname.startsWith('/competitive-exam-result')) return 'Exam Results';
+    if (pathname.startsWith('/live-exam-monitor')) return 'Live Exam Monitor';
+    if (pathname.startsWith('/competitive-exam-leaderboard')) return 'Leaderboard & Ranks';
     if (pathname === '/exams') return 'Examinations & Grades';
     if (pathname === '/exams/new') return 'Create Exam';
     if (pathname.match(/^\/exams\/[^\/]+\/entry$/)) return 'Marks Entry';

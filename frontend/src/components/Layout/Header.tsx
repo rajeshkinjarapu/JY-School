@@ -21,13 +21,13 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
   const handleSelect = (year: string) => {
     setSelectedYear(year);
     setOpen(false);
-    toast.success(`Academic Year ${year} ఎంచుకోబడింది!`, { icon: '📅' });
+    toast.success(`Academic Year ${year} selected!`, { icon: '📅' });
   };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newYearInput.trim()) {
-      toast.error('దయచేసి అకడమిక్ ఇయర్ నమోదు చేయండి (ఉదా: 2027-2028)');
+      toast.error('Please enter an academic year (e.g. 2027-2028)');
       return;
     }
     setSubmitting(true);
@@ -44,11 +44,10 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 ${
-          isLight
-            ? 'bg-slate-100/95 hover:bg-slate-200/90 border border-slate-200/90 text-slate-700'
-            : 'bg-white/15 hover:bg-white/25 border border-white/20 text-white'
-        }`}
+        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95 ${isLight
+          ? 'bg-slate-100/95 hover:bg-slate-200/90 border border-slate-200/90 text-slate-700'
+          : 'bg-white/15 hover:bg-white/25 border border-white/20 text-white'
+          }`}
         title="Select Academic Year (అకడమిక్ ఇయర్ మార్చండి)"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
@@ -79,11 +78,10 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                     key={yr}
                     type="button"
                     onClick={() => handleSelect(yr)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${
-                      isSelected
-                        ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm shadow-indigo-500/25'
-                        : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all text-left cursor-pointer ${isSelected
+                      ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-sm shadow-indigo-500/25'
+                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-slate-300 dark:bg-slate-600'}`} />
@@ -125,7 +123,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                 </div>
                 <div>
                   <h3 className="text-base font-black">Add New Academic Year</h3>
-                  <p className="text-xs text-indigo-100 font-medium">కొత్త అకడమిక్ ఇయర్ జోడించండి</p>
+                  <p className="text-xs text-indigo-100 font-medium">Create and initialize a new academic session</p>
                 </div>
               </div>
               <button
@@ -241,10 +239,6 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/' || location.pathname === '/chairman';
   const showBackButton = !isDashboard;
 
-  if (!isDashboard && !forceShow) {
-    return null;
-  }
-
   const handleBack = () => {
     if (window.history.state && window.history.state.idx > 0) {
       navigate(-1);
@@ -258,11 +252,11 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
     }
   };
 
-  if (isDashboard) {
-    return (
-      <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs">
-        {/* Left: Hamburger Menu */}
-        <div className="flex items-center gap-3">
+  return (
+    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs">
+      {/* Left: Hamburger Menu + Back Button + Page Title */}
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        {!hideMenuButton && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -274,91 +268,47 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
           >
             <Menu className="w-5 h-5" />
           </button>
-        </div>
-
-        {/* Right Side: Notification Bell + Calendar + Academic Year */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          <NotificationBell variant="light" />
-
-          {/* Calendar Icon Button */}
-          <button
-            type="button"
-            onClick={() => navigate('/attendance/holidays')}
-            className="p-2 rounded-xl text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
-            title="Academic Calendar & Holidays"
-          >
-            <Calendar className="w-5 h-5" />
-          </button>
-
-          {/* Academic Year Dropdown */}
-          <AcademicYearSelector variant="light" />
-        </div>
-      </header>
-    );
-  }
-
-  return (
-    <header
-      className={`print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-3.5 py-2.5 shadow-lg shadow-black/30`}
-      style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%)' }}
-    >
-      {/* Left: Hamburger + Home + Back + Page Title */}
-      <div className="flex items-center gap-1.5 min-w-0">
-        {/* Hamburger — mobile only */}
-        {!hideMenuButton && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onMenuClick?.();
-              window.dispatchEvent(new CustomEvent('toggleSidebar'));
-            }}
-            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
         )}
 
-        {/* Home Button for Teachers & All Users */}
-        <Link
-          to="/dashboard"
-          className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 flex items-center justify-center border border-white/20 bg-white/10"
-          title="Go to Dashboard"
-          aria-label="Go to Dashboard"
-        >
-          <Home className="w-4 h-4 text-white" />
-        </Link>
-
-        {/* Back Button */}
         {showBackButton && (
           <button
             onClick={handleBack}
-            className="p-1.5 rounded-xl text-white/90 hover:text-white hover:bg-white/20 transition-all duration-200 cursor-pointer shrink-0 flex items-center justify-center shadow-sm border border-white/20"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-800 transition-colors cursor-pointer shrink-0 flex items-center justify-center shadow-xs"
             title="Go Back"
-            aria-label="Go back"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
         )}
 
-        {/* Page Title - Hidden on desktop to avoid double headings with Hero Banners */}
-        <div className="flex items-center gap-2 min-w-0 md:hidden">
-          <h1 className="text-base font-black text-white leading-tight truncate drop-shadow-md">
+        {title && (
+          <h1 className="text-sm sm:text-base font-black text-slate-800 dark:text-white truncate">
             {title}
           </h1>
-        </div>
+        )}
       </div>
 
-      {/* Right Side */}
-      <div className="flex items-center gap-2 shrink-0 relative">
-        <AcademicYearSelector variant="dark" />
-        <NotificationBell />
+      {/* Right Side: Notification Bell + Calendar + Academic Year + Teacher Profile */}
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 relative">
+        <NotificationBell variant="light" />
+
+        {/* Calendar Icon Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/attendance/holidays')}
+          className="p-2 rounded-xl text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
+          title="Academic Calendar & Holidays"
+        >
+          <Calendar className="w-5 h-5" />
+        </button>
+
+        {/* Academic Year Dropdown */}
+        <AcademicYearSelector variant="light" />
 
         {user?.role === 'TEACHER' && (
           <>
-            <button 
+            <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="w-8 h-8 rounded-full border-2 border-white/20 overflow-hidden shadow-sm hover:border-white/50 transition-colors cursor-pointer"
+              className="w-8 h-8 rounded-full border-2 border-indigo-200 overflow-hidden shadow-xs hover:border-indigo-400 transition-colors cursor-pointer ml-1"
             >
               {getPhotoUrl(user?.photoUrl) ? (
                 <img src={getPhotoUrl(user?.photoUrl)} alt="Profile" className="w-full h-full object-cover" />
@@ -368,20 +318,20 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
                 </div>
               )}
             </button>
-            
+
             {profileOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setProfileOpen(false)}></div>
                 <div className="absolute top-10 right-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 animate-fade-in-up">
-                  <Link 
-                    to="/profile" 
+                  <Link
+                    to="/profile"
                     onClick={() => setProfileOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <User className="w-4 h-4 text-gray-400" />
                     Profile Update
                   </Link>
-                  <button 
+                  <button
                     onClick={() => {
                       setProfileOpen(false);
                       logout();

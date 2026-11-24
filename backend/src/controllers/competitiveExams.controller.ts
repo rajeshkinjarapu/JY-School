@@ -361,7 +361,35 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
         class: true, 
         _count: { select: { questions: true, submissions: true } },
         submissions: {
-          select: { marksObtained: true }
+          select: {
+            id: true,
+            studentId: true,
+            marksObtained: true,
+            totalTimeTaken: true,
+            createdAt: true,
+            student: {
+              select: {
+                id: true,
+                rollNo: true,
+                user: { select: { name: true, photoUrl: true } },
+                class: { select: { name: true, section: true } }
+              }
+            }
+          },
+          orderBy: { marksObtained: 'desc' }
+        },
+        questions: {
+          select: {
+            id: true,
+            questionText: true,
+            questionType: true,
+            imageUrl: true,
+            options: true,
+            correctAnswer: true,
+            marks: true,
+            chapterName: true,
+            difficulty: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }

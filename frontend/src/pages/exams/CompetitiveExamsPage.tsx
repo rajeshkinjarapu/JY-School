@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -100,7 +100,7 @@ const extractExams = (payload: any): any[] => {
 };
 
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'MANAGE_EXAMS' | 'QUESTION_BANK' | 'RESULTS'>('MANAGE_EXAMS');
+  const [activeTab, setActiveTab] = useState<'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS'>('EXAMS');
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -141,6 +141,47 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const totalQuestions = exams.reduce((acc, e) => acc + (e._count?.questions || e.questions?.length || 0), 0);
   const totalSubmissions = exams.reduce((acc, e) => acc + (e._count?.submissions || e.submissions?.length || 0), 0);
 
+  // Compute Active Students across all exams
+  const activeStudents = useMemo(() => {
+    const studentMap = new Map<string, any>();
+    exams.forEach((ex: any) => {
+      (ex.submissions || []).forEach((sub: any) => {
+        const student = sub.student;
+        if (!student) return;
+        const sId = student.id || sub.studentId;
+        if (!studentMap.has(sId)) {
+          studentMap.set(sId, {
+            id: sId,
+            name: student.user?.name || 'Student',
+            photoUrl: student.user?.photoUrl,
+            rollNo: student.rollNo || '-',
+            className: student.class ? `${student.class.name} ${student.class.section ? `(${student.class.section})` : ''}` : '-',
+            rawClassName: student.class?.name || '',
+            attempts: 1,
+            bestScore: sub.marksObtained || 0,
+            latestDate: sub.createdAt,
+            latestExam: ex.title,
+            examId: ex.id,
+            submissionId: sub.id,
+          });
+        } else {
+          const item = studentMap.get(sId);
+          item.attempts += 1;
+          if ((sub.marksObtained || 0) > item.bestScore) {
+            item.bestScore = sub.marksObtained || 0;
+          }
+          if (new Date(sub.createdAt) > new Date(item.latestDate)) {
+            item.latestDate = sub.createdAt;
+            item.latestExam = ex.title;
+            item.examId = ex.id;
+            item.submissionId = sub.id;
+          }
+        }
+      });
+    });
+    return Array.from(studentMap.values()).sort((a, b) => b.attempts - a.attempts);
+  }, [exams]);
+
   const handleDeleteExam = async (id: string, title: string) => {
     if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
     try {
@@ -153,101 +194,126 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   };
 
   const handleOpenQuestionBankForExam = (examId: string) => {
-    navigate(`/competitive-question-bank?examId=${examId}`);
+    setSelectedExamIdForQB(examId);
+    setActiveTab('QUESTIONS');
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
-      {/* Executive Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-6 md:p-8 rounded-3xl text-white shadow-xl border border-indigo-500/20 relative overflow-hidden">
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 border border-indigo-400/30 px-3 py-1 text-xs font-semibold text-indigo-200 mb-2">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            EDURACLE CBT TESTING ENGINE & NTA EXAM SUITE
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 min-h-screen">
+      {/* Clean & Professional Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20">
+            <BookOpen className="w-6 h-6 text-white" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
-            <BookOpen className="h-8 w-8 text-blue-400" />
-            Competitive Exams (JEE / NEET / EAMCET)
-          </h1>
-          <p className="text-slate-300 text-sm mt-1 max-w-2xl font-medium">
-            National-standard computer based test creation, multi-subject section blueprints, and live proctoring.
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Competitive Exams (CBT)
+              </h1>
+              <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                CBT Testing Suite
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Online Computer Based Tests (CBT), question blueprints, subject-wise question bank, and rank analysis
+            </p>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={() => fetchExams()}
-            className="p-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white border border-white/10 transition backdrop-blur-md shadow-xs cursor-pointer"
+            className="p-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/90 transition shadow-xs cursor-pointer"
             title="Refresh List"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
           <button
             onClick={() => {
-              setActiveTab('MANAGE_EXAMS');
+              setActiveTab('EXAMS');
               setShowInlineCreate(true);
             }}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-extrabold text-sm shadow-lg shadow-indigo-500/25 flex items-center gap-2 transition hover:scale-105 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
           >
-            <Plus className="w-5 h-5" /> Create Exam Wizard
+            <Plus className="w-4 h-4" />
+            <span>+ Create Exam Wizard</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* 4 Interactive Clickable KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="TOTAL EXAMS" value={exams.length} color="blue" icon={<List className="w-5 h-5" />} />
-        <StatCard title="TOTAL QUESTIONS" value={totalQuestions} color="emerald" icon={<FileQuestion className="w-5 h-5" />} />
-        <StatCard title="RESULTS PUBLISHED" value={totalSubmissions} color="purple" icon={<Award className="w-5 h-5" />} />
-        <StatCard title="ACTIVE STUDENTS" value={exams.filter(e => e.isPublished).length} color="amber" icon={<Users className="w-5 h-5" />} />
+        <StatCard
+          title="TOTAL EXAMS"
+          value={exams.length}
+          subtitle="Online & Mock Tests"
+          color="blue"
+          icon={<List className="w-5 h-5" />}
+          active={activeTab === 'EXAMS'}
+          onClick={() => setActiveTab('EXAMS')}
+        />
+        <StatCard
+          title="TOTAL QUESTIONS"
+          value={totalQuestions}
+          subtitle="Subject-wise Questions"
+          color="emerald"
+          icon={<FileQuestion className="w-5 h-5" />}
+          active={activeTab === 'QUESTIONS'}
+          onClick={() => setActiveTab('QUESTIONS')}
+        />
+        <StatCard
+          title="RESULTS PUBLISHED"
+          value={totalSubmissions}
+          subtitle="Scorecards & Ranks"
+          color="purple"
+          icon={<Award className="w-5 h-5" />}
+          active={activeTab === 'RESULTS'}
+          onClick={() => setActiveTab('RESULTS')}
+        />
+        <StatCard
+          title="ACTIVE STUDENTS"
+          value={activeStudents.length}
+          subtitle="Participating Students"
+          color="amber"
+          icon={<Users className="w-5 h-5" />}
+          active={activeTab === 'STUDENTS'}
+          onClick={() => setActiveTab('STUDENTS')}
+        />
       </div>
 
-      {/* Navigation Tabs (Exact 4 Tabs) */}
-      <div className="flex overflow-x-auto gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
+      {/* Navigation Tabs (Direct Sync with Cards) */}
+      <div className="flex overflow-x-auto gap-2 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200/90">
         <TabButton 
-          active={activeTab === 'DASHBOARD'} 
-          onClick={() => setActiveTab('DASHBOARD')} 
-          icon={<LayoutDashboard size={18} />} 
-          label="Dashboard Overview" 
+          active={activeTab === 'EXAMS'} 
+          onClick={() => setActiveTab('EXAMS')} 
+          icon={<List size={17} />} 
+          label={`All Exams (${exams.length})`} 
         />
         <TabButton 
-          active={activeTab === 'MANAGE_EXAMS'} 
-          onClick={() => setActiveTab('MANAGE_EXAMS')} 
-          icon={<List size={18} />} 
-          label={`Manage Exams (${exams.length})`} 
-        />
-        <TabButton 
-          active={false} 
-          onClick={() => navigate('/competitive-question-bank')} 
-          icon={<Database size={18} />} 
-          label={`Question Bank (${totalQuestions}) ↗`} 
+          active={activeTab === 'QUESTIONS'} 
+          onClick={() => setActiveTab('QUESTIONS')} 
+          icon={<FileQuestion size={17} />} 
+          label={`Subject-wise Questions (${totalQuestions})`} 
         />
         <TabButton 
           active={activeTab === 'RESULTS'} 
           onClick={() => setActiveTab('RESULTS')} 
-          icon={<Award size={18} />} 
+          icon={<Award size={17} />} 
           label={`Results & Ranks (${totalSubmissions})`} 
+        />
+        <TabButton 
+          active={activeTab === 'STUDENTS'} 
+          onClick={() => setActiveTab('STUDENTS')} 
+          icon={<Users size={17} />} 
+          label={`Active Students (${activeStudents.length})`} 
         />
       </div>
 
       {/* Tab Contents */}
-      <div className="mt-6">
-        {activeTab === 'DASHBOARD' && (
-          <DashboardOverviewTab 
-            exams={exams} 
-            totalQuestions={totalQuestions} 
-            totalSubmissions={totalSubmissions} 
-            onOpenCreate={() => {
-              setActiveTab('MANAGE_EXAMS');
-              setShowInlineCreate(true);
-            }}
-            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            navigate={navigate}
-          />
-        )}
-
-        {activeTab === 'MANAGE_EXAMS' && (
+      <div className="mt-4">
+        {activeTab === 'EXAMS' && (
           <ManageExamsTab
             exams={exams}
             loading={loading}
@@ -265,8 +331,8 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           />
         )}
 
-        {activeTab === 'QUESTION_BANK' && (
-          <QuestionBankTab 
+        {activeTab === 'QUESTIONS' && (
+          <SubjectWiseQuestionBankTab 
             exams={exams} 
             selectedExamId={selectedExamIdForQB}
             setSelectedExamId={setSelectedExamIdForQB}
@@ -278,6 +344,10 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
         {activeTab === 'RESULTS' && (
           <ResultsAndRanksTab exams={exams} navigate={navigate} />
+        )}
+
+        {activeTab === 'STUDENTS' && (
+          <ActiveStudentsTab exams={exams} navigate={navigate} />
         )}
       </div>
 
@@ -301,7 +371,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           onLaunchExam={() => navigate(`/take-competitive-exam/${createdExamModal.id}`)}
           onOpenQuestionBank={() => {
             setSelectedExamIdForQB(createdExamModal.id);
-            setActiveTab('QUESTION_BANK');
+            setActiveTab('QUESTIONS');
             setCreatedExamModal(null);
           }}
         />
@@ -1575,8 +1645,19 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
 };
 
 // ═══════════════════════════════════════════════════════════════
-// QUESTION BANK TAB (FULLY INTERACTIVE & REAL-TIME WITH KATEX)
+// QUESTION BANK TAB (SUBJECT-WISE, SEARCH, KATEX, AI PARSER)
 // ═══════════════════════════════════════════════════════════════
+
+const normalizeSubject = (chapterName: string = ''): string => {
+  const lower = (chapterName || '').toLowerCase();
+  if (lower.includes('math')) return 'Mathematics';
+  if (lower.includes('phys')) return 'Physics';
+  if (lower.includes('chem')) return 'Chemistry';
+  if (lower.includes('bio') || lower.includes('botan') || lower.includes('zool')) return 'Biology';
+  if (lower.includes('mental') || lower.includes('reason') || lower.includes('arith')) return 'Mental Ability';
+  if (!chapterName || lower.includes('general')) return 'General';
+  return chapterName.split(':')[0].trim();
+};
 
 const QuestionBankTab = ({ 
   exams, 
@@ -1590,12 +1671,31 @@ const QuestionBankTab = ({
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [showAiTextParserModal, setShowAiTextParserModal] = useState(false);
+  
+  // Subject & Search Filters
+  const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
 
   const fetchQuestions = async (examId: string) => {
     if (!examId) {
       setQuestions([]);
       return;
     }
+
+    if (examId === 'ALL') {
+      // Aggregate questions from all exams
+      const allQ = exams.flatMap((ex: any) => 
+        (ex.questions || []).map((q: any) => ({
+          ...q,
+          examTitle: ex.title,
+          examId: ex.id
+        }))
+      );
+      setQuestions(allQ);
+      return;
+    }
+
     setLoadingQuestions(true);
     try {
       const res = await api.get(`/api/competitive-exams/${examId}`);
@@ -1622,6 +1722,48 @@ const QuestionBankTab = ({
   }, [selectedExamId, exams]);
 
   const activeExam = exams.find((e: any) => e.id === selectedExamId) || exams[0];
+
+  // Compute subject distribution
+  const subjectStats = useMemo(() => {
+    const counts: Record<string, number> = {
+      'ALL': questions.length,
+      'Mathematics': 0,
+      'Physics': 0,
+      'Chemistry': 0,
+      'Biology': 0,
+      'General': 0,
+    };
+
+    questions.forEach((q: any) => {
+      const sub = normalizeSubject(q.chapterName);
+      counts[sub] = (counts[sub] || 0) + 1;
+    });
+
+    return counts;
+  }, [questions]);
+
+  // Distinct subjects present
+  const availableSubjects = useMemo(() => {
+    const defaultList = ['ALL', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'General'];
+    const extraSubjects = Object.keys(subjectStats).filter(s => !defaultList.includes(s) && subjectStats[s] > 0);
+    return [...defaultList, ...extraSubjects];
+  }, [subjectStats]);
+
+  // Filtered Questions
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q: any) => {
+      const qSubject = normalizeSubject(q.chapterName);
+      const matchesSubject = selectedSubject === 'ALL' || qSubject === selectedSubject;
+      const matchesDifficulty = difficultyFilter === 'ALL' || (q.difficulty || 'MEDIUM').toUpperCase() === difficultyFilter.toUpperCase();
+      const qText = (q.questionText || '').toLowerCase();
+      const chText = (q.chapterName || '').toLowerCase();
+      const matchesSearch = !searchQuery.trim() || 
+        qText.includes(searchQuery.toLowerCase()) || 
+        chText.includes(searchQuery.toLowerCase());
+
+      return matchesSubject && matchesDifficulty && matchesSearch;
+    });
+  }, [questions, selectedSubject, difficultyFilter, searchQuery]);
 
   // If authoring mode is active, render the Dedicated Full Question Studio view
   if (isAddingQuestion && activeExam) {
@@ -1665,19 +1807,20 @@ const QuestionBankTab = ({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Top Controls Card */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex-1 w-full md:w-auto">
-          <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="flex-1 w-full lg:w-auto">
+          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
             Select Exam to View & Manage Questions
           </label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <select
               value={selectedExamId}
               onChange={e => setSelectedExamId(e.target.value)}
-              className="w-full md:max-w-md p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-sm outline-none focus:border-indigo-500 focus:bg-white"
+              className="w-full lg:max-w-md p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
             >
+              <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)} Questions)</option>
               {exams.map((ex: any) => (
                 <option key={ex.id} value={ex.id}>
                   {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
@@ -1687,55 +1830,124 @@ const QuestionBankTab = ({
             
             <button
               onClick={() => fetchQuestions(selectedExamId)}
-              className="p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer"
+              className="p-2.5 sm:p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer shrink-0"
               title="Refresh Questions"
             >
-              <RefreshCw size={18} className={loadingQuestions ? 'animate-spin' : ''} />
+              <RefreshCw size={17} className={loadingQuestions ? 'animate-spin' : ''} />
             </button>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
           <button
             onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 cursor-pointer"
             title="Open Dedicated Full Page AI Text Parser"
           >
-            <FileText size={16} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
+            <FileText size={15} className="text-emerald-200" />
+            <span>📄 Paste Exam Text (AI Parser)</span>
           </button>
 
           <button
             onClick={() => activeExam && onOpenAiModal(activeExam)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
-            <Sparkles size={16} className="text-amber-300" /> ✨ AI Generate Questions
+            <Sparkles size={15} className="text-amber-300" />
+            <span>✨ AI Generate Questions</span>
           </button>
 
           <button
             onClick={() => setIsAddingQuestion(true)}
-            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
-            <Plus size={16} /> Add Manually
+            <Plus size={15} />
+            <span>Add Manually</span>
           </button>
         </div>
       </div>
 
-      {/* Exam Details Summary Pill */}
-      {activeExam && (
-        <div className="bg-slate-100 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs font-semibold text-slate-700 border border-slate-200">
-          <div className="flex items-center gap-2">
-            <span className="font-black text-slate-900">{activeExam.title}</span>
-            <span>•</span>
-            <span className="text-indigo-600 font-bold">{questions.length} Total Questions</span>
+      {/* Subject Wise Filter Tabs (Interactive Pills) */}
+      <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
+        <div className="flex items-center justify-between gap-2 px-1">
+          <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Filter by Subject:
+          </span>
+          <span className="text-xs font-bold text-slate-500">
+            Showing <strong className="text-indigo-600">{filteredQuestions.length}</strong> of {questions.length} questions
+          </span>
+        </div>
+
+        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-none">
+          {availableSubjects.map((subName) => {
+            const count = subjectStats[subName] || 0;
+            const isSelected = selectedSubject === subName;
+            
+            const subjectColors: Record<string, { active: string; inactive: string }> = {
+              'ALL': { active: 'bg-indigo-600 text-white shadow-xs', inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200' },
+              'Mathematics': { active: 'bg-blue-600 text-white shadow-xs', inactive: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
+              'Physics': { active: 'bg-purple-600 text-white shadow-xs', inactive: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
+              'Chemistry': { active: 'bg-emerald-600 text-white shadow-xs', inactive: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+              'Biology': { active: 'bg-rose-600 text-white shadow-xs', inactive: 'bg-rose-50 text-rose-700 hover:bg-rose-100' },
+              'General': { active: 'bg-amber-600 text-white shadow-xs', inactive: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
+            };
+
+            const styling = subjectColors[subName] || { active: 'bg-slate-800 text-white', inactive: 'bg-slate-100 text-slate-700' };
+
+            return (
+              <button
+                key={subName}
+                onClick={() => setSelectedSubject(subName)}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
+                  isSelected ? styling.active : styling.inactive
+                }`}
+              >
+                <span>{subName === 'ALL' ? 'All Subjects' : subName}</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-700 border border-slate-200'
+                }`}>
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Search & Difficulty Filter Sub-bar */}
+        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by question text, formulas or topic..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+              >
+                ✕
+              </button>
+            )}
           </div>
-          <div className="flex items-center gap-4 text-slate-500">
-            <span>Duration: <b>{activeExam.duration}m</b></span>
-            <span>Total Marks: <b>{activeExam.totalMarks}</b></span>
-            <span>Negative: <b>-{activeExam.negativeMarks || 0}</b></span>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <select
+              value={difficultyFilter}
+              onChange={e => setDifficultyFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500"
+            >
+              <option value="ALL">All Difficulties</option>
+              <option value="EASY">Easy</option>
+              <option value="MEDIUM">Medium</option>
+              <option value="HARD">Hard</option>
+            </select>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Questions List with KaTeX math formula rendering */}
       {loadingQuestions ? (
@@ -1743,37 +1955,58 @@ const QuestionBankTab = ({
           <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-2" />
           <p className="text-slate-500 font-bold text-sm">Loading questions from Question Bank...</p>
         </div>
-      ) : questions.length === 0 ? (
+      ) : filteredQuestions.length === 0 ? (
         <div className="p-12 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
           <FileQuestion size={48} className="text-indigo-200 mb-3" />
-          <h4 className="text-base font-bold text-slate-800">No Questions Added to this Exam</h4>
+          <h4 className="text-base font-bold text-slate-800">
+            {searchQuery || selectedSubject !== 'ALL' || difficultyFilter !== 'ALL'
+              ? 'No Questions Matching Selected Filters'
+              : 'No Questions Added to this Exam'}
+          </h4>
           <p className="text-xs text-slate-500 mt-1 max-w-sm">
-            Add questions manually or let Google Gemini AI synthesize high-quality MCQs with negative marks and solutions.
+            {searchQuery || selectedSubject !== 'ALL'
+              ? 'Try changing the subject filter or clearing your search term.'
+              : 'Add questions manually or let Google Gemini AI synthesize high-quality MCQs with negative marks and solutions.'}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
-            <button
-              onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
-            >
-              <FileText size={15} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
-            </button>
-            <button
-              onClick={() => activeExam && onOpenAiModal(activeExam)}
-              className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition flex items-center gap-1.5 cursor-pointer"
-            >
-              <Sparkles size={14} className="text-amber-300" /> ✨ AI Generate Now
-            </button>
-            <button
-              onClick={() => setIsAddingQuestion(true)}
-              className="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition cursor-pointer"
-            >
-              + Add Manually
-            </button>
+            {searchQuery || selectedSubject !== 'ALL' ? (
+              <button
+                onClick={() => {
+                  setSelectedSubject('ALL');
+                  setSearchQuery('');
+                  setDifficultyFilter('ALL');
+                }}
+                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition"
+              >
+                Reset All Filters
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
+                >
+                  <FileText size={15} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
+                </button>
+                <button
+                  onClick={() => activeExam && onOpenAiModal(activeExam)}
+                  className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Sparkles size={14} className="text-amber-300" /> ✨ AI Generate Now
+                </button>
+                <button
+                  onClick={() => setIsAddingQuestion(true)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition cursor-pointer"
+                >
+                  + Add Manually
+                </button>
+              </>
+            )}
           </div>
         </div>
       ) : (
         <div className="space-y-4">
-          {questions.map((q: any, idx: number) => {
+          {filteredQuestions.map((q: any, idx: number) => {
             let options: string[] = [];
             try {
               options = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
@@ -1781,32 +2014,51 @@ const QuestionBankTab = ({
               options = ['Option A', 'Option B', 'Option C', 'Option D'];
             }
 
+            const qSub = normalizeSubject(q.chapterName);
+            const subBadgeColors: Record<string, string> = {
+              'Mathematics': 'bg-blue-50 text-blue-700 border-blue-200',
+              'Physics': 'bg-purple-50 text-purple-700 border-purple-200',
+              'Chemistry': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+              'Biology': 'bg-rose-50 text-rose-700 border-rose-200',
+              'General': 'bg-amber-50 text-amber-700 border-amber-200',
+            };
+
             return (
               <div 
                 key={q.id || idx} 
-                className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 hover:border-indigo-300 transition"
+                className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200/90 hover:border-indigo-300 transition"
               >
                 {/* Header row */}
                 <div className="flex justify-between items-start gap-3 mb-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center">
                       Q{idx + 1}
                     </span>
-                    <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
-                      {q.chapterName || 'General'}
+                    <span className={`text-xs font-black px-2.5 py-0.5 rounded-md border ${subBadgeColors[qSub] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                      {qSub}
                     </span>
-                    <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    {q.chapterName && q.chapterName !== qSub && (
+                      <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                        {q.chapterName}
+                      </span>
+                    )}
+                    <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                       {q.difficulty || 'MEDIUM'}
                     </span>
+                    {q.examTitle && (
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
+                        Exam: {q.examTitle}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                       +{q.marks || 4} Marks
                     </span>
                     <button
                       onClick={() => handleDeleteQuestion(q.id)}
-                      className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                       title="Delete Question"
                     >
                       <Trash2 size={16} />
@@ -1815,23 +2067,30 @@ const QuestionBankTab = ({
                 </div>
 
                 {/* Question Text with KaTeX Rendering */}
-                <div className="text-sm font-bold text-slate-800 mb-4 whitespace-pre-wrap leading-relaxed">
+                <div className="text-sm font-bold text-slate-900 mb-3 whitespace-pre-wrap leading-relaxed pl-0.5">
                   <LatexRenderer text={q.questionText} />
                 </div>
+
+                {/* Image diagram if present */}
+                {q.imageUrl && (
+                  <div className="mb-3 p-2 bg-slate-50 border border-slate-200 rounded-xl inline-block">
+                    <img src={q.imageUrl} alt="Diagram" className="max-h-48 object-contain rounded" />
+                  </div>
+                )}
 
                 {/* Options 2x2 grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   {options.map((opt: string, oIdx: number) => {
-                    const isCorrect = opt === q.correctAnswer;
+                    const isCorrect = String(opt).trim() === String(q.correctAnswer).trim() || String.fromCharCode(65 + oIdx) === String(q.correctAnswer).trim();
                     const optLetter = String.fromCharCode(65 + oIdx);
 
                     return (
                       <div
                         key={oIdx}
-                        className={`p-3 rounded-xl border flex items-center gap-2.5 transition ${
+                        className={`p-3 rounded-xl border flex items-start gap-2.5 transition ${
                           isCorrect
-                            ? 'bg-emerald-50 border-emerald-400 text-emerald-900 font-black shadow-xs'
-                            : 'bg-slate-50 border-slate-200 text-slate-700 font-medium'
+                            ? 'bg-emerald-50/90 border-emerald-400 text-emerald-950 font-black ring-1 ring-emerald-400 shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200 text-slate-700 font-medium'
                         }`}
                       >
                         <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black shrink-0 ${
@@ -1839,12 +2098,12 @@ const QuestionBankTab = ({
                         }`}>
                           {optLetter}
                         </span>
-                        <span className="flex-1">
+                        <div className="flex-1 leading-snug">
                           <LatexRenderer text={opt} />
-                        </span>
+                        </div>
                         {isCorrect && (
-                          <span className="text-[10px] uppercase font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                            Correct
+                          <span className="text-[10px] uppercase font-black text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full shrink-0 flex items-center gap-0.5">
+                            <Check size={11} className="text-emerald-700" /> Correct
                           </span>
                         )}
                       </div>
@@ -1856,8 +2115,6 @@ const QuestionBankTab = ({
           })}
         </div>
       )}
-
-
 
       {/* AI Text Parser Modal */}
       {showAiTextParserModal && (
@@ -1874,6 +2131,8 @@ const QuestionBankTab = ({
     </div>
   );
 };
+
+export const SubjectWiseQuestionBankTab = QuestionBankTab;
 
 // ═══════════════════════════════════════════════════════════════
 // DEDICATED QUESTION STUDIO & UNIFIED OPTIONS EDITOR
@@ -2109,46 +2368,490 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
 };
 
 // ═══════════════════════════════════════════════════════════════
-// RESULTS & RANKS TAB
+// RESULTS & RANKS TAB (PER-EXAM & ALL-EXAM DETAILED SCORECARDS)
 // ═══════════════════════════════════════════════════════════════
 
 const ResultsAndRanksTab = ({ exams, navigate }: any) => {
+  const [selectedExamId, setSelectedExamId] = useState<string>('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Extract all submissions across all exams or selected exam
+  const allSubmissions = useMemo(() => {
+    const list: any[] = [];
+    exams.forEach((ex: any) => {
+      if (selectedExamId !== 'ALL' && ex.id !== selectedExamId) return;
+      (ex.submissions || []).forEach((sub: any) => {
+        list.push({
+          ...sub,
+          examId: ex.id,
+          examTitle: ex.title,
+          examTotalMarks: ex.totalMarks || 300,
+          examDuration: ex.duration || 180,
+          studentName: sub.student?.user?.name || 'Student',
+          studentPhoto: sub.student?.user?.photoUrl,
+          studentRollNo: sub.student?.rollNo || '-',
+          studentClass: sub.student?.class ? `${sub.student.class.name} ${sub.student.class.section ? `(${sub.student.class.section})` : ''}` : '-',
+        });
+      });
+    });
+
+    // Sort by marksObtained descending, then time taken ascending (official tie-breaker)
+    return list.sort((a, b) => {
+      if (b.marksObtained !== a.marksObtained) {
+        return (b.marksObtained || 0) - (a.marksObtained || 0);
+      }
+      return (a.totalTimeTaken || 0) - (b.totalTimeTaken || 0);
+    });
+  }, [exams, selectedExamId]);
+
+  const filteredSubmissions = useMemo(() => {
+    if (!searchQuery.trim()) return allSubmissions;
+    const q = searchQuery.toLowerCase();
+    return allSubmissions.filter((sub: any) => 
+      sub.studentName.toLowerCase().includes(q) ||
+      sub.studentRollNo.toLowerCase().includes(q) ||
+      sub.examTitle.toLowerCase().includes(q) ||
+      sub.studentClass.toLowerCase().includes(q)
+    );
+  }, [allSubmissions, searchQuery]);
+
+  // Statistics
+  const totalSubmissionsCount = allSubmissions.length;
+  const highestScore = totalSubmissionsCount > 0 ? Math.max(...allSubmissions.map(s => s.marksObtained || 0)) : 0;
+  const averageScore = totalSubmissionsCount > 0 ? Math.round(allSubmissions.reduce((acc, s) => acc + (s.marksObtained || 0), 0) / totalSubmissionsCount) : 0;
+  const topStudent = totalSubmissionsCount > 0 ? allSubmissions[0]?.studentName : '-';
+
+  const formatTime = (secs: number) => {
+    if (!secs) return '0m';
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return m > 0 ? `${m}m ${s}s` : `${s}s`;
+  };
+
+  const getRankBadge = (index: number) => {
+    if (index === 0) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-100 text-amber-800 font-black text-xs border border-amber-300 shadow-xs shrink-0">
+          <Trophy className="w-3.5 h-3.5 text-amber-600 fill-amber-500" /> #1 Rank
+        </span>
+      );
+    }
+    if (index === 1) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-200 text-slate-800 font-black text-xs border border-slate-300 shadow-xs shrink-0">
+          <Award className="w-3.5 h-3.5 text-slate-600" /> #2 Rank
+        </span>
+      );
+    }
+    if (index === 2) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-amber-700/10 text-amber-900 font-black text-xs border border-amber-600/30 shadow-xs shrink-0">
+          <Award className="w-3.5 h-3.5 text-amber-700" /> #3 Rank
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 font-bold text-xs border border-slate-200 shrink-0">
+        #{index + 1}
+      </span>
+    );
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center mb-2">
-        <h2 className="text-lg font-black text-slate-800">Exam Results & Rank Lists</h2>
+    <div className="space-y-5">
+      {/* KPI Stats Ribbon */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Submissions</div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{totalSubmissionsCount}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Tests Completed</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Top / Highest Score</div>
+          <div className="text-xl sm:text-2xl font-black text-emerald-600 mt-1">{highestScore}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5 truncate">Topper: {topStudent}</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Average Score</div>
+          <div className="text-xl sm:text-2xl font-black text-indigo-600 mt-1">{averageScore}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Class Mean Performance</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-purple-600">Exam Coverage</div>
+          <div className="text-xl sm:text-2xl font-black text-purple-600 mt-1">{exams.length}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Online Exams Active</div>
+        </div>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-        <div className="divide-y divide-slate-100">
-          {exams.map((exam: any) => {
-            const subCount = exam._count?.submissions || exam.submissions?.length || 0;
-            return (
-              <div key={exam.id} className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 hover:bg-slate-50/80 transition">
-                <div>
-                  <h4 className="font-extrabold text-slate-900 text-base">{exam.title}</h4>
-                  <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
-                    <span>Duration: {exam.duration}m</span>
-                    <span>•</span>
-                    <span>Max Marks: {exam.totalMarks}</span>
-                    <span>•</span>
-                    <span className="font-bold text-indigo-600">{subCount} Students Submitted</span>
+      {/* Filter and Search Bar */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="flex-1 w-full sm:w-auto">
+          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+            Filter by Exam
+          </label>
+          <select
+            value={selectedExamId}
+            onChange={e => setSelectedExamId(e.target.value)}
+            className="w-full sm:max-w-md p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+          >
+            <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.submissions || ex.submissions?.length || 0), 0)} Total Submissions)</option>
+            {exams.map((ex: any) => {
+              const subCount = ex._count?.submissions || ex.submissions?.length || 0;
+              return (
+                <option key={ex.id} value={ex.id}>
+                  {ex.title} ({subCount} Submissions)
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="w-full sm:w-72">
+          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+            Search Student
+          </label>
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by student, roll no, class..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Results List */}
+      {filteredSubmissions.length === 0 ? (
+        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto shadow-xs">
+            <Award className="w-8 h-8" />
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-black text-slate-800">
+              {searchQuery ? 'No Submissions Matching Search' : 'No Test Submissions Yet'}
+            </h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto mt-1 leading-relaxed">
+              {searchQuery
+                ? 'Try a different student name or roll number.'
+                : 'Students who submit their CBT online tests will appear here instantly with marks, ranks, and full scorecards.'}
+            </p>
+          </div>
+          {exams.length > 0 && (
+            <div className="pt-2">
+              <button
+                onClick={() => navigate(`/take-competitive-exam/${exams[0].id}`)}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-md transition cursor-pointer inline-flex items-center gap-2"
+              >
+                <Play className="w-3.5 h-3.5 fill-white" /> Launch CBT Exam Test
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-white rounded-3xl border border-slate-200/90 overflow-hidden shadow-xs">
+          <div className="px-6 py-4 bg-slate-50 border-b border-slate-200/90 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                Exam Submissions & Ranks
+              </span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-indigo-100 text-indigo-700">
+                {filteredSubmissions.length} Records
+              </span>
+            </div>
+            {selectedExamId !== 'ALL' && (
+              <button
+                onClick={() => navigate(`/competitive-exam-leaderboard/${selectedExamId}`)}
+                className="text-xs font-black text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+              >
+                <Trophy size={14} className="text-amber-500" /> View Full Leaderboard
+              </button>
+            )}
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {filteredSubmissions.map((sub: any, idx: number) => {
+              const pct = sub.examTotalMarks > 0 ? Math.round(((sub.marksObtained || 0) / sub.examTotalMarks) * 100) : 0;
+              const isPassing = pct >= 40;
+
+              return (
+                <div 
+                  key={sub.id || idx} 
+                  className="p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 hover:bg-slate-50/80 transition"
+                >
+                  {/* Left: Rank & Student Profile */}
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    {getRankBadge(idx)}
+
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                      {sub.studentPhoto ? (
+                        <img src={sub.studentPhoto} alt={sub.studentName} className="w-full h-full object-cover" />
+                      ) : (
+                        sub.studentName.charAt(0).toUpperCase()
+                      )}
+                    </div>
+
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-black text-slate-900 text-sm sm:text-base truncate">
+                          {sub.studentName}
+                        </h4>
+                        <span className="px-2 py-0.2 rounded-md bg-slate-100 text-slate-600 font-bold text-[10px]">
+                          Roll: {sub.studentRollNo}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 font-medium mt-0.5">
+                        <span className="font-bold text-slate-700">Class: {sub.studentClass}</span>
+                        <span>•</span>
+                        <span className="text-indigo-600 font-bold truncate">{sub.examTitle}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Middle: Score, Time & Percentage */}
+                  <div className="flex items-center gap-4 sm:gap-6 w-full lg:w-auto justify-between lg:justify-end">
+                    <div className="text-center sm:text-right">
+                      <div className="text-[10px] text-slate-400 font-bold uppercase">Marks Obtained</div>
+                      <div className="text-base sm:text-lg font-black text-slate-900">
+                        <span className={sub.marksObtained >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                          {sub.marksObtained}
+                        </span>
+                        <span className="text-xs text-slate-400 font-bold"> / {sub.examTotalMarks}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 justify-center sm:justify-end mt-0.5">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-black ${
+                          isPassing ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'
+                        }`}>
+                          {pct}%
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-semibold">
+                          ⏱️ {formatTime(sub.totalTimeTaken)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => navigate(`/competitive-exam-result/${sub.examId}?submissionId=${sub.id}`)}
+                        className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Award size={14} />
+                        <span>View Scorecard</span>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/competitive-exam-leaderboard/${sub.examId}`)}
+                        className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition cursor-pointer"
+                        title="View Exam Leaderboard"
+                      >
+                        <Trophy size={15} className="text-amber-500" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIVE STUDENTS TAB (PARTICIPATING STUDENTS DIRECTORY)
+// ═══════════════════════════════════════════════════════════════
+
+const ActiveStudentsTab = ({ exams, navigate }: any) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedClass, setSelectedClass] = useState<string>('ALL');
+
+  // Compute Active Students across all exams
+  const studentMap = useMemo(() => {
+    const map = new Map<string, any>();
+    exams.forEach((ex: any) => {
+      (ex.submissions || []).forEach((sub: any) => {
+        const student = sub.student;
+        if (!student) return;
+        const sId = student.id || sub.studentId;
+        if (!map.has(sId)) {
+          map.set(sId, {
+            id: sId,
+            name: student.user?.name || 'Student',
+            photoUrl: student.user?.photoUrl,
+            rollNo: student.rollNo || '-',
+            className: student.class ? `${student.class.name} ${student.class.section ? `(${student.class.section})` : ''}` : '-',
+            rawClassName: student.class?.name || '',
+            attempts: 1,
+            bestScore: sub.marksObtained || 0,
+            latestDate: sub.createdAt,
+            latestExam: ex.title,
+            examId: ex.id,
+            submissionId: sub.id,
+          });
+        } else {
+          const item = map.get(sId);
+          item.attempts += 1;
+          if ((sub.marksObtained || 0) > item.bestScore) {
+            item.bestScore = sub.marksObtained || 0;
+          }
+          if (new Date(sub.createdAt) > new Date(item.latestDate)) {
+            item.latestDate = sub.createdAt;
+            item.latestExam = ex.title;
+            item.examId = ex.id;
+            item.submissionId = sub.id;
+          }
+        }
+      });
+    });
+    return Array.from(map.values()).sort((a, b) => b.attempts - a.attempts);
+  }, [exams]);
+
+  const classesList = useMemo(() => {
+    const set = new Set<string>();
+    studentMap.forEach(s => {
+      if (s.rawClassName) set.add(s.rawClassName);
+    });
+    return Array.from(set);
+  }, [studentMap]);
+
+  const filteredStudents = useMemo(() => {
+    return studentMap.filter((st: any) => {
+      const matchSearch = !searchQuery.trim() || 
+        st.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        st.rollNo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        st.latestExam.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchClass = selectedClass === 'ALL' || st.rawClassName === selectedClass;
+      return matchSearch && matchClass;
+    });
+  }, [studentMap, searchQuery, selectedClass]);
+
+  const totalAttempts = studentMap.reduce((acc, s) => acc + s.attempts, 0);
+
+  return (
+    <div className="space-y-5">
+      {/* KPI Ribbon */}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Test Takers</div>
+          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{studentMap.length}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Students with CBT attempts</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
+          <div className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Total Attempts</div>
+          <div className="text-xl sm:text-2xl font-black text-indigo-600 mt-1">{totalAttempts}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Cumulative test submissions</div>
+        </div>
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs col-span-2 md:col-span-1">
+          <div className="text-[10px] font-black uppercase tracking-wider text-purple-600">Classes Engaged</div>
+          <div className="text-xl sm:text-2xl font-black text-purple-600 mt-1">{classesList.length}</div>
+          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Standards participating</div>
+        </div>
+      </div>
+
+      {/* Search & Class Filter */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+        <div className="w-full sm:max-w-md">
+          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+            Search Active Students
+          </label>
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by student name, roll number, or exam..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
+            />
+          </div>
+        </div>
+
+        {classesList.length > 0 && (
+          <div className="w-full sm:w-auto">
+            <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
+              Filter by Class
+            </label>
+            <select
+              value={selectedClass}
+              onChange={e => setSelectedClass(e.target.value)}
+              className="w-full sm:w-48 p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs outline-none focus:border-indigo-500"
+            >
+              <option value="ALL">All Classes ({studentMap.length})</option>
+              {classesList.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {/* Students Directory Grid */}
+      {filteredStudents.length === 0 ? (
+        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/90 shadow-xs space-y-3">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto shadow-xs">
+            <Users className="w-8 h-8" />
+          </div>
+          <h3 className="text-base sm:text-lg font-black text-slate-800">
+            {searchQuery ? 'No Students Found' : 'No Active Students Yet'}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            Students who attempt any online competitive exam will appear here with their total test attempts and best scores.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredStudents.map((st: any) => (
+            <div
+              key={st.id}
+              className="bg-white p-5 rounded-3xl border border-slate-200/90 hover:border-indigo-300 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-black text-base flex items-center justify-center shrink-0 shadow-xs overflow-hidden">
+                    {st.photoUrl ? (
+                      <img src={st.photoUrl} alt={st.name} className="w-full h-full object-cover" />
+                    ) : (
+                      st.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-black text-slate-900 text-sm sm:text-base truncate">{st.name}</h4>
+                    <p className="text-xs font-bold text-slate-500">Roll: {st.rollNo} • {st.className}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
-                    className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs border border-indigo-200 flex items-center gap-1.5 transition cursor-pointer"
-                  >
-                    <Award className="w-4 h-4 text-amber-500" /> View Rank List
-                  </button>
+                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center mb-3">
+                  <div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Attempts</div>
+                    <div className="text-sm font-black text-indigo-600">{st.attempts} Exams</div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase">Best Score</div>
+                    <div className="text-sm font-black text-emerald-600">{st.bestScore} Marks</div>
+                  </div>
+                </div>
+
+                <div className="text-[11px] text-slate-500 font-medium">
+                  <span className="font-bold text-slate-700">Latest Test:</span> {st.latestExam}
                 </div>
               </div>
-            );
-          })}
+
+              <div className="pt-3 mt-3 border-t border-slate-100 flex items-center gap-2">
+                <button
+                  onClick={() => navigate(`/competitive-exam-result/${st.examId}?submissionId=${st.submissionId}`)}
+                  className="w-full py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-black text-xs border border-indigo-200 transition cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <Award size={14} className="text-amber-500" />
+                  <span>View Latest Scorecard</span>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -2715,23 +3418,66 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
   </button>
 );
 
-const StatCard = ({ title, value, color, icon }: any) => {
-  const colors: any = {
-    blue: 'bg-blue-50 text-blue-600 border-blue-200/80',
-    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-200/80',
-    purple: 'bg-purple-50 text-purple-600 border-purple-200/80',
-    amber: 'bg-amber-50 text-amber-600 border-amber-200/80',
+interface StatCardProps {
+  title: string;
+  value: number | string;
+  color: 'blue' | 'emerald' | 'purple' | 'amber';
+  icon: React.ReactNode;
+  subtitle?: string;
+  active?: boolean;
+  onClick?: () => void;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, subtitle, active, onClick }) => {
+  const activeBorders: Record<string, string> = {
+    blue: 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-md',
+    emerald: 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-md',
+    purple: 'border-purple-500 bg-purple-50/70 ring-2 ring-purple-500/20 shadow-md',
+    amber: 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-md',
   };
+
+  const badgeBg: Record<string, string> = {
+    blue: 'bg-blue-600 text-white',
+    emerald: 'bg-emerald-600 text-white',
+    purple: 'bg-purple-600 text-white',
+    amber: 'bg-amber-600 text-white',
+  };
+
+  const defaultBadgeBg: Record<string, string> = {
+    blue: 'bg-blue-50 text-blue-600',
+    emerald: 'bg-emerald-50 text-emerald-600',
+    purple: 'bg-purple-50 text-purple-600',
+    amber: 'bg-amber-50 text-amber-600',
+  };
+
   return (
-    <div className={`p-5 rounded-3xl border ${colors[color]} flex items-center justify-between shadow-xs`}>
-      <div>
-        <p className="text-[11px] font-black uppercase tracking-wider mb-0.5 opacity-75">{title}</p>
-        <h3 className="text-3xl font-black text-slate-900">{value}</h3>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group w-full ${
+        active
+          ? activeBorders[color]
+          : 'bg-white hover:bg-slate-50/90 border-slate-200/90 shadow-xs hover:border-slate-300'
+      }`}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500">
+          {title}
+        </span>
+        <div className={`p-2 rounded-xl transition-colors ${active ? badgeBg[color] : defaultBadgeBg[color]}`}>
+          {icon}
+        </div>
       </div>
-      <div className="w-10 h-10 rounded-2xl bg-white/80 shadow-xs flex items-center justify-center">
-        {icon}
+      <div className="text-2xl sm:text-3xl font-black text-slate-900">{value}</div>
+      <div className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-1 flex items-center justify-between">
+        <span className="truncate">{subtitle || 'Click to view'}</span>
+        {active && (
+          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded shrink-0">
+            Active
+          </span>
+        )}
       </div>
-    </div>
+    </button>
   );
 };
 
