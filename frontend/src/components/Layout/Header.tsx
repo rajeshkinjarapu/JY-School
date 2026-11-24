@@ -48,7 +48,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
           ? 'bg-slate-100/95 hover:bg-slate-200/90 border border-slate-200/90 text-slate-700'
           : 'bg-white/15 hover:bg-white/25 border border-white/20 text-white'
           }`}
-        title="Select Academic Year (అకడమిక్ ఇయర్ మార్చండి)"
+        title="Select Academic Year"
       >
         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
         <span className="tracking-tight">{selectedYear}</span>
@@ -99,7 +99,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                 onClick={() => {
                   setOpen(false);
                   setCloneFrom(selectedYear);
-                  setShowAddYearModal(true);
+                  setShowAddModal(true);
                 }}
                 className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800/80 transition-all cursor-pointer shadow-xs"
               >
@@ -184,7 +184,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                 <div className="mt-2 p-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/50 flex items-start gap-2 text-xs text-indigo-800 dark:text-indigo-300">
                   <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
                   <span>
-                    ఈ ఆప్షన్ ద్వారా ప్రస్తుత సంవత్సరం ఉన్న అన్ని క్లాసులు (Nursery నుండి 10th వరకు సెక్షన్లు & సబ్జెక్టులు) కొత్త సంవత్సరానికి ఆటోమేటిక్‌గా కాపీ అవుతాయి.
+                    Clones all existing classes (Nursery to 10th sections & subjects) automatically into the new academic year.
                   </span>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                   onClick={() => setShowAddModal(false)}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                 >
-                  రద్దు (Cancel)
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -205,7 +205,7 @@ export const AcademicYearSelector: React.FC<{ variant?: 'light' | 'dark' }> = ({
                   {submitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>సృష్టిస్తోంది...</span>
+                      <span>Creating...</span>
                     </>
                   ) : (
                     <>
@@ -237,6 +237,8 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
   const [profileOpen, setProfileOpen] = React.useState(false);
 
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/' || location.pathname === '/chairman';
+  if (!isDashboard && !forceShow) return null;
+
   const showBackButton = !isDashboard;
 
   const handleBack = () => {

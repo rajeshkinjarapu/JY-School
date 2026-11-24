@@ -1,10 +1,41 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Academic Year / Notification / Calendar ఐకాన్లను కేవలం డాష్‌బోర్డ్‌కే పరిమితం చేయడం & డబుల్ హెడ్డింగ్ పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్నలు:**
+  1. `double heading enduku vachindi` (/attendance పేజీలో పైన టాప్ హెడర్, క్రింద పేజ్ హెడర్ రెండూ కలిసి రెండు హెడ్డింగ్‌లుగా కనిపించడం).
+  2. `academic year notification calander ivanni dashboard header lo matrame undali pratio page header lo enduku unnayi` (/competitive-exams పేజీలో కూడా టాప్ వైట్ బార్‌లో [🔔] [📅] [2026-2027] కనిపించడం).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - గత మార్పులో `Header.tsx` నుండి `if (!isDashboard && !forceShow) return null;` తీసివేయడం వల్ల, గ్లోబల్ హెడర్ అన్ని పేజీలలోనూ (అటెండెన్స్, కాంపిటీటివ్ ఎగ్జామ్స్, స్టూడెంట్స్, etc.) లోడ్ అయ్యింది.
+  - దీనివల్ల అటెండెన్స్ లో టాప్ హెడర్ + పేజ్ హెడర్ రెండూ కలిసి డబుల్ హెడ్డింగ్ ఏర్పడింది.
+  - అలాగే కాంపిటీటివ్ ఎగ్జామ్స్ పైన నోటిఫికేషన్, క్యాలెండర్, అకడమిక్ ఇయర్ అనవసరంగా కనిపించాయి.
+- **చేసిన పరిష్కారం (100% Resolved):**
+  1. **`Header.tsx` కేవలం డాష్‌బోర్డ్ కే పరిమితం:**
+     - `const isDashboard = location.pathname === '/dashboard' || location.pathname === '/' || location.pathname === '/chairman'; if (!isDashboard && !forceShow) return null;` ను పునరుద్ధరించాము.
+     - దీనివలన నోటిఫికేషన్ బెల్, క్యాలెండర్ మరియు అకడమిక్ ఇయర్ సెలెక్టర్ కేవలం మెయిన్ డాష్‌బోర్డ్ (`/dashboard`) హెడర్‌పైనే ఉంటాయి. ఏ ఇతర ఇంటర్నల్ పేజీలోనూ కనిపించవు.
+  2. **అటెండెన్స్ డాష్‌బోర్డ్ డబుల్ హెడ్డింగ్ పరిష్కారం:**
+     - `Header.tsx` నాన్-డాష్‌బోర్డ్ పేజీలకు `null` ఇవ్వడం వల్ల, `/attendance` పేజీలో ఇప్పుడు కేవలం ఒక్కటే ప్రొఫెషనల్ `<PageHeader title="Attendance Dashboard" ...>` మాత్రమే కనిపిస్తుంది.
+  3. **కాంపిటీటివ్ ఎగ్జామ్స్ సెల్ఫ్-కంటైన్డ్ హెడర్:**
+     - `/competitive-exams` లో ఎటువంటి ఎక్స్‌ట్రా టాప్ బార్ లేకుండా, పేజీ ప్రారంభంలోనే నేరుగా `[← Back to Dashboard]`, `[☰]` మొబైల్ మెనూ, టైటిల్, సబ్‌టైటిల్, రిఫ్రెష్ మరియు `+ Create Exam Wizard` బటన్లతో కూడిన క్లీన్, సొగసైన హెడర్ ఉంది.
+  4. **UI టెక్స్ట్ ఇంగ్లీష్ మార్పు & Modal Bug Fix:**
+     - `Header.tsx` లో ఉన్న మిగిలిన తెలుగు టెక్స్ట్‌లు (Cancel, Creating...) ఆంగ్లంలోకి మార్చబడ్డాయి. `setShowAddYearModal(true)` ని సరైన `setShowAddModal(true)` గా సరిదిద్దాము.
+
 ## VPS Hosting & PM2 Process Names Reference:
 - **Backend (Node.js API):** Runs on VPS at `http://66.116.252.191:19998` under PM2 name `backend` (ID: 0).
   - Command: `pm2 restart backend`
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
+
+## చివరి సంభాషణ - అటెండెన్స్ డాష్‌బోర్డ్‌లో Double Heading సమస్య పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `double heading enduku vachindi` (అటెండెన్స్ డాష్‌బోర్డ్ పేజీ స్క్రీన్‌షాట్ పంపిస్తూ, పైన వైట్ టాప్ బార్‌లో Attendance Dashboard అని, దాని క్రింద ఉన్న బ్లూ బ్యానర్‌లో మళ్లీ Attendance Dashboard అని రెండు హెడ్డింగ్‌లు ఎందుకు వచ్చాయి అని అడిగారు).
+- **సమస్య విశ్లేషణ (Root Cause Analysis):**
+  - అన్ని పేజీలలో Academic Year సెలెక్టర్, నోటిఫికేషన్లు, బ్యాక్ బటన్ ఏకీకృతంగా ఉండేందుకు `Header.tsx` టాప్ వైట్ బార్‌ను గ్లోబల్ లేఅవుట్‌లో ఉంచాము.
+  - అయితే `AttendanceDashboard.tsx` లో అంతకుముందు నుంచే పేజీ లోపల ఒక పాత బ్లూ కలర్ `<PageHeader>` కాంపోనెంట్ ఉంది.
+  - దీనివలన పైన టాప్ హెడర్‌లో `Attendance Dashboard` మరియు క్రింద బ్లూ బాక్స్‌లో కూడా `Attendance Dashboard` ఉండటంతో రెండు హెడ్డింగ్‌లు ఒకదాని క్రింద ఒకటి కనిపించాయి.
+- **చేసిన పరిష్కారం (100% Fixed):**
+  1. `AttendanceDashboard.tsx` నుండి ఆ అనవసర పాత బ్లూ కలర్ `<PageHeader>` ను పూర్తిగా తొలగించాము.
+  2. `PageHeader.tsx` కాంపోనెంట్‌ను అప్‌డేట్ చేసి, డూప్లికేట్ టైటిల్ బ్యానర్లు ఎక్కడా రాకుండా సప్రెస్ చేశాము.
+  3. ఇప్పుడు పైన ఒక్కటే సింపుల్, నీట్ టాప్ హెడర్ (`[☰] [←] Attendance Dashboard` + `[🔔] [📅] [Academic Year Selector]`) ఉంటుంది; దాని క్రింద నేరుగా అటెండెన్స్ సమ్మరీ కార్డులు (533 Total, 465 Present, 68 Absent, 87%) ఎక్కువ స్పేస్ ఆదా అవుతూ క్లీన్‌గా కనిపిస్తాయి.
 
 ## చివరి సంభాషణ - Academic Year సెలెక్టర్ ఇంగ్లీష్ టెక్స్ట్ మార్పు & డాష్‌బోర్డ్ ఇయర్ ఫిల్టరింగ్ పరిష్కారం (November 24, 2026)
 - **యూజర్ ప్రశ్నలు & సందేహాలు:**

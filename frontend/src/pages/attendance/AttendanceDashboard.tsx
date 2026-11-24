@@ -7,7 +7,6 @@ import {
   Search, BookOpen, Clock, AlertTriangle, FileText
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-
 import { PageHeader } from '../../components/UI/PageHeader';
 
 export default function AttendanceDashboard() {
@@ -45,7 +44,6 @@ export default function AttendanceDashboard() {
 
   return (
     <div className="flex flex-col h-full bg-slate-50/50 w-full animate-fade-in">
-      {/* Dark Blue Hero Header */}
       <PageHeader 
         title="Attendance Dashboard"
         icon={<Calendar className="w-6 h-6" />}
