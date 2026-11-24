@@ -3,35 +3,34 @@ import { toast } from 'react-hot-toast';
 import api from '../../api/axios';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  FileText, CheckCircle2, XCircle, PlusCircle, Printer, Clock, 
-  LogOut, MapPin, User, Search, Users, ShieldCheck, Activity 
+  ShieldCheck, PlusCircle, Printer, Eye, Trash2, Clock, 
+  LogOut, LogIn, CheckCircle2, XCircle, Search, Filter, 
+  RefreshCw, User, Calendar, MapPin, Phone, AlertCircle, 
+  Check, Copy, ChevronDown, X, Sparkles, AlertTriangle,
+  Building, CheckSquare, Users, Activity
 } from 'lucide-react';
-import { GatePassPrint } from '../../components/gate-pass/GatePassPrint';
+import { GatePassPrint, printGatePassSlip } from '../../components/gate-pass/GatePassPrint';
+import type { GatePassPrintData, SchoolSettingsData } from '../../components/gate-pass/GatePassPrint';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { PageHeader } from '../../components/UI/PageHeader';
-
-interface GatePassItem {
-  id: string;
-  reason: string;
-  destination?: string;
-  exitTime?: string;
-  returnTime?: string;
-  notes?: string;
-  requestType: string;
-  status: string;
-  slipNumber?: string;
-  requestedDate: string;
-  requester: { name: string; role: string };
-  student?: { rollNo?: string; user?: { name: string; photoUrl?: string }; class?: { name: string; section: string } };
-  approvedBy?: { name: string };
-  rejectionReason?: string;
-}
+import { getPhotoUrl } from '../../utils/photo';
 
 interface StudentOption {
   id: string;
   rollNo?: string;
-  user?: { name: string };
-  class?: { name: string; section: string };
+  fatherName?: string;
+  mobileNumber?: string;
+  user?: { 
+    id?: string;
+    name: string; 
+    phone?: string; 
+    photoUrl?: string; 
+  };
+  class?: { 
+    id?: string;
+    name: string; 
+    section: string; 
+  };
 }
 
 interface Stats {
@@ -41,442 +40,1045 @@ interface Stats {
   todayTotal: number;
 }
 
-const GatePassPage: React.FC = () => {
+const REASON_CATEGORIES = [
+  { label: '🏥 Medical / Health Issue', value: 'Medical Emergency / Health Issue' },
+  { label: '👨‍👩‍👧 Family Emergency', value: 'Family Emergency / Urgent Work' },
+  { label: '⏰ Early Permission', value: 'Early Permission from Principal' },
+  { label: '🏆 Sports / Competition', value: 'Official School Competition / Sports' },
+  { label: '📝 Personal / Other', value: 'Personal Matter' },
+];
+
+export const GatePassPage: React.FC = () => {
   const { user } = useAuth();
-  const [items, setItems] = useState<GatePassItem[]>([]);
+  const isAdminOrSecurity = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'SECURITY';
+  const isSuperAdminOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+
+  // Base Data
+  const [items, setItems] = useState<GatePassPrintData[]>([]);
   const [students, setStudents] = useState<StudentOption[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [schoolName, setSchoolName] = useState('JY SCHOOL');
-  
-  // Dashboard states
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'APPROVALS' | 'HISTORY'>('DASHBOARD');
-  const [stats, setStats] = useState<Stats>({ inside: 0, out: 0, pending: 0, todayTotal: 0 });
-  
-  // Form states
-  const [selectedClassName, setSelectedClassName] = useState('');
-  const [selectedSection, setSelectedSection] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [form, setForm] = useState({ 
-    reason: '', destination: '', exitTime: '', returnTime: '', notes: '', studentId: '', 
-    requestType: user?.role === 'TEACHER' ? 'TEACHER' : 'STUDENT' 
+  const [refreshing, setRefreshing] = useState(false);
+  const [schoolSettings, setSchoolSettings] = useState<SchoolSettingsData>({
+    schoolName: 'SRI VENKATESWARA JY SCHOOL',
+    schoolSubtitle: '(IIT-JEE / NEET Foundation – Olympiads)',
+    address: 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+    logoUrl: '/logo.png',
   });
-  
-  const [printGatePass, setPrintGatePass] = useState<any>(null);
-  const canApprove = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'SECURITY';
 
-  const loadData = async () => {
-    setLoading(true);
+  // Stats
+  const [stats, setStats] = useState<Stats>({ inside: 0, out: 0, pending: 0, todayTotal: 0 });
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED'>('ALL');
+  const [classFilter, setClassFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState<'TODAY' | 'ALL'>('TODAY');
+
+  // Modals
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [previewItem, setPreviewItem] = useState<GatePassPrintData | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<GatePassPrintData | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Form State
+  const [formType, setFormType] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
+  const [selectedStudentClass, setSelectedStudentClass] = useState('');
+  const [selectedStudentSection, setSelectedStudentSection] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [customReason, setCustomReason] = useState('');
+  const [destination, setDestination] = useState('');
+  const [exitTime, setExitTime] = useState(() => {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  });
+  const [returnTime, setReturnTime] = useState('');
+  const [accompanyingPerson, setAccompanyingPerson] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Load School Settings & Stats
+  const loadInitialData = async () => {
     try {
-      // Fetch stats
-      const statsRes = await api.get('/api/gate-pass/stats').catch(() => null);
+      const setRes = await api.get('/api/settings').catch(() => null);
+      if (setRes?.data?.data || setRes?.data) {
+        const s = setRes.data?.data || setRes.data;
+        setSchoolSettings({
+          schoolName: s.schoolName || 'SRI VENKATESWARA JY SCHOOL',
+          schoolSubtitle: s.schoolSubtitle || '(IIT-JEE / NEET Foundation – Olympiads)',
+          address: s.address || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+          logoUrl: s.logoUrl || '/logo.png',
+          principalSignatureUrl: s.principalSignatureUrl,
+        });
+      }
+    } catch (_) {}
+
+    if (isAdminOrSecurity) {
+      try {
+        const [clsRes, stuRes] = await Promise.all([
+          api.get('/api/classes?limit=1000').catch(() => ({ data: { data: [] } })),
+          api.get('/api/students?limit=5000').catch(() => ({ data: { data: [] } })),
+        ]);
+        setClasses(clsRes.data?.data || clsRes.data || []);
+        setStudents(stuRes.data?.data || stuRes.data || []);
+      } catch (_) {}
+    }
+  };
+
+  // Fetch Gate Passes & Stats
+  const loadGatePasses = async (showLoadingSpinner = true) => {
+    if (showLoadingSpinner) setLoading(true);
+    else setRefreshing(true);
+
+    try {
+      const [statsRes, listRes] = await Promise.all([
+        api.get('/api/gate-pass/stats').catch(() => null),
+        api.get('/api/gate-pass?limit=200').catch(() => null),
+      ]);
+
       if (statsRes?.data?.data) {
         setStats(statsRes.data.data);
       }
 
-      // Fetch gate passes based on tab
-      let statusFilter = '';
-      if (activeTab === 'APPROVALS') statusFilter = 'PENDING';
-      
-      const res = await api.get(`/api/gate-pass?limit=50&status=${statusFilter}`);
-      setItems(res.data?.data || res.data || []);
-    } catch {
-      toast.error('Unable to load gate passes');
+      if (listRes?.data?.data || listRes?.data) {
+        const data = listRes.data?.data || listRes.data || [];
+        setItems(data);
+      }
+    } catch (err) {
+      console.error('Error fetching gate passes:', err);
+      toast.error('Unable to fetch latest gate passes');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   useEffect(() => {
-    loadData();
-    api.get('/api/settings').then((response: any) => {
-      if (response?.data?.schoolName) setSchoolName(response.data.schoolName);
-    }).catch(() => {});
+    loadInitialData();
+    loadGatePasses(true);
 
-    if (canApprove) {
-      api.get('/api/classes?limit=5000').then((res: any) => {
-        setClasses(res.data?.data || res.data || []);
-      }).catch(() => {});
-      
-      api.get('/api/students?limit=5000').then((res: any) => {
-        setStudents(res.data?.data || res.data || []);
-      }).catch(() => {});
-    }
-
+    // Auto-refresh every 45s for security desk
     const interval = setInterval(() => {
-      loadData();
-    }, 30000); // 30s auto-refresh
-    
+      loadGatePasses(false);
+    }, 45000);
     return () => clearInterval(interval);
-  }, [activeTab, canApprove]);
+  }, []);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (canApprove && !form.studentId) {
-      toast.error('Please select a student before issuing a gate pass');
+  // Filtered List
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // 1. Status Filter
+      if (statusFilter !== 'ALL') {
+        if (statusFilter === 'ACTIVE' && item.status !== 'ACTIVE') return false;
+        if (statusFilter === 'PENDING' && item.status !== 'PENDING') return false;
+        if (statusFilter === 'APPROVED' && item.status !== 'APPROVED') return false;
+        if (statusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
+        if (statusFilter === 'REJECTED' && item.status !== 'REJECTED') return false;
+      }
+
+      // 2. Class Filter
+      if (classFilter) {
+        if (item.requestType !== 'STUDENT') return false;
+        if (item.student?.class?.name !== classFilter) return false;
+      }
+
+      // 3. Date Filter
+      if (dateFilter === 'TODAY' && item.createdAt) {
+        const itemDate = new Date(item.createdAt).toDateString();
+        const todayDate = new Date().toDateString();
+        if (itemDate !== todayDate) return false;
+      }
+
+      // 4. Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const slip = (item.slipNumber || '').toLowerCase();
+        const studentName = (item.student?.user?.name || '').toLowerCase();
+        const rollNo = (item.student?.rollNo || '').toLowerCase();
+        const requesterName = (item.requester?.name || '').toLowerCase();
+        const reason = (item.reason || '').toLowerCase();
+        const destination = (item.destination || '').toLowerCase();
+
+        return (
+          slip.includes(q) ||
+          studentName.includes(q) ||
+          rollNo.includes(q) ||
+          requesterName.includes(q) ||
+          reason.includes(q) ||
+          destination.includes(q)
+        );
+      }
+
+      return true;
+    });
+  }, [items, statusFilter, classFilter, dateFilter, searchQuery]);
+
+  // Unique Classes list for dropdown
+  const uniqueClassNames = useMemo(() => {
+    return Array.from(new Set(classes.map((c) => c.name))).filter(Boolean);
+  }, [classes]);
+
+  // Filtered student list for issue modal
+  const modalAvailableStudents = useMemo(() => {
+    return students.filter((s) => {
+      if (selectedStudentClass && s.class?.name !== selectedStudentClass) return false;
+      if (selectedStudentSection && s.class?.section !== selectedStudentSection) return false;
+      return true;
+    });
+  }, [students, selectedStudentClass, selectedStudentSection]);
+
+  const selectedStudentObj = useMemo(() => {
+    return students.find((s) => s.id === selectedStudentId);
+  }, [students, selectedStudentId]);
+
+  // Issue Gate Pass Submit
+  const handleIssuePass = async (autoPrint = false) => {
+    if (formType === 'STUDENT' && !selectedStudentId) {
+      toast.error('Please select a student');
       return;
     }
+    if (!customReason.trim()) {
+      toast.error('Please enter a reason for departure');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      await api.post('/api/gate-pass', { ...form, studentId: form.studentId || undefined });
-      toast.success(canApprove ? 'Gate pass issued' : 'Gate pass requested');
-      setForm({ reason: '', destination: '', exitTime: '', returnTime: '', notes: '', studentId: '', requestType: user?.role === 'TEACHER' ? 'TEACHER' : 'STUDENT' });
-      loadData();
+      const payload: any = {
+        requestType: formType,
+        reason: customReason.trim(),
+        destination: destination.trim() || undefined,
+        exitTime: exitTime || undefined,
+        returnTime: returnTime || undefined,
+        notes: accompanyingPerson.trim() ? `Escorted by: ${accompanyingPerson.trim()}` : undefined,
+      };
+
+      if (formType === 'STUDENT') {
+        payload.studentId = selectedStudentId;
+      }
+
+      const res = await api.post('/api/gate-pass', payload);
+      const createdItem = res.data?.data || res.data;
+
+      toast.success(isAdminOrSecurity ? 'Gate Pass Issued Successfully!' : 'Pass Requested Successfully!');
+      setIsIssueModalOpen(false);
+
+      // Reset form
+      setSelectedStudentId('');
+      setCustomReason('');
+      setDestination('');
+      setReturnTime('');
+      setAccompanyingPerson('');
+
+      // Refresh data
+      await loadGatePasses(false);
+
+      // Auto Print if requested
+      if (autoPrint && createdItem) {
+        setTimeout(() => {
+          printGatePassSlip(createdItem, schoolSettings);
+        }, 300);
+      }
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Unable to submit request');
+      toast.error(err?.response?.data?.message || 'Failed to issue gate pass');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const approve = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+  // Status Actions: Mark Exit (OUT) / Mark Return (IN)
+  const handleMarkStatus = async (id: string, action: 'EXIT' | 'RETURN') => {
     try {
-      await api.patch(`/api/gate-pass/${id}`, { 
-        status, 
-        rejectionReason: status === 'REJECTED' ? 'Not approved by Admin/Security' : undefined 
+      await api.patch(`/api/gate-pass/${id}`, {
+        status: action === 'EXIT' ? 'ACTIVE' : 'COMPLETED',
       });
-      toast.success(`Gate pass ${status.toLowerCase()}`);
-      loadData();
+      toast.success(action === 'EXIT' ? 'Marked OUT (Left Campus)' : 'Marked IN (Safely Returned)');
+      loadGatePasses(false);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Update failed');
+      toast.error(err?.response?.data?.message || 'Failed to update status');
     }
   };
 
-  const markExitReturn = async (id: string, action: 'EXIT' | 'RETURN') => {
+  // Approval / Rejection
+  const handleApproveReject = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     try {
-      await api.patch(`/api/gate-pass/${id}`, { 
-        status: action === 'EXIT' ? 'ACTIVE' : 'COMPLETED' 
+      await api.patch(`/api/gate-pass/${id}`, {
+        status,
+        rejectionReason: status === 'REJECTED' ? 'Rejected by Administration' : undefined,
       });
-      toast.success(action === 'EXIT' ? 'Marked as EXITED' : 'Marked as RETURNED');
-      loadData();
+      toast.success(`Gate pass ${status.toLowerCase()} successfully`);
+      loadGatePasses(false);
     } catch (err: any) {
-      toast.error('Failed to update status');
+      toast.error(err?.response?.data?.message || 'Failed to update status');
     }
   };
 
-  const printSlip = (item: GatePassItem) => {
-    setPrintGatePass(item);
-    setTimeout(() => {
-      window.print();
-    }, 100);
+  // Delete Gate Pass
+  const handleDeletePass = async () => {
+    if (!deleteConfirmItem) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/gate-pass/${deleteConfirmItem.id}`);
+      toast.success('Gate pass deleted successfully');
+      setDeleteConfirmItem(null);
+      loadGatePasses(false);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to delete gate pass');
+    } finally {
+      setDeleting(false);
+    }
   };
-  
-  const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));
-  const availableSections = classes.filter(c => c.name === selectedClassName).map(c => c.section);
-  
-  const filteredStudents = students.filter(student => {
-    const matchClass = !selectedClassName || student.class?.name === selectedClassName;
-    const matchSection = !selectedSection || student.class?.section === selectedSection;
-    const matchSearch = !searchQuery || 
-      (student.user?.name && student.user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (student.rollNo && student.rollNo.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    return matchClass && matchSection && matchSearch;
-  });
 
   return (
-    <div className="flex flex-col h-full bg-slate-50" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
+    <div className="flex flex-col h-full bg-slate-50/70" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      {/* Top Banner */}
+      <PageHeader
         title="Gate Pass Command Center"
-        icon={<ShieldCheck className="w-6 h-6" />}
+        icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
       />
 
-      {/* Printable Area */}
-      <div className="hidden print:block absolute inset-0 bg-white z-[9999]">
-        {printGatePass && <GatePassPrint gatePass={printGatePass} schoolName={schoolName} />}
-      </div>
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="max-w-[1600px] mx-auto space-y-6">
 
-      <div className="print:hidden flex-1 overflow-auto p-4 md:p-6 lg:p-8">
-        <div className="max-w-[1400px] mx-auto space-y-6">
-
-          {/* Stats Bar */}
-          {canApprove && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in-up">
-              {[
-                { label: 'Inside Campus', value: stats.inside, icon: Users, color: 'emerald' },
-                { label: 'Outside Campus', value: stats.out, icon: LogOut, color: 'rose' },
-                { label: 'Pending Approvals', value: stats.pending, icon: Clock, color: 'amber' },
-                { label: 'Passes Today', value: stats.todayTotal, icon: Activity, color: 'indigo' }
-              ].map((stat, idx) => (
-                <div key={idx} className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm relative overflow-hidden group hover:border-${stat.color}-200 transition-colors`}>
-                  <div className={`absolute top-0 right-0 w-24 h-24 bg-${stat.color}-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110`} />
-                  <div className="flex items-center gap-4 relative">
-                    <div className={`w-12 h-12 rounded-xl bg-${stat.color}-100 text-${stat.color}-600 flex items-center justify-center`}>
-                      <stat.icon className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{stat.label}</p>
-                      <h3 className="text-2xl font-black text-slate-800 mt-1">{stat.value}</h3>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          {/* Top Hero Card */}
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-slate-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
             
-            {/* LEFT COL: Issue Form */}
-            <div className="xl:col-span-4 space-y-6 animate-fade-in-up delay-75">
-              <div className="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/40 relative overflow-hidden h-full flex flex-col">
-                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-purple-500" />
-                
-                <div className="p-6 md:p-8 flex-1">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
-                      <PlusCircle className="w-6 h-6" />
-                    </div>
-                    <h2 className="text-xl font-black text-slate-800">{canApprove ? 'Issue Gate Pass' : 'Request Pass'}</h2>
-                  </div>
-                  
-                  <form onSubmit={submit} className="space-y-5">
-                    {canApprove && (
-                      <div className="p-5 bg-slate-50/80 border border-slate-100 rounded-2xl space-y-4">
-                        <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 mb-2">
-                          <Users className="w-4 h-4 text-slate-400" /> Student Selection
-                        </h4>
-                        
-                        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-                          <select 
-                            value={selectedClassName} 
-                            onChange={(e) => { setSelectedClassName(e.target.value); setSelectedSection(''); setForm({...form, studentId: ''}); }} 
-                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none"
-                          >
-                            <option value="">All Classes</option>
-                            {uniqueClassNames.map((name) => (
-                              <option key={name as string} value={name as string}>{name as string}</option>
-                            ))}
-                          </select>
-                          
-                          <select 
-                            value={selectedSection} 
-                            onChange={(e) => { setSelectedSection(e.target.value); setForm({...form, studentId: ''}); }} 
-                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none disabled:opacity-50"
-                            disabled={!selectedClassName}
-                          >
-                            <option value="">All Sections</option>
-                            {availableSections.map((sec) => (
-                              <option key={sec} value={sec}>{sec}</option>
-                            ))}
-                          </select>
-                          
-                          <div className="sm:col-span-2 relative">
-                            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
-                            <input 
-                              type="text" 
-                              placeholder="Search by name or roll no..." 
-                              value={searchQuery} 
-                              onChange={(e) => setSearchQuery(e.target.value)} 
-                              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none"
-                            />
-                          </div>
-                        </div>
+            <div className="relative z-10 space-y-2">
+              <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-200 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-indigo-400/20">
+                <ShieldCheck className="w-4 h-4 text-indigo-400" /> Security & Movement Desk
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-sm">
+                Gate Pass Management
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-2xl leading-relaxed">
+                Issue, monitor, verify, and print official departure gate passes with student photo, authorized signatures, and dual-copy slips.
+              </p>
+            </div>
 
-                        <div>
-                          <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5 mt-2">Select Student <span className="text-rose-500">*</span></label>
-                          <select 
-                            className="w-full px-4 py-2.5 bg-white border-2 border-indigo-100 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none" 
-                            value={form.studentId} 
-                            onChange={(e) => setForm({ ...form, studentId: e.target.value })} 
-                            required
-                          >
-                            <option value="">-- Choose a student --</option>
-                            {filteredStudents.map((student) => (
-                              <option key={student.id} value={student.id}>
-                                {student.user?.name || 'Unknown'} {student.rollNo ? `(${student.rollNo})` : ''} {student.class ? `- ${student.class.name} ${student.class.section}` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                    )}
+            <div className="relative z-10 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => loadGatePasses(false)}
+                disabled={refreshing}
+                className="bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-black px-4 py-3 rounded-2xl border border-white/15 transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
 
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Reason <span className="text-rose-500">*</span></label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. Medical emergency"
-                          className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
-                          value={form.reason} 
-                          onChange={(e) => setForm({ ...form, reason: e.target.value })} 
-                          required 
-                        />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Destination</label>
-                        <input 
-                          type="text" 
-                          placeholder="Where are they going?"
-                          className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
-                          value={form.destination} 
-                          onChange={(e) => setForm({ ...form, destination: e.target.value })} 
-                        />
-                      </div>
+              {isAdminOrSecurity && (
+                <button
+                  onClick={() => setIsIssueModalOpen(true)}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider px-6 py-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2.5 cursor-pointer hover:-translate-y-0.5"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Issue Gate Pass</span>
+                </button>
+              )}
+            </div>
+          </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Exit Time</label>
-                          <input 
-                            type="time" 
-                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
-                            value={form.exitTime} 
-                            onChange={(e) => setForm({ ...form, exitTime: e.target.value })} 
-                          />
-                        </div>
-                        
-                        <div>
-                          <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Return Time</label>
-                          <input 
-                            type="time" 
-                            className="w-full px-4 py-3 bg-slate-50/50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
-                            value={form.returnTime} 
-                            onChange={(e) => setForm({ ...form, returnTime: e.target.value })} 
-                          />
-                        </div>
-                      </div>
-                    </div>
+          {/* 4 Live Metric Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Card 1: Today's Passes */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Passes Today</span>
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl">
+                  <Activity className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
+                {stats.todayTotal || items.filter(i => new Date(i.createdAt || '').toDateString() === new Date().toDateString()).length}
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Total departures logged today</p>
+            </div>
 
-                    <div className="pt-4 mt-auto">
-                      <button 
-                        type="submit" 
-                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black uppercase tracking-widest text-xs px-6 py-4 rounded-xl shadow-lg shadow-indigo-600/20 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                        {canApprove ? 'Generate Pass' : 'Submit Request'}
-                      </button>
-                    </div>
-                  </form>
+            {/* Card 2: Currently Outside */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-black text-amber-600 uppercase tracking-wider">Currently Outside</span>
+                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl">
+                  <LogOut className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-3xl font-black text-amber-600 tracking-tight flex items-center gap-2">
+                <span>{stats.out || items.filter(i => i.status === 'ACTIVE').length}</span>
+                {items.filter(i => i.status === 'ACTIVE').length > 0 && (
+                  <span className="inline-flex w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
+                )}
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Out of campus right now</p>
+            </div>
+
+            {/* Card 3: Pending Approval */}
+            <div 
+              onClick={() => setStatusFilter('PENDING')}
+              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all cursor-pointer hover:border-purple-300"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-black text-purple-600 uppercase tracking-wider">Pending Approval</span>
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-2xl">
+                  <Clock className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-3xl font-black text-purple-600 tracking-tight">
+                {stats.pending || items.filter(i => i.status === 'PENDING').length}
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Awaiting principal / admin review</p>
+            </div>
+
+            {/* Card 4: Safely Returned */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">Safely Returned</span>
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="text-3xl font-black text-emerald-600 tracking-tight">
+                {items.filter(i => i.status === 'COMPLETED').length}
+              </div>
+              <p className="text-[11px] font-semibold text-slate-500 mt-1">Completed passes returned</p>
+            </div>
+          </div>
+
+          {/* Control Toolbar */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm space-y-4">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+              {/* Search Bar */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search student, roll no, slip #, reason..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Class Filter & Date Filter */}
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  value={classFilter}
+                  onChange={(e) => setClassFilter(e.target.value)}
+                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                >
+                  <option value="">All Classes</option>
+                  {uniqueClassNames.map((name) => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
+                  <button
+                    onClick={() => setDateFilter('TODAY')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      dateFilter === 'TODAY' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setDateFilter('ALL')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      dateFilter === 'ALL' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                    }`}
+                  >
+                    All Records
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COL: Tabs & Records */}
-            <div className="xl:col-span-8 animate-fade-in-up delay-150">
-              <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 overflow-hidden h-full flex flex-col">
-                
-                {/* Tabs */}
-                <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-wrap gap-2">
-                  {['DASHBOARD', 'APPROVALS', 'HISTORY'].map((tab) => (
+            {/* Status Filter Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar border-t border-slate-100 dark:border-slate-800">
+              {[
+                { id: 'ALL', label: 'All Passes', count: items.length },
+                { id: 'ACTIVE', label: 'Outside Campus', count: items.filter(i => i.status === 'ACTIVE').length },
+                { id: 'PENDING', label: 'Pending Approval', count: items.filter(i => i.status === 'PENDING').length },
+                { id: 'APPROVED', label: 'Approved', count: items.filter(i => i.status === 'APPROVED').length },
+                { id: 'COMPLETED', label: 'Safely Returned', count: items.filter(i => i.status === 'COMPLETED').length },
+                { id: 'REJECTED', label: 'Rejected', count: items.filter(i => i.status === 'REJECTED').length },
+              ].map((pill) => (
+                <button
+                  key={pill.id}
+                  onClick={() => setStatusFilter(pill.id as any)}
+                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
+                    statusFilter === pill.id
+                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                  }`}
+                >
+                  <span>{pill.label}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    statusFilter === pill.id ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600'
+                  }`}>
+                    {pill.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Records Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/70 dark:border-slate-800 overflow-hidden">
+            {loading ? (
+              <div className="py-24 flex flex-col items-center justify-center space-y-3">
+                <LoadingSpinner size="lg" />
+                <p className="text-xs font-bold text-slate-400">Loading gate passes...</p>
+              </div>
+            ) : filteredItems.length === 0 ? (
+              <div className="py-20 flex flex-col items-center justify-center text-center px-4">
+                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl mb-3">
+                  <ShieldCheck className="w-12 h-12 text-slate-300" />
+                </div>
+                <h3 className="text-base font-black text-slate-700 dark:text-slate-300">No Gate Passes Found</h3>
+                <p className="text-xs font-semibold text-slate-400 mt-1 max-w-sm">
+                  {searchQuery || statusFilter !== 'ALL' || classFilter
+                    ? 'No passes match your selected filters. Try resetting the search or status filter.'
+                    : 'No gate passes have been issued yet. Click "Issue Gate Pass" to create one.'}
+                </p>
+                {isAdminOrSecurity && (
+                  <button
+                    onClick={() => setIsIssueModalOpen(true)}
+                    className="mt-5 btn-primary text-xs font-bold px-5 py-2.5 rounded-xl flex items-center gap-2"
+                  >
+                    <PlusCircle className="w-4 h-4" /> Issue Gate Pass
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-extrabold uppercase tracking-wider text-[11px]">
+                      <th className="py-4 px-6">Pass Details</th>
+                      <th className="py-4 px-6">Person Profile</th>
+                      <th className="py-4 px-6">Reason & Destination</th>
+                      <th className="py-4 px-6">Timings</th>
+                      <th className="py-4 px-6">Status</th>
+                      <th className="py-4 px-6 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                    {filteredItems.map((item) => {
+                      const isTeacher = item.requestType === 'TEACHER';
+                      const personName = isTeacher ? item.requester?.name : item.student?.user?.name;
+                      const rawPhoto = isTeacher ? item.requester?.photoUrl : item.student?.user?.photoUrl;
+                      const photoUrl = rawPhoto ? getPhotoUrl(rawPhoto) : '';
+                      const rollNo = item.student?.rollNo;
+                      const className = item.student?.class ? `${item.student.class.name} - ${item.student.class.section}` : '';
+                      const slipNo = item.slipNumber || `GP-${item.id.substring(0, 6).toUpperCase()}`;
+
+                      return (
+                        <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors group">
+                          {/* Col 1: Pass Details */}
+                          <td className="py-4 px-6 align-middle">
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono font-black text-slate-900 dark:text-white text-sm tracking-tight">
+                                #{slipNo}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(slipNo);
+                                  toast.success('Slip number copied');
+                                }}
+                                title="Copy Slip #"
+                                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
+                              >
+                                <Copy className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                            <div className="text-[11px] font-bold text-slate-400 mt-0.5">
+                              {item.createdAt ? format(new Date(item.createdAt), 'dd MMM yyyy, hh:mm a') : '--'}
+                            </div>
+                          </td>
+
+                          {/* Col 2: Person Profile */}
+                          <td className="py-4 px-6 align-middle">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                                {photoUrl ? (
+                                  <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
+                                ) : (
+                                  <User className="w-4 h-4 text-slate-400" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="font-black text-slate-800 dark:text-slate-100 text-xs">
+                                  {personName || 'N/A'}
+                                </div>
+                                <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                  {!isTeacher ? (
+                                    <>
+                                      <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-700 dark:text-slate-300">
+                                        Class: {className || 'N/A'}
+                                      </span>
+                                      {rollNo && <span>· Roll: {rollNo}</span>}
+                                    </>
+                                  ) : (
+                                    <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px]">Staff Member</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Col 3: Reason & Destination */}
+                          <td className="py-4 px-6 align-middle max-w-xs">
+                            <div className="font-bold text-slate-800 dark:text-slate-200 truncate" title={item.reason}>
+                              {item.reason}
+                            </div>
+                            <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
+                              <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
+                              <span className="truncate">{item.destination || 'Not Specified'}</span>
+                            </div>
+                          </td>
+
+                          {/* Col 4: Timings */}
+                          <td className="py-4 px-6 align-middle">
+                            <div className="space-y-0.5 font-bold text-[11px]">
+                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                <span className="text-slate-400 font-semibold w-12">Exit:</span>
+                                <span className="text-rose-600 font-black">{item.exitTime || '--:--'}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                                <span className="text-slate-400 font-semibold w-12">Return:</span>
+                                <span className="text-emerald-600 font-black">{item.returnTime || '--:--'}</span>
+                              </div>
+                            </div>
+                          </td>
+
+                          {/* Col 5: Status */}
+                          <td className="py-4 px-6 align-middle">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
+                              item.status === 'APPROVED' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300' :
+                              item.status === 'ACTIVE' ? 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 animate-pulse' :
+                              item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300' :
+                              item.status === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300' :
+                              'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300'
+                            }`}>
+                              {item.status === 'ACTIVE' ? 'OUTSIDE' : item.status === 'COMPLETED' ? 'RETURNED' : item.status}
+                            </span>
+                          </td>
+
+                          {/* Col 6: Actions */}
+                          <td className="py-4 px-6 align-middle text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* 1. Quick Print Slip */}
+                              <button
+                                onClick={() => printGatePassSlip(item, schoolSettings)}
+                                title="Print Gate Pass (Iframe - 100% Crisp)"
+                                className="p-2 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-xs active:scale-95"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+
+                              {/* 2. Visual Preview */}
+                              <button
+                                onClick={() => setPreviewItem(item)}
+                                title="Preview Dual-Copy Slip"
+                                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-xs active:scale-95"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
+                              {/* 3. Mark Out / In for Security Desk */}
+                              {isAdminOrSecurity && item.status === 'APPROVED' && (
+                                <button
+                                  onClick={() => handleMarkStatus(item.id, 'EXIT')}
+                                  title="Mark student as EXITED (OUT)"
+                                  className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                                >
+                                  <LogOut className="w-3 h-3" /> OUT
+                                </button>
+                              )}
+
+                              {isAdminOrSecurity && item.status === 'ACTIVE' && (
+                                <button
+                                  onClick={() => handleMarkStatus(item.id, 'RETURN')}
+                                  title="Mark student as RETURNED (IN)"
+                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
+                                >
+                                  <LogIn className="w-3 h-3" /> IN
+                                </button>
+                              )}
+
+                              {/* 4. Approve / Reject for Pending Passes */}
+                              {isAdminOrSecurity && item.status === 'PENDING' && (
+                                <>
+                                  <button
+                                    onClick={() => handleApproveReject(item.id, 'APPROVED')}
+                                    title="Approve Pass"
+                                    className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all border border-emerald-200 cursor-pointer active:scale-95"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleApproveReject(item.id, 'REJECTED')}
+                                    title="Reject Pass"
+                                    className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-all border border-rose-200 cursor-pointer active:scale-95"
+                                  >
+                                    <XCircle className="w-4 h-4" />
+                                  </button>
+                                </>
+                              )}
+
+                              {/* 5. Delete Pass (Admin / Super Admin) */}
+                              {isSuperAdminOrAdmin && (
+                                <button
+                                  onClick={() => setDeleteConfirmItem(item)}
+                                  title="Delete Gate Pass Record"
+                                  className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all border border-slate-200 hover:border-rose-200 cursor-pointer shadow-xs active:scale-95"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+        </div>
+      </div>
+
+      {/* ══ MODAL 1: ISSUE GATE PASS ══ */}
+      {isIssueModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] animate-scale-up">
+            {/* Modal Header */}
+            <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-indigo-500/20 rounded-xl border border-indigo-400/20 text-indigo-300">
+                  <PlusCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black tracking-tight">Issue Official Gate Pass</h3>
+                  <p className="text-xs text-slate-300 font-medium">Record student/staff campus departure with live approval</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsIssueModalOpen(false)}
+                className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              {/* Type Switcher */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setFormType('STUDENT')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    formType === 'STUDENT' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                  }`}
+                >
+                  Student Departure Pass
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormType('TEACHER')}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
+                    formType === 'TEACHER' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                  }`}
+                >
+                  Staff / Teacher Pass
+                </button>
+              </div>
+
+              {/* Student Picker */}
+              {formType === 'STUDENT' && (
+                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-3">
+                  <div className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                    <User className="w-4 h-4 text-indigo-600" /> Select Student
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-500 block mb-1">Filter Class</label>
+                      <select
+                        value={selectedStudentClass}
+                        onChange={(e) => {
+                          setSelectedStudentClass(e.target.value);
+                          setSelectedStudentId('');
+                        }}
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      >
+                        <option value="">All Classes</option>
+                        {uniqueClassNames.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-500 block mb-1">Select Student</label>
+                      <select
+                        value={selectedStudentId}
+                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+                      >
+                        <option value="">Choose student...</option>
+                        {modalAvailableStudents.map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.user?.name} {s.rollNo ? `(Roll: ${s.rollNo})` : ''} - {s.class?.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Selected Student Preview Card */}
+                  {selectedStudentObj && (
+                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-200/70 dark:border-indigo-900/50 flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
+                        {selectedStudentObj.user?.photoUrl ? (
+                          <img src={getPhotoUrl(selectedStudentObj.user.photoUrl)} alt="Photo" className="w-full h-full object-cover" />
+                        ) : (
+                          <User className="w-full h-full p-2 text-slate-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          {selectedStudentObj.user?.name}
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-500">
+                          Class: {selectedStudentObj.class?.name}-{selectedStudentObj.class?.section} · Roll: {selectedStudentObj.rollNo || 'N/A'} · Father: {selectedStudentObj.fatherName || 'N/A'}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Reason Category Chips */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Quick Reason Template</label>
+                <div className="flex flex-wrap gap-2">
+                  {REASON_CATEGORIES.map((cat) => (
                     <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab as any)}
-                      className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${
-                        activeTab === tab 
-                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200' 
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                      key={cat.label}
+                      type="button"
+                      onClick={() => setCustomReason(cat.value)}
+                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                        customReason === cat.value
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
                       }`}
                     >
-                      {tab === 'DASHBOARD' ? 'Live Passes' : tab.charAt(0) + tab.slice(1).toLowerCase()}
-                      {tab === 'APPROVALS' && stats.pending > 0 && (
-                        <span className={`ml-2 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] ${activeTab === tab ? 'bg-white text-indigo-600' : 'bg-rose-500 text-white'}`}>
-                          {stats.pending}
-                        </span>
-                      )}
+                      {cat.label}
                     </button>
                   ))}
                 </div>
+              </div>
 
-                {/* Table */}
-                <div className="flex-1 overflow-auto">
-                  {loading ? (
-                    <div className="flex justify-center py-16"><LoadingSpinner size="lg" /></div>
-                  ) : items.length === 0 ? (
-                    <div className="text-center py-20 text-slate-400 flex flex-col items-center">
-                      <FileText className="w-16 h-16 mb-4 opacity-20 text-slate-400" />
-                      <p className="font-black text-xl text-slate-600">No records found</p>
-                      <p className="text-sm font-medium mt-1 text-slate-500">Gate pass records will appear here.</p>
-                    </div>
-                  ) : (
-                    <table className="w-full text-sm text-left">
-                      <thead className="bg-white text-slate-400 text-xs uppercase tracking-widest sticky top-0 z-10 border-b border-slate-100">
-                        <tr>
-                          <th className="px-6 py-4 font-bold">Pass Info</th>
-                          <th className="px-6 py-4 font-bold">Person Details</th>
-                          <th className="px-6 py-4 font-bold">Reason & Times</th>
-                          <th className="px-6 py-4 font-bold">Status</th>
-                          <th className="px-6 py-4 font-bold text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-50">
-                        {items.map((item) => (
-                          <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
-                            <td className="px-6 py-4 align-top">
-                              <div className="font-black text-slate-800 text-base">{item.slipNumber || '-'}</div>
-                              <div className="text-xs text-slate-500 font-bold mt-1 bg-slate-100 w-fit px-2 py-0.5 rounded-md">{new Date(item.requestedDate).toLocaleDateString()}</div>
-                            </td>
-                            <td className="px-6 py-4 align-top">
-                              <div className="font-bold text-slate-800 flex items-center gap-2 text-sm">
-                                <div className="w-7 h-7 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                  <User className="w-4 h-4" />
-                                </div>
-                                {item.requestType === 'STUDENT' ? item.student?.user?.name : item.requester?.name}
-                              </div>
-                              <div className="text-xs text-slate-500 font-semibold mt-1.5 bg-slate-50 w-fit px-2.5 py-1 rounded-lg border border-slate-100">
-                                {item.requestType === 'STUDENT' 
-                                  ? `Class ${item.student?.class?.name}-${item.student?.class?.section} | Roll: ${item.student?.rollNo || 'N/A'}`
-                                  : `Role: ${item.requester?.role}`
-                                }
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 align-top max-w-[200px]">
-                              <div className="font-bold text-slate-700 line-clamp-2 leading-relaxed" title={item.reason}>{item.reason}</div>
-                              <div className="flex items-center gap-3 text-xs font-bold mt-2">
-                                <div className="flex items-center gap-1.5 text-slate-500"><LogOut className="w-3.5 h-3.5 text-rose-500" /> {item.exitTime || '--:--'}</div>
-                                <div className="flex items-center gap-1.5 text-slate-500"><Clock className="w-3.5 h-3.5 text-emerald-500" /> {item.returnTime || '--:--'}</div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 align-top">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border ${
-                                item.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                                item.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-200' :
-                                item.status === 'ACTIVE' ? 'bg-indigo-50 text-indigo-600 border-indigo-200' :
-                                item.status === 'COMPLETED' ? 'bg-slate-100 text-slate-600 border-slate-300' :
-                                'bg-amber-50 text-amber-600 border-amber-200'
-                              }`}>
-                                {item.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 align-top text-right">
-                              <div className="flex flex-wrap items-center justify-end gap-2">
-                                {canApprove && item.status === 'PENDING' && (
-                                  <>
-                                    <button onClick={() => approve(item.id, 'APPROVED')} className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-100" title="Approve">
-                                      <CheckCircle2 className="w-4 h-4" />
-                                    </button>
-                                    <button onClick={() => approve(item.id, 'REJECTED')} className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors border border-red-100" title="Reject">
-                                      <XCircle className="w-4 h-4" />
-                                    </button>
-                                  </>
-                                )}
-                                
-                                {user?.role === 'SECURITY' && item.status === 'APPROVED' && (
-                                  <button onClick={() => markExitReturn(item.id, 'EXIT')} className="px-3 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-100 rounded-lg text-xs font-bold uppercase transition-colors">
-                                    Mark Exit
-                                  </button>
-                                )}
-                                {user?.role === 'SECURITY' && item.status === 'ACTIVE' && (
-                                  <button onClick={() => markExitReturn(item.id, 'RETURN')} className="px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100 rounded-lg text-xs font-bold uppercase transition-colors">
-                                    Mark Return
-                                  </button>
-                                )}
-
-                                {(item.status === 'APPROVED' || item.status === 'ACTIVE' || item.status === 'COMPLETED') && (
-                                  <button onClick={() => printSlip(item)} className="px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-bold uppercase transition-colors flex items-center gap-1.5 shadow-sm" title="Print Slip">
-                                    <Printer className="w-3.5 h-3.5" /> Print
-                                  </button>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
+              {/* Specific Reason & Destination */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+                    Specific Reason <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Severe headache, Dental appointment"
+                    value={customReason}
+                    onChange={(e) => setCustomReason(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
                 </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Destination</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Home, SVL Hospital, Narasannapeta"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Times */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Departure Time (Exit)</label>
+                  <input
+                    type="time"
+                    value={exitTime}
+                    onChange={(e) => setExitTime(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Expected Return Time</label>
+                  <input
+                    type="time"
+                    placeholder="Leave empty if not returning today"
+                    value={returnTime}
+                    onChange={(e) => setReturnTime(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+              </div>
+
+              {/* Accompanying Person */}
+              <div>
+                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Accompanying Guardian / Escort Name (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Father, Mother, Self"
+                  value={accompanyingPerson}
+                  onChange={(e) => setAccompanyingPerson(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setIsIssueModalOpen(false)}
+                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => handleIssuePass(false)}
+                className="btn-secondary text-xs font-black uppercase px-5 py-2.5 rounded-xl cursor-pointer disabled:opacity-50"
+              >
+                {submitting ? 'Issuing...' : 'Issue Pass'}
+              </button>
+
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => handleIssuePass(true)}
+                className="btn-primary text-xs font-black uppercase px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+              >
+                <Printer className="w-4 h-4" />
+                <span>Issue & Print Immediately</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ MODAL 2: PREVIEW DUAL-COPY SLIP ══ */}
+      {previewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] animate-scale-up">
+            <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
+              <div className="flex items-center gap-2.5">
+                <Printer className="w-5 h-5 text-indigo-400" />
+                <h3 className="text-base font-black">Gate Pass Slip Preview (A4 2-Copy Layout)</h3>
+              </div>
+              <button onClick={() => setPreviewItem(null)} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-950">
+              <GatePassPrint
+                gatePass={previewItem}
+                schoolSettings={schoolSettings}
+              />
+            </div>
+
+            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-400">
+                Printed format contains Student Copy & Security Copy on 1 single sheet.
+              </span>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setPreviewItem(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-100 cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    printGatePassSlip(previewItem, schoolSettings);
+                    setPreviewItem(null);
+                  }}
+                  className="btn-primary text-xs font-black uppercase px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Slip Now</span>
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ══ MODAL 3: DELETE CONFIRMATION ══ */}
+      {deleteConfirmItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5 animate-scale-up">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-2xl">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white">Delete Gate Pass?</h3>
+                <p className="text-xs font-semibold text-slate-500">This action cannot be undone.</p>
+              </div>
+            </div>
+
+            <div className="p-4 bg-rose-50/60 dark:bg-rose-950/20 rounded-2xl border border-rose-100 dark:border-rose-900/40 text-xs text-rose-800 dark:text-rose-300 space-y-1">
+              <div>Are you sure you want to permanently delete Gate Pass:</div>
+              <div className="font-mono font-black text-sm text-rose-900 dark:text-rose-200">
+                #{deleteConfirmItem.slipNumber || deleteConfirmItem.id}
+              </div>
+              <div className="text-[11px] text-rose-600 dark:text-rose-400">
+                Person: {deleteConfirmItem.student?.user?.name || deleteConfirmItem.requester?.name || 'N/A'}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmItem(null)}
+                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-100 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={deleting}
+                onClick={handleDeletePass}
+                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase px-6 py-2.5 rounded-xl shadow-md shadow-rose-600/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleting ? <LoadingSpinner size="sm" /> : <Trash2 className="w-4 h-4" />}
+                <span>Yes, Delete</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

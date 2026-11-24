@@ -104,11 +104,13 @@ const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const LeaveDashboardPage = lazy(() => import('../pages/leave/LeaveDashboardPage'));
 const GatePassPage = lazy(routeImports['/leave/gate-pass']);
 const HomeworkPage = lazy(routeImports['/homework']);
+const AssignHomeworkPage = lazy(() => import('../pages/homework/AssignHomeworkPage'));
 const TeacherAttendancePage = lazy(routeImports['/teacher-attendance']);
 const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
+const AcademicProgressCardPage = lazy(() => import('../pages/office-tools/AcademicProgressCardPage'));
 const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
 const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
@@ -670,6 +672,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'office-tools/academic-progress-card',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AcademicProgressCardPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'office-tools/slip-test',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN']}>
@@ -850,6 +860,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
             <HomeworkPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'homework/create',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AssignHomeworkPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'homework/edit/:id',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AssignHomeworkPage />
           </ProtectedRoute>
         ),
       },

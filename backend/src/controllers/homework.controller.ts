@@ -71,9 +71,20 @@ export const createHomework = async (req: AuthRequest, res: Response, next: Next
       if (!teacher) return next(createError('Teacher profile not found', 404));
       teacherId = teacher.id;
     } else {
-      // Admin can assign on behalf of any teacher — require teacherId in body
-      if (!req.body.teacherId) return next(createError('teacherId required for admin', 400));
-      teacherId = req.body.teacherId;
+      if (req.body.teacherId) {
+        teacherId = req.body.teacherId;
+      } else {
+        const cst = await prisma.classSubjectTeacher.findFirst({
+          where: { classId, subjectId }
+        });
+        if (cst) {
+          teacherId = cst.teacherId;
+        } else {
+          const anyTeacher = await prisma.teacher.findFirst();
+          if (!anyTeacher) return next(createError('No teacher found in school to assign homework', 400));
+          teacherId = anyTeacher.id;
+        }
+      }
     }
 
     const hw = await prisma.homework.create({

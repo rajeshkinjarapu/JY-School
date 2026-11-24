@@ -1,5 +1,5 @@
 import React from 'react';
-import { Award, User, Hash, GraduationCap, Users, Phone, Calendar, MapPin, Medal, BarChart3, PenTool, ClipboardList } from 'lucide-react';
+import { Award, User, Hash, GraduationCap, Phone, Calendar, MapPin, Medal, BarChart3, PenTool, ClipboardList } from 'lucide-react';
 
 interface ProgressCardTemplateProps {
   data?: any;
@@ -38,40 +38,21 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   const examTitle = settings?.examNameOverride || exam?.name || 'EXAMINATION RESULT CARD';
   const logoUrl = settings?.logoUrl;
   const teacherSignatureUrl = settings?.teacherSignatureUrl;
-  const principalSignatureUrl = settings?.signatureUrl;
+  const principalSignatureUrl = settings?.signatureUrl || settings?.principalSignatureUrl;
 
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-  const resolveUrl = (url: string) => {
+  const resolveUrl = (url?: string) => {
     if (!url || url === 'null' || url === 'undefined') return '';
     if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    if (url === '/logo.png' || url === 'logo.png') return '/logo.png';
     return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
   };
 
-  const infoRows = [
-    { icon: <User className="w-4 h-4 text-purple-700" />, label: 'STUDENT NAME', value: safeData.studentName },
-    { icon: <Hash className="w-4 h-4 text-indigo-500" />, label: 'STUDENT ID', value: safeData.rollNo },
-    { icon: <GraduationCap className="w-4 h-4 text-emerald-600" />, label: 'CLASS', value: safeData.className },
-    { icon: <Users className="w-4 h-4 text-blue-500" />, label: 'SECTION', value: safeData.section },
-    { icon: <Phone className="w-4 h-4 text-red-500" />, label: 'MOBILE', value: safeData.mobile },
-    { icon: <Calendar className="w-4 h-4 text-cyan-600" />, label: 'ACADEMIC YEAR', value: safeData.academicYear },
-    { icon: <MapPin className="w-4 h-4 text-pink-600" />, label: 'LOCATION', value: safeData.location },
-    ...(safeData.rank ? [{ icon: <Medal className="w-4 h-4 text-yellow-600" />, label: 'CLASS RANK', value: `#${safeData.rank}` }] : []),
-  ];
-
   return (
     <div
-      className="w-[794px] bg-white mx-auto shrink-0 print:shadow-none"
+      className="progress-card-container progress-card-page bg-white p-6 w-[210mm] min-h-[297mm] h-[297mm] max-h-[297mm] mx-auto flex flex-col justify-between box-border relative overflow-hidden"
       style={{
-        minHeight: '1123px', // Exact A4 Height in pixels at 96 DPI
-        display: 'flex',
-        flexDirection: 'column',
-        fontFamily: "'Segoe UI','Roboto',system-ui,-apple-system,sans-serif",
-        boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
-        borderRadius: 0,
-        overflow: 'hidden',
-        border: '3px solid #0b1a33', // outer dark blue
-        outline: '1.5px solid #f39c12', // inner orange
-        outlineOffset: -8, // white gap
+        fontFamily: "'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif",
         boxSizing: 'border-box',
         background: '#ffffff',
       }}
@@ -80,166 +61,286 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
         @media print {
           @page { size: A4 portrait; margin: 0; }
           body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; margin: 0 !important; padding: 0 !important; background: white !important; }
-          .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; }
-          .w-\\\\[794px\\\\] { width: 210mm !important; max-width: 210mm !important; margin: 0 !important; box-shadow: none !important; border-radius: 0 !important; }
+          .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; display: block !important; width: 210mm !important; min-height: 297mm !important; height: 297mm !important; margin: 0 auto !important; }
+          .progress-card-page { width: 210mm !important; min-height: 297mm !important; height: 297mm !important; margin: 0 auto !important; box-shadow: none !important; }
         }
       `}</style>
 
-      <div style={{ display: 'flex', alignItems: 'center', padding: '24px 32px 12px 32px', gap: 16 }}>
-        <div style={{ width: 90, height: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          {resolveUrl(logoUrl) ? (
-            <img src={resolveUrl(logoUrl)} alt="Logo" style={{ maxWidth: '100%', maxHeight: 90, objectFit: 'contain' }} />
-          ) : (
-            <Award style={{ width: 48, height: 48, color: '#1a4a7a' }} />
-          )}
-        </div>
-        <div style={{ textAlign: 'center', flex: 1, padding: '0 8px' }}>
-          <div style={{ fontSize: 26, fontWeight: 900, color: '#0b1a33', letterSpacing: 1.5, fontFamily: "'Times New Roman','Georgia',serif", lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-            {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
-          </div>
-          <div style={{ fontSize: 12, color: '#64748b', marginTop: 4, whiteSpace: 'nowrap', fontWeight: 500 }}>
-            {settings?.schoolAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}
-          </div>
-          <div style={{ fontSize: 20, fontWeight: 500, color: '#64748b', letterSpacing: 2, margin: '8px 0 0', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
-            {examTitle}
-          </div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: '#f39c12', letterSpacing: 4, marginTop: 4, whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-            <span style={{ fontSize: 18 }}>✦</span> RESULT CARD <span style={{ fontSize: 18 }}>✦</span>
-          </div>
-        </div>
-        <div style={{ width: 90, flexShrink: 0 }} />
+      {/* Watermark in Background */}
+      <div className="absolute inset-0 z-0 flex items-center justify-center opacity-[0.035] pointer-events-none">
+        <img
+          src={resolveUrl(logoUrl) || '/logo.png'}
+          alt="Watermark"
+          className="w-[360px] h-[360px] object-contain grayscale"
+          crossOrigin="anonymous"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (!target.src.endsWith('/logo.png')) target.src = '/logo.png';
+          }}
+        />
       </div>
 
-      {/* Decorative Divider */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px 32px 16px 32px' }}>
-        <div style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg,transparent,#f39c12)' }} />
-        <span style={{ margin: '0 12px', color: '#d4a017', fontSize: 14 }}>✦</span>
-        <span style={{ margin: '0 12px', color: '#d4a017', fontSize: 14 }}>✦</span>
-        <span style={{ margin: '0 12px', color: '#d4a017', fontSize: 14 }}>✦</span>
-        <div style={{ flex: 1, height: 1.5, background: 'linear-gradient(90deg,#f39c12,transparent)' }} />
-      </div>
-
-      {/* Student Info Box */}
-      <div style={{ margin: '0 24px 14px 24px', border: '1.5px solid #f39c12', borderRadius: 12, overflow: 'hidden', background: 'linear-gradient(135deg,#ffffff,#fef8f0)', display: 'flex', position: 'relative' }}>
-        <div style={{ flex: 1 }}>
-          {infoRows.map((row, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '175px 1fr', borderBottom: i < infoRows.length - 1 ? '1px solid #f5ede4' : 'none', background: i % 2 === 1 ? '#fdfcf9' : 'transparent' }}>
-              <div style={{ padding: '11px 16px', fontWeight: 700, fontSize: 12, color: '#6a3a1a', display: 'flex', alignItems: 'center', gap: 10, whiteSpace: 'nowrap' }}>
-                <span style={{ background: '#fff', padding: 4, borderRadius: 6, boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>{row.icon}</span> {row.label}
+      {/* Double Border Frame: Outer Navy Blue (3px) + Gap + Inner Gold (1.5px) */}
+      <div className="w-full h-full flex-1 border-[3px] border-[#0b1a33] p-[2.5px] relative flex flex-col z-10 bg-transparent box-border">
+        <div className="w-full h-full flex-1 border border-[#f39c12] flex flex-col justify-between bg-white/95 relative p-5 box-border">
+          
+          {/* 1. Header Area */}
+          <div>
+            <div className="flex items-center gap-5 pb-3 border-b-2 border-slate-900/80">
+              <div className="w-20 h-20 shrink-0 bg-white border border-slate-200 p-1.5 shadow-xs rounded-xl flex items-center justify-center overflow-hidden">
+                {resolveUrl(logoUrl) ? (
+                  <img src={resolveUrl(logoUrl)} alt="Logo" className="max-w-full max-h-full object-contain" crossOrigin="anonymous" />
+                ) : (
+                  <Award className="w-10 h-10 text-[#0b1a33]" />
+                )}
               </div>
-              <div style={{ padding: '11px 16px', paddingRight: 120, fontWeight: 700, fontSize: 13, color: '#0b1a33', display: 'flex', alignItems: 'center', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                {row.value}
+              <div className="flex-1 text-center">
+                <h1 className="text-[22px] font-black uppercase tracking-wider text-[#0b1a33] leading-tight" style={{ fontFamily: '"Georgia", serif' }}>
+                  {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
+                </h1>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d97706] mt-1">
+                  {settings?.schoolSubtitle || "(IIT-JEE / NEET Foundation – Olympiads)"}
+                </p>
+                <p className="text-[11px] font-semibold text-slate-500 mt-1">
+                  {settings?.schoolAddress || settings?.headerAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}
+                </p>
+              </div>
+              <div className="w-20 shrink-0 pointer-events-none" aria-hidden="true" />
+            </div>
+
+            {/* Title Badges */}
+            <div className="flex flex-col items-center py-2.5 border-b border-slate-200">
+              <div className="bg-[#0b1a33] text-white px-7 py-1 rounded-sm shadow-sm transform -skew-x-12 mb-1">
+                <h2 className="text-sm font-black uppercase tracking-[0.25em] transform skew-x-12 text-[#fbbf24] flex items-center gap-2">
+                  <span>✦</span> RESULT CARD <span>✦</span>
+                </h2>
+              </div>
+              <h3 className="text-sm font-bold text-slate-800 uppercase tracking-widest text-center">
+                {examTitle}
+              </h3>
+            </div>
+          </div>
+
+          {/* 2. Candidate Details Box */}
+          <div className="rounded-xl border border-slate-300 overflow-hidden shadow-2xs bg-white my-3">
+            <div className="bg-[#0b1a33] px-4 py-2 flex items-center justify-between">
+              <h4 className="text-xs font-bold uppercase tracking-widest text-white flex items-center gap-2">
+                <User className="w-3.5 h-3.5 text-[#fbbf24]" /> Candidate Details
+              </h4>
+              {safeData.rank ? (
+                <span className="bg-[#fbbf24] text-[#0b1a33] font-black text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                  <Medal className="w-3 h-3 text-[#0b1a33]" /> Class Rank #{safeData.rank}
+                </span>
+              ) : null}
+            </div>
+
+            <div className="flex items-stretch p-3 gap-4">
+              <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
+                  </span>
+                  <span className="font-black text-slate-900 uppercase text-[12px] truncate">{safeData.studentName}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <Hash className="w-3.5 h-3.5 text-indigo-600" /> Student ID:
+                  </span>
+                  <span className="font-extrabold text-slate-800">{safeData.rollNo}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <GraduationCap className="w-3.5 h-3.5 text-emerald-600" /> Class & Sec:
+                  </span>
+                  <span className="font-extrabold text-slate-800">{safeData.className} {safeData.section ? `- ${safeData.section}` : ''}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
+                  </span>
+                  <span className="font-bold text-slate-800">{safeData.academicYear}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-rose-500" /> Mobile:
+                  </span>
+                  <span className="font-bold text-slate-800">{safeData.mobile}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
+                  </span>
+                  <span className="font-bold text-slate-800">{safeData.location}</span>
+                </div>
+              </div>
+
+              {/* Student Photo */}
+              <div className="shrink-0 w-24 h-28 p-1 bg-white border-2 border-[#f39c12] rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
+                {resolveUrl(safeData.photo) ? (
+                  <img src={resolveUrl(safeData.photo)} alt="Candidate Photo" className="w-full h-full object-cover rounded" crossOrigin="anonymous" />
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-slate-400 text-[10px] font-bold">
+                    <User className="w-8 h-8 text-slate-300 mb-1" />
+                    <span>PHOTO</span>
+                  </div>
+                )}
               </div>
             </div>
-          ))}
-        </div>
-        <div style={{ position: 'absolute', right: 14, top: 12 }}>
-          {resolveUrl(safeData.photo) ? (
-             <div style={{ padding: 2, background: '#fff', border: '2px solid #f39c12', borderRadius: 8, boxShadow: '0 4px 12px rgba(243,156,18,0.15)' }}>
-                <img src={resolveUrl(safeData.photo)} alt="Student" style={{ width: 86, height: 106, objectFit: 'cover', borderRadius: 6 }} />
-             </div>
-          ) : (
-            <div style={{ width: 90, height: 110, background: '#ede8e0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8a7a6a', fontSize: 38, border: '3px dashed #c8b8a8', borderRadius: 6 }}>📷</div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      {/* Performance Summary */}
-      <div style={{ margin: '24px 24px 16px 24px' }}>
-        <div style={{ fontSize: 16, fontWeight: 800, color: '#0b1a33', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <BarChart3 className="w-5 h-5 text-indigo-500" />
-          <span>Performance Summary</span>
-          <span style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 500, color: '#94a3b8' }}>Max Marks: {TOTAL_MAX_MARKS}</span>
-        </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', borderRadius: 8, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.04)', fontSize: 14, border: '1px solid #e2e8f0' }}>
-          <thead>
-            <tr style={{ background: '#0b1a33' }}>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '14px 16px 14px 20px', textAlign: 'left', fontSize: 12 }}>Subject</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '14px 16px', textAlign: 'center', fontSize: 12 }}>Marks</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '14px 16px', textAlign: 'center', fontSize: 12 }}>Max Marks</th>
-              <th style={{ color: '#fff', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, padding: '14px 16px', textAlign: 'center', fontSize: 12 }}>%</th>
-            </tr>
-          </thead>
-          <tbody>
-            {safeData.marks.map((sub: any, i: number) => {
-              const max = Number(sub.maxMarks) || 100;
-              const isAB = sub.remarks === 'AB';
-              const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
-              const subPct = isAB ? '0.0' : (max > 0 ? ((Number(sub.obtained) || 0) / max) * 100 : 0).toFixed(1);
-              return (
-                <tr key={i} style={{ background: i % 2 === 1 ? '#f8fafc' : '#ffffff', borderBottom: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '14px 16px 14px 20px', textAlign: 'left', fontWeight: 700, color: '#0b1a33', textTransform: 'uppercase', display: 'flex', alignItems: 'center' }}>
-                    <span style={{ display: 'inline-block', width: 8, height: 8, background: '#38bdf8', marginRight: 12, borderRadius: 2 }}></span>
-                    {sub.subject}
-                  </td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center', fontWeight: 800, fontSize: 15, color: isAB ? '#ef4444' : '#0b1a33' }}>{obt}</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center', color: '#94a3b8', fontWeight: 500 }}>{max}</td>
-                  <td style={{ padding: '14px 16px', textAlign: 'center', fontWeight: 800, color: '#1e3a8a' }}>{subPct}%</td>
-                </tr>
-              );
-            })}
-            <tr style={{ background: '#fffcf5' }}>
-              <td style={{ padding: '16px 16px 16px 20px', textAlign: 'left', fontWeight: 900, color: '#0b1a33', textTransform: 'uppercase', letterSpacing: 1, fontSize: 14, display: 'flex', alignItems: 'center' }}>
-                <span style={{ color: '#dc2626', marginRight: 10, fontSize: 16 }}>✦</span> TOTAL
-              </td>
-              <td style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 900, fontSize: 18, color: '#dc2626' }}>{safeData.total}</td>
-              <td style={{ padding: '16px 16px', textAlign: 'center', color: '#1e3a8a', fontWeight: 700 }}>{TOTAL_MAX_MARKS}</td>
-              <td style={{ padding: '16px 16px', textAlign: 'center', fontWeight: 900, color: '#1e3a8a' }}>{totalPct}%</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+          {/* 3. Performance Summary Table */}
+          <div className="my-2">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-black uppercase tracking-wider text-[#0b1a33] flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-indigo-600" /> Performance Summary
+              </h4>
+              <span className="text-[11px] font-bold text-slate-500">
+                Max Aggregate: <strong className="text-slate-800">{TOTAL_MAX_MARKS}</strong>
+              </span>
+            </div>
 
-      {/* Progress Bar (Neumorphic Pill) */}
-      <div style={{ margin: '10px 24px 14px 24px', padding: '0 8px' }}>
-        <div style={{ position: 'relative', width: '100%', padding: '14px 20px', background: '#f8fafc', borderRadius: 20, border: '1px solid #e2e8f0', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.02)' }}>
-          <div style={{ height: 16, background: '#e2e8f0', borderRadius: 20, overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${barWidth}%`, background: 'linear-gradient(90deg,#1e3a8a,#38bdf8)', borderRadius: 20 }} />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12, fontSize: 12, fontWeight: 500, color: '#94a3b8' }}>
-            <span>0</span>
-            <span>Threshold: {PASS_THRESHOLD}%</span>
-            <span>{TOTAL_MAX_MARKS}</span>
-          </div>
-        </div>
-      </div>
+            <div className="border border-slate-300 rounded-lg overflow-hidden shadow-2xs">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#0b1a33] text-white">
+                    <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-[11px]">Subject</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Marks Obtained</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Max Marks</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">% Score</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {safeData.marks.map((sub: any, i: number) => {
+                    const max = Number(sub.maxMarks) || 100;
+                    const isAB = sub.remarks === 'AB' || sub.obtained === 'AB';
+                    const obt = isAB ? 'AB' : (Number(sub.obtained) || 0);
+                    const obtNum = Number(sub.obtained) || 0;
+                    const subPct = isAB ? '0.0' : (max > 0 ? (obtNum / max) * 100 : 0).toFixed(1);
+                    const isPass = !isAB && (max > 0 ? (obtNum / max) * 100 >= PASS_THRESHOLD : false);
 
-      {/* Footer Area */}
-      <div style={{ margin: 'auto 24px 0 24px', paddingTop: 20, paddingBottom: 24, borderTop: '2px dashed #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: '#1e3a8a', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <ClipboardList className="w-5 h-5 text-indigo-600" /> TOTAL MARKS: {safeData.total} / {TOTAL_MAX_MARKS}
-          </div>
-          <div style={{ fontSize: 52, fontWeight: 900, color: '#dc2626', lineHeight: 1, letterSpacing: -1, marginTop: 6 }}>
-            {totalPct}%
-          </div>
-        </div>
-        <div style={{ display: 'flex', gap: 48 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 140 }}>
-            {resolveUrl(teacherSignatureUrl) ? (
-              <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" style={{ maxWidth: 140, maxHeight: 56, objectFit: 'contain', marginBottom: 8 }} />
-            ) : (
-              <div style={{ width: '100%', height: 56, borderBottom: '1.5px dashed #cbd5e1', marginBottom: 8 }} />
-            )}
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0b1a33', textAlign: 'center', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <PenTool className="w-4 h-4 text-orange-500" /> Teacher Signature
+                    return (
+                      <tr key={i} className={i % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'}>
+                        <td className="py-2.5 px-4 font-bold text-slate-800 uppercase flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-[#0b1a33]" />
+                          {sub.subject}
+                        </td>
+                        <td className={`py-2.5 px-3 text-center font-black text-sm ${isAB ? 'text-red-600' : 'text-slate-900'}`}>
+                          {obt}
+                        </td>
+                        <td className="py-2.5 px-3 text-center font-semibold text-slate-600">{max}</td>
+                        <td className="py-2.5 px-3 text-center font-extrabold text-indigo-700">{subPct}%</td>
+                        <td className="py-2.5 px-3 text-center font-bold">
+                          {isAB ? (
+                            <span className="text-[10px] text-red-600 font-black">ABSENT</span>
+                          ) : isPass ? (
+                            <span className="text-[10px] text-emerald-600 font-extrabold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">PASS</span>
+                          ) : (
+                            <span className="text-[10px] text-rose-600 font-extrabold bg-rose-50 px-2 py-0.5 rounded border border-rose-200">NEEDS FOCUS</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Total Row */}
+                  <tr className="bg-amber-50/80 border-t-2 border-[#0b1a33]">
+                    <td className="py-3 px-4 font-black text-slate-900 uppercase tracking-wider text-xs flex items-center gap-1.5">
+                      <span className="text-red-600">✦</span> GRAND TOTAL
+                    </td>
+                    <td className="py-3 px-3 text-center font-black text-base text-red-600">
+                      {safeData.total}
+                    </td>
+                    <td className="py-3 px-3 text-center font-bold text-slate-800">{TOTAL_MAX_MARKS}</td>
+                    <td className="py-3 px-3 text-center font-black text-sm text-[#0b1a33]">{totalPct}%</td>
+                    <td className="py-3 px-3 text-center font-black text-xs text-emerald-700 uppercase">
+                      {Number(totalPct) >= 75 ? 'DISTINCTION' : Number(totalPct) >= 60 ? 'FIRST CLASS' : Number(totalPct) >= PASS_THRESHOLD ? 'PASSED' : 'FAILED'}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 140 }}>
-            {resolveUrl(principalSignatureUrl) ? (
-              <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" style={{ maxWidth: 140, maxHeight: 56, objectFit: 'contain', marginBottom: 8 }} />
-            ) : (
-              <div style={{ width: '100%', height: 56, borderBottom: '1.5px dashed #cbd5e1', marginBottom: 8 }} />
-            )}
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0b1a33', textAlign: 'center', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <PenTool className="w-4 h-4 text-orange-500" /> Principal Signature
+
+          {/* 4. Visual Score & Progress Gauge */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 my-2">
+            <div className="flex justify-between items-center text-xs font-bold text-slate-600 mb-1.5">
+              <span>Overall Performance Gauge</span>
+              <span className="text-indigo-700 font-black">{totalPct}% Overall Score</span>
+            </div>
+            <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 rounded-full transition-all"
+                style={{ width: `${barWidth}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[10px] text-slate-400 mt-1 font-semibold">
+              <span>0%</span>
+              <span className="text-slate-600 font-bold">Pass Threshold: {PASS_THRESHOLD}%</span>
+              <span>100%</span>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div style={{ background: '#0b1a33', color: '#94a3b8', fontSize: 10, textAlign: 'center', padding: '10px 8px', fontWeight: 500, letterSpacing: 0.5 }}>
-        ★ This is a system-generated result card for {examTitle} ★
+          {/* 5. Result Summary & Signatures */}
+          <div className="mt-auto pt-3 border-t-2 border-dashed border-slate-200 flex items-end justify-between">
+            <div>
+              <div className="text-xs font-black uppercase tracking-wider text-[#0b1a33] flex items-center gap-1.5">
+                <ClipboardList className="w-4 h-4 text-indigo-600" /> Total Marks: {safeData.total} / {TOTAL_MAX_MARKS}
+              </div>
+              <div className="text-4xl font-black text-red-600 tracking-tight mt-0.5 leading-none">
+                {totalPct}%
+              </div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">
+                Result Status: {Number(totalPct) >= PASS_THRESHOLD ? 'Qualified / Passed' : 'Needs Improvement'}
+              </div>
+            </div>
+
+            <div className="flex items-end gap-10">
+              {/* Teacher Signature */}
+              <div className="text-center w-36 flex flex-col items-center">
+                <div className="h-16 flex items-end justify-center mb-1">
+                  {resolveUrl(teacherSignatureUrl) ? (
+                    <img
+                      src={resolveUrl(teacherSignatureUrl)}
+                      alt="Teacher Signature"
+                      className="max-h-14 max-w-full object-contain"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-32 border-b-2 border-dashed border-slate-400 mb-2" />
+                  )}
+                </div>
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-1">
+                  <PenTool className="w-3 h-3 text-orange-500" /> Class Teacher
+                </span>
+              </div>
+
+              {/* Principal Signature */}
+              <div className="text-center w-44 flex flex-col items-center">
+                <div className="h-16 flex items-end justify-center mb-1 relative">
+                  {resolveUrl(principalSignatureUrl) ? (
+                    <img
+                      src={resolveUrl(principalSignatureUrl)}
+                      alt="Principal Signature"
+                      className="max-h-16 max-w-full object-contain mix-blend-multiply"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="w-36 border-b-2 border-dashed border-slate-400 mb-2" />
+                  )}
+                </div>
+                <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-900 flex items-center gap-1">
+                  <PenTool className="w-3 h-3 text-orange-500" /> Principal / Head Master
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 6. Footer bar */}
+          <div className="bg-[#0b1a33] text-white text-[9.5px] font-semibold text-center py-1.5 px-3 rounded-b -mx-5 -mb-5 mt-2 tracking-wide">
+            ★ This is a computer-generated official Progress Card issued by Sri Venkateswara JY School ★
+          </div>
+
+        </div>
       </div>
     </div>
   );
