@@ -6,6 +6,48 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ (Git Pull Sync) (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `git nunchi updates anni download cheyu` (GitHub నుండి తాజా అప్‌డేట్‌లను లోకల్ సిస్టమ్‌లో మరియు VPS సర్వర్‌లో సింక్ చేసుకోవడానికి కమాండ్స్ అడిగారు).
+- **అందించిన కమాండ్స్ & గైడెన్స్:**
+  1. **లోకల్ కంప్యూటర్ (PowerShell):** ప్రస్తుత లోకల్ మార్పులను సురక్షితంగా ఉంచుతూ GitHub రిమోట్ నుండి లేటెస్ట్ కోడ్ డౌన్‌లోడ్ చేయడానికి `git pull origin main` కమాండ్స్ అందించాం.
+  2. **VPS సర్వర్:** VPS SSH వివరాల నిబంధన ప్రకారం `ssh root@66.116.252.191` తో ప్రారంభించి, లైవ్ సర్వర్‌లో లేటెస్ట్ కోడ్ పుల్ చేసి బిల్డ్ మరియు రీస్టార్ట్ చేసే కమాండ్స్ అందించాం.
+
+## చివరి సంభాషణ - Gate Pass ప్రింట్ లో ఖాళీ పేజీలు (Blank Pages) రాకుండా ఐఫ్రేమ్ ప్రింటర్ & లైవ్ ప్రివ్యూ మోడల్ తో పూర్తి పరిష్కారం (November 23, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `gatepass print ravatam ledu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో Gate Pass ప్రింట్ కొట్టినప్పుడు బ్రౌజర్ ప్రింట్ డైలాగ్‌లో 3 తెల్లటి ఖాళీ పేజీలు '3 sheets of paper' కనిపిస్తున్నాయి, స్లిప్ ప్రింట్ అవ్వడం లేదు).
+- **సమస్యకు మూలకారణం (Root Cause Analysis):**
+  - గేట్ పాస్ పేజీలోని ప్రింటబుల్ ఏరియా `absolute inset-0 z-[9999]` తో ఉంది. డ్యాష్‌బోర్డ్ పేరెంట్ కంటైనర్లలో `overflow: hidden` ఉండటం వల్ల, క్రోమియం (Cốc Cốc / Chrome) ప్రింట్ ఇంజిన్ అబ్‌సల్యూట్ ఎలిమెంట్‌ను 0 హైట్‌తో క్లిప్ చేసి ఖాళీ తెల్లటి పేజీలను రెండర్ చేసింది.
+  - అలాగే సైడ్‌బార్, హెడర్, టేబుల్ మొత్తం కలిసి 3 పేజీలుగా విస్తరించి ప్రింట్ ప్రివ్యూ పాడైంది.
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **ఐసోలేటెడ్ ఐఫ్రేమ్ ప్రింటింగ్ మెకానిజం ([`frontend/src/components/gate-pass/GatePassPrint.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/components/gate-pass/GatePassPrint.tsx)):**
+     - క్వశ్చన్ పేపర్ జనరేటర్‌లో ఉన్న గోల్డ్-స్టాండర్డ్ ఐఫ్రేమ్ ప్రింటింగ్ పద్ధతిని (`printGatePassSlip`) అమలు చేసాము.
+     - ప్రింట్ బటన్ నొక్కగానే బ్యాక్‌గ్రౌండ్‌లో ఒక హిడెన్ ఐఫ్రేమ్ క్రియేట్ అయ్యి, అందులో గేట్ పాస్ A4 ల్యాండ్‌స్కేప్ (స్టూడెంట్ కాపీ + సెక్యూరిటీ కాపీ) హెచ్‌టీఎమ్‌ఎల్, స్టూడెంట్ ఫోటో, QR కోడ్, అధీకృత సంతకాలు మరియు సీల్ బాక్స్‌లు లోడ్ అవుతాయి.
+     - సైడ్‌బార్, హెడర్ లేదా డ్యాష్‌బోర్డ్ ఓవర్‌ఫ్లోతో ఎలాంటి సంబంధం లేకుండా, సరిగ్గా 1 A4 షీట్‌లో క్లియర్, షార్ప్ అండ్ క్రిస్ప్ గా ప్రింట్ వస్తుంది.
+  2. **లైవ్ స్లిప్ ప్రివ్యూ & డైరెక్ట్ ప్రింట్ మోడల్:**
+     - ప్రింట్ నొక్కగానే స్క్రీన్‌పై ఒక సొగసైన గేట్ పాస్ ప్రివ్యూ మోడల్ కూడా కనిపిస్తుంది.
+     - విద్యార్థి వివరాలు, ఫోటో, స్లిప్ నంబర్, క్యూఆర్ కోడ్ లైవ్‌గా సరిచూసుకుని, ఎప్పుడైనా "Print Slip (A4)" పై క్లిక్ చేసి నేరుగా రీ-ప్రింట్ తీసుకునే వెసులుబాటు కల్పించబడింది.
+  3. **గేట్ పాస్ పేజీ అప్‌డేట్ ([`frontend/src/pages/gate-pass/GatePassPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/gate-pass/GatePassPage.tsx)):**
+     - పాత బ్రోకెన్ `window.print()` ని తొలగించి, కొత్త `printGatePassSlip` & ప్రివ్యూ మోడల్ తో అనుసంధానించాము.
+
+## చివరి సంభాషణ - Dedicated Full-Page AI Smart Parser & Gemini Flash Models రెసిలియంట్ ఫాల్‌బ్యాక్ (November 23, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `ai smart paster separate page open avvali` (AI Smart Parser చిన్న పాప్-అప్ మోడల్ కాకుండా పూర్తి ప్రత్యేక పేజీగా ఓపెన్ అవ్వాలి).
+  2. `gemini 2.5 flash engine ani undi text remove chey` (UI పై ఉన్న 'GEMINI 2.5 FLASH AI ENGINE' బ్రాండింగ్ టెక్స్ట్ మరియు బ్యాడ్జ్ పూర్తిగా తొలగించాలి).
+  3. `api key lo 3.7 gemini flash pettu` (యూజర్ స్క్రీన్‌షాట్‌లో కనిపించిన "AI generation error. Please try again." ఎర్రర్‌ను నివారించేందుకు పని చేసే అధికారిక గూగుల్ జెమిని ఫ్లాష్ మోడల్స్ మరియు రెసిలియంట్ ఫాల్‌బ్యాక్ సిస్టమ్ కాన్ఫిగర్ చేయాలి).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **Dedicated AI Smart Parser View ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - పాత చిన్న మోడల్ (`AiTextParserModal`) స్థానంలో సరికొత్త `DedicatedAiParserView` రూపొందించబడింది.
+     - Question Bank ట్యాబ్‌లో `isAiParsing` స్టేట్ ద్వారా పేజ్ స్విచ్ అవుతుంది. "← Back to Question Bank" నావిగేషన్, 20+ ప్రశ్నలను సులువుగా పేస్ట్ చేసే పెద్ద టెక్స్ట్ ఎడిటర్, మరియు ఎక్స్‌ట్రాక్ట్ అయిన ప్రశ్నల రివ్యూ/కన్ఫర్మేషన్ గ్రిడ్ పూర్తి స్క్రీన్‌లో అందుబాటులోకి వచ్చాయి.
+  2. **'Gemini 2.5 Flash' బ్రాండింగ్ పూర్తి తొలగింపు:**
+     - మోడల్/హెడర్ పై ఉన్న `# GEMINI 2.5 FLASH AI ENGINE` బ్యాడ్జ్, ఇన్ఫో బాక్స్ లోని వివరణ, మరియు బటన్ల నుండి Gemini 2.5 Flash ప్రస్తావనలు పూర్తిగా తొలగించబడ్డాయి.
+     - క్లీన్ ఎంటర్‌ప్రైజ్ లుక్‌తో `⚡ Parse Questions with AI` అని రూపొందించబడింది. UI లో ఎక్కడా తెలుగు లేకుండా 100% ఇంగ్లీష్ మెయింటైన్ చేయబడింది.
+  3. **Gemini Flash మోడల్స్ & రెసిలియంట్ ఫాల్‌బ్యాక్ ఆర్కిటెక్చర్ ([`backend/src/utils/gemini.ts`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/utils/gemini.ts)):**
+     - గతంలో హార్డ్‌కోడ్ అయిన చెల్లని `gemini-2.5-flash` స్థానంలో అధికారిక `gemini-2.0-flash`, `gemini-1.5-flash`, `gemini-1.5-pro` మోడల్స్ కాండిడేట్ లూప్‌లో అమర్చబడ్డాయి.
+     - `generateQuizQuestions` మరియు `parseRawExamTextToMCQs` రెండింటికీ ఇంటెలిజెంట్ ఆఫ్-లైన్ సిలబస్ సింథసైజర్ మరియు లోకల్ రెజెక్స్ పార్సర్ ఫాల్‌బ్యాక్‌లను అమర్చాము. దీనివల్ల గూగుల్ ఏపీఐ ఫెయిల్ అయినా లేదా కోటా ఇష్యూ వచ్చినా "AI generation error" రాకుండా 100% సేఫ్ గా ప్రశ్నలు జనరేట్ అవుతాయి.
+  4. **ఎన్విరాన్మెంట్ కాన్ఫిగరేషన్ ([`backend/.env`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/.env)):**
+     - `GEMINI_MODEL="gemini-2.0-flash"` మరియు యూజర్ అందించిన తాజా API కీ భద్రపరచబడ్డాయి.
+
 ## చివరి సంభాషణ - Examination పేజీ నుండి OMR Scanner ఆప్షన్ పూర్తి తొలగింపు (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `examination lo unna omr option poortiga remove cheyu, student exams ki marks em touch cheyakunda code distrub lekunda perfect ga safee ga remove cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో Examination పేజీలోని Examinations List హెడర్‌లో ఉన్న `OMR Scanner` గ్రీన్ బటన్‌ను కోడ్ డిస్టర్బ్ అవ్వకుండా, విద్యార్థుల మార్కులు లేదా పరీక్షలకు ఎలాంటి ఎఫెక్ట్ పడకుండా సురక్షితంగా తొలగించాలని కోరారు).

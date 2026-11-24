@@ -6,7 +6,7 @@ import {
   FileText, CheckCircle2, XCircle, PlusCircle, Printer, Clock, 
   LogOut, MapPin, User, Search, Users, ShieldCheck, Activity 
 } from 'lucide-react';
-import { GatePassPrint } from '../../components/gate-pass/GatePassPrint';
+import { GatePassPrint, printGatePassSlip } from '../../components/gate-pass/GatePassPrint';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { PageHeader } from '../../components/UI/PageHeader';
 
@@ -153,9 +153,7 @@ const GatePassPage: React.FC = () => {
 
   const printSlip = (item: GatePassItem) => {
     setPrintGatePass(item);
-    setTimeout(() => {
-      window.print();
-    }, 100);
+    printGatePassSlip(item, schoolName);
   };
   
   const uniqueClassNames = Array.from(new Set(classes.map(c => c.name)));
@@ -178,10 +176,14 @@ const GatePassPage: React.FC = () => {
         icon={<ShieldCheck className="w-6 h-6" />}
       />
 
-      {/* Printable Area */}
-      <div className="hidden print:block absolute inset-0 bg-white z-[9999]">
-        {printGatePass && <GatePassPrint gatePass={printGatePass} schoolName={schoolName} />}
-      </div>
+      {/* Gate Pass Slip Preview & Direct Print Modal */}
+      {printGatePass && (
+        <GatePassPrint 
+          gatePass={printGatePass} 
+          schoolName={schoolName} 
+          onClose={() => setPrintGatePass(null)} 
+        />
+      )}
 
       <div className="print:hidden flex-1 overflow-auto p-4 md:p-6 lg:p-8">
         <div className="max-w-[1400px] mx-auto space-y-6">

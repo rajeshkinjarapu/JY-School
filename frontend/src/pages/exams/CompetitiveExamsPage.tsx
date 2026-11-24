@@ -1386,7 +1386,7 @@ const QuestionBankTab = ({
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [showAiTextParserModal, setShowAiTextParserModal] = useState(false);
+  const [isAiParsing, setIsAiParsing] = useState(false);
 
   const fetchQuestions = async (examId: string) => {
     if (!examId) {
@@ -1432,6 +1432,21 @@ const QuestionBankTab = ({
           if (!addAnother) {
             setIsAddingQuestion(false);
           }
+        }}
+      />
+    );
+  }
+
+  // If AI text parser view is active, render the Dedicated Full AI Parser view
+  if (isAiParsing && activeExam) {
+    return (
+      <DedicatedAiParserView
+        exam={activeExam}
+        onBack={() => setIsAiParsing(false)}
+        onParsedAndAdded={() => {
+          setIsAiParsing(false);
+          fetchQuestions(selectedExamId);
+          onExamsUpdated();
         }}
       />
     );
@@ -1495,7 +1510,7 @@ const QuestionBankTab = ({
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
           <button
-            onClick={() => setShowAiTextParserModal(true)}
+            onClick={() => setIsAiParsing(true)}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 cursor-pointer"
           >
             <FileText size={16} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
@@ -1548,7 +1563,7 @@ const QuestionBankTab = ({
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
             <button
-              onClick={() => setShowAiTextParserModal(true)}
+              onClick={() => setIsAiParsing(true)}
               className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
             >
               <FileText size={15} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
@@ -1655,18 +1670,7 @@ const QuestionBankTab = ({
 
 
 
-      {/* AI Text Parser Modal */}
-      {showAiTextParserModal && (
-        <AiTextParserModal
-          exam={activeExam}
-          onClose={() => setShowAiTextParserModal(false)}
-          onParsedAndAdded={() => {
-            setShowAiTextParserModal(false);
-            fetchQuestions(selectedExamId);
-            onExamsUpdated();
-          }}
-        />
-      )}
+
     </div>
   );
 };
@@ -2372,7 +2376,7 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
           </div>
           <h3 className="text-base font-black text-slate-800">AI Question Synthesizer</h3>
           <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-            Google Gemini 2.5 powered automated MCQ generator with LaTeX math formulas, negative marks, and difficulty tiering (Easy, Medium, Hard).
+            AI-powered automated MCQ generator with LaTeX math formulas, negative marks, and difficulty tiering (Easy, Medium, Hard).
           </p>
         </div>
 
@@ -2656,10 +2660,10 @@ const AiQuestionGeneratorModal = ({ exam, onClose, onGenerated }: any) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// AI TEXT PARSER MODAL (PASTE RAW EXAM PAPER -> CBT QUESTIONS)
+// DEDICATED AI TEXT PARSER VIEW (FULL PAGE EXAM DIGITIZER)
 // ═══════════════════════════════════════════════════════════════
 
-const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
+const DedicatedAiParserView = ({ exam, onBack, onParsedAndAdded }: any) => {
   const [rawText, setRawText] = useState('');
   const [chapterHint, setChapterHint] = useState(exam?.subject?.name || 'General');
   const [defaultMarks, setDefaultMarks] = useState(4);
@@ -2688,7 +2692,7 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
         toast.error('No questions detected. Please verify your text format.');
       } else {
         setParsedQuestions(extracted);
-        toast.success(`🎉 Successfully extracted ${extracted.length} questions with Gemini AI!`);
+        toast.success(`Successfully extracted ${extracted.length} questions!`);
       }
     } catch (err: any) {
       console.error('AI text parse error:', err);
@@ -2705,7 +2709,7 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
       await api.post(`/api/competitive-exams/${exam.id}/bulk-add-questions`, {
         questions: parsedQuestions,
       });
-      toast.success(`✅ Successfully added ${parsedQuestions.length} questions to exam!`);
+      toast.success(`Successfully added ${parsedQuestions.length} questions to exam!`);
       onParsedAndAdded();
     } catch (err: any) {
       console.error('Bulk save error:', err);
@@ -2724,234 +2728,236 @@ const AiTextParserModal = ({ exam, onClose, onParsedAndAdded }: any) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-800 via-teal-900 to-slate-900 text-white p-5 sm:p-6 flex justify-between items-center shrink-0">
+    <div className="space-y-6 animate-fadeIn pb-12">
+      {/* Top Header Navigation */}
+      <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-2 font-bold text-xs cursor-pointer shadow-xs"
+            title="Return to Question Bank"
+          >
+            <ArrowLeft size={16} /> Back to Question Bank
+          </button>
           <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-black uppercase tracking-wider mb-1">
-              <Sparkles size={13} className="text-amber-300" /> Gemini 2.5 Flash AI Engine
-            </div>
-            <h3 className="text-lg sm:text-xl font-black flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-400" /> Paste Exam Text (AI Smart Parser)
-            </h3>
-            <p className="text-xs text-slate-300 mt-0.5">
-              Target Exam: <span className="font-bold text-white">{exam?.title}</span> • Instant KaTeX Math & Options Conversion
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-emerald-600" />
+              <span>Smart Exam Text Parser & Digitizer</span>
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold">
+                {exam?.title}
+              </span>
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Paste full exam papers from Word, PDF, or text notes • Automatic KaTeX formulas & 4 options extraction
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full cursor-pointer transition text-slate-300 hover:text-white">
-            <X size={22} />
-          </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1">
-          {parsedQuestions.length === 0 ? (
-            /* Input / Paste Form */
-            <form onSubmit={handleParseText} className="space-y-4">
-              <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-4 text-xs text-emerald-900">
-                <p className="font-bold flex items-center gap-2 text-emerald-800 text-sm mb-1">
-                  💡 How it works:
-                </p>
-                <p className="leading-relaxed">
-                  Paste raw exam questions from Word, PDF, or text notes. Google Gemini 2.5 Flash AI automatically recognizes math equations ($LaTeX$), organizes 4 options (A, B, C, D), and detects answer keys in seconds.
-                </p>
-              </div>
+        {parsedQuestions.length > 0 && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setParsedQuestions([])}
+              className="px-4 py-2.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition text-xs cursor-pointer"
+            >
+              Paste Different Text
+            </button>
+            <button
+              onClick={handleSaveToExam}
+              disabled={saving}
+              className="px-6 py-2.5 rounded-xl font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2 text-xs"
+            >
+              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 size={16} />}
+              Confirm & Save All ({parsedQuestions.length}) Questions
+            </button>
+          </div>
+        )}
+      </div>
 
+      {parsedQuestions.length === 0 ? (
+        /* Large Full-Page Input Form */
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-5 text-xs text-emerald-900">
+            <p className="font-black flex items-center gap-2 text-emerald-800 text-sm mb-1.5">
+              💡 How it works:
+            </p>
+            <p className="leading-relaxed">
+              Paste raw exam questions from Word, PDF, or text notes. The AI engine automatically recognizes math equations ($LaTeX$), organizes 4 options (A, B, C, D), and detects answer keys in seconds.
+            </p>
+          </div>
+
+          <form onSubmit={handleParseText} className="space-y-6">
+            <div>
+              <label className="block text-xs font-black text-slate-900 uppercase mb-2 flex items-center justify-between">
+                <span>Paste Exam Questions Text Here *</span>
+                <span className="text-[11px] text-slate-400 font-bold">Supports 20+ Questions & Math Formulas with $...$</span>
+              </label>
+              <textarea
+                value={rawText}
+                onChange={e => setRawText(e.target.value)}
+                rows={14}
+                className="w-full border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm font-mono text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-slate-50 focus:bg-white transition leading-relaxed shadow-xs"
+                placeholder={`Example format:\n\n1. A particle starts from rest and moves with acceleration a = 4 m/s². What is its velocity after 5 seconds?\n(A) 20 m/s\n(B) 25 m/s\n(C) 15 m/s\n(D) 10 m/s\nAns: A\n\n2. If $f(x) = x^2 + 2x$, what is the derivative $f'(x)$?\nA) $2x + 2$\nB) $x^2$\nC) $2x$\nD) $x + 2$\nCorrect: A`}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-extrabold text-slate-700 uppercase mb-1.5 flex items-center justify-between">
-                  <span>Paste Exam Questions Text Here *</span>
-                  <span className="text-[11px] text-slate-400 font-semibold">Supports Multiple MCQs & Math Formulas</span>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Subject / Chapter Section Hint
                 </label>
-                <textarea
-                  value={rawText}
-                  onChange={e => setRawText(e.target.value)}
-                  rows={10}
-                  className="w-full border border-slate-200 rounded-2xl p-4 text-xs sm:text-sm font-mono text-slate-800 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 bg-slate-50 focus:bg-white transition"
-                  placeholder={`Example format:
-
-1. A particle starts from rest and moves with acceleration a = 4 m/s². What is its velocity after 5 seconds?
-(A) 20 m/s
-(B) 25 m/s
-(C) 15 m/s
-(D) 10 m/s
-Ans: A
-
-2. If $f(x) = x^2 + 2x$, what is the derivative $f'(x)$?
-A) $2x + 2$
-B) $x^2$
-C) $2x$
-D) $x + 2$
-Correct: A`}
-                  required
+                <input
+                  type="text"
+                  value={chapterHint}
+                  onChange={e => setChapterHint(e.target.value)}
+                  className="w-full border border-slate-200 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 bg-slate-50 focus:bg-white"
+                  placeholder="e.g. Mathematics / Calculus or Physics"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Subject / Chapter Section Hint
-                  </label>
-                  <input
-                    type="text"
-                    value={chapterHint}
-                    onChange={e => setChapterHint(e.target.value)}
-                    className="w-full border border-slate-200 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 bg-white"
-                    placeholder="e.g. Mathematics / Calculus or Physics"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                    Default Marks per Question
-                  </label>
-                  <input
-                    type="number"
-                    value={defaultMarks}
-                    onChange={e => setDefaultMarks(Number(e.target.value))}
-                    className="w-full border border-slate-200 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 bg-white"
-                    min={1}
-                    max={20}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={parsing || !rawText.trim()}
-                  className="px-6 py-3 rounded-xl font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2 text-xs hover:scale-105"
-                >
-                  {parsing ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" /> 🤖 Gemini AI Digitizing Questions...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-amber-300" /> ⚡ Parse with AI (Gemini 2.5 Flash)
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          ) : (
-            /* Parsed Questions Preview Screen */
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
-                <div>
-                  <h4 className="text-sm font-black text-emerald-900 flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-                    AI Review: {parsedQuestions.length} Questions Ready to Add
-                  </h4>
-                  <p className="text-xs text-emerald-700 mt-0.5">
-                    Review parsed questions and options below. You can edit the correct answer or remove questions before saving.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setParsedQuestions([])}
-                  className="px-3.5 py-1.5 rounded-xl border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition cursor-pointer"
-                >
-                  Paste Different Text
-                </button>
-              </div>
-
-              {/* Questions List */}
-              <div className="space-y-3">
-                {parsedQuestions.map((q, idx) => {
-                  const opts: string[] = Array.isArray(q.options) ? q.options : ['A', 'B', 'C', 'D'];
-                  return (
-                    <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 hover:border-emerald-300 transition relative">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <div className="flex items-center gap-2">
-                          <span className="w-7 h-7 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
-                            #{idx + 1}
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] uppercase">
-                            {q.chapterName || 'General'}
-                          </span>
-                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px]">
-                            +{q.marks || 4} Marks
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => handleRemoveParsedQuestion(idx)}
-                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                          title="Remove this question"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-
-                      {/* Question Text with KaTeX */}
-                      <div className="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed mb-3">
-                        <LatexRenderer text={q.questionText} />
-                      </div>
-
-                      {/* Options Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        {opts.map((opt, oIdx) => {
-                          const optLabel = String.fromCharCode(65 + oIdx);
-                          const isCorrect = q.correctAnswer === opt;
-                          return (
-                            <div
-                              key={oIdx}
-                              className={`p-2.5 rounded-xl border flex items-start gap-2 ${
-                                isCorrect
-                                  ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold'
-                                  : 'bg-white border-slate-200 text-slate-700'
-                              }`}
-                            >
-                              <span className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
-                                isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
-                              }`}>
-                                {optLabel}
-                              </span>
-                              <div className="flex-1">
-                                <LatexRenderer text={opt} />
-                              </div>
-                              {isCorrect && (
-                                <span className="text-[10px] font-black uppercase text-emerald-700 flex items-center gap-0.5 shrink-0">
-                                  <Check size={12} /> Correct
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Correct Answer Dropdown Editor */}
-                      <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
-                        <span className="text-slate-500 font-semibold">Change Correct Answer:</span>
-                        <select
-                          value={q.correctAnswer}
-                          onChange={e => handleOptionChange(idx, e.target.value)}
-                          className="p-1.5 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 text-xs outline-none focus:border-emerald-500"
-                        >
-                          {opts.map((opt, oIdx) => (
-                            <option key={oIdx} value={opt}>
-                              Option ({String.fromCharCode(65 + oIdx)}): {opt.length > 30 ? opt.substring(0, 30) + '...' : opt}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Default Marks per Question
+                </label>
+                <input
+                  type="number"
+                  value={defaultMarks}
+                  onChange={e => setDefaultMarks(Number(e.target.value))}
+                  className="w-full border border-slate-200 rounded-xl p-3 text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-emerald-500 bg-white"
+                  min={1}
+                  max={20}
+                />
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        {parsedQuestions.length > 0 && (
-          <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-5 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={parsing || !rawText.trim()}
+                className="px-8 py-3 rounded-xl font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2 text-xs hover:scale-105"
+              >
+                {parsing ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" /> AI Digitizing Questions...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-amber-300" /> Parse Questions with AI
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        /* Parsed Questions Full Review Area */
+        <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+            <div>
+              <h4 className="text-sm font-black text-emerald-900 flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                Review & Confirm: {parsedQuestions.length} Questions Extracted
+              </h4>
+              <p className="text-xs text-emerald-700 mt-0.5">
+                Review questions and options below. You can customize the correct answer or remove questions before importing into Question Bank.
+              </p>
+            </div>
+            <button
+              onClick={() => setParsedQuestions([])}
+              className="px-3.5 py-1.5 rounded-xl border border-emerald-300 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition cursor-pointer"
+            >
+              Paste Different Text
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            {parsedQuestions.map((q, idx) => {
+              const opts: string[] = Array.isArray(q.options) ? q.options : ['A', 'B', 'C', 'D'];
+              return (
+                <div key={idx} className="bg-slate-50 border border-slate-200 rounded-2xl p-5 hover:border-emerald-300 transition relative">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-7 h-7 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        #{idx + 1}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] uppercase">
+                        {q.chapterName || 'General'}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                        +{q.marks || 4} Marks
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveParsedQuestion(idx)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                      title="Remove this question"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+
+                  <div className="text-sm font-bold text-slate-800 leading-relaxed mb-3">
+                    <LatexRenderer text={q.questionText} />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    {opts.map((opt, oIdx) => {
+                      const optLabel = String.fromCharCode(65 + oIdx);
+                      const isCorrect = q.correctAnswer === opt;
+                      return (
+                        <div
+                          key={oIdx}
+                          className={`p-2.5 rounded-xl border flex items-start gap-2 ${
+                            isCorrect
+                              ? 'bg-emerald-50 border-emerald-400 text-emerald-950 font-bold'
+                              : 'bg-white border-slate-200 text-slate-700'
+                          }`}
+                        >
+                          <span className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center shrink-0 ${
+                            isCorrect ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
+                          }`}>
+                            {optLabel}
+                          </span>
+                          <div className="flex-1">
+                            <LatexRenderer text={opt} />
+                          </div>
+                          {isCorrect && (
+                            <span className="text-[10px] font-black uppercase text-emerald-700 flex items-center gap-0.5 shrink-0">
+                              <Check size={12} /> Correct
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-slate-200 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-semibold">Change Correct Answer:</span>
+                    <select
+                      value={q.correctAnswer}
+                      onChange={e => handleOptionChange(idx, e.target.value)}
+                      className="p-1.5 bg-white border border-slate-300 rounded-lg font-bold text-slate-800 text-xs outline-none focus:border-emerald-500"
+                    >
+                      {opts.map((opt, oIdx) => (
+                        <option key={oIdx} value={opt}>
+                          Option ({String.fromCharCode(65 + oIdx)}): {opt.length > 30 ? opt.substring(0, 30) + '...' : opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex justify-between items-center">
             <button
               onClick={() => setParsedQuestions([])}
               className="px-4 py-2.5 rounded-xl font-bold text-slate-600 hover:bg-slate-200 transition text-xs cursor-pointer"
@@ -2961,21 +2967,14 @@ Correct: A`}
             <button
               onClick={handleSaveToExam}
               disabled={saving}
-              className="px-6 py-3 rounded-xl font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2 text-xs hover:scale-105"
+              className="px-8 py-3 rounded-xl font-black text-white bg-emerald-600 hover:bg-emerald-700 shadow-md transition cursor-pointer disabled:opacity-50 flex items-center gap-2 text-xs"
             >
-              {saving ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Saving Questions to Exam...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 size={16} /> Confirm & Save All ({parsedQuestions.length}) Questions
-                </>
-              )}
+              {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CheckCircle2 size={16} />}
+              Confirm & Save All ({parsedQuestions.length}) Questions
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
