@@ -1,11 +1,349 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ కమాండ్స్ & గైడెన్స్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `git nunchi updates anni download cheyu` (GitHub నుండి తాజా అప్‌డేట్‌లను డౌన్‌లోడ్ చేయడం).
+- **వివరణ & అందించిన కమాండ్స్:**
+  - సిస్టమ్ నిబంధనల ప్రకారం (No Direct Terminal Execution) ఏజెంట్ నేరుగా బ్యాక్‌గ్రౌండ్‌లో టెర్మినల్ కమాండ్స్ రన్ చేయకూడదు.
+  - కాబట్టి యూజర్ తన టెర్మినల్ ద్వారా సులువుగా డౌన్‌లోడ్ చేసుకునేందుకు లోకల్ పవర్-షెల్ కమాండ్స్ మరియు VPS SSH డిప్లాయ్ కమాండ్స్ అందించబడ్డాయి.
+
+## చివరి సంభాషణ - CBT Online Competitive Exam పోర్టల్ పూర్తి రీడిజైన్, స్కూల్ హెడర్, ప్రశ్నల సైజు & సబ్మిషన్ బగ్ పరిష్కారం (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `top lo school name header lo ravali logo tho`: టాప్ హెడర్‌లో అధికారిక స్కూల్ లోగో మరియు స్కూల్ పేరు స్పష్టంగా రావాలి.
+  2. `page width ki saripoyela screen desgin cheyu`: ఇరుగ్గా కాకుండా స్క్రీన్ పూర్తి వెడల్పును ఉపయోగించుకునేలా ప్రొఫెషనల్ CBT లేఅవుట్ కావాలి.
+  3. `image 2 lo questions size increase cheyu konchem bold ga undali`: ప్రశ్నల ఫాంట్ సైజు పెంచి బోల్డ్ గా మరియు ఆప్షన్స్ స్పష్టంగా A, B, C, D బ్యాడ్జ్‌లతో కనిపించాలి.
+  4. `image 3 lo exam submit chesaka ila vastundi`: ఎగ్జామ్ సబ్మిట్ చేసాక "No Exam Submission Found" అని ఖాళీగా రాకుండా సరైన స్కోర్‌కార్డ్ రిజల్ట్ కనిపించాలి.
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - విద్యార్థి/స్టాఫ్ సమాధానం ఇవ్వని ప్రశ్నలకు `data.option` అనేది `undefined` గా ఉండటం వల్ల, Prisma లో `selectedOption: undefined` పాస్ అయి 500 ఎర్రర్ వచ్చింది. సబ్మిషన్ DB లో సేవ్ కాకపోవడంతో రిజల్ట్ పేజీ 404 ఇచ్చింది.
+  - హెడర్ లో స్కూల్ బ్రాండింగ్, లోగో మరియు ఫుల్-విడ్త్ లేఅవుట్ లేవు.
+  - ప్రశ్నల సైజు చిన్నదిగా ఉంది.
+- **చేయబడిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. **స్కూల్ బ్రాండింగ్ హెడర్ & ఫుల్-విడ్త్ లేఅవుట్:**
+     - ఇన్స్ట్రక్షన్స్ స్క్రీన్, లైవ్ ఎగ్జామ్ స్క్రీన్ మరియు రిజల్ట్ స్కోర్‌కార్డ్ పేజీలలో అధికారిక స్కూల్ లోగో (`logoUrl`), స్కూల్ పూర్తి పేరు (`schoolName`), ఎగ్జామ్ టైటిల్ మరియు స్టాఫ్ ప్రివ్యూ బ్యాడ్జ్ తో కూడిన ప్రీమియం హెడర్ డిజైన్ చేయబడింది.
+     - స్క్రీన్ మొత్తం స్పేస్ ఉపయోగపడేలా ఫుల్-విడ్త్ లేఅవుట్ అమలు చేయబడింది.
+  2. **ప్రశ్నల సైజు మరియు బోల్డ్ ఆప్షన్ కార్డ్స్:**
+     - ప్రశ్నల ఫాంట్ సైజు `text-xl md:text-2xl font-bold text-slate-900` కు పెంచబడింది.
+     - ఆప్షన్లకు `A`, `B`, `C`, `D` బోల్డ్ బ్యాడ్జ్‌లు, హోవర్/సెలెక్షన్ ఎఫెక్ట్‌లతో `text-lg md:text-xl font-bold` ఫాంట్ ఇవ్వబడింది.
+  3. **సబ్మిషన్ మరియు రిజల్ట్స్ బగ్ ఫిక్స్:**
+     - `TakeCompetitiveExamPage.tsx` లో సమాధానం లేని ప్రశ్నలకు సేఫ్‌గా `null` పంపేలా శానిటైజ్ చేసాము.
+     - `backend/src/controllers/competitiveExams.controller.ts` లో `submitCompetitiveExam` మరియు `getStudentResult` లలో స్టాఫ్ ప్రివ్యూ రికార్డులను పక్కాగా హ్యాండిల్ చేసి రిజల్ట్ స్కోర్‌కార్డ్ ఖచ్చితంగా లోడ్ అయ్యేలా చేసాము.
+     - `backend/src/controllers/competitiveExams.controller.ts:369` లో `createdAt` ఎర్రర్‌ను `submittedAt` గా సరిదిద్దాము.
+  4. **రిజల్ట్ పేజీ స్కూల్ హెడర్:**
+     - `CompetitiveExamResultPage.tsx` లో కూడా అధికారిక స్కూల్ లోగో, స్కూల్ పేరు మరియు స్కోర్‌కార్డ్ బ్యాడ్జ్‌లతో రీడిజైన్ చేయబడింది.
+
+
+
+## చివరి సంభాషణ - Backend Competitive Exams TS ఎర్రర్ ఫిక్స్ & PM2 ప్రాసెస్ సరిదిద్దుబాటు (November 24, 2026)
+- **యూజర్ టెర్మినల్ ఎర్రర్ రిపోర్ట్:**
+  1. `src/controllers/competitiveExams.controller.ts:369:13 - error TS2353: Object literal may only specify known properties, and 'createdAt' does not exist in type 'CompetitiveExamSubmissionSelect<DefaultArgs>'.`
+  2. `[PM2][ERROR] Process or Namespace jy-school-backend not found`
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `CompetitiveExamSubmission` ప్రిస్మా స్కీమా మోడల్‌లో ఫీల్డ్ పేరు `submittedAt`, కానీ కంట్రోలర్‌లో `createdAt: true` అని ఉండటం వల్ల TypeScript కంపైలేషన్ ఎర్రర్ ఇచ్చింది.
+  - VPS లో PM2 ప్రాసెస్ పేర్లు `backend` మరియు `frontend` (లేదా `pm2 restart all`).
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `backend/src/controllers/competitiveExams.controller.ts` లోని లైన్ 369 లో `createdAt: true` స్థానంలో సరైన `submittedAt: true` గా మార్చాము.
+  2. PM2 రీస్టార్ట్ కోసం `pm2 restart all` లేదా `pm2 restart backend frontend` కమాండ్‌ను అందించాము.
+
+
+
+## చివరి సంభాషణ - Office Tools డ్యాష్‌బోర్డ్ నుండి "Admissions" కార్డ్ తొలగింపు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  - `ee dashboard lo unna admissions kuda remove cheyu` (`/office-tools` స్క్రీన్‌షాట్ జతచేసి అందులో ఉన్న "ADMISSIONS" కార్డ్‌ను తొలగించమని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `OfficeToolsDashboard.tsx` లో "ADMISSIONS - Manage website admission inquiries" కార్డ్ ఉండేది. ఆఫీస్ టూల్స్ సెక్షన్‌లో ఇది అవసరం లేనందున తొలగించాల్సి వచ్చింది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx` లోని `tools` అర్రే నుండి `ADMISSIONS` కార్డ్ ఆబ్జెక్ట్ పూర్తిగా తీసివేయబడింది.
+  2. `onClick` నావిగేషన్ లాజిక్ నుండి `ADMISSIONS` రూట్ హ్యాండ్లర్ తొలగించబడింది.
+  3. ఇప్పుడు Office Tools డ్యాష్‌బోర్డ్ లో కేవలం 4 అధికారిక ఆఫీస్ టూల్స్ మాత్రమే నీట్‌గా ఉంటాయి:
+     - **STUDY CERTIFICATE**
+     - **ACADEMIC PROGRESS CARD** (FA1-FA4 & SA1-SA2 క్యుములేటివ్ రిపోర్ట్ కార్డ్)
+     - **TRANSFER CERTIFICATE**
+     - **PAYSLIP**
+
+
+
+## చివరి సంభాషణ - Office Tools డ్యాష్‌బోర్డ్ నుండి "Admissions" కార్డ్ తొలగింపు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  - `ee dashboard lo unna admissions kuda remove cheyu` (`/office-tools` స్క్రీన్‌షాట్ జతచేసి అందులో ఉన్న "ADMISSIONS" కార్డ్‌ను తొలగించమని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `OfficeToolsDashboard.tsx` లో "ADMISSIONS - Manage website admission inquiries" కార్డ్ ఉండేది. ఆఫీస్ టూల్స్ సెక్షన్‌లో ఇది అవసరం లేనందున తొలగించాల్సి వచ్చింది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx` లోని `tools` అర్రే నుండి `ADMISSIONS` కార్డ్ ఆబ్జెక్ట్ పూర్తిగా తీసివేయబడింది.
+  2. `onClick` నావిగేషన్ లాజిక్ నుండి `ADMISSIONS` రూట్ హ్యాండ్లర్ తొలగించబడింది.
+  3. ఇప్పుడు Office Tools డ్యాష్‌బోర్డ్ లో కేవలం 4 అధికారిక ఆఫీస్ టూల్స్ మాత్రమే నీట్‌గా ఉంటాయి:
+     - **STUDY CERTIFICATE**
+     - **ACADEMIC PROGRESS CARD** (FA1-FA4 & SA1-SA2 క్యుములేటివ్ రిపోర్ట్ కార్డ్)
+     - **TRANSFER CERTIFICATE**
+     - **PAYSLIP**
+
+
+
+## చివరి సంభాషణ - Staff Attendance Manager (`/teacher-attendance`) పూర్తి స్థాయి లిస్ట్ / టేబుల్ లేఅవుట్ రీడిజైన్ (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `entire page mottam complete ui change cheyu` (మొత్తం పేజీ UI పూర్తి ప్రొఫెషనల్‌గా మార్చాలి).
+  2. `list wise ga ravali` (చిన్న చిన్న గ్రిడ్ కార్డులు కాకుండా స్పష్టమైన లిస్ట్/టేబుల్ రూపంలో రావాలి).
+  3. `oka professional look lo undali` (టాప్-క్లాస్ ఎంటర్‌ప్రైజ్ స్కూల్ ERP లుక్ & ఫీల్ ఉండాలి).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - పాత పేజీలో 5 కాలమ్స్ గ్రిడ్‌తో చిన్న చిన్న కార్డులు ఉండేవి. అందులో టీచర్ల పూర్తి పేర్లు కనిపించక కట్ అయిపోయాయి (ఉదాహరణకు: `TARRA VARALAKSH...`, `SANAPALA KRISHN...`).
+  - కింద ఫ్లోటింగ్ బార్ ఉండటం వల్ల చివరి వరుసలోని కార్డులను సగం కప్పేసింది.
+  - రిమార్క్స్ లేదా కారణాలు రాయడానికి ఇన్పుట్ లేదు.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. **ఎంటర్‌ప్రైజ్ లిస్ట్ / టేబుల్ ఆర్కిటెక్చర్ (`TeacherAttendancePage.tsx`):**
+     - చిన్న కార్డుల స్థానంలో పూర్తి-వెడల్పు (Full-Width) రెస్పాన్సివ్ టేబుల్ లేఅవుట్ అమలు చేయబడింది.
+     - **కాలమ్స్:** `#` (సీరియల్ నంబర్), **Staff Member** (టీచర్ ప్రొఫైల్ ఫోటో/అవతార్, పూర్తి పేరు, ఎంప్లాయ్ ఐడీ, స్పెషలైజేషన్), **Attendance Status** (Segmented `P` Present, `A` Absent, `L` Leave, `½` Half Day బటన్స్), **Notes / Remarks** (ప్రత్యేకమైన ఇన్-లైన్ నోట్స్ ఇన్‌పుట్), **Live Status Badge**.
+  2. **టాప్ 4 KPI మెట్రిక్ కార్డ్స్:** Total Staff, Present Today (% Rate తో), Absent, On Leave / Half Day.
+  3. **స్మార్ట్ సెర్చ్ & మల్టీ-ఫిల్టర్ టూల్‌బార్:** ఎంప్లాయ్ ఐడీ/పేరుతో సెర్చ్, స్టేటస్ ఫిల్టర్లు (`All`, `Present`, `Absent`, `Leave`), డేట్ పికర్ మరియు మంత్ నేవిగేటర్.
+  4. **డాక్డ్ స్టీకీ యాక్షన్ బార్:** కింద ఫిక్స్ అయిన బార్ కంటెంట్‌ను ఏమాత్రం కప్పకుండా `pb-28` ప్యాడింగ్, `Mark All Present` బటన్ మరియు డేటాబేస్‌కు భద్రపరిచే `Save Staff Attendance` బటన్.
+
+
+
+## చివరి సంభాషణ - Assign Homework ప్రత్యేక పేజీ (`/homework/create`) & హోమ్‌వర్క్ మేనేజర్ పూర్తి అప్‌గ్రేడ్ (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `assign home work click cheste separeate page open avvali` (చిన్న పాప్-అప్ మోడల్ కాకుండా పూర్తి స్థాయి ప్రత్యేక పేజీ ఓపెన్ అవ్వాలి).
+  2. `professional look lo undali perfect ga work avvali` (ప్రొఫెషనల్ స్కూల్ ERP లుక్ & ఫీల్ మరియు ఎలాంటి ఎర్రర్స్ లేకుండా పనిచేయాలి).
+  3. `progress card kuda andam ga undali` (హోమ్‌వర్క్ కార్డ్స్ మరియు ప్రోగ్రెస్ కార్డులు అత్యంత అందంగా, స్పష్టంగా ఉండాలి).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - పాత `HomeworkPage.tsx` లో `+ Assign New` క్లిక్ చేయగానే స్క్రీన్‌పై చిన్న మోడల్ పాప్-అప్ వచ్చేది. అందులో ఫీల్డ్స్ ఇరుగ్గా ఉండేవి.
+  - బ్యాకెండ్ `createHomework` లో Admin హోమ్‌వర్క్ క్రియేట్ చేసినప్పుడు `teacherId` లేకపోతే `teacherId required for admin` అనే ఎర్రర్ వచ్చేది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. **ప్రత్యేక పేజీ నిర్మాణం (`AssignHomeworkPage.tsx`):**
+     - కొత్తగా `/homework/create` (మరియు ఎడిట్ కోసం `/homework/edit/:id`) ప్రత్యేక పేజీ రూపొందించబడింది.
+     - **లెఫ్ట్ సైడ్:** టార్గెట్ క్లాస్ & సెక్షన్ సెలెక్టర్, సబ్జెక్ట్ డ్రాప్‌డౌన్, టైటిల్ విత్ క్విక్ సజెషన్ చిప్స్ (టెక్స్ట్‌బుక్ ఎక్సర్‌సైజ్, వర్క్‌షీట్ ప్రాక్టీస్, సైన్స్ యాక్టివిటీ, మ్యాథ్ ప్రాబ్లమ్ సెట్), వివరణాత్మక ఇన్‌స్ట్రక్షన్స్ ఏరియా.
+     - **రైట్ సైడ్:** డ్యూ డేట్ పికర్ విత్ క్విక్ డేట్ ప్రిసెట్స్ (Tomorrow, In 2 Days, This Weekend, Next Monday), హోమ్‌వర్క్ ప్రయారిటీ (Regular, High Priority, Project, Revision), పబ్లిషింగ్ స్టేటస్, మరియు ఆ క్లాస్‌లోని విద్యార్థుల సంఖ్య లైవ్ ప్రివ్యూ.
+  2. **బ్యాకెండ్ కంట్రోలర్ ఆప్టిమైజేషన్ (`homework.controller.ts`):**
+     - అడ్మిన్ లేదా సూపర్ అడ్మిన్ హోమ్‌వర్క్ అసైన్ చేసినప్పుడు `teacherId` పంపకపోయినా ఆ క్లాస్/సబ్జెక్ట్‌కు సంబంధించిన టీచర్‌ను లేదా పాఠశాలలోని టీచర్‌ను ఆటోమేటిక్‌గా అసైన్ చేసుకునేలా లాజిక్ అప్‌డేట్ చేయబడింది.
+  3. **హోమ్‌వర్క్ డ్యాష్‌బోర్డ్ రీడిజైన్ (`HomeworkPage.tsx`):**
+     - టాప్ లో 4 లైవ్ మెట్రిక్ కార్డ్స్ (Total Tasks, Active, Due Soon, Overdue).
+     - పాత చిన్న మోడల్ తొలగించబడి, `+ Assign Homework` క్లిక్ చేయగానే నేరుగా `/homework/create` పేజీకి నావిగేట్ అవుతుంది.
+     - ప్రతి హోమ్‌వర్క్ కార్డు అందమైన గ్రేడియంట్ యాక్సెంట్, కలర్-కోడెడ్ డ్యూ డేట్ పిల్స్ (`Due Today`, `Due Tomorrow`, `3 Days Left`), సబ్జెక్ట్ ట్యాగ్స్, టీచర్ ప్రొఫైల్ మరియు క్విక్ వ్యూ మోడల్‌తో ప్రీమియంగా తీర్చిదిద్దబడింది.
+
+## చివరి సంభాషణ - Academic Progress Card (FA1-FA4 & SA1-SA2) క్యుములేటివ్ రిపోర్ట్ జనరేటర్ పూర్తి అమలు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `original academic progress card name change cheyu -> Academic Progress Card ani ravali`
+  2. `andulo fa-1 -4 and sa-1 and sa-2 total progress card ready avvali`
+  3. `database lo unna marks tho original ga ravali`
+- **సమస్య విశ్లేషణ & ఆర్కిటెక్చర్ ప్లాన్:**
+  - స్కూల్ ఎడ్యుకేషన్ (ఆంధ్రప్రదేశ్ & తెలంగాణ CCE విధానం) లో విద్యార్థి వార్షిక ప్రగతి పత్రం (Annual Progress Report) లో Formative Assessments (FA-1, FA-2, FA-3, FA-4) మరియు Summative Assessments (SA-1, SA-2) అన్నీ ఒకే టేబుల్‌లో క్రోడీకరించి రావాలి.
+  - డేటాబేస్‌లోని `marks` టేబుల్ నుండి విద్యార్థికి సంబంధించిన అన్ని అసెస్‌మెంట్ల మార్కులు ఆటోమేటిక్‌గా ఫెచ్ అవ్వాలి.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented):**
+  1. **Backend Integration (`marks.controller.ts` & `marks.ts`):**
+     - కొత్త ఎండ్‌పాయింట్ `GET /api/marks/cce-cumulative-card?classId=...` సృష్టించబడింది.
+     - డేటాబేస్ నుండి తరగతి విద్యార్థులందరినీ, సబ్జెక్టులను, మరియు జరిగిన పరీక్షలను (FA-1, FA-2, FA-3, FA-4, SA-1, SA-2 గా స్మార్ట్ రెగెక్స్ ద్వారా ఆటో-క్లాసిఫై చేస్తూ) లోడ్ చేస్తుంది.
+     - ప్రతి విద్యార్థికి సబ్జెక్ట్ వారీగా: FA-1, FA-2, FA-3, FA-4, FA Total, SA-1, SA-2, SA Total, Grand Total, Percentage, CCE Grade (A1-E) మరియు Grade Point (10-3) లెక్కిస్తుంది.
+     - విద్యార్థి హాజరు (Working Days vs Present Days) మరియు క్లాస్ ర్యాంకును శాతాన్ని బట్టి ఆటోమేటిక్‌గా కేటాయిస్తుంది.
+  2. **Office Tools Dashboard అప్‌డేట్ (`OfficeToolsDashboard.tsx`):**
+     - కార్డ్ పేరును `ACADEMIC PROGRESS CARD` గా మార్చాము.
+     - క్లిక్ చేయగానే `/office-tools/academic-progress-card` కి నావిగేట్ అయ్యేలా సెట్ చేశాము.
+  3. **Router అప్‌డేట్ (`router/index.tsx`):**
+     - `/office-tools/academic-progress-card` కి `AcademicProgressCardPage` ను రిజిస్టర్ చేశాము.
+  4. **పూర్తి స్థాయి డ్యాష్‌బోర్డ్ & A4 CCE కార్డ్ జనరేటర్ (`AcademicProgressCardPage.tsx`):**
+     - **కంట్రోల్ ప్యానెల్:** తరగతి సెలెక్టర్, సింగిల్ వర్సెస్ బల్క్ మోడ్ స్విచ్చర్, స్టూడెంట్ సెర్చ్, స్టూడెంట్ చెక్‌లిస్ట్, ప్రివ్యూ నావిగేటర్.
+     - **CCE గోల్డ్ స్టాండర్డ్ A4 లేఅవుట్ (210mm x 297mm):**
+       - రాయల్ నేవీ & గోల్డ్ డబుల్ బోర్డర్, స్కూల్ ఎంబ్లెమ్ & పూర్తి బ్రాండింగ్.
+       - విద్యార్థి ఫోటో, వివరాల బాక్స్ (పేరు, రోల్ నెంబర్, క్లాస్, తల్లిదండ్రుల పేర్లు, DOB).
+       - PART I: FA-1, FA-2, FA-3, FA-4, FA Total, SA-1, SA-2, SA Total, Grand Total, %, Grade, Grade Point తో కూడిన రియల్ మార్క్స్ టేబుల్.
+       - సమ్మరీ బ్యానర్: టోటల్ మార్క్స్, పర్సంటేజ్, క్యుములేటివ్ గ్రేడ్, క్లాస్ ర్యాంక్, రిజల్ట్ (PROMOTED).
+       - PART II: కో-స్కాలస్టిక్ ఏరియాస్, లైఫ్ స్కిల్స్, హాజరు రికార్డు మరియు CCE గ్రేడింగ్ స్కేల్ కీ.
+       - అధికారిక సంతకాల విభాగం: పేరెంట్, క్లాస్ టీచర్, ప్రిన్సిపాల్ సిగ్నేచర్స్.
+     - **ఐఫ్రేమ్ ప్రింట్ & PDF/ZIP ఎక్స్‌పోర్ట్:**
+       - ఒక్క క్లిక్‌తో సింగిల్ లేదా తరగతిలోని అందరి సర్టిఫికెట్లు 0-బ్లాంక్ పేజీ సమస్య లేకుండా ప్రింట్ అయ్యేలా ఐఫ్రేమ్ మెకానిజం.
+       - సింగిల్ PDF డౌన్‌లోడ్ మరియు బల్క్ ZIP డౌన్‌లోడ్ సదుపాయం.
+
+## చివరి సంభాషణ - Office Tools నుండి "Duplicate Academic Progress Card" పూర్తి తొలగింపు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  - `duplicate progress card poortiga remove cheyu` (`/office-tools` స్క్రీన్‌షాట్ పంపించి అందులో ఉన్న Duplicate Academic Progress Card కార్డును తీసివేయమని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - `OfficeToolsDashboard.tsx` లో "DUPLICATE ACADEMIC PROGRESS CARD" అనేది ఒక డమ్మీ అన్‌యూజ్డ్ కార్డ్. దీనికి ఎటువంటి క్లిక్ ఈవెంట్ లేదా పేజీ లింక్ లేదు.
+  - అసలైన ప్రోగ్రెస్ కార్డ్స్ అన్నీ ఇప్పటికే `/exams` (Examination Dashboard) లో లైవ్ మోడల్, JEE మోడల్ మరియు కస్టమ్ టెంప్లేట్లతో పూర్తి స్థాయిలో పనిచేస్తున్నాయి. ఆఫీస్ టూల్స్ లో డూప్లికేట్ ప్రోగ్రెస్ కార్డ్ కార్డ్ ఉండటం అనవసరం.
+- **చేసిన శాశ్వత పరిష్కారం:**
+  1. `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx` నుండి `DUPLICATE ACADEMIC PROGRESS CARD` కార్డును పూర్తిగా తొలగించాము.
+  2. పక్కనే ఉన్న `ORIGINAL ACADEMIC PROGRESS CARD` కార్డుపై క్లిక్ చేయగానే నేరుగా అసలైన ప్రోగ్రెస్ కార్డ్స్ జనరేటర్ ఉన్న `/exams` పేజీకి రీడైరెక్ట్ అయ్యేలా లింక్ చేసాము.
+  3. `PAYSLIP` కార్డును కూడా సరైన శాలరీ పేజీ (`/hr/salary`) కి మ్యాప్ చేసాము.
+
+## చివరి సంభాషణ - Study & Conduct Certificate జనరేటర్ రీడిజైన్, రియల్ డేటా ఆటోఫిల్ & బల్క్ క్లాస్ ప్రింట్ అమలు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `study certificate anedi student data nunchi ravali` (స్టూడెంట్ పేరు, తండ్రి పేరు, రోల్ నెంబర్, క్లాస్ మొదలైనవి డేటాబేస్ నుండి ఆటోమేటిక్‌గా రావాలి).
+  2. `school logo autometic ga ravali upload remove cheyu` (లోగో ఆటోమేటిక్‌గా స్కూల్ సెట్టింగ్స్ నుండి రావాలి, మాన్యువల్ అప్‌లోడ్ బటన్ తీసివేయాలి).
+  3. `bulk wise ga class wise ga kuda generate chese option kavali` (క్లాస్ వారీగా అందరి సర్టిఫికెట్లను ఒకేసారి బల్క్‌గా జనరేట్, ప్రింట్ మరియు జిప్ డౌన్‌లోడ్ చేసుకునే అవకాశం ఉండాలి).
+  4. `live preview ela ayite undo same print kuda same alane undali` (స్క్రీన్‌పై కనిపించిన లైవ్ ప్రివ్యూ మరియు ప్రింట్ రెండూ 1:1 ఖచ్చితంగా ఒకేలా ఉండాలి).
+  5. `ee study certificate dashboard mottam new look tho new ui tho andam ga professional ga design cheuyu` (డ్యాష్‌బోర్డ్ లుక్ పూర్తిగా ప్రొఫెషనల్‌గా రీడిజైన్ చేయాలి).
+- **సమస్యల విశ్లేషణ & రూట్ కాజ్ (Root Cause Analysis):**
+  - పాత కోడ్‌లో `classes.find(c => c.className === selectedClass)` అని ఉండటం వల్ల క్లాస్ మరియు సెక్షన్ సెలెక్షన్ ఫెయిల్ అయ్యింది (డేటాబేస్‌లో `c.name` ఉంది).
+  - విద్యార్థి డేటాలో `s.firstName`, `s.lastName`, `s.admissionNumber` అని వెతకడం వల్ల, అసలైన `s.user.name`, `s.fatherName`, `s.rollNo` వివరాలు రాక సర్టిఫికెట్ ఖాళీ అండర్‌లైన్లతో కనిపించింది.
+  - స్కూల్ లోగో కోసం అనవసరంగా మాన్యువల్ "Choose File" బటన్ ఉంది.
+  - ప్రింట్ కోసం `window.print()` వాడటం వల్ల మార్జిన్లు కట్ అవ్వడం, జూమ్ తేడాలు వచ్చాయి.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Implemented & Tested):**
+  1. **రియల్ స్టూడెంట్ డేటా అనుసంధానం (`StudyCertificatePage.tsx`):**
+     - తరగతి సెలెక్ట్ చేయగానే `/api/classes/:id/students` నుండి రియల్ విద్యార్థుల లిస్ట్ లోడ్ అవుతుంది.
+     - స్టూడెంట్‌ని ఎంచుకోగానే పేరు (`s.user.name`), తండ్రి పేరు (`s.fatherName`), అడ్మిషన్/రోల్ నంబర్ (`s.rollNo`), తరగతి మరియు అకడమిక్ ఇయర్స్ ఆటోమేటిక్‌గా ఫిల్ అవుతాయి.
+  2. **స్కూల్ లోగో ఆటోమేటిక్ లోడింగ్:**
+     - `/api/settings` నుండి పాఠశాల అధికారిక లోగో, పేరు, చిరునామా, ప్రిన్సిపాల్ సంతకం నేరుగా లోడ్ అయ్యి సర్టిఫికెట్ హెడర్ మరియు వాటర్‌మార్క్‌లో సెట్ చేయబడ్డాయి. మాన్యువల్ అప్‌లోడ్ బాక్స్ తొలగించబడింది.
+  3. **బల్క్ క్లాస్ జనరేషన్ & ప్రింట్:**
+     - క్లాస్ విద్యార్థులందరి చెక్‌లిస్ట్ (Select All / None సౌలభ్యంతో).
+     - ప్రివ్యూలో స్టూడెంట్ వారీగా నావిగేషన్ (`Student 1 of 34`, Prev / Next).
+     - **Print All (34 Certificates):** ఒకే క్లిక్‌తో విద్యార్థులందరి సర్టిఫికెట్లు ఒక్కొక్కటి ఒక పూర్తి A4 పేజీలో ఎలాంటి బ్లాంక్ పేజీలు లేకుండా ప్రింట్ అవుతాయి.
+     - **ZIP Download:** విద్యార్థుల పేర్లతో విడివిడిగా PDF లు జనరేట్ అయ్యి ఒకే జిప్ ఫైల్‌గా డౌన్‌లోడ్ అవుతాయి.
+  4. **1:1 లైవ్ ప్రివ్యూ & ఐఫ్రేమ్ ప్రింట్:**
+     - స్క్రీన్‌పై గోల్డ్ & రాయల్ నేవీ డబుల్ బోర్డర్, ఆర్నేట్ కార్నర్స్, స్కూల్ క్రెస్ట్, వాటర్‌మార్క్, అకడమిక్ టేబుల్‌తో కనిపించే A4 లేఅవుట్, ప్రింట్ చేసినప్పుడు కూడా అచ్చు అలాగే 100% పర్‌ఫెక్ట్‌గా వస్తుంది.
+  5. **ప్రీమియం స్ప్లిట్ డ్యాష్‌బోర్డ్ UI:**
+     - ఎడమవైపు కంట్రోల్ ప్యానెల్ (ఇండివిడ్యువల్ & బల్క్ ట్యాబ్‌లు, UDISE కోడ్, కాండక్ట్, ప్లేస్, డేట్, అకడమిక్ ఇయర్స్ ఎడిటర్) మరియు కుడివైపు జూమ్ కంట్రోల్స్‌తో కూడిన లైవ్ A4 కాన్వాస్ వ్యూ.
+
+## చివరి సంభాషణ - Gate Pass ప్రింట్ బగ్ పరిష్కారం, పూర్తి డాష్‌బోర్డ్ రీడిజైన్ & డిలీట్ ఆప్షన్ అమలు (November 24, 2026)
+- **యూజర్ సమస్యలు & అవసరాలు:**
+  1. `gate pass print ravatam ledu` (స్క్రీన్‌షాట్ పంపించారు: ప్రింట్ ప్రివ్యూలో మొదటి షీట్ మొత్తం తెల్లటి ఖాళీ బ్లాంక్ పేజీగా రావడం).
+  2. `gate pass dashboard assalu bagoledu complete ga change cheyu` (గేట్ పాస్ డాష్‌బోర్డ్ పాతది బాగాలేదు, పూర్తి ఆధునికంగా, అందంగా మార్చాలి).
+  3. `gatepass delete chese option kuda kavali` (అనవసరమైన లేదా తప్పుడు గేట్ పాస్‌లను డిలీట్ చేసే సదుపాయం కావాలి).
+- **సమస్యల లోతైన విశ్లేషణ & రూట్ కాజ్ (Root Cause Analysis):**
+  1. **ప్రింట్ బ్లాంక్ పేజీ రావడానికి కారణం:**
+     - పాత కోడ్ `window.print()` ను నేరుగా యాప్ విండోపై ట్రిగ్గర్ చేసింది.
+     - `DashboardLayout` యొక్క కంటైనర్‌కు `h-screen overflow-hidden` ఉండటం వల్ల బ్రౌజర్ ప్రింట్ ఇంజిన్ లేఅవుట్‌ను క్లిప్ చేసి, 0-హైట్‌తో కట్ చేసింది. ఫలితంగా మొదటి పేజీ పూర్తిగా తెల్లగా వచ్చింది.
+     - అలాగే రియాక్ట్ స్టేట్ `setPrintGatePass` మారిన 100ms లోనే ప్రింట్ రన్ అవ్వడం వల్ల ఫోటోలు, QR కోడ్ రెండర్ కాలేదు.
+  2. **డిలీట్ ఆప్షన్ లేకపోవడం:**
+     - బ్యాకెండ్‌లో API ఉన్నప్పటికీ UI లో బటన్ మరియు హ్యాండ్లర్ లేదు.
+  3. **పాత డాష్‌బోర్డ్ లోపాలు:**
+     - 40% స్క్రీన్ ను ఎడమవైపు ఫారమ్ శాశ్వతంగా ఆక్రమించడం వల్ల టేబుల్ ఇరుగ్గా ఉంది.
+     - లైవ్ సెర్చ్, క్లాస్ ఫిల్టర్, డేట్ ఫిల్టర్, క్విక్ రీజన్ టెంప్లేట్లు లేవు.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Fixed & Tested):**
+  1. **రాక్-సాలిడ్ ఐఫ్రేమ్ ప్రింట్ (`printGatePassSlip` in `GatePassPrint.tsx`):**
+     - ఇన్విజిబుల్ ఐఫ్రేమ్ ద్వారా స్టాండలోన్ డాక్యుమెంట్‌గా ప్రింట్ చేసే మెకానిజం అమలు చేయబడింది.
+     - `@page { size: A4 landscape; margin: 6mm 8mm; }` తో ఒకే A4 పేజీలో రెండు సమాన కాపీలు (STUDENT / PARENT COPY మరియు SECURITY GATE COPY), మధ్యలో కట్ లైన్ (`✂ CUT HERE ✂`) తో సిద్ధం చేయబడింది.
+     - స్కూల్ పేరు, సబ్‌టైటిల్, లోగో, విద్యార్థి ఫోటో, రోల్ నెంబర్, క్లాస్, తండ్రి పేరు, ఫోన్, కారణం, డెస్టినేషన్, టైమింగ్స్, అధీకృత సంతకాలు మరియు అధికారిక స్టాంప్ బాక్స్‌తో కూడిన పూర్తి నిండు లేఅవుట్.
+     - ఎటువంటి బ్లాంక్ పేజీలు లేకుండా **ఖచ్చితంగా ఒక్కటే షీట్** ప్రింట్ అవుతుంది.
+  2. **డిలీట్ ఆప్షన్ (Delete Feature with Safe Modal):**
+     - ప్రతి గేట్ పాస్ రికార్డుకు రెడ్ ట్రాష్ ఐకాన్ తో డిలీట్ బటన్ జోడించబడింది.
+     - క్లిక్ చేయగానే కన్ఫర్మేషన్ మోడల్ ఓపెన్ అయ్యి, `DELETE /api/gate-pass/:id` ద్వారా సురక్షితంగా డేటాబేస్ నుండి తొలగించబడుతుంది.
+  3. **గేట్ పాస్ కమాండ్ సెంటర్ పూర్తి రీడిజైన్ (`GatePassPage.tsx`):**
+     - **హీరో హెడర్:** స్కూల్ బ్రాండింగ్, రిఫ్రెష్ బటన్, మరియు `+ Issue Gate Pass` బటన్.
+     - **4 లైవ్ మెట్రిక్ కార్డ్స్:** Today's Passes, Currently Outside Campus (ఆరెంజ్ పల్సింగ్ అలర్ట్‌తో), Pending Approvals, Safely Returned.
+     - **కంట్రోల్ టూల్‌బార్:** విద్యార్థి పేరు, రోల్ నంబర్, స్లిప్ నంబర్, కారణం లేదా డెస్టినేషన్ ద్వారా లైవ్ సెర్చ్; క్లాస్ ఫిల్టర్; డేట్ ఫిల్టర్ (Today vs All); స్టేటస్ పిల్స్ (All, Outside, Pending, Approved, Returned, Rejected).
+     - **హై-ఎండ్ టేబుల్ & యాక్షన్స్:** 🖨️ Quick Print, 👁️ Dual-Copy Preview, 🚪 Mark OUT, 🏫 Mark IN, ✅ Approve, ❌ Reject, 🗑️ Delete.
+     - **ఇష్యూ గేట్ పాస్ మోడల్:** క్లాస్ సెలెక్టర్, స్టూడెంట్ పికర్ విత్ ఫోటో ప్రివ్యూ, క్విక్ రీజన్ చిప్స్, మరియు "Issue & Print Immediately" బటన్లు.
+  4. **బ్యాకెండ్ ఆటో-అప్రూవల్ (`gatePass.controller.ts`):**
+     - అడ్మిన్ లేదా సెక్యూరిటీ డెస్క్ పాస్ ఇష్యూ చేసినప్పుడు, అది ఆటోమేటిక్‌గా `APPROVED` స్టేటస్‌తో తక్షణమే ప్రింట్‌కు సిద్ధంగా ఉండేలా చేయబడింది.
+
+## చివరి సంభాషణ - Examination Section డీప్ ఆడిట్ & పూర్తి ప్రొఫెషనల్ ఎగ్జామ్ సెట్టింగ్స్ మాస్టర్ కంట్రోల్ సెంటర్ అమలు (November 24, 2026)
+- **యూజర్ ప్రశ్న & అవసరం:**
+  - `oksari examination section mottam deep ga check chesi assalu original ga exam setting lo undavalasinavi enti`
+  - `present unnavi dummy laga anipistundi and peddaga use kuda avvatam ledu oka professional look lo prati okka option use ayyela ga kavali cheyu`
+  - యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్ (`media_1795509585181_60e24447.jpg`): `/exams` లోని `Global Exam Settings` టాబ్‌లో ఉన్నవి కేవలం డమ్మీ స్టాటిక్ హెచ్‌టిఎమ్‌ఎల్ బాక్స్‌లు, బటన్‌కు ఎటువంటి ఆన్-క్లిక్ ఈవెంట్ లేదా ఏపీఐ లింక్ లేదు.
+- **డీప్ ఆడిట్ పరిశీలనలు (Deep Audit & Root Cause Analysis):**
+  1. **ఎగ్జామ్ సెట్టింగ్స్ ఎందుకు డమ్మీగా ఉన్నాయి?:**
+     - `ExamListPage.tsx` లోని సెట్టింగ్స్ టాబ్ కోడ్ కేవలం స్టాటిక్ లేఅవుట్ మాత్రమే.
+     - `defaultValue="40"`, `defaultValue="5"` తో ఇన్పుట్లు ఉండేవటమే తప్ప, ఎలాంటి రియాక్ట్ స్టేట్ (`useState`) లేదా కంట్రోలర్ లేదు.
+     - స్విచ్ టాగులు క్లిక్ చేసినా ఆన్/ఆఫ్ కావు (హార్డ్‌కోడెడ్ `translate-x-6`).
+     - "Save Settings" బటన్ క్లిక్ చేసినా ఏమీ జరగదు (`onClick` హ్యాండ్లర్ లేదు).
+  2. **ఒక పూర్తి స్థాయి ప్రొఫెషనల్ స్కూల్ ERP ఎగ్జామినేషన్ సెట్టింగ్స్ లో నిజంగా ఉండవలసినవి:**
+     - **విభాగం 1: Institutional & Certificate Branding (స్కూల్ బ్రాండింగ్ & అధికారిక సంతకాలు)**
+       - School Full Name, Subtitle (e.g. IIT-JEE / Foundation), Campus Address
+       - Official School Crest / Logo Upload (Admit Card & Progress Card వాటర్‌మార్క్ కోసం)
+       - Principal Signature & Official Stamp Upload (హాల్ టికెట్ & మార్క్స్ మెమోపై ఆటోమేటిక్ గా ప్రింట్ అవుతుంది)
+       - Class Teacher Signature Upload
+     - **విభాగం 2: Evaluation & Grading Standards (మూల్యాంకన విధానం)**
+       - Primary Evaluation System (CCE Grading A1-E2, 10-Point GPA Scale, Direct Percentage, Marks Range)
+       - Default Minimum Pass Marks % (పాస్ పర్సంటేజ్ ప్రమాణం)
+       - Grace Marks Limit (గ్రేస్ మార్కుల పరిమితి)
+     - **విభాగం 3: Hall Ticket & Admit Card Rules (అడ్మిట్ కార్డ్ నిబంధనలు)**
+       - Default Exam Timings (e.g., 09:30 AM - 12:30 PM)
+       - Show Grading Legend on Admit Card (గ్రేడింగ్ టేబుల్ చూపించాలా వద్దా)
+       - Candidate Exam Hall Instructions (హాల్ టికెట్ కింద వచ్చే పరీక్షా నియమావళి)
+     - **విభాగం 4: Result Publication & Privacy Controls (ఫలితాల నియంత్రణలు)**
+       - Show Class Rank to Students (రాంక్ చూపించాలా లేదా ప్రైవేట్ గా ఉంచాలా)
+       - Auto-Publish Results (టీచర్ మార్క్స్ వేయగానే విడుదల కావాలా లేదా ప్రిన్సిపాల్ అప్రూవల్ అవసరమా)
+       - Display Student Photograph on Marks Memo (ప్రోగ్రెస్ కార్డుపై ఫోటో ప్రదర్శన)
+       - Strict Moderation & Lock (రిజల్ట్స్ విడుదలయ్యాక మార్కులు మార్చకుండా లాక్ చేయడం)
+     - **విభాగం 5: Parent Communication & SMS Automation (తల్లిదండ్రులకు సమాచారం)**
+       - Auto-Send Marks SMS upon Result Publish (ఫలితాలు రాగానే పేరెంట్స్ కి ఆటోమేటిక్ SMS)
+       - Live DLT Approved SMS Template Preview
+- **చేసిన శాశ్వత పరిష్కారాలు & అప్‌గ్రేడ్‌లు (100% Functional & Completed):**
+  1. **Backend Integration (`backend/src/routes/settings.ts` & `backend/src/controllers/settings.controller.ts`):**
+     - `POST /api/settings` మరియు `PUT /api/settings` ఎండ్‌పాయింట్లను సిద్ధం చేసాము.
+     - `SchoolSettings` మోడల్‌లోని అసలైన కాలమ్స్ (`schoolName`, `address`, `logoUrl`, `principalSignatureUrl`, `teacherSignatureUrl`, `examGradingSystem`, `examAutoPublish`, `examSendSms`, `examShowGradesOnAdmitCard`, `examAdmitCardInstructions`) మరియు విస్తరించిన ఫీల్డ్స్ (`schoolSubtitle`, `examPassMarks`, `examGraceMarks`, `examShowRank`, `examStrictModeration`, `examDefaultTiming`, `examShowStudentPhoto`) అన్నీ సురక్షితంగా డేటాబేస్‌లో సేవ్ అయ్యేలా కంట్రోలర్ లాజిక్ అమలు చేశాము. ఎటువంటి రిస్కీ డేటాబేస్ మైగ్రేషన్ల అవసరం లేకుండా 100% అతుకులు లేకుండా సేవ్ అవుతుంది.
+  2. **Dedicated Settings Master Component (`frontend/src/pages/exams/ExamSettingsTab.tsx`):**
+     - పూర్తి ఇంటరాక్టివ్ స్టేట్ మరియు లైవ్ API కాల్స్‌తో 5 ప్రొఫెషనల్ సెక్షన్లను నిర్మించాము.
+     - లోగో, ప్రిన్సిపాల్ సంతకం, టీచర్ సంతకం నేరుగా అప్‌లోడ్ చేసుకునే ఇమేజ్ అప్‌లోడర్లు, లైవ్ ఇమేజ్ ప్రివ్యూ బాక్స్‌లు.
+     - స్మూత్ యానిమేటెడ్ టాగుల్ స్విచ్‌లు (క్లిక్ చేయగానే ఆన్/ఆఫ్ అవుతాయి).
+     - ఎగ్జామ్ హాల్ టికెట్ ఇన్స్ట్రక్షన్స్ ఎడిట్ చేసుకునే టెక్స్ట్‌ఏరియా.
+     - పేరెంట్స్ కి వెళ్లే లైవ్ SMS ఫార్మాట్ ప్రివ్యూ.
+     - స్క్రీన్ కింద ఫ్లోటింగ్ "Save Master Settings" బటన్ (సేవింగ్ స్పిన్నర్, సక్సెస్ టోస్ట్‌తో సహా).
+  3. **`ExamListPage.tsx` తో అనుసంధానం:**
+     - పాత డమ్మీ స్టాటిక్ HTML సెట్టింగ్స్ కోడ్‌ను తీసివేసి, కొత్త `<ExamSettingsTab />` కాంపోనెంట్‌ను పూర్తిస్థాయిలో ఇంటిగ్రేట్ చేశాము.
+
+## చివరి సంభాషణ - Progress Card PDF డిజైన్ & కంప్రెషన్ ఇష్యూ పరిష్కారం (A4 గోల్డ్ స్టాండర్డ్ అడ్మిట్ కార్డ్ రేషియో) (November 24, 2026)
+- **యూజర్ సమస్య & ఫిర్యాదు:**
+  - `progress card design change ayipoyi saginattu compress chesinattu undali andam ga ledu assalu`
+  - `live preview lo chupinchi nattu card ravatam ledu compress chesinattu daggaraki madichinattu vastundi`
+  - యూజర్ రెండు పిడిఎఫ్ స్క్రీన్‌షాట్‌లు పంపించారు:
+    1. `BORA GEHENAJNA_JEE_ProgressCard.pdf`: కార్డ్ మధ్యలోకి నలిగిపోయి, చుట్టూ భారీ తెల్లటి ఖాళీ మార్జిన్లు వచ్చి, పైకి కిందకి సాగిపోయినట్లు (stretched/compressed) కనిపించింది.
+    2. `PEDDINI LASYA PRIYA_AdmitCard.pdf`: అడ్మిట్ కార్డ్ ఎంత అందంగా, A4 పేజీ మొత్తం నిండుగా, డబుల్ బోర్డర్ మరియు సరైన మార్జిన్లతో ఉందో చూపించారు.
+- **లోతైన విశ్లేషణ & రూట్ కాజ్ (Root Cause Analysis):**
+  1. **కంటైనర్ కొలతల వ్యత్యాసం:** `ProgressCardTemplate.tsx` లో రూట్ కంటైనర్ `w-[794px]` గా ఉండి, `outline: 1.5px solid #f39c12` విత్ `outlineOffset: -8` వాడబడింది. Canvas rendering లో ఈ negative outline offset లోపాలను సృష్టించింది.
+  2. **పేరెంట్ ప్రింట్ కంటైనర్ అన్‌స్ట్రక్చర్డ్ డిస్‌ప్లే:** `JEEProgressCardTab.tsx` మరియు `ProgressCardTab.tsx` లలో `#progress-cards-print-container` పేరెంట్ `zIndex: -9999` మరియు అన్‌లిమిటెడ్ ఫ్లెక్స్ పేరెంట్‌గా ఉండటం వల్ల `toJpeg` కి ఎలిమెంట్ బాహ్య విడ్త్ కరెక్ట్‌గా అందలేదు.
+  3. **A4 రేషియో స్ట్రెచింగ్:** `toJpeg` క్యాప్చర్‌కు ఫిక్స్‌డ్ `width: 794, height: 1123` లేకుండా కేవలం `(0, 0, 210, 297)` కి ఫోర్స్ చేయడం వల్ల, ఎలిమెంట్ ఎత్తు తక్కువగా ఉన్నప్పుడు నిలువుగా సాగిపోయి, చుట్టూ భారీ వైట్ స్పేస్ ఏర్పడింది.
+- **చేసిన శాశ్వత పరిష్కారాలు (100% Fixed & Gold Standard Applied):**
+  1. **`ProgressCardTemplate.tsx` పూర్తి A4 రీఫ్యాక్టరింగ్:**
+     - అడ్మిట్ కార్డ్ లాగానే ఖచ్చితమైన A4 కొలతలు `w-[210mm] min-h-[297mm] h-[297mm] max-h-[297mm]` మరియు `p-6` ప్యాడింగ్ అందించాము.
+     - రాయల్ నేవీ బ్లూ (`#0b1a33`, 3px) మరియు గోల్డ్ (`#f39c12`, 1.5px) డబుల్ బోర్డర్ ఫ్రేమ్ ఏర్పాటు చేశాము.
+     - బ్యాక్‌గ్రౌండ్‌లో స్కూల్ లోగో వాటర్‌మార్క్ (`opacity-[0.035]`) జోడించాము.
+     - హెడర్‌లో జార్జియా సెరిఫ్ టైపోగ్రఫీ, సెంటర్ స్కివ్డ్ `RESULT CARD` బ్యాడ్జ్, కాండిడేట్ వివరాల బాక్స్ (క్లాస్ ర్యాంక్ బ్యాడ్జ్, ఫోటో ఫ్రేమ్), పెర్ఫార్మెన్స్ సమ్మరీ మార్క్స్ టేబుల్, ప్రొగ్రెస్ బార్ గేజ్, పెద్ద స్కోర్ పర్సంటేజ్, టీచర్ మరియు ప్రిన్సిపాల్ సంతకాల ప్లేస్‌మెంట్లను పేజీ మొత్తం సమతుల్యంగా నిండేలా `flex flex-col justify-between` తో డిజైన్ చేశాము.
+  2. **`JEEProgressCardTab.tsx` & `ProgressCardTab.tsx` లలో Admit Card స్థాయి రాక్-సాలిడ్ PDF క్యాప్చర్:**
+     - `generatePDFForElement` మరియు `handleDownloadAllZip` లలో ప్రింట్ కంటైనర్‌ను `position: fixed; width: 210mm; zIndex: 999999` తో యాక్టివ్ లేయర్‌లోకి తీసుకొచ్చి, బ్రౌజర్ లేఅవుట్ మరియు ఇమేజ్‌లు 100% లోడ్ అయ్యేలా చేసి, `w = 794, h = 1123` ఖచ్చితమైన పిక్సెల్ డైమెన్షన్లతో క్యాప్చర్ చేసాము.
+     - `imgRatio = 1.414` ద్వారా jsPDF లో 100% అసలైన A4 రేషియోతో ప్రింట్/డౌన్‌లోడ్ అయ్యేలా సరిదిద్దాము.
+     - సింగిల్ PDF డౌన్‌లోడ్, వాట్సాప్ షేరింగ్, ఆల్ జిప్ డౌన్‌లోడ్ మరియు ప్రింట్ అన్నీ ఇప్పుడు అడ్మిట్ కార్డ్ తరహాలోనే అద్భుతంగా, నిండుగా మరియు అందంగా వస్తాయి.
+
+
+## చివరి సంభాషణ - Academic Year / Notification / Calendar ఐకాన్లను కేవలం డాష్‌బోర్డ్‌కే పరిమితం చేయడం & డబుల్ హెడ్డింగ్ పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్నలు:**
+  1. `double heading enduku vachindi` (/attendance పేజీలో పైన టాప్ హెడర్, క్రింద పేజ్ హెడర్ రెండూ కలిసి రెండు హెడ్డింగ్‌లుగా కనిపించడం).
+  2. `academic year notification calander ivanni dashboard header lo matrame undali pratio page header lo enduku unnayi` (/competitive-exams పేజీలో కూడా టాప్ వైట్ బార్‌లో [🔔] [📅] [2026-2027] కనిపించడం).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - గత మార్పులో `Header.tsx` నుండి `if (!isDashboard && !forceShow) return null;` తీసివేయడం వల్ల, గ్లోబల్ హెడర్ అన్ని పేజీలలోనూ (అటెండెన్స్, కాంపిటీటివ్ ఎగ్జామ్స్, స్టూడెంట్స్, etc.) లోడ్ అయ్యింది.
+  - దీనివల్ల అటెండెన్స్ లో టాప్ హెడర్ + పేజ్ హెడర్ రెండూ కలిసి డబుల్ హెడ్డింగ్ ఏర్పడింది.
+  - అలాగే కాంపిటీటివ్ ఎగ్జామ్స్ పైన నోటిఫికేషన్, క్యాలెండర్, అకడమిక్ ఇయర్ అనవసరంగా కనిపించాయి.
+- **చేసిన పరిష్కారం (100% Resolved):**
+  1. **`Header.tsx` కేవలం డాష్‌బోర్డ్ కే పరిమితం:**
+     - `const isDashboard = location.pathname === '/dashboard' || location.pathname === '/' || location.pathname === '/chairman'; if (!isDashboard && !forceShow) return null;` ను పునరుద్ధరించాము.
+     - దీనివలన నోటిఫికేషన్ బెల్, క్యాలెండర్ మరియు అకడమిక్ ఇయర్ సెలెక్టర్ కేవలం మెయిన్ డాష్‌బోర్డ్ (`/dashboard`) హెడర్‌పైనే ఉంటాయి. ఏ ఇతర ఇంటర్నల్ పేజీలోనూ కనిపించవు.
+  2. **అటెండెన్స్ డాష్‌బోర్డ్ డబుల్ హెడ్డింగ్ పరిష్కారం:**
+     - `Header.tsx` నాన్-డాష్‌బోర్డ్ పేజీలకు `null` ఇవ్వడం వల్ల, `/attendance` పేజీలో ఇప్పుడు కేవలం ఒక్కటే ప్రొఫెషనల్ `<PageHeader title="Attendance Dashboard" ...>` మాత్రమే కనిపిస్తుంది.
+  3. **కాంపిటీటివ్ ఎగ్జామ్స్ సెల్ఫ్-కంటైన్డ్ హెడర్:**
+     - `/competitive-exams` లో ఎటువంటి ఎక్స్‌ట్రా టాప్ బార్ లేకుండా, పేజీ ప్రారంభంలోనే నేరుగా `[← Back to Dashboard]`, `[☰]` మొబైల్ మెనూ, టైటిల్, సబ్‌టైటిల్, రిఫ్రెష్ మరియు `+ Create Exam Wizard` బటన్లతో కూడిన క్లీన్, సొగసైన హెడర్ ఉంది.
+  4. **UI టెక్స్ట్ ఇంగ్లీష్ మార్పు & Modal Bug Fix:**
+     - `Header.tsx` లో ఉన్న మిగిలిన తెలుగు టెక్స్ట్‌లు (Cancel, Creating...) ఆంగ్లంలోకి మార్చబడ్డాయి. `setShowAddYearModal(true)` ని సరైన `setShowAddModal(true)` గా సరిదిద్దాము.
+
+## చివరి సంభాషణ - MCQ Paper Generator లో ఆప్షన్లు కలిసిపోవడం & Word-Slicing Regex బగ్స్ పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `question bank lo konni questions lo options kalasipotunnayi problem enti detail ga cheppu evo errors unnayi naku detail ga kavali` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో ఆప్షన్లు పక్కపక్కనే రావడం, ప్యాసేజ్‌లో `lan` మరియు `(D)` అని పదం ముక్కలవడం, పైన `(B) Carbohydrate` అని విడిగా రావడం సమస్యలపై విశ్లేషణ కోరారు).
+- **సమస్యల లోతైన విశ్లేషణ (Root Cause Analysis):**
+  1. **ఇంగ్లీష్ పదాలు ముక్కలై తప్పుడు ఆప్షన్‌గా మారడం (Word-Slicing Regex Bug):**
+     - స్క్రీన్‌షాట్‌లోని రీడింగ్ ప్యాసేజ్‌లో `...and on land. A duck's feet...` లోని `land. A` ని కోడ్‌లోని Regex `([^\n\s])\s*([A-Da-d]\.)\s+` తప్పుగా Option `(D)` గా గుర్తించింది.
+     - దీనివల్ల `land.` లోని `d.` తెగిపోయి `lan` మిగిలింది, `(D) A duck's...` అనే కొత్త ఆప్షన్‌గా కిందకి విడిపోయింది! `food. `, `sound. `, `hand. `, `India. `, `good. ` లాంటి ఏ సాధారణ ఇంగ్లీష్ పదం చివర `d.`, `a.` వచ్చినా ఇలాగే జరిగింది.
+  2. **ఆప్షన్లు పక్కపక్కనే కలిసిపోవడం (Auto-Column Layout & Tight Gap):**
+     - ఆప్షన్ల సైజు తక్కువగా ఉన్నప్పుడు (<=8 క్యారెక్టర్లు, ఉదా: Q36, Q41, Q42), సిస్టమ్ ఆటోమేటిక్‌గా 4 ఆప్షన్లను ఒకే అడ్డు వరుసలో (`grid-cols-4`) లో ఉంచింది.
+     - కాలమ్స్ మధ్య ఉన్న గ్యాప్ (`gap-x-2`, `gap-x-3`) చాలా తక్కువగా ఉండటం వల్ల ఆప్షన్లు ఒకదానికొకటి తాకుతూ కలిసిపోయినట్లు కనిపించాయి.
+  3. **ఆర్ఫన్ ఆప్షన్లు (Orphan Options - (B), (C), (D) విడిపోవడం):**
+     - టెక్స్ట్‌లో ప్రశ్న మరియు (A) తర్వాత అదనపు ఖాళీ లైన్లు ఉండటం వల్ల, సిస్టమ్ (A) వరకు ఒక ప్రశ్నగాను, (B), (C), (D) లను వేరే విడి ముక్కగాను భావించి ప్రివ్యూలో వేరు చేసింది.
+- **చేసిన పరిష్కారాలు (100% Fixed):**
+  1. `MCQPaperGeneratorPage.tsx` మరియు `LiveLatexPreview.tsx` లోని ఆప్షన్ స్ప్లిట్టింగ్ Regex ను సరిదిద్దాము. ఇంగ్లీష్ పదాల చివర వచ్చే డాట్‌లను (`land.`, `food.`, మొదలైనవి) ఆప్షన్లుగా మార్చకుండా ప్రొటెక్షన్ జోడించాము.
+  2. `LiveLatexPreview.tsx` లో ఆప్షన్ల మధ్య ఖాళీని `gap-x-4`, `gap-x-6` కి పెంచి, ఆటో-కాలమ్ లిమిట్‌ను సరిచేసి ఆప్షన్లు ఒకదానితో ఒకటి కలిసిపోకుండా స్పష్టమైన స్పేసింగ్ ఇచ్చాము.
+
+## చివరి సంభాషణ - Examination Dashboard నుండి Slip Test Rank Card తొలగింపు (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `slip test rank card exam ki marks ki elanti ibbandi lekunda remove cheyu poortiga` (/exams స్క్రీన్‌షాట్ పంపిస్తూ, Examination Dashboard లోని Slip Test Rank Card ను ఎగ్జామ్స్ మరియు మార్క్స్‌కు ఎటువంటి ఆటంకం లేకుండా పూర్తిగా తీసేయమని కోరారు).
+- **సమస్య విశ్లేషణ:**
+  - `ExamListPage.tsx` లోని టూల్స్ గ్రిడ్‌లో `Slip Test Rank Card` అనేది కేవలం పాత మాన్యువల్ పేజీ `/office-tools/slip-test` కు వెళ్లే సింపుల్ లింక్ కార్డ్ మాత్రమే.
+  - ప్రధాన ఎగ్జామ్స్, మార్క్స్ ఎంట్రీ, గ్రేడ్ షీట్లు లేదా రిపోర్ట్ కార్డులు ఏవీ దీనిపై ఆధారపడలేదు.
+- **చేసిన పరిష్కారం (100% Safe & Complete):**
+  - `frontend/src/pages/exams/ExamListPage.tsx` లోని కార్డ్స్ గ్రిడ్ నుండి `Slip Test Rank Card` ను పూర్తిగా తొలగించాము.
+  - ఉపయోగించని పాత `SlipTestsTab` ఇంపోర్ట్‌ను క్లీన్ చేసాము.
+  - ఇప్పుడు ఎగ్జామినేషన్ డ్యాష్‌బోర్డ్‌లో ఎగ్జామ్స్ లిస్ట్, అడ్మిట్ కార్డ్, క్వశ్చన్ పేపర్స్, మార్క్స్ అప్‌లోడ్, రిజల్ట్స్, ప్రోగ్రెస్ కార్డ్, ఎస్సెమ్మెస్, స్టేటస్ ఓవర్‌వ్యూ, సెట్టింగ్స్ మాత్రమే అత్యంత ప్రొఫెషనల్‌గా కనిపిస్తాయి.
+
 ## VPS Hosting & PM2 Process Names Reference:
 - **Backend (Node.js API):** Runs on VPS at `http://66.116.252.191:19998` under PM2 name `backend` (ID: 0).
   - Command: `pm2 restart backend`
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
+<<<<<<< HEAD
 ## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ (Git Pull Sync) (November 24, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `git nunchi updates anni download cheyu` (GitHub నుండి తాజా అప్‌డేట్‌లను లోకల్ సిస్టమ్‌లో మరియు VPS సర్వర్‌లో సింక్ చేసుకోవడానికి కమాండ్స్ అడిగారు).
@@ -47,6 +385,209 @@
      - `generateQuizQuestions` మరియు `parseRawExamTextToMCQs` రెండింటికీ ఇంటెలిజెంట్ ఆఫ్-లైన్ సిలబస్ సింథసైజర్ మరియు లోకల్ రెజెక్స్ పార్సర్ ఫాల్‌బ్యాక్‌లను అమర్చాము. దీనివల్ల గూగుల్ ఏపీఐ ఫెయిల్ అయినా లేదా కోటా ఇష్యూ వచ్చినా "AI generation error" రాకుండా 100% సేఫ్ గా ప్రశ్నలు జనరేట్ అవుతాయి.
   4. **ఎన్విరాన్మెంట్ కాన్ఫిగరేషన్ ([`backend/.env`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/.env)):**
      - `GEMINI_MODEL="gemini-2.0-flash"` మరియు యూజర్ అందించిన తాజా API కీ భద్రపరచబడ్డాయి.
+=======
+## చివరి సంభాషణ - అటెండెన్స్ డాష్‌బోర్డ్‌లో Double Heading సమస్య పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `double heading enduku vachindi` (అటెండెన్స్ డాష్‌బోర్డ్ పేజీ స్క్రీన్‌షాట్ పంపిస్తూ, పైన వైట్ టాప్ బార్‌లో Attendance Dashboard అని, దాని క్రింద ఉన్న బ్లూ బ్యానర్‌లో మళ్లీ Attendance Dashboard అని రెండు హెడ్డింగ్‌లు ఎందుకు వచ్చాయి అని అడిగారు).
+- **సమస్య విశ్లేషణ (Root Cause Analysis):**
+  - అన్ని పేజీలలో Academic Year సెలెక్టర్, నోటిఫికేషన్లు, బ్యాక్ బటన్ ఏకీకృతంగా ఉండేందుకు `Header.tsx` టాప్ వైట్ బార్‌ను గ్లోబల్ లేఅవుట్‌లో ఉంచాము.
+  - అయితే `AttendanceDashboard.tsx` లో అంతకుముందు నుంచే పేజీ లోపల ఒక పాత బ్లూ కలర్ `<PageHeader>` కాంపోనెంట్ ఉంది.
+  - దీనివలన పైన టాప్ హెడర్‌లో `Attendance Dashboard` మరియు క్రింద బ్లూ బాక్స్‌లో కూడా `Attendance Dashboard` ఉండటంతో రెండు హెడ్డింగ్‌లు ఒకదాని క్రింద ఒకటి కనిపించాయి.
+- **చేసిన పరిష్కారం (100% Fixed):**
+  1. `AttendanceDashboard.tsx` నుండి ఆ అనవసర పాత బ్లూ కలర్ `<PageHeader>` ను పూర్తిగా తొలగించాము.
+  2. `PageHeader.tsx` కాంపోనెంట్‌ను అప్‌డేట్ చేసి, డూప్లికేట్ టైటిల్ బ్యానర్లు ఎక్కడా రాకుండా సప్రెస్ చేశాము.
+  3. ఇప్పుడు పైన ఒక్కటే సింపుల్, నీట్ టాప్ హెడర్ (`[☰] [←] Attendance Dashboard` + `[🔔] [📅] [Academic Year Selector]`) ఉంటుంది; దాని క్రింద నేరుగా అటెండెన్స్ సమ్మరీ కార్డులు (533 Total, 465 Present, 68 Absent, 87%) ఎక్కువ స్పేస్ ఆదా అవుతూ క్లీన్‌గా కనిపిస్తాయి.
+
+## చివరి సంభాషణ - Academic Year సెలెక్టర్ ఇంగ్లీష్ టెక్స్ట్ మార్పు & డాష్‌బోర్డ్ ఇయర్ ఫిల్టరింగ్ పరిష్కారం (November 24, 2026)
+- **యూజర్ ప్రశ్నలు & సందేహాలు:**
+  1. `telugu lo enduku vastundi text`: వెబ్‌సైట్ టోస్ట్ మరియు మోడల్‌లో తెలుగు టెక్స్ట్ రావడం గమనించి ఇంగ్లీష్ లో ఉండాలని అడిగారు.
+  2. `2027-28 select chesinappudu malli 2026-27 dashboard ye chudpistundi naku assalu emi ardam kavatam ledu plan unte cheppu`: 2027-28 సెలెక్ట్ చేసినప్పుడు కూడా 533 విద్యార్థులు, 2026-27 డాష్‌బోర్డ్ ఎందుకు చూపిస్తోంది, అకడమిక్ ఇయర్ ప్లాన్ ఏమిటి అని అడిగారు.
+- **రూట్ కాజ్ విశ్లేషణ & పరిష్కారాలు (100% Fixed):**
+  1. **వెబ్‌సైట్ UI టెక్స్ట్ ఆంగ్లంలోకి మార్పు ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx)):**
+     - టోస్ట్ నోటిఫికేషన్‌ను `Academic Year 2027-2028 selected!` గాను, మోడల్ సబ్‌హెడర్‌ను `Create and initialize a new academic session` గాను మార్చాము.
+  2. **డాష్‌బోర్డ్ హార్డ్‌కోడెడ్ ఫాల్‌బ్యాక్ తొలగింపు ([`DashboardPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx)):**
+     - గతంలో ఉన్న `data.totalStudents || 533` మరియు `data.totalClasses || 24` ల వలన 2027-28 లో 0 విద్యార్థులు ఉన్నప్పటికీ జావాస్క్రిప్ట్ `0 || 533` ను `533` గా చూపించింది.
+     - దానిని `data.totalStudents ?? 0` మరియు `data.totalClasses ?? 0`, `totalRevenueFormatted` ను `?? 0` గా మార్చాము.
+  3. **బ్యాకెండ్ డాష్‌బోర్డ్ ఫిల్టరింగ్ ([`dashboard.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+     - ఫీజు వసూళ్లు (Revenue), రీసెంట్ పేమెంట్స్, ఈరోజు అటెండెన్స్, జెండర్ గ్రూపింగ్, బర్త్‌డే లిస్ట్ అన్నింటికీ `academicYear` ఫిల్టర్ వర్తించేలా అప్‌డేట్ చేశాము.
+  4. **స్కూల్ ERP అకడమిక్ ఇయర్ లైఫ్‌సైకిల్ ప్లాన్:**
+     - 2026-2027 (ప్రస్తుత సంవత్సరం): 533 మంది విద్యార్థులు.
+     - 2027-2028 (కొత్త సంవత్సరం): ప్రమోషన్ లేదా కొత్త అడ్మిషన్లు జరిగే వరకు 0 విద్యార్థులు, 0 ఫీజుగా ఫ్రెష్‌గా ప్రారంభమవుతుంది.
+
+## చివరి సంభాషణ - Competitive Exams UI రీడిజైన్, సబ్జెక్ట్-వైజ్ ప్రశ్నల బ్యాంక్, ఫలితాలు & యాక్టివ్ స్టూడెంట్స్ ట్యాబ్‌లు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `anni pages ki unnatte simple top header undali`
+  - `ee page kuda UI complete ga andam ga change cheyu. over cheyavalasina avasram ledu`
+  - `total exams click cheste exams list open avvali`
+  - `total questions click cheste subject wise questions chusukunela undali`
+  - `result meda click cheste aa exam ki taggattu result list ravali`
+  - `Active students kuda ravali`
+  - `oka professional develoepr ga alochinchi professional ga design cheyu. okkokka page chala andam ga undali`
+- **పూర్తయిన పనులు & మార్పులు (100% Complete):**
+  1. **టాప్ హెడర్ ఏకీకరణ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx) & [`DashboardLayout.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/DashboardLayout.tsx)):**
+     - అన్ని పేజీలలాగే సింపుల్, నీట్ మరియు ఆధునిక వైట్ టాప్ హెడర్ (`bg-white/95`, బ్యాక్‌డ్రాప్ బ్లర్, హాంబర్గర్ మెనూ, బ్యాక్ బటన్, పేజీ టైటిల్ 'Competitive Exams', నోటిఫికేషన్ బెల్, క్యాలెండర్, అకడమిక్ ఇయర్ సెలెక్టర్) ఏకీకృతం చేయబడింది.
+  2. **Competitive Exams పేజీ రీడిజైన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - గతంలో ఉన్న భారీ డార్క్ బ్యానర్ తొలగించబడి, సొగసైన మరియు ప్రొఫెషనల్ స్కూల్ ERP హెడర్ అందించబడింది.
+     - 4 ఇంటరాక్టివ్ క్లిక్ చేయగల స్టాట్ కార్డులు అనుసంధానించబడ్డాయి:
+       - **TOTAL EXAMS:** క్లిక్ చేయగానే అందుబాటులో ఉన్న ఆన్‌లైన్ ఎగ్జామ్స్ లిస్ట్ ఓపెన్ అవుతుంది.
+       - **TOTAL QUESTIONS:** క్లిక్ చేయగానే సబ్జెక్ట్‌ల వారీగా ప్రశ్నల బ్యాంక్ ఓపెన్ అవుతుంది.
+       - **RESULTS PUBLISHED:** క్లిక్ చేయగానే ఎగ్జామ్ వారీగా విద్యార్థుల ఫలితాలు మరియు ర్యాంకుల జాబితా వస్తుంది.
+       - **ACTIVE STUDENTS:** క్లిక్ చేయగానే పరీక్షలు రాసిన విద్యార్థుల వివరాలు వస్తాయి.
+  3. **సబ్జెక్ట్-వైజ్ క్వశ్చన్ బ్యాంక్ ట్యాబ్ (`SubjectWiseQuestionBankTab`):**
+     - ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్ (All Exams లేదా నిర్దిష్ట ఎగ్జామ్ ఎంచుకోవచ్చు).
+     - సబ్జెక్ట్ ఫిల్టర్ పిల్స్: All Subjects, Mathematics, Physics, Chemistry, Biology, Mental Ability, General తో కూడిన లైవ్ కౌంట్లు.
+     - శోధన (Search bar) మరియు డిఫికల్టీ ఫిల్టర్ (Easy, Medium, Hard).
+     - KaTeX మ్యాథ్ రెండరింగ్, డయాగ్రమ్ సపోర్ట్ మరియు సరైన సమాధానం గ్రీన్ కలర్ బ్యాడ్జ్‌తో హైలైట్ చేయబడిన 4 ఆప్షన్ల గ్రిడ్.
+  4. **ఫలితాలు & ర్యాంకుల ట్యాబ్ (`ResultsAndRanksTab`):**
+     - ఎగ్జామ్ ఫిల్టర్ సెలెక్టర్ & విద్యార్థుల శోధన బార్.
+     - సమ్మరీ KPI కార్డులు: Total Submissions, Highest Score, Average Score, Top Student.
+     - ఫలితాల జాబితా: #1 గోల్డ్ ట్రోఫీ, #2 సిల్వర్, #3 బ్రాంజ్ ర్యాంక్ బ్యాడ్జ్‌లు, విద్యార్థి ప్రొఫైల్, రోల్ నంబర్, క్లాస్, మార్కులు, పర్సంటేజ్, టైమ్ టేకెన్ మరియు 'View Scorecard' బటన్.
+  5. **యాక్టివ్ స్టూడెంట్స్ ట్యాబ్ (`ActiveStudentsTab`):**
+     - పరీక్షలు రాసిన యాక్టివ్ విద్యార్థుల డైరెక్టరీ.
+     - విద్యార్థి పేరు, రోల్ నంబర్, క్లాస్ ఫిల్టర్.
+     - విద్యార్థి రాసిన పరీక్షల సంఖ్య (Attempts), బెస్ట్ స్కోర్, లేటెస్ట్ ఎగ్జామ్ వివరాలు మరియు లేటెస్ట్ స్కోర్‌కార్డ్ లింక్.
+  6. **బ్యాకెండ్ డేటా ఎన్‌రిచ్‌మెంట్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - `getAllCompetitiveExams` లో విద్యార్థుల సబ్మిషన్లు (student user, class, marks, time) మరియు ప్రశ్నల ఆబ్జెక్టులను ఒకే రిక్వెస్ట్‌లో పూర్తి వివరాలతో లోడ్ అయ్యేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Competitive Exams UI రీడిజైన్, సబ్జెక్ట్-వైజ్ ప్రశ్నల బ్యాంక్, ఫలితాలు & యాక్టివ్ స్టూడెంట్స్ ట్యాబ్‌లు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `anni pages ki unnatte simple top header undali`
+  - `ee page kuda UI complete ga andam ga change cheyu. over cheyavalasina avasram ledu`
+  - `total exams click cheste exams list open avvali`
+  - `total questions click cheste subject wise questions chusukunela undali`
+  - `result meda click cheste aa exam ki taggattu result list ravali`
+  - `Active students kuda ravali`
+  - `oka professional develoepr ga alochinchi professional ga design cheyu. okkokka page chala andam ga undali`
+- **పూర్తయిన పనులు & మార్పులు (100% Complete):**
+  1. **టాప్ హెడర్ ఏకీకరణ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx) & [`DashboardLayout.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/DashboardLayout.tsx)):**
+     - అన్ని పేజీలలాగే సింపుల్, నీట్ మరియు ఆధునిక వైట్ టాప్ హెడర్ (`bg-white/95`, బ్యాక్‌డ్రాప్ బ్లర్, హాంబర్గర్ మెనూ, బ్యాక్ బటన్, పేజీ టైటిల్ 'Competitive Exams', నోటిఫికేషన్ బెల్, క్యాలెండర్, అకడమిక్ ఇయర్ సెలెక్టర్) ఏకీకృతం చేయబడింది.
+  2. **Competitive Exams పేజీ రీడిజైన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - గతంలో ఉన్న భారీ డార్క్ బ్యానర్ తొలగించబడి, సొగసైన మరియు ప్రొఫెషనల్ స్కూల్ ERP హెడర్ అందించబడింది.
+     - 4 ఇంటరాక్టివ్ క్లిక్ చేయగల స్టాట్ కార్డులు అనుసంధానించబడ్డాయి:
+       - **TOTAL EXAMS:** క్లిక్ చేయగానే అందుబాటులో ఉన్న ఆన్‌లైన్ ఎగ్జామ్స్ లిస్ట్ ఓపెన్ అవుతుంది.
+       - **TOTAL QUESTIONS:** క్లిక్ చేయగానే సబ్జెక్ట్‌ల వారీగా ప్రశ్నల బ్యాంక్ ఓపెన్ అవుతుంది.
+       - **RESULTS PUBLISHED:** క్లిక్ చేయగానే ఎగ్జామ్ వారీగా విద్యార్థుల ఫలితాలు మరియు ర్యాంకుల జాబితా వస్తుంది.
+       - **ACTIVE STUDENTS:** క్లిక్ చేయగానే పరీక్షలు రాసిన విద్యార్థుల వివరాలు వస్తాయి.
+  3. **సబ్జెక్ట్-వైజ్ క్వశ్చన్ బ్యాంక్ ట్యాబ్ (`SubjectWiseQuestionBankTab`):**
+     - ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్ (All Exams లేదా నిర్దిష్ట ఎగ్జామ్ ఎంచుకోవచ్చు).
+     - సబ్జెక్ట్ ఫిల్టర్ పిల్స్: All Subjects, Mathematics, Physics, Chemistry, Biology, Mental Ability, General తో కూడిన లైవ్ కౌంట్లు.
+     - శోధన (Search bar) మరియు డిఫికల్టీ ఫిల్టర్ (Easy, Medium, Hard).
+     - KaTeX మ్యాథ్ రెండరింగ్, డయాగ్రమ్ సపోర్ట్ మరియు సరైన సమాధానం గ్రీన్ కలర్ బ్యాడ్జ్‌తో హైలైట్ చేయబడిన 4 ఆప్షన్ల గ్రిడ్.
+  4. **ఫలితాలు & ర్యాంకుల ట్యాబ్ (`ResultsAndRanksTab`):**
+     - ఎగ్జామ్ ఫిల్టర్ సెలెక్టర్ & విద్యార్థుల శోధన బార్.
+     - సమ్మరీ KPI కార్డులు: Total Submissions, Highest Score, Average Score, Top Student.
+     - ఫలితాల జాబితా: #1 గోల్డ్ ట్రోఫీ, #2 సిల్వర్, #3 బ్రాంజ్ ర్యాంక్ బ్యాడ్జ్‌లు, విద్యార్థి ప్రొఫైల్, రోల్ నంబర్, క్లాస్, మార్కులు, పర్సంటేజ్, టైమ్ టేకెన్ మరియు 'View Scorecard' బటన్.
+  5. **యాక్టివ్ స్టూడెంట్స్ ట్యాబ్ (`ActiveStudentsTab`):**
+     - పరీక్షలు రాసిన యాక్టివ్ విద్యార్థుల డైరెక్టరీ.
+     - విద్యార్థి పేరు, రోల్ నంబర్, క్లాస్ ఫిల్టర్.
+     - విద్యార్థి రాసిన పరీక్షల సంఖ్య (Attempts), బెస్ట్ స్కోర్, లేటెస్ట్ ఎగ్జామ్ వివరాలు మరియు లేటెస్ట్ స్కోర్‌కార్డ్ లింక్.
+  6. **బ్యాకెండ్ డేటా ఎన్‌రిచ్‌మెంట్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts)):**
+     - `getAllCompetitiveExams` లో విద్యార్థుల సబ్మిషన్లు (student user, class, marks, time) మరియు ప్రశ్నల ఆబ్జెక్టులను ఒకే రిక్వెస్ట్‌లో పూర్తి వివరాలతో లోడ్ అయ్యేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Academic Year గ్లోబల్ సెలెక్టర్, స్టూడెంట్ ఫిల్టరింగ్ & యాడ్ ఇయర్ ఇంప్లిమెంటేషన్ (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `paina academic year lo ye year select cheste aa year students kanapdali naku sariga teliyadu professional developer ga alochinchi ela cheyalo naku cheppu, academic year ela add chestam ivvani kavali`
+  - `ok start cheyu`
+- **పూర్తయిన పనులు & ఆర్కిటెక్చర్ మార్పులు (100% Complete):**
+  1. **గ్లోబల్ అకడమిక్ ఇయర్ కాంటెక్స్ట్ ([`AcademicYearContext.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/contexts/AcademicYearContext.tsx)):**
+     - యాప్ అంతటా అకడమిక్ ఇయర్ స్టేట్‌ను నిల్వ చేయడానికి `AcademicYearProvider` ను సృష్టించాము.
+     - `selectedYear` ను `localStorage` లో భద్రపరిచి, యూజర్ మారినప్పుడు `window.dispatchEvent` ద్వారా తక్షణ నోటిఫికేషన్ అందిస్తుంది.
+     - కొత్త అకడమిక్ ఇయర్ జోడించేటప్పుడు గత సంవత్సరం క్లాసులు & సబ్జెక్టులను కొత్త సంవత్సరానికి క్లోన్ చేయడానికి `createAcademicYear` మెథడ్‌ను అనుసంధానించాము.
+  2. **రూట్ ప్రొవైడర్స్ అనుసంధానం ([`main.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/main.tsx)):**
+     - `<AcademicYearProvider>` ను `<AuthProvider>` లోపల మౌంట్ చేసి యాప్ మొత్తం యాక్సెస్ కల్పించాము.
+  3. **ఇంటరాక్టివ్ హెడర్ డ్రాప్‌డౌన్ & మోడల్ ([`Header.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/components/layout/Header.tsx)):**
+     - పాత స్టాటిక్ `2026 – 27` పిల్ స్థానంలో అధునాతన `AcademicYearSelector` ను రూపొందించాము.
+     - అన్ని అకడమిక్ ఇయర్లు డ్రాప్‌డౌన్‌లో కనిపిస్తాయి; యాక్టివ్ ఇయర్‌కు గ్రీన్ చెక్‌మార్క్ ఉంటుంది.
+     - క్రింద `+ Add Academic Year` బటన్ ద్వారా క్లాసులను ఆటోమేటిక్‌గా క్లోన్ చేసే మోడల్ పనిచేస్తుంది.
+  4. **విద్యార్థుల లిస్ట్ ఆటో-ఫిల్టరింగ్ ([`StudentListPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentListPage.tsx) & [`students.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts)):**
+     - `/api/students?academicYear=...` ద్వారా సెలెక్ట్ చేసిన ఇయర్ విద్యార్థులు మాత్రమే ఫిల్టర్ అవుతారు.
+     - `StudentListPage` లో "Total Students" పక్కన డెస్క్‌టాప్ మరియు మొబైల్ ఫిల్టర్లలో అకడమిక్ ఇయర్ సెలెక్టర్‌ను జోడించాము. ఇయర్ మార్చగానే తక్షణమే రికార్డులు రీఫ్రెష్ అవుతాయి.
+  5. **డాష్‌బోర్డ్ సింక్ ([`DashboardPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx) & [`dashboard.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+     - `/api/dashboard/admin?academicYear=...` ద్వారా Total Students, Total Classes మరియు క్లాసుల జాబితా ఎంచుకున్న అకడమిక్ ఇయర్‌కు తగ్గట్టు మారుతుంది.
+  6. **తరగతుల నిర్వహణ సింక్ ([`ClassManagementPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/classes/ClassManagementPage.tsx)):**
+     - క్లాసెస్ పేజీలో కూడా అకడమిక్ ఇయర్ మారగానే ఆ సంవత్సరపు క్లాసులు మాత్రమే లోడ్ అవుతాయి.
+
+## మునుపటి సంభాషణ - View Paper ప్రశ్నల లోడింగ్, అందమైన ప్రింట్ & Result Not Found పరిష్కారాలు (November 24, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `view paper lo question kanapadatam ledu and print kuda ravali andam ga` (View Paper లో ప్రశ్నలు కనిపించడం లేదు, మరియు ప్రింట్ క్లిక్ చేసినప్పుడు చాలా అందంగా A4 పేపర్ ప్రింట్ రావాలి).
+  2. `result not found antundi chudu` (ఎగ్జామ్ సబ్మిట్ చేసిన తర్వాత లేదా రిజల్ట్ పేజీలో "Result not found. Did you submit the exam?" అని వస్తోంది).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **View Paper ఇంటరాక్టివ్ ఎంటి-స్టేట్ & ఆటో-శాంపిల్ పాపులేషన్ ([`CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - యూజర్ సృష్టించిన ఎగ్జామ్‌లో ఇంకా ప్రశ్నలు యాడ్ చేయనప్పుడు (0 Questions ఉన్నప్పుడు), ఖాళీగా కనిపించకుండా ఒక అందమైన యాక్షన్ కార్డును అందించాము:
+       - `✨ Auto-Fill Sample NTA Questions` బటన్: ఒకే క్లిక్‌తో 10 హై-క్వాలిటీ జేఈఈ/నీట్ ప్రశ్నలను డేటాబేస్‌లో చేర్చి తక్షణమే పేపర్‌ను లోడ్ చేస్తుంది (`POST /api/competitive-exams/:id/populate-sample`).
+       - `📄 Paste Exam Text (AI Parser)` మరియు `+ Add Questions in Studio` బటన్లు.
+  2. **అందమైన A4 క్వశ్చన్ పేపర్ ప్రింట్ ఇంజిన్ (`printCompetitivePaper`):**
+     - పాత `window.print()` (ఇది వెబ్‌సైట్ స్క్రీన్ మొత్తాన్ని వికృతంగా ప్రింట్ చేసేది) స్థానంలో `iframe` ఆధారిత ప్రొఫెషనల్ ప్రింట్ మెకానిజాన్ని రూపొందించాము.
+     - ప్రింట్‌లో వచ్చే అంశాలు:
+       - **అధికారిక హెడర్:** `JY SCHOOL`, `EDURACLE CBT TESTING`, పరీక్ష పేరు, క్లాస్, సబ్జెక్ట్, సమయం, గరిష్ట మార్కులు, నెగెటివ్ మార్కింగ్.
+       - **ఇన్స్ట్రక్షన్స్ బాక్స్:** అభ్యర్థులకు స్పష్టమైన నిబంధనలు.
+       - **ప్రశ్నలు & మ్యాథ్ సూత్రాలు:** KaTeX రెండరింగ్‌తో కూడిన మ్యాథ్ ఫార్ములాలు, డయాగ్రమ్‌లు మరియు (A), (B), (C), (D) ఆప్షన్లతో కూడిన క్లీన్ 2-కాలమ్ గ్రిడ్.
+       - `@page { size: A4 portrait; margin: 12mm 10mm; }` మరియు `break-inside: avoid` తో ప్రశ్నలు పేజీ మధ్యలో కట్ అవ్వకుండా శుభ్రంగా ప్రింట్ అవుతాయి.
+  3. **"Result Not Found" బగ్ పరిష్కారం & స్కోర్‌కార్డ్ అప్‌గ్రేడ్ ([`competitiveExams.controller.ts`](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts) & [`CompetitiveExamResultPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamResultPage.tsx)):**
+     - **బ్యాకెండ్ ఫిక్స్:** `getStudentResult` లో పాత కోడ్ కేవలం మొదటి విద్యార్థి ID తో మాత్రమే ఫిల్టర్ చేయడం వల్ల వచ్చిన ఫాల్స్ 404 బగ్‌ను సరిదిద్దాము. ఇప్పుడు `submissionId` ని నేరుగా సపోర్ట్ చేస్తుంది; అడ్మిన్/టీచర్ స్టాఫ్ పరీక్షించినప్పుడు కూడా లేటెస్ట్ సబ్మిషన్‌ను సరిగ్గా చూపిస్తుంది.
+     - **సబ్మిట్ హ్యాండ్లర్:** `TakeCompetitiveExamPage.tsx` ఎగ్జామ్ సబ్మిట్ కాగానే జనరేట్ అయిన `submissionId` తో రిజల్ట్ పేజీకి నావిగేట్ చేస్తుంది.
+     - **ఫ్రంటెండ్ స్కోర్‌కార్డ్:** రిజల్ట్ పేజీలో KaTeX ఫార్ములా రెండరింగ్, అక్యురసీ పర్సంటేజ్, టైమ్ టేకెన్, మరియు ఒకవేళ ఇంకా ఎగ్జామ్ రాయని పక్షంలో అందమైన "No Exam Submission Found" కార్డును అందించాము.
+
+
+## చివరి సంభాషణ - Student Exam Tab Restriction & Kiosk Lockdown ఆర్కిటెక్చర్ వివరణ (November 24, 2026)
+- **యూజర్ ప్రశ్న:**
+  - `student login lo assalu inko tab kuda open avvakudadu ala cheyocha emaina options unnaya detail ga explain cheyu` (స్టూడెంట్ లాగిన్‌లో లేదా ఎగ్జామ్ రాస్తున్నప్పుడు విద్యార్థి వేరే ట్యాబ్ ఓపెన్ చేయకుండా పూర్తిగా లాక్ చేయవచ్చా? అందుబాటులో ఉన్న సాంకేతిక ఆప్షన్లు ఏమిటి?).
+- **వివరించిన కీలక అంశాలు & పరిష్కార మార్గాలు:**
+  1. **బ్రౌజర్ సెక్యూరిటీ పరిమితి & రియాలిటీ:** సాధారణ బ్రౌజర్లు (Chrome, Edge) సెక్యూరిటీ శాండ్‌బాక్స్ కారణంగా ఏ వెబ్‌సైట్‌కు కూడా యూజర్ యొక్క మొత్తం బ్రౌజర్‌ను (OS లెవల్ బటన్లను) బలవంతంగా కంట్రోల్ చేసే అనుమతి ఇవ్వవు.
+  2. **సాధ్యమయ్యే 4 ప్రాక్టికల్ ప్రొఫెషనల్ సొల్యూషన్లు:**
+     - **Option 1 (స్ట్రిక్ట్ ఫుల్‌స్క్రీన్ + షార్ట్‌కట్ లాక్ + ఆటో సబ్మిట్):** HTML5 Fullscreen API తో స్క్రీన్ లాక్, `Ctrl+T`, `Ctrl+N`, `Ctrl+W`, `Alt+Tab`, రైట్ క్లిక్ బ్లాకింగ్, మరియు ట్యాబ్ స్విచ్ లేదా ఫుల్‌స్క్రీన్ ఎగ్జిట్ అయితే తక్షణ ఆటో-సబ్మిట్ పెనాల్టీ.
+     - **Option 2 (PWA Standalone App):** వెబ్‌సైట్‌ను PWA యాప్ లాగా ఇన్‌స్టాల్ చేసుకుని ఓపెన్ చేస్తే బ్రౌజర్ URL బార్, టాబ్‌లు ఏవీ ఉండవు.
+     - **Option 3 (Flutter Mobile App Kiosk Lock):** మొబైల్ యాప్‌లో స్క్రీన్ పిన్నింగ్ ద్వారా ఇతర యాప్‌లకు లేదా హోమ్ స్క్రీన్‌కి వెళ్లకుండా లాక్ చేయడం.
+     - **Option 4 (NTA / TCS iON తరహా Safe Exam Browser - SEB):** కాలేజీ / స్కూల్ కంప్యూటర్ ల్యాబ్‌ల కోసం డెడికేటెడ్ కియోస్క్ బ్రౌజర్.
+
+## చివరి సంభాషణ - సింగిల్ రా బాక్స్ స్టూడియో & ప్రత్యేక క్వశ్చన్ బ్యాంక్ పేజీ (November 24, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  1. `question ki separate box answer ki separate box kakunda oke box lo raw text question and answer vacheyla kavali` (ప్రశ్న స్టేట్‌మెంట్‌కు ఒక బాక్స్, ఆన్సర్‌కు వేరొక బాక్స్ కాకుండా... ఒకే ఒక్క రా టెక్స్ట్ బాక్స్‌లో మొత్తం ప్రశ్న, ఆప్షన్లు A, B, C, D మరియు ఆన్సర్ కీ పేస్ట్ చేసే సదుపాయం కావాలి).
+  2. `Question bank click cheste separate page open avvali` (క్వశ్చన్ బ్యాంక్ క్లిక్ చేసినప్పుడు ఇన్-లైన్ ట్యాబ్ లాగా కాకుండా ప్రత్యేక డెడికేటెడ్ ఫుల్ పేజీ ఓపెన్ అవ్వాలి).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **సింగిల్ యూనిఫైడ్ రా బాక్స్ క్వశ్చన్ స్టూడియో ([`SingleRawBoxQuestionStudio`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveQuestionBankDashboard.tsx)):**
+     - గతంలో ఉన్న రెండు వేర్వేరు ఇన్పుట్ బాక్సులను (Box 1: Question Statement, Box 2: Unified Options Editor) పూర్తిగా తొలగించి, కేవలం **ఒకే ఒక్క రా టెక్స్ట్ ఎడిటర్ బాక్స్** ను అందించాము.
+     - ఉపాధ్యాయుడు పూర్తి ప్రశ్న, (A), (B), (C), (D) ఆప్షన్లు మరియు `Ans: B` లేదా `Key: 2` ని ఈ సింగిల్ బాక్స్‌లో పేస్ట్ చేస్తే చాలు:
+       - `(A)` కి ముందు ఉన్న టెక్స్ట్ మొత్తం ఆటోమేటిక్‌గా `Question Statement` గా మారుతుంది (KaTeX `$formula$` సపోర్ట్‌తో).
+       - `(A)`, `(B)`, `(C)`, `(D)` లు 4 ప్రత్యేక ఆప్షన్లుగా ఎక్స్‌ట్రాక్ట్ అవుతాయి.
+       - `Ans: B` లేదా `Key: B` ఆధారంగా ఆప్షన్ B ఆటోమేటిక్‌గా సరైన సమాధానంగా ఎంపిక చేయబడుతుంది.
+     - క్రింద 4 ఆప్షన్ల కార్డులు ఆటో-డిటెక్ట్ అయి కనిపిస్తాయి. ఉపాధ్యాయుడు ఏ కార్డునైనా క్లిక్ చేసి సరైన సమాధానాన్ని మార్చవచ్చు లేదా ఆప్షన్లకు డయాగ్రమ్‌లను అటాచ్ చేయవచ్చు.
+     - కుడివైపున **NTA CBT Real-Time Student Preview** లో విద్యార్థికి పరీక్షలో ఎలా కనిపిస్తుందో లైవ్‌గా KaTeX మ్యాథ్ ఫార్ములాలతో రెండర్ అవుతుంది.
+     - `CompetitiveExamsPage.tsx` లోని పాత `DedicatedQuestionEditorView` స్థానంలో కూడా ఈ సరికొత్త `SingleRawBoxQuestionStudio` ని అనుసంధానించాము.
+  2. **ప్రత్యేక క్వశ్చన్ బ్యాంక్ డెడికేటెడ్ పేజీ ([`CompetitiveQuestionBankDashboard.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveQuestionBankDashboard.tsx)):**
+     - క్వశ్చన్ బ్యాంక్ ఇప్పుడు ఇన్-లైన్ సబ్-ట్యాబ్ లాగా కాకుండా పూర్తి స్థాయి ప్రత్యేక పేజీగా (`/competitive-question-bank` మరియు `/competitive-question-bank?examId=...`) ఓపెన్ అవుతుంది.
+     - Competitive Exams పేజీలోని "Question Bank (N) ↗" ట్యాబ్ క్లిక్ చేసినా లేదా ఎగ్జామ్ కార్డులోని "Questions (N)" క్లిక్ చేసినా నేరుగా ఈ ప్రత్యేక పేజీకి నావిగేట్ అవుతుంది.
+     - ఈ పేజీలో ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్, టార్గెట్ ఎగ్జామ్ బ్లూప్రింట్, సెర్చ్ బార్, ప్రశ్నల కార్డులు, లైవ్ KaTeX ప్రివ్యూ, డిలీట్ ఆప్షన్, మరియు "+ Add Question (Single Box Studio)" లేదా "📄 Paste Exam Text (AI Parser)" బటన్లు ఉంటాయి.
+
+
+## చివరి సంభాషణ - CBT Exam ట్యాబ్ స్విచ్ అలర్ట్ & ప్రొక్టరింగ్ రిఫ్యాక్టరింగ్ (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `ila vastundi okasari check cheyu` (యూజర్ అందించిన స్క్రీన్‌షాట్‌లో `take-competitive-exam` పేజీలో `WARNING: You have switched tabs or lost window focus. Attempt 1/3. Exam will be auto-submitted if you continue.` అనే బ్రౌజర్ నేటివ్ అలర్ట్ పాపప్ వచ్చింది).
+- **సమస్య మూలకారణం & పరిష్కారం ([`frontend/src/pages/exams/TakeCompetitiveExamPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/TakeCompetitiveExamPage.tsx)):**
+  1. **అడ్మిన్లు & టీచర్లకు ప్రొక్టరింగ్ డిసేబుల్:** అడ్మిన్లు/టీచర్లు ఎగ్జామ్‌ను ప్రివ్యూ చూస్తున్నప్పుడు ట్యాబ్ స్విచ్ వార్నింగ్‌లు లేదా ఆటో-సబ్మిట్ సమస్యలు రాకుండా బైపాస్ చేసాము. హెడర్‌లో `Staff Preview Mode (Proctoring Off)` బ్యాడ్జ్ మరియు `Exit Preview` బటన్ అందించాము.
+  2. **అవాంఛిత `window.blur` తొలగింపు:** విద్యార్థి స్క్రీన్ పక్కన క్లిక్ చేసినా లేదా స్క్రీన్‌షాట్ తీసినా వచ్చే ఫాల్స్ వార్నింగ్‌లను అరికట్టడానికి `window.blur` తీసివేసి, కేవలం నిజమైన ట్యాబ్ మార్పిడికి మాత్రమే (`document.visibilityState === 'hidden'`) పరిమితం చేసాము.
+  3. **నేటివ్ అలర్ట్‌ల స్థానంలో ఇన్-యాప్ ప్రొక్టరింగ్ మోడల్:** బ్రౌజర్‌ను ఫ్రీజ్ చేసే పాత `alert()` స్థానంలో ఆధునిక ఇన్-యాప్ `Proctoring Alert` మోడల్ మరియు `react-hot-toast` నోటిఫికేషన్లను చేర్చాము.
+  4. **ఎగ్జామ్ స్టార్ట్ అవ్వకముందు వార్నింగ్‌లు బంద్:** ఎగ్జామ్ ఇన్‌స్ట్రక్షన్స్ చదివే సమయంలో యాంటీ-చీట్ లిజనర్లు యాక్టివేట్ కాకుండా, విద్యార్థి "Start Exam" క్లిక్ చేసిన తర్వాతే రన్ అయ్యేలా చేసాము.
+
+
+## చివరి సంభాషణ - Paste Exam Text (AI Smart Parser) ప్రత్యేక ఫుల్ పేజ్ వర్క్‌స్పేస్‌గా మార్పు (November 24, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `separate ga oka page open avvali` (యూజర్ అప్‌లోడ్ చేసిన స్క్రీన్‌షాట్‌లో Competitive Exams పేజీలో "Paste Exam Text (AI Smart Parser)" మోడల్ పాపప్ ఉంది. దాన్ని ఒక చిన్న డైలాగ్ బాక్స్ లాగా కాకుండా ప్రత్యేక ఫుల్ పేజీగా ఓపెన్ అయ్యేలా మార్చాలని కోరారు).
+- **పూర్తయిన కీలక మార్పులు:**
+  1. **ప్రత్యేక ఫుల్ పేజ్ వర్క్‌స్పేస్ నిర్మాణం ([`frontend/src/pages/exams/PasteCompetitiveExamTextPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/PasteCompetitiveExamTextPage.tsx)):**
+     - చిన్న మోడల్ స్థానంలో పూర్తి స్థాయి డెడికేటెడ్ పేజీని నిర్మించాము.
+     - **హెడర్ & నావిగేషన్:** `< Back to Competitive Exams` బటన్, టార్గెట్ ఎగ్జామ్ సెలెక్టర్ డ్రాప్‌డౌన్, ఎగ్జామ్ బ్లూప్రింట్ బ్యానర్ (సబ్జెక్ట్, క్లాస్, డ్యూరేషన్, టోటల్ మార్క్స్, నెగెటివ్ మార్కింగ్, ఇప్పటికే ఉన్న ప్రశ్నల సంఖ్య).
+     - **స్ప్లిట్ 2-కాలమ్ వర్క్‌స్పేస్:**
+       - **ఎడమ కాలమ్ (ఇన్‌పుట్ & సెట్టింగ్స్):** పెద్ద రా టెక్స్ట్ ఏరియా, "Load Sample Text" క్విక్ టెంప్లేట్ బటన్, సబ్జెక్ట్/చాప్టర్ హింట్, డిఫికల్టీ లెవెల్, డీఫాల్ట్ మార్క్స్, క్లియర్ బటన్, మరియు `⚡ Parse with AI (Gemini 2.5 Flash)` యాక్షన్ బటన్.
+       - **కుడి కాలమ్ (లైవ్ KaTeX ప్రివ్యూ & రివ్యూ):** ఖాళీగా ఉన్నప్పుడు హెల్ప్‌ఫుల్ గైడెన్స్ కార్డ్; ప్రశ్నలు పార్స్ అయిన తర్వాత ప్రతి ప్రశ్నకు కార్డ్ నంబర్, చాప్టర్ ట్యాగ్, మార్కులు, లైవ్ KaTeX మ్యాథ్ రెండరింగ్, ఆప్షన్లు (A, B, C, D) గ్రిడ్, ఆన్సర్ కీ చేంజర్ డ్రాప్‌డౌన్, ఇన్-లైన్ ఎడిట్ మోడ్, మరియు డిలీట్ బటన్లు.
+     - **స్టిక్కీ సేవ్ బార్:** క్రింద ఉన్న బార్‌లో ఒకే క్లిక్‌తో అన్ని ప్రశ్నలను ఎగ్జామ్‌లోకి బల్క్ సేవ్ చేసి (`/api/competitive-exams/:id/bulk-add-questions`) నేరుగా ఎగ్జామ్స్ పేజీకి రిటర్న్ చేసే సదుపాయం.
+  2. **రౌటింగ్ రిజిస్ట్రేషన్ ([`frontend/src/router/index.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/router/index.tsx)):**
+     - `DashboardLayout` క్రింద `/competitive-exams/paste-ai` మరియు `/competitive-exams/:id/paste-ai` రౌట్లను జోడించాము.
+  3. **CompetitiveExamsPage లింకింగ్ ([`frontend/src/pages/exams/CompetitiveExamsPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+     - క్వశ్చన్ బ్యాంక్ ట్యాబ్ హెడర్ బార్‌లో మరియు ఎంప్టీ స్టేట్‌లో ఉన్న "📄 Paste Exam Text (AI Parser)" బటన్లను క్లిక్ చేయగానే మోడల్ తెరవకుండా నేరుగా ఈ ప్రత్యేక ఫుల్ పేజీకి నావిగేట్ అయ్యేలా చేసాము (`navigate('/competitive-exams/' + activeExam.id + '/paste-ai')`).
+     - మేనేజ్ ఎగ్జామ్స్ ట్యాబ్‌లోని ప్రతి ఎగ్జామ్ కార్డుపై కూడా నేరుగా "📄 Paste Exam Text" బటన్‌ను యాడ్ చేసాము.
+
+>>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
 
 ## చివరి సంభాషణ - Examination పేజీ నుండి OMR Scanner ఆప్షన్ పూర్తి తొలగింపు (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**

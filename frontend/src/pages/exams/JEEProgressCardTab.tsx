@@ -140,57 +140,94 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
   };
 
   const generatePDFForElement = async (el: HTMLElement, fileName: string) => {
-    const parentContainer = document.getElementById('progress-cards-print-container');
-    const originalParentDisplay = parentContainer?.style.display || '';
-    const originalParentPosition = parentContainer?.style.position || '';
-    const originalParentZIndex = parentContainer?.style.zIndex || '';
-    const originalParentTop = parentContainer?.style.top || '';
-    const originalParentLeft = parentContainer?.style.left || '';
+    const dlContainer = document.getElementById('progress-cards-print-container');
+    const origDlPosition = dlContainer?.style.position;
+    const origDlLeft = dlContainer?.style.left;
+    const origDlTop = dlContainer?.style.top;
+    const origDlZIndex = dlContainer?.style.zIndex;
+    const origDlOpacity = dlContainer?.style.opacity;
+    const origDlVisibility = dlContainer?.style.visibility;
+    const origDlDisplay = dlContainer?.style.display;
     
-    if (parentContainer) {
-      parentContainer.classList.remove('hidden');
-      parentContainer.style.display = 'flex';
-      // Use absolute instead of fixed to prevent viewport clipping by html-to-image
-      parentContainer.style.position = 'absolute';
-      parentContainer.style.top = '0';
-      parentContainer.style.left = '0';
-      parentContainer.style.zIndex = '-9999';
+    // Save element original styles
+    const originalPosition = el.style.position;
+    const originalLeft = el.style.left;
+    const originalTop = el.style.top;
+    const originalZIndex = el.style.zIndex;
+    const originalOpacity = el.style.opacity;
+    const originalVisibility = el.style.visibility;
+    const originalDisplay = el.style.display;
+
+    // Bring container and element into active rendering layer so browser computes layout & renders images
+    if (dlContainer) {
+      dlContainer.style.position = 'fixed';
+      dlContainer.style.left = '0';
+      dlContainer.style.top = '0';
+      dlContainer.style.width = '210mm';
+      dlContainer.style.zIndex = '999999';
+      dlContainer.style.opacity = '1';
+      dlContainer.style.visibility = 'visible';
+      dlContainer.style.display = 'block';
     }
 
-    const originalDisplay = el.style.display;
-    el.style.display = 'flex';
+    el.style.position = 'fixed';
+    el.style.left = '0';
+    el.style.top = '0';
+    el.style.width = '210mm';
+    el.style.minHeight = '297mm';
+    el.style.height = '297mm';
+    el.style.zIndex = '999999';
+    el.style.opacity = '1';
+    el.style.visibility = 'visible';
+    el.style.display = 'block';
+
+    // Wait for DOM layout & images to fully load
+    await new Promise(resolve => setTimeout(resolve, 600));
     
-    // Wait a bit for images and layout to render
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
+    let pdf: any;
     try {
-      const rect = el.getBoundingClientRect();
+      pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfPageWidth = 210;
+      const pdfPageHeight = 297;
+
+      const w = Math.max(el.offsetWidth, 794);
+      const h = Math.max(el.offsetHeight, 1123);
       const imgData = await toJpeg(el, { 
-        quality: 1.0,
+        cacheBust: true,
+        pixelRatio: 2,
+        quality: 0.95,
         backgroundColor: '#ffffff',
-        pixelRatio: window.innerWidth < 768 ? 1.5 : 2,
-        style: { display: 'flex', transform: 'none', margin: '0' },
-        useCORS: true
+        width: w,
+        height: h,
+        onImageErrorHandler: () => null,
       } as any);
       
-      const finalPdfWidth = 210;  // A4 width in mm
-      const finalPdfHeight = 297; // A4 height in mm — always fill full A4 page
+      const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+      const calculatedH = pdfPageWidth * imgRatio;
+      const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, pdfPageHeight) : pdfPageHeight;
       
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      pdf.addImage(imgData, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
+      if (imgData && imgData.length > 50) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfPageWidth, imgH, undefined, 'FAST');
+      }
       
       return pdf;
     } finally {
+      el.style.position = originalPosition;
+      el.style.left = originalLeft;
+      el.style.top = originalTop;
+      el.style.zIndex = originalZIndex;
+      el.style.opacity = originalOpacity;
+      el.style.visibility = originalVisibility;
       el.style.display = originalDisplay;
       
-      if (parentContainer) {
-        parentContainer.classList.add('hidden');
-        parentContainer.style.display = originalParentDisplay;
-        parentContainer.style.position = originalParentPosition;
-        parentContainer.style.zIndex = originalParentZIndex;
-        parentContainer.style.top = originalParentTop;
-        parentContainer.style.left = originalParentLeft;
+      if (dlContainer) {
+        dlContainer.style.position = origDlPosition || 'fixed';
+        dlContainer.style.left = origDlLeft || '-9999px';
+        dlContainer.style.top = origDlTop || '0';
+        dlContainer.style.zIndex = origDlZIndex || '-9999';
+        dlContainer.style.opacity = origDlOpacity || '0';
+        dlContainer.style.visibility = origDlVisibility || 'hidden';
+        dlContainer.style.display = origDlDisplay || 'none';
       }
     }
   };
@@ -281,64 +318,83 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     try {
       const zip = new JSZip();
       
-      const printArea = document.getElementById('progress-cards-print-container');
-      const originalParentDisplay = printArea?.style.display || '';
-      const originalParentPosition = printArea?.style.position || '';
-      const originalParentZIndex = printArea?.style.zIndex || '';
-      const originalParentTop = printArea?.style.top || '';
-      const originalParentLeft = printArea?.style.left || '';
+      const dlContainer = document.getElementById('progress-cards-print-container');
+      const origDlPosition = dlContainer?.style.position;
+      const origDlLeft = dlContainer?.style.left;
+      const origDlTop = dlContainer?.style.top;
+      const origDlZIndex = dlContainer?.style.zIndex;
+      const origDlOpacity = dlContainer?.style.opacity;
+      const origDlVisibility = dlContainer?.style.visibility;
+      const origDlDisplay = dlContainer?.style.display;
 
-      if (printArea) {
-        printArea.classList.remove('hidden');
-        printArea.classList.add('flex');
-        printArea.style.position = 'fixed';
-        printArea.style.top = '0';
-        printArea.style.left = '0';
-        printArea.style.zIndex = '-9999';
+      if (dlContainer) {
+        dlContainer.style.position = 'fixed';
+        dlContainer.style.left = '0';
+        dlContainer.style.top = '0';
+        dlContainer.style.width = '210mm';
+        dlContainer.style.zIndex = '999999';
+        dlContainer.style.opacity = '1';
+        dlContainer.style.visibility = 'visible';
+        dlContainer.style.display = 'block';
       }
 
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const templates = document.querySelectorAll('.progress-card-wrapper');
+      await new Promise(resolve => setTimeout(resolve, 600));
 
-      for (let i = 0; i < templates.length; i++) {
-        const el = templates[i] as HTMLElement;
+      for (let i = 0; i < studentsData.length; i++) {
+        const el = document.getElementById(`progress-card-${i}`);
         const data = studentsData[i];
+        if (!el) continue;
         
         if (i % 5 === 0) toast.loading(`Generated ${i} of ${studentsData.length}...`, { id: loadingToastId });
-        
-        const originalDisplay = el.style.display;
-        el.style.display = 'flex';
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
+
+        el.style.position = 'fixed';
+        el.style.left = '0';
+        el.style.top = '0';
+        el.style.width = '210mm';
+        el.style.minHeight = '297mm';
+        el.style.height = '297mm';
+        el.style.zIndex = '999999';
+        el.style.opacity = '1';
+        el.style.visibility = 'visible';
+        el.style.display = 'block';
+
+        await new Promise(resolve => setTimeout(resolve, 150));
+
+        const w = Math.max(el.offsetWidth, 794);
+        const h = Math.max(el.offsetHeight, 1123);
         const imgData = await toJpeg(el, { 
+          cacheBust: true,
+          pixelRatio: 2,
           quality: 0.95,
           backgroundColor: '#ffffff',
-          pixelRatio: 2,
-          style: { margin: '0' },
-          useCORS: true
+          width: w,
+          height: h,
+          onImageErrorHandler: () => null,
         } as any);
         
-        const rect = el.getBoundingClientRect();
-        const finalPdfWidth = 210;
-        const finalPdfHeight = (rect.height * finalPdfWidth) / rect.width;
+        const imgRatio = (w > 0 && h > 0) ? h / w : 1.414;
+        const calculatedH = 210 * imgRatio;
+        const imgH = (!isNaN(calculatedH) && calculatedH > 0) ? Math.min(calculatedH, 297) : 297;
         
         const pdf = new jsPDF('p', 'mm', 'a4');
-        
-        pdf.addImage(imgData, 'JPEG', 0, 0, finalPdfWidth, finalPdfHeight, undefined, 'FAST');
+        if (imgData && imgData.length > 50) {
+          pdf.addImage(imgData, 'JPEG', 0, 0, 210, imgH, undefined, 'FAST');
+        }
         const fileName = `${data.studentName || `Student_${i+1}`}_ProgressCard.pdf`;
         zip.file(fileName, pdf.output('blob'));
         
-        el.style.display = originalDisplay;
+        el.style.display = 'none';
+        el.style.visibility = 'hidden';
       }
       
-      if (printArea) {
-        printArea.classList.add('hidden');
-        printArea.classList.remove('flex');
-        printArea.style.display = originalParentDisplay;
-        printArea.style.position = originalParentPosition;
-        printArea.style.zIndex = originalParentZIndex;
-        printArea.style.top = originalParentTop;
-        printArea.style.left = originalParentLeft;
+      if (dlContainer) {
+        dlContainer.style.position = origDlPosition || 'fixed';
+        dlContainer.style.left = origDlLeft || '-9999px';
+        dlContainer.style.top = origDlTop || '0';
+        dlContainer.style.zIndex = origDlZIndex || '-9999';
+        dlContainer.style.opacity = origDlOpacity || '0';
+        dlContainer.style.visibility = origDlVisibility || 'hidden';
+        dlContainer.style.display = origDlDisplay || 'none';
       }
 
       toast.loading('Zipping files...', { id: loadingToastId });
@@ -868,7 +924,7 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           </div>
 
           {/* Hidden Container for Printing & PDF Generation */}
-          <div id="progress-cards-print-container" className="hidden print:flex print-area bg-white p-0 flex-col items-center">
+          <div id="progress-cards-print-container" className="hidden print:block print-area bg-white p-0">
             <style dangerouslySetInnerHTML={{__html: `
             @media print {
               @page { size: A4 portrait; margin: 0; }
@@ -876,13 +932,13 @@ export const JEEProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               .print-area, .print-area * { visibility: visible; }
               .print-area { position: absolute; left: 0; top: 0; width: 100%; background: white !important; display: block !important; padding: 0 !important; margin: 0 !important; }
               html, body { height: 100%; background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-              .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; display: block; }
+              .progress-card-wrapper { page-break-after: always; break-after: page; page-break-inside: avoid; display: block !important; width: 210mm !important; min-height: 297mm !important; height: 297mm !important; margin: 0 auto !important; }
               .progress-card-wrapper:last-child { page-break-after: auto; break-after: auto; }
             }
           `}} />
           
             {studentsData.map((data, idx) => (
-              <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper justify-center bg-white hidden" style={{ width: '210mm' }}>
+              <div key={data.studentId} id={`progress-card-${idx}`} className="progress-card-wrapper bg-white hidden" style={{ width: '210mm', minHeight: '297mm', height: '297mm', boxSizing: 'border-box' }}>
                 <ProgressCardTemplate data={data} exam={selectedExam} settings={{ ...(selectedExam?.admitCardSettings || {}), logoUrl, signatureUrl, teacherSignatureUrl, examNameOverride }} />
               </div>
             ))}

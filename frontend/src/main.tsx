@@ -7,6 +7,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { get, set, del } from 'idb-keyval';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { AcademicYearProvider } from './contexts/AcademicYearContext';
 import { Toaster } from 'react-hot-toast';
 
 import { registerSW } from 'virtual:pwa-register';
@@ -108,8 +109,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <PersistQueryClientProvider client={queryClient} persistOptions={{ persister: idbPersister }}>
       <ThemeProvider>
         <AuthProvider>
-          <App />
-          <Toaster position="top-right" reverseOrder={false} />
+          <AcademicYearProvider>
+            <App />
+            <Toaster position="top-right" reverseOrder={false} />
+          </AcademicYearProvider>
         </AuthProvider>
       </ThemeProvider>
     </PersistQueryClientProvider>

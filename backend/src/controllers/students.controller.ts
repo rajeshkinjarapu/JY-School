@@ -23,10 +23,11 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
     const search = (req.query.search as string) || '';
     const classId = (req.query.classId as string) || '';
     const gender = (req.query.gender as string) || '';
+    const academicYear = (req.query.academicYear as string) || '';
     const skip = (page - 1) * limit;
 
     const useCache = limit <= 100;
-    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}:class_alpha_v4`;
+    const cacheKey = `students:list:${page}:${limit}:${search}:${classId}:${gender}:${academicYear}:class_alpha_v5`;
 
     if (useCache) {
       const cached = await cache.get<any>(cacheKey);
@@ -36,7 +37,16 @@ export const getAll = async (req: AuthRequest, res: Response, next: NextFunction
     }
 
     const where: any = {};
-    if (classId) where.classId = classId;
+    if (academicYear) {
+      if (classId) {
+        where.classId = classId;
+        where.class = { academicYear };
+      } else {
+        where.class = { academicYear };
+      }
+    } else if (classId) {
+      where.classId = classId;
+    }
     if (gender) where.gender = gender;
     if (search) {
       where.OR = [

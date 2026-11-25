@@ -15,12 +15,12 @@ import { formatExamOptionLabel } from '../../utils/formatters';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { sortClasses } from '../../utils/sortClasses';
-import { SlipTestsTab } from './SlipTestsTab';
 import { AdmitCardTab } from './AdmitCardTab';
 import { ProgressCardTab } from './ProgressCardTab';
 import { ResultsTab } from './ResultsTab';
 import { JEEProgressCardTab } from './JEEProgressCardTab';
 import { ExamStatusTab } from './ExamStatusTab';
+import { ExamSettingsTab } from './ExamSettingsTab';
 
 const ExamCard: React.FC<{
   label: string;
@@ -1361,7 +1361,6 @@ export const ExamListPage: React.FC = () => {
               )}
               {isAdmin && (
                 <>
-                  <ExamCard label="Slip Test Rank Card" sub="Manual ranks" icon={Award} gradient="linear-gradient(135deg, #06b6d4, #0891b2)" glow="rgba(6,182,212,0.4)" onClick={() => navigate('/office-tools/slip-test')} />
                   <ExamCard label="Send Marks SMS" sub="SMS parents" icon={MessageSquare} gradient="linear-gradient(135deg, #ec4899, #db2777)" glow="rgba(236,72,153,0.4)" onClick={() => setShowSmsModal(true)} />
                   <ExamCard label="Status Overview" sub="Track progress" icon={ShieldAlert} gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)" glow="rgba(139,92,246,0.4)" onClick={() => setActiveTab('status-overview')} />
                   <ExamCard label="Settings" sub="Configurations" icon={Settings} gradient="linear-gradient(135deg, #3f3f46, #27272a)" glow="rgba(63,63,70,0.4)" onClick={() => setActiveTab('settings')} />
@@ -2535,104 +2534,7 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 8: SETTINGS ══ */}
       {activeTab === 'settings' && (
-        <div className="space-y-6 animate-fade-in-up">
-          <div className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="bg-gradient-to-br from-slate-600 to-slate-800 p-3.5 rounded-2xl shadow-lg shadow-slate-500/30 text-white">
-                <Settings className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-700 to-slate-900 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent drop-shadow-sm">Global Exam Settings</h3>
-
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Grading Configuration */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <Award className="w-4 h-4 text-purple-500" /> Grading Standards
-                </h4>
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Primary Evaluation Mode</label>
-                    <select className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all cursor-pointer">
-                      <option value="CCE">CCE Grading System (A1, A2, B1...)</option>
-                      <option value="GPA">10 Point GPA Scale</option>
-                      <option value="PERCENTAGE">Direct Percentage (Max 100%)</option>
-                      <option value="CUSTOM">Custom Range Scale</option>
-                    </select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Default Pass Marks (%)</label>
-                      <input type="number" defaultValue="40" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Grace Marks Limit</label>
-                      <input type="number" defaultValue="5" className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Result Publishing Rules */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">
-                <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-6 flex items-center gap-2">
-                  <CheckSquare className="w-4 h-4 text-emerald-500" /> Result & Marks Rules
-                </h4>
-                <div className="space-y-4">
-                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div className="pr-4">
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Auto-Publish Results</span>
-                      <span className="text-xs font-medium text-slate-500">Publish immediately after teacher submission</span>
-                    </div>
-                    <div className="relative inline-block w-12 h-6 rounded-full bg-emerald-500">
-                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-6"></span>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div className="pr-4">
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Show Rank to Students</span>
-                      <span className="text-xs font-medium text-slate-500">Display class rank in student portal</span>
-                    </div>
-                    <div className="relative inline-block w-12 h-6 rounded-full bg-emerald-500">
-                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-6"></span>
-                    </div>
-                  </label>
-
-                  <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <div className="pr-4">
-                      <span className="text-sm font-bold text-slate-700 dark:text-slate-200 block">Strict Moderation</span>
-                      <span className="text-xs font-medium text-slate-500">Require principal approval before publish</span>
-                    </div>
-                    <div className="relative inline-block w-12 h-6 rounded-full bg-slate-300 dark:bg-slate-600">
-                      <span className="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform translate-x-0"></span>
-                    </div>
-                  </label>
-                </div>
-              </div>
-
-              {/* Security & Freeze Controls */}
-              <div className="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 lg:col-span-2">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-1 flex items-center gap-2">
-                      <ShieldAlert className="w-4 h-4 text-rose-500" /> Security & Freeze Controls
-                    </h4>
-                    <p className="text-xs text-slate-500 font-semibold leading-relaxed">
-                      Security logging is active. Grade entries, overrides, and exam schedules are tracked for student auditing automatically.
-                    </p>
-                  </div>
-                  <button className="btn-primary whitespace-nowrap bg-gradient-to-r from-slate-800 to-slate-900 text-white border-0 shadow-lg shadow-slate-900/20">
-                    <Save className="w-4 h-4 mr-2 inline" /> Save Settings
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ExamSettingsTab />
       )}
 
       {/* SMS Modal */}

@@ -104,11 +104,13 @@ const ProfilePage = lazy(() => import('../pages/profile/ProfilePage'));
 const LeaveDashboardPage = lazy(() => import('../pages/leave/LeaveDashboardPage'));
 const GatePassPage = lazy(routeImports['/leave/gate-pass']);
 const HomeworkPage = lazy(routeImports['/homework']);
+const AssignHomeworkPage = lazy(() => import('../pages/homework/AssignHomeworkPage'));
 const TeacherAttendancePage = lazy(routeImports['/teacher-attendance']);
 const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
+const AcademicProgressCardPage = lazy(() => import('../pages/office-tools/AcademicProgressCardPage'));
 const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
 const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
 const FeeReminderPage = lazy(() => import('../pages/fees/FeeReminderPage'));
@@ -141,6 +143,7 @@ const TakeCompetitiveExamPage = lazy(() => import('../pages/exams/TakeCompetitiv
 const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveExamResultPage').then(m => ({ default: m.CompetitiveExamResultPage })));
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
 const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
+const PasteCompetitiveExamTextPage = lazy(() => import('../pages/exams/PasteCompetitiveExamTextPage'));
 const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
 const ChairmanDashboardPage = lazy(routeImports['/chairman']);
 const AttendanceWrapper = () => {
@@ -524,6 +527,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'competitive-exams/paste-ai',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <PasteCompetitiveExamTextPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/:id/paste-ai',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <PasteCompetitiveExamTextPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'create-competitive-exam',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
@@ -649,6 +668,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <StudyCertificatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/academic-progress-card',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AcademicProgressCardPage />
           </ProtectedRoute>
         ),
       },
@@ -833,6 +860,22 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
             <HomeworkPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'homework/create',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AssignHomeworkPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'homework/edit/:id',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <AssignHomeworkPage />
           </ProtectedRoute>
         ),
       },

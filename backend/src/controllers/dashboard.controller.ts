@@ -18,7 +18,8 @@ export const clearDashboardCache = () => {
 
 export const getAdminDashboard = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const cacheKey = 'admin_dashboard';
+    const academicYear = (req.query.academicYear as string) || '';
+    const cacheKey = `admin_dashboard_${academicYear || 'all'}`;
     const nowMs = Date.now();
     const isRefresh = req.query.refresh === 'true';
     if (!isRefresh && cache[cacheKey] && cache[cacheKey].expiry > nowMs) {
@@ -40,6 +41,10 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    const studentCountWhere = academicYear ? { class: { academicYear } } : {};
+    const classCountWhere = academicYear ? { academicYear } : {};
+    const studentFilterWhere = academicYear ? { student: { class: { academicYear } } } : {};
+
     // Run independent database queries in parallel
     const [
       totalStudents,
@@ -57,18 +62,41 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       totalAppInstalls,
       studentsWithDob
     ] = await Promise.all([
-      prisma.student.count(),
+      prisma.student.count({ where: studentCountWhere }),
       prisma.teacher.count(),
-      prisma.class.count(),
-      prisma.feePayment.aggregate({ _sum: { amountPaid: true } }),
-      prisma.class.findMany({ select: { id: true, name: true, section: true, _count: { select: { students: true } } } }).then(sortClasses),
-      prisma.attendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
+      prisma.class.count({ where: classCountWhere }),
+      prisma.feePayment.aggregate({
+        where: studentFilterWhere,
+        _sum: { amountPaid: true }
+      }),
+      prisma.class.findMany({ 
+        where: classCountWhere,
+        select: { id: true, name: true, section: true, academicYear: true, _count: { select: { students: true } } } 
+      }).then(sortClasses),
+      prisma.attendance.findMany({
+        where: {
+          date: { gte: today, lt: tomorrow },
+          ...(academicYear ? { class: { academicYear } } : {})
+        },
+        select: { status: true }
+      }),
       prisma.teacherAttendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
-      prisma.feePayment.findMany({ where: { paymentDate: { gte: twelveMonthsAgo } }, select: { paymentDate: true, amountPaid: true } }),
-      prisma.student.groupBy({ by: ['gender'], _count: { _all: true } }),
+      prisma.feePayment.findMany({
+        where: {
+          paymentDate: { gte: twelveMonthsAgo },
+          ...studentFilterWhere
+        },
+        select: { paymentDate: true, amountPaid: true }
+      }),
+      prisma.student.groupBy({
+        by: ['gender'],
+        _count: { _all: true },
+        where: studentCountWhere
+      }),
       prisma.feePayment.findMany({
         take: 5,
         orderBy: { createdAt: 'desc' },
+        where: studentFilterWhere,
         include: {
           student: { include: { user: { select: { name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
           feeStructure: { select: { name: true } }
@@ -79,10 +107,25 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         orderBy: { createdAt: 'desc' },
         where: { isActive: true }
       }),
-      prisma.attendance.findMany({ where: { date: { gte: sevenDaysAgo } }, select: { date: true, status: true } }),
-      prisma.user.count({ where: { role: Role.STUDENT, isAppInstalled: true } }),
+      prisma.attendance.findMany({
+        where: {
+          date: { gte: sevenDaysAgo },
+          ...(academicYear ? { class: { academicYear } } : {})
+        },
+        select: { date: true, status: true }
+      }),
+      prisma.user.count({
+        where: {
+          role: Role.STUDENT,
+          isAppInstalled: true,
+          ...(academicYear ? { student: { class: { academicYear } } } : {})
+        }
+      }),
       prisma.student.findMany({
-        where: { dob: { not: null } },
+        where: {
+          dob: { not: null },
+          ...studentCountWhere
+        },
         select: {
           id: true,
           userId: true,

@@ -1,797 +1,1540 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Download, Printer, Upload, ChevronLeft, ChevronRight, Plus, X, GraduationCap, FileText, Database, CheckSquare, Square } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  Download, Printer, ChevronLeft, ChevronRight, Plus, Trash2, 
+  GraduationCap, FileText, Database, CheckSquare, Square, 
+  Search, RefreshCw, ZoomIn, ZoomOut, Maximize2, Sparkles,
+  CheckCircle2, Building, Calendar, MapPin, User, Award, Eye
+} from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/axios';
+import { getPhotoUrl } from '../../utils/photo';
+import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 
-const CANVAS_W = 850;
-const CANVAS_H = 1202;
+interface AcademicRow {
+  year: string;
+  className: string;
+  remarks: string;
+}
 
-// Sub-component for the actual certificate to allow reuse for screen and print
-const CertificateTemplate = ({ data, logo, rows, id = "cert-template" }: any) => {
-    return (
-        <div id={id} className="cert-a4-canvas">
-            {/* Borders */}
-            <div className="cert-border-outer"></div>
-            <div className="cert-border-inner"></div>
-            <div className="corner tl"></div>
-            <div className="corner tr"></div>
-            <div className="corner bl"></div>
-            <div className="corner br"></div>
+interface StudentItem {
+  id: string;
+  rollNo?: string;
+  fatherName?: string;
+  motherName?: string;
+  dob?: string;
+  admissionDate?: string;
+  user?: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    photoUrl?: string;
+  };
+  name?: string;
+  class?: {
+    id?: string;
+    name: string;
+    section: string;
+  };
+}
 
-            {/* Watermark */}
-            <div className="cert-watermark">
-                {logo && <img src={logo} alt="watermark" />}
-            </div>
+interface SchoolSettings {
+  schoolName: string;
+  schoolSubtitle: string;
+  address: string;
+  logoUrl: string;
+  principalSignatureUrl?: string;
+}
 
-            {/* Content */}
-            <div className="cert-content">
-                <div className="c-header">
-                    <div className="c-logo">
-                        {logo ? <img src={logo} alt="Logo" /> : <span className="c-logo-placeholder">🏫</span>}
-                    </div>
-                    <div className="c-school-info">
-                        <div className="c-school-name">JY SCHOOL</div>
-                        <div className="c-school-rc">Rc. No. 281125100013 / Visakhapatnam/2025. Dated :21-10-2025</div>
-                        <div className="c-school-addr">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</div>
-                    </div>
-                </div>
+export const StudyCertificatePage: React.FC = () => {
+  // Mode: 'single' (Individual Student) or 'bulk' (Whole Class)
+  const [mode, setMode] = useState<'single' | 'bulk'>('single');
+  const [loading, setLoading] = useState(false);
+  const [classesLoading, setClassesLoading] = useState(false);
+  const [studentsLoading, setStudentsLoading] = useState(false);
 
-                <div className="c-title">Study & Conduct Certificate</div>
+  // School Settings
+  const [schoolSettings, setSchoolSettings] = useState<SchoolSettings>({
+    schoolName: 'SRI VENKATESWARA JY SCHOOL',
+    schoolSubtitle: '(IIT-JEE / NEET Foundation – Olympiads)',
+    address: 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+    logoUrl: '/logo.png',
+  });
 
-                <div className="c-meta-boxes">
-                    <div className="c-meta-box">Admission No. : <span>{data.admission}</span></div>
-                    <div className="c-meta-box">UDISE Code : <span>{data.udise}</span></div>
-                </div>
+  // Common Certificate Settings
+  const [rcNumber, setRcNumber] = useState('Rc. No. 281125100013 / Visakhapatnam/2025. Dated :21-10-2025');
+  const [udiseCode, setUdiseCode] = useState('281125100013');
+  const [conduct, setConduct] = useState('Excellent');
+  const [place, setPlace] = useState('Narasannapeta');
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+  });
 
-                <div className="c-body">
-                    <div className="p1">
-                        <span className="c-label">This is to certify that</span>
-                        <span className="c-value c-value-lg">{data.student}</span>
-                        <span className="c-label">, Son/Daughter of</span>
-                        <span className="c-value c-value-lg">{data.parent}</span>
-                        <span className="c-label">, was a bona fide student of this institution.</span>
-                    </div>
-                    <div className="p2">
-                        <span className="c-label">During the period of study, the student's conduct, character, discipline, and behavior were found to be</span>
-                        <span className="c-value" style={{ fontStyle: 'italic' }}>{data.conduct}</span>
-                        <span className="c-label">. The student consistently maintained good moral values, complied with the rules and regulations of the institution, and demonstrated respectful behavior towards teachers, staff, and fellow students.</span>
-                    </div>
-                    <div className="p3">
-                        <span className="c-label">He/She studied the following classes during the years noted below, as recorded in the school records.</span>
-                    </div>
-
-                    <div className="c-table-wrap">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style={{ width: '15%' }}>Sl. No.</th>
-                                    <th style={{ width: '35%' }}>Academic Year</th>
-                                    <th style={{ width: '25%' }}>Class</th>
-                                    <th style={{ width: '25%' }}>Remarks</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {rows.length === 0 ? (
-                                    <tr><td colSpan={4} style={{ color: '#999', textAlign: 'center' }}>No records</td></tr>
-                                ) : (
-                                    rows.map((row: any, idx: number) => (
-                                        <tr key={idx}>
-                                            <td>{idx + 1}</td>
-                                            <td>{row.year}</td>
-                                            <td>{row.class}</td>
-                                            <td>{row.remarks}</td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="c-footer">
-                        <div className="c-meta">
-                            <div className="c-meta-line">
-                                <span className="c-label" style={{ marginLeft: 0 }}>Place :</span>
-                                <span className="c-value">{data.place}</span>
-                            </div>
-                            <div className="c-meta-line">
-                                <span className="c-label" style={{ marginLeft: 0 }}>Date &nbsp;:</span>
-                                <span className="c-value">{data.date}</span>
-                            </div>
-                        </div>
-                        <div className="c-signature">
-                            <div className="c-sig-line"></div>
-                            <div className="c-sig-label">Headmaster / Principal</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-export const StudyCertificatePage = () => {
-  const navigate = useNavigate();
-  const [mode, setMode] = useState<'manual' | 'bulk'>('manual');
-  const [logoDataUrl, setLogoDataUrl] = useState<string | null>(null);
-  
-  // Shared Data
-  const [mConduct, setMConduct] = useState('Excellent');
-  const [mUdise, setMUdise] = useState('');
-  const [mPlace, setMPlace] = useState('');
-  const [mDate, setMDate] = useState('');
-  const [academicRows, setAcademicRows] = useState<{year: string, class: string, remarks: string}[]>([
-    { year: '2023-24', class: 'VI', remarks: '' },
-    { year: '2024-25', class: 'VII', remarks: '' },
-    { year: '2025-26', class: 'VIII', remarks: 'Pro wrote' }
+  // Academic Progression Table
+  const [academicRows, setAcademicRows] = useState<AcademicRow[]>([
+    { year: '2023-24', className: 'VI', remarks: 'Promoted' },
+    { year: '2024-25', className: 'VII', remarks: 'Promoted' },
+    { year: '2025-26', className: 'VIII', remarks: 'Studying' },
   ]);
 
-  // Manual State
-  const [mStudent, setMStudent] = useState('');
-  const [mParent, setMParent] = useState('');
-  const [mAdmission, setMAdmission] = useState('');
-
-  // Bulk / DB State
+  // Classes & Students Data
   const [classes, setClasses] = useState<any[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>('');
-  const [selectedSection, setSelectedSection] = useState<string>('');
-  const [students, setStudents] = useState<any[]>([]);
+  const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [classStudents, setClassStudents] = useState<StudentItem[]>([]);
+
+  // Single Mode State
   const [selectedStudentId, setSelectedStudentId] = useState<string>('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [manualStudentName, setManualStudentName] = useState('');
+  const [manualFatherName, setManualFatherName] = useState('');
+  const [manualRollNo, setManualRollNo] = useState('');
+
+  // Bulk Mode State
   const [bulkSelectedIds, setBulkSelectedIds] = useState<string[]>([]);
+  const [bulkPreviewIndex, setBulkPreviewIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
-  
-  // Bulk Preview Index
-  const [bulkIndex, setBulkIndex] = useState(0);
 
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const zipCanvasRef = useRef<HTMLDivElement>(null);
+  // Zoom scale for canvas preview (default: fit / 0.85)
+  const [zoomScale, setZoomScale] = useState(0.85);
 
-  // Load classes & UDISE on mount
+  const certPreviewRef = useRef<HTMLDivElement>(null);
+
+  // 1. Load School Settings & Local Storage Presets
   useEffect(() => {
-    const savedUdise = localStorage.getItem('study_cert_udise');
-    if (savedUdise) setMUdise(savedUdise);
-
-    api.get('/api/classes?limit=5000')
-      .then((res: any) => setClasses(res.data?.data || res.data || []))
-      .catch(() => toast.error('Failed to load classes'));
-  }, []);
-
-  // Save UDISE on change
-  useEffect(() => {
-    localStorage.setItem('study_cert_udise', mUdise);
-  }, [mUdise]);
-
-  // Fetch students when Class + Section selected
-  useEffect(() => {
-    if (selectedClass && selectedSection) {
-      const cls = classes.find(c => c.className === selectedClass && c.section === selectedSection);
-      if (cls) {
-        api.get(`/api/classes/${cls.id}/students`)
-          .then((res: any) => {
-              setStudents(res.data?.data || res.data || []);
-              setBulkSelectedIds([]); // Reset selection on new fetch
-              setBulkIndex(0);
-          })
-          .catch(() => toast.error('Failed to load students'));
-      } else {
-        setStudents([]);
-      }
-    } else {
-      setStudents([]);
-    }
-  }, [selectedClass, selectedSection, classes]);
-
-  // Handle Manual Student Selection
-  const handleManualStudentSelect = (id: string) => {
-      setSelectedStudentId(id);
-      const s = students.find(x => x.id === id);
-      if (s) {
-          setMStudent(`${s.firstName || ''} ${s.lastName || ''}`.trim());
-          setMParent(s.fatherName || s.guardianName || '');
-          setMAdmission(s.admissionNumber || '');
-      }
-  };
-
-  // Resize canvas to fit viewport (only applies to screen view)
-  useEffect(() => {
-    const handleResize = () => {
-      if (!viewportRef.current || !canvasRef.current) return;
-      const viewW = viewportRef.current.clientWidth;
-      const viewH = viewportRef.current.clientHeight;
-      const padding = 40;
-      const targetW = viewW - padding;
-      const targetH = viewH - padding;
-      const scaleW = targetW / CANVAS_W;
-      const scaleH = targetH / CANVAS_H;
-      const scale = Math.min(scaleW, scaleH, 1.2);
-      canvasRef.current.style.transform = `scale(${scale})`;
+    const loadSettings = async () => {
+      try {
+        const res = await api.get('/api/settings').catch(() => null);
+        if (res?.data?.data || res?.data) {
+          const s = res.data?.data || res.data;
+          setSchoolSettings({
+            schoolName: s.schoolName || 'SRI VENKATESWARA JY SCHOOL',
+            schoolSubtitle: s.schoolSubtitle || '(IIT-JEE / NEET Foundation – Olympiads)',
+            address: s.address || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
+            logoUrl: s.logoUrl || '/logo.png',
+            principalSignatureUrl: s.principalSignatureUrl,
+          });
+        }
+      } catch (_) {}
     };
 
-    handleResize();
-    const observer = new ResizeObserver(handleResize);
-    if (viewportRef.current) observer.observe(viewportRef.current);
-    return () => observer.disconnect();
-  }, [mode, bulkIndex, mStudent, students]);
+    const savedUdise = localStorage.getItem('study_cert_udise');
+    if (savedUdise) setUdiseCode(savedUdise);
+    const savedRc = localStorage.getItem('study_cert_rc');
+    if (savedRc) setRcNumber(savedRc);
+    const savedPlace = localStorage.getItem('study_cert_place');
+    if (savedPlace) setPlace(savedPlace);
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setLogoDataUrl(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
+    loadSettings();
+    loadClasses();
+  }, []);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Save Presets on change
+  useEffect(() => {
+    if (udiseCode) localStorage.setItem('study_cert_udise', udiseCode);
+    if (rcNumber) localStorage.setItem('study_cert_rc', rcNumber);
+    if (place) localStorage.setItem('study_cert_place', place);
+  }, [udiseCode, rcNumber, place]);
 
-  const handleExportPDF = async () => {
-    if (!canvasRef.current) return;
-    setIsExporting(true);
-    
+  // 2. Load Classes
+  const loadClasses = async () => {
+    setClassesLoading(true);
     try {
-        const originalTransform = canvasRef.current.style.transform;
-        canvasRef.current.style.transform = 'none';
-        void canvasRef.current.offsetWidth; // Force reflow
+      const res = await api.get('/api/classes?limit=1000');
+      const list = res.data?.data || res.data || [];
+      setClasses(list);
+      if (list.length > 0 && !selectedClassId) {
+        setSelectedClassId(list[0].id);
+      }
+    } catch (_) {
+      toast.error('Failed to load classes');
+    } finally {
+      setClassesLoading(false);
+    }
+  };
 
-        const canvas = await html2canvas(canvasRef.current, {
+  // 3. Load Students whenever selectedClassId changes
+  useEffect(() => {
+    if (!selectedClassId) {
+      setClassStudents([]);
+      setBulkSelectedIds([]);
+      return;
+    }
+
+    const loadStudentsForClass = async () => {
+      setStudentsLoading(true);
+      try {
+        const res = await api.get(`/api/classes/${selectedClassId}/students`);
+        const list: StudentItem[] = res.data?.data || res.data || [];
+        setClassStudents(list);
+
+        // Select all by default in bulk mode
+        setBulkSelectedIds(list.map((s) => s.id));
+        setBulkPreviewIndex(0);
+
+        // In single mode, select first student if available
+        if (list.length > 0) {
+          const first = list[0];
+          setSelectedStudentId(first.id);
+          setManualStudentName(first.user?.name || first.name || '');
+          setManualFatherName(first.fatherName || '');
+          setManualRollNo(first.rollNo || '');
+
+          // Auto-adjust academic years for class
+          autoGenerateAcademicRows(first);
+        } else {
+          setSelectedStudentId('');
+        }
+      } catch (_) {
+        toast.error('Failed to load students for class');
+      } finally {
+        setStudentsLoading(false);
+      }
+    };
+
+    loadStudentsForClass();
+  }, [selectedClassId]);
+
+  // Auto-generate academic years based on class name (e.g. 10th, 8th)
+  const autoGenerateAcademicRows = (student?: StudentItem) => {
+    const cls = classes.find((c) => c.id === selectedClassId);
+    const className = cls?.name || 'VIII';
+    const num = parseInt(className.replace(/\D/g, ''), 10) || 8;
+    
+    // Generate 3 years progression
+    const currentYearNum = new Date().getFullYear();
+    const rows: AcademicRow[] = [
+      {
+        year: `${currentYearNum - 2}-${String(currentYearNum - 1).slice(-2)}`,
+        className: toRoman(Math.max(1, num - 2)),
+        remarks: 'Promoted',
+      },
+      {
+        year: `${currentYearNum - 1}-${String(currentYearNum).slice(-2)}`,
+        className: toRoman(Math.max(1, num - 1)),
+        remarks: 'Promoted',
+      },
+      {
+        year: `${currentYearNum}-${String(currentYearNum + 1).slice(-2)}`,
+        className: toRoman(num),
+        remarks: 'Studying',
+      },
+    ];
+    setAcademicRows(rows);
+  };
+
+  const toRoman = (num: number): string => {
+    const romanMap: Record<number, string> = {
+      1: 'I', 2: 'II', 3: 'III', 4: 'IV', 5: 'V',
+      6: 'VI', 7: 'VII', 8: 'VIII', 9: 'IX', 10: 'X',
+    };
+    return romanMap[num] || String(num);
+  };
+
+  // Handle student selection in single mode
+  const handleSelectStudent = (studentId: string) => {
+    setSelectedStudentId(studentId);
+    const s = classStudents.find((x) => x.id === studentId);
+    if (s) {
+      setManualStudentName(s.user?.name || s.name || '');
+      setManualFatherName(s.fatherName || '');
+      setManualRollNo(s.rollNo || '');
+    }
+  };
+
+  // Add / Remove academic rows
+  const handleAddAcademicRow = () => {
+    setAcademicRows((prev) => [
+      ...prev,
+      { year: '2026-27', className: 'IX', remarks: 'Studying' },
+    ]);
+  };
+
+  const handleRemoveAcademicRow = (index: number) => {
+    setAcademicRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateAcademicRow = (index: number, field: keyof AcademicRow, val: string) => {
+    setAcademicRows((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: val };
+      return copy;
+    });
+  };
+
+  // Compute Active Certificate Data for live screen preview
+  const currentPreviewData = useMemo(() => {
+    if (mode === 'single') {
+      return {
+        studentName: manualStudentName || '___________________________',
+        fatherName: manualFatherName || '___________________________',
+        admissionNo: manualRollNo || '____________',
+        udiseCode: udiseCode || '281125100013',
+        conduct,
+        place,
+        date,
+      };
+    } else {
+      // Bulk Mode
+      const activeBulkStudentId = bulkSelectedIds[bulkPreviewIndex] || selectedStudentId;
+      const s = classStudents.find((x) => x.id === activeBulkStudentId);
+      return {
+        studentName: s?.user?.name || s?.name || '___________________________',
+        fatherName: s?.fatherName || '___________________________',
+        admissionNo: s?.rollNo || '____________',
+        udiseCode: udiseCode || '281125100013',
+        conduct,
+        place,
+        date,
+      };
+    }
+  }, [
+    mode, bulkSelectedIds, bulkPreviewIndex, classStudents,
+    selectedStudentId, manualStudentName, manualFatherName, manualRollNo,
+    udiseCode, conduct, place, date
+  ]);
+
+  // Filtered student list for single mode search
+  const filteredClassStudents = useMemo(() => {
+    if (!studentSearch.trim()) return classStudents;
+    const q = studentSearch.toLowerCase();
+    return classStudents.filter((s) => {
+      const name = (s.user?.name || s.name || '').toLowerCase();
+      const roll = (s.rollNo || '').toLowerCase();
+      return name.includes(q) || roll.includes(q);
+    });
+  }, [classStudents, studentSearch]);
+
+  // -------------------------------------------------------------
+  // 100% ROCK-SOLID IFRAME PRINT (SINGLE & BULK)
+  // -------------------------------------------------------------
+  const generateCertificateHtml = (cert: {
+    studentName: string;
+    fatherName: string;
+    admissionNo: string;
+    udiseCode: string;
+    conduct: string;
+    place: string;
+    date: string;
+  }) => {
+    const logoUrl = getPhotoUrl(schoolSettings.logoUrl) || '/logo.png';
+    const sigUrl = schoolSettings.principalSignatureUrl ? getPhotoUrl(schoolSettings.principalSignatureUrl) : '';
+
+    return `
+      <div class="cert-page">
+        <!-- Outer Gold Frame -->
+        <div class="cert-outer-frame"></div>
+        <!-- Inner Royal Navy Frame -->
+        <div class="cert-inner-frame"></div>
+
+        <!-- Corner Ornaments -->
+        <div class="corner-ornament tl"></div>
+        <div class="corner-ornament tr"></div>
+        <div class="corner-ornament bl"></div>
+        <div class="corner-ornament br"></div>
+
+        <!-- Watermark -->
+        <div class="cert-watermark">
+          <img src="${logoUrl}" alt="Watermark" />
+        </div>
+
+        <!-- Certificate Content -->
+        <div class="cert-content">
+          <!-- Header -->
+          <div class="cert-header">
+            <div class="cert-logo">
+              <img src="${logoUrl}" alt="Logo" onerror="this.src='/logo.png'" />
+            </div>
+            <div class="cert-titles">
+              <h1 class="school-name">${schoolSettings.schoolName}</h1>
+              <div class="school-rc">${rcNumber}</div>
+              <div class="school-addr">${schoolSettings.address}</div>
+            </div>
+          </div>
+
+          <!-- Main Certificate Title -->
+          <div class="cert-main-title">
+            <span>STUDY & CONDUCT CERTIFICATE</span>
+          </div>
+
+          <!-- Admission & UDISE Bar -->
+          <div class="cert-meta-bar">
+            <div class="meta-box">
+              <span class="m-label">Admission No. :</span>
+              <span class="m-val">${cert.admissionNo}</span>
+            </div>
+            <div class="meta-box">
+              <span class="m-label">UDISE Code :</span>
+              <span class="m-val">${cert.udiseCode}</span>
+            </div>
+          </div>
+
+          <!-- Certificate Body Paragraphs -->
+          <div class="cert-body">
+            <p class="body-para p-first">
+              <span class="txt-regular">This is to certify that</span>
+              <span class="txt-highlight">${cert.studentName}</span>
+              <span class="txt-regular">, Son / Daughter of</span>
+              <span class="txt-highlight">${cert.fatherName}</span>
+              <span class="txt-regular">, was a bona fide student of this institution.</span>
+            </p>
+
+            <p class="body-para p-second">
+              <span class="txt-regular">During the period of study, the student's conduct, character, discipline, and behavior were found to be</span>
+              <span class="txt-highlight font-italic">${cert.conduct}</span>
+              <span class="txt-regular">. The student consistently maintained good moral values, complied with the rules and regulations of the institution, and demonstrated respectful behavior towards teachers, staff, and fellow students.</span>
+            </p>
+
+            <p class="body-para p-third">
+              <span class="txt-regular">He / She studied the following classes during the years noted below, as recorded in the school records:</span>
+            </p>
+          </div>
+
+          <!-- Academic Progression Table -->
+          <div class="cert-table-container">
+            <table class="academic-table">
+              <thead>
+                <tr>
+                  <th style="width: 15%;">SL. NO.</th>
+                  <th style="width: 35%;">ACADEMIC YEAR</th>
+                  <th style="width: 25%;">CLASS</th>
+                  <th style="width: 25%;">REMARKS</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${academicRows.map((r, i) => `
+                  <tr>
+                    <td>${i + 1}</td>
+                    <td>${r.year}</td>
+                    <td>${r.className}</td>
+                    <td>${r.remarks || 'Promoted'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Signatures & Footer -->
+          <div class="cert-footer">
+            <div class="footer-meta">
+              <div class="meta-row">
+                <span class="f-label">Place :</span>
+                <span class="f-val">${cert.place}</span>
+              </div>
+              <div class="meta-row">
+                <span class="f-label">Date &nbsp;:</span>
+                <span class="f-val">${cert.date}</span>
+              </div>
+            </div>
+
+            <div class="footer-sign">
+              ${sigUrl ? `
+                <div class="sig-img-wrap">
+                  <img src="${sigUrl}" alt="Principal Signature" />
+                </div>
+              ` : `
+                <div class="sig-space"></div>
+              `}
+              <div class="sig-line"></div>
+              <div class="sig-label">HEADMASTER / PRINCIPAL</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  };
+
+  const printCertificatesIframe = (certificates: Array<any>) => {
+    if (!certificates || certificates.length === 0) {
+      toast.error('No certificates to print');
+      return;
+    }
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:210mm;height:297mm;border:0;opacity:0;pointer-events:none;z-index:-9999;';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument!;
+    doc.open();
+    doc.write(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Study Certificates - ${schoolSettings.schoolName}</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Times New Roman', 'TeX Gyre Schola', 'Century Schoolbook', Georgia, serif;
+    }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      color: #0f172a;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    .cert-page {
+      width: 210mm;
+      height: 297mm;
+      max-height: 297mm;
+      min-height: 297mm;
+      background: #FDFBF7 !important;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+      page-break-inside: avoid;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 14mm 16mm;
+      margin: 0 auto;
+    }
+    .cert-outer-frame {
+      position: absolute;
+      top: 8mm;
+      left: 8mm;
+      right: 8mm;
+      bottom: 8mm;
+      border: 1.8px solid #b45309;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .cert-inner-frame {
+      position: absolute;
+      top: 11mm;
+      left: 11mm;
+      right: 11mm;
+      bottom: 11mm;
+      border: 4.5px solid #0b1a33;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .corner-ornament {
+      position: absolute;
+      width: 10mm;
+      height: 10mm;
+      border: 2px solid #b45309;
+      z-index: 11;
+      pointer-events: none;
+    }
+    .corner-ornament.tl { top: 9.5mm; left: 9.5mm; border-right: none; border-bottom: none; }
+    .corner-ornament.tr { top: 9.5mm; right: 9.5mm; border-left: none; border-bottom: none; }
+    .corner-ornament.bl { bottom: 9.5mm; left: 9.5mm; border-right: none; border-top: none; }
+    .corner-ornament.br { bottom: 9.5mm; right: 9.5mm; border-left: none; border-top: none; }
+
+    .cert-watermark {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 110mm;
+      height: 110mm;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cert-watermark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: grayscale(100%);
+    }
+    .cert-content {
+      position: relative;
+      z-index: 5;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 2mm 4mm;
+    }
+    .cert-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin-top: 2mm;
+      margin-bottom: 5mm;
+      min-height: 28mm;
+    }
+    .cert-logo {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 25mm;
+      height: 25mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .cert-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .cert-titles {
+      text-align: center;
+      width: 100%;
+      padding: 0 28mm;
+    }
+    .school-name {
+      font-size: 26pt;
+      font-weight: 900;
+      color: #0b1a33;
+      letter-spacing: 0.8px;
+      line-height: 1.15;
+      text-transform: uppercase;
+    }
+    .school-rc {
+      font-family: Arial, sans-serif;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #334155;
+      margin-top: 1.5mm;
+    }
+    .school-addr {
+      font-family: Arial, sans-serif;
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: #0b1a33;
+      margin-top: 1mm;
+    }
+    .cert-main-title {
+      text-align: center;
+      margin: 3mm 0 6mm 0;
+    }
+    .cert-main-title span {
+      font-size: 17pt;
+      font-weight: 900;
+      color: #0b1a33;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+      text-decoration-thickness: 1.5px;
+    }
+    .cert-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6mm;
+    }
+    .meta-box {
+      border: 1.5px solid #0b1a33;
+      padding: 2.5mm 6mm;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.7);
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0b1a33;
+    }
+    .meta-box .m-val {
+      font-weight: 900;
+      color: #0b1a33;
+      margin-left: 2mm;
+    }
+    .cert-body {
+      font-size: 13.5pt;
+      line-height: 1.85;
+      color: #1e293b;
+      text-align: justify;
+    }
+    .body-para {
+      margin-bottom: 4mm;
+    }
+    .txt-regular {
+      color: #334155;
+      font-style: italic;
+    }
+    .txt-highlight {
+      font-weight: 900;
+      font-size: 14pt;
+      color: #0b1a33;
+      border-bottom: 1.5px dotted #64748b;
+      padding: 0 4mm;
+      font-style: normal;
+    }
+    .font-italic {
+      font-style: italic;
+    }
+    .cert-table-container {
+      margin: 4mm 0 6mm 0;
+      border: 1.5px solid #0b1a33;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .academic-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Arial, sans-serif;
+      font-size: 10.5pt;
+    }
+    .academic-table th {
+      background: #0b1a33;
+      color: #ffffff;
+      padding: 2.5mm 4mm;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+    .academic-table td {
+      padding: 2.2mm 4mm;
+      text-align: center;
+      border-bottom: 1px solid #cbd5e1;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .academic-table tr:last-child td {
+      border-bottom: none;
+    }
+    .cert-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 4mm;
+      padding-bottom: 2mm;
+    }
+    .footer-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2mm;
+      font-size: 11pt;
+      font-weight: 700;
+      color: #334155;
+    }
+    .meta-row {
+      display: flex;
+      align-items: center;
+    }
+    .f-label {
+      width: 18mm;
+      font-style: italic;
+    }
+    .f-val {
+      font-weight: 800;
+      color: #0b1a33;
+      border-bottom: 1px dotted #64748b;
+      min-width: 35mm;
+    }
+    .footer-sign {
+      text-align: center;
+      width: 60mm;
+    }
+    .sig-img-wrap {
+      height: 18mm;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      margin-bottom: 1mm;
+    }
+    .sig-img-wrap img {
+      max-height: 18mm;
+      max-width: 50mm;
+      object-fit: contain;
+    }
+    .sig-space {
+      height: 18mm;
+    }
+    .sig-line {
+      border-bottom: 1.5px solid #0b1a33;
+      margin-bottom: 2mm;
+    }
+    .sig-label {
+      font-size: 10pt;
+      font-weight: 900;
+      color: #0b1a33;
+      letter-spacing: 0.8px;
+    }
+  </style>
+</head>
+<body>
+  ${certificates.map((cert) => generateCertificateHtml(cert)).join('')}
+</body>
+</html>`);
+    doc.close();
+
+    // Focus and Print
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (e) {
+        console.error('Iframe print error:', e);
+      } finally {
+        setTimeout(() => {
+          try {
+            iframe.remove();
+          } catch (_) {}
+        }, 3000);
+      }
+    }, 450);
+  };
+
+  // Print Handlers
+  const handlePrintCurrent = () => {
+    printCertificatesIframe([currentPreviewData]);
+  };
+
+  const handlePrintAllBulk = () => {
+    if (bulkSelectedIds.length === 0) {
+      toast.error('Please select at least one student');
+      return;
+    }
+
+    const certificates = bulkSelectedIds.map((id) => {
+      const s = classStudents.find((x) => x.id === id);
+      return {
+        studentName: s?.user?.name || s?.name || '___________________________',
+        fatherName: s?.fatherName || '___________________________',
+        admissionNo: s?.rollNo || '____________',
+        udiseCode: udiseCode || '281125100013',
+        conduct,
+        place,
+        date,
+      };
+    });
+
+    printCertificatesIframe(certificates);
+  };
+
+  // Export Single PDF via html2canvas & jsPDF
+  const handleExportSinglePDF = async () => {
+    if (!certPreviewRef.current) return;
+    setIsExporting(true);
+    const toastId = toast.loading('Generating high-resolution PDF...');
+
+    try {
+      const el = certPreviewRef.current;
+      const canvas = await html2canvas(el, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#FDFBF7',
+        logging: false,
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+
+      const cleanName = currentPreviewData.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'Student';
+      pdf.save(`Study_Certificate_${cleanName}.pdf`);
+      toast.success('Study Certificate downloaded successfully!', { id: toastId });
+    } catch (err: any) {
+      toast.error('Failed to export PDF: ' + err.message, { id: toastId });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Export Bulk ZIP with individual PDFs
+  const handleExportBulkZip = async () => {
+    if (bulkSelectedIds.length === 0) {
+      toast.error('Select at least one student for bulk export');
+      return;
+    }
+
+    setIsZipping(true);
+    const toastId = toast.loading(`Generating ZIP with ${bulkSelectedIds.length} certificates...`);
+
+    try {
+      const zip = new JSZip();
+      const cls = classes.find((c) => c.id === selectedClassId);
+      const classLabel = cls ? `${cls.name}_${cls.section}` : 'Class';
+
+      // We use the hidden capture mechanism
+      for (let i = 0; i < bulkSelectedIds.length; i++) {
+        const studentId = bulkSelectedIds[i];
+        const s = classStudents.find((x) => x.id === studentId);
+        if (!s) continue;
+
+        // Render in off-screen container
+        const certData = {
+          studentName: s.user?.name || s.name || 'Student',
+          fatherName: s.fatherName || 'N/A',
+          admissionNo: s.rollNo || 'N/A',
+          udiseCode,
+          conduct,
+          place,
+          date,
+        };
+
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = 'position:fixed;top:-10000px;left:-10000px;width:210mm;height:297mm;';
+        tempDiv.innerHTML = generateCertificateHtml(certData);
+        document.body.appendChild(tempDiv);
+
+        const targetEl = tempDiv.querySelector('.cert-page') as HTMLElement;
+        if (targetEl) {
+          const canvas = await html2canvas(targetEl, {
             scale: 2,
             useCORS: true,
             backgroundColor: '#FDFBF7',
             logging: false,
-            width: CANVAS_W,
-            height: CANVAS_H
-        });
+          });
 
-        canvasRef.current.style.transform = originalTransform;
+          const imgData = canvas.toDataURL('image/png');
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
 
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfW = 210;
-        const pdfH = (CANVAS_H * pdfW) / CANVAS_W;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
-        
-        let filename = 'Certificate.pdf';
-        if (mode === 'manual' && mStudent) filename = `Certificate_${mStudent.replace(/\s+/g, '_')}.pdf`;
-        else if (mode === 'bulk' && bulkSelectedIds.length > 0) {
-            const s = students.find(x => x.id === bulkSelectedIds[bulkIndex]);
-            if (s) filename = `Certificate_${s.firstName}_${s.lastName}.pdf`;
+          const studentFileName = (s.user?.name || s.name || `Student_${i + 1}`).replace(/[^a-zA-Z0-9]/g, '_');
+          zip.file(`Certificate_${studentFileName}.pdf`, pdf.output('blob'));
         }
-            
-        pdf.save(filename);
-        toast.success("PDF exported successfully!");
+
+        document.body.removeChild(tempDiv);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      saveAs(zipBlob, `Study_Certificates_${classLabel}.zip`);
+      toast.success('All certificates zipped and downloaded!', { id: toastId });
     } catch (err: any) {
-        toast.error("Export failed: " + err.message);
+      toast.error('Failed to create ZIP: ' + err.message, { id: toastId });
     } finally {
-        setIsExporting(false);
+      setIsZipping(false);
     }
   };
 
-  const handleGenerateZip = async () => {
-      if (bulkSelectedIds.length === 0) return toast.error("Select at least one student!");
-      
-      setIsZipping(true);
-      const toastId = toast.loading('Generating ZIP... Please wait (this may take a minute depending on count)');
-      
-      try {
-          const zip = new JSZip();
-          
-          for (let i = 0; i < bulkSelectedIds.length; i++) {
-              const studentId = bulkSelectedIds[i];
-              const s = students.find(x => x.id === studentId);
-              if (!s) continue;
-              
-              const targetDiv = document.getElementById(`zip-cert-${studentId}`);
-              if (!targetDiv) continue;
-
-              const canvas = await html2canvas(targetDiv, {
-                  scale: 2,
-                  useCORS: true,
-                  backgroundColor: '#FDFBF7',
-                  logging: false,
-                  width: CANVAS_W,
-                  height: CANVAS_H
-              });
-
-              const imgData = canvas.toDataURL('image/png');
-              const pdf = new jsPDF('p', 'mm', 'a4');
-              const pdfW = 210;
-              const pdfH = (CANVAS_H * pdfW) / CANVAS_W;
-              pdf.addImage(imgData, 'PNG', 0, 0, pdfW, pdfH);
-              
-              const pdfBlob = pdf.output('blob');
-              zip.file(`Certificate_${s.firstName}_${s.lastName}.pdf`.replace(/\s+/g, '_'), pdfBlob);
-          }
-
-          const zipBlob = await zip.generateAsync({ type: 'blob' });
-          saveAs(zipBlob, `Study_Certificates_${selectedClass}_${selectedSection}.zip`);
-          toast.success('ZIP downloaded successfully!', { id: toastId });
-      } catch (err: any) {
-          toast.error("ZIP Generation failed: " + err.message, { id: toastId });
-      } finally {
-          setIsZipping(false);
-      }
-  };
-
-  // Determine what data to render on screen
-  const defaultFields = {
-    student: '_________________________',
-    parent: '_________________________',
-    conduct: mConduct || '_______________',
-    admission: '___________',
-    udise: mUdise || '___________',
-    place: mPlace || '_______________',
-    date: mDate || '_______________'
-  };
-
-  let screenData: any = { ...defaultFields };
-  if (mode === 'manual') {
-      screenData = {
-          student: mStudent || defaultFields.student,
-          parent: mParent || defaultFields.parent,
-          conduct: mConduct || defaultFields.conduct,
-          admission: mAdmission || defaultFields.admission,
-          udise: mUdise || defaultFields.udise,
-          place: mPlace || defaultFields.place,
-          date: mDate || defaultFields.date,
-      };
-  } else if (mode === 'bulk' && bulkSelectedIds.length > 0) {
-      const s = students.find(x => x.id === bulkSelectedIds[bulkIndex]);
-      if (s) {
-          screenData = {
-              student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
-              parent: s.fatherName || s.guardianName || defaultFields.parent,
-              conduct: mConduct || defaultFields.conduct,
-              admission: s.admissionNumber || defaultFields.admission,
-              udise: mUdise || defaultFields.udise,
-              place: mPlace || defaultFields.place,
-              date: mDate || defaultFields.date,
-          };
-      }
-  }
-
-  // Filter unique classes and sections
-  const uniqueClassNames = Array.from(new Set(classes.map(c => c.className))).sort();
-  const availableSections = classes.filter(c => c.className === selectedClass).map(c => c.section).sort();
-
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] overflow-hidden bg-gray-50/50">
+    <div className="flex flex-col h-full bg-slate-50/70" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      {/* Page Header */}
+      <PageHeader
+        title="Study & Conduct Certificate Generator"
+        icon={<GraduationCap className="w-5 h-5 text-indigo-600" />}
+      />
+
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden p-4 sm:p-6 gap-6">
         
-        {/* Scoped CSS for the Certificate itself to guarantee exact HTML styling */}
-        <style>{`
-        :root {
-            --cert-bg: #FDFBF7;
-            --cert-navy: #0F203C;
-            --cert-gold: #D4AF37;
-            --cert-text: #2d3748;
-            --cert-font: 'TXTGRYSCHOLA', 'TeX Gyre Schola', 'Century Schoolbook', 'Times New Roman', serif;
-        }
-        
-        .cert-viewport {
-            flex: 1;
-            width: 100%;
-            background: transparent;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-            min-height: 500px;
-        }
+        {/* LEFT CONTROL PANEL (40% width on desktop) */}
+        <div className="w-full lg:w-[460px] xl:w-[480px] bg-white rounded-3xl shadow-sm border border-slate-200/80 flex flex-col overflow-hidden shrink-0">
+          
+          {/* Header Tabs: Single Mode vs Bulk Class Mode */}
+          <div className="p-3 bg-slate-50 border-b border-slate-200 flex gap-2 shrink-0">
+            <button
+              onClick={() => setMode('single')}
+              className={`flex-1 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                mode === 'single'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Individual Student</span>
+            </button>
+            <button
+              onClick={() => setMode('bulk')}
+              className={`flex-1 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                mode === 'bulk'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              <span>Bulk Class Mode</span>
+            </button>
+          </div>
 
-        .cert-a4-canvas {
-            width: 850px;
-            height: 1202px;
-            background: var(--cert-bg);
-            position: relative;
-            transform-origin: center center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            font-family: var(--cert-font);
-        }
-        
-        .cert-a4-canvas-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-        }
-
-        .cert-border-outer { position: absolute; inset: 28px; border: 2px solid var(--cert-gold); pointer-events: none; z-index: 10; }
-        .cert-border-inner { position: absolute; inset: 36px; border: 6px solid var(--cert-navy); pointer-events: none; z-index: 10; }
-        .cert-border-inner::before, .cert-border-inner::after { content: ''; position: absolute; width: 28px; height: 28px; border: 3px solid var(--cert-gold); }
-        .cert-border-inner::before { top: -10px; left: -10px; border-right: none; border-bottom: none; }
-        .cert-border-inner::after { bottom: -10px; right: -10px; border-left: none; border-top: none; }
-
-        .corner { position: absolute; width: 36px; height: 36px; background: transparent; border: 2px solid var(--cert-gold); z-index: 11; }
-        .corner.tl { top: 32px; left: 32px; border-right: none; border-bottom: none; }
-        .corner.tr { top: 32px; right: 32px; border-left: none; border-bottom: none; }
-        .corner.bl { bottom: 32px; left: 32px; border-right: none; border-top: none; }
-        .corner.br { bottom: 32px; right: 32px; border-left: none; border-top: none; }
-
-        .cert-watermark { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: 0.035; pointer-events: none; z-index: 1; }
-        .cert-watermark img { width: 400px; height: 400px; object-fit: contain; filter: grayscale(100%); }
-
-        .cert-content { position: absolute; inset: 48px; z-index: 5; display: flex; flex-direction: column; padding: 5px 36px; }
-
-        .c-header { display: flex; align-items: center; justify-content: center; margin-bottom: 18px; position: relative; min-height: 110px; padding: 0 10px; }
-        .c-logo { position: absolute; left: -30px; top: 50%; transform: translateY(-50%); width: 100px; height: 100px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-        .c-logo img { width: 100%; height: 100%; object-fit: contain; }
-        .c-logo-placeholder { font-size: 42px; }
-
-        .c-school-info { text-align: center; width: 100%; padding: 0; display: flex; flex-direction: column; align-items: center; }
-        .c-school-name { font-family: var(--cert-font); font-weight: 900; font-size: 50px; letter-spacing: 2px; color: #0b3b8c; text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08); line-height: 1.3; white-space: nowrap; }
-        .c-school-rc { font-family: 'Arial', sans-serif; font-size: 15px; font-weight: 700; color: #2d3748; letter-spacing: 0.3px; line-height: 1.4; white-space: nowrap; }
-        .c-school-addr { font-family: 'Arial', sans-serif; font-size: 17px; font-weight: 700; color: var(--cert-navy); letter-spacing: 0.8px; line-height: 1.3; white-space: nowrap; }
-
-        .c-title { text-align: center; font-family: var(--cert-font); font-weight: 700; font-size: 28px; color: var(--cert-navy); letter-spacing: 5px; text-transform: uppercase; margin: 0 0 20px 0; text-decoration: underline; text-underline-offset: 10px; text-decoration-thickness: 3px; text-decoration-color: #000000; white-space: nowrap; }
-
-        .c-meta-boxes { display: flex; justify-content: space-between; margin: 0 0 45px 0; font-family: var(--cert-font); font-size: 16px; font-weight: 600; color: var(--cert-navy); }
-        .c-meta-box { border: 2px solid var(--cert-navy); padding: 6px 18px; border-radius: 4px; background: rgba(255, 255, 255, 0.6); display: inline-block; white-space: nowrap; }
-        .c-meta-box span { font-weight: 400; color: var(--cert-text); }
-
-        .c-body { font-family: var(--cert-font); font-size: 19px; line-height: 1.6; color: var(--cert-text); text-align: justify; padding: 0 4px; margin-bottom: 12px; }
-        .c-body .p1 { text-align: left; text-align-last: left; margin-bottom: 8px; }
-        .c-body .p2 { text-align: left; text-align-last: left; margin-bottom: 10px; }
-        .c-body .p3 { text-align: justify; text-align-last: left; font-weight: 500; margin-bottom: 8px; }
-
-        .c-label { font-style: italic; color: #4a5568; margin: 0 2px; }
-        .c-value { font-family: var(--cert-font); font-weight: 600; font-size: 20px; color: var(--cert-navy); display: inline; border-bottom: 2px dotted #a0aec0; padding: 0 6px; text-align: center; }
-        .c-value-lg { min-width: 140px; font-size: 20px; }
-
-        .c-table-wrap { margin: 6px 0 12px 0; border: 2px solid var(--cert-navy); border-radius: 4px; overflow: hidden; }
-        .c-table-wrap table { width: 100%; border-collapse: collapse; font-family: 'Arial', sans-serif; font-size: 15px !important; }
-        .c-table-wrap td { padding: 5px 10px; text-align: center; border-bottom: 2px solid #cbd5e1; font-size: 15px !important; }
-        .c-table-wrap th { background: var(--cert-navy); color: #ffffff; padding: 6px 10px; text-align: center; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; font-size: 15px !important; }
-        .c-table-wrap tr:last-child td { border-bottom: none; }
-
-        .c-footer { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 4px; margin-top: 6px; gap: 20px; }
-        .c-meta { display: flex; flex-direction: column; gap: 8px; }
-        .c-meta-line { font-family: var(--cert-font); font-size: 17px; color: var(--cert-text); }
-        .c-meta-line .c-value { font-size: 17px; min-width: 160px; text-align: left; border-bottom: 2px dotted #a0aec0; }
-        .c-signature { text-align: center; min-width: 200px; }
-        .c-sig-line { border-bottom: 2px solid var(--cert-navy); margin-bottom: 10px; height: 130px; }
-        .c-sig-label { font-family: var(--cert-font); font-size: 16px; font-weight: 700; color: var(--cert-navy); letter-spacing: 1px; text-transform: uppercase; }
-
-        /* EXACT PRINT CSS */
-        @media print {
-            .no-print { display: none !important; }
-            html, body { 
-                margin: 0 !important; 
-                padding: 0 !important; 
-                background: #fff !important; 
-            }
-            @page { size: A4 portrait; margin: 0; }
-            .print-container { 
-                display: block !important; 
-                width: 210mm !important; 
-                margin: 0 auto; 
-                padding: 0;
-            }
-            .cert-a4-canvas { 
-                position: relative !important; 
-                transform: none !important; 
-                box-shadow: none !important; 
-                width: 210mm !important; 
-                height: 296.8mm !important; 
-                page-break-after: always;
-                page-break-inside: avoid;
-                margin: 0 auto;
-                background: #FDFBF7 !important;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            .cert-a4-canvas {
-                zoom: 0.93;
-            }
-        }
-        `}</style>
-
-        <div className="no-print shrink-0">
-            <PageHeader 
-                title="Study Certificate Generator" 
-                icon={<GraduationCap className="w-5 h-5" />} 
-            />
-        </div>
-
-        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden no-print">
+          {/* Form Scrollable Body */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
             
-            {/* SIDEBAR */}
-            <div className="w-full lg:w-[420px] flex flex-col bg-white border-r border-slate-200 shadow-xl z-10 shrink-0">
-                {/* TABS */}
-                <div className="flex border-b border-slate-200 shrink-0">
-                    <button 
-                        onClick={() => setMode('manual')}
-                        className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold transition-all ${mode === 'manual' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
-                    >
-                        <FileText className="w-4 h-4" /> Manual Entry
-                    </button>
-                    <button 
-                        onClick={() => setMode('bulk')}
-                        className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-bold transition-all ${mode === 'bulk' ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'}`}
-                    >
-                        <Database className="w-4 h-4" /> Bulk / Class
-                    </button>
+            {/* Automatic School Branding Card */}
+            <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl flex items-center gap-3.5 shadow-sm">
+              <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center shrink-0">
+                <img
+                  src={getPhotoUrl(schoolSettings.logoUrl) || '/logo.png'}
+                  alt="School Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e: any) => { e.target.src = '/logo.png'; }}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] font-bold text-indigo-300 uppercase tracking-widest flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                  Official Branding Active
                 </div>
-
-                <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-                    
-                    {/* COMMON SHARED FIELDS (ALWAYS VISIBLE) */}
-                    <div className="mb-6 space-y-6">
-                        <div className="flex items-center gap-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                            <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 shadow-sm flex items-center justify-center overflow-hidden shrink-0">
-                                {logoDataUrl ? <img src={logoDataUrl} alt="Logo" className="w-full h-full object-contain p-1" /> : <span className="text-2xl opacity-50">🏫</span>}
-                            </div>
-                            <div className="flex-1">
-                                <label className="block text-xs font-bold text-slate-700 mb-1">School Logo</label>
-                                <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-xs w-full text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer" />
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Common Settings</h3>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">UDISE Code</label>
-                                        <input type="text" value={mUdise} onChange={e => setMUdise(e.target.value)} placeholder="Auto-saves..." className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Conduct & Character</label>
-                                        <select value={mConduct} onChange={e => setMConduct(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none cursor-pointer">
-                                            <option value="Excellent">Excellent</option>
-                                            <option value="Very Good">Very Good</option>
-                                            <option value="Good">Good</option>
-                                            <option value="Satisfactory">Satisfactory</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Place</label>
-                                        <input type="text" value={mPlace} onChange={e => setMPlace(e.target.value)} placeholder="e.g. Srikakulam" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Date</label>
-                                        <input type="date" value={mDate} onChange={e => setMDate(e.target.value)} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none cursor-pointer text-slate-700" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Academic Records (Applies to all)</h3>
-                            <div className="space-y-3">
-                                {academicRows.map((row, idx) => (
-                                    <div key={idx} className="flex gap-2 items-center">
-                                        <input type="text" value={row.year} onChange={e => { const r = [...academicRows]; r[idx].year = e.target.value; setAcademicRows(r); }} placeholder="Year" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                        <input type="text" value={row.class} onChange={e => { const r = [...academicRows]; r[idx].class = e.target.value; setAcademicRows(r); }} placeholder="Class" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                        <input type="text" value={row.remarks} onChange={e => { const r = [...academicRows]; r[idx].remarks = e.target.value; setAcademicRows(r); }} placeholder="Remarks" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none" />
-                                        <button onClick={() => setAcademicRows(academicRows.filter((_, i) => i !== idx))} className="text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-colors">
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </div>
-                                ))}
-                                <button onClick={() => setAcademicRows([...academicRows, { year: '', class: '', remarks: '' }])} className="text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 py-2 px-4 rounded-xl flex items-center gap-1.5 transition-colors">
-                                    <Plus className="w-3.5 h-3.5" /> Add Class Record
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {/* MODE SPECIFIC FIELDS */}
-                    {mode === 'manual' ? (
-                        <div className="space-y-6 animate-fade-in-up border-t-2 border-dashed border-slate-200 pt-6">
-                            <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Student Data (Manual / Autofill)</h3>
-                                
-                                {/* Class/Section Dropdowns to fetch students for autofill */}
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedSection(''); setSelectedStudentId(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none">
-                                        <option value="">Select Class...</option>
-                                        {uniqueClassNames.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                    <select value={selectedSection} onChange={e => { setSelectedSection(e.target.value); setSelectedStudentId(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none" disabled={!selectedClass}>
-                                        <option value="">Select Section...</option>
-                                        {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                </div>
-                                {students.length > 0 && (
-                                    <div className="mb-4">
-                                        <select value={selectedStudentId} onChange={e => handleManualStudentSelect(e.target.value)} className="w-full px-3 py-2 bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none">
-                                            <option value="">-- Select Student to Autofill --</option>
-                                            {students.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
-                                        </select>
-                                    </div>
-                                )}
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Student Full Name</label>
-                                        <input type="text" value={mStudent} onChange={e => setMStudent(e.target.value)} placeholder="e.g. K. Aditya" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Son / Daughter of</label>
-                                        <input type="text" value={mParent} onChange={e => setMParent(e.target.value)} placeholder="e.g. Sri K. Ramesh" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Admission No.</label>
-                                        <input type="text" value={mAdmission} onChange={e => setMAdmission(e.target.value)} placeholder="e.g. 2538" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="space-y-6 animate-fade-in-up border-t-2 border-dashed border-slate-200 pt-6">
-                            <div>
-                                <h3 className="text-xs uppercase tracking-wider font-bold text-slate-400 mb-3 pb-2 border-b border-slate-100">Select Class for Bulk</h3>
-                                <div className="grid grid-cols-2 gap-4 mb-4">
-                                    <select value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setSelectedSection(''); }} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none font-semibold text-slate-700">
-                                        <option value="">Select Class...</option>
-                                        {uniqueClassNames.map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                    <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none font-semibold text-slate-700" disabled={!selectedClass}>
-                                        <option value="">Select Section...</option>
-                                        {availableSections.map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            {selectedClass && selectedSection && students.length > 0 && (
-                                <div>
-                                    <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
-                                        <h3 className="text-xs uppercase tracking-wider font-bold text-slate-600">Students ({students.length})</h3>
-                                        <div className="flex gap-3">
-                                            <button onClick={() => setBulkSelectedIds(students.map(s => s.id))} className="text-xs font-bold text-indigo-600 hover:text-indigo-700">Select All</button>
-                                            <button onClick={() => setBulkSelectedIds([])} className="text-xs font-bold text-slate-500 hover:text-slate-700">None</button>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="max-h-60 overflow-y-auto bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 custom-scrollbar">
-                                        {students.map(s => {
-                                            const isSelected = bulkSelectedIds.includes(s.id);
-                                            return (
-                                                <div 
-                                                    key={s.id} 
-                                                    onClick={() => {
-                                                        if (isSelected) setBulkSelectedIds(prev => prev.filter(id => id !== s.id));
-                                                        else setBulkSelectedIds(prev => [...prev, s.id]);
-                                                    }}
-                                                    className={`px-4 py-2.5 flex items-center gap-3 cursor-pointer transition-colors ${isSelected ? 'bg-indigo-50/50' : 'hover:bg-slate-50'}`}
-                                                >
-                                                    {isSelected ? <CheckSquare className="w-4 h-4 text-indigo-600 shrink-0" /> : <Square className="w-4 h-4 text-slate-300 shrink-0" />}
-                                                    <span className={`text-sm font-semibold ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>{s.firstName} {s.lastName}</span>
-                                                </div>
-                                            )
-                                        })}
-                                    </div>
-                                    
-                                    <div className="mt-4 p-3 bg-blue-50 text-blue-700 text-xs font-semibold rounded-xl flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                                        {bulkSelectedIds.length} Students Selected for Generation
-                                    </div>
-                                </div>
-                            )}
-
-                            {selectedClass && selectedSection && students.length === 0 && (
-                                <div className="p-6 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200">
-                                    No students found in this section.
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </div>
+                <div className="text-xs font-black truncate">{schoolSettings.schoolName}</div>
+                <div className="text-[10px] text-slate-300 truncate">{schoolSettings.address}</div>
+              </div>
             </div>
 
-            {/* PREVIEW AREA */}
-            <div className="flex-1 bg-slate-100 flex flex-col relative overflow-hidden">
-                {/* PREVIEW HEADER */}
-                <div className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10 no-print">
-                    <div className="flex items-center gap-3">
-                        <h2 className="text-lg font-black text-slate-800">Live Preview</h2>
-                        <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold tracking-wide">A4 PORTRAIT</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-3">
-                        {mode === 'bulk' && bulkSelectedIds.length > 0 && (
-                            <div className="flex items-center bg-slate-100 rounded-xl p-1 mr-4 border border-slate-200">
-                                <button onClick={() => setBulkIndex(Math.max(0, bulkIndex - 1))} disabled={bulkIndex === 0} className="p-1.5 text-slate-600 hover:bg-white rounded-lg disabled:opacity-50 transition-colors">
-                                    <ChevronLeft className="w-5 h-5" />
-                                </button>
-                                <span className="px-4 text-sm font-bold text-slate-700 min-w-[120px] text-center">View {bulkIndex + 1} of {bulkSelectedIds.length}</span>
-                                <button onClick={() => setBulkIndex(Math.min(bulkSelectedIds.length - 1, bulkIndex + 1))} disabled={bulkIndex === bulkSelectedIds.length - 1} className="p-1.5 text-slate-600 hover:bg-white rounded-lg disabled:opacity-50 transition-colors">
-                                    <ChevronRight className="w-5 h-5" />
-                                </button>
-                            </div>
-                        )}
-                        
-                        {mode === 'manual' || bulkSelectedIds.length === 0 ? (
-                            <>
-                                <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all">
-                                    <Printer className="w-4 h-4" /> Print
-                                </button>
-                                <button onClick={handleExportPDF} disabled={isExporting} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-70">
-                                    {isExporting ? 'Generating...' : <><Download className="w-4 h-4" /> Export PDF</>}
-                                </button>
-                            </>
-                        ) : (
-                            <>
-                                <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold shadow-sm transition-all">
-                                    <Printer className="w-4 h-4" /> Print All ({bulkSelectedIds.length})
-                                </button>
-                                <button onClick={handleGenerateZip} disabled={isZipping} className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 transition-all disabled:opacity-70">
-                                    {isZipping ? 'Zipping...' : <><Download className="w-4 h-4" /> ZIP ({bulkSelectedIds.length} PDFs)</>}
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                {/* CANVAS WRAPPER (SCREEN PREVIEW) */}
-                <div ref={viewportRef} className="cert-viewport p-8 pb-16 overflow-y-auto bg-slate-100 no-print">
-                    <div ref={canvasRef} className="cert-a4-canvas-wrapper">
-                        {/* We use a wrapper to apply scale dynamically via React ref without breaking the 850x1202 dimension */}
-                        <CertificateTemplate data={screenData} logo={logoDataUrl} rows={academicRows} id="cert-screen" />
-                    </div>
-                </div>
+            {/* Class & Section Picker */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Building className="w-4 h-4 text-indigo-600" />
+                Select Target Class & Section
+              </label>
+              <select
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+              >
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    Class: {c.name} - Section {c.section}
+                  </option>
+                ))}
+              </select>
             </div>
-        </div>
 
-        {/* --- HIDDEN PRINT / BULK ZIP CONTAINER --- */}
-        {/* These elements are hidden on screen but visible during window.print(), or used by html2canvas for ZIP generation */}
-        
-        {/* 1. PRINT CONTAINER */}
-        <div className="hidden print-container">
-            {mode === 'manual' || bulkSelectedIds.length === 0 ? (
-                <CertificateTemplate data={screenData} logo={logoDataUrl} rows={academicRows} id="cert-print-single" />
-            ) : (
-                bulkSelectedIds.map(id => {
-                    const s = students.find(x => x.id === id);
-                    if (!s) return null;
-                    const data = {
-                        student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
-                        parent: s.fatherName || s.guardianName || defaultFields.parent,
-                        conduct: mConduct || defaultFields.conduct,
-                        admission: s.admissionNumber || defaultFields.admission,
-                        udise: mUdise || defaultFields.udise,
-                        place: mPlace || defaultFields.place,
-                        date: mDate || defaultFields.date,
-                    };
-                    return <CertificateTemplate key={id} data={data} logo={logoDataUrl} rows={academicRows} id={`cert-print-${id}`} />
-                })
+            {/* SINGLE MODE: Select Student with Live Autofill */}
+            {mode === 'single' && (
+              <div className="p-4 bg-indigo-50/50 border border-indigo-100 rounded-2xl space-y-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-indigo-600" />
+                    Student Data Autofill
+                  </span>
+                  <span className="text-[10px] font-bold text-indigo-600 bg-indigo-100/60 px-2 py-0.5 rounded-full">
+                    {classStudents.length} Students in Class
+                  </span>
+                </div>
+
+                {/* Quick Student Search */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Search student by name or roll number..."
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                  />
+                </div>
+
+                {/* Student Select Dropdown */}
+                <select
+                  value={selectedStudentId}
+                  onChange={(e) => handleSelectStudent(e.target.value)}
+                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+                >
+                  <option value="">Select student...</option>
+                  {filteredClassStudents.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.user?.name || s.name} · Roll: {s.rollNo || 'N/A'}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Student Profile Quick View & Manual Overrides */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 block mb-1">Student Full Name</label>
+                    <input
+                      type="text"
+                      value={manualStudentName}
+                      onChange={(e) => setManualStudentName(e.target.value)}
+                      placeholder="Student Name"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-slate-500 block mb-1">Father / Guardian Name</label>
+                    <input
+                      type="text"
+                      value={manualFatherName}
+                      onChange={(e) => setManualFatherName(e.target.value)}
+                      placeholder="Father's Name"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="text-[10px] font-bold text-slate-500 block mb-1">Admission No. / Roll No.</label>
+                    <input
+                      type="text"
+                      value={manualRollNo}
+                      onChange={(e) => setManualRollNo(e.target.value)}
+                      placeholder="e.g. JY26-1015"
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold font-mono text-slate-800 outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
             )}
-        </div>
 
-        {/* 2. ZIP GENERATION CONTAINER */}
-        <div className="absolute top-[-20000px] left-[-20000px] opacity-0" ref={zipCanvasRef}>
-            {mode === 'bulk' && isZipping && bulkSelectedIds.map(id => {
-                const s = students.find(x => x.id === id);
-                if (!s) return null;
-                const data = {
-                    student: `${s.firstName || ''} ${s.lastName || ''}`.trim() || defaultFields.student,
-                    parent: s.fatherName || s.guardianName || defaultFields.parent,
-                    conduct: mConduct || defaultFields.conduct,
-                    admission: s.admissionNumber || defaultFields.admission,
-                    udise: mUdise || defaultFields.udise,
-                    place: mPlace || defaultFields.place,
-                    date: mDate || defaultFields.date,
-                };
-                return (
-                    <div key={id} id={`zip-cert-${id}`} className="bg-white" style={{width: CANVAS_W, height: CANVAS_H}}>
-                        <CertificateTemplate data={data} logo={logoDataUrl} rows={academicRows} id={`inner-zip-cert-${id}`} />
+            {/* BULK MODE: Student Checklist & Batch Controls */}
+            {mode === 'bulk' && (
+              <div className="p-4 bg-purple-50/50 border border-purple-100 rounded-2xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-black text-purple-950 uppercase tracking-wider">Class Student Checklist</h4>
+                    <p className="text-[11px] font-semibold text-purple-700">
+                      Selected: <strong>{bulkSelectedIds.length}</strong> of {classStudents.length} students
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setBulkSelectedIds(classStudents.map((s) => s.id))}
+                      className="text-[11px] font-black text-indigo-600 bg-white px-2.5 py-1 rounded-lg border border-indigo-200 hover:bg-indigo-50"
+                    >
+                      All
+                    </button>
+                    <button
+                      onClick={() => setBulkSelectedIds([])}
+                      className="text-[11px] font-black text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50"
+                    >
+                      None
+                    </button>
+                  </div>
+                </div>
+
+                {/* Scrollable Checkbox List */}
+                <div className="max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 custom-scrollbar">
+                  {classStudents.map((s) => {
+                    const isChecked = bulkSelectedIds.includes(s.id);
+                    return (
+                      <div
+                        key={s.id}
+                        onClick={() => {
+                          if (isChecked) {
+                            setBulkSelectedIds((prev) => prev.filter((id) => id !== s.id));
+                          } else {
+                            setBulkSelectedIds((prev) => [...prev, s.id]);
+                          }
+                        }}
+                        className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer transition-colors ${
+                          isChecked ? 'bg-indigo-50/40' : 'hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {isChecked ? (
+                            <CheckSquare className="w-4 h-4 text-indigo-600 shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-slate-300 shrink-0" />
+                          )}
+                          <div className="truncate">
+                            <span className="text-xs font-bold text-slate-800">{s.user?.name || s.name}</span>
+                            <span className="text-[10px] text-slate-400 font-mono ml-2">({s.rollNo || 'N/A'})</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {classStudents.length === 0 && (
+                    <div className="p-4 text-center text-xs font-bold text-slate-400">
+                      No students found in this class.
                     </div>
-                )
-            })}
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Common Certificate Settings (UDISE, RC, Conduct, Date, Place) */}
+            <div className="space-y-3 pt-1">
+              <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider pb-1 border-b border-slate-100">
+                Certificate Details & Conduct
+              </h4>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">UDISE Code</label>
+                  <input
+                    type="text"
+                    value={udiseCode}
+                    onChange={(e) => setUdiseCode(e.target.value)}
+                    placeholder="UDISE"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">Conduct & Character</label>
+                  <select
+                    value={conduct}
+                    onChange={(e) => setConduct(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                  >
+                    <option value="Excellent">Excellent</option>
+                    <option value="Exemplary">Exemplary</option>
+                    <option value="Good">Good</option>
+                    <option value="Very Good">Very Good</option>
+                    <option value="Satisfactory">Satisfactory</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-bold text-slate-500 block mb-1">Recognition / Rc. Number</label>
+                <input
+                  type="text"
+                  value={rcNumber}
+                  onChange={(e) => setRcNumber(e.target.value)}
+                  placeholder="Rc. No. ..."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">Place of Issue</label>
+                  <input
+                    type="text"
+                    value={place}
+                    onChange={(e) => setPlace(e.target.value)}
+                    placeholder="e.g. Narasannapeta"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 block mb-1">Issue Date</label>
+                  <input
+                    type="text"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
+                    placeholder="dd-mm-yyyy"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Academic Progression Table Editor */}
+            <div className="space-y-2.5 pt-1">
+              <div className="flex items-center justify-between pb-1 border-b border-slate-100">
+                <h4 className="text-xs font-black text-slate-700 uppercase tracking-wider">
+                  Academic Progress Records
+                </h4>
+                <button
+                  onClick={handleAddAcademicRow}
+                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Row
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                {academicRows.map((row, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200/80">
+                    <span className="text-[11px] font-bold text-slate-400 w-4 text-center">{idx + 1}</span>
+                    <input
+                      type="text"
+                      value={row.year}
+                      onChange={(e) => handleUpdateAcademicRow(idx, 'year', e.target.value)}
+                      placeholder="2024-25"
+                      className="w-24 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={row.className}
+                      onChange={(e) => handleUpdateAcademicRow(idx, 'className', e.target.value)}
+                      placeholder="Class (VII)"
+                      className="w-20 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={row.remarks}
+                      onChange={(e) => handleUpdateAcademicRow(idx, 'remarks', e.target.value)}
+                      placeholder="Remarks"
+                      className="flex-1 px-2 py-1 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none"
+                    />
+                    <button
+                      onClick={() => handleRemoveAcademicRow(idx)}
+                      disabled={academicRows.length <= 1}
+                      className="p-1 text-slate-400 hover:text-rose-600 disabled:opacity-30 cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
         </div>
 
+        {/* RIGHT LIVE A4 CANVAS PREVIEW AREA (60% width) */}
+        <div className="flex-1 bg-slate-200/60 rounded-3xl border border-slate-200/80 flex flex-col overflow-hidden shadow-inner relative">
+          
+          {/* Preview Toolbar */}
+          <div className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <Eye className="w-4 h-4 text-indigo-600" /> Live Preview
+              </h3>
+              <span className="px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-black uppercase tracking-wider">
+                A4 Portrait (210mm × 297mm)
+              </span>
+            </div>
+
+            {/* Bulk Navigation (< Prev / Next >) */}
+            {mode === 'bulk' && bulkSelectedIds.length > 0 && (
+              <div className="flex items-center bg-slate-100 rounded-2xl p-1 border border-slate-200">
+                <button
+                  onClick={() => setBulkPreviewIndex((p) => Math.max(0, p - 1))}
+                  disabled={bulkPreviewIndex === 0}
+                  className="p-1.5 text-slate-600 hover:bg-white rounded-xl disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="px-3 text-xs font-black text-slate-700 min-w-[120px] text-center">
+                  Student {bulkPreviewIndex + 1} of {bulkSelectedIds.length}
+                </span>
+                <button
+                  onClick={() => setBulkPreviewIndex((p) => Math.min(bulkSelectedIds.length - 1, p + 1))}
+                  disabled={bulkPreviewIndex >= bulkSelectedIds.length - 1}
+                  className="p-1.5 text-slate-600 hover:bg-white rounded-xl disabled:opacity-40 transition-colors cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Action Buttons: Print & Download */}
+            <div className="flex items-center gap-2.5">
+              {/* Zoom Controls */}
+              <div className="hidden sm:flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200 mr-2">
+                <button
+                  onClick={() => setZoomScale((s) => Math.max(0.5, s - 0.1))}
+                  className="p-1.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="text-[10px] font-mono font-bold px-1 text-slate-600">{Math.round(zoomScale * 100)}%</span>
+                <button
+                  onClick={() => setZoomScale((s) => Math.min(1.2, s + 0.1))}
+                  className="p-1.5 text-slate-500 hover:text-slate-800 cursor-pointer"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {mode === 'single' ? (
+                <>
+                  <button
+                    onClick={handlePrintCurrent}
+                    className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Print A4</span>
+                  </button>
+                  <button
+                    onClick={handleExportSinglePDF}
+                    disabled={isExporting}
+                    className="btn-primary px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {isExporting ? <LoadingSpinner size="sm" /> : <Download className="w-3.5 h-3.5" />}
+                    <span>Export PDF</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handlePrintAllBulk}
+                    disabled={bulkSelectedIds.length === 0}
+                    className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-indigo-600" />
+                    <span>Print All ({bulkSelectedIds.length})</span>
+                  </button>
+                  <button
+                    onClick={handleExportBulkZip}
+                    disabled={isZipping || bulkSelectedIds.length === 0}
+                    className="btn-primary px-5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer disabled:opacity-50"
+                  >
+                    {isZipping ? <LoadingSpinner size="sm" /> : <Download className="w-3.5 h-3.5" />}
+                    <span>ZIP ({bulkSelectedIds.length} PDFs)</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Interactive Zoomable Viewport */}
+          <div className="flex-1 overflow-auto p-6 flex justify-center items-start custom-scrollbar">
+            
+            {/* The A4 Canvas Element */}
+            <div
+              style={{
+                transform: `scale(${zoomScale})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.15s ease-out',
+              }}
+              className="shrink-0 mb-12 shadow-2xl"
+            >
+              <div
+                ref={certPreviewRef}
+                style={{
+                  width: '210mm',
+                  height: '297mm',
+                  minHeight: '297mm',
+                  maxHeight: '297mm',
+                  background: '#FDFBF7',
+                  fontFamily: "'Times New Roman', Georgia, serif",
+                }}
+                className="relative overflow-hidden flex flex-col justify-between p-12 select-none"
+              >
+                {/* Outer Golden Border */}
+                <div className="absolute inset-[8mm] border-[1.8px] border-amber-600 pointer-events-none z-10" />
+                {/* Inner Navy Border */}
+                <div className="absolute inset-[11mm] border-[4.5px] border-[#0b1a33] pointer-events-none z-10" />
+
+                {/* Corner Accents */}
+                <div className="absolute top-[9.5mm] left-[9.5mm] w-8 h-8 border-t-2 border-l-2 border-amber-600 z-11 pointer-events-none" />
+                <div className="absolute top-[9.5mm] right-[9.5mm] w-8 h-8 border-t-2 border-r-2 border-amber-600 z-11 pointer-events-none" />
+                <div className="absolute bottom-[9.5mm] left-[9.5mm] w-8 h-8 border-b-2 border-l-2 border-amber-600 z-11 pointer-events-none" />
+                <div className="absolute bottom-[9.5mm] right-[9.5mm] w-8 h-8 border-b-2 border-r-2 border-amber-600 z-11 pointer-events-none" />
+
+                {/* Background Logo Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none z-1">
+                  <img
+                    src={getPhotoUrl(schoolSettings.logoUrl) || '/logo.png'}
+                    alt="Watermark"
+                    className="w-[110mm] h-[110mm] object-contain grayscale"
+                  />
+                </div>
+
+                {/* Main Content Area */}
+                <div className="relative z-5 h-full flex flex-col justify-between p-4">
+                  
+                  {/* Top Header */}
+                  <div>
+                    <div className="flex items-center justify-center relative min-h-[90px] mb-4">
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-20 h-20 flex items-center justify-center">
+                        <img
+                          src={getPhotoUrl(schoolSettings.logoUrl) || '/logo.png'}
+                          alt="School Logo"
+                          className="w-full h-full object-contain"
+                          onError={(e: any) => { e.target.src = '/logo.png'; }}
+                        />
+                      </div>
+                      <div className="text-center px-24">
+                        <h1 className="text-3xl font-black text-[#0b1a33] uppercase tracking-wide leading-tight">
+                          {schoolSettings.schoolName}
+                        </h1>
+                        <p className="text-[12px] font-bold text-slate-700 font-sans mt-1">
+                          {rcNumber}
+                        </p>
+                        <p className="text-[12px] font-bold text-[#0b1a33] font-sans mt-0.5">
+                          {schoolSettings.address}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Certificate Title */}
+                    <div className="text-center my-4">
+                      <h2 className="text-xl font-black text-[#0b1a33] uppercase tracking-widest underline underline-offset-8 decoration-2 inline-block">
+                        STUDY & CONDUCT CERTIFICATE
+                      </h2>
+                    </div>
+
+                    {/* Admission & UDISE Bar */}
+                    <div className="flex justify-between items-center my-5 px-1 font-serif">
+                      <div className="border-2 border-[#0b1a33] px-4 py-1 rounded bg-white/70 text-sm font-bold text-[#0b1a33]">
+                        Admission No. : <span className="font-mono font-black ml-1 text-slate-900">{currentPreviewData.admissionNo}</span>
+                      </div>
+                      <div className="border-2 border-[#0b1a33] px-4 py-1 rounded bg-white/70 text-sm font-bold text-[#0b1a33]">
+                        UDISE Code : <span className="font-mono font-black ml-1 text-slate-900">{currentPreviewData.udiseCode}</span>
+                      </div>
+                    </div>
+
+                    {/* Certificate Body Paragraphs */}
+                    <div className="space-y-4 text-justify font-serif text-[17px] leading-relaxed text-slate-800 pt-2">
+                      <p>
+                        <span className="italic text-slate-600">This is to certify that</span>{' '}
+                        <strong className="text-xl font-black text-[#0b1a33] border-b-2 border-dotted border-slate-500 px-3">
+                          {currentPreviewData.studentName}
+                        </strong>
+                        , <span className="italic text-slate-600">Son / Daughter of</span>{' '}
+                        <strong className="text-xl font-black text-[#0b1a33] border-b-2 border-dotted border-slate-500 px-3">
+                          {currentPreviewData.fatherName}
+                        </strong>
+                        , <span className="italic text-slate-600">was a bona fide student of this institution.</span>
+                      </p>
+
+                      <p>
+                        <span className="italic text-slate-600">During the period of study, the student's conduct, character, discipline, and behavior were found to be</span>{' '}
+                        <strong className="italic text-lg font-black text-[#0b1a33] border-b-2 border-dotted border-slate-500 px-2">
+                          {currentPreviewData.conduct}
+                        </strong>
+                        . <span className="italic text-slate-600">The student consistently maintained good moral values, complied with the rules and regulations of the institution, and demonstrated respectful behavior towards teachers, staff, and fellow students.</span>
+                      </p>
+
+                      <p className="italic text-slate-600">
+                        He / She studied the following classes during the years noted below, as recorded in the school records:
+                      </p>
+                    </div>
+
+                    {/* Academic Progress Table */}
+                    <div className="border-2 border-[#0b1a33] rounded overflow-hidden my-4">
+                      <table className="w-full text-center border-collapse font-sans text-xs">
+                        <thead>
+                          <tr className="bg-[#0b1a33] text-white">
+                            <th className="py-2 px-3 font-bold uppercase w-16">Sl. No.</th>
+                            <th className="py-2 px-3 font-bold uppercase">Academic Year</th>
+                            <th className="py-2 px-3 font-bold uppercase">Class</th>
+                            <th className="py-2 px-3 font-bold uppercase">Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-300 font-bold text-slate-800 bg-white/40">
+                          {academicRows.map((row, idx) => (
+                            <tr key={idx}>
+                              <td className="py-2 px-3">{idx + 1}</td>
+                              <td className="py-2 px-3">{row.year}</td>
+                              <td className="py-2 px-3">{row.className}</td>
+                              <td className="py-2 px-3">{row.remarks || 'Promoted'}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Signatures & Footer */}
+                  <div className="flex justify-between items-end pt-6 font-serif">
+                    <div className="space-y-1.5 text-sm font-bold text-slate-700">
+                      <div>
+                        <span className="italic text-slate-500 mr-2">Place :</span>
+                        <strong className="text-[#0b1a33] border-b border-dotted border-slate-500 px-2">{currentPreviewData.place}</strong>
+                      </div>
+                      <div>
+                        <span className="italic text-slate-500 mr-2">Date &nbsp;:</span>
+                        <strong className="text-[#0b1a33] border-b border-dotted border-slate-500 px-2">{currentPreviewData.date}</strong>
+                      </div>
+                    </div>
+
+                    <div className="text-center w-56">
+                      {schoolSettings.principalSignatureUrl ? (
+                        <div className="h-14 flex items-end justify-center mb-1">
+                          <img
+                            src={getPhotoUrl(schoolSettings.principalSignatureUrl)}
+                            alt="Principal Signature"
+                            className="max-h-14 max-w-44 object-contain"
+                          />
+                        </div>
+                      ) : (
+                        <div className="h-14" />
+                      )}
+                      <div className="border-b-2 border-[#0b1a33] mb-1.5" />
+                      <div className="text-xs font-black uppercase tracking-wider text-[#0b1a33]">
+                        Headmaster / Principal
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
     </div>
   );
 };

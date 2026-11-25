@@ -60,6 +60,7 @@ export const createGatePass = async (req: AuthRequest, res: Response, next: Next
 
     const finalRequesterId = (staffId && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN')) ? staffId : user.id;
     const finalRequestType = requestType || (studentId ? 'STUDENT' : 'TEACHER');
+    const isAdminOrSecurity = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'SECURITY';
     
     const slipNumber = `GP-${Date.now().toString().slice(-6)}`;
 
@@ -74,10 +75,14 @@ export const createGatePass = async (req: AuthRequest, res: Response, next: Next
         returnTime,
         notes,
         slipNumber,
+        status: isAdminOrSecurity ? 'APPROVED' : 'PENDING',
+        approvedById: isAdminOrSecurity ? user.id : undefined,
+        approvedAt: isAdminOrSecurity ? new Date() : undefined,
       },
       include: {
         requester: { select: { id: true, name: true, email: true, role: true, photoUrl: true } },
         student: { include: { user: { select: { id: true, name: true, email: true, phone: true, photoUrl: true } }, class: true } },
+        approvedBy: { select: { id: true, name: true, email: true, role: true, photoUrl: true } },
       },
     });
 

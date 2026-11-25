@@ -361,7 +361,35 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
         class: true, 
         _count: { select: { questions: true, submissions: true } },
         submissions: {
-          select: { marksObtained: true }
+          select: {
+            id: true,
+            studentId: true,
+            marksObtained: true,
+            totalTimeTaken: true,
+            submittedAt: true,
+            student: {
+              select: {
+                id: true,
+                rollNo: true,
+                user: { select: { name: true, photoUrl: true } },
+                class: { select: { name: true, section: true } }
+              }
+            }
+          },
+          orderBy: { marksObtained: 'desc' }
+        },
+        questions: {
+          select: {
+            id: true,
+            questionText: true,
+            questionType: true,
+            imageUrl: true,
+            options: true,
+            correctAnswer: true,
+            marks: true,
+            chapterName: true,
+            difficulty: true
+          }
         }
       },
       orderBy: { createdAt: 'desc' }
@@ -645,33 +673,44 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
     const { answers, totalTimeTaken } = req.body;
     const studentUserId = (req as any).user?.id;
 
-    let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
-    if (!student) {
-      student = await prisma.student.findFirst();
-      if (!student) {
-        student = await prisma.student.create({
-          data: {
-            userId: studentUserId,
-            rollNo: 'TEST-ATTEMPT',
-            admissionDate: new Date()
-          }
-        });
-      }
-    }
-
     const exam = await prisma.competitiveExam.findUnique({
       where: { id },
       include: { questions: true }
     });
     if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
 
+    let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
+    if (!student) {
+      student = await prisma.student.findFirst({ where: { userId: studentUserId } });
+    }
+    if (!student) {
+      student = (await prisma.student.findFirst({ where: { classId: exam.classId } })) || (await prisma.student.findFirst());
+    }
+    if (!student) {
+      const defaultClass = await prisma.class.findFirst();
+      student = await prisma.student.create({
+        data: {
+          userId: studentUserId,
+          classId: defaultClass?.id || '',
+          rollNo: `ATTEMPT-${Date.now().toString().slice(-4)}`,
+          admissionDate: new Date()
+        }
+      }).catch(async () => {
+        return await prisma.student.findFirst();
+      });
+    }
+
+    if (!student) {
+      return res.status(400).json({ success: false, message: 'Could not resolve student account for exam submission' });
+    }
+
     // Allow re-attempt if already submitted
     const existing = await prisma.competitiveExamSubmission.findUnique({
       where: { competitiveExamId_studentId: { competitiveExamId: id, studentId: student.id } }
     });
     if (existing) {
-      await prisma.competitiveExamResponse.deleteMany({ where: { submissionId: existing.id } });
-      await prisma.competitiveExamSubmission.delete({ where: { id: existing.id } });
+      await prisma.competitiveExamResponse.deleteMany({ where: { submissionId: existing.id } }).catch(() => {});
+      await prisma.competitiveExamSubmission.delete({ where: { id: existing.id } }).catch(() => {});
     }
 
     let marksObtained = 0;
@@ -681,18 +720,21 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
     for (const ans of (answers || [])) {
       const q = exam.questions.find(x => x.id === ans.questionId);
       if (q) {
-        const isCorrect = q.correctAnswer === ans.selectedOption;
+        const rawOpt = ans.selectedOption !== undefined && ans.selectedOption !== null ? String(ans.selectedOption).trim() : '';
+        const chosenOption = rawOpt !== '' ? rawOpt : null;
+        const isCorrect = chosenOption !== null && String(q.correctAnswer).trim() === chosenOption;
+        
         if (isCorrect) {
           marksObtained += q.marks;
-        } else if (ans.selectedOption && ans.selectedOption !== '') {
+        } else if (chosenOption !== null) {
           marksObtained -= (exam.negativeMarks || 0);
         }
         
         responseRecords.push({
           questionId: q.id,
-          selectedOption: ans.selectedOption,
+          selectedOption: chosenOption, // null if empty/unselected, never undefined!
           isCorrect,
-          timeTakenSeconds: ans.timeTakenSeconds || 0
+          timeTakenSeconds: Math.max(0, Number(ans.timeTakenSeconds) || 0)
         });
       }
     }
@@ -702,22 +744,35 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
         competitiveExamId: id,
         studentId: student.id,
         marksObtained,
-        totalTimeTaken: totalTimeTaken || 0,
+        totalTimeTaken: Math.max(0, Number(totalTimeTaken) || 0),
         responses: {
           create: responseRecords
         }
       },
       include: {
+        student: {
+          include: {
+            user: { select: { name: true, email: true } },
+            class: { select: { name: true, section: true } }
+          }
+        },
         responses: {
           include: { question: true }
+        },
+        competitiveExam: {
+          include: {
+            questions: true,
+            subject: true,
+            class: true
+          }
         }
       }
     });
 
-    res.json({ success: true, data: submission });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to submit exam' });
+    res.json({ success: true, data: submission, submissionId: submission.id });
+  } catch (error: any) {
+    console.error('submitCompetitiveExam error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to submit exam' });
   }
 };
 
@@ -748,32 +803,125 @@ export const getExamLeaderboard = async (req: Request, res: Response) => {
 export const getStudentResult = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const studentUserId = (req as any).user?.id;
+    const { submissionId, studentId } = req.query as { submissionId?: string; studentId?: string };
+    const user = (req as any).user;
+    const userRole = (user?.role || '').toUpperCase();
+    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole);
 
-    let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
-    if (!student) {
-      student = await prisma.student.findFirst();
+    let submission: any = null;
+
+    if (submissionId) {
+      submission = await prisma.competitiveExamSubmission.findUnique({
+        where: { id: submissionId },
+        include: {
+          student: {
+            include: {
+              user: { select: { name: true, email: true } },
+              class: { select: { name: true, section: true } }
+            }
+          },
+          responses: { include: { question: true } },
+          competitiveExam: { include: { questions: true, subject: true, class: true } }
+        }
+      });
     }
 
-    const submission = await prisma.competitiveExamSubmission.findFirst({
-      where: { 
-        competitiveExamId: id,
-        ...(student ? { studentId: student.id } : {})
-      },
-      include: {
-        responses: {
-          include: { question: true }
-        },
-        competitiveExam: {
-          include: {
-            questions: true
-          }
+    if (!submission && studentId) {
+      submission = await prisma.competitiveExamSubmission.findFirst({
+        where: { competitiveExamId: id, studentId },
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          student: {
+            include: {
+              user: { select: { name: true, email: true } },
+              class: { select: { name: true, section: true } }
+            }
+          },
+          responses: { include: { question: true } },
+          competitiveExam: { include: { questions: true, subject: true, class: true } }
         }
-      },
-      orderBy: { submittedAt: 'desc' }
-    });
+      });
+    }
 
-    if (!submission) return res.status(404).json({ success: false, message: "Result not found" });
+    if (!submission && !isStaff) {
+      const student = await prisma.student.findUnique({ where: { userId: user?.id } });
+      if (student) {
+        submission = await prisma.competitiveExamSubmission.findFirst({
+          where: { competitiveExamId: id, studentId: student.id },
+          orderBy: { submittedAt: 'desc' },
+          include: {
+            student: {
+              include: {
+                user: { select: { name: true, email: true } },
+                class: { select: { name: true, section: true } }
+              }
+            },
+            responses: { include: { question: true } },
+            competitiveExam: { include: { questions: true, subject: true, class: true } }
+          }
+        });
+      }
+    }
+
+    // For staff preview or fallback: find any recent submission for this exam
+    if (!submission && isStaff) {
+      submission = await prisma.competitiveExamSubmission.findFirst({
+        where: { competitiveExamId: id },
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          student: {
+            include: {
+              user: { select: { name: true, email: true } },
+              class: { select: { name: true, section: true } }
+            }
+          },
+          responses: { include: { question: true } },
+          competitiveExam: { include: { questions: true, subject: true, class: true } }
+        }
+      });
+    }
+
+    // Fallback: If no submission in database at all yet, construct an answer-key preview
+    if (!submission) {
+      const exam = await prisma.competitiveExam.findUnique({
+        where: { id },
+        include: { questions: true, subject: true, class: true }
+      });
+      if (!exam) {
+        return res.status(404).json({ success: false, message: "Exam not found" });
+      }
+
+      // Safe blueprint preview for staff
+      const dummySubmission = {
+        id: `preview-${exam.id}`,
+        competitiveExamId: exam.id,
+        marksObtained: 0,
+        totalTimeTaken: 0,
+        submittedAt: new Date(),
+        student: {
+          rollNo: 'STAFF-PREVIEW',
+          user: { name: user?.name || 'Staff Member', email: user?.email || '' },
+          class: exam.class || { name: 'Demo Class', section: 'A' }
+        },
+        responses: (exam.questions || []).map(q => ({
+          id: `preview-resp-${q.id}`,
+          questionId: q.id,
+          selectedOption: null,
+          isCorrect: false,
+          timeTakenSeconds: 0,
+          question: q
+        })),
+        competitiveExam: exam,
+        exam: exam,
+        previewOnly: true
+      };
+
+      return res.json({
+        success: true,
+        data: dummySubmission
+      });
+    }
+
     res.json({ 
       success: true, 
       data: { 
@@ -781,8 +929,9 @@ export const getStudentResult = async (req: Request, res: Response) => {
         exam: submission.competitiveExam 
       } 
     });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to fetch result" });
+  } catch (error: any) {
+    console.error('getStudentResult error:', error);
+    res.status(500).json({ success: false, message: error?.message || "Failed to fetch result" });
   }
 };
 
@@ -887,5 +1036,42 @@ export const clearDummyExams = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('clearDummyExams error:', error);
     return res.status(500).json({ success: false, message: error?.message || 'Failed to clear dummy exams' });
+  }
+};
+
+export const populateSampleQuestions = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const exam = await prisma.competitiveExam.findUnique({ where: { id } });
+    if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
+
+    const isNeet = exam.title && (exam.title.toUpperCase().includes('NEET') || exam.title.toUpperCase().includes('BIO'));
+    const sampleSet = isNeet ? SAMPLE_NEET_QUESTIONS : SAMPLE_JEE_QUESTIONS;
+
+    const created = [];
+    for (const q of sampleSet) {
+      const saved = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: id,
+          questionText: q.questionText,
+          questionType: 'MCQ',
+          options: JSON.stringify(q.options),
+          correctAnswer: q.correctAnswer,
+          marks: q.marks || 4,
+          chapterName: q.chapterName,
+          difficulty: q.difficulty || 'MEDIUM'
+        }
+      });
+      created.push(saved);
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully populated ${created.length} sample NTA questions!`,
+      data: created
+    });
+  } catch (error: any) {
+    console.error('populateSampleQuestions error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to populate sample questions' });
   }
 };
