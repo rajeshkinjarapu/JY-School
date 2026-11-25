@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck, Menu
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck, Menu, ZoomIn, ZoomOut
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
@@ -10,6 +10,8 @@ import toast from 'react-hot-toast';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import { SingleRawBoxQuestionStudio } from './CompetitiveQuestionBankDashboard';
+import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
+import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
 
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
@@ -1206,12 +1208,22 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
   const [populating, setPopulating] = useState(false);
   const [examData, setExamData] = useState<any>(exam);
   const [activeSection, setActiveSection] = useState<string>('ALL');
+  const [isDoubleColumn, setIsDoubleColumn] = useState<boolean>(true);
+  const [zoomLevel, setZoomLevel] = useState<number>(0.85);
+  const [schoolLogo, setSchoolLogo] = useState<string>(() => localStorage.getItem('jy_school_logo') || '/logo.png');
 
   const loadDetails = async () => {
     try {
-      const res = await api.get(`/api/competitive-exams/${exam.id}`);
+      const [res, settingsRes] = await Promise.all([
+        api.get(`/api/competitive-exams/${exam.id}`),
+        api.get('/api/settings').catch(() => null),
+      ]);
       if (res.data?.data) {
         setExamData(res.data.data);
+      }
+      const sData = settingsRes?.data?.data || settingsRes?.data;
+      if (sData?.schoolLogoUrl || sData?.logoUrl) {
+        setSchoolLogo(sData.schoolLogoUrl || sData.logoUrl);
       }
     } catch (err) {
       console.warn('Failed to load full exam paper details:', err);
@@ -1240,6 +1252,31 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
         return q.chapterName.startsWith(activeSection) || q.chapterName.includes(activeSection);
       });
 
+  // Convert questions into MCQ Paper Generator LiveLatexPreview format
+  const formattedPaperContent = useMemo(() => {
+    return filteredQuestions.map((q: any, qIdx: number) => {
+      let parsedOptions: string[] = [];
+      try {
+        parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+      } catch {
+        parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+      }
+      const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
+      const qBody = (q.questionText || '').trim();
+      const imgPart = q.imageUrl ? `\n[IMAGE:${q.imageUrl}]` : '';
+      const optsPart = parsedOptions
+        .map((opt: string, idx: number) => `(${optLetters[idx] || idx + 1}) ${String(opt || '').trim()}`)
+        .join('\n');
+      return `${qIdx + 1}. ${qBody}${imgPart}\n${optsPart}`;
+    }).join('\n\n');
+  }, [filteredQuestions]);
+
+  const paperInstructions = useMemo(() => [
+    `This paper contains ${filteredQuestions.length} objective multiple choice questions.`,
+    `Each correct answer carries +4 marks. Negative marking: -${examData?.negativeMarks || 1} mark for each wrong answer.`,
+    `Rough calculations must be carried out on rough sheets only.`
+  ], [filteredQuestions.length, examData?.negativeMarks]);
+
   const handlePopulateSample = async () => {
     setPopulating(true);
     try {
@@ -1253,176 +1290,71 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (filteredQuestions.length === 0) {
       toast.error('No questions in paper to print');
       return;
     }
-
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:0;left:0;width:210mm;height:100vh;border:0;opacity:0;pointer-events:none;z-index:-9999;';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument!;
-    const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style'))
-      .map(n => n.outerHTML).join('');
-
-    const printableEl = document.getElementById('competitive-paper-printable');
-    const contentHtml = printableEl ? printableEl.innerHTML : '';
-
-    doc.open();
-    doc.write(`<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${examData.title || 'Official Question Paper'}</title>
-  ${styles}
-  <style>
-    @page { size: A4 portrait; margin: 12mm 10mm; }
-    html, body {
-      margin: 0 !important;
-      padding: 0 !important;
-      background: #ffffff !important;
-      width: 210mm !important;
-      color: #0f172a !important;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-    .print-header-box {
-      text-align: center;
-      border-bottom: 2.5px solid #0f172a;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-    }
-    .print-badge {
-      font-size: 8pt;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #4f46e5;
-      margin-bottom: 2px;
-    }
-    .print-school-name {
-      font-size: 20pt;
-      font-weight: 900;
-      letter-spacing: 1.5px;
-      margin: 0;
-      text-transform: uppercase;
-      color: #0f172a;
-    }
-    .print-exam-name {
-      font-size: 13pt;
-      font-weight: 800;
-      margin: 3px 0;
-      color: #1e293b;
-    }
-    .print-meta-row {
-      display: flex;
-      justify-content: space-between;
-      border-top: 1px solid #cbd5e1;
-      padding-top: 6px;
-      margin-top: 6px;
-      font-size: 9pt;
-      font-weight: 700;
-      color: #334155;
-    }
-    .print-instructions-box {
-      background: #f8fafc;
-      border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 8px 12px;
-      margin-bottom: 14px;
-      font-size: 8.5pt;
-      line-height: 1.4;
-    }
-    .print-instructions-box ol {
-      margin: 4px 0 0 16px;
-      padding: 0;
-    }
-    .question-block {
-      break-inside: avoid !important;
-      page-break-inside: avoid !important;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 10px 12px;
-      margin-bottom: 10px;
-      background: #ffffff;
-    }
-    .katex .hide-tail { overflow: hidden !important; }
-    .katex svg { overflow: hidden !important; }
-    .katex-display { overflow: visible !important; }
-    .no-print { display: none !important; }
-  </style>
-</head>
-<body>
-  <div class="print-header-box">
-    <div class="print-badge">Official NTA Computer Based Test Question Paper</div>
-    <h1 class="print-school-name">JY SCHOOL</h1>
-    <h2 class="print-exam-name">${examData.title}</h2>
-    <div class="print-meta-row">
-      <span>CLASS: ${examData.class?.name || '10th Standard'}</span>
-      <span>SUBJECT: ${examData.subject?.name || 'General'}</span>
-      <span>DURATION: ${examData.duration} MINS</span>
-      <span>TOTAL MARKS: ${examData.totalMarks}</span>
-      <span>MARKING: +4 / -${examData.negativeMarks || 1}</span>
-    </div>
-  </div>
-
-  <div class="print-instructions-box">
-    <strong>INSTRUCTIONS TO CANDIDATES:</strong>
-    <ol>
-      <li>This paper contains <strong>${filteredQuestions.length}</strong> objective multiple choice questions.</li>
-      <li>Each correct answer earns <strong>4 marks</strong>. For each wrong answer, <strong>${examData.negativeMarks || 1} mark</strong> is deducted.</li>
-      <li>Rough calculations must be carried out on rough sheets only.</li>
-    </ol>
-  </div>
-
-  <div id="print-body">
-    ${contentHtml}
-  </div>
-</body>
-</html>`);
-    doc.close();
-
-    setTimeout(async () => {
-      if (iframe.contentDocument?.fonts) {
-        try {
-          await iframe.contentDocument.fonts.ready;
-        } catch (e) {}
-      }
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      setTimeout(() => iframe.remove(), 2500);
-    }, 400);
+    await printPaper('a4-preview-paper');
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-      <div className="bg-white rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-2 sm:p-5 overflow-y-auto">
+      <div className="bg-white rounded-3xl max-w-6xl w-full max-h-[94vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
         {/* Modal Header */}
-        <div className="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex items-center justify-between gap-4 shrink-0 border-b border-white/10">
+        <div className="p-4 sm:p-5 bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white flex items-center justify-between gap-4 shrink-0">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-3 py-0.5 rounded-full bg-indigo-500/30 text-indigo-300 text-[10px] font-black uppercase tracking-wider border border-indigo-400/30">
-                Official NTA CBT Question Paper
+              <span className="px-3 py-0.5 rounded-full bg-white/20 text-white text-[10px] font-black uppercase tracking-wider border border-white/25">
+                A4 Question Paper Preview (MCQ Format)
               </span>
-              <span className="text-xs text-slate-400 font-bold">Class: {examData.class?.name || '10th Standard'}</span>
+              <span className="text-xs text-indigo-100 font-bold">Class: {examData.class?.name || '10th Standard'}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white line-clamp-1">
+            <h2 className="text-lg sm:text-xl font-black tracking-tight text-white line-clamp-1">
               {examData.title}
             </h2>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Column Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsDoubleColumn((v) => !v)}
+              className="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/20"
+              title="Toggle 1-Column / 2-Column Layout"
+            >
+              <span>{isDoubleColumn ? '2 Columns' : '1 Column'}</span>
+            </button>
+
+            {/* Zoom Controls */}
+            <div className="hidden sm:flex items-center bg-white/15 rounded-xl p-0.5 border border-white/20">
+              <button
+                type="button"
+                onClick={() => setZoomLevel((z) => Math.max(0.5, Number((z - 0.1).toFixed(2))))}
+                className="p-1.5 text-white hover:bg-white/20 rounded-lg cursor-pointer"
+                title="Zoom Out"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] font-bold px-1.5">{Math.round(zoomLevel * 100)}%</span>
+              <button
+                type="button"
+                onClick={() => setZoomLevel((z) => Math.min(1.2, Number((z + 0.1).toFixed(2))))}
+                className="p-1.5 text-white hover:bg-white/20 rounded-lg cursor-pointer"
+                title="Zoom In"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             <button
               onClick={handlePrint}
               disabled={filteredQuestions.length === 0}
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/10 disabled:opacity-50"
+              className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-sm disabled:opacity-50"
               title="Print Clean A4 Question Paper"
             >
-              <Printer className="w-4 h-4 text-amber-300" />
+              <Printer className="w-4 h-4" />
               <span>Print Paper</span>
             </button>
             <button
@@ -1430,14 +1362,14 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
                 onClose();
                 navigate(`/take-competitive-exam/${examData.id}`);
               }}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
             >
-              <Play className="w-3.5 h-3.5 fill-white" />
+              <Play className="w-3.5 h-3.5 fill-indigo-700" />
               <span className="hidden sm:inline">Launch CBT Exam</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+              className="p-2 rounded-xl hover:bg-white/20 text-white transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1445,12 +1377,12 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
         </div>
 
         {/* Paper Metadata Ribbon */}
-        <div className="bg-slate-100 px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600 shrink-0">
+        <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600 shrink-0">
           <div className="flex items-center gap-4 sm:gap-6">
             <span>⏱️ Duration: <strong className="text-slate-900">{examData.duration} Mins</strong></span>
             <span>🎯 Total Marks: <strong className="text-indigo-600">{examData.totalMarks}</strong></span>
             <span>📝 Questions: <strong className="text-emerald-600">{questions.length}</strong></span>
-            <span>⚖️ Marking: <strong className="text-rose-600">+{examData.totalMarks > 400 ? '4' : '4'} / -{examData.negativeMarks || 1}</strong></span>
+            <span>⚖️ Marking: <strong className="text-rose-600">+4 / -{examData.negativeMarks || 1}</strong></span>
           </div>
 
           {/* Section filter tabs */}
@@ -1483,15 +1415,15 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
           )}
         </div>
 
-        {/* Paper Content / Questions List */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6 bg-slate-50">
+        {/* Paper Content / Live A4 MCQ Paper Preview */}
+        <div className="p-4 sm:p-6 overflow-auto flex-1 bg-slate-200/70 flex justify-center items-start">
           {loading ? (
-            <div className="py-20 text-center">
+            <div className="py-20 text-center w-full">
               <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-3" />
               <p className="text-slate-500 font-bold text-sm">Loading complete question paper with KaTeX math rendering...</p>
             </div>
           ) : filteredQuestions.length === 0 ? (
-            <div className="py-12 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-300 max-w-xl mx-auto space-y-4">
+            <div className="py-12 px-6 text-center bg-white rounded-3xl border border-dashed border-slate-300 max-w-xl mx-auto space-y-4 my-auto">
               <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-xs">
                 <FileQuestion className="w-7 h-7" />
               </div>
@@ -1532,98 +1464,28 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
               </div>
             </div>
           ) : (
-            <div id="competitive-paper-printable" className="space-y-4">
-              {filteredQuestions.map((q: any, qIdx: number) => {
-                let parsedOptions: string[] = [];
-                try {
-                  parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
-                } catch {
-                  parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
-                }
-
-                const optLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
-
-                return (
-                  <div
-                    key={q.id || qIdx}
-                    className="question-block bg-white rounded-2xl p-5 sm:p-6 shadow-xs border border-slate-200 space-y-3.5"
-                  >
-                    {/* Question Header */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                          Q{qIdx + 1}
-                        </span>
-                        {q.chapterName && (
-                          <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-bold text-[10px] border border-slate-200">
-                            {q.chapterName}
-                          </span>
-                        )}
-                        <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-[10px]">
-                          {q.difficulty || 'MEDIUM'}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                          +{q.marks || 4} Marks
-                        </span>
-                        <span className="text-xs font-black text-rose-500 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
-                          -{examData.negativeMarks || 1} Neg
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Question Statement */}
-                    <div className="text-slate-900 text-sm sm:text-base font-semibold leading-relaxed pl-1">
-                      <LatexRenderer text={q.questionText} />
-                    </div>
-
-                    {/* Question Diagram if present */}
-                    {q.imageUrl && (
-                      <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl inline-block">
-                        <img src={q.imageUrl} alt="Question Diagram" className="max-h-56 object-contain rounded" />
-                      </div>
-                    )}
-
-                    {/* 4 Options Grid */}
-                    <div className="options-grid grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-                      {parsedOptions.map((opt: string, optIdx: number) => {
-                        const isCorrect = String(opt).trim() === String(q.correctAnswer).trim() || optLetters[optIdx] === String(q.correctAnswer).trim();
-
-                        return (
-                          <div
-                            key={optIdx}
-                            className={`option-cell p-3 rounded-xl border flex items-start gap-2.5 transition ${
-                              isCorrect
-                                ? 'bg-emerald-50/80 border-emerald-400 ring-1 ring-emerald-400'
-                                : 'bg-slate-50/70 border-slate-200'
-                            }`}
-                          >
-                            <span
-                              className={`option-letter w-5 h-5 rounded-md font-black text-[10px] flex items-center justify-center shrink-0 ${
-                                isCorrect
-                                  ? 'bg-emerald-600 text-white'
-                                  : 'bg-slate-200 text-slate-700'
-                              }`}
-                            >
-                              {optLetters[optIdx]}
-                            </span>
-                            <div className="flex-1 text-xs sm:text-sm font-medium text-slate-800 leading-snug">
-                              <LatexRenderer text={opt} />
-                            </div>
-                            {isCorrect && (
-                              <span className="no-print px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-extrabold text-[9px] shrink-0 flex items-center gap-0.5">
-                                <Check size={10} className="text-emerald-700" /> Correct
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
+            <div
+              style={{
+                transform: `scale(${zoomLevel})`,
+                transformOrigin: 'top center',
+                transition: 'transform 0.15s ease-out',
+              }}
+              className="shrink-0 mb-10"
+            >
+              <LiveLatexPreview
+                content={formattedPaperContent}
+                examName={examData.title || 'COMPETITIVE EXAMINATION'}
+                examClass={examData.class?.name || '10th Standard'}
+                examSubject={activeSection !== 'ALL' ? activeSection : (examData.subject?.name || 'General')}
+                maxMarks={String(examData.totalMarks || 100)}
+                time={examData.duration ? `${examData.duration} Mins` : '180 Mins'}
+                instructions={paperInstructions}
+                logoBase64={schoolLogo}
+                isDoubleColumn={isDoubleColumn}
+                fontSize="medium"
+                questionSpacing="normal"
+                showHeader={true}
+              />
             </div>
           )}
         </div>

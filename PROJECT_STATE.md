@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Competitive Exams A4 Paper Preview & Print (MCQ Paper Generator Style) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `paper preview ela undali ante project lo unna mcq paper generator lo paper preview ela untundo ala kavali`
+- **చేసిన శాశ్వత పరిష్కారాలు (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
+  - `ExamPaperPreviewModal` లో MCQ Paper Generator లోని `LiveLatexPreview` మరియు `printPaper` లను ఇంటిగ్రేట్ చేశాము (`MCQPaperGeneratorPage.tsx` / `LiveLatexPreview.tsx` ను ఏమాత్రం మార్చకుండా).
+  - ఇకపై "View Exam Paper" & "Print Paper" క్లిక్ చేసినప్పుడు అచ్చం MCQ Paper Generator లోని 2-Column A4 ప్రీమియం ఎగ్జామ్ పేపర్ లాగే ప్రివ్యూ మరియు ప్రింట్ వస్తాయి (Zoom, 1/2 Column toggle సహా).
+
 ## చివరి సంభాషణ - Marks SMS 0/A బగ్ ఫిక్స్ (`sendMarksSMS`) (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `sms send chestunte 0 lu vastunnayi okasari deep ga check chesi reason ento cheppuy` -> Fix చేయమన్నారు.
 - **చేసిన శాశ్వత పరిష్కారాలు (`backend/src/controllers/exams.controller.ts`):**
