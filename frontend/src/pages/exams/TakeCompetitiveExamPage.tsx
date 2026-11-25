@@ -401,10 +401,10 @@ const TakeCompetitiveExamPage = () => {
 
   if (!hasStartedExam) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col font-sans select-none p-3 sm:p-6 md:p-8">
-        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col min-h-[92vh]">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none p-3 sm:p-6 md:p-8">
+        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 flex flex-col min-h-[92vh]">
           {/* Institutional School Branding Header */}
-          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 border-b border-indigo-500/20 shrink-0">
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white p-6 sm:p-8 border-b border-indigo-500/20 shrink-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
               <div className="flex items-center gap-4 sm:gap-5">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center shrink-0 border border-white/20">
@@ -512,7 +512,7 @@ const TakeCompetitiveExamPage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* Institutional School Branding Header */}
-      <header className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 flex justify-between items-center shadow-lg shrink-0 border-b border-indigo-500/20 w-full">
+      <header className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 flex justify-between items-center shadow-lg shrink-0 border-b border-indigo-500/20 w-full">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 shadow-md flex items-center justify-center shrink-0 border border-white/20">
             <img 

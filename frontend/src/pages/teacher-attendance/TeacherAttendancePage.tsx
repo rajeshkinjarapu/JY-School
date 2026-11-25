@@ -612,48 +612,49 @@ export const TeacherAttendancePage: React.FC = () => {
               {/* Monthly KPI Stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: 'Present Days', value: summary.present, color: 'text-emerald-400', bg: 'bg-emerald-950/30 border-emerald-800/50' },
-                  { label: 'Absent Days', value: summary.absent, color: 'text-rose-400', bg: 'bg-rose-950/30 border-rose-800/50' },
-                  { label: 'Half Day', value: summary.halfDay, color: 'text-sky-400', bg: 'bg-sky-950/30 border-sky-800/50' },
-                  { label: 'Attendance %', value: `${summary.rate}%`, color: 'text-indigo-400', bg: 'bg-indigo-950/30 border-indigo-800/50' },
+                  { label: 'Present Days', value: summary.present, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+                  { label: 'Absent Days', value: summary.absent, color: 'text-rose-700', bg: 'bg-rose-50 border-rose-200' },
+                  { label: 'Half Day', value: summary.halfDay, color: 'text-sky-700', bg: 'bg-sky-50 border-sky-200' },
+                  { label: 'Attendance %', value: `${summary.rate}%`, color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200' },
                 ].map((stat, i) => (
                   <div key={i} className={`rounded-2xl p-5 border shadow-lg ${stat.bg}`}>
                     <p className="text-[11px] font-black uppercase tracking-wider text-slate-400 mb-1">{stat.label}</p>
                     <p className={`text-3xl font-black ${stat.color}`}>{stat.value}</p>
+
                   </div>
                 ))}
               </div>
 
               {/* Monthly Attendance Log */}
-              <div className="bg-slate-950/80 rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
-                <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
                   <div>
-                    <h3 className="font-black text-white text-sm">Monthly Attendance Breakdown</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{MONTHS[selectedMonth]} {selectedYear} &bull; {myRecords.length} records</p>
+                    <h3 className="font-black text-slate-900 text-sm">Monthly Attendance Breakdown</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">{MONTHS[selectedMonth]} {selectedYear} &bull; {myRecords.length} records</p>
                   </div>
-                  <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-xl border border-indigo-500/30">
+                  <span className="px-3 py-1 bg-indigo-100 text-indigo-700 font-bold text-xs rounded-xl border border-indigo-200">
                     {summary.rate}% Attendance
                   </span>
                 </div>
 
-                <div className="divide-y divide-slate-800/60 max-h-[380px] overflow-y-auto">
+                <div className="divide-y divide-slate-100 max-h-[380px] overflow-y-auto">
                   {myRecords.length > 0 ? (
                     myRecords.map((r: any) => {
                       const sc = STATUS_COLORS[r.status] || STATUS_COLORS.PRESENT;
                       const StatusIcon = sc.icon;
                       const dObj = new Date(r.date);
                       return (
-                        <div key={r.id || r.date} className="p-4 hover:bg-slate-900/40 transition-colors flex items-center justify-between gap-3">
+                        <div key={r.id || r.date} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3.5">
-                            <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center bg-slate-800 border border-slate-700 text-white font-black shrink-0">
-                              <span className="text-[9px] uppercase text-indigo-400 font-bold leading-none">{dObj.toLocaleDateString('en-US', { weekday: 'short' })}</span>
+                            <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center bg-indigo-50 border border-indigo-200 text-indigo-700 font-black shrink-0">
+                              <span className="text-[9px] uppercase text-indigo-500 font-bold leading-none">{dObj.toLocaleDateString('en-US', { weekday: 'short' })}</span>
                               <span className="text-sm font-black leading-none mt-0.5">{dObj.getDate()}</span>
                             </div>
                             <div>
-                              <p className="font-bold text-white text-xs sm:text-sm">
+                              <p className="font-bold text-slate-800 text-xs sm:text-sm">
                                 {dObj.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
                               </p>
-                              {r.note && <p className="text-xs text-slate-400 mt-0.5">{r.note}</p>}
+                              {r.note && <p className="text-xs text-slate-500 mt-0.5">{r.note}</p>}
                             </div>
                           </div>
 
@@ -673,31 +674,31 @@ export const TeacherAttendancePage: React.FC = () => {
               </div>
 
               {/* Request History */}
-              <div className="bg-slate-950/80 rounded-3xl border border-slate-800 overflow-hidden shadow-xl">
-                <div className="p-5 border-b border-slate-800 bg-slate-900/60">
-                  <h3 className="font-black text-white text-sm">Gatepass &amp; Leave Request History</h3>
+              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="p-5 border-b border-slate-200 bg-slate-50">
+                  <h3 className="font-black text-slate-900 text-sm">Gatepass &amp; Leave Request History</h3>
                 </div>
-                <div className="divide-y divide-slate-800/60 max-h-[350px] overflow-y-auto">
+                <div className="divide-y divide-slate-100 max-h-[350px] overflow-y-auto">
                   {historyLogs.map((log: any, idx) => (
-                    <div key={idx} className="p-4 hover:bg-slate-900/40 transition-colors flex items-center justify-between">
+                    <div key={idx} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white ${
-                          log.logType === 'GATEPASS' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                          log.logType === 'GATEPASS' ? 'bg-orange-50 text-orange-500 border border-orange-200' : 'bg-blue-50 text-blue-500 border border-blue-200'
                         }`}>
                           {log.logType === 'GATEPASS' ? <FileText className="w-5 h-5" /> : <UserCheck className="w-5 h-5" />}
                         </div>
                         <div>
-                          <p className="font-bold text-white text-sm">
+                          <p className="font-bold text-slate-800 text-sm">
                             {log.logType === 'GATEPASS' ? `Gate Pass to ${log.destination}` : `${log.logType} Request`}
                           </p>
-                          <p className="text-xs text-slate-400 mt-0.5">{log.reason}</p>
-                          <p className="text-[10px] text-slate-500 mt-0.5">{new Date(log.createdAt).toLocaleString()}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{log.reason}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{new Date(log.createdAt).toLocaleString()}</p>
                         </div>
                       </div>
 
                       <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wide border ${
-                        log.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' :
-                        log.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                        log.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                        log.status === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}>
                         {log.status}
                       </span>

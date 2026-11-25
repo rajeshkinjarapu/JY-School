@@ -212,9 +212,9 @@ export const AssignHomeworkPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-900 min-h-screen">
+      <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-50 min-h-screen">
         <LoadingSpinner size="lg" />
-        <p className="text-sm font-bold text-slate-400 mt-4">Loading homework form...</p>
+        <p className="text-sm font-bold text-slate-500 mt-4">Loading homework form...</p>
       </div>
     );
   }
@@ -223,31 +223,31 @@ export const AssignHomeworkPage: React.FC = () => {
   const selectedSubject = subjects.find(s => s.id === subjectId);
 
   return (
-    <div className="flex-1 overflow-auto bg-slate-900 text-slate-100 min-h-screen pb-16">
+    <div className="flex-1 overflow-auto bg-slate-50 text-slate-800 min-h-screen pb-16">
       
       {/* Top Header & Breadcrumbs */}
-      <div className="bg-slate-950/90 border-b border-slate-800 px-6 py-4 sticky top-0 z-30 backdrop-blur-md">
+      <div className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-30 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => navigate('/homework')}
-              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
               title="Return to Homework List"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
               <div className="flex items-center gap-2">
-                <BookMarked className="w-5 h-5 text-emerald-400" />
-                <h1 className="text-lg font-black text-white tracking-wide">
+                <BookMarked className="w-5 h-5 text-emerald-600" />
+                <h1 className="text-lg font-black text-slate-900 tracking-wide">
                   {editId ? 'Edit Homework Assignment' : 'Assign New Homework'}
                 </h1>
-                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-700 border border-emerald-200">
                   {editId ? 'UPDATE MODE' : 'CREATE MODE'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Publish school assignments, home tasks, and project work directly to student portals &amp; parent app
               </p>
             </div>
@@ -257,7 +257,7 @@ export const AssignHomeworkPage: React.FC = () => {
             <button
               type="button"
               onClick={() => navigate('/homework')}
-              className="px-4 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300 hover:bg-slate-800 transition-all"
+              className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-all"
             >
               Cancel
             </button>
@@ -287,8 +287,8 @@ export const AssignHomeworkPage: React.FC = () => {
       <div className="max-w-6xl mx-auto px-6 py-8">
         
         {error && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-950/60 border border-rose-800/80 text-rose-200 text-sm font-semibold flex items-center gap-3 shadow-lg">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0" />
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-semibold flex items-center gap-3 shadow-sm">
+            <AlertCircle className="w-5 h-5 text-rose-500 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -299,23 +299,23 @@ export const AssignHomeworkPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             
             {/* Card 1: Target Class & Subject */}
-            <div className="bg-slate-950/80 border border-slate-800/90 rounded-3xl p-6 shadow-xl space-y-5">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800/80">
-                <Layers className="w-5 h-5 text-indigo-400" />
-                <h2 className="text-sm font-black uppercase tracking-wider text-slate-200">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <Layers className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-800">
                   Target Class &amp; Subject
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                     Class &amp; Section *
                   </label>
                   <select
                     value={classId}
                     onChange={handleClassChange}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-colors cursor-pointer"
                   >
                     <option value="">Select Target Class</option>
                     {classes.map((c) => (
@@ -327,14 +327,14 @@ export const AssignHomeworkPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                  <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                     Curricular Subject *
                   </label>
                   <select
                     value={subjectId}
                     onChange={(e) => setSubjectId(e.target.value)}
                     disabled={!classId || subjects.length === 0}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-emerald-500 transition-colors cursor-pointer disabled:opacity-40"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-colors cursor-pointer disabled:opacity-40"
                   >
                     <option value="">{classId ? 'Select Subject' : 'Select Class First'}</option>
                     {subjects.map((s) => (
@@ -348,17 +348,17 @@ export const AssignHomeworkPage: React.FC = () => {
             </div>
 
             {/* Card 2: Assignment Content & Quick Templates */}
-            <div className="bg-slate-950/80 border border-slate-800/90 rounded-3xl p-6 shadow-xl space-y-5">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800/80">
-                <FileText className="w-5 h-5 text-emerald-400" />
-                <h2 className="text-sm font-black uppercase tracking-wider text-slate-200">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <FileText className="w-5 h-5 text-emerald-600" />
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-800">
                   Assignment Title &amp; Details
                 </h2>
               </div>
 
               {/* Title Field */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Homework Title / Topic *
                 </label>
                 <input
@@ -366,14 +366,14 @@ export const AssignHomeworkPage: React.FC = () => {
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="e.g. Chapter 4: Fractions and Decimals - Exercise 4.2"
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-colors"
                 />
               </div>
 
               {/* Quick Template Chips */}
               <div>
-                <span className="block text-[11px] font-bold text-slate-400 mb-2 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span className="block text-[11px] font-bold text-slate-500 mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                   Quick Title Suggestions:
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -382,7 +382,7 @@ export const AssignHomeworkPage: React.FC = () => {
                       key={idx}
                       type="button"
                       onClick={() => setTitle(tmpl)}
-                      className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[11px] font-medium text-slate-300 hover:text-white transition-all text-left"
+                      className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-[11px] font-medium text-slate-600 hover:text-indigo-700 transition-all text-left"
                     >
                       {tmpl}
                     </button>
@@ -392,15 +392,15 @@ export const AssignHomeworkPage: React.FC = () => {
 
               {/* Detailed Description */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Instructions &amp; Description
                 </label>
                 <textarea
                   rows={6}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Provide clear instructions for students:&#10;1. Complete questions 1 to 8 on page 45.&#10;2. Show step-by-step working in homework notebook.&#10;3. Bring completed work tomorrow for teacher review."
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none leading-relaxed"
+                  placeholder={"Provide clear instructions for students:\n1. Complete questions 1 to 8 on page 45.\n2. Show step-by-step working in homework notebook.\n3. Bring completed work tomorrow for teacher review."}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-colors resize-none leading-relaxed"
                 />
               </div>
             </div>
@@ -411,55 +411,55 @@ export const AssignHomeworkPage: React.FC = () => {
           <div className="space-y-6">
             
             {/* Card 3: Due Date & Schedule */}
-            <div className="bg-slate-950/80 border border-slate-800/90 rounded-3xl p-6 shadow-xl space-y-5">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800/80">
-                <Clock className="w-5 h-5 text-amber-400" />
-                <h2 className="text-sm font-black uppercase tracking-wider text-slate-200">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-5">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <Clock className="w-5 h-5 text-amber-500" />
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-800">
                   Submission Deadline
                 </h2>
               </div>
 
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Due Date *
                 </label>
                 <input
                   type="date"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-amber-500 transition-colors cursor-pointer"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100 transition-colors cursor-pointer"
                 />
               </div>
 
               {/* Quick Due Date Presets */}
               <div>
-                <span className="block text-[11px] font-bold text-slate-400 mb-2">Quick Date Presets:</span>
+                <span className="block text-[11px] font-bold text-slate-500 mb-2">Quick Date Presets:</span>
                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
                   <button
                     type="button"
                     onClick={() => setQuickDueDate(1)}
-                    className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold transition-colors"
+                    className="p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 text-slate-600 hover:text-amber-700 font-bold transition-colors"
                   >
                     Tomorrow
                   </button>
                   <button
                     type="button"
                     onClick={() => setQuickDueDate(2)}
-                    className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold transition-colors"
+                    className="p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 text-slate-600 hover:text-amber-700 font-bold transition-colors"
                   >
                     In 2 Days
                   </button>
                   <button
                     type="button"
                     onClick={() => setQuickDueDate(3)}
-                    className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold transition-colors"
+                    className="p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 text-slate-600 hover:text-amber-700 font-bold transition-colors"
                   >
                     This Weekend
                   </button>
                   <button
                     type="button"
                     onClick={setNextMonday}
-                    className="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold transition-colors"
+                    className="p-2 rounded-lg bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 text-slate-600 hover:text-amber-700 font-bold transition-colors"
                   >
                     Next Monday
                   </button>
@@ -468,13 +468,13 @@ export const AssignHomeworkPage: React.FC = () => {
 
               {/* Priority Tag */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Assignment Priority
                 </label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 transition-colors"
                 >
                   <option value="REGULAR">Normal Daily Practice</option>
                   <option value="IMPORTANT">High Priority (Scored Task)</option>
@@ -485,13 +485,13 @@ export const AssignHomeworkPage: React.FC = () => {
 
               {/* Status */}
               <div>
-                <label className="block text-xs font-black uppercase tracking-wider text-slate-400 mb-2">
+                <label className="block text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
                   Publishing Status
                 </label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:border-amber-500 transition-colors"
                 >
                   <option value="ACTIVE">Active (Live to Students)</option>
                   <option value="CLOSED">Closed / Completed</option>
@@ -500,49 +500,49 @@ export const AssignHomeworkPage: React.FC = () => {
             </div>
 
             {/* Card 4: Target Audience & Live Preview */}
-            <div className="bg-slate-950/80 border border-slate-800/90 rounded-3xl p-6 shadow-xl space-y-4">
-              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-800/80">
-                <Users className="w-5 h-5 text-teal-400" />
-                <h2 className="text-sm font-black uppercase tracking-wider text-slate-200">
+            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <Users className="w-5 h-5 text-teal-600" />
+                <h2 className="text-sm font-black uppercase tracking-wider text-slate-800">
                   Target Audience
                 </h2>
               </div>
 
               <div className="space-y-3 text-xs">
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Selected Class:</span>
-                  <strong className="text-white font-bold">{selectedClass ? `${selectedClass.name} - ${selectedClass.section}` : 'None'}</strong>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Selected Class:</span>
+                  <strong className="text-slate-800 font-bold">{selectedClass ? `${selectedClass.name} - ${selectedClass.section}` : 'None'}</strong>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Subject:</span>
-                  <strong className="text-emerald-400 font-bold">{selectedSubject ? selectedSubject.name : 'None'}</strong>
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex justify-between items-center">
+                  <span className="text-slate-500 font-medium">Subject:</span>
+                  <strong className="text-emerald-600 font-bold">{selectedSubject ? selectedSubject.name : 'None'}</strong>
                 </div>
 
-                <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex justify-between items-center">
-                  <span className="text-slate-400 font-medium">Enrolled Students:</span>
-                  <strong className="text-teal-300 font-black text-sm">{selectedClassStudentsCount} Students</strong>
+                <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex justify-between items-center">
+                  <span className="text-indigo-600 font-medium">Enrolled Students:</span>
+                  <strong className="text-indigo-700 font-black text-sm">{selectedClassStudentsCount} Students</strong>
                 </div>
               </div>
 
               {/* Notification Toggles */}
-              <div className="pt-2 border-t border-slate-800 space-y-2.5">
-                <label className="flex items-center gap-3 cursor-pointer text-xs font-semibold text-slate-300 select-none">
+              <div className="pt-2 border-t border-slate-100 space-y-2.5">
+                <label className="flex items-center gap-3 cursor-pointer text-xs font-semibold text-slate-700 select-none">
                   <input
                     type="checkbox"
                     checked={notifyStudents}
                     onChange={(e) => setNotifyStudents(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700"
+                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-50 border-slate-300"
                   />
                   <span>Send instant app push notification to students</span>
                 </label>
 
-                <label className="flex items-center gap-3 cursor-pointer text-xs font-semibold text-slate-300 select-none">
+                <label className="flex items-center gap-3 cursor-pointer text-xs font-semibold text-slate-700 select-none">
                   <input
                     type="checkbox"
                     checked={notifyParents}
                     onChange={(e) => setNotifyParents(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-900 border-slate-700"
+                    className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 bg-slate-50 border-slate-300"
                   />
                   <span>Send notification to Parent Portal</span>
                 </label>

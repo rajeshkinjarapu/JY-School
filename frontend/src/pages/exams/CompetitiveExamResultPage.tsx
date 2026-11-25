@@ -173,9 +173,9 @@ export const CompetitiveExamResultPage = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-50 min-h-screen">
       {/* Top Institutional School Branding Header */}
-      <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-7 rounded-3xl border border-indigo-500/20 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white p-6 sm:p-7 rounded-3xl border border-indigo-400/20 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
         <div className="flex items-center gap-4 sm:gap-5">
           <button 
             onClick={() => navigate("/competitive-exams")} 
@@ -318,7 +318,7 @@ export const CompetitiveExamResultPage = () => {
               <div key={r.id || idx} className={`p-5 rounded-2xl border-2 transition ${borderBg}`}>
                 <div className="flex justify-between items-start gap-3 mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                    <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
                       Q{idx + 1}
                     </span>
                     {r.question?.chapterName && (
