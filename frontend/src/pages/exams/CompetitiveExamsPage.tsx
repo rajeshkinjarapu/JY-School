@@ -4,7 +4,7 @@ import {
   Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck, Menu, ZoomIn, ZoomOut, FileSpreadsheet, FolderOpen
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { DataCache } from '../../services/dataCache';
 import toast from 'react-hot-toast';
@@ -103,7 +103,19 @@ const extractExams = (payload: any): any[] => {
 };
 
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS' | 'REPORTS'>('DASHBOARD');
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const activeTab: 'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS' | 'REPORTS' = useMemo(() => {
+    const p = location.pathname;
+    if (p.includes('/competitive-exams/exams')) return 'EXAMS';
+    if (p.includes('/competitive-exams/question-bank')) return 'QUESTIONS';
+    if (p.includes('/competitive-exams/students')) return 'STUDENTS';
+    if (p.includes('/competitive-exams/results')) return 'RESULTS';
+    if (p.includes('/competitive-exams/reports')) return 'REPORTS';
+    return 'DASHBOARD';
+  }, [location.pathname]);
+
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -115,8 +127,19 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [previewExamPaper, setPreviewExamPaper] = useState<any | null>(null);
   const [masterQuestionsList, setMasterQuestionsList] = useState<any[]>([]);
   const [totalSchoolStudents, setTotalSchoolStudents] = useState<number>(0);
-  const [qbPresetSubject, setQbPresetSubject] = useState<string>('ALL');
-  const [openBulkImportOnQB, setOpenBulkImportOnQB] = useState<boolean>(false);
+
+  const qbPresetSubject = searchParams.get('subject') || 'ALL';
+  const openBulkImportOnQB = searchParams.get('bulkImport') === 'true';
+
+  useEffect(() => {
+    if (activeTab === 'EXAMS' && searchParams.get('create') === 'true') {
+      setShowInlineCreate(true);
+    }
+    const examIdParam = searchParams.get('examId');
+    if (activeTab === 'QUESTIONS' && examIdParam) {
+      setSelectedExamIdForQB(examIdParam);
+    }
+  }, [activeTab, searchParams]);
 
   const fetchExams = async () => {
     setLoading(true);
@@ -225,8 +248,42 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
   const handleOpenQuestionBankForExam = (examId: string) => {
     setSelectedExamIdForQB(examId);
-    setActiveTab('QUESTIONS');
+    navigate(`/competitive-exams/question-bank?examId=${examId}`);
   };
+
+  const pageMeta: Record<string, { title: string; subtitle: string; badge: string }> = {
+    DASHBOARD: {
+      title: 'Online Exam Module',
+      subtitle: 'Dashboard Overview, Live & Upcoming Exams, Subject & Topic Question Bank, Results & Reports',
+      badge: 'CBT Testing Suite',
+    },
+    EXAMS: {
+      title: 'Exam Management',
+      subtitle: 'Create, schedule, publish exams, launch CBT simulator, and manage exam papers',
+      badge: 'Exams & Scheduling',
+    },
+    QUESTIONS: {
+      title: 'Master Question Bank',
+      subtitle: 'Subject-wise & Topic-wise permanent PostgreSQL Question Bank with Bulk Excel Import & AI Parser',
+      badge: 'Question Repository',
+    },
+    STUDENTS: {
+      title: 'Student Management',
+      subtitle: 'Participating students, exam attempts, best scores, and individual performance tracking',
+      badge: 'Candidate Directory',
+    },
+    RESULTS: {
+      title: 'Results & Result Cards',
+      subtitle: 'Exam rankings, scorecards, accuracy analytics, and printable A4 Result Cards',
+      badge: 'Merit & Scorecards',
+    },
+    REPORTS: {
+      title: 'Performance Reports & Analytics',
+      subtitle: 'Pass/Fail percentages, average & highest scores, and Excel report export',
+      badge: 'Analytics & Export',
+    },
+  };
+  const currentMeta = pageMeta[activeTab] || pageMeta.DASHBOARD;
 
   return (
     <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 min-h-screen bg-slate-50">
@@ -241,11 +298,12 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             <Menu className="w-5 h-5" />
           </button>
           <button
-            onClick={() => navigate('/dashboard')}
-            className="p-2 sm:p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 shadow-xs cursor-pointer transition flex items-center justify-center shrink-0"
-            title="Back to Dashboard"
+            onClick={() => navigate(activeTab === 'DASHBOARD' ? '/dashboard' : '/competitive-exams')}
+            className="px-3 py-2 sm:py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 shadow-xs cursor-pointer transition flex items-center gap-1.5 shrink-0 text-xs font-bold"
+            title={activeTab === 'DASHBOARD' ? 'Back to School Dashboard' : 'Back to Online Exam Dashboard'}
           >
             <ArrowLeft className="w-4 h-4" />
+            {activeTab !== 'DASHBOARD' && <span className="hidden sm:inline">Exam Dashboard</span>}
           </button>
           <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
             <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -253,14 +311,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Online Exam Module
+                {currentMeta.title}
               </h1>
               <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                CBT Testing Suite
+                {currentMeta.badge}
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Exams, Subject & Topic Question Bank, Bulk Import, Student Tracking, Result Cards & Reports
+              {currentMeta.subtitle}
             </p>
           </div>
         </div>
@@ -275,10 +333,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           </button>
 
           <button
-            onClick={() => {
-              setOpenBulkImportOnQB(true);
-              setActiveTab('QUESTIONS');
-            }}
+            onClick={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
             className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -287,8 +342,8 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
           <button
             onClick={() => {
-              setActiveTab('EXAMS');
               setShowInlineCreate(true);
+              navigate('/competitive-exams/exams?create=true');
             }}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
           >
@@ -298,106 +353,62 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         </div>
       </div>
 
-      {/* 6 Interactive Clickable KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        <StatCard
-          title="TOTAL EXAMS"
-          value={exams.length}
-          subtitle="All Created Tests"
-          color="blue"
-          icon={<List className="w-4 h-4" />}
-          active={activeTab === 'EXAMS'}
-          onClick={() => setActiveTab('EXAMS')}
-        />
-        <StatCard
-          title="LIVE EXAMS"
-          value={liveExams.length}
-          subtitle="Active Right Now"
-          color="emerald"
-          icon={<Activity className="w-4 h-4" />}
-          active={activeTab === 'DASHBOARD'}
-          onClick={() => setActiveTab('DASHBOARD')}
-        />
-        <StatCard
-          title="UPCOMING EXAMS"
-          value={upcomingExams.length}
-          subtitle="Scheduled Tests"
-          color="indigo"
-          icon={<Calendar className="w-4 h-4" />}
-          active={false}
-          onClick={() => setActiveTab('EXAMS')}
-        />
-        <StatCard
-          title="TOTAL QUESTIONS"
-          value={totalQuestions}
-          subtitle="Master Question Bank"
-          color="purple"
-          icon={<FileQuestion className="w-4 h-4" />}
-          active={activeTab === 'QUESTIONS'}
-          onClick={() => setActiveTab('QUESTIONS')}
-        />
-        <StatCard
-          title="TOTAL STUDENTS"
-          value={totalSchoolStudents || activeStudents.length}
-          subtitle={`${activeStudents.length} Attempted`}
-          color="amber"
-          icon={<Users className="w-4 h-4" />}
-          active={activeTab === 'STUDENTS'}
-          onClick={() => setActiveTab('STUDENTS')}
-        />
-        <StatCard
-          title="RESULT CARDS"
-          value={totalSubmissions}
-          subtitle="Ranks & Reports"
-          color="rose"
-          icon={<Award className="w-4 h-4" />}
-          active={activeTab === 'RESULTS'}
-          onClick={() => setActiveTab('RESULTS')}
-        />
-      </div>
+      {/* Show 6 KPI Cards ONLY on main Dashboard so sub-pages stay clean & dedicated */}
+      {activeTab === 'DASHBOARD' && (
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+          <StatCard
+            title="TOTAL EXAMS"
+            value={exams.length}
+            subtitle="All Created Tests"
+            color="blue"
+            icon={<List className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/exams')}
+          />
+          <StatCard
+            title="LIVE EXAMS"
+            value={liveExams.length}
+            subtitle="Active Right Now"
+            color="emerald"
+            icon={<Activity className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/exams')}
+          />
+          <StatCard
+            title="UPCOMING EXAMS"
+            value={upcomingExams.length}
+            subtitle="Scheduled Tests"
+            color="indigo"
+            icon={<Calendar className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/exams')}
+          />
+          <StatCard
+            title="TOTAL QUESTIONS"
+            value={totalQuestions}
+            subtitle="Master Question Bank"
+            color="purple"
+            icon={<FileQuestion className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/question-bank')}
+          />
+          <StatCard
+            title="TOTAL STUDENTS"
+            value={totalSchoolStudents || activeStudents.length}
+            subtitle={`${activeStudents.length} Attempted`}
+            color="amber"
+            icon={<Users className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/students')}
+          />
+          <StatCard
+            title="RESULT CARDS"
+            value={totalSubmissions}
+            subtitle="Ranks & Reports"
+            color="rose"
+            icon={<Award className="w-4 h-4" />}
+            onClick={() => navigate('/competitive-exams/results')}
+          />
+        </div>
+      )}
 
-      {/* Navigation Tabs (Direct Sync with Cards) */}
-      <div className="flex overflow-x-auto gap-1.5 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200/90">
-        <TabButton 
-          active={activeTab === 'DASHBOARD'} 
-          onClick={() => setActiveTab('DASHBOARD')} 
-          icon={<LayoutDashboard size={16} />} 
-          label="Dashboard" 
-        />
-        <TabButton 
-          active={activeTab === 'EXAMS'} 
-          onClick={() => setActiveTab('EXAMS')} 
-          icon={<List size={16} />} 
-          label={`Exam Management (${exams.length})`} 
-        />
-        <TabButton 
-          active={activeTab === 'QUESTIONS'} 
-          onClick={() => setActiveTab('QUESTIONS')} 
-          icon={<Database size={16} />} 
-          label={`Question Bank (${totalQuestions})`} 
-        />
-        <TabButton 
-          active={activeTab === 'STUDENTS'} 
-          onClick={() => setActiveTab('STUDENTS')} 
-          icon={<Users size={16} />} 
-          label={`Students (${activeStudents.length})`} 
-        />
-        <TabButton 
-          active={activeTab === 'RESULTS'} 
-          onClick={() => setActiveTab('RESULTS')} 
-          icon={<Award size={16} />} 
-          label={`Results & Cards (${totalSubmissions})`} 
-        />
-        <TabButton 
-          active={activeTab === 'REPORTS'} 
-          onClick={() => setActiveTab('REPORTS')} 
-          icon={<BarChart3 size={16} />} 
-          label="View Reports" 
-        />
-      </div>
-
-      {/* Tab Contents */}
-      <div className="mt-4">
+      {/* Dedicated Page Contents */}
+      <div className="mt-2">
         {activeTab === 'DASHBOARD' && (
           <OnlineExamDashboardOverview
             exams={exams}
@@ -406,18 +417,16 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             masterQuestionsList={masterQuestionsList}
             activeStudents={activeStudents}
             onCreateExam={() => {
-              setActiveTab('EXAMS');
               setShowInlineCreate(true);
+              navigate('/competitive-exams/exams?create=true');
             }}
             onOpenQuestionBank={(subjectFilter?: string) => {
-              setQbPresetSubject(subjectFilter || 'ALL');
-              setActiveTab('QUESTIONS');
+              navigate(subjectFilter && subjectFilter !== 'ALL'
+                ? `/competitive-exams/question-bank?subject=${encodeURIComponent(subjectFilter)}`
+                : '/competitive-exams/question-bank');
             }}
-            onOpenBulkImport={() => {
-              setOpenBulkImportOnQB(true);
-              setActiveTab('QUESTIONS');
-            }}
-            onOpenReports={() => setActiveTab('REPORTS')}
+            onOpenBulkImport={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
+            onOpenReports={() => navigate('/competitive-exams/reports')}
             onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
             navigate={navigate}
           />
@@ -450,7 +459,11 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             onExamsUpdated={fetchExams}
             presetSubject={qbPresetSubject}
             openBulkImportInitially={openBulkImportOnQB}
-            onConsumeBulkImportFlag={() => setOpenBulkImportOnQB(false)}
+            onConsumeBulkImportFlag={() => {
+              const next = new URLSearchParams(searchParams);
+              next.delete('bulkImport');
+              setSearchParams(next, { replace: true });
+            }}
             navigate={navigate} 
           />
         )}
@@ -4227,6 +4240,36 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
             <BarChart3 size={15} /> View Reports
           </button>
         </div>
+      </div>
+
+      {/* 6 Dedicated Module Cards (Each opens its own separate page) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        {[
+          { label: 'Exam Management', sub: `${exams.length} Exams`, icon: List, color: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400', onClick: () => navigate('/competitive-exams/exams') },
+          { label: 'Question Bank', sub: `${masterQuestionsList.length} Saved Qs`, icon: Database, color: 'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-400', onClick: () => onOpenQuestionBank('ALL') },
+          { label: 'Bulk Import', sub: 'Excel / CSV / AI', icon: FileSpreadsheet, color: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400', onClick: onOpenBulkImport },
+          { label: 'Student Management', sub: `${activeStudents.length} Active`, icon: Users, color: 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400', onClick: () => navigate('/competitive-exams/students') },
+          { label: 'Results & Cards', sub: 'Ranks & Scorecards', icon: Award, color: 'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-400', onClick: () => navigate('/competitive-exams/results') },
+          { label: 'View Reports', sub: 'Analytics & Excel', icon: BarChart3, color: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:border-indigo-400', onClick: onOpenReports },
+        ].map((mod) => {
+          const Icon = mod.icon;
+          return (
+            <button
+              key={mod.label}
+              type="button"
+              onClick={mod.onClick}
+              className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all text-left cursor-pointer group flex flex-col justify-between gap-3"
+            >
+              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${mod.color}`}>
+                <Icon className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{mod.label}</div>
+                <div className="text-[11px] font-semibold text-slate-500 mt-0.5">{mod.sub} →</div>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

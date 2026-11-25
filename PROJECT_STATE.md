@@ -1,5 +1,10 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Online Exam Module Separate Dedicated Pages (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `question bank click cheste separate page open avvali ala dashboard lo ye button click chste daniki antu oka dedicated page undali professional ga`
+- **చేసిన మార్పులు:**
+  - `frontend/src/router/index.tsx` & `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `/competitive-exams` ప్రధాన Dashboard గా, మరియు `/competitive-exams/exams`, `/competitive-exams/question-bank`, `/competitive-exams/students`, `/competitive-exams/results`, `/competitive-exams/reports` ప్రత్యేక Dedicated Pages గా రూపొందించాము. ప్రతి sub-page పైభాగంలో `← Exam Dashboard` బటన్ ఉంటుంది.
+
 ## చివరి సంభాషణ - Online Exam Module పూర్తి రీడిజైన్ (Dashboard, 6 KPIs, Topic Bank, Bulk Excel Import & Reports) (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** Sidebar లో `Online Exam Module` పేరు మార్పు, కొత్త Dashboard, 6 KPI Cards, Live/Upcoming Exams, Subject→Topic Question Bank, Bulk Excel Import, Student Management, Result Cards & View Reports.
 - **చేసిన శాశ్వత మార్పులు:**
