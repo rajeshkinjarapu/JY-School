@@ -122,7 +122,7 @@ export const HomeworkPage: React.FC = () => {
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
 
   return (
-    <div className="flex flex-col h-full bg-slate-900/40 text-slate-100" style={{ minHeight: 'calc(100vh - 64px)' }}>
+    <div className="flex flex-col h-full bg-slate-50 text-slate-800" style={{ minHeight: 'calc(100vh - 64px)' }}>
       <PageHeader 
         title="Homework Manager" 
         icon={<BookMarked className="w-5 h-5" />} 

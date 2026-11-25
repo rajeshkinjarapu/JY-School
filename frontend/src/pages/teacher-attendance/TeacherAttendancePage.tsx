@@ -230,15 +230,15 @@ export const TeacherAttendancePage: React.FC = () => {
 
   if (loading && teachers.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-900 min-h-screen">
+      <div className="flex-1 flex flex-col items-center justify-center p-12 bg-slate-50 min-h-screen">
         <LoadingSpinner size="lg" />
-        <p className="text-sm font-bold text-slate-400 mt-4">Loading staff attendance register...</p>
+        <p className="text-sm font-bold text-slate-500 mt-4">Loading staff attendance register...</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full bg-slate-900 text-slate-100 min-h-screen">
+    <div className="flex flex-col h-full bg-slate-50 text-slate-800 min-h-screen">
       <PageHeader 
         title={isAdmin ? "Staff Attendance Manager" : "My Attendance Register"}
         icon={<CalendarCheck className="w-5 h-5" />}

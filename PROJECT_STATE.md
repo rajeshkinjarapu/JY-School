@@ -6,7 +6,7 @@
   - `/teacher-attendance` పేజీ డిజైన్ పూర్తిగా మార్చి, అందమైన లైట్ థీమ్ లోకి తేవాలి.
 - **చేసిన శాశ్వత పరిష్కారాలు:**
   1. `.agents/AGENTS.md` లో **No Black / Dark Theme Design Rule** ను శాశ్వతంగా జోడించాము.
-  2. `frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx` ను పూర్తిగా **Light Theme** (crisp white cards, soft slate backgrounds, high-contrast typography, vibrant emerald/indigo/amber/rose accents) లోకి రీడిజైన్ చేశాము.
+  2. `frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx` మరియు `frontend/src/pages/homework/HomeworkPage.tsx` లలో డార్క్/బ్లాక్ బ్యాక్‌గ్రౌండ్‌లు పూర్తిగా తొలగించి, స్వచ్ఛమైన **Light Theme** (`bg-slate-50`, crisp white cards, high-contrast typography) లోకి మార్చాము.
 
 ## చివరి సంభాషణ - CBT Online Competitive Exam పోర్టల్ పూర్తి రీడిజైన్, స్కూల్ హెడర్, ప్రశ్నల సైజు & సబ్మిషన్ బగ్ పరిష్కారం (November 24, 2026)
 - **యూజర్ సమస్యలు & అవసరాలు:**
