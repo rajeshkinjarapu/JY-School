@@ -679,12 +679,13 @@ export const StudyCertificatePage: React.FC = () => {
       font-size: 10.5pt;
     }
     .academic-table th {
-      background: #0b1a33;
-      color: #ffffff;
-      padding: 2.5mm 4mm;
-      font-weight: 800;
+      background: #f1f5f9;
+      color: #0b1a33;
+      border-bottom: 2px solid #0b1a33;
+      padding: 2.8mm 4mm;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       text-align: center;
     }
     .academic-table td {
@@ -1462,11 +1463,11 @@ export const StudyCertificatePage: React.FC = () => {
                     <div className="border-2 border-[#0b1a33] rounded overflow-hidden my-4">
                       <table className="w-full text-center border-collapse font-sans text-xs">
                         <thead>
-                          <tr className="bg-[#0b1a33] text-white">
-                            <th className="py-2 px-3 font-bold uppercase w-16">Sl. No.</th>
-                            <th className="py-2 px-3 font-bold uppercase">Academic Year</th>
-                            <th className="py-2 px-3 font-bold uppercase">Class</th>
-                            <th className="py-2 px-3 font-bold uppercase">Remarks</th>
+                          <tr className="bg-slate-100 border-b-2 border-[#0b1a33]">
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase w-16">Sl. No.</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Academic Year</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Class</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Remarks</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-300 font-bold text-slate-800 bg-white/40">

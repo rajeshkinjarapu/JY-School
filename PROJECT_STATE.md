@@ -1,5 +1,28 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Marks SMS 0/A బగ్ ఫిక్స్ (`sendMarksSMS`) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `sms send chestunte 0 lu vastunnayi okasari deep ga check chesi reason ento cheppuy` -> Fix చేయమన్నారు.
+- **చేసిన శాశ్వత పరిష్కారాలు (`backend/src/controllers/exams.controller.ts`):**
+  1. మార్కులు ఎంటర్ చేయని విద్యార్థులకు (`studentMarks.length === 0`) లేదా JEE సబ్జెక్టులు లేని ఎగ్జామ్‌లకు డమ్మీ `A / A / A / TOTAL: 0` SMS వెళ్లకుండా స్కిప్ (`skippedCount`) చేశాము.
+  2. `getCanonicalSubjectName` ద్వారా `MAT`, `PS`, `PHY`, `CHEM` మొదలైనవి సరిగ్గా మ్యాచ్ అయ్యేలా చేశాము.
+  3. `AB` రిమార్క్‌ను కూడా Absent (`A`) గా గుర్తించేలా సరిదిద్దాము.
+
+## చివరి సంభాషణ - Results PDF Strict Section Filter (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `nenu 5th a section select chesi print teeste B section kuda print lo vachinchi`
+- **పరిశీలన & పరిష్కారం:**
+  - `backend/src/controllers/exams.controller.ts` (`getResults`) మరియు `frontend/src/pages/exams/ResultsTab.tsx` రెండింటిలోనూ `classId` పై స్ట్రిక్ట్ ఫిల్టర్ చెక్ జోడించాము.
+  - ఒకవేళ డేటాబేస్‌లోని `Students` లిస్ట్ లో B-సెక్షన్ విద్యార్థులు కూడా `5th - A` క్లాస్ లో అసైన్ అయి ఉంటే, వారిని `Students` పేజీ నుండి `5th - B` కి మార్చాలని యూజర్‌కు సూచించాము.
+
+## చివరి సంభాషణ - Exam Results PDF 1-Page Fit పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `OKA CLASS SELECT CHESI PDF GENERATE CHESTE TOTAL 2 SECTIONS VASTUNDI` (Results PDF 2వ పేజీలోకి ఖాళీగా ఓవర్‌ఫ్లో అవ్వడం).
+- **చేసిన పరిష్కారం (`frontend/src/pages/exams/ResultsTab.tsx`):**
+  - `autoTable` లో `cellPadding` మరియు `fontSize` లను విద్యార్థుల సంఖ్య (`totalRows`) ఆధారంగా డైనమిక్‌గా తగ్గించి, `236 / totalRows` సేఫ్ హైట్‌తో సెట్ చేశాము. ఇకపై ఒక క్లాస్‌లోని 40-55 మంది విద్యార్థులందరూ ఖచ్చితంగా **1 A4 పేజీలోనే** ఓవర్‌ఫ్లో లేకుండా వస్తారు.
+
+## చివరి సంభాషణ - Study Certificate Table Header Text Visibility పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `TABLE BOX HEADER LO UNNA TEXT KANAPDATAM LEDU`
+- **చేసిన పరిష్కారం (`frontend/src/pages/office-tools/StudyCertificatePage.tsx`):**
+  - లైవ్ ప్రివ్యూ మరియు ప్రింట్ టెంప్లేట్ రెండింటిలోనూ Academic Progress Table హెడర్‌ను లైట్ బ్యాక్‌గ్రౌండ్ (`#f1f5f9`) + స్పష్టమైన డార్క్ నేవీ టెక్స్ట్ (`#0b1a33`) తో అప్‌డేట్ చేశాము, తద్వారా `SL. NO.`, `ACADEMIC YEAR`, `CLASS`, `REMARKS` స్పష్టంగా కనిపిస్తాయి.
+
 ## చివరి సంభాషణ - Study Certificate Signature తొలగింపు & Export PDF oklch బగ్ ఫిక్స్ (November 25, 2026)
 - **యూజర్ అభ్యర్థన & స్క్రీన్‌షాట్:**
   - `remove head master upload signature`

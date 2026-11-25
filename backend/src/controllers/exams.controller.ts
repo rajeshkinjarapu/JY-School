@@ -598,6 +598,9 @@ export const getResults = async (req: AuthRequest, res: Response, next: NextFunc
   // Sort marks by createdAt DESC so newest marks come first
   const sortedMarks = [...exam.marks].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   for (const mark of sortedMarks) {
+    if (classId && mark.student?.classId && mark.student.classId !== classId) {
+      continue;
+    }
     const key = mark.studentId;
     if (!studentMap.has(key)) {
       studentMap.set(key, {
@@ -983,6 +986,7 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
     const dltTemplateId = '1707175316314375479';
     let sentCount = 0;
     let failedCount = 0;
+    let skippedCount = 0;
 
     // We will dynamically import the sendSMS function
     const { sendSMS } = await import('../utils/sms');
@@ -995,23 +999,42 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
       }
 
       const studentMarks = marks.filter(m => m.studentId === student.id);
-      
+      if (studentMarks.length === 0) {
+        skippedCount++;
+        continue;
+      }
+
       let mathScore = 'A';
       let phyScore = 'A';
       let chemScore = 'A';
       let totalScore = 0;
+      let hasMatchedJeeSubject = false;
 
       studentMarks.forEach(m => {
-        const subName = m.subject.name.toLowerCase();
-        const isAbsent = m.remarks?.toLowerCase().includes('absent');
+        const canonSub = getCanonicalSubjectName(m.subject?.name || '');
+        const rem = (m.remarks || '').trim().toUpperCase();
+        const isAbsent = rem === 'AB' || rem.includes('ABSENT');
         const score = isAbsent ? 'A' : m.marksObtained.toString();
 
-        if (subName.includes('math')) mathScore = score;
-        else if (subName.includes('phy')) phyScore = score;
-        else if (subName.includes('chem')) chemScore = score;
+        if (canonSub === 'MATHEMATICS') {
+          mathScore = score;
+          hasMatchedJeeSubject = true;
+        } else if (canonSub === 'PHYSICS' || canonSub === 'PHYSICAL SCIENCE') {
+          phyScore = score;
+          hasMatchedJeeSubject = true;
+        } else if (canonSub === 'CHEMISTRY') {
+          chemScore = score;
+          hasMatchedJeeSubject = true;
+        }
 
         if (!isAbsent) totalScore += m.marksObtained;
       });
+
+      // Prevent sending dummy "A / A / A / TOTAL: 0" SMS when exam has no matching JEE subjects
+      if (!hasMatchedJeeSubject) {
+        skippedCount++;
+        continue;
+      }
 
       // DLT Template: Dear parent Your child {#var#} Class {#var#} JEE MAINS SCORE MATHS: {#var#} PHYSICS : {#var#} CHEMISTRY: {#var#} TOTAL: {#var#} Thanking you SVJY SCHOOL
       const message = `Dear parent Your child ${student.user.name} Class ${fullClassName} JEE MAINS SCORE MATHS: ${mathScore} PHYSICS : ${phyScore} CHEMISTRY: ${chemScore} TOTAL: ${totalScore} Thanking you SVJY SCHOOL`;
@@ -1024,7 +1047,11 @@ export const sendMarksSMS = async (req: AuthRequest, res: Response, next: NextFu
       }
     }
 
-    successResponse(res, { sent: sentCount, failed: failedCount }, `SMS sending complete. Sent: ${sentCount}, Failed: ${failedCount}`);
+    successResponse(
+      res,
+      { sent: sentCount, failed: failedCount, skipped: skippedCount },
+      `SMS sending complete. Sent: ${sentCount}, Failed: ${failedCount}, Skipped (No Marks): ${skippedCount}`
+    );
   } catch (error: any) {
     console.error("SEND MARKS SMS ERROR:", error);
     next(error);
