@@ -1,5 +1,7 @@
 # Custom Rules
 
+- **No Black / Dark Theme Design Rule (Strict Order — NO EXCEPTIONS):** NEVER use black, dark-mode, or dark slate/navy background themes (`bg-slate-900`, `bg-gray-900`, `bg-black`, etc.) for any webpage, dashboard, card, or mobile screen. ALWAYS design with a bright, clean, modern **Light Theme** (crisp white cards `#FFFFFF`, soft light slate/gray backgrounds `bg-slate-50`, subtle borders `border-slate-200`, dark readable text `text-slate-800`, and vibrant accent colors like indigo, emerald, amber, rose). Ensure high contrast and a fresh, airy, premium School ERP aesthetic at all times.
+
 - **Always Provide VPS SSH Details Rule (Strict Order — NO EXCEPTIONS):** Whenever providing commands to be executed on the VPS (for git pull, prisma generate, backend/frontend builds, PM2 restart, or DB scripts), ALWAYS explicitly include the SSH login command (`ssh root@66.116.252.191`) at the very top of the command block. NEVER assume the user is already connected to the VPS. NEVER write phrases like "ఇప్పటికే SSH లో ఉన్నారు కాబట్టి" or "since you're already connected". ALWAYS provide the full block starting with `ssh root@66.116.252.191`, then `cd` path, then all build commands — every single time, without exception. This is a hard rule with zero tolerance for omissions.
 
 - **Exact Terminal Commands with Path (Strict Order):** Whenever providing a terminal command for the user to run, always include the exact cd command to navigate to the required folder path first, so the user can copy and paste the entire block seamlessly.

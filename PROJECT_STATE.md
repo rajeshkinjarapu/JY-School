@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - No Black Theme Rule & Staff Attendance Manager లైట్ థీమ్ రీడిజైన్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `black theme design assalu use cheyakudadu idi na rule book lo save chesuko`
+  - `/teacher-attendance` పేజీ డిజైన్ పూర్తిగా మార్చి, అందమైన లైట్ థీమ్ లోకి తేవాలి.
+- **చేసిన శాశ్వత పరిష్కారాలు:**
+  1. `.agents/AGENTS.md` లో **No Black / Dark Theme Design Rule** ను శాశ్వతంగా జోడించాము.
+  2. `frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx` ను పూర్తిగా **Light Theme** (crisp white cards, soft slate backgrounds, high-contrast typography, vibrant emerald/indigo/amber/rose accents) లోకి రీడిజైన్ చేశాము.
+
 ## చివరి సంభాషణ - CBT Online Competitive Exam పోర్టల్ పూర్తి రీడిజైన్, స్కూల్ హెడర్, ప్రశ్నల సైజు & సబ్మిషన్ బగ్ పరిష్కారం (November 24, 2026)
 - **యూజర్ సమస్యలు & అవసరాలు:**
   1. `top lo school name header lo ravali logo tho`: టాప్ హెడర్‌లో అధికారిక స్కూల్ లోగో మరియు స్కూల్ పేరు స్పష్టంగా రావాలి.
