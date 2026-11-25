@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Online Exam Module పూర్తి రీడిజైన్ (Dashboard, 6 KPIs, Topic Bank, Bulk Excel Import & Reports) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** Sidebar లో `Online Exam Module` పేరు మార్పు, కొత్త Dashboard, 6 KPI Cards, Live/Upcoming Exams, Subject→Topic Question Bank, Bulk Excel Import, Student Management, Result Cards & View Reports.
+- **చేసిన శాశ్వత మార్పులు:**
+  1. `frontend/src/components/Layout/Sidebar.tsx` & `DashboardLayout.tsx`: `Competitive Exams` → `Online Exam Module`.
+  2. `frontend/src/pages/exams/CompetitiveExamsPage.tsx`:
+     - **6 Interactive KPI Cards:** Total Exams, Live Exams, Upcoming Exams, Total Questions, Total Students, Result Cards.
+     - **`OnlineExamDashboardOverview`:** Quick Actions, Live Exams, Upcoming Exams, Subject-wise Bank summary.
+     - **Topic-wise Question Bank + `ExcelBulkImportModal`:** `.xlsx`/`.csv` sample template & bulk import into PostgreSQL `MasterQuestion`.
+     - **`OnlineExamReportsTab`:** Exam analytics table + Excel report export.
+
 ## చివరి సంభాషణ - Central Master Question Bank & Dual-Save పూర్తి అమలు (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `questions add chesinavi anni database lo save ayi undali` (Exam లేకపోయినా ప్రశ్నలు డేటాబేస్‌లో శాశ్వతంగా సేవ్ అవ్వాలి).
 - **చేసిన శాశ్వత మార్పులు:**

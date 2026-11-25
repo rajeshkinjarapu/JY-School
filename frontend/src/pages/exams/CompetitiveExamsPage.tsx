@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { 
-  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck, Menu, ZoomIn, ZoomOut
+  Play, Plus, Clock, FileText, CheckCircle, Edit, ShieldAlert, Award, FileQuestion, Users, RefreshCw, Trash2, BarChart3, Activity, TrendingUp, AlertTriangle, BookOpen, ChevronRight, CheckCircle2, XCircle, MinusCircle, Database, LayoutDashboard, List, UploadCloud, Download, Sparkles, Zap, Shield, HelpCircle, Check, ArrowRight, ArrowLeft, ExternalLink, X, Calendar, Hash, Target, Layers, Settings2, Sliders, Eye, Printer, Upload, Image as ImageIcon, Search, Trophy, UserCheck, Menu, ZoomIn, ZoomOut, FileSpreadsheet, FolderOpen
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { DataCache } from '../../services/dataCache';
@@ -102,7 +103,7 @@ const extractExams = (payload: any): any[] => {
 };
 
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
-  const [activeTab, setActiveTab] = useState<'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS'>('EXAMS');
+  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS' | 'REPORTS'>('DASHBOARD');
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -112,19 +113,25 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [selectedExamIdForQB, setSelectedExamIdForQB] = useState<string>('');
   const [createdExamModal, setCreatedExamModal] = useState<any | null>(null);
   const [previewExamPaper, setPreviewExamPaper] = useState<any | null>(null);
-  const [masterQuestionsCount, setMasterQuestionsCount] = useState<number>(0);
+  const [masterQuestionsList, setMasterQuestionsList] = useState<any[]>([]);
+  const [totalSchoolStudents, setTotalSchoolStudents] = useState<number>(0);
+  const [qbPresetSubject, setQbPresetSubject] = useState<string>('ALL');
+  const [openBulkImportOnQB, setOpenBulkImportOnQB] = useState<boolean>(false);
 
   const fetchExams = async () => {
     setLoading(true);
     try {
-      const [res, mqRes] = await Promise.all([
+      const [res, mqRes, stRes] = await Promise.all([
         api.get('/api/competitive-exams/admin'),
         api.get('/api/master-questions').catch(() => ({ data: { data: [] } })),
+        api.get('/api/students?limit=1').catch(() => null),
       ]);
       const loadedExams = extractExams(res.data);
       setExams(loadedExams);
       const mqList = mqRes?.data?.data || mqRes?.data || [];
-      setMasterQuestionsCount(Array.isArray(mqList) ? mqList.length : 0);
+      setMasterQuestionsList(Array.isArray(mqList) ? mqList : []);
+      const stTotal = stRes?.data?.pagination?.total || stRes?.data?.meta?.total || (Array.isArray(stRes?.data?.data) ? stRes.data.data.length : 0);
+      if (stTotal > 0) setTotalSchoolStudents(stTotal);
       if (loadedExams.length > 0 && !selectedExamIdForQB) {
         setSelectedExamIdForQB(loadedExams[0].id);
       }
@@ -147,8 +154,21 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   }, []);
 
   const examQuestionsCount = exams.reduce((acc, e) => acc + (e._count?.questions || e.questions?.length || 0), 0);
-  const totalQuestions = Math.max(masterQuestionsCount, examQuestionsCount);
+  const totalQuestions = Math.max(masterQuestionsList.length, examQuestionsCount);
   const totalSubmissions = exams.reduce((acc, e) => acc + (e._count?.submissions || e.submissions?.length || 0), 0);
+
+  const nowTs = Date.now();
+  const liveExams = useMemo(() => exams.filter((e: any) => {
+    const start = e.startTime ? new Date(e.startTime).getTime() : 0;
+    const end = e.endTime ? new Date(e.endTime).getTime() : 0;
+    if (start && end) return nowTs >= start && nowTs <= end;
+    return e.isPublished !== false;
+  }), [exams, nowTs]);
+
+  const upcomingExams = useMemo(() => exams.filter((e: any) => {
+    const start = e.startTime ? new Date(e.startTime).getTime() : 0;
+    return start > nowTs;
+  }), [exams, nowTs]);
 
   // Compute Active Students across all exams
   const activeStudents = useMemo(() => {
@@ -168,7 +188,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             rawClassName: student.class?.name || '',
             attempts: 1,
             bestScore: sub.marksObtained || 0,
-            latestDate: sub.createdAt,
+            latestDate: sub.createdAt || sub.submittedAt,
             latestExam: ex.title,
             examId: ex.id,
             submissionId: sub.id,
@@ -179,8 +199,9 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           if ((sub.marksObtained || 0) > item.bestScore) {
             item.bestScore = sub.marksObtained || 0;
           }
-          if (new Date(sub.createdAt) > new Date(item.latestDate)) {
-            item.latestDate = sub.createdAt;
+          const subDt = sub.createdAt || sub.submittedAt;
+          if (new Date(subDt) > new Date(item.latestDate)) {
+            item.latestDate = subDt;
             item.latestExam = ex.title;
             item.examId = ex.id;
             item.submissionId = sub.id;
@@ -208,7 +229,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 min-h-screen">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 min-h-screen bg-slate-50">
       {/* Clean & Professional Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
         <div className="flex items-center gap-2.5 sm:gap-3">
@@ -232,25 +253,36 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Competitive Exams (CBT)
+                Online Exam Module
               </h1>
               <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
                 CBT Testing Suite
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Online Computer Based Tests (CBT), question blueprints, subject-wise question bank, and rank analysis
+              Exams, Subject & Topic Question Bank, Bulk Import, Student Tracking, Result Cards & Reports
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => fetchExams()}
             className="p-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/90 transition shadow-xs cursor-pointer"
-            title="Refresh List"
+            title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
+
+          <button
+            onClick={() => {
+              setOpenBulkImportOnQB(true);
+              setActiveTab('QUESTIONS');
+            }}
+            className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Bulk Import</span>
           </button>
 
           <button
@@ -261,81 +293,136 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>+ Create Exam Wizard</span>
+            <span>+ Create Exam</span>
           </button>
         </div>
       </div>
 
-      {/* 4 Interactive Clickable KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* 6 Interactive Clickable KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
         <StatCard
           title="TOTAL EXAMS"
           value={exams.length}
-          subtitle="Online & Mock Tests"
+          subtitle="All Created Tests"
           color="blue"
-          icon={<List className="w-5 h-5" />}
+          icon={<List className="w-4 h-4" />}
           active={activeTab === 'EXAMS'}
+          onClick={() => setActiveTab('EXAMS')}
+        />
+        <StatCard
+          title="LIVE EXAMS"
+          value={liveExams.length}
+          subtitle="Active Right Now"
+          color="emerald"
+          icon={<Activity className="w-4 h-4" />}
+          active={activeTab === 'DASHBOARD'}
+          onClick={() => setActiveTab('DASHBOARD')}
+        />
+        <StatCard
+          title="UPCOMING EXAMS"
+          value={upcomingExams.length}
+          subtitle="Scheduled Tests"
+          color="indigo"
+          icon={<Calendar className="w-4 h-4" />}
+          active={false}
           onClick={() => setActiveTab('EXAMS')}
         />
         <StatCard
           title="TOTAL QUESTIONS"
           value={totalQuestions}
-          subtitle="Subject-wise Questions"
-          color="emerald"
-          icon={<FileQuestion className="w-5 h-5" />}
+          subtitle="Master Question Bank"
+          color="purple"
+          icon={<FileQuestion className="w-4 h-4" />}
           active={activeTab === 'QUESTIONS'}
           onClick={() => setActiveTab('QUESTIONS')}
         />
         <StatCard
-          title="RESULTS PUBLISHED"
-          value={totalSubmissions}
-          subtitle="Scorecards & Ranks"
-          color="purple"
-          icon={<Award className="w-5 h-5" />}
-          active={activeTab === 'RESULTS'}
-          onClick={() => setActiveTab('RESULTS')}
-        />
-        <StatCard
-          title="ACTIVE STUDENTS"
-          value={activeStudents.length}
-          subtitle="Participating Students"
+          title="TOTAL STUDENTS"
+          value={totalSchoolStudents || activeStudents.length}
+          subtitle={`${activeStudents.length} Attempted`}
           color="amber"
-          icon={<Users className="w-5 h-5" />}
+          icon={<Users className="w-4 h-4" />}
           active={activeTab === 'STUDENTS'}
           onClick={() => setActiveTab('STUDENTS')}
+        />
+        <StatCard
+          title="RESULT CARDS"
+          value={totalSubmissions}
+          subtitle="Ranks & Reports"
+          color="rose"
+          icon={<Award className="w-4 h-4" />}
+          active={activeTab === 'RESULTS'}
+          onClick={() => setActiveTab('RESULTS')}
         />
       </div>
 
       {/* Navigation Tabs (Direct Sync with Cards) */}
-      <div className="flex overflow-x-auto gap-2 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200/90">
+      <div className="flex overflow-x-auto gap-1.5 bg-white p-1.5 rounded-2xl shadow-xs border border-slate-200/90">
+        <TabButton 
+          active={activeTab === 'DASHBOARD'} 
+          onClick={() => setActiveTab('DASHBOARD')} 
+          icon={<LayoutDashboard size={16} />} 
+          label="Dashboard" 
+        />
         <TabButton 
           active={activeTab === 'EXAMS'} 
           onClick={() => setActiveTab('EXAMS')} 
-          icon={<List size={17} />} 
-          label={`All Exams (${exams.length})`} 
+          icon={<List size={16} />} 
+          label={`Exam Management (${exams.length})`} 
         />
         <TabButton 
           active={activeTab === 'QUESTIONS'} 
           onClick={() => setActiveTab('QUESTIONS')} 
-          icon={<FileQuestion size={17} />} 
-          label={`Subject-wise Questions (${totalQuestions})`} 
-        />
-        <TabButton 
-          active={activeTab === 'RESULTS'} 
-          onClick={() => setActiveTab('RESULTS')} 
-          icon={<Award size={17} />} 
-          label={`Results & Ranks (${totalSubmissions})`} 
+          icon={<Database size={16} />} 
+          label={`Question Bank (${totalQuestions})`} 
         />
         <TabButton 
           active={activeTab === 'STUDENTS'} 
           onClick={() => setActiveTab('STUDENTS')} 
-          icon={<Users size={17} />} 
-          label={`Active Students (${activeStudents.length})`} 
+          icon={<Users size={16} />} 
+          label={`Students (${activeStudents.length})`} 
+        />
+        <TabButton 
+          active={activeTab === 'RESULTS'} 
+          onClick={() => setActiveTab('RESULTS')} 
+          icon={<Award size={16} />} 
+          label={`Results & Cards (${totalSubmissions})`} 
+        />
+        <TabButton 
+          active={activeTab === 'REPORTS'} 
+          onClick={() => setActiveTab('REPORTS')} 
+          icon={<BarChart3 size={16} />} 
+          label="View Reports" 
         />
       </div>
 
       {/* Tab Contents */}
       <div className="mt-4">
+        {activeTab === 'DASHBOARD' && (
+          <OnlineExamDashboardOverview
+            exams={exams}
+            liveExams={liveExams}
+            upcomingExams={upcomingExams}
+            masterQuestionsList={masterQuestionsList}
+            activeStudents={activeStudents}
+            onCreateExam={() => {
+              setActiveTab('EXAMS');
+              setShowInlineCreate(true);
+            }}
+            onOpenQuestionBank={(subjectFilter?: string) => {
+              setQbPresetSubject(subjectFilter || 'ALL');
+              setActiveTab('QUESTIONS');
+            }}
+            onOpenBulkImport={() => {
+              setOpenBulkImportOnQB(true);
+              setActiveTab('QUESTIONS');
+            }}
+            onOpenReports={() => setActiveTab('REPORTS')}
+            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
+            navigate={navigate}
+          />
+        )}
+
         {activeTab === 'EXAMS' && (
           <ManageExamsTab
             exams={exams}
@@ -361,6 +448,9 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             setSelectedExamId={setSelectedExamIdForQB}
             onOpenAiModal={(exam: any) => setAiModalExam(exam)}
             onExamsUpdated={fetchExams}
+            presetSubject={qbPresetSubject}
+            openBulkImportInitially={openBulkImportOnQB}
+            onConsumeBulkImportFlag={() => setOpenBulkImportOnQB(false)}
             navigate={navigate} 
           />
         )}
@@ -371,6 +461,10 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
         {activeTab === 'STUDENTS' && (
           <ActiveStudentsTab exams={exams} navigate={navigate} />
+        )}
+
+        {activeTab === 'REPORTS' && (
+          <OnlineExamReportsTab exams={exams} masterQuestionsList={masterQuestionsList} navigate={navigate} />
         )}
       </div>
 
@@ -1547,7 +1641,10 @@ const QuestionBankTab = ({
   selectedExamId, 
   setSelectedExamId, 
   onOpenAiModal, 
-  onExamsUpdated, 
+  onExamsUpdated,
+  presetSubject,
+  openBulkImportInitially,
+  onConsumeBulkImportFlag,
   navigate 
 }: any) => {
   const [bankSource, setBankSource] = useState<'MASTER' | 'EXAM'>('MASTER');
@@ -1556,13 +1653,30 @@ const QuestionBankTab = ({
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
   const [showAddMasterModal, setShowAddMasterModal] = useState(false);
   const [showMasterAiModal, setShowMasterAiModal] = useState(false);
+  const [showExcelBulkModal, setShowExcelBulkModal] = useState(false);
   const [showPickFromBankModal, setShowPickFromBankModal] = useState(false);
   
-  // Subject, Category & Search Filters
+  // Subject, Topic, Category & Search Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
+  const [selectedSubject, setSelectedSubject] = useState<string>(presetSubject || 'ALL');
+  const [selectedTopic, setSelectedTopic] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
+
+  useEffect(() => {
+    if (presetSubject) {
+      setSelectedSubject(presetSubject);
+      setSelectedTopic('ALL');
+    }
+  }, [presetSubject]);
+
+  useEffect(() => {
+    if (openBulkImportInitially) {
+      setBankSource('MASTER');
+      setShowExcelBulkModal(true);
+      onConsumeBulkImportFlag?.();
+    }
+  }, [openBulkImportInitially]);
 
   const fetchMasterBank = async () => {
     setLoadingQuestions(true);
@@ -1657,11 +1771,27 @@ const QuestionBankTab = ({
     return [...defaultList, ...extraSubjects];
   }, [subjectStats]);
 
+  // Topic / Chapter breakdown for the selected Subject
+  const topicStats = useMemo(() => {
+    const map: Record<string, number> = {};
+    questions.forEach((q: any) => {
+      const qSub = normalizeSubject(q.subjectName || q.chapterName);
+      if (selectedSubject !== 'ALL' && qSub !== selectedSubject) return;
+      const rawTopic = (q.topicName || q.chapterName || 'General').trim();
+      const topic = rawTopic.includes(':') ? rawTopic.split(':').slice(1).join(':').trim() || rawTopic : rawTopic;
+      map[topic] = (map[topic] || 0) + 1;
+    });
+    return map;
+  }, [questions, selectedSubject]);
+
   // Filtered Questions
   const filteredQuestions = useMemo(() => {
     return questions.filter((q: any) => {
       const qSubject = normalizeSubject(q.subjectName || q.chapterName);
       const matchesSubject = selectedSubject === 'ALL' || qSubject === selectedSubject;
+      const rawTopic = (q.topicName || q.chapterName || 'General').trim();
+      const qTopic = rawTopic.includes(':') ? rawTopic.split(':').slice(1).join(':').trim() || rawTopic : rawTopic;
+      const matchesTopic = selectedTopic === 'ALL' || qTopic === selectedTopic;
       const matchesCategory = bankSource !== 'MASTER' || selectedCategory === 'ALL' || (q.category || 'GENERAL').toUpperCase() === selectedCategory;
       const matchesDifficulty = difficultyFilter === 'ALL' || (q.difficulty || 'MEDIUM').toUpperCase() === difficultyFilter.toUpperCase();
       const qText = (q.questionText || '').toLowerCase();
@@ -1672,9 +1802,9 @@ const QuestionBankTab = ({
         chText.includes(searchQuery.toLowerCase()) ||
         subText.includes(searchQuery.toLowerCase());
 
-      return matchesSubject && matchesCategory && matchesDifficulty && matchesSearch;
+      return matchesSubject && matchesTopic && matchesCategory && matchesDifficulty && matchesSearch;
     });
-  }, [questions, selectedSubject, selectedCategory, bankSource, difficultyFilter, searchQuery]);
+  }, [questions, selectedSubject, selectedTopic, selectedCategory, bankSource, difficultyFilter, searchQuery]);
 
   // If authoring mode is active for an exam, render the Dedicated Full Question Studio view
   if (isAddingQuestion && activeExam && bankSource === 'EXAM') {
@@ -1814,18 +1944,25 @@ const QuestionBankTab = ({
             {bankSource === 'MASTER' ? (
               <>
                 <button
+                  onClick={() => setShowExcelBulkModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Bulk Excel Import</span>
+                </button>
+                <button
                   onClick={() => setShowMasterAiModal(true)}
                   className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   <FileText size={15} />
-                  <span>📄 Paste Exam Text (AI Parser)</span>
+                  <span>AI Text Parser</span>
                 </button>
                 <button
                   onClick={() => setShowAddMasterModal(true)}
                   className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   <Plus size={15} />
-                  <span>Add Question to Bank</span>
+                  <span>Add Question</span>
                 </button>
               </>
             ) : exams.length > 0 ? (
@@ -1897,7 +2034,10 @@ const QuestionBankTab = ({
             return (
               <button
                 key={subName}
-                onClick={() => setSelectedSubject(subName)}
+                onClick={() => {
+                  setSelectedSubject(subName);
+                  setSelectedTopic('ALL');
+                }}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
                   isSelected ? styling.active : styling.inactive
                 }`}
@@ -1912,6 +2052,37 @@ const QuestionBankTab = ({
             );
           })}
         </div>
+
+        {/* Topic-wise Pills inside Selected Subject */}
+        {Object.keys(topicStats).length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-slate-100 scrollbar-none">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
+              <FolderOpen className="w-3.5 h-3.5 text-indigo-500" /> Topics:
+            </span>
+            <button
+              type="button"
+              onClick={() => setSelectedTopic('ALL')}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
+                selectedTopic === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              }`}
+            >
+              All Topics
+            </button>
+            {Object.entries(topicStats).map(([tName, tCount]) => (
+              <button
+                key={tName}
+                type="button"
+                onClick={() => setSelectedTopic(tName)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 flex items-center gap-1 ${
+                  selectedTopic === tName ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
+                }`}
+              >
+                <span>{tName}</span>
+                <span className="opacity-75">({tCount})</span>
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Search & Difficulty Filter Sub-bar */}
         <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
@@ -2167,6 +2338,18 @@ const QuestionBankTab = ({
           onClose={() => setShowMasterAiModal(false)}
           onSaved={() => {
             setShowMasterAiModal(false);
+            fetchMasterBank();
+            onExamsUpdated();
+          }}
+        />
+      )}
+
+      {/* Excel / CSV Bulk Import Modal */}
+      {showExcelBulkModal && (
+        <ExcelBulkImportModal
+          onClose={() => setShowExcelBulkModal(false)}
+          onSaved={() => {
+            setShowExcelBulkModal(false);
             fetchMasterBank();
             onExamsUpdated();
           }}
@@ -3817,6 +4000,491 @@ Correct: A`}
 };
 
 // ═══════════════════════════════════════════════════════════════
+// EXCEL / CSV BULK QUESTION IMPORT MODAL
+// ═══════════════════════════════════════════════════════════════
+
+const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void }> = ({ onClose, onSaved }) => {
+  const [rows, setRows] = useState<any[]>([]);
+  const [fileName, setFileName] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const handleDownloadSample = () => {
+    const sample = [
+      {
+        Category: 'JEE',
+        Subject: 'Mathematics',
+        Topic: 'Quadratic Equations',
+        Question: 'If $x^2 - 5x + 6 = 0$, what are the roots?',
+        'Option A': '2, 3',
+        'Option B': '1, 6',
+        'Option C': '-2, -3',
+        'Option D': '3, 4',
+        'Correct Answer': 'A',
+        Difficulty: 'EASY',
+        Marks: 4,
+        Explanation: 'Factoring gives $(x-2)(x-3)=0$.'
+      },
+      {
+        Category: 'NEET',
+        Subject: 'Biology',
+        Topic: 'Cell Biology',
+        Question: 'Which organelle is known as the powerhouse of the cell?',
+        'Option A': 'Ribosome',
+        'Option B': 'Mitochondria',
+        'Option C': 'Golgi Body',
+        'Option D': 'Nucleus',
+        'Correct Answer': 'B',
+        Difficulty: 'EASY',
+        Marks: 4,
+        Explanation: 'Mitochondria produces ATP through cellular respiration.'
+      }
+    ];
+    const ws = XLSX.utils.json_to_sheet(sample);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+    XLSX.writeFile(wb, 'Online_Exam_Question_Bank_Template.xlsx');
+    toast.success('Sample Excel template downloaded!');
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const jsonRows: any[] = XLSX.utils.sheet_to_json(ws);
+        const mapped = jsonRows.map((r) => {
+          const opts = [
+            String(r['Option A'] ?? r.optionA ?? '').trim(),
+            String(r['Option B'] ?? r.optionB ?? '').trim(),
+            String(r['Option C'] ?? r.optionC ?? '').trim(),
+            String(r['Option D'] ?? r.optionD ?? '').trim(),
+          ];
+          const rawAns = String(r['Correct Answer'] ?? r.correctAnswer ?? 'A').trim();
+          let correctAnswer = rawAns;
+          const idxMap: Record<string, number> = { A: 0, B: 1, C: 2, D: 3 };
+          if (idxMap[rawAns.toUpperCase()] !== undefined && opts[idxMap[rawAns.toUpperCase()]]) {
+            correctAnswer = opts[idxMap[rawAns.toUpperCase()]];
+          }
+          return {
+            category: String(r.Category ?? r.category ?? 'GENERAL').toUpperCase(),
+            subjectName: String(r.Subject ?? r.subjectName ?? 'General').trim(),
+            topicName: String(r.Topic ?? r.topicName ?? 'General').trim(),
+            chapterName: `${String(r.Subject ?? r.subjectName ?? 'General').trim()}: ${String(r.Topic ?? r.topicName ?? 'General').trim()}`,
+            questionText: String(r.Question ?? r.questionText ?? '').trim(),
+            options: opts,
+            correctAnswer,
+            difficulty: String(r.Difficulty ?? r.difficulty ?? 'MEDIUM').toUpperCase(),
+            marks: Number(r.Marks ?? r.marks ?? 4) || 4,
+            explanation: String(r.Explanation ?? r.explanation ?? '').trim() || null,
+          };
+        }).filter((q) => q.questionText);
+        setRows(mapped);
+        if (mapped.length === 0) toast.error('No valid questions found in file');
+        else toast.success(`Loaded ${mapped.length} questions from Excel!`);
+      } catch (err) {
+        toast.error('Failed to read Excel/CSV file');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleSaveAll = async () => {
+    if (rows.length === 0) return;
+    setSaving(true);
+    try {
+      await api.post('/api/master-questions/bulk', { questions: rows });
+      toast.success(`Imported ${rows.length} questions permanently to Question Bank!`);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Bulk import failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+        <div className="p-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5" /> Bulk Import Questions (Excel / CSV)
+            </h3>
+            <p className="text-xs text-amber-100 mt-0.5">Upload 100–1000+ Subject & Topic-wise MCQs directly into PostgreSQL</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full cursor-pointer"><X size={20} /></button>
+        </div>
+
+        <div className="p-6 space-y-5 overflow-y-auto flex-1">
+          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-black text-amber-900">Step 1: Download Sample Excel Template</p>
+              <p className="text-[11px] text-amber-700 mt-0.5">Columns: Category, Subject, Topic, Question, Option A-D, Correct Answer, Difficulty, Marks, Explanation</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadSample}
+              className="px-4 py-2 rounded-xl bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs font-black flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <Download size={14} /> Download Template (.xlsx)
+            </button>
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-slate-700 uppercase mb-2">Step 2: Upload Filled Excel / CSV File</label>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              onChange={handleFileChange}
+              className="w-full p-4 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer hover:border-indigo-400"
+            />
+            {fileName && <p className="text-xs text-indigo-600 font-bold mt-1.5">Selected: {fileName} ({rows.length} questions)</p>}
+          </div>
+
+          {rows.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto border border-slate-200 rounded-2xl p-3 bg-slate-50">
+              {rows.slice(0, 15).map((r, i) => (
+                <div key={i} className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs flex items-center justify-between gap-2">
+                  <div className="truncate font-bold text-slate-800">
+                    <span className="text-indigo-600 mr-1.5">#{i + 1}</span>
+                    [{r.subjectName} / {r.topicName}] {r.questionText}
+                  </div>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 shrink-0">{r.difficulty}</span>
+                </div>
+              ))}
+              {rows.length > 15 && <p className="text-center text-[11px] font-bold text-slate-500">...and {rows.length - 15} more questions</p>}
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 bg-white border-t border-slate-200 flex justify-end gap-2">
+          <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
+          <button
+            onClick={handleSaveAll}
+            disabled={saving || rows.length === 0}
+            className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer disabled:opacity-50"
+          >
+            {saving ? 'Importing...' : `Import (${rows.length}) Questions to DB`}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ONLINE EXAM DASHBOARD OVERVIEW
+// ═══════════════════════════════════════════════════════════════
+
+const OnlineExamDashboardOverview: React.FC<any> = ({
+  exams,
+  liveExams,
+  upcomingExams,
+  masterQuestionsList,
+  activeStudents,
+  onCreateExam,
+  onOpenQuestionBank,
+  onOpenBulkImport,
+  onOpenReports,
+  onPreviewPaper,
+  navigate,
+}) => {
+  const subjectBreakdown = useMemo(() => {
+    const counts: Record<string, number> = {};
+    masterQuestionsList.forEach((q: any) => {
+      const sub = normalizeSubject(q.subjectName || q.chapterName);
+      counts[sub] = (counts[sub] || 0) + 1;
+    });
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  }, [masterQuestionsList]);
+
+  return (
+    <div className="space-y-6">
+      {/* Quick Action Command Bar */}
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-black text-slate-900">Online Exam Command Center</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Create exams, manage your Subject & Topic Question Bank, monitor live tests, and export performance reports
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button onClick={onCreateExam} className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer">
+            <Plus size={15} /> Create Exam
+          </button>
+          <button onClick={() => onOpenQuestionBank('ALL')} className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
+            <Database size={15} /> Question Bank ({masterQuestionsList.length})
+          </button>
+          <button onClick={onOpenBulkImport} className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
+            <FileSpreadsheet size={15} /> Bulk Import
+          </button>
+          <button onClick={onOpenReports} className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
+            <BarChart3 size={15} /> View Reports
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Live & Upcoming Exams (2 Columns) */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Live Exams */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Exams ({liveExams.length})
+              </h3>
+              <span className="text-xs font-bold text-slate-400">Active CBT Tests</span>
+            </div>
+
+            {liveExams.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-xs font-bold text-slate-500">No exams are currently live.</p>
+                <button onClick={onCreateExam} className="mt-3 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
+                  + Schedule New Exam
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {liveExams.slice(0, 4).map((ex: any) => (
+                  <div key={ex.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">LIVE</span>
+                        <span className="text-xs font-bold text-slate-500">{ex.class?.name || 'All Classes'}</span>
+                      </div>
+                      <h4 className="text-sm font-black text-slate-900 mt-1">{ex.title}</h4>
+                      <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                        ⏱️ {ex.duration}m • 📝 {ex._count?.questions || ex.questions?.length || 0} Qs • 🎯 {ex.totalMarks} Marks
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => onPreviewPaper(ex)} className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        View Paper
+                      </button>
+                      <button onClick={() => navigate(`/live-exam-monitor/${ex.id}`)} className="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 hover:bg-rose-100 cursor-pointer">
+                        Live Monitor
+                      </button>
+                      <button onClick={() => navigate(`/take-competitive-exam/${ex.id}`)} className="px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 cursor-pointer">
+                        Launch
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Upcoming Exams */}
+          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-indigo-600" />
+                Upcoming Exams ({upcomingExams.length})
+              </h3>
+            </div>
+
+            {upcomingExams.length === 0 ? (
+              <p className="text-xs font-semibold text-slate-400 py-4 text-center bg-slate-50 rounded-2xl border border-slate-100">
+                No upcoming scheduled exams. Create an exam with a future start time to see it here.
+              </p>
+            ) : (
+              <div className="space-y-2.5">
+                {upcomingExams.slice(0, 4).map((ex: any) => (
+                  <div key={ex.id} className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-sm font-black text-slate-900">{ex.title}</h4>
+                      <p className="text-[11px] font-semibold text-indigo-700">
+                        Starts: {new Date(ex.startTime).toLocaleString()} • {ex.duration} Mins
+                      </p>
+                    </div>
+                    <button onClick={() => onPreviewPaper(ex)} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-700 cursor-pointer">
+                      Preview
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Subject-wise Question Bank Summary */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4 h-fit">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+              <Database className="w-4 h-4 text-purple-600" />
+              Subject-wise Bank
+            </h3>
+            <button onClick={() => onOpenQuestionBank('ALL')} className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer">
+              View All →
+            </button>
+          </div>
+
+          {subjectBreakdown.length === 0 ? (
+            <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
+              <p className="text-xs font-bold text-slate-500">Question Bank is empty.</p>
+              <button onClick={onOpenBulkImport} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
+                + Add / Bulk Import
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {subjectBreakdown.map(([subName, count]) => (
+                <button
+                  key={subName}
+                  onClick={() => onOpenQuestionBank(subName)}
+                  className="w-full p-3 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 flex items-center justify-between transition cursor-pointer"
+                >
+                  <span className="text-xs font-black text-slate-800">{subName}</span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-xs font-black text-indigo-600">
+                    {count} Qs
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
+            <span>Participating Students:</span>
+            <span className="text-slate-900 font-black">{activeStudents.length}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// ONLINE EXAM REPORTS & ANALYTICS TAB
+// ═══════════════════════════════════════════════════════════════
+
+const OnlineExamReportsTab: React.FC<{ exams: any[]; masterQuestionsList: any[]; navigate: any }> = ({
+  exams,
+  masterQuestionsList,
+  navigate,
+}) => {
+  const reportRows = useMemo(() => {
+    return exams.map((ex: any) => {
+      const subs: any[] = ex.submissions || [];
+      const count = subs.length;
+      const totalMarks = ex.totalMarks || 100;
+      const passMarks = ex.passMarks || Math.round(totalMarks * 0.35);
+      const passed = subs.filter((s: any) => (s.marksObtained || 0) >= passMarks).length;
+      const avg = count > 0 ? Math.round(subs.reduce((a: number, s: any) => a + (s.marksObtained || 0), 0) / count) : 0;
+      const highest = count > 0 ? Math.max(...subs.map((s: any) => s.marksObtained || 0)) : 0;
+      const passRate = count > 0 ? Math.round((passed / count) * 100) : 0;
+      return {
+        id: ex.id,
+        title: ex.title,
+        className: ex.class?.name || 'All',
+        questionsCount: ex._count?.questions || ex.questions?.length || 0,
+        attempts: count,
+        passed,
+        passRate,
+        avgScore: avg,
+        highestScore: highest,
+        totalMarks,
+      };
+    });
+  }, [exams]);
+
+  const handleExportExcel = () => {
+    if (reportRows.length === 0) {
+      toast.error('No exam data to export');
+      return;
+    }
+    const ws = XLSX.utils.json_to_sheet(reportRows.map((r) => ({
+      'Exam Title': r.title,
+      'Class': r.className,
+      'Questions': r.questionsCount,
+      'Total Attempts': r.attempts,
+      'Passed': r.passed,
+      'Pass Rate %': `${r.passRate}%`,
+      'Average Score': `${r.avgScore} / ${r.totalMarks}`,
+      'Highest Score': `${r.highestScore} / ${r.totalMarks}`,
+    })));
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Exam_Reports');
+    XLSX.writeFile(wb, `Online_Exam_Reports_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Report exported to Excel!');
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-black text-slate-900">Performance Reports & Analytics</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Exam-wise pass percentage, average & highest scores, and Master Question Bank coverage ({masterQuestionsList.length} Qs)
+          </p>
+        </div>
+        <button
+          onClick={handleExportExcel}
+          className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer"
+        >
+          <Download size={15} /> Export Report (.xlsx)
+        </button>
+      </div>
+
+      <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+        {reportRows.length === 0 ? (
+          <div className="p-12 text-center text-xs font-bold text-slate-500">
+            No exams created yet. Create an exam and collect student submissions to view analytics reports.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-black uppercase text-[10.5px] tracking-wider">
+                  <th className="py-3.5 px-5">Exam Title</th>
+                  <th className="py-3.5 px-4 text-center">Class</th>
+                  <th className="py-3.5 px-4 text-center">Questions</th>
+                  <th className="py-3.5 px-4 text-center">Attempts</th>
+                  <th className="py-3.5 px-4 text-center">Pass Rate</th>
+                  <th className="py-3.5 px-4 text-center">Avg Score</th>
+                  <th className="py-3.5 px-4 text-center">Highest</th>
+                  <th className="py-3.5 px-4 text-right">Leaderboard</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {reportRows.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50">
+                    <td className="py-3.5 px-5 font-black text-slate-900">{r.title}</td>
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-600">{r.className}</td>
+                    <td className="py-3.5 px-4 text-center font-bold text-indigo-600">{r.questionsCount}</td>
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-800">{r.attempts}</td>
+                    <td className="py-3.5 px-4 text-center">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-black">
+                        {r.passRate}%
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-700">{r.avgScore} / {r.totalMarks}</td>
+                    <td className="py-3.5 px-4 text-center font-black text-amber-600">{r.highestScore}</td>
+                    <td className="py-3.5 px-4 text-right">
+                      <button
+                        onClick={() => navigate(`/competitive-exam-leaderboard/${r.id}`)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs cursor-pointer"
+                      >
+                        View Ranks →
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
 // UI REUSABLE HELPERS
 // ═══════════════════════════════════════════════════════════════
 
@@ -3836,7 +4504,7 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
 interface StatCardProps {
   title: string;
   value: number | string;
-  color: 'blue' | 'emerald' | 'purple' | 'amber';
+  color: 'blue' | 'emerald' | 'purple' | 'amber' | 'indigo' | 'rose';
   icon: React.ReactNode;
   subtitle?: string;
   active?: boolean;
@@ -3849,6 +4517,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, subtitle
     emerald: 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-md',
     purple: 'border-purple-500 bg-purple-50/70 ring-2 ring-purple-500/20 shadow-md',
     amber: 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-md',
+    indigo: 'border-indigo-500 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-md',
+    rose: 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-500/20 shadow-md',
   };
 
   const badgeBg: Record<string, string> = {
@@ -3856,6 +4526,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, subtitle
     emerald: 'bg-emerald-600 text-white',
     purple: 'bg-purple-600 text-white',
     amber: 'bg-amber-600 text-white',
+    indigo: 'bg-indigo-600 text-white',
+    rose: 'bg-rose-600 text-white',
   };
 
   const defaultBadgeBg: Record<string, string> = {
@@ -3863,6 +4535,8 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, subtitle
     emerald: 'bg-emerald-50 text-emerald-600',
     purple: 'bg-purple-50 text-purple-600',
     amber: 'bg-amber-50 text-amber-600',
+    indigo: 'bg-indigo-50 text-indigo-600',
+    rose: 'bg-rose-50 text-rose-600',
   };
 
   return (
