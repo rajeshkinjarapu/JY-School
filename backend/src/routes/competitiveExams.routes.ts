@@ -19,6 +19,7 @@ import {
   updateCompetitiveQuestion,
   parseTextQuestionsAI,
   bulkAddQuestions,
+  importFromMasterBank,
   populateSampleQuestions
 } from "../controllers/competitiveExams.controller";
 
@@ -46,6 +47,7 @@ router.post("/:examId/questions", authenticate, addCompetitiveQuestion);
 router.post("/:examId/generate-ai", authenticate, generateCompetitiveQuestionsAI);
 router.post("/:examId/ai-parse-text", authenticate, parseTextQuestionsAI);
 router.post("/:examId/bulk-add-questions", authenticate, bulkAddQuestions);
+router.post("/:examId/import-from-bank", authenticate, importFromMasterBank);
 router.put("/question/:questionId", authenticate, updateCompetitiveQuestion);
 router.delete("/question/:questionId", authenticate, deleteCompetitiveQuestion);
 

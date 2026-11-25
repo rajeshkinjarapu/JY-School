@@ -112,13 +112,19 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const [selectedExamIdForQB, setSelectedExamIdForQB] = useState<string>('');
   const [createdExamModal, setCreatedExamModal] = useState<any | null>(null);
   const [previewExamPaper, setPreviewExamPaper] = useState<any | null>(null);
+  const [masterQuestionsCount, setMasterQuestionsCount] = useState<number>(0);
 
   const fetchExams = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/api/competitive-exams/admin');
+      const [res, mqRes] = await Promise.all([
+        api.get('/api/competitive-exams/admin'),
+        api.get('/api/master-questions').catch(() => ({ data: { data: [] } })),
+      ]);
       const loadedExams = extractExams(res.data);
       setExams(loadedExams);
+      const mqList = mqRes?.data?.data || mqRes?.data || [];
+      setMasterQuestionsCount(Array.isArray(mqList) ? mqList.length : 0);
       if (loadedExams.length > 0 && !selectedExamIdForQB) {
         setSelectedExamIdForQB(loadedExams[0].id);
       }
@@ -140,7 +146,8 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     fetchExams();
   }, []);
 
-  const totalQuestions = exams.reduce((acc, e) => acc + (e._count?.questions || e.questions?.length || 0), 0);
+  const examQuestionsCount = exams.reduce((acc, e) => acc + (e._count?.questions || e.questions?.length || 0), 0);
+  const totalQuestions = Math.max(masterQuestionsCount, examQuestionsCount);
   const totalSubmissions = exams.reduce((acc, e) => acc + (e._count?.submissions || e.submissions?.length || 0), 0);
 
   // Compute Active Students across all exams
@@ -1543,24 +1550,45 @@ const QuestionBankTab = ({
   onExamsUpdated, 
   navigate 
 }: any) => {
+  const [bankSource, setBankSource] = useState<'MASTER' | 'EXAM'>('MASTER');
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-  const [showAiTextParserModal, setShowAiTextParserModal] = useState(false);
+  const [showAddMasterModal, setShowAddMasterModal] = useState(false);
+  const [showMasterAiModal, setShowMasterAiModal] = useState(false);
+  const [showPickFromBankModal, setShowPickFromBankModal] = useState(false);
   
-  // Subject & Search Filters
+  // Subject, Category & Search Filters
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedSubject, setSelectedSubject] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
 
+  const fetchMasterBank = async () => {
+    setLoadingQuestions(true);
+    try {
+      const res = await api.get('/api/master-questions');
+      const list = res.data?.data || res.data || [];
+      setQuestions(Array.isArray(list) ? list : []);
+    } catch (e) {
+      toast.error('Failed to load Master Question Bank');
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+
   const fetchQuestions = async (examId: string) => {
+    if (bankSource === 'MASTER') {
+      await fetchMasterBank();
+      return;
+    }
+
     if (!examId) {
       setQuestions([]);
       return;
     }
 
     if (examId === 'ALL') {
-      // Aggregate questions from all exams
       const allQ = exams.flatMap((ex: any) => 
         (ex.questions || []).map((q: any) => ({
           ...q,
@@ -1590,12 +1618,16 @@ const QuestionBankTab = ({
   };
 
   useEffect(() => {
-    if (selectedExamId) {
+    if (bankSource === 'MASTER') {
+      fetchMasterBank();
+    } else if (selectedExamId) {
       fetchQuestions(selectedExamId);
     } else if (exams.length > 0) {
       setSelectedExamId(exams[0].id);
+    } else {
+      setQuestions([]);
     }
-  }, [selectedExamId, exams]);
+  }, [bankSource, selectedExamId, exams]);
 
   const activeExam = exams.find((e: any) => e.id === selectedExamId) || exams[0];
 
@@ -1611,7 +1643,7 @@ const QuestionBankTab = ({
     };
 
     questions.forEach((q: any) => {
-      const sub = normalizeSubject(q.chapterName);
+      const sub = normalizeSubject(q.subjectName || q.chapterName);
       counts[sub] = (counts[sub] || 0) + 1;
     });
 
@@ -1628,21 +1660,24 @@ const QuestionBankTab = ({
   // Filtered Questions
   const filteredQuestions = useMemo(() => {
     return questions.filter((q: any) => {
-      const qSubject = normalizeSubject(q.chapterName);
+      const qSubject = normalizeSubject(q.subjectName || q.chapterName);
       const matchesSubject = selectedSubject === 'ALL' || qSubject === selectedSubject;
+      const matchesCategory = bankSource !== 'MASTER' || selectedCategory === 'ALL' || (q.category || 'GENERAL').toUpperCase() === selectedCategory;
       const matchesDifficulty = difficultyFilter === 'ALL' || (q.difficulty || 'MEDIUM').toUpperCase() === difficultyFilter.toUpperCase();
       const qText = (q.questionText || '').toLowerCase();
       const chText = (q.chapterName || '').toLowerCase();
+      const subText = (q.subjectName || '').toLowerCase();
       const matchesSearch = !searchQuery.trim() || 
         qText.includes(searchQuery.toLowerCase()) || 
-        chText.includes(searchQuery.toLowerCase());
+        chText.includes(searchQuery.toLowerCase()) ||
+        subText.includes(searchQuery.toLowerCase());
 
-      return matchesSubject && matchesDifficulty && matchesSearch;
+      return matchesSubject && matchesCategory && matchesDifficulty && matchesSearch;
     });
-  }, [questions, selectedSubject, difficultyFilter, searchQuery]);
+  }, [questions, selectedSubject, selectedCategory, bankSource, difficultyFilter, searchQuery]);
 
-  // If authoring mode is active, render the Dedicated Full Question Studio view
-  if (isAddingQuestion && activeExam) {
+  // If authoring mode is active for an exam, render the Dedicated Full Question Studio view
+  if (isAddingQuestion && activeExam && bankSource === 'EXAM') {
     return (
       <DedicatedQuestionEditorView
         exam={activeExam}
@@ -1661,85 +1696,174 @@ const QuestionBankTab = ({
   const handleDeleteQuestion = async (qId: string) => {
     if (!window.confirm('Are you sure you want to delete this question?')) return;
     try {
-      await api.delete(`/api/competitive-exams/question/${qId}`);
-      toast.success('Question deleted successfully');
-      fetchQuestions(selectedExamId);
+      if (bankSource === 'MASTER') {
+        await api.delete(`/api/master-questions/${qId}`);
+        toast.success('Deleted from Master Question Bank');
+        await fetchMasterBank();
+      } else {
+        await api.delete(`/api/competitive-exams/question/${qId}`);
+        toast.success('Removed from Exam');
+        await fetchQuestions(selectedExamId);
+      }
       onExamsUpdated();
     } catch (e) {
       toast.error('Failed to delete question');
     }
   };
 
-  if (exams.length === 0) {
-    return (
-      <div className="p-16 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
-        <Database size={64} className="text-indigo-200 mb-4" />
-        <h3 className="text-xl font-bold text-slate-800">No Exams Available</h3>
-        <p className="text-slate-500 max-w-md mt-2">
-          Create an exam first to start building or generating its question bank.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
       {/* Top Controls Card */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex-1 w-full lg:w-auto">
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
-            Select Exam to View & Manage Questions
-          </label>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <select
-              value={selectedExamId}
-              onChange={e => setSelectedExamId(e.target.value)}
-              className="w-full lg:max-w-md p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
-            >
-              <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)} Questions)</option>
-              {exams.map((ex: any) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
-                </option>
-              ))}
-            </select>
-            
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
+        {/* Source Mode Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl w-fit">
             <button
-              onClick={() => fetchQuestions(selectedExamId)}
-              className="p-2.5 sm:p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer shrink-0"
-              title="Refresh Questions"
+              type="button"
+              onClick={() => setBankSource('MASTER')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                bankSource === 'MASTER'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              <RefreshCw size={17} className={loadingQuestions ? 'animate-spin' : ''} />
+              <Database size={14} />
+              <span>Central Master Bank (Permanent DB)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setBankSource('EXAM')}
+              className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
+                bankSource === 'EXAM'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Layers size={14} />
+              <span>Exam-Specific Questions ({exams.length})</span>
             </button>
           </div>
+
+          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
+            ✅ All added questions are permanently saved in PostgreSQL
+          </span>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
-          <button
-            onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 cursor-pointer"
-            title="Open Dedicated Full Page AI Text Parser"
-          >
-            <FileText size={15} className="text-emerald-200" />
-            <span>📄 Paste Exam Text (AI Parser)</span>
-          </button>
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+          {bankSource === 'MASTER' ? (
+            <div className="flex-1 w-full lg:w-auto flex flex-wrap items-center gap-2">
+              <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1">Category:</span>
+              {['ALL', 'JEE', 'NEET', 'NAVODAYA', 'APPSC', 'SSC', 'SCHOOL', 'GENERAL'].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                    selectedCategory === cat
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {cat === 'ALL' ? 'All Categories' : cat}
+                </button>
+              ))}
+              <button
+                onClick={fetchMasterBank}
+                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer"
+                title="Refresh Master Bank"
+              >
+                <RefreshCw size={15} className={loadingQuestions ? 'animate-spin' : ''} />
+              </button>
+            </div>
+          ) : exams.length === 0 ? (
+            <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-xl">
+              No exams created yet. You can add questions to the Central Master Bank anytime, then import them when you create an exam!
+            </div>
+          ) : (
+            <div className="flex-1 w-full lg:w-auto">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
+                Select Exam to View & Manage Questions
+              </label>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <select
+                  value={selectedExamId}
+                  onChange={e => setSelectedExamId(e.target.value)}
+                  className="w-full lg:max-w-md p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+                >
+                  <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)} Questions)</option>
+                  {exams.map((ex: any) => (
+                    <option key={ex.id} value={ex.id}>
+                      {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
+                    </option>
+                  ))}
+                </select>
+                
+                <button
+                  onClick={() => fetchQuestions(selectedExamId)}
+                  className="p-2.5 sm:p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer shrink-0"
+                  title="Refresh Questions"
+                >
+                  <RefreshCw size={17} className={loadingQuestions ? 'animate-spin' : ''} />
+                </button>
+              </div>
+            </div>
+          )}
 
-          <button
-            onClick={() => activeExam && onOpenAiModal(activeExam)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Sparkles size={15} className="text-amber-300" />
-            <span>✨ AI Generate Questions</span>
-          </button>
-
-          <button
-            onClick={() => setIsAddingQuestion(true)}
-            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Plus size={15} />
-            <span>Add Manually</span>
-          </button>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
+            {bankSource === 'MASTER' ? (
+              <>
+                <button
+                  onClick={() => setShowMasterAiModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <FileText size={15} />
+                  <span>📄 Paste Exam Text (AI Parser)</span>
+                </button>
+                <button
+                  onClick={() => setShowAddMasterModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span>Add Question to Bank</span>
+                </button>
+              </>
+            ) : exams.length > 0 ? (
+              <>
+                {activeExam && (
+                  <button
+                    onClick={() => setShowPickFromBankModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                  >
+                    <Database size={15} />
+                    <span>📚 Pick from Master Bank</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                  title="Open Dedicated Full Page AI Text Parser"
+                >
+                  <FileText size={15} />
+                  <span>📄 Paste Exam Text</span>
+                </button>
+                <button
+                  onClick={() => activeExam && onOpenAiModal(activeExam)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <Sparkles size={15} className="text-amber-300" />
+                  <span>✨ AI Generate</span>
+                </button>
+                <button
+                  onClick={() => setIsAddingQuestion(true)}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                >
+                  <Plus size={15} />
+                  <span>Add Manually</span>
+                </button>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -1856,13 +1980,36 @@ const QuestionBankTab = ({
               >
                 Reset All Filters
               </button>
-            ) : (
+            ) : bankSource === 'MASTER' ? (
               <>
                 <button
-                  onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer hover:scale-105"
+                  onClick={() => setShowMasterAiModal(true)}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer"
                 >
-                  <FileText size={15} className="text-emerald-200" /> 📄 Paste Exam Text (AI Parser)
+                  <FileText size={15} /> 📄 Paste Exam Text (AI Parser)
+                </button>
+                <button
+                  onClick={() => setShowAddMasterModal(true)}
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Plus size={14} /> Add Question to Bank
+                </button>
+              </>
+            ) : (
+              <>
+                {activeExam && (
+                  <button
+                    onClick={() => setShowPickFromBankModal(true)}
+                    className="px-4 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-black hover:bg-amber-600 transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <Database size={15} /> 📚 Pick from Master Bank
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                >
+                  <FileText size={15} /> 📄 Paste Exam Text (AI Parser)
                 </button>
                 <button
                   onClick={() => activeExam && onOpenAiModal(activeExam)}
@@ -1872,7 +2019,7 @@ const QuestionBankTab = ({
                 </button>
                 <button
                   onClick={() => setIsAddingQuestion(true)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 text-white text-xs font-bold hover:bg-slate-900 transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition cursor-pointer"
                 >
                   + Add Manually
                 </button>
@@ -1921,6 +2068,16 @@ const QuestionBankTab = ({
                     <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                       {q.difficulty || 'MEDIUM'}
                     </span>
+                    {q.category && (
+                      <span className="text-[10px] font-black text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                        {q.category}
+                      </span>
+                    )}
+                    {typeof q._count?.examQuestions === 'number' && (
+                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                        Used in {q._count.examQuestions} Exams
+                      </span>
+                    )}
                     {q.examTitle && (
                       <span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">
                         Exam: {q.examTitle}
@@ -1992,18 +2149,400 @@ const QuestionBankTab = ({
         </div>
       )}
 
-      {/* AI Text Parser Modal */}
-      {showAiTextParserModal && (
-        <AiTextParserModal
+      {/* Add Single Question to Master Bank Modal */}
+      {showAddMasterModal && (
+        <AddMasterQuestionModal
+          onClose={() => setShowAddMasterModal(false)}
+          onSaved={() => {
+            setShowAddMasterModal(false);
+            fetchMasterBank();
+            onExamsUpdated();
+          }}
+        />
+      )}
+
+      {/* AI Text Parser for Master Bank Modal */}
+      {showMasterAiModal && (
+        <MasterAiParserModal
+          onClose={() => setShowMasterAiModal(false)}
+          onSaved={() => {
+            setShowMasterAiModal(false);
+            fetchMasterBank();
+            onExamsUpdated();
+          }}
+        />
+      )}
+
+      {/* Pick from Master Bank Modal */}
+      {showPickFromBankModal && activeExam && (
+        <PickFromMasterBankModal
           exam={activeExam}
-          onClose={() => setShowAiTextParserModal(false)}
-          onParsedAndAdded={() => {
-            setShowAiTextParserModal(false);
+          onClose={() => setShowPickFromBankModal(false)}
+          onImported={() => {
+            setShowPickFromBankModal(false);
             fetchQuestions(selectedExamId);
             onExamsUpdated();
           }}
         />
       )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// MASTER BANK MODALS (ADD, AI PARSE, PICK INTO EXAM)
+// ═══════════════════════════════════════════════════════════════
+
+const AddMasterQuestionModal: React.FC<{ onClose: () => void; onSaved: () => void }> = ({ onClose, onSaved }) => {
+  const [rawInput, setRawInput] = useState('');
+  const [category, setCategory] = useState('JEE');
+  const [subjectName, setSubjectName] = useState('Mathematics');
+  const [chapterName, setChapterName] = useState('General');
+  const [difficulty, setDifficulty] = useState('MEDIUM');
+  const [marks, setMarks] = useState(4);
+  const [saving, setSaving] = useState(false);
+
+  const parsed = useMemo(() => parseSingleRawQuestionAndOptions(rawInput), [rawInput]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!parsed.questionText.trim()) {
+      toast.error('Please enter or paste a question with options');
+      return;
+    }
+    setSaving(true);
+    try {
+      const correctOpt = parsed.options[parsed.correctAnswerIndex] || parsed.options[0] || 'A';
+      await api.post('/api/master-questions', {
+        category,
+        subjectName,
+        chapterName: chapterName.trim() || subjectName,
+        difficulty,
+        marks: Number(marks) || 4,
+        questionText: parsed.questionText,
+        options: parsed.options,
+        correctAnswer: correctOpt,
+      });
+      toast.success('Question saved permanently to Master Bank!');
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to save question');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+        <div className="p-5 bg-gradient-to-r from-indigo-600 to-blue-700 text-white flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <Database className="w-5 h-5" /> Add Question to Central Master Bank
+            </h3>
+            <p className="text-xs text-indigo-100 mt-0.5">Saved permanently in PostgreSQL — reusable across any exam</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full cursor-pointer">
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto flex-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div>
+              <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Category</label>
+              <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                {['JEE', 'NEET', 'NAVODAYA', 'APPSC', 'SSC', 'SCHOOL', 'GENERAL'].map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Subject</label>
+              <select value={subjectName} onChange={e => setSubjectName(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Mental Ability', 'English', 'General'].map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Difficulty</label>
+              <select value={difficulty} onChange={e => setDifficulty(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                <option value="EASY">Easy</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HARD">Hard</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Marks</label>
+              <input type="number" min={1} value={marks} onChange={e => setMarks(Number(e.target.value))} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Chapter / Topic</label>
+            <input type="text" value={chapterName} onChange={e => setChapterName(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" placeholder="e.g. Quadratic Equations" />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Paste Question + Options + Answer Key *</label>
+            <textarea
+              rows={7}
+              value={rawInput}
+              onChange={e => setRawInput(e.target.value)}
+              className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-800 focus:bg-white focus:border-indigo-500 outline-none"
+              placeholder={"1. If $x^2 - 5x + 6 = 0$, find the roots.\n(A) 2, 3\n(B) 1, 6\n(C) -2, -3\n(D) 3, 4\nAns: A"}
+              required
+            />
+          </div>
+
+          {parsed.questionText && (
+            <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-200 space-y-2">
+              <div className="text-[11px] font-black text-indigo-700 uppercase">Live KaTeX Preview</div>
+              <div className="text-sm font-bold text-slate-900"><LatexRenderer text={parsed.questionText} /></div>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {parsed.options.map((opt, i) => (
+                  <div key={i} className={`p-2 rounded-xl border ${i === parsed.correctAnswerIndex ? 'bg-emerald-50 border-emerald-400 font-bold text-emerald-900' : 'bg-white border-slate-200'}`}>
+                    <strong>({String.fromCharCode(65 + i)})</strong> <LatexRenderer text={opt || '-'} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-slate-100">
+            <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
+            <button type="submit" disabled={saving} className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer disabled:opacity-50">
+              {saving ? 'Saving...' : 'Save to Master Bank'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const MasterAiParserModal: React.FC<{ onClose: () => void; onSaved: () => void }> = ({ onClose, onSaved }) => {
+  const [rawText, setRawText] = useState('');
+  const [category, setCategory] = useState('JEE');
+  const [subjectName, setSubjectName] = useState('Mathematics');
+  const [chapterName, setChapterName] = useState('General');
+  const [parsing, setParsing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [parsedQuestions, setParsedQuestions] = useState<any[]>([]);
+
+  const handleParse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rawText.trim()) return;
+    setParsing(true);
+    try {
+      const res = await api.post('/api/master-questions/ai-parse-text', {
+        rawText,
+        defaultMarks: 4,
+        chapterName: `${subjectName}: ${chapterName}`,
+      });
+      setParsedQuestions(res.data?.questions || []);
+      toast.success(`Extracted ${res.data?.questions?.length || 0} questions!`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to parse text');
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    if (parsedQuestions.length === 0) return;
+    setSaving(true);
+    try {
+      await api.post('/api/master-questions/bulk', {
+        questions: parsedQuestions,
+        category,
+        subjectName,
+      });
+      toast.success(`Saved ${parsedQuestions.length} questions permanently to DB!`);
+      onSaved();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to save questions');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+        <div className="p-5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-black">AI Smart Text Parser → Master Question Bank</h3>
+            <p className="text-xs text-emerald-100 mt-0.5">Paste multiple questions and save them permanently to PostgreSQL</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full cursor-pointer"><X size={20} /></button>
+        </div>
+
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          {parsedQuestions.length === 0 ? (
+            <form onSubmit={handleParse} className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <select value={category} onChange={e => setCategory(e.target.value)} className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                  {['JEE', 'NEET', 'NAVODAYA', 'APPSC', 'SSC', 'SCHOOL', 'GENERAL'].map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <select value={subjectName} onChange={e => setSubjectName(e.target.value)} className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
+                  {['Mathematics', 'Physics', 'Chemistry', 'Biology', 'Mental Ability', 'English', 'General'].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <input type="text" value={chapterName} onChange={e => setChapterName(e.target.value)} placeholder="Chapter" className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" />
+              </div>
+              <textarea
+                rows={9}
+                value={rawText}
+                onChange={e => setRawText(e.target.value)}
+                className="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-800"
+                placeholder="Paste 10-50 MCQ questions here..."
+                required
+              />
+              <div className="flex justify-end gap-2">
+                <button type="button" onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
+                <button type="submit" disabled={parsing} className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer disabled:opacity-50">
+                  {parsing ? 'Parsing with Gemini AI...' : '⚡ Parse Questions'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                <span className="text-xs font-black text-emerald-800">{parsedQuestions.length} Questions Ready to Save</span>
+                <button onClick={() => setParsedQuestions([])} className="text-xs font-bold text-emerald-700 underline cursor-pointer">Back</button>
+              </div>
+              {parsedQuestions.map((q, i) => (
+                <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                  <div className="font-bold text-slate-900">Q{i + 1}. <LatexRenderer text={q.questionText} /></div>
+                </div>
+              ))}
+              <div className="flex justify-end gap-2 pt-2">
+                <button onClick={onClose} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
+                <button onClick={handleSaveAll} disabled={saving} className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer disabled:opacity-50">
+                  {saving ? 'Saving to DB...' : `Save All (${parsedQuestions.length}) to Master Bank`}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PickFromMasterBankModal: React.FC<{ exam: any; onClose: () => void; onImported: () => void }> = ({ exam, onClose, onImported }) => {
+  const [bankList, setBankList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [search, setSearch] = useState('');
+  const [importing, setImporting] = useState(false);
+
+  useEffect(() => {
+    api.get('/api/master-questions')
+      .then(res => setBankList(res.data?.data || res.data || []))
+      .catch(() => toast.error('Failed to load Master Question Bank'))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return bankList;
+    const q = search.toLowerCase();
+    return bankList.filter(item =>
+      (item.questionText || '').toLowerCase().includes(q) ||
+      (item.chapterName || '').toLowerCase().includes(q) ||
+      (item.subjectName || '').toLowerCase().includes(q) ||
+      (item.category || '').toLowerCase().includes(q)
+    );
+  }, [bankList, search]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const handleImport = async () => {
+    if (selectedIds.length === 0) return;
+    setImporting(true);
+    try {
+      await api.post(`/api/competitive-exams/${exam.id}/import-from-bank`, { masterQuestionIds: selectedIds });
+      toast.success(`Imported ${selectedIds.length} questions into ${exam.title}!`);
+      onImported();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to import questions');
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
+        <div className="p-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-black">Pick Questions from Central Master Bank</h3>
+            <p className="text-xs text-amber-100 mt-0.5">Target Exam: {exam.title}</p>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-full cursor-pointer"><X size={20} /></button>
+        </div>
+
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search by question, subject, chapter, category..."
+            className="flex-1 px-4 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={() => setSelectedIds(filtered.map(q => q.id))}
+            className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-indigo-600 cursor-pointer"
+          >
+            Select All ({filtered.length})
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto flex-1 space-y-2.5 bg-slate-50">
+          {loading ? (
+            <div className="py-12 text-center text-xs font-bold text-slate-500">Loading Master Question Bank...</div>
+          ) : filtered.length === 0 ? (
+            <div className="py-12 text-center text-xs font-bold text-slate-500">No questions found in Master Bank.</div>
+          ) : (
+            filtered.map((q) => {
+              const checked = selectedIds.includes(q.id);
+              return (
+                <div
+                  key={q.id}
+                  onClick={() => toggleSelect(q.id)}
+                  className={`p-4 rounded-2xl border cursor-pointer transition flex items-start gap-3 ${
+                    checked ? 'bg-indigo-50 border-indigo-400' : 'bg-white border-slate-200 hover:border-indigo-300'
+                  }`}
+                >
+                  <input type="checkbox" checked={checked} readOnly className="mt-1 w-4 h-4 text-indigo-600 rounded" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200">{q.category || 'GENERAL'}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200">{q.subjectName || q.chapterName}</span>
+                      <span className="text-[10px] font-bold text-slate-500">{q.difficulty}</span>
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 line-clamp-2"><LatexRenderer text={q.questionText} /></div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center">
+          <span className="text-xs font-bold text-slate-600">Selected: <strong className="text-indigo-600">{selectedIds.length}</strong> questions</span>
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
+            <button
+              onClick={handleImport}
+              disabled={importing || selectedIds.length === 0}
+              className="px-6 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer disabled:opacity-50"
+            >
+              {importing ? 'Importing...' : `Import (${selectedIds.length}) to Exam`}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

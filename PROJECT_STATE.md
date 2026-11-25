@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Central Master Question Bank & Dual-Save పూర్తి అమలు (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `questions add chesinavi anni database lo save ayi undali` (Exam లేకపోయినా ప్రశ్నలు డేటాబేస్‌లో శాశ్వతంగా సేవ్ అవ్వాలి).
+- **చేసిన శాశ్వత మార్పులు:**
+  1. `backend/prisma/schema.prisma`: `MasterQuestion` (`category`, `subjectName`, `examQuestions`) మరియు `CompetitiveExamQuestion.masterQuestionId` (`onDelete: SetNull`) అప్‌డేట్ చేశాము.
+  2. `backend/src/controllers/masterQuestions.controller.ts` & `masterQuestions.routes.ts`: `bulkAddMasterQuestions`, `parseMasterTextAI`, `updateMasterQuestion`, `resolveMasterSubjectId` తో పూర్తి Master Bank APIs సిద్ధం చేశాము.
+  3. `backend/src/controllers/competitiveExams.controller.ts` & `competitiveExams.routes.ts`: `saveToMasterBankIfNew` (Dual-Save) మరియు `importFromMasterBank` యాడ్ చేశాము.
+  4. `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `QuestionBankTab` లో **Central Master Bank (Permanent DB)** మోడ్, `AddMasterQuestionModal`, `MasterAiParserModal` మరియు Exam కోసం `PickFromMasterBankModal` బిల్డ్ చేశాము.
+
 ## చివరి సంభాషణ - `/login` Infinite Reload Loop పరిష్కారం (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `website ala load avutu undi aagatam ledu check cheyu` (`/login` స్పిన్నర్ వద్దే ఆగిపోవడం & `GET /api/promotion/years 401` లూప్).
 - **రూట్ కాజ్ & పరిష్కారం:**

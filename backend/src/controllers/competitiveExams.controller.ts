@@ -424,6 +424,63 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
   }
 };
 
+// Helper: Dual-Save every added question into MasterQuestion so it is NEVER lost
+async function saveToMasterBankIfNew(qData: {
+  questionText: string;
+  questionType?: string;
+  imageUrl?: string | null;
+  options: string;
+  correctAnswer: string;
+  marks?: number;
+  chapterName?: string;
+  difficulty?: string;
+}): Promise<string | null> {
+  try {
+    const cleanText = String(qData.questionText || '').trim();
+    if (!cleanText) return null;
+
+    const existing = await prisma.masterQuestion.findFirst({
+      where: { questionText: cleanText },
+      select: { id: true },
+    });
+    if (existing) return existing.id;
+
+    const chap = qData.chapterName || 'General';
+    const subName = chap.includes(':') ? chap.split(':')[0].trim() : chap;
+
+    let sub = await prisma.subject.findFirst({
+      where: { name: { contains: subName, mode: 'insensitive' } },
+      select: { id: true },
+    }).catch(() => null);
+    if (!sub) {
+      sub = await prisma.subject.findFirst({ select: { id: true } });
+    }
+    if (!sub) return null;
+
+    const created = await prisma.masterQuestion.create({
+      data: {
+        category: 'GENERAL',
+        subjectId: sub.id,
+        subjectName: subName,
+        chapterName: chap,
+        questionText: cleanText,
+        questionType: qData.questionType || 'MCQ',
+        imageUrl: qData.imageUrl || null,
+        options: qData.options,
+        correctAnswer: qData.correctAnswer || 'Option A',
+        marks: Number(qData.marks) || 4,
+        negativeMarks: 1,
+        difficulty: qData.difficulty || 'MEDIUM',
+      },
+      select: { id: true },
+    });
+    return created.id;
+  } catch (err) {
+    console.warn('saveToMasterBankIfNew warning:', err);
+    return null;
+  }
+}
+
 export const addCompetitiveQuestion = async (req: Request, res: Response) => {
   try {
     const { examId } = req.params;
@@ -433,9 +490,21 @@ export const addCompetitiveQuestion = async (req: Request, res: Response) => {
       ? JSON.stringify(options) 
       : (typeof options === 'string' ? options : JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']));
 
+    const masterQuestionId = await saveToMasterBankIfNew({
+      questionText: questionText || '',
+      questionType: questionType || 'MCQ',
+      imageUrl: imageUrl || null,
+      options: formattedOptions,
+      correctAnswer: correctAnswer || 'Option A',
+      marks: Number(marks) || 4,
+      chapterName: chapterName || 'General',
+      difficulty: difficulty || 'MEDIUM',
+    });
+
     const q = await prisma.competitiveExamQuestion.create({
       data: {
         competitiveExamId: examId,
+        masterQuestionId,
         questionText: questionText || '',
         questionType: questionType || 'MCQ',
         imageUrl: imageUrl || null,
@@ -574,9 +643,21 @@ export const bulkAddQuestions = async (req: Request, res: Response) => {
         ? JSON.stringify(q.options) 
         : (typeof q.options === 'string' ? q.options : JSON.stringify(['A', 'B', 'C', 'D']));
 
+      const masterQuestionId = await saveToMasterBankIfNew({
+        questionText: q.questionText || '',
+        questionType: q.questionType || 'MCQ',
+        imageUrl: q.imageUrl || null,
+        options: formattedOptions,
+        correctAnswer: q.correctAnswer || (Array.isArray(q.options) ? q.options[0] : 'A'),
+        marks: Number(q.marks) || 4,
+        chapterName: q.chapterName || 'General',
+        difficulty: q.difficulty || 'MEDIUM',
+      });
+
       const saved = await prisma.competitiveExamQuestion.create({
         data: {
           competitiveExamId: examId,
+          masterQuestionId,
           questionText: q.questionText || '',
           questionType: q.questionType || 'MCQ',
           imageUrl: q.imageUrl || null,
@@ -599,6 +680,55 @@ export const bulkAddQuestions = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('bulkAddQuestions error:', error);
     res.status(500).json({ success: false, message: error?.message || 'Failed to bulk add questions' });
+  }
+};
+
+export const importFromMasterBank = async (req: Request, res: Response) => {
+  try {
+    const { examId } = req.params;
+    const { masterQuestionIds } = req.body;
+
+    if (!Array.isArray(masterQuestionIds) || masterQuestionIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please select at least one question to import' });
+    }
+
+    const exam = await prisma.competitiveExam.findUnique({ where: { id: examId } });
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Competitive exam not found' });
+    }
+
+    const masterQuestions = await prisma.masterQuestion.findMany({
+      where: { id: { in: masterQuestionIds } },
+    });
+
+    const imported = [];
+    for (const mq of masterQuestions) {
+      const created = await prisma.competitiveExamQuestion.create({
+        data: {
+          competitiveExamId: examId,
+          masterQuestionId: mq.id,
+          questionText: mq.questionText,
+          questionType: mq.questionType || 'MCQ',
+          imageUrl: mq.imageUrl || null,
+          options: mq.options,
+          correctAnswer: mq.correctAnswer,
+          marks: mq.marks || 4,
+          chapterName: mq.chapterName || mq.subjectName || 'General',
+          difficulty: mq.difficulty || 'MEDIUM',
+        },
+      });
+      imported.push(created);
+    }
+
+    res.status(201).json({
+      success: true,
+      count: imported.length,
+      message: `Imported ${imported.length} questions from Master Question Bank`,
+      data: imported,
+    });
+  } catch (error: any) {
+    console.error('importFromMasterBank error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to import questions' });
   }
 };
 
