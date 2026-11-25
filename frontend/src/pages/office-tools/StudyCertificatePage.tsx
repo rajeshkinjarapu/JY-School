@@ -5,7 +5,7 @@ import {
   Search, RefreshCw, ZoomIn, ZoomOut, Maximize2, Sparkles,
   CheckCircle2, Building, Calendar, MapPin, User, Award, Eye
 } from 'lucide-react';
-import html2canvas from 'html2canvas';
+import { toJpeg } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
@@ -323,7 +323,6 @@ export const StudyCertificatePage: React.FC = () => {
     date: string;
   }) => {
     const logoUrl = getPhotoUrl(schoolSettings.logoUrl) || '/logo.png';
-    const sigUrl = schoolSettings.principalSignatureUrl ? getPhotoUrl(schoolSettings.principalSignatureUrl) : '';
 
     return `
       <div class="cert-page">
@@ -433,13 +432,7 @@ export const StudyCertificatePage: React.FC = () => {
             </div>
 
             <div class="footer-sign">
-              ${sigUrl ? `
-                <div class="sig-img-wrap">
-                  <img src="${sigUrl}" alt="Principal Signature" />
-                </div>
-              ` : `
-                <div class="sig-space"></div>
-              `}
+              <div class="sig-space"></div>
               <div class="sig-line"></div>
               <div class="sig-label">HEADMASTER / PRINCIPAL</div>
             </div>
@@ -686,12 +679,13 @@ export const StudyCertificatePage: React.FC = () => {
       font-size: 10.5pt;
     }
     .academic-table th {
-      background: #0b1a33;
-      color: #ffffff;
-      padding: 2.5mm 4mm;
-      font-weight: 800;
+      background: #f1f5f9;
+      color: #0b1a33;
+      border-bottom: 2px solid #0b1a33;
+      padding: 2.8mm 4mm;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       text-align: center;
     }
     .academic-table td {
@@ -814,7 +808,7 @@ export const StudyCertificatePage: React.FC = () => {
     printCertificatesIframe(certificates);
   };
 
-  // Export Single PDF via html2canvas & jsPDF
+  // Export Single PDF via html-to-image & jsPDF (avoids oklch error)
   const handleExportSinglePDF = async () => {
     if (!certPreviewRef.current) return;
     setIsExporting(true);
@@ -822,22 +816,20 @@ export const StudyCertificatePage: React.FC = () => {
 
     try {
       const el = certPreviewRef.current;
-      const canvas = await html2canvas(el, {
-        scale: 2.5,
-        useCORS: true,
+      const imgData = await toJpeg(el, {
+        quality: 0.96,
+        pixelRatio: 2.5,
         backgroundColor: '#FDFBF7',
-        logging: false,
       });
 
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
 
       const cleanName = currentPreviewData.studentName.replace(/[^a-zA-Z0-9]/g, '_') || 'Student';
       pdf.save(`Study_Certificate_${cleanName}.pdf`);
       toast.success('Study Certificate downloaded successfully!', { id: toastId });
     } catch (err: any) {
-      toast.error('Failed to export PDF: ' + err.message, { id: toastId });
+      toast.error('Failed to export PDF: ' + (err?.message || 'Unknown error'), { id: toastId });
     } finally {
       setIsExporting(false);
     }
@@ -876,22 +868,20 @@ export const StudyCertificatePage: React.FC = () => {
         };
 
         const tempDiv = document.createElement('div');
-        tempDiv.style.cssText = 'position:fixed;top:-10000px;left:-10000px;width:210mm;height:297mm;';
+        tempDiv.style.cssText = 'position:fixed;top:0;left:0;width:210mm;height:297mm;opacity:0;pointer-events:none;z-index:-9999;';
         tempDiv.innerHTML = generateCertificateHtml(certData);
         document.body.appendChild(tempDiv);
 
         const targetEl = tempDiv.querySelector('.cert-page') as HTMLElement;
         if (targetEl) {
-          const canvas = await html2canvas(targetEl, {
-            scale: 2,
-            useCORS: true,
+          const imgData = await toJpeg(targetEl, {
+            quality: 0.95,
+            pixelRatio: 2,
             backgroundColor: '#FDFBF7',
-            logging: false,
           });
 
-          const imgData = canvas.toDataURL('image/png');
           const pdf = new jsPDF('p', 'mm', 'a4');
-          pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+          pdf.addImage(imgData, 'JPEG', 0, 0, 210, 297);
 
           const studentFileName = (s.user?.name || s.name || `Student_${i + 1}`).replace(/[^a-zA-Z0-9]/g, '_');
           zip.file(`Certificate_${studentFileName}.pdf`, pdf.output('blob'));
@@ -953,7 +943,7 @@ export const StudyCertificatePage: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
             
             {/* Automatic School Branding Card */}
-            <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-2xl flex items-center gap-3.5 shadow-sm">
+            <div className="p-4 bg-gradient-to-r from-indigo-600 to-blue-700 text-white rounded-2xl flex items-center gap-3.5 shadow-sm">
               <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center shrink-0">
                 <img
                   src={getPhotoUrl(schoolSettings.logoUrl) || '/logo.png'}
@@ -1473,11 +1463,11 @@ export const StudyCertificatePage: React.FC = () => {
                     <div className="border-2 border-[#0b1a33] rounded overflow-hidden my-4">
                       <table className="w-full text-center border-collapse font-sans text-xs">
                         <thead>
-                          <tr className="bg-[#0b1a33] text-white">
-                            <th className="py-2 px-3 font-bold uppercase w-16">Sl. No.</th>
-                            <th className="py-2 px-3 font-bold uppercase">Academic Year</th>
-                            <th className="py-2 px-3 font-bold uppercase">Class</th>
-                            <th className="py-2 px-3 font-bold uppercase">Remarks</th>
+                          <tr className="bg-slate-100 border-b-2 border-[#0b1a33]">
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase w-16">Sl. No.</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Academic Year</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Class</th>
+                            <th style={{ color: '#0b1a33', backgroundColor: '#f1f5f9' }} className="py-2.5 px-3 font-black uppercase">Remarks</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-300 font-bold text-slate-800 bg-white/40">
@@ -1508,17 +1498,7 @@ export const StudyCertificatePage: React.FC = () => {
                     </div>
 
                     <div className="text-center w-56">
-                      {schoolSettings.principalSignatureUrl ? (
-                        <div className="h-14 flex items-end justify-center mb-1">
-                          <img
-                            src={getPhotoUrl(schoolSettings.principalSignatureUrl)}
-                            alt="Principal Signature"
-                            className="max-h-14 max-w-44 object-contain"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-14" />
-                      )}
+                      <div className="h-14" />
                       <div className="border-b-2 border-[#0b1a33] mb-1.5" />
                       <div className="text-xs font-black uppercase tracking-wider text-[#0b1a33]">
                         Headmaster / Principal

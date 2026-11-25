@@ -75,7 +75,7 @@ const TakeCompetitiveExamPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes((user?.role || '').toUpperCase());
-  
+
   const [schoolInfo, setSchoolInfo] = useState<{ schoolName: string; logoUrl?: string }>({
     schoolName: 'SRI VENKATESWARA JY SCHOOL',
     logoUrl: '/logo.png?v=1'
@@ -84,11 +84,11 @@ const TakeCompetitiveExamPage = () => {
   const [exam, setExam] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(0);
-  
+
   const [answers, setAnswers] = useState<Record<string, { option: string, timeSpent: number }>>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [questionStatuses, setQuestionStatuses] = useState<Record<string, 'not_visited' | 'not_answered' | 'answered' | 'marked_review' | 'answered_marked_review'>>({});
-  
+
   const [warnings, setWarnings] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasStartedExam, setHasStartedExam] = useState(false);
@@ -110,13 +110,13 @@ const TakeCompetitiveExamPage = () => {
           logoUrl: data.schoolLogoUrl || data.logoUrl || '/logo.png?v=1'
         });
       }
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   useEffect(() => {
     fetchExam();
     enterFullScreen();
-    
+
     // Check if opened in another tab within the session
     const tabKey = `exam_running_${id}`;
     sessionStorage.setItem(tabKey, 'true');
@@ -145,11 +145,11 @@ const TakeCompetitiveExamPage = () => {
       const examData = res.data?.data || res.data;
       if (!examData) throw new Error('No exam data received');
       setExam(examData);
-      
+
       // Calculate remaining time synced with server end time ideally.
       // For simplicity here, we use duration in seconds
       setTimeLeft((examData.duration || 180) * 60);
-      
+
       // Init statuses
       const initStatuses: any = {};
       const qs = examData.questions || [];
@@ -244,7 +244,7 @@ const TakeCompetitiveExamPage = () => {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       }
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const autoSubmit = () => {
@@ -257,7 +257,7 @@ const TakeCompetitiveExamPage = () => {
       return;
     }
     setShowSubmitModal(false);
-    
+
     setIsSubmitting(true);
     if (timerRef.current) clearInterval(timerRef.current);
     if (activeQuestionTimerRef.current) clearInterval(activeQuestionTimerRef.current);
@@ -275,7 +275,7 @@ const TakeCompetitiveExamPage = () => {
         answers: formattedAnswers,
         totalTimeTaken
       });
-      
+
       const submissionId = res.data?.submissionId || res.data?.data?.id;
       toast.success("Exam submitted successfully!");
       sessionStorage.removeItem(`exam_running_${id}`);
@@ -297,7 +297,7 @@ const TakeCompetitiveExamPage = () => {
   const handleSaveAndNext = () => {
     const qId = exam.questions[currentQuestionIndex].id;
     const hasAnswered = !!answers[qId]?.option;
-    
+
     setQuestionStatuses(prev => ({
       ...prev,
       [qId]: hasAnswered ? 'answered' : 'not_answered'
@@ -327,7 +327,7 @@ const TakeCompetitiveExamPage = () => {
   const handleMarkForReview = () => {
     const qId = exam.questions[currentQuestionIndex].id;
     const hasAnswered = !!answers[qId]?.option;
-    
+
     setQuestionStatuses(prev => ({
       ...prev,
       [qId]: hasAnswered ? 'answered_marked_review' : 'marked_review'
@@ -350,7 +350,7 @@ const TakeCompetitiveExamPage = () => {
     }
 
     setCurrentQuestionIndex(index);
-    
+
     const targetQId = exam.questions[index].id;
     if (questionStatuses[targetQId] === 'not_visited') {
       setQuestionStatuses(prev => ({
@@ -401,18 +401,18 @@ const TakeCompetitiveExamPage = () => {
 
   if (!hasStartedExam) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col font-sans select-none p-3 sm:p-6 md:p-8">
-        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 flex flex-col min-h-[92vh]">
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans select-none p-3 sm:p-6 md:p-8">
+        <div className="w-full max-w-7xl mx-auto bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200 flex flex-col min-h-[92vh]">
           {/* Institutional School Branding Header */}
-          <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 border-b border-indigo-500/20 shrink-0">
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white p-6 sm:p-8 border-b border-indigo-500/20 shrink-0">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
               <div className="flex items-center gap-4 sm:gap-5">
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center shrink-0 border border-white/20">
-                  <img 
-                    src={schoolInfo.logoUrl || '/logo.png?v=1'} 
-                    alt="School Logo" 
-                    className="w-full h-full object-contain" 
-                    onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
+                  <img
+                    src={schoolInfo.logoUrl || '/logo.png?v=1'}
+                    alt="School Logo"
+                    className="w-full h-full object-contain"
+                    onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }}
                   />
                 </div>
                 <div>
@@ -443,66 +443,66 @@ const TakeCompetitiveExamPage = () => {
             </div>
           </div>
           <div className="p-6 md:p-8 flex-1 overflow-y-auto">
-             <h2 className="text-xl font-bold text-slate-800 mb-6 border-b pb-2">Exam Instructions</h2>
-             
-             <div className="grid grid-cols-2 gap-4 mb-8">
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-400 uppercase">Duration</p>
-                  <p className="text-lg font-bold text-slate-800">{exam.duration} Minutes</p>
-               </div>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-400 uppercase">Total Marks</p>
-                  <p className="text-lg font-bold text-slate-800">{exam.totalMarks}</p>
-               </div>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-400 uppercase">Total Questions</p>
-                  <p className="text-lg font-bold text-slate-800">{exam.questions?.length || 0}</p>
-               </div>
-               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="text-sm font-bold text-slate-400 uppercase">Marking Scheme</p>
-                  <p className="text-lg font-bold text-emerald-600">+{exam.questions?.[0]?.marks || 4} / <span className="text-red-500">-{exam.negativeMarks || 1}</span></p>
-               </div>
-             </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-6 border-b pb-2">Exam Instructions</h2>
 
-             <h3 className="font-bold text-slate-800 mb-4">Navigation Rules & Symbols</h3>
-             <ul className="space-y-4 text-sm text-slate-700">
-               <li className="flex gap-4 items-start">
-                 <div className="w-8 h-8 shrink-0 bg-gray-200 rounded text-gray-700 flex items-center justify-center font-bold">1</div>
-                 <span>You have not visited the question yet.</span>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="w-8 h-8 shrink-0 bg-red-500 text-white rounded-t-lg rounded-br-lg flex items-center justify-center font-bold">2</div>
-                 <span>You have visited the question but have not answered it.</span>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="w-8 h-8 shrink-0 bg-green-500 text-white rounded-t-lg rounded-br-lg flex items-center justify-center font-bold">3</div>
-                 <span>You have answered the question.</span>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="w-8 h-8 shrink-0 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">4</div>
-                 <span>You have NOT answered the question, but have marked the question for review.</span>
-               </li>
-               <li className="flex gap-4 items-start">
-                 <div className="w-8 h-8 shrink-0 bg-purple-600 text-white rounded-full border-2 border-green-400 flex items-center justify-center font-bold relative"><span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full"></span>5</div>
-                 <span>The question(s) "Answered and Marked for Review" will be considered for evaluation.</span>
-               </li>
-             </ul>
-             
-             <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
-                <p className="font-bold text-yellow-800">Submission Rules</p>
-                <p className="text-yellow-700 text-sm mt-1">The exam will be auto-submitted when the timer reaches 00:00:00. Do not switch tabs or resize the window during the exam. Doing so may result in automatic submission.</p>
-             </div>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-sm font-bold text-slate-400 uppercase">Duration</p>
+                <p className="text-lg font-bold text-slate-800">{exam.duration} Minutes</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-sm font-bold text-slate-400 uppercase">Total Marks</p>
+                <p className="text-lg font-bold text-slate-800">{exam.totalMarks}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-sm font-bold text-slate-400 uppercase">Total Questions</p>
+                <p className="text-lg font-bold text-slate-800">{exam.questions?.length || 0}</p>
+              </div>
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <p className="text-sm font-bold text-slate-400 uppercase">Marking Scheme</p>
+                <p className="text-lg font-bold text-emerald-600">+{exam.questions?.[0]?.marks || 4} / <span className="text-red-500">-{exam.negativeMarks || 1}</span></p>
+              </div>
+            </div>
+
+            <h3 className="font-bold text-slate-800 mb-4">Navigation Rules & Symbols</h3>
+            <ul className="space-y-4 text-sm text-slate-700">
+              <li className="flex gap-4 items-start">
+                <div className="w-8 h-8 shrink-0 bg-gray-200 rounded text-gray-700 flex items-center justify-center font-bold">1</div>
+                <span>You have not visited the question yet.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <div className="w-8 h-8 shrink-0 bg-red-500 text-white rounded-t-lg rounded-br-lg flex items-center justify-center font-bold">2</div>
+                <span>You have visited the question but have not answered it.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <div className="w-8 h-8 shrink-0 bg-green-500 text-white rounded-t-lg rounded-br-lg flex items-center justify-center font-bold">3</div>
+                <span>You have answered the question.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <div className="w-8 h-8 shrink-0 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold">4</div>
+                <span>You have NOT answered the question, but have marked the question for review.</span>
+              </li>
+              <li className="flex gap-4 items-start">
+                <div className="w-8 h-8 shrink-0 bg-purple-600 text-white rounded-full border-2 border-green-400 flex items-center justify-center font-bold relative"><span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full"></span>5</div>
+                <span>The question(s) "Answered and Marked for Review" will be considered for evaluation.</span>
+              </li>
+            </ul>
+
+            <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <p className="font-bold text-yellow-800">Submission Rules</p>
+              <p className="text-yellow-700 text-sm mt-1">The exam will be auto-submitted when the timer reaches 00:00:00. Do not switch tabs or resize the window during the exam. Doing so may result in automatic submission.</p>
+            </div>
           </div>
           <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0">
-             <label className="flex items-center gap-3 cursor-pointer mb-6">
-               <input type="checkbox" checked={instructionsAccepted} onChange={(e) => setInstructionsAccepted(e.target.checked)} className="w-5 h-5 text-indigo-600 rounded" />
-               <span className="font-bold text-slate-700">I have read and understood the instructions. I agree to abide by the rules.</span>
-             </label>
-             <div className="flex justify-end">
-               <button onClick={startExamRun} disabled={!instructionsAccepted} className={`px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md ${instructionsAccepted ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-0.5' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>
-                 START EXAM
-               </button>
-             </div>
+            <label className="flex items-center gap-3 cursor-pointer mb-6">
+              <input type="checkbox" checked={instructionsAccepted} onChange={(e) => setInstructionsAccepted(e.target.checked)} className="w-5 h-5 text-indigo-600 rounded" />
+              <span className="font-bold text-slate-700">I have read and understood the instructions. I agree to abide by the rules.</span>
+            </label>
+            <div className="flex justify-end">
+              <button onClick={startExamRun} disabled={!instructionsAccepted} className={`px-10 py-4 rounded-xl font-bold text-lg transition-all shadow-md ${instructionsAccepted ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:-translate-y-0.5' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}>
+                START EXAM
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -512,14 +512,14 @@ const TakeCompetitiveExamPage = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans select-none" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* Institutional School Branding Header */}
-      <header className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 text-white px-4 py-2.5 sm:px-6 sm:py-3 flex justify-between items-center shadow-lg shrink-0 border-b border-indigo-500/20 w-full">
+      <header className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white px-4 py-2.5 sm:px-6 sm:py-3 flex justify-between items-center shadow-lg shrink-0 border-b border-indigo-500/20 w-full">
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white p-1 shadow-md flex items-center justify-center shrink-0 border border-white/20">
-            <img 
-              src={schoolInfo.logoUrl || '/logo.png?v=1'} 
-              alt="School Logo" 
-              className="w-full h-full object-contain" 
-              onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
+            <img
+              src={schoolInfo.logoUrl || '/logo.png?v=1'}
+              alt="School Logo"
+              className="w-full h-full object-contain"
+              onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }}
             />
           </div>
           <div>
@@ -584,37 +584,35 @@ const TakeCompetitiveExamPage = () => {
               Marks: <span className="text-emerald-600">+{currentQuestion.marks}</span> / <span className="text-rose-500">-{exam.negativeMarks}</span>
             </span>
           </div>
-          
+
           <div className="flex-1 overflow-y-auto p-6 md:p-8">
             <div className="text-xl md:text-2xl font-bold text-slate-900 mb-6 leading-relaxed">
               <LatexRenderer content={currentQuestion.questionText} />
             </div>
-            
+
             {currentQuestion.imageUrl && (
               <div className="mb-8 p-3 bg-white border border-slate-200 rounded-2xl shadow-sm inline-block">
                 <img src={currentQuestion.imageUrl} alt="Question Graphic" className="max-w-full max-h-80 object-contain rounded-xl" />
               </div>
             )}
-            
+
             <div className="space-y-4 max-w-4xl">
               {currentQuestion.options.map((opt: string, idx: number) => {
                 const isSelected = answers[qId]?.option === opt;
                 const optionLabel = String.fromCharCode(65 + idx);
                 return (
-                  <label 
-                    key={idx} 
-                    className={`flex items-start p-4 md:p-5 border-2 rounded-2xl cursor-pointer transition-all ${
-                      isSelected 
-                        ? 'bg-indigo-50/80 border-indigo-600 shadow-md ring-2 ring-indigo-500/20' 
-                        : 'hover:bg-slate-50 border-slate-200 hover:border-slate-300 bg-white shadow-xs'
-                    }`}
+                  <label
+                    key={idx}
+                    className={`flex items-start p-4 md:p-5 border-2 rounded-2xl cursor-pointer transition-all ${isSelected
+                      ? 'bg-indigo-50/80 border-indigo-600 shadow-md ring-2 ring-indigo-500/20'
+                      : 'hover:bg-slate-50 border-slate-200 hover:border-slate-300 bg-white shadow-xs'
+                      }`}
                   >
                     <div className="flex items-center gap-3 shrink-0 mr-3">
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm transition-all ${
-                        isSelected 
-                          ? 'bg-indigo-600 text-white shadow-sm' 
-                          : 'bg-slate-100 text-slate-700 border border-slate-300'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-black text-sm transition-all ${isSelected
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-700 border border-slate-300'
+                        }`}>
                         {optionLabel}
                       </div>
                       <input
@@ -635,7 +633,7 @@ const TakeCompetitiveExamPage = () => {
               })}
             </div>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="bg-gray-50 p-4 border-t border-gray-300 flex justify-between items-center shrink-0">
             <div className="flex gap-3">
@@ -664,7 +662,7 @@ const TakeCompetitiveExamPage = () => {
               <p className="text-xs text-gray-500">{exam.subject.name}</p>
             </div>
           </div>
-          
+
           {/* Legend */}
           <div className="p-4 border-b border-gray-300 text-xs font-medium text-gray-700 grid grid-cols-2 gap-y-3 bg-white">
             <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-t-lg rounded-br-lg bg-green-500 text-white flex items-center justify-center">{stats.answered}</div> Answered</div>
@@ -685,9 +683,9 @@ const TakeCompetitiveExamPage = () => {
                 else if (status === 'not_answered') bgClass = "bg-red-500 text-white rounded-t-lg rounded-br-lg";
                 else if (status === 'marked_review') bgClass = "bg-purple-600 text-white rounded-full";
                 else if (status === 'answered_marked_review') bgClass = "bg-purple-600 text-white rounded-full border-2 border-green-400";
-                
+
                 return (
-                  <button 
+                  <button
                     key={q.id}
                     onClick={() => navigateToQuestion(idx)}
                     className={`w-10 h-10 flex items-center justify-center font-bold relative ${bgClass} hover:opacity-80`}
@@ -702,7 +700,7 @@ const TakeCompetitiveExamPage = () => {
 
           {/* Final Submit */}
           <div className="p-4 bg-white border-t border-gray-300 shrink-0">
-            <button 
+            <button
               onClick={() => setShowSubmitModal(true)}
               disabled={isSubmitting}
               className="w-full py-3 bg-green-600 text-white rounded font-bold text-lg hover:bg-green-700 shadow-md flex items-center justify-center gap-2"
@@ -717,31 +715,31 @@ const TakeCompetitiveExamPage = () => {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
             <h2 className="text-2xl font-black text-indigo-900 mb-6 text-center uppercase tracking-wider">Submit Exam?</h2>
-            
+
             <div className="bg-slate-50 rounded-2xl p-6 space-y-4 mb-8 border border-slate-100">
-               <div className="flex justify-between items-center text-lg">
-                 <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded-sm"></div> Answered</span>
-                 <span className="font-extrabold text-slate-800">{stats.answered + stats.answered_marked_review}</span>
-               </div>
-               <div className="flex justify-between items-center text-lg">
-                 <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-red-500 rounded-sm"></div> Not Answered</span>
-                 <span className="font-extrabold text-slate-800">{stats.not_answered}</span>
-               </div>
-               <div className="flex justify-between items-center text-lg">
-                 <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-purple-600 rounded-full"></div> Marked Review</span>
-                 <span className="font-extrabold text-slate-800">{stats.marked_review}</span>
-               </div>
+              <div className="flex justify-between items-center text-lg">
+                <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-green-500 rounded-sm"></div> Answered</span>
+                <span className="font-extrabold text-slate-800">{stats.answered + stats.answered_marked_review}</span>
+              </div>
+              <div className="flex justify-between items-center text-lg">
+                <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-red-500 rounded-sm"></div> Not Answered</span>
+                <span className="font-extrabold text-slate-800">{stats.not_answered}</span>
+              </div>
+              <div className="flex justify-between items-center text-lg">
+                <span className="font-bold text-slate-500 flex items-center gap-2"><div className="w-4 h-4 bg-purple-600 rounded-full"></div> Marked Review</span>
+                <span className="font-extrabold text-slate-800">{stats.marked_review}</span>
+              </div>
             </div>
 
             <p className="text-center font-bold text-slate-600 mb-8">Are you sure you want to submit?</p>
 
             <div className="flex gap-4">
-               <button onClick={() => setShowSubmitModal(false)} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-lg transition-colors">
-                 CANCEL
-               </button>
-               <button onClick={() => handleSubmit(true)} disabled={isSubmitting} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
-                 SUBMIT EXAM
-               </button>
+              <button onClick={() => setShowSubmitModal(false)} className="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-lg transition-colors">
+                CANCEL
+              </button>
+              <button onClick={() => handleSubmit(true)} disabled={isSubmitting} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                SUBMIT EXAM
+              </button>
             </div>
           </div>
         </div>

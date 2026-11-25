@@ -10,10 +10,7 @@ import {
   Building, CheckSquare, Users, Activity
 } from 'lucide-react';
 import { GatePassPrint, printGatePassSlip } from '../../components/gate-pass/GatePassPrint';
-<<<<<<< HEAD
-=======
 import type { GatePassPrintData, SchoolSettingsData } from '../../components/gate-pass/GatePassPrint';
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { getPhotoUrl } from '../../utils/photo';
@@ -315,11 +312,11 @@ export const GatePassPage: React.FC = () => {
     }
   };
 
-<<<<<<< HEAD
-  const printSlip = (item: GatePassItem) => {
-    setPrintGatePass(item);
-    printGatePassSlip(item, schoolName);
-=======
+
+
+
+
+
   // Delete Gate Pass
   const handleDeletePass = async () => {
     if (!deleteConfirmItem) return;
@@ -334,7 +331,7 @@ export const GatePassPage: React.FC = () => {
     } finally {
       setDeleting(false);
     }
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
+
   };
 
   return (
@@ -345,32 +342,21 @@ export const GatePassPage: React.FC = () => {
         icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
       />
 
-<<<<<<< HEAD
-      {/* Gate Pass Slip Preview & Direct Print Modal */}
-      {printGatePass && (
-        <GatePassPrint 
-          gatePass={printGatePass} 
-          schoolName={schoolName} 
-          onClose={() => setPrintGatePass(null)} 
-        />
-      )}
-=======
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
         <div className="max-w-[1600px] mx-auto space-y-6">
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
 
           {/* Top Hero Card */}
-          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-slate-900/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-indigo-600/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
             
             <div className="relative z-10 space-y-2">
-              <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-200 px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-indigo-400/20">
-                <ShieldCheck className="w-4 h-4 text-indigo-400" /> Security & Movement Desk
+              <div className="inline-flex items-center gap-2 bg-white/20 text-white px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-white/20">
+                <ShieldCheck className="w-4 h-4 text-white" /> Security & Movement Desk
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-sm">
                 Gate Pass Management
               </h1>
-              <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-2xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-indigo-100 font-medium max-w-2xl leading-relaxed">
                 Issue, monitor, verify, and print official departure gate passes with student photo, authorized signatures, and dual-copy slips.
               </p>
             </div>

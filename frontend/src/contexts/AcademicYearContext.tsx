@@ -25,6 +25,11 @@ export const AcademicYearProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [loading, setLoading] = useState<boolean>(true);
 
   const fetchYears = useCallback(async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
     try {
       const res = await api.get('/api/promotion/years');
       const data = res.data?.data || res.data;

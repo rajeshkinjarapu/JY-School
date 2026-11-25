@@ -83,7 +83,10 @@ api.interceptors.response.use(
       if (!refreshToken) {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        const publicAuthRoutes = ['/login', '/forgot-password', '/reset-password'];
+        if (!publicAuthRoutes.some(r => window.location.pathname.startsWith(r))) {
+          window.location.href = '/login';
+        }
         return Promise.reject(error);
       }
 
@@ -123,7 +126,10 @@ api.interceptors.response.use(
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          window.location.href = '/login';
+          const publicAuthRoutes = ['/login', '/forgot-password', '/reset-password'];
+          if (!publicAuthRoutes.some(r => window.location.pathname.startsWith(r))) {
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(refreshError);
       } finally {

@@ -527,6 +527,46 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'competitive-exams/exams',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/question-bank',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/students',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/results',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/reports',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'competitive-exams/paste-ai',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>

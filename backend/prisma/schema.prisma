@@ -648,6 +648,8 @@ model CompetitiveExam {
 model MasterQuestion {
   id            String   @id @default(uuid())
   subjectId     String
+  category      String   @default("GENERAL")
+  subjectName   String?
   className     String?  // Manually entered class name
   chapterName   String
   topicName     String?
@@ -659,6 +661,7 @@ model MasterQuestion {
   correctAnswer String
   marks         Float    @default(4)
   negativeMarks Float    @default(1)
+  examQuestions CompetitiveExamQuestion[]
   explanation   String?  @db.Text
   
   createdAt     DateTime @default(now())
@@ -671,6 +674,8 @@ model CompetitiveExamQuestion {
   id               String       @id @default(uuid())
   competitiveExamId String
   competitiveExam  CompetitiveExam @relation(fields: [competitiveExamId], references: [id], onDelete: Cascade)
+  masterQuestionId String?
+  masterQuestion   MasterQuestion? @relation(fields: [masterQuestionId], references: [id], onDelete: SetNull)
   questionText     String       @db.Text
   questionType     String       // "MCQ" or "SUBJECTIVE"
   imageUrl         String?      // Support for Diagram based questions

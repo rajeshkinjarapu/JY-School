@@ -161,7 +161,10 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           ? `/api/exams/${selectedExamId}/results?classId=${selectedClassId}`
           : `/api/exams/${selectedExamId}/results`;
         const res: any = await api.get(url);
-        const data = res.data?.data || res.data || [];
+        const rawData = res.data?.data || res.data || [];
+        const data = selectedClassId
+          ? rawData.filter((r: any) => !r.classId || r.classId === selectedClassId)
+          : rawData;
         setResults(data);
       } catch (err: any) {
         toast.error('Failed to fetch results');
@@ -311,15 +314,26 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         ];
       });
 
-      // Stretch the rows to fill the entire A4 page vertically.
+      // Fit all students cleanly on 1 A4 page when <= 55 rows without spilling onto an empty Page 2
       const totalRows = results.length || 1;
-      // Page height is 297mm. StartY is 29mm. Bottom margin is 16mm. Head is ~9mm.
-      // Available height for body = 297 - 29 - 16 - 9 = 243mm.
-      const dynamicRowHeight = 243 / totalRows;
-      
+      // Page height is 297mm. StartY is 29mm. Bottom margin is 14mm. Head is ~8.5mm.
+      // Safe body height = 236mm (leaves ~9.5mm buffer so autoTable never overflows onto Page 2).
+      const dynamicRowHeight = totalRows <= 55
+        ? Math.min(9.5, Math.max(4.0, Math.floor((236 / totalRows) * 10) / 10))
+        : 5.5;
+
       let dynamicFontSize = 9.0;
-      if (totalRows >= 30) dynamicFontSize = 7.0;
-      else if (totalRows >= 20) dynamicFontSize = 8.0;
+      let dynamicPadding: { top: number; bottom: number; left: number; right: number } = { top: 1.6, bottom: 1.6, left: 2.5, right: 2.5 };
+      if (totalRows >= 40) {
+        dynamicFontSize = 6.8;
+        dynamicPadding = { top: 0.65, bottom: 0.65, left: 1.5, right: 1.5 };
+      } else if (totalRows >= 30) {
+        dynamicFontSize = 7.2;
+        dynamicPadding = { top: 0.9, bottom: 0.9, left: 1.8, right: 1.8 };
+      } else if (totalRows >= 20) {
+        dynamicFontSize = 8.0;
+        dynamicPadding = { top: 1.2, bottom: 1.2, left: 2.0, right: 2.0 };
+      }
 
       autoTable(doc, {
         startY: 29,
@@ -332,7 +346,8 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           fontStyle: 'bold',
           halign: 'center',
           valign: 'middle',
-          minCellHeight: 8.5,
+          minCellHeight: 7.5,
+          cellPadding: { top: 1.4, bottom: 1.4, left: 1.5, right: 1.5 },
           fontSize: 8.5
         },
         bodyStyles: {
@@ -340,6 +355,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           valign: 'middle',
           textColor: 30,
           fontSize: dynamicFontSize,
+          cellPadding: dynamicPadding,
           minCellHeight: dynamicRowHeight
         },
         alternateRowStyles: {
@@ -361,7 +377,7 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
             data.cell.styles.textColor = [22, 101, 52]; // Green-800
           }
         },
-        margin: { left: 12, right: 12, top: 42, bottom: 16 },
+        margin: { left: 12, right: 12, top: 29, bottom: 14 },
         didDrawPage: (data) => {
           const totalPages = (doc as any).internal.getNumberOfPages();
           const currentPage = data.pageNumber;

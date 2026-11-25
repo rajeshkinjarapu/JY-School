@@ -1,11 +1,101 @@
 # JY School Project State
 
-## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ కమాండ్స్ & గైడెన్స్ (November 25, 2026)
+## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ & Merge Conflicts పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `git nunchi updates anni download cheyu`
+- **వివరణ & చేసిన పరిష్కారాలు:**
+  - Remote Main నుండి పుల్ చేసినప్పుడు ఏర్పడిన 4 ఫైళ్లలోని మెర్జ్ కాన్ఫ్లిక్ట్‌లను (`PROJECT_STATE.md`, `CompetitiveExamsPage.tsx`, `GatePassPrint.tsx`, `GatePassPage.tsx`) అన్ని ఫీచర్లు, లేటెస్ట్ క్వశ్చన్ బ్యాంక్ డిజైన్ మరియు గేట్ పాస్ A4 డ్యూయల్-కాపీ ప్రింట్ ఫంక్షనాలిటీ చెక్కుచెదరకుండా పరిష్కరించాము.
+
+## చివరి సంభాషణ - Question Bank Clean & Premium UI Redesign (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** Question Bank లో కేవలం Category, Subjects మరియు అవసరమైనవి మాత్రమే ఉంచి, అనవసరమైనవన్నీ తొలగించి శుభ్రంగా, అందంగా డిజైన్ చేయమని కోరారు.
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `/competitive-exams/question-bank` పేజీలో హెడర్‌లోని `Bulk Import` మరియు `+ Create Exam` డూప్లికేట్ బటన్లను దాచివేశాము. `Central Master Bank / Exam-Specific` స్విచ్చర్, గ్రీన్ PostgreSQL బ్యాడ్జ్, మరియు ఎంప్టీ స్టేట్‌లోని డూప్లికేట్ బటన్లను తీసివేసి, కేవలం **Category**, **Subjects**, **Topics**, **Search/Levels**, మరియు **Bulk Excel / AI Parser / + Add Question** బటన్లతో ఒకే ప్రీమియం Light Theme కార్డ్‌లో శుభ్రంగా డిజైన్ చేశాము.
+- **తదుపరి దశ:**
+  - Local నుండి Git Push చేసి, VPS లో `npx prisma db push`, Backend & Frontend Build + `pm2 restart all` రన్ చేయాలి.
+
+## చివరి సంభాషణ - Online Exam Module Separate Dedicated Pages (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `question bank click cheste separate page open avvali ala dashboard lo ye button click chste daniki antu oka dedicated page undali professional ga`
+- **చేసిన మార్పులు:**
+  - `frontend/src/router/index.tsx` & `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `/competitive-exams` ప్రధాన Dashboard గా, మరియు `/competitive-exams/exams`, `/competitive-exams/question-bank`, `/competitive-exams/students`, `/competitive-exams/results`, `/competitive-exams/reports` ప్రత్యేక Dedicated Pages గా రూపొందించాము. ప్రతి sub-page పైభాగంలో `← Exam Dashboard` బటన్ ఉంటుంది.
+
+## చివరి సంభాషణ - Online Exam Module పూర్తి రీడిజైన్ (Dashboard, 6 KPIs, Topic Bank, Bulk Excel Import & Reports) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** Sidebar లో `Online Exam Module` పేరు మార్పు, కొత్త Dashboard, 6 KPI Cards, Live/Upcoming Exams, Subject→Topic Question Bank, Bulk Excel Import, Student Management, Result Cards & View Reports.
+- **చేసిన శాశ్వత మార్పులు:**
+  1. `frontend/src/components/Layout/Sidebar.tsx` & `DashboardLayout.tsx`: `Competitive Exams` → `Online Exam Module`.
+  2. `frontend/src/pages/exams/CompetitiveExamsPage.tsx`:
+     - **6 Interactive KPI Cards:** Total Exams, Live Exams, Upcoming Exams, Total Questions, Total Students, Result Cards.
+     - **`OnlineExamDashboardOverview`:** Quick Actions, Live Exams, Upcoming Exams, Subject-wise Bank summary.
+     - **Topic-wise Question Bank + `ExcelBulkImportModal`:** `.xlsx`/`.csv` sample template & bulk import into PostgreSQL `MasterQuestion`.
+     - **`OnlineExamReportsTab`:** Exam analytics table + Excel report export.
+
+## చివరి సంభాషణ - Central Master Question Bank & Dual-Save పూర్తి అమలు (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `questions add chesinavi anni database lo save ayi undali` (Exam లేకపోయినా ప్రశ్నలు డేటాబేస్‌లో శాశ్వతంగా సేవ్ అవ్వాలి).
+- **చేసిన శాశ్వత మార్పులు:**
+  1. `backend/prisma/schema.prisma`: `MasterQuestion` (`category`, `subjectName`, `examQuestions`) మరియు `CompetitiveExamQuestion.masterQuestionId` (`onDelete: SetNull`) అప్‌డేట్ చేశాము.
+  2. `backend/src/controllers/masterQuestions.controller.ts` & `masterQuestions.routes.ts`: `bulkAddMasterQuestions`, `parseMasterTextAI`, `updateMasterQuestion`, `resolveMasterSubjectId` తో పూర్తి Master Bank APIs సిద్ధం చేశాము.
+  3. `backend/src/controllers/competitiveExams.controller.ts` & `competitiveExams.routes.ts`: `saveToMasterBankIfNew` (Dual-Save) మరియు `importFromMasterBank` యాడ్ చేశాము.
+  4. `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `QuestionBankTab` లో **Central Master Bank (Permanent DB)** మోడ్, `AddMasterQuestionModal`, `MasterAiParserModal` మరియు Exam కోసం `PickFromMasterBankModal` బిల్డ్ చేశాము.
+
+## చివరి సంభాషణ - `/login` Infinite Reload Loop పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `website ala load avutu undi aagatam ledu check cheyu` (`/login` స్పిన్నర్ వద్దే ఆగిపోవడం & `GET /api/promotion/years 401` లూప్).
+- **రూట్ కాజ్ & పరిష్కారం:**
+  1. `frontend/src/contexts/AcademicYearContext.tsx` లో `accessToken` లేకుండా `/api/promotion/years` కాల్ అవ్వకుండా గార్డ్ యాడ్ చేశాము.
+  2. `frontend/src/api/axios.ts` లో ఇప్పటికే `/login` పై ఉన్నప్పుడు `window.location.href = '/login'` రీలోడ్ అవ్వకుండా నివారించాము.
+
+## చివరి సంభాషణ - Competitive Exams A4 Paper Preview & Print (MCQ Paper Generator Style) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `paper preview ela undali ante project lo unna mcq paper generator lo paper preview ela untundo ala kavali`
+- **చేసిన శాశ్వత పరిష్కారాలు (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
+  - `ExamPaperPreviewModal` లో MCQ Paper Generator లోని `LiveLatexPreview` మరియు `printPaper` లను ఇంటిగ్రేట్ చేశాము (`MCQPaperGeneratorPage.tsx` / `LiveLatexPreview.tsx` ను ఏమాత్రం మార్చకుండా).
+  - ఇకపై "View Exam Paper" & "Print Paper" క్లిక్ చేసినప్పుడు అచ్చం MCQ Paper Generator లోని 2-Column A4 ప్రీమియం ఎగ్జామ్ పేపర్ లాగే ప్రివ్యూ మరియు ప్రింట్ వస్తాయి (Zoom, 1/2 Column toggle సహా).
+
+## చివరి సంభాషణ - Marks SMS 0/A బగ్ ఫిక్స్ (`sendMarksSMS`) (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `sms send chestunte 0 lu vastunnayi okasari deep ga check chesi reason ento cheppuy` -> Fix చేయమన్నారు.
+- **చేసిన శాశ్వత పరిష్కారాలు (`backend/src/controllers/exams.controller.ts`):**
+  1. మార్కులు ఎంటర్ చేయని విద్యార్థులకు (`studentMarks.length === 0`) లేదా JEE సబ్జెక్టులు లేని ఎగ్జామ్‌లకు డమ్మీ `A / A / A / TOTAL: 0` SMS వెళ్లకుండా స్కిప్ (`skippedCount`) చేశాము.
+  2. `getCanonicalSubjectName` ద్వారా `MAT`, `PS`, `PHY`, `CHEM` మొదలైనవి సరిగ్గా మ్యాచ్ అయ్యేలా చేశాము.
+  3. `AB` రిమార్క్‌ను కూడా Absent (`A`) గా గుర్తించేలా సరిదిద్దాము.
+
+## చివరి సంభాషణ - Results PDF Strict Section Filter (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `nenu 5th a section select chesi print teeste B section kuda print lo vachinchi`
+- **పరిశీలన & పరిష్కారం:**
+  - `backend/src/controllers/exams.controller.ts` (`getResults`) మరియు `frontend/src/pages/exams/ResultsTab.tsx` రెండింటిలోనూ `classId` పై స్ట్రిక్ట్ ఫిల్టర్ చెక్ జోడించాము.
+  - ఒకవేళ డేటాబేస్‌లోని `Students` లిస్ట్ లో B-సెక్షన్ విద్యార్థులు కూడా `5th - A` క్లాస్ లో అసైన్ అయి ఉంటే, వారిని `Students` పేజీ నుండి `5th - B` కి మార్చాలని యూజర్‌కు సూచించాము.
+
+## చివరి సంభాషణ - Exam Results PDF 1-Page Fit పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `OKA CLASS SELECT CHESI PDF GENERATE CHESTE TOTAL 2 SECTIONS VASTUNDI` (Results PDF 2వ పేజీలోకి ఖాళీగా ఓవర్‌ఫ్లో అవ్వడం).
+- **చేసిన పరిష్కారం (`frontend/src/pages/exams/ResultsTab.tsx`):**
+  - `autoTable` లో `cellPadding` మరియు `fontSize` లను విద్యార్థుల సంఖ్య (`totalRows`) ఆధారంగా డైనమిక్‌గా తగ్గించి, `236 / totalRows` సేఫ్ హైట్‌తో సెట్ చేశాము. ఇకపై ఒక క్లాస్‌లోని 40-55 మంది విద్యార్థులందరూ ఖచ్చితంగా **1 A4 పేజీలోనే** ఓవర్‌ఫ్లో లేకుండా వస్తారు.
+
+## చివరి సంభాషణ - Study Certificate Table Header Text Visibility పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `TABLE BOX HEADER LO UNNA TEXT KANAPDATAM LEDU`
+- **చేసిన పరిష్కారం (`frontend/src/pages/office-tools/StudyCertificatePage.tsx`):**
+  - లైవ్ ప్రివ్యూ మరియు ప్రింట్ టెంప్లేట్ రెండింటిలోనూ Academic Progress Table హెడర్‌ను లైట్ బ్యాక్‌గ్రౌండ్ (`#f1f5f9`) + స్పష్టమైన డార్క్ నేవీ టెక్స్ట్ (`#0b1a33`) తో అప్‌డేట్ చేశాము, తద్వారా `SL. NO.`, `ACADEMIC YEAR`, `CLASS`, `REMARKS` స్పష్టంగా కనిపిస్తాయి.
+
+## చివరి సంభాషణ - Study Certificate Signature తొలగింపు & Export PDF oklch బగ్ ఫిక్స్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన & స్క్రీన్‌షాట్:**
+  - `remove head master upload signature`
+  - స్క్రీన్‌షాట్ ఎర్రర్: `Failed to export PDF: Attempting to parse an unsupported color function "oklch"`
+- **చేసిన శాశ్వత పరిష్కారాలు (`frontend/src/pages/office-tools/StudyCertificatePage.tsx`):**
+  1. `generateCertificateHtml` మరియు లైవ్ A4 ప్రివ్యూ నుండి అప్‌లోడ్ చేసిన `principalSignatureUrl` ఇమేజ్ తొలగించి, మాన్యువల్ సంతకం కోసం ఖాళీ స్పేస్ ఉంచాము.
+  2. `html2canvas` స్థానంలో `html-to-image` (`toJpeg`) ఉపయోగించి `oklch` కలర్ ఎర్రర్ లేకుండా Export PDF మరియు Bulk ZIP పనిచేసేలా సరిదిద్దాము.
+  3. బ్రాండింగ్ కార్డ్‌ను డార్క్ నుండి `from-indigo-600 to-blue-700` లైట్-ERP థీమ్‌లోకి మార్చాము.
+
+## చివరి సంభాషణ - CBT, Staff Attendance & Homework పూర్తి Light Theme అప్‌గ్రేడ్ (November 25, 2026)
 - **యూజర్ అభ్యర్థన:**
-  - `git nunchi updates anni download cheyu` (GitHub నుండి తాజా అప్‌డేట్‌లను డౌన్‌లోడ్ చేయడం).
-- **వివరణ & అందించిన కమాండ్స్:**
-  - సిస్టమ్ నిబంధనల ప్రకారం (No Direct Terminal Execution) ఏజెంట్ నేరుగా బ్యాక్‌గ్రౌండ్‌లో టెర్మినల్ కమాండ్స్ రన్ చేయకూడదు.
-  - కాబట్టి యూజర్ తన టెర్మినల్ ద్వారా సులువుగా డౌన్‌లోడ్ చేసుకునేందుకు లోకల్ పవర్-షెల్ కమాండ్స్ మరియు VPS SSH డిప్లాయ్ కమాండ్స్ అందించబడ్డాయి.
+  - CBT Result Page, Staff Attendance (Teacher View), Assign Homework Page మరియు Homework Manager లో ఉన్న మిగిలిన డార్క్/బ్లాక్ బ్యాక్‌గ్రౌండ్‌లను పూర్తిగా లైట్ థీమ్ లోకి మార్చాలి.
+- **చేసిన శాశ్వత పరిష్కారాలు:**
+  1. `frontend/src/pages/exams/CompetitiveExamResultPage.tsx` — `bg-slate-50 min-h-screen`, `from-indigo-600 via-indigo-700 to-purple-700` హెడర్, `bg-indigo-600` Q-బ్యాడ్జ్.
+  2. `frontend/src/pages/exams/TakeCompetitiveExamPage.tsx` — ఇన్స్ట్రక్షన్స్ స్క్రీన్ `bg-slate-50`, హెడర్లు `from-indigo-600 via-indigo-700 to-blue-700`.
+  3. `frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx` — టీచర్ వ్యూ KPI కార్డ్స్, Monthly Attendance Breakdown మరియు Request History కార్డులను `bg-white` / `bg-slate-50` లైట్ థీమ్‌లోకి మార్చాము.
+  4. `frontend/src/pages/homework/AssignHomeworkPage.tsx` — `/homework/create` ప్రత్యేక పేజీ మొత్తాన్ని `bg-slate-50` & వైట్ కార్డులతో పూర్తి లైట్ థీమ్‌లోకి మార్చాము.
+  5. `frontend/src/pages/homework/HomeworkPage.tsx` — అన్ని `dark:*` క్లాసులను తొలగించి, స్వచ్ఛమైన లైట్ థీమ్ కార్డులు & మోడల్ అమలు చేశాము.
+
+## చివరి సంభాషణ - No Black Theme Rule & Staff Attendance Manager లైట్ థీమ్ రీడిజైన్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `black theme design assalu use cheyakudadu idi na rule book lo save chesuko`
+  - `/teacher-attendance` పేజీ డిజైన్ పూర్తిగా మార్చి, అందమైన లైట్ థీమ్ లోకి తేవాలి.
+- **చేసిన శాశ్వత పరిష్కారాలు:**
+  1. `.agents/AGENTS.md` లో **No Black / Dark Theme Design Rule** ను శాశ్వతంగా జోడించాము.
+  2. `frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx` మరియు `frontend/src/pages/homework/HomeworkPage.tsx` లలో డార్క్/బ్లాక్ బ్యాక్‌గ్రౌండ్‌లు పూర్తిగా తొలగించి, స్వచ్ఛమైన **Light Theme** (`bg-slate-50`, crisp white cards, high-contrast typography) లోకి మార్చాము.
 
 ## చివరి సంభాషణ - CBT Online Competitive Exam పోర్టల్ పూర్తి రీడిజైన్, స్కూల్ హెడర్, ప్రశ్నల సైజు & సబ్మిషన్ బగ్ పరిష్కారం (November 24, 2026)
 - **యూజర్ సమస్యలు & అవసరాలు:**
