@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - `/login` Infinite Reload Loop పరిష్కారం (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** `website ala load avutu undi aagatam ledu check cheyu` (`/login` స్పిన్నర్ వద్దే ఆగిపోవడం & `GET /api/promotion/years 401` లూప్).
+- **రూట్ కాజ్ & పరిష్కారం:**
+  1. `frontend/src/contexts/AcademicYearContext.tsx` లో `accessToken` లేకుండా `/api/promotion/years` కాల్ అవ్వకుండా గార్డ్ యాడ్ చేశాము.
+  2. `frontend/src/api/axios.ts` లో ఇప్పటికే `/login` పై ఉన్నప్పుడు `window.location.href = '/login'` రీలోడ్ అవ్వకుండా నివారించాము.
+
 ## చివరి సంభాషణ - Competitive Exams A4 Paper Preview & Print (MCQ Paper Generator Style) (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `paper preview ela undali ante project lo unna mcq paper generator lo paper preview ela untundo ala kavali`
 - **చేసిన శాశ్వత పరిష్కారాలు (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
