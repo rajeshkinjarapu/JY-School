@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Study Certificate Signature తొలగింపు & Export PDF oklch బగ్ ఫిక్స్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన & స్క్రీన్‌షాట్:**
+  - `remove head master upload signature`
+  - స్క్రీన్‌షాట్ ఎర్రర్: `Failed to export PDF: Attempting to parse an unsupported color function "oklch"`
+- **చేసిన శాశ్వత పరిష్కారాలు (`frontend/src/pages/office-tools/StudyCertificatePage.tsx`):**
+  1. `generateCertificateHtml` మరియు లైవ్ A4 ప్రివ్యూ నుండి అప్‌లోడ్ చేసిన `principalSignatureUrl` ఇమేజ్ తొలగించి, మాన్యువల్ సంతకం కోసం ఖాళీ స్పేస్ ఉంచాము.
+  2. `html2canvas` స్థానంలో `html-to-image` (`toJpeg`) ఉపయోగించి `oklch` కలర్ ఎర్రర్ లేకుండా Export PDF మరియు Bulk ZIP పనిచేసేలా సరిదిద్దాము.
+  3. బ్రాండింగ్ కార్డ్‌ను డార్క్ నుండి `from-indigo-600 to-blue-700` లైట్-ERP థీమ్‌లోకి మార్చాము.
+
 ## చివరి సంభాషణ - CBT, Staff Attendance & Homework పూర్తి Light Theme అప్‌గ్రేడ్ (November 25, 2026)
 - **యూజర్ అభ్యర్థన:**
   - CBT Result Page, Staff Attendance (Teacher View), Assign Homework Page మరియు Homework Manager లో ఉన్న మిగిలిన డార్క్/బ్లాక్ బ్యాక్‌గ్రౌండ్‌లను పూర్తిగా లైట్ థీమ్ లోకి మార్చాలి.
