@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Question Bank Clean & Premium UI Redesign (November 25, 2026)
+- **యూజర్ అభ్యర్థన:** Question Bank లో కేవలం Category, Subjects మరియు అవసరమైనవి మాత్రమే ఉంచి, అనవసరమైనవన్నీ తొలగించి శుభ్రంగా, అందంగా డిజైన్ చేయమని కోరారు.
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `/competitive-exams/question-bank` పేజీలో హెడర్‌లోని `Bulk Import` మరియు `+ Create Exam` డూప్లికేట్ బటన్లను దాచివేశాము. `Central Master Bank / Exam-Specific` స్విచ్చర్, గ్రీన్ PostgreSQL బ్యాడ్జ్, మరియు ఎంప్టీ స్టేట్‌లోని డూప్లికేట్ బటన్లను తీసివేసి, కేవలం **Category**, **Subjects**, **Topics**, **Search/Levels**, మరియు **Bulk Excel / AI Parser / + Add Question** బటన్లతో ఒకే ప్రీమియం Light Theme కార్డ్‌లో శుభ్రంగా డిజైన్ చేశాము.
+- **తదుపరి దశ:**
+  - Local నుండి Git Push చేసి, VPS లో `npx prisma db push`, Backend & Frontend Build + `pm2 restart all` రన్ చేయాలి.
+
 ## చివరి సంభాషణ - Online Exam Module Separate Dedicated Pages (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `question bank click cheste separate page open avvali ala dashboard lo ye button click chste daniki antu oka dedicated page undali professional ga`
 - **చేసిన మార్పులు:**

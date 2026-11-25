@@ -332,24 +332,28 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
 
-          <button
-            onClick={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
-            className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Bulk Import</span>
-          </button>
+          {activeTab !== 'QUESTIONS' && (
+            <>
+              <button
+                onClick={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
+                className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <FileSpreadsheet className="w-4 h-4" />
+                <span>Bulk Import</span>
+              </button>
 
-          <button
-            onClick={() => {
-              setShowInlineCreate(true);
-              navigate('/competitive-exams/exams?create=true');
-            }}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>+ Create Exam</span>
-          </button>
+              <button
+                onClick={() => {
+                  setShowInlineCreate(true);
+                  navigate('/competitive-exams/exams?create=true');
+                }}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Create Exam</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -1855,361 +1859,260 @@ const QuestionBankTab = ({
   };
 
   return (
-    <div className="space-y-5">
-      {/* Top Controls Card */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs space-y-4">
-        {/* Source Mode Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2 bg-slate-100 p-1 rounded-2xl w-fit">
-            <button
-              type="button"
-              onClick={() => setBankSource('MASTER')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                bankSource === 'MASTER'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Database size={14} />
-              <span>Central Master Bank (Permanent DB)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setBankSource('EXAM')}
-              className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-1.5 ${
-                bankSource === 'EXAM'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Layers size={14} />
-              <span>Exam-Specific Questions ({exams.length})</span>
-            </button>
-          </div>
-
-          <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full">
-            ✅ All added questions are permanently saved in PostgreSQL
-          </span>
-        </div>
-
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          {bankSource === 'MASTER' ? (
-            <div className="flex-1 w-full lg:w-auto flex flex-wrap items-center gap-2">
-              <span className="text-xs font-black text-slate-500 uppercase tracking-wider mr-1">Category:</span>
-              {['ALL', 'JEE', 'NEET', 'NAVODAYA', 'APPSC', 'SSC', 'SCHOOL', 'GENERAL'].map((cat) => (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
-                    selectedCategory === cat
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {cat === 'ALL' ? 'All Categories' : cat}
-                </button>
-              ))}
+    <div className="space-y-4">
+      {/* Unified Clean Filter & Action Card */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        {bankSource === 'EXAM' ? (
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-center gap-2.5 flex-1 w-full">
               <button
-                onClick={fetchMasterBank}
-                className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer"
-                title="Refresh Master Bank"
+                type="button"
+                onClick={() => setBankSource('MASTER')}
+                className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
               >
-                <RefreshCw size={15} className={loadingQuestions ? 'animate-spin' : ''} />
+                ← Master Bank
               </button>
-            </div>
-          ) : exams.length === 0 ? (
-            <div className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2.5 rounded-xl">
-              No exams created yet. You can add questions to the Central Master Bank anytime, then import them when you create an exam!
-            </div>
-          ) : (
-            <div className="flex-1 w-full lg:w-auto">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
-                Select Exam to View & Manage Questions
-              </label>
-              <div className="flex items-center gap-2 sm:gap-3">
+              {exams.length > 0 && (
                 <select
                   value={selectedExamId}
                   onChange={e => setSelectedExamId(e.target.value)}
-                  className="w-full lg:max-w-md p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+                  className="w-full sm:w-auto min-w-[240px] px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs outline-none focus:border-indigo-500 focus:bg-white transition"
                 >
-                  <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)} Questions)</option>
+                  <option value="ALL">All Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)})</option>
                   {exams.map((ex: any) => (
                     <option key={ex.id} value={ex.id}>
-                      {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
+                      {ex.title} ({ex._count?.questions || ex.questions?.length || 0})
                     </option>
                   ))}
                 </select>
-                
-                <button
-                  onClick={() => fetchQuestions(selectedExamId)}
-                  className="p-2.5 sm:p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer shrink-0"
-                  title="Refresh Questions"
-                >
-                  <RefreshCw size={17} className={loadingQuestions ? 'animate-spin' : ''} />
-                </button>
-              </div>
+              )}
             </div>
-          )}
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
-            {bankSource === 'MASTER' ? (
-              <>
-                <button
-                  onClick={() => setShowExcelBulkModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                >
-                  <FileSpreadsheet size={15} />
-                  <span>Bulk Excel Import</span>
-                </button>
-                <button
-                  onClick={() => setShowMasterAiModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                >
-                  <FileText size={15} />
-                  <span>AI Text Parser</span>
-                </button>
-                <button
-                  onClick={() => setShowAddMasterModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                >
-                  <Plus size={15} />
-                  <span>Add Question</span>
-                </button>
-              </>
-            ) : exams.length > 0 ? (
-              <>
+            {exams.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
                 {activeExam && (
                   <button
                     onClick={() => setShowPickFromBankModal(true)}
-                    className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                   >
-                    <Database size={15} />
-                    <span>📚 Pick from Master Bank</span>
+                    <Database size={14} />
+                    <span>Pick from Bank</span>
                   </button>
                 )}
                 <button
                   onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                  title="Open Dedicated Full Page AI Text Parser"
+                  className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
-                  <FileText size={15} />
-                  <span>📄 Paste Exam Text</span>
-                </button>
-                <button
-                  onClick={() => activeExam && onOpenAiModal(activeExam)}
-                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-                >
-                  <Sparkles size={15} className="text-amber-300" />
-                  <span>✨ AI Generate</span>
+                  <FileText size={14} />
+                  <span>AI Parser</span>
                 </button>
                 <button
                   onClick={() => setIsAddingQuestion(true)}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
                 >
-                  <Plus size={15} />
-                  <span>Add Manually</span>
+                  <Plus size={14} />
+                  <span>Add Question</span>
                 </button>
-              </>
-            ) : null}
+              </div>
+            )}
           </div>
-        </div>
-      </div>
+        ) : (
+          /* Clean Category + Action Bar */
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1.5">Category</span>
+              {['ALL', 'JEE', 'NEET', 'NAVODAYA', 'APPSC', 'SSC', 'SCHOOL'].map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    selectedCategory === cat
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'bg-slate-50 text-slate-600 border border-slate-200/80 hover:bg-slate-100 hover:text-slate-900'
+                  }`}
+                >
+                  {cat === 'ALL' ? 'All' : cat === 'NAVODAYA' ? 'Navodaya' : cat === 'SCHOOL' ? 'School' : cat}
+                </button>
+              ))}
+            </div>
 
-      {/* Subject Wise Filter Tabs (Interactive Pills) */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Filter by Subject:
-          </span>
-          <span className="text-xs font-bold text-slate-500">
-            Showing <strong className="text-indigo-600">{filteredQuestions.length}</strong> of {questions.length} questions
-          </span>
-        </div>
-
-        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-none">
-          {availableSubjects.map((subName) => {
-            const count = subjectStats[subName] || 0;
-            const isSelected = selectedSubject === subName;
-            
-            const subjectColors: Record<string, { active: string; inactive: string }> = {
-              'ALL': { active: 'bg-indigo-600 text-white shadow-xs', inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200' },
-              'Mathematics': { active: 'bg-blue-600 text-white shadow-xs', inactive: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-              'Physics': { active: 'bg-purple-600 text-white shadow-xs', inactive: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
-              'Chemistry': { active: 'bg-emerald-600 text-white shadow-xs', inactive: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-              'Biology': { active: 'bg-rose-600 text-white shadow-xs', inactive: 'bg-rose-50 text-rose-700 hover:bg-rose-100' },
-              'General': { active: 'bg-amber-600 text-white shadow-xs', inactive: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-            };
-
-            const styling = subjectColors[subName] || { active: 'bg-slate-800 text-white', inactive: 'bg-slate-100 text-slate-700' };
-
-            return (
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
-                key={subName}
-                onClick={() => {
-                  setSelectedSubject(subName);
-                  setSelectedTopic('ALL');
-                }}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 shrink-0 ${
-                  isSelected ? styling.active : styling.inactive
-                }`}
+                onClick={() => setShowExcelBulkModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/90 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <span>{subName === 'ALL' ? 'All Subjects' : subName}</span>
-                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-700 border border-slate-200'
-                }`}>
-                  {count}
-                </span>
+                <FileSpreadsheet size={14} />
+                <span>Bulk Excel</span>
               </button>
-            );
-          })}
-        </div>
-
-        {/* Topic-wise Pills inside Selected Subject */}
-        {Object.keys(topicStats).length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-slate-100 scrollbar-none">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
-              <FolderOpen className="w-3.5 h-3.5 text-indigo-500" /> Topics:
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedTopic('ALL')}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
-                selectedTopic === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              All Topics
-            </button>
-            {Object.entries(topicStats).map(([tName, tCount]) => (
               <button
-                key={tName}
-                type="button"
-                onClick={() => setSelectedTopic(tName)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 flex items-center gap-1 ${
-                  selectedTopic === tName ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
-                }`}
+                onClick={() => setShowMasterAiModal(true)}
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/90 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
               >
-                <span>{tName}</span>
-                <span className="opacity-75">({tCount})</span>
+                <FileText size={14} />
+                <span>AI Parser</span>
               </button>
-            ))}
+              <button
+                onClick={() => setShowAddMasterModal(true)}
+                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+              >
+                <Plus size={14} />
+                <span>Add Question</span>
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Search & Difficulty Filter Sub-bar */}
-        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
+        {/* Subject Pills Row */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Subjects
+            </span>
+            <span className="text-xs font-semibold text-slate-500">
+              Showing <strong className="text-slate-800">{filteredQuestions.length}</strong> of {questions.length}
+            </span>
+          </div>
+
+          <div className="flex overflow-x-auto gap-2 pb-0.5 scrollbar-none">
+            {availableSubjects.map((subName) => {
+              const count = subjectStats[subName] || 0;
+              const isSelected = selectedSubject === subName;
+
+              const subjectColors: Record<string, { active: string; inactive: string }> = {
+                'ALL': { active: 'bg-slate-800 text-white shadow-xs', inactive: 'bg-slate-50 text-slate-700 border border-slate-200/80 hover:bg-slate-100' },
+                'Mathematics': { active: 'bg-blue-600 text-white shadow-xs', inactive: 'bg-blue-50/70 text-blue-700 border border-blue-200/70 hover:bg-blue-100/70' },
+                'Physics': { active: 'bg-purple-600 text-white shadow-xs', inactive: 'bg-purple-50/70 text-purple-700 border border-purple-200/70 hover:bg-purple-100/70' },
+                'Chemistry': { active: 'bg-emerald-600 text-white shadow-xs', inactive: 'bg-emerald-50/70 text-emerald-700 border border-emerald-200/70 hover:bg-emerald-100/70' },
+                'Biology': { active: 'bg-rose-600 text-white shadow-xs', inactive: 'bg-rose-50/70 text-rose-700 border border-rose-200/70 hover:bg-rose-100/70' },
+                'General': { active: 'bg-amber-600 text-white shadow-xs', inactive: 'bg-amber-50/70 text-amber-700 border border-amber-200/70 hover:bg-amber-100/70' },
+              };
+
+              const styling = subjectColors[subName] || { active: 'bg-slate-800 text-white', inactive: 'bg-slate-50 text-slate-700 border border-slate-200' };
+
+              return (
+                <button
+                  key={subName}
+                  onClick={() => {
+                    setSelectedSubject(subName);
+                    setSelectedTopic('ALL');
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex items-center gap-2 shrink-0 ${
+                    isSelected ? styling.active : styling.inactive
+                  }`}
+                >
+                  <span>{subName === 'ALL' ? 'All Subjects' : subName}</span>
+                  <span className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold leading-none ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-white text-slate-600 border border-slate-200/70'
+                  }`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Topic Pills (shown when topics exist) */}
+          {Object.keys(topicStats).length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-2 border-t border-slate-100 scrollbar-none">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
+                <FolderOpen className="w-3.5 h-3.5 text-indigo-400" /> Topics
+              </span>
+              <button
+                type="button"
+                onClick={() => setSelectedTopic('ALL')}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 ${
+                  selectedTopic === 'ALL' ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-600 border border-slate-200/80 hover:bg-slate-100'
+                }`}
+              >
+                All Topics
+              </button>
+              {Object.entries(topicStats).map(([tName, tCount]) => (
+                <button
+                  key={tName}
+                  type="button"
+                  onClick={() => setSelectedTopic(tName)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer shrink-0 flex items-center gap-1 ${
+                    selectedTopic === tName ? 'bg-indigo-600 text-white' : 'bg-indigo-50/70 text-indigo-700 hover:bg-indigo-100 border border-indigo-200/70'
+                  }`}
+                >
+                  <span>{tName}</span>
+                  <span className="opacity-75">({tCount})</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Search & Difficulty Row */}
+        <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-1">
           <div className="relative flex-1 w-full">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by question text, formulas or topic..."
+              placeholder="Search questions, formulas, or topics..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
+              className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
               >
                 ✕
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-            <select
-              value={difficultyFilter}
-              onChange={e => setDifficultyFilter(e.target.value)}
-              className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500"
-            >
-              <option value="ALL">All Difficulties</option>
-              <option value="EASY">Easy</option>
-              <option value="MEDIUM">Medium</option>
-              <option value="HARD">Hard</option>
-            </select>
-          </div>
+          <select
+            value={difficultyFilter}
+            onChange={e => setDifficultyFilter(e.target.value)}
+            className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-slate-50/80 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-indigo-500 focus:bg-white transition cursor-pointer"
+          >
+            <option value="ALL">All Levels</option>
+            <option value="EASY">Easy</option>
+            <option value="MEDIUM">Medium</option>
+            <option value="HARD">Hard</option>
+          </select>
         </div>
       </div>
 
       {/* Questions List with KaTeX math formula rendering */}
       {loadingQuestions ? (
-        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-slate-200 shadow-sm">
-          <RefreshCw className="w-8 h-8 animate-spin text-indigo-600 mb-2" />
-          <p className="text-slate-500 font-bold text-sm">Loading questions from Question Bank...</p>
+        <div className="p-16 flex flex-col items-center justify-center bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+          <RefreshCw className="w-7 h-7 animate-spin text-indigo-600 mb-2.5" />
+          <p className="text-slate-500 font-semibold text-xs">Loading questions...</p>
         </div>
       ) : filteredQuestions.length === 0 ? (
-        <div className="p-12 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
-          <FileQuestion size={48} className="text-indigo-200 mb-3" />
-          <h4 className="text-base font-bold text-slate-800">
-            {searchQuery || selectedSubject !== 'ALL' || difficultyFilter !== 'ALL'
-              ? 'No Questions Matching Selected Filters'
-              : 'No Questions Added to this Exam'}
-          </h4>
-          <p className="text-xs text-slate-500 mt-1 max-w-sm">
-            {searchQuery || selectedSubject !== 'ALL'
-              ? 'Try changing the subject filter or clearing your search term.'
-              : 'Add questions manually or let Google Gemini AI synthesize high-quality MCQs with negative marks and solutions.'}
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
-            {searchQuery || selectedSubject !== 'ALL' ? (
-              <button
-                onClick={() => {
-                  setSelectedSubject('ALL');
-                  setSearchQuery('');
-                  setDifficultyFilter('ALL');
-                }}
-                className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition"
-              >
-                Reset All Filters
-              </button>
-            ) : bankSource === 'MASTER' ? (
-              <>
-                <button
-                  onClick={() => setShowMasterAiModal(true)}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer"
-                >
-                  <FileText size={15} /> 📄 Paste Exam Text (AI Parser)
-                </button>
-                <button
-                  onClick={() => setShowAddMasterModal(true)}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus size={14} /> Add Question to Bank
-                </button>
-              </>
-            ) : (
-              <>
-                {activeExam && (
-                  <button
-                    onClick={() => setShowPickFromBankModal(true)}
-                    className="px-4 py-2.5 rounded-xl bg-amber-500 text-white text-xs font-black hover:bg-amber-600 transition flex items-center gap-1.5 shadow-md cursor-pointer"
-                  >
-                    <Database size={15} /> 📚 Pick from Master Bank
-                  </button>
-                )}
-                <button
-                  onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs font-black hover:from-emerald-700 hover:to-teal-700 transition flex items-center gap-1.5 shadow-md cursor-pointer"
-                >
-                  <FileText size={15} /> 📄 Paste Exam Text (AI Parser)
-                </button>
-                <button
-                  onClick={() => activeExam && onOpenAiModal(activeExam)}
-                  className="px-4 py-2.5 rounded-xl bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Sparkles size={14} className="text-amber-300" /> ✨ AI Generate Now
-                </button>
-                <button
-                  onClick={() => setIsAddingQuestion(true)}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition cursor-pointer"
-                >
-                  + Add Manually
-                </button>
-              </>
-            )}
+        <div className="p-14 flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center mb-3">
+            <FileQuestion size={24} className="text-indigo-500" />
           </div>
+          <h4 className="text-sm font-bold text-slate-800">
+            {searchQuery || selectedSubject !== 'ALL' || selectedCategory !== 'ALL' || difficultyFilter !== 'ALL'
+              ? 'No Questions Matching Selected Filters'
+              : 'No Questions in Question Bank Yet'}
+          </h4>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">
+            {searchQuery || selectedSubject !== 'ALL' || selectedCategory !== 'ALL' || difficultyFilter !== 'ALL'
+              ? 'Try changing the category, subject, or clearing your search query.'
+              : 'Use + Add Question, AI Parser, or Bulk Excel above to add questions to your repository.'}
+          </p>
+          {(searchQuery || selectedSubject !== 'ALL' || selectedCategory !== 'ALL' || difficultyFilter !== 'ALL') && (
+            <button
+              onClick={() => {
+                setSelectedCategory('ALL');
+                setSelectedSubject('ALL');
+                setSelectedTopic('ALL');
+                setSearchQuery('');
+                setDifficultyFilter('ALL');
+              }}
+              className="mt-4 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
