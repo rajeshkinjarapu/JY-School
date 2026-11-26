@@ -134,9 +134,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               ) : null}
             </div>
 
-            <div className="flex items-stretch p-3 gap-4">
+            <div className={`flex items-center ${isNavodaya ? 'p-4' : 'p-3'} gap-4`}>
               {isNavodaya ? (
-                <div className="flex-1 flex flex-col justify-center gap-1.5 text-xs">
+                <div className="flex-1 flex flex-col justify-center gap-2.5 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
@@ -161,19 +161,17 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                     </span>
                     <span className="font-bold text-slate-800">{safeData.mobile}</span>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
-                      </span>
-                      <span className="font-bold text-slate-800">{safeData.academicYear}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] shrink-0 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
-                      </span>
-                      <span className="font-bold text-slate-800">{safeData.location}</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.academicYear}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.location}</span>
                   </div>
                 </div>
               ) : (
