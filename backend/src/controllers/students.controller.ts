@@ -546,6 +546,8 @@ export const deleteStudent = async (req: AuthRequest, res: Response, next: NextF
       prisma.user.deleteMany({ where: { id: student.userId } }),
     ]);
     cache.delPattern('students:list:*');
+    cache.delPattern('student:*');
+    cache.delPattern('class:students:*');
     clearDashboardCache();
     successResponse(res, null, 'Student deleted');
   } catch (err) {
@@ -1149,6 +1151,8 @@ export const bulkUploadPhotos = async (req: AuthRequest, res: Response, next: Ne
     fs.unlinkSync(zipPath);
 
     cache.delPattern('students:list:*');
+    cache.delPattern('student:*');
+    cache.delPattern('class:students:*');
     clearDashboardCache();
 
     successResponse(res, { success, failed }, `Bulk photo upload complete. ${success} uploaded.`);

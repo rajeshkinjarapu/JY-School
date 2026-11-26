@@ -116,6 +116,13 @@ export const StudentListPage: React.FC = () => {
   const [importResult, setImportResult] = useState<any>(null);
   const [dragOver, setDragOver] = useState(false);
 
+  // Bulk photo upload states
+  const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [photoZipFile, setPhotoZipFile] = useState<File | null>(null);
+  const [photoUploadLoading, setPhotoUploadLoading] = useState(false);
+  const [photoUploadResult, setPhotoUploadResult] = useState<any>(null);
+  const [photoDragOver, setPhotoDragOver] = useState(false);
+
   const fetchClasses = useCallback(async () => {
     try {
       const res = await api.get('/api/classes', { params: { academicYear: selectedYear, limit: 100 } });
@@ -272,6 +279,27 @@ export const StudentListPage: React.FC = () => {
     }
   };
 
+  const handleBulkPhotoUpload = async () => {
+    if (!photoZipFile) { toast.error('Please select a ZIP file first.'); return; }
+    setPhotoUploadLoading(true);
+    const t = toast.loading('Uploading & matching student photos...');
+    try {
+      const formData = new FormData();
+      formData.append('file', photoZipFile);
+      const res: any = await api.post('/api/students/bulk-photos', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const data = res.data?.data || res.data;
+      setPhotoUploadResult(data);
+      toast.success(`Photos uploaded! ${data.success || 0} students updated.`, { id: t, duration: 5000 });
+      fetchStudents();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Photo upload failed', { id: t });
+    } finally {
+      setPhotoUploadLoading(false);
+    }
+  };
+
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
@@ -314,6 +342,11 @@ export const StudentListPage: React.FC = () => {
                   <Upload className="w-4 h-4" /> Upload Students
                 </button>
                 <button
+                  onClick={() => {
+                    setPhotoUploadResult(null);
+                    setPhotoZipFile(null);
+                    setShowPhotoModal(true);
+                  }}
                   className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
                   title="Upload Photos"
                 >
@@ -795,6 +828,151 @@ export const StudentListPage: React.FC = () => {
         </div>,
         document.body
       )}
+      {/* Bulk Photo Upload Modal */}
+      {showPhotoModal && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-between text-white">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl"><ImageIcon className="w-5 h-5" /></div>
+                <div>
+                  <h2 className="text-lg font-black tracking-tight">Bulk Upload Student Photos</h2>
+                  <p className="text-white/80 text-xs font-medium">ZIP file containing photos named by Student ID (e.g. JY26-0511.jpg)</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowPhotoModal(false); setPhotoUploadResult(null); setPhotoZipFile(null); }}
+                className="p-1.5 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[80vh] overflow-y-auto">
+              {!photoUploadResult ? (
+                <div className="space-y-5">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5">
+                    <p className="font-bold text-slate-800">ఫోటోలు అప్‌లోడ్ చేసే విధానం:</p>
+                    <p>1. ప్రతి విద్యార్థి ఫోటో పేరులో వారి <strong>Student ID</strong> ఉండేలా పెట్టుకోండి (ఉదా: <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511.jpg</code> లేదా <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511 Name.png</code>).</p>
+                    <p>2. ఆ ఫోటోలన్నింటినీ ఒక <strong>.zip</strong> ఫైల్‌గా కంప్రెస్ చేసి ఇక్కడ అప్‌లోడ్ చేయండి.</p>
+                  </div>
+
+                  <div
+                    onDragOver={(e) => { e.preventDefault(); setPhotoDragOver(true); }}
+                    onDragLeave={() => setPhotoDragOver(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setPhotoDragOver(false);
+                      if (e.dataTransfer.files?.[0]) setPhotoZipFile(e.dataTransfer.files[0]);
+                    }}
+                    onClick={() => document.getElementById('bulk-photo-zip-input')?.click()}
+                    className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${
+                      photoDragOver
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : photoZipFile
+                        ? 'border-emerald-400 bg-emerald-50/40'
+                        : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+                    }`}
+                  >
+                    <input
+                      id="bulk-photo-zip-input"
+                      type="file"
+                      accept=".zip"
+                      className="hidden"
+                      onChange={(e) => setPhotoZipFile(e.target.files?.[0] || null)}
+                    />
+                    {photoZipFile ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="p-3 bg-emerald-100 text-emerald-600 rounded-full"><CheckCircle2 className="w-8 h-8" /></div>
+                        <span className="font-bold text-slate-800 text-sm">{photoZipFile.name}</span>
+                        <span className="text-xs font-bold text-indigo-600 hover:underline">Click to choose another ZIP file</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-slate-400">
+                        <Upload className="w-8 h-8 text-indigo-500" />
+                        <span className="font-bold text-slate-700 text-sm">Click or drag ZIP file here</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">.zip (JPG, PNG, WEBP inside)</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => { setShowPhotoModal(false); setPhotoZipFile(null); }}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleBulkPhotoUpload}
+                      disabled={!photoZipFile || photoUploadLoading}
+                      className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black text-sm rounded-xl shadow-md hover:from-indigo-700 hover:to-purple-700 active:scale-95 transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                    >
+                      {photoUploadLoading ? (
+                        <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Uploading Photos...</>
+                      ) : (
+                        <>Upload Photos</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-5 text-center py-4">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 text-emerald-600">
+                    <CheckCircle2 className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-800">Photo Upload Complete!</h3>
+                    <p className="text-slate-500 text-xs font-medium mt-1">విద్యార్థుల ఫోటోలు విజయవంతంగా అప్‌డేట్ అయ్యాయి.</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">
+                    <div className="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl flex flex-col items-center">
+                      <span className="text-2xl font-black text-emerald-600">{photoUploadResult?.success || 0}</span>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mt-1">Uploaded</span>
+                    </div>
+                    <div className={`${(photoUploadResult?.failed?.length || 0) > 0 ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-200'} border p-3.5 rounded-2xl flex flex-col items-center`}>
+                      <span className={`text-2xl font-black ${(photoUploadResult?.failed?.length || 0) > 0 ? 'text-rose-600' : 'text-slate-400'}`}>{photoUploadResult?.failed?.length || 0}</span>
+                      <span className={`text-[10px] font-black uppercase tracking-wider mt-1 ${(photoUploadResult?.failed?.length || 0) > 0 ? 'text-rose-700' : 'text-slate-400'}`}>Failed</span>
+                    </div>
+                  </div>
+
+                  {photoUploadResult?.failed && photoUploadResult.failed.length > 0 && (
+                    <div className="text-left max-h-40 overflow-y-auto bg-rose-50/70 border border-rose-200 p-3.5 rounded-xl text-xs">
+                      <div className="flex items-center gap-1.5 text-rose-700 font-bold mb-2">
+                        <AlertCircle className="w-4 h-4" /> Unmatched / Failed Files:
+                      </div>
+                      <ul className="space-y-1 text-rose-600">
+                        {photoUploadResult.failed.map((e: any, idx: number) => (
+                          <li key={idx} className="flex justify-between gap-2">
+                            <span className="font-mono font-bold truncate">{e.file}</span>
+                            <span className="shrink-0">{e.reason}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex justify-center pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setPhotoUploadResult(null);
+                        setPhotoZipFile(null);
+                        setShowPhotoModal(false);
+                      }}
+                      className="px-8 py-2.5 bg-slate-100 text-slate-700 hover:bg-slate-200 font-black rounded-xl transition cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       <StudentListExportModal 
         isOpen={exportDialog.open}
         onClose={() => setExportDialog(f => ({ ...f, open: false }))}

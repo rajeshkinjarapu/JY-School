@@ -1,5 +1,16 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Progress Card Student Full Name & 2nd Line Student ID (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `student full name kanapadatam ledu student id 2nd line lo ravali`
+- **చేసిన మార్పులు:**
+  - `frontend/src/components/exams/ProgressCardTemplate.tsx`: `Student Name` ను `col-span-2` లో పెట్టి `truncate` తొలగించాము (పూర్తి పేరు కనిపిస్తుంది), మరియు `Student ID` ను 2వ లైన్‌కు మార్చాము.
+
+## చివరి సంభాషణ - Students Bulk Upload Photos Button & Modal Fix (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `photo upload option work avvatam leud` (Students పేజీలో `Upload Photos` బటన్ పనిచేయడం లేదు).
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/students/StudentListPage.tsx`: `Upload Photos` బటన్‌కు `onClick` మరియు Light Theme Bulk Photo Upload Modal (`.zip` ఫైల్ ద్వారా Student ID ఆధారంగా ఫోటోలు అప్‌లోడ్ చేసేలా) జోడించి `POST /api/students/bulk-photos` కు కనెక్ట్ చేశాము.
+  - `backend/src/controllers/students.controller.ts`: `bulkUploadPhotos` లో `student:*` మరియు `class:students:*` క్యాష్ క్లియరింగ్ జత చేశాము.
+
 ## చివరి సంభాషణ - Progress Card Student Photo Fix (Web App & Flutter App Done) (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** `progress card meda image ravatam ledu both webapp and flutter app lo perfect ga ravali`
 - **Web App లో చేసిన మార్పులు:**

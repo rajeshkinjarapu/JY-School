@@ -135,11 +135,11 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
 
             <div className="flex items-stretch p-3 gap-4">
               <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div className="flex items-center gap-2">
+                <div className="col-span-2 flex items-center gap-2">
                   <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
                     <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
                   </span>
-                  <span className="font-black text-slate-900 uppercase text-[12px] truncate">{safeData.studentName}</span>
+                  <span className="font-black text-slate-900 uppercase text-[12px] leading-snug break-words">{safeData.studentName}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
@@ -165,7 +165,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                   </span>
                   <span className="font-bold text-slate-800">{safeData.mobile}</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="col-span-2 flex items-center gap-2">
                   <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
                     <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
                   </span>
