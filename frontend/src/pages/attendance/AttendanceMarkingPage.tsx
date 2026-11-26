@@ -21,6 +21,7 @@ export const AttendanceMarkingPage: React.FC = () => {
   const [students, setStudents] = useState<any[]>([]);
   const [records, setRecords] = useState<{ [studentId: string]: string }>({});
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchClasses = async () => {
@@ -68,7 +69,9 @@ export const AttendanceMarkingPage: React.FC = () => {
 
     try {
       const attendancePromise = api.get(`/api/attendance/class`, { params: { classId, date } });
-      const studentsPromise = classId === 'ALL' ? api.get('/api/students') : api.get(`/api/classes/${classId}/students`);
+      const studentsPromise = classId === 'ALL'
+        ? api.get('/api/students', { params: { limit: 2000 } })
+        : api.get(`/api/classes/${classId}/students`);
       
       const [attendanceRes, studentsRes]: any = await Promise.all([
         attendancePromise,
@@ -105,7 +108,7 @@ export const AttendanceMarkingPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (!activeClassId) return;
+    if (!activeClassId || saving) return;
 
     const payload = {
       classId: activeClassId,
@@ -116,14 +119,17 @@ export const AttendanceMarkingPage: React.FC = () => {
       })),
     };
 
-    // OPTIMISTIC UPDATE: Show success immediately!
-    toast.success('Attendance records saved successfully!');
-
-    // Send to server in background without blocking UI
-    api.post('/api/attendance/bulk', payload).catch(e => {
-      console.error("Background sync failed:", e);
-      toast.error('Failed to sync attendance in background');
-    });
+    setSaving(true);
+    const toastId = toast.loading('Saving attendance...');
+    try {
+      await api.post('/api/attendance/bulk', payload);
+      toast.success(`Attendance saved for ${payload.records.length} students!`, { id: toastId });
+    } catch (e: any) {
+      console.error('Failed to save attendance:', e);
+      toast.error(e?.response?.data?.message || 'Failed to save attendance. Please try again.', { id: toastId });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const uniqueClassNames = ['All Classes', ...Array.from(new Set(classes.map(c => c.name)))];
@@ -318,9 +324,10 @@ export const AttendanceMarkingPage: React.FC = () => {
               <div className="hidden sm:flex justify-end p-6 border-t border-indigo-50 bg-indigo-50/20">
                 <button
                   onClick={handleSubmit}
-                  className="px-10 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/30 tracking-wide flex items-center gap-2 transform hover:-translate-y-1"
+                  disabled={saving}
+                  className="px-10 py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-extrabold rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/30 tracking-wide flex items-center gap-2 transform hover:-translate-y-1 disabled:opacity-60 cursor-pointer"
                 >
-                  <CheckCircle className="w-5 h-5" /> SAVE ATTENDANCE
+                  <CheckCircle className="w-5 h-5" /> {saving ? 'SAVING...' : 'SAVE ATTENDANCE'}
                 </button>
               </div>
             )}
@@ -343,9 +350,10 @@ export const AttendanceMarkingPage: React.FC = () => {
         <div className="sticky bottom-0 -mx-3 sm:-mx-4 p-4 bg-white/90 backdrop-blur-xl border-t border-indigo-100 z-50 sm:hidden mt-8" style={{ paddingBottom: 'env(safe-area-inset-bottom, 1rem)' }}>
           <button
             onClick={handleSubmit}
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 active:scale-[0.98] text-white font-black rounded-2xl text-sm transition-all shadow-xl shadow-emerald-500/30 tracking-wide flex items-center justify-center gap-2"
+            disabled={saving}
+            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 active:scale-[0.98] text-white font-black rounded-2xl text-sm transition-all shadow-xl shadow-emerald-500/30 tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            <CheckCircle className="w-5 h-5" /> SAVE ATTENDANCE
+            <CheckCircle className="w-5 h-5" /> {saving ? 'SAVING...' : 'SAVE ATTENDANCE'}
           </button>
         </div>
       )}

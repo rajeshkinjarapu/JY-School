@@ -10,7 +10,12 @@ const cache: { [key: string]: { data: any; expiry: number } } = {};
 
 export const clearDashboardCache = () => {
   Object.keys(cache).forEach(key => {
-    if (key === 'admin_dashboard' || key === 'dashboard:stats' || key === 'dashboard:recent_activities' || key.startsWith('students:list:')) {
+    if (
+      key.startsWith('admin_dashboard') ||
+      key === 'dashboard:stats' ||
+      key === 'dashboard:recent_activities' ||
+      key.startsWith('students:list:')
+    ) {
       delete cache[key];
     }
   });

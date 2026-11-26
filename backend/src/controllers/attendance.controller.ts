@@ -6,6 +6,7 @@ import { successResponse } from '../utils/response';
 import { Role } from '../types/enums';
 import { sortClasses } from '../utils/sortClasses';
 import { createSystemNotification } from './notifications.controller';
+import { clearDashboardCache } from './dashboard.controller';
 
 export const getByClass = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { classId, date } = req.query as { classId: string; date: string };
@@ -122,6 +123,7 @@ export const markBulk = async (req: AuthRequest, res: Response, next: NextFuncti
   });
 
   await prisma.$transaction(upsertOps);
+  clearDashboardCache();
 
   // 1. Notify Admin and Super Admin when teacher marks attendance
   const teacherName = req.user?.name || 'Teacher';

@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Attendance Save & Dashboard Cache Sync Fix (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `attendance vesina ventane save avvatam ledu`
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/attendance/AttendanceMarkingPage.tsx`: `handleSubmit` లో ఆప్టిమిస్టిక్ బ్యాక్‌గ్రౌండ్ కాల్ బదులుగా `await api.post('/api/attendance/bulk', payload)` చేసి `saving` స్టేట్‌తో సర్వర్‌లో సేవ్ అయిన తర్వాతే సక్సెస్ చూపించేలా మార్చాము (`limit: 2000` for All Classes).
+  - `backend/src/controllers/attendance.controller.ts`: `markBulk` తర్వాత `clearDashboardCache()` కాల్ జత చేశాము.
+  - `backend/src/controllers/dashboard.controller.ts`: `clearDashboardCache()` లో `key.startsWith('admin_dashboard')` వాడి `admin_dashboard_<year>` క్యాష్‌లు కూడా వెంటనే క్లియర్ అయ్యేలా ఫిక్స్ చేశాము.
+
 ## చివరి సంభాషణ - Navodaya Exam Only Progress Card Layout (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** `only navodaya exam ki sambandinchina ee progress card lo matrame ee changes undali remaing progress card assalu touch cheyocddu; class and mobile number kuda kundaku one by one vachela cheyu`
 - **చేసిన మార్పులు:**
