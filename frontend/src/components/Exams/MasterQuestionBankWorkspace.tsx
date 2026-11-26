@@ -4,7 +4,7 @@ import {
   Search, Plus, Trash2, Edit, Copy, RefreshCw, Sparkles, BookOpen,
   Database, X, FileSpreadsheet, Download, Upload, Image as ImageIcon,
   FolderOpen, ChevronRight, Zap, CheckSquare, Square, Eye, EyeOff, Printer, Layers,
-  CheckCircle2, LayoutGrid, List
+  CheckCircle2, LayoutGrid, List, Tag, FileText
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import api from '../../api/axios';
@@ -250,6 +250,70 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
     return { easy, medium, hard };
   }, [filteredQuestions]);
 
+  // Global summary counts for the 7 pastel stat tiles
+  const bankOverviewStats = useMemo(() => {
+    const subSet = new Set<string>();
+    const chSet = new Set<string>();
+    const topicSet = new Set<string>();
+    let easy = 0;
+    let medium = 0;
+    let hard = 0;
+
+    questions.forEach((q: any) => {
+      const sub = normalizeSubjectLabel(q.subjectName || q.subject?.name || q.chapterName);
+      if (sub) subSet.add(sub);
+      const ch = extractChapterLabel(q);
+      if (ch) chSet.add(`${sub}::${ch}`);
+      const tp = (q.topicName || q.category || ch || 'General').trim();
+      if (tp) topicSet.add(`${sub}::${tp}`);
+      const d = (q.difficulty || 'MEDIUM').toUpperCase();
+      if (d === 'EASY') easy += 1;
+      else if (d === 'HARD') hard += 1;
+      else medium += 1;
+    });
+
+    return {
+      total: questions.length,
+      subjectsCount: subSet.size,
+      chaptersCount: chSet.size,
+      topicsCount: topicSet.size,
+      easy,
+      medium,
+      hard,
+    };
+  }, [questions]);
+
+  const handleExportExcel = () => {
+    if (filteredQuestions.length === 0) {
+      toast.error('No questions to export');
+      return;
+    }
+    const rows = filteredQuestions.map((q: any, idx: number) => {
+      const opts = safeParseOptions(q.options);
+      return {
+        '#': idx + 1,
+        Category: q.category || 'SCHOOL',
+        Class: q.className || '',
+        Subject: normalizeSubjectLabel(q.subjectName || q.subject?.name || q.chapterName),
+        Chapter: extractChapterLabel(q),
+        Question: q.questionText || '',
+        'Option A': opts[0] || '',
+        'Option B': opts[1] || '',
+        'Option C': opts[2] || '',
+        'Option D': opts[3] || '',
+        'Correct Answer': q.correctAnswer || '',
+        Difficulty: q.difficulty || 'MEDIUM',
+        Type: q.questionType || 'MCQ',
+        Explanation: q.explanation || '',
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+    XLSX.writeFile(wb, `Question_Bank_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success(`Exported ${rows.length} questions to Excel!`);
+  };
+
   // Helper for subject colors & friendly icons
   const getSubjectAccent = (name: string) => {
     const n = (name || '').toLowerCase();
@@ -382,210 +446,263 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
     navigate('/question-bank/mcq-generator?fromBank=true');
   };
 
+  const SignalBarsIcon: React.FC<{ color: string }> = ({ color }) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="shrink-0">
+      <rect x="2" y="12" width="4" height="6" rx="1.5" fill={color} />
+      <rect x="8" y="8" width="4" height="10" rx="1.5" fill={color} />
+      <rect x="14" y="3" width="4" height="15" rx="1.5" fill={color} />
+    </svg>
+  );
+
   return (
-    <div className="space-y-5 pb-24">
-      {/* 1. CLEAN, EASY-TO-UNDERSTAND COMMAND HEADER & FILTERS */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4">
-        {/* Top Row: Clear Title + Friendly Guide + Plain-Language Action Buttons */}
-        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-          <div className="flex items-start sm:items-center gap-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-100 border border-indigo-200/80 text-indigo-600 flex items-center justify-center shrink-0">
-              <BookOpen size={22} />
+    <div className="space-y-4 pb-24">
+      {/* 1. CLEAN 7-STAT PASTEL HEADER + SINGLE-ROW ACTION TOOLBAR */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+        {/* Row 1: 7 Equal Pastel Stat Tiles */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5">
+          {/* 1. Total Questions */}
+          <button
+            type="button"
+            onClick={() => setDifficultyFilter('ALL')}
+            className={`rounded-xl px-3.5 py-2.5 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3 text-left transition hover:opacity-95 cursor-pointer ${
+              difficultyFilter === 'ALL' ? 'ring-2 ring-[#5B3DF5]/30' : ''
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <h2 className="text-base sm:text-lg font-black text-slate-900">School Question Bank</h2>
-                <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-extrabold">
-                  {questions.length} Saved Questions
-                </span>
-                <button
-                  type="button"
-                  onClick={handleSyncFromExams}
-                  disabled={syncing}
-                  className="px-2.5 py-0.5 rounded-full bg-slate-100 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border border-slate-200 hover:border-amber-200 text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                  title="Bring questions from existing Online Exams into this Question Bank"
-                >
-                  <RefreshCw size={11} className={syncing ? 'animate-spin' : ''} />
-                  <span>{syncing ? 'Syncing...' : 'Sync from Exams'}</span>
-                </button>
-              </div>
-              <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Filter by Class or Subject below, or tick questions to make an A4 Paper or Online Exam.
-              </p>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black leading-tight">{bankOverviewStats.total.toLocaleString()}</div>
+              <div className="text-[11px] font-semibold text-indigo-100 truncate">Total Questions</div>
+            </div>
+          </button>
+
+          {/* 2. Subjects */}
+          <div className="rounded-xl px-3.5 py-2.5 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.subjectsCount}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Subjects</div>
             </div>
           </div>
 
+          {/* 3. Chapters */}
+          <div className="rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <BookOpen className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.chaptersCount}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Chapters</div>
+            </div>
+          </div>
+
+          {/* 4. Topics */}
+          <div className="rounded-xl px-3.5 py-2.5 bg-[#FFF4E5] border border-[#FDE2BA] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+              <Tag className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.topicsCount}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Topics</div>
+            </div>
+          </div>
+
+          {/* 5. Easy */}
+          <button
+            type="button"
+            onClick={() => setDifficultyFilter(difficultyFilter === 'EASY' ? 'ALL' : 'EASY')}
+            className={`rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border text-left flex items-center gap-3 transition cursor-pointer ${
+              difficultyFilter === 'EASY' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-[#CBEFD6] hover:border-emerald-300'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/80 flex items-center justify-center shrink-0">
+              <SignalBarsIcon color="#16A34A" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.easy.toLocaleString()}</div>
+              <div className="text-[11px] font-bold text-[#16A34A] truncate">Easy</div>
+            </div>
+          </button>
+
+          {/* 6. Medium */}
+          <button
+            type="button"
+            onClick={() => setDifficultyFilter(difficultyFilter === 'MEDIUM' ? 'ALL' : 'MEDIUM')}
+            className={`rounded-xl px-3.5 py-2.5 bg-[#FFF4E5] border text-left flex items-center gap-3 transition cursor-pointer ${
+              difficultyFilter === 'MEDIUM' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-[#FDE2BA] hover:border-amber-300'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/80 flex items-center justify-center shrink-0">
+              <SignalBarsIcon color="#EA580C" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.medium.toLocaleString()}</div>
+              <div className="text-[11px] font-bold text-[#D97706] truncate">Medium</div>
+            </div>
+          </button>
+
+          {/* 7. Hard */}
+          <button
+            type="button"
+            onClick={() => setDifficultyFilter(difficultyFilter === 'HARD' ? 'ALL' : 'HARD')}
+            className={`rounded-xl px-3.5 py-2.5 bg-[#FEECEF] border text-left flex items-center gap-3 transition cursor-pointer ${
+              difficultyFilter === 'HARD' ? 'border-rose-500 ring-2 ring-rose-500/20' : 'border-[#FBD0D8] hover:border-rose-300'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/80 flex items-center justify-center shrink-0">
+              <SignalBarsIcon color="#E11D48" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{bankOverviewStats.hard.toLocaleString()}</div>
+              <div className="text-[11px] font-bold text-[#E11D48] truncate">Hard</div>
+            </div>
+          </button>
+        </div>
+
+        {/* Row 2: Clean Single-Line Action Toolbar + Search */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 pt-0.5">
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
               type="button"
               onClick={() => setComposerState({ open: true, mode: 'ADD' })}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
             >
               <Plus size={15} />
-              <span>Add Question</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => navigate('/competitive-exams/ai-studio')}
-              className="px-3.5 py-2.5 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-800 border border-sky-200 text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer"
-              title="Paste exam text or upload photo/PDF to extract questions using AI"
-            >
-              <Sparkles size={14} className="text-sky-600" />
-              <span>AI Scan / Text</span>
+              <span>Add New Question</span>
             </button>
 
             <button
               type="button"
               onClick={() => setShowExcelModal(true)}
-              className="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer"
-              title="Upload questions in bulk using Excel or CSV"
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
             >
-              <FileSpreadsheet size={14} className="text-emerald-600" />
-              <span>Upload Excel</span>
+              <Upload size={14} className="text-slate-600" />
+              <span>Import (Excel)</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setShowAutoPickModal(true)}
-              disabled={questions.length === 0}
-              className="px-3.5 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-40"
-              title="Automatically pick Easy, Medium, and Hard questions for a paper"
+              onClick={handleExportExcel}
+              disabled={filteredQuestions.length === 0}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer disabled:opacity-40"
             >
-              <Zap size={14} className="text-purple-600" />
-              <span>Auto-Make Paper</span>
+              <Download size={14} className="text-slate-600" />
+              <span>Export</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedIds.length > 0) handleSendToPaperGenerator(selectedIds);
+                else setShowAutoPickModal(true);
+              }}
+              disabled={questions.length === 0}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer disabled:opacity-40"
+            >
+              <FileText size={14} className="text-slate-600" />
+              <span>Generate Paper</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate('/competitive-exams/ai-studio')}
+              className="px-3.5 py-2.5 rounded-xl bg-[#F0F7FF] hover:bg-[#E0EFFF] text-[#1D4ED8] border border-[#CFE2FF] text-xs font-bold flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+            >
+              <Sparkles size={14} />
+              <span>AI Studio</span>
+            </button>
+          </div>
+
+          <div className="relative flex-1 lg:max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search question (keyword, text, formula...)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-[#5B3DF5] transition"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Second Row: Clear Labeled Search + Dropdowns */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-          <div className="lg:col-span-5">
-            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-              Search Questions
-            </label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Type keyword, formula, or chapter name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 rounded-xl bg-slate-50 focus:bg-white border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-400 transition"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-              Class
-            </label>
+        {/* Row 3: Slim Secondary Filter Strip (Class, Exam/Board, Format, Sync) */}
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+          <div className="flex flex-wrap items-center gap-2">
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 focus:bg-white border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-[#5B3DF5] cursor-pointer"
             >
               {classOptions.map((c) => (
                 <option key={c} value={c}>
-                  {c === 'ALL' ? 'All Classes' : c}
+                  {c === 'ALL' ? 'Class: All' : `Class: ${c}`}
                 </option>
               ))}
             </select>
-          </div>
 
-          <div className="lg:col-span-3">
-            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-              Exam / Board
-            </label>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 focus:bg-white border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-[#5B3DF5] cursor-pointer"
             >
               {CATEGORY_OPTIONS.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat === 'ALL'
-                    ? 'All Exams (School, JEE, NEET...)'
+                    ? 'Exam: All'
                     : cat === 'NAVODAYA'
-                    ? 'Navodaya / Sainik'
+                    ? 'Exam: Navodaya'
                     : cat === 'SCHOOL'
-                    ? 'School Curriculum'
-                    : cat === 'GENERAL'
-                    ? 'General'
-                    : cat}
+                    ? 'Exam: School'
+                    : `Exam: ${cat}`}
                 </option>
               ))}
             </select>
-          </div>
 
-          <div className="lg:col-span-2">
-            <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1">
-              Question Format
-            </label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl bg-slate-50 focus:bg-white border border-slate-200 text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 outline-none focus:border-[#5B3DF5] cursor-pointer"
             >
               {QUESTION_TYPES.map((t) => (
                 <option key={t.key} value={t.key}>
-                  {t.key === 'ALL' ? 'All Formats' : t.label}
+                  {t.key === 'ALL' ? 'Format: All' : t.label}
                 </option>
               ))}
             </select>
-          </div>
-        </div>
 
-        {/* Third Row: Visual Clickable Difficulty Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 mr-1">
-              Difficulty:
-            </span>
-            {[
-              { key: 'ALL', label: 'All Levels', count: filteredQuestions.length, active: 'bg-indigo-600 text-white border-indigo-600', idle: 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100' },
-              { key: 'EASY', label: 'Easy', dot: 'bg-emerald-500', count: difficultyStats.easy, active: 'bg-emerald-600 text-white border-emerald-600', idle: 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100' },
-              { key: 'MEDIUM', label: 'Medium', dot: 'bg-amber-500', count: difficultyStats.medium, active: 'bg-amber-500 text-white border-amber-500', idle: 'bg-amber-50/70 text-amber-800 border-amber-200 hover:bg-amber-100' },
-              { key: 'HARD', label: 'Hard', dot: 'bg-rose-500', count: difficultyStats.hard, active: 'bg-rose-600 text-white border-rose-600', idle: 'bg-rose-50/70 text-rose-800 border-rose-200 hover:bg-rose-100' },
-            ].map((lvl) => {
-              const isActive = difficultyFilter === lvl.key;
-              return (
-                <button
-                  key={lvl.key}
-                  type="button"
-                  onClick={() => setDifficultyFilter(lvl.key)}
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-extrabold inline-flex items-center gap-1.5 transition cursor-pointer ${
-                    isActive ? lvl.active : lvl.idle
-                  }`}
-                >
-                  {lvl.dot && !isActive && <span className={`w-2 h-2 rounded-full ${lvl.dot}`} />}
-                  <span>{lvl.label}</span>
-                  <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-black ${isActive ? 'bg-white/25 text-white' : 'bg-white/80 text-slate-700'}`}>
-                    {lvl.count}
-                  </span>
-                </button>
-              );
-            })}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold inline-flex items-center gap-1 cursor-pointer"
+              >
+                <X size={12} /> Clear Filters
+              </button>
+            )}
           </div>
 
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              className="px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-extrabold inline-flex items-center gap-1 transition cursor-pointer"
-            >
-              <X size={13} /> Clear All Filters
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={handleSyncFromExams}
+            disabled={syncing}
+            className="px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold inline-flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50"
+            title="Sync questions from existing Online Exams"
+          >
+            <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
+            <span>{syncing ? 'Syncing...' : 'Sync from Exams'}</span>
+          </button>
         </div>
       </div>
 
