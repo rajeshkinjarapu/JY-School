@@ -37,6 +37,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   const PASS_THRESHOLD = 35;
 
   const examTitle = settings?.examNameOverride || exam?.name || 'EXAMINATION RESULT CARD';
+  const isNavodaya = String(examTitle || exam?.name || '').toUpperCase().includes('NAVODAYA');
   const logoUrl = settings?.logoUrl;
   const teacherSignatureUrl = settings?.teacherSignatureUrl;
   const principalSignatureUrl = settings?.signatureUrl || settings?.principalSignatureUrl;
@@ -134,44 +135,87 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             </div>
 
             <div className="flex items-stretch p-3 gap-4">
-              <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                <div className="col-span-2 flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
-                  </span>
-                  <span className="font-black text-slate-900 uppercase text-[12px] leading-snug break-words">{safeData.studentName}</span>
+              {isNavodaya ? (
+                <div className="flex-1 flex flex-col justify-center gap-1.5 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
+                    </span>
+                    <span className="font-black text-slate-900 uppercase text-[12px] leading-snug break-words">{safeData.studentName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5 text-indigo-600" /> Student ID:
+                    </span>
+                    <span className="font-extrabold text-slate-800">{safeData.rollNo}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-emerald-600" /> Class & Sec:
+                    </span>
+                    <span className="font-extrabold text-slate-800">{safeData.className} {safeData.section ? `- ${safeData.section}` : ''}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-rose-500" /> Mobile:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.mobile}</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
+                      </span>
+                      <span className="font-bold text-slate-800">{safeData.academicYear}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] shrink-0 flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
+                      </span>
+                      <span className="font-bold text-slate-800">{safeData.location}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <Hash className="w-3.5 h-3.5 text-indigo-600" /> Student ID:
-                  </span>
-                  <span className="font-extrabold text-slate-800">{safeData.rollNo}</span>
+              ) : (
+                <div className="flex-1 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
+                    </span>
+                    <span className="font-black text-slate-900 uppercase text-[12px] truncate">{safeData.studentName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Hash className="w-3.5 h-3.5 text-indigo-600" /> Student ID:
+                    </span>
+                    <span className="font-extrabold text-slate-800">{safeData.rollNo}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <GraduationCap className="w-3.5 h-3.5 text-emerald-600" /> Class & Sec:
+                    </span>
+                    <span className="font-extrabold text-slate-800">{safeData.className} {safeData.section ? `- ${safeData.section}` : ''}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.academicYear}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-rose-500" /> Mobile:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.mobile}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
+                    </span>
+                    <span className="font-bold text-slate-800">{safeData.location}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <GraduationCap className="w-3.5 h-3.5 text-emerald-600" /> Class & Sec:
-                  </span>
-                  <span className="font-extrabold text-slate-800">{safeData.className} {safeData.section ? `- ${safeData.section}` : ''}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-cyan-600" /> Academic Year:
-                  </span>
-                  <span className="font-bold text-slate-800">{safeData.academicYear}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-rose-500" /> Mobile:
-                  </span>
-                  <span className="font-bold text-slate-800">{safeData.mobile}</span>
-                </div>
-                <div className="col-span-2 flex items-center gap-2">
-                  <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-pink-600" /> Location:
-                  </span>
-                  <span className="font-bold text-slate-800">{safeData.location}</span>
-                </div>
-              </div>
+              )}
 
               {/* Student Photo */}
               <div className="shrink-0 w-24 h-28 p-1 bg-white border-2 border-[#f39c12] rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
