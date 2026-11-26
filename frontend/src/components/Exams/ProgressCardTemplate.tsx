@@ -134,9 +134,9 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               ) : null}
             </div>
 
-            <div className={`flex items-center ${isNavodaya ? 'p-4' : 'p-3'} gap-4`}>
+            <div className={`flex items-center ${isNavodaya ? 'px-5 py-5' : 'p-3'} gap-4`}>
               {isNavodaya ? (
-                <div className="flex-1 flex flex-col justify-center gap-2.5 text-xs">
+                <div className="flex-1 flex flex-col justify-center gap-3.5 text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-slate-500 font-bold uppercase tracking-wider text-[10.5px] w-28 shrink-0 flex items-center gap-1.5">
                       <User className="w-3.5 h-3.5 text-purple-600" /> Student Name:
@@ -216,7 +216,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               )}
 
               {/* Student Photo */}
-              <div className="shrink-0 w-24 h-28 p-1 bg-white border-2 border-[#f39c12] rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
+              <div className={`shrink-0 ${isNavodaya ? 'w-28 h-32' : 'w-24 h-28'} p-1 bg-white border-2 border-[#f39c12] rounded-lg shadow-sm flex items-center justify-center overflow-hidden`}>
                 {resolveUrl(safeData.photo) ? (
                   <img src={resolveUrl(safeData.photo)} alt="Candidate Photo" className="w-full h-full object-cover rounded" />
                 ) : (
@@ -243,12 +243,12 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
             <div className="border border-slate-300 rounded-lg overflow-hidden shadow-2xs">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#0b1a33] text-white">
-                    <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-[11px]">Subject</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Marks Obtained</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Max Marks</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">% Score</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center">Status</th>
+                  <tr className="bg-[#0b1a33] text-white" style={{ backgroundColor: '#0b1a33', color: '#ffffff' }}>
+                    <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-[11px] text-white" style={{ color: '#ffffff' }}>Subject</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Marks Obtained</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Max Marks</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>% Score</th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">

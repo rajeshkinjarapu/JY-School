@@ -3,7 +3,7 @@
 ## చివరి సంభాషణ - Navodaya Exam Only Progress Card Layout (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** `only navodaya exam ki sambandinchina ee progress card lo matrame ee changes undali remaing progress card assalu touch cheyocddu; class and mobile number kuda kundaku one by one vachela cheyu`
 - **చేసిన మార్పులు:**
-  - `frontend/src/components/exams/ProgressCardTemplate.tsx`: `isNavodaya` కండిషన్ ద్వారా **కేవలం Navodaya Exam Progress Card** లో మాత్రమే `Student Name` (full name), `Student ID`, `Class & Sec`, `Mobile`, `Academic Year`, `Location` అన్నీ కిందకు ఒకదాని తర్వాత ఒకటి మంచి స్పేసింగ్ (`gap-2.5`) తో వచ్చేలా మార్చాము. మిగతా అన్ని పరీక్షల Progress Cards పాత 2-కాలమ్ లేఅవుట్‌లోనే యథాతథంగా ఉంటాయి.
+  - `frontend/src/components/exams/ProgressCardTemplate.tsx`: `isNavodaya` కండిషన్ ద్వారా **కేవలం Navodaya Exam Progress Card** లో మాత్రమే `Student Name` (full name), `Student ID`, `Class & Sec`, `Mobile`, `Academic Year`, `Location` అన్నీ కిందకు ఒకదాని తర్వాత ఒకటి మంచి స్పేసింగ్ (`gap-3.5`, `py-5`, ఫోటో `w-28 h-32`) తో వచ్చేలా మార్చాము. అలాగే Performance Summary టేబుల్ హెడ్డింగ్స్ (`SUBJECT`, `MARKS OBTAINED`, `MAX MARKS`, `% SCORE`, `STATUS`) స్పష్టంగా తెలుపు రంగులో కనిపించేలా `color: '#ffffff'` జత చేశాము. మిగతా అన్ని పరీక్షల Progress Cards పాత 2-కాలమ్ లేఅవుట్‌లోనే యథాతథంగా ఉంటాయి.
 
 ## చివరి సంభాషణ - Progress Card Student Full Name & 2nd Line Student ID (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** `student full name kanapadatam ledu student id 2nd line lo ravali`
