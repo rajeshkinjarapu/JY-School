@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Master Question Bank "Failed to load Master Question Bank" DB Schema Sync Fix (November 26, 2026)
+- **సమస్య:** `/competitive-exams/question-bank` పేజీలో `Failed to load Master Question Bank` ఎర్రర్ టోస్ట్ కనిపిస్తోంది — ఎందుకంటే `schema.prisma` లో కొత్తగా జతచేసిన కాలమ్‌లు (`topicName`, `questionType`, `category`, `subjectName`, `className`, `explanation`, మరియు `CompetitiveExamQuestion.masterQuestionId`) లైవ్ Supabase PostgreSQL డేటాబేస్‌లో `ADD COLUMN` కాకపోవడంతో `getMasterQuestions` క్వెరీ 500 ఎర్రర్ ఇస్తోంది.
+- **పరిష్కారం:**
+  - [masterQuestions.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/masterQuestions.controller.ts): `ensureMasterQuestionSchema()` హెల్పర్ జత చేసి, అవసరమైన టేబుల్ & కాలమ్‌లు అన్నీ లేకపోతే సురక్షితంగా (`ADD COLUMN IF NOT EXISTS`) ఆటో-సింక్ అయ్యేలా చేశాము, మరియు `getMasterQuestions` లో `_count` ఫాల్‌బ్యాక్ + స్పష్టమైన ఎర్రర్ మెసేజ్ జోడించాము.
+  - [server.ts](file:///d:/JY%20School/JY-School-main/backend/src/server.ts): సర్వర్ బూట్ సమయంలోనే `ensureMasterQuestionSchema()` ఆటోమేటిక్‌గా రన్ అయ్యేలా కనెక్ట్ చేశాము.
+  - [MasterQuestionBankWorkspace.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Exams/MasterQuestionBankWorkspace.tsx): ఏదైనా లోడ్ ఎర్రర్ వస్తే అసలైన బ్యాకెండ్ మెసేజ్ చూపించేలా అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Full-Width AI Question Studio Page & Shared Gemini API Key (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** Master Question Bank లో `AI Extract` పాపప్ బదులు **సెపరేట్ ఫుల్-పేజీ AI Question Studio** ఓపెన్ అవ్వాలి మరియు MCQ Paper Generator లో ఇప్పటికే ఉన్న Gemini API Key (`jy_gemini_api_key`) మీదనే ఇక్కడి అన్ని AI ఫీచర్లు పని చేయాలి.
 - **చేసిన మార్పులు:**

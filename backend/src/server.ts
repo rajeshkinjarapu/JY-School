@@ -171,6 +171,7 @@ app.use(errorHandler);
 
 import { autoCleanDuplicateSubjectsAndMarks } from './utils/cleanupDuplicateSubjects';
 import { ensureChairmanUser } from './utils/ensureChairmanUser';
+import { ensureMasterQuestionSchema } from './controllers/masterQuestions.controller';
 
 const PORT = parseInt(process.env.PORT || '5000', 10);
 if (!process.env.VERCEL) {
@@ -184,6 +185,9 @@ if (!process.env.VERCEL) {
       CREATE INDEX IF NOT EXISTS "Student_childId_idx" ON "Student"("childId");
       CREATE INDEX IF NOT EXISTS "Student_apaarId_idx" ON "Student"("apaarId");
     `).catch(err => console.log('Auto-sync student columns notice:', err?.message));
+
+    // Ensure MasterQuestion & CompetitiveExamQuestion schema columns exist in DB
+    ensureMasterQuestionSchema().catch(err => console.log('Auto-sync MasterQuestion notice:', err?.message));
 
     // Ensure dedicated Group Chairman user account exists
     ensureChairmanUser().catch(err => {

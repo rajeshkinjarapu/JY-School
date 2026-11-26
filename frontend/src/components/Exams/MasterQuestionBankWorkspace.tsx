@@ -143,8 +143,8 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
         .map((c: any) => (c.name || '').trim())
         .filter(Boolean);
       setSchoolClasses(Array.from(new Set<string>(dbClsNames)));
-    } catch {
-      toast.error('Failed to load Master Question Bank');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to load Master Question Bank');
     } finally {
       setLoading(false);
     }
