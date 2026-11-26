@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 
 class ProgressCardNative extends StatelessWidget {
   final Map<String, dynamic> data;
@@ -577,22 +578,28 @@ class ProgressCardNative extends StatelessWidget {
   }
 
   Widget _buildStudentPhoto(String photoUrl) {
-    if (photoUrl.isEmpty) {
+    final resolved = ApiService.getImageUrl(photoUrl);
+    if (resolved.isEmpty) {
       return const Icon(Icons.person, size: 50, color: Colors.grey);
     }
-    
+
     try {
-      if (photoUrl.startsWith('data:image')) {
-        final commaIdx = photoUrl.indexOf(',');
-        final base64Str = commaIdx != -1 ? photoUrl.substring(commaIdx + 1) : photoUrl;
+      if (resolved.startsWith('data:image')) {
+        final commaIdx = resolved.indexOf(',');
+        final rawBase64 = commaIdx != -1 ? resolved.substring(commaIdx + 1) : resolved;
+        final cleanBase64 = rawBase64.replaceAll(RegExp(r'\s+'), '');
         return Image.memory(
-          base64Decode(base64Str),
+          base64Decode(cleanBase64),
+          width: 95,
+          height: 114,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
         );
-      } else if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+      } else if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
         return Image.network(
-          photoUrl,
+          resolved,
+          width: 95,
+          height: 114,
           fit: BoxFit.cover,
           errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 50, color: Colors.grey),
         );

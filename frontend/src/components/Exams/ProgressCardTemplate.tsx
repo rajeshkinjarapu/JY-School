@@ -1,5 +1,6 @@
 import React from 'react';
 import { Award, User, Hash, GraduationCap, Phone, Calendar, MapPin, Medal, BarChart3, PenTool, ClipboardList } from 'lucide-react';
+import { getPhotoUrl } from '../../utils/photo';
 
 interface ProgressCardTemplateProps {
   data?: any;
@@ -40,12 +41,10 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
   const teacherSignatureUrl = settings?.teacherSignatureUrl;
   const principalSignatureUrl = settings?.signatureUrl || settings?.principalSignatureUrl;
 
-  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   const resolveUrl = (url?: string) => {
     if (!url || url === 'null' || url === 'undefined') return '';
-    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
     if (url === '/logo.png' || url === 'logo.png') return '/logo.png';
-    return `${API_BASE.replace(/\/+$/, '')}/${url.replace(/^\/+/, '')}`;
+    return getPhotoUrl(url) || '';
   };
 
   return (
@@ -177,7 +176,7 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               {/* Student Photo */}
               <div className="shrink-0 w-24 h-28 p-1 bg-white border-2 border-[#f39c12] rounded-lg shadow-sm flex items-center justify-center overflow-hidden">
                 {resolveUrl(safeData.photo) ? (
-                  <img src={resolveUrl(safeData.photo)} alt="Candidate Photo" className="w-full h-full object-cover rounded" crossOrigin="anonymous" />
+                  <img src={resolveUrl(safeData.photo)} alt="Candidate Photo" className="w-full h-full object-cover rounded" />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-slate-400 text-[10px] font-bold">
                     <User className="w-8 h-8 text-slate-300 mb-1" />

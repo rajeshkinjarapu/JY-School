@@ -1,5 +1,16 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Progress Card Student Photo Fix (Web App & Flutter App Done) (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `progress card meda image ravatam ledu both webapp and flutter app lo perfect ga ravali`
+- **Web App లో చేసిన మార్పులు:**
+  - `frontend/src/utils/photo.ts`: `getBackendBaseUrl()` ను VPS పోర్ట్ `:19998` కు సరిదిద్దాము మరియు `localhost` URL రీరైటింగ్, `\` స్లాష్ క్లీనింగ్ జోడించాము.
+  - `frontend/src/components/exams/ProgressCardTemplate.tsx`: `getPhotoUrl` వాడి, Student Photo `<img>` పై `crossOrigin="anonymous"` తొలగించాము.
+  - `frontend/src/pages/exams/JEEProgressCardTab.tsx` & `ProgressCardTab.tsx`: PDF జనరేట్ చేసే ముందు అన్ని `<img>` లు లోడ్ అయ్యేలా wait లాజిక్ + `cacheBust: false`.
+  - `frontend/src/pages/exams/AppProgressCardView.tsx`: `includePhoto=true` జత చేశాము.
+- **Flutter App లో చేసిన మార్పులు (Shorebird Patch Ready):**
+  - `flutter_mobile/lib/screens/single_progress_card_screen.dart`: `ApiService.getImageUrl` వాడకం + PDF క్యాప్చర్ ముందు `precacheImage`.
+  - `flutter_mobile/lib/widgets/progress_card_native.dart`: `ApiService.getImageUrl` + Base64 whitespace క్లీనింగ్ (`replaceAll(RegExp(r'\s+'), '')`) + స్పష్టమైన `width: 95, height: 114`.
+
 ## చివరి సంభాషణ - పూర్తి ప్రాజెక్ట్ డబుల్ చెక్ & ఎర్రర్-ఫ్రీ వెరిఫికేషన్ (November 26, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `okasari double check chyu emaina errors unte clear cheyu` (మొత్తం ప్రాజెక్ట్‌ను మరోసారి క్షుణ్ణంగా డబుల్ చెక్ చేసి, ఏవైనా ఎర్రర్లు ఉంటే క్లియర్ చేయాలని అడిగారు).

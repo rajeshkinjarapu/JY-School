@@ -207,8 +207,19 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
     el.style.visibility = 'visible';
     el.style.display = 'block';
 
-    // Wait for DOM layout & images to fully load
-    await new Promise(resolve => setTimeout(resolve, 600));
+    // Wait for DOM layout & all <img> elements inside el to finish loading
+    await new Promise(resolve => setTimeout(resolve, 250));
+    const imgs = Array.from(el.querySelectorAll('img'));
+    await Promise.all(
+      imgs.map(img => {
+        if (img.complete) return Promise.resolve();
+        return new Promise<void>(res => {
+          const timer = setTimeout(res, 2000);
+          img.addEventListener('load', () => { clearTimeout(timer); res(); }, { once: true });
+          img.addEventListener('error', () => { clearTimeout(timer); res(); }, { once: true });
+        });
+      })
+    );
     
     let pdf: any;
     try {
@@ -219,7 +230,7 @@ export const ProgressCardTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       const w = Math.max(el.offsetWidth, 794);
       const h = Math.max(el.offsetHeight, 1123);
       const imgData = await toJpeg(el, { 
-        cacheBust: true,
+        cacheBust: false,
         pixelRatio: 2,
         quality: 0.95,
         backgroundColor: '#ffffff',

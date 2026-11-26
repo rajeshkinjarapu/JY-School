@@ -36,7 +36,7 @@ export const AppProgressCardView: React.FC = () => {
 
         const [settingsRes, resultsRes, examRes] = await Promise.all([
           axiosInstance.get('/api/settings'),
-          axiosInstance.get(`/api/exams/${examId}/results${classId ? `?classId=${classId}` : ''}`),
+          axiosInstance.get(`/api/exams/${examId}/results?includePhoto=true${classId ? `&classId=${classId}` : ''}`),
           axiosInstance.get(`/api/exams/${examId}`)
         ]);
 

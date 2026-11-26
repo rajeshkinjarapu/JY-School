@@ -100,27 +100,13 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
           throw Exception("Student result not found in this exam");
         }
 
-        // Resolve student photo from multiple potential sources
-        String studentPhoto = '';
-        final rawPhoto = targetStudent['photo'] ?? targetStudent['photoUrl'];
-        if (rawPhoto != null && rawPhoto.toString().trim().isNotEmpty) {
-          final p = rawPhoto.toString().trim();
-          if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('data:image')) {
-            studentPhoto = p;
-          } else {
-            studentPhoto = 'http://66.116.252.191:19998${p.startsWith('/') ? '' : '/'}$p';
-          }
-        } else if (widget.studentData != null) {
-          final p = widget.studentData!['user']?['photoUrl'] ?? widget.studentData!['photoUrl'] ?? widget.studentData!['photo'];
-          if (p != null && p.toString().trim().isNotEmpty) {
-            final pStr = p.toString().trim();
-            if (pStr.startsWith('http://') || pStr.startsWith('https://') || pStr.startsWith('data:image')) {
-              studentPhoto = pStr;
-            } else {
-              studentPhoto = 'http://66.116.252.191:19998${pStr.startsWith('/') ? '' : '/'}$pStr';
-            }
-          }
-        }
+        // Resolve student photo from multiple potential sources via ApiService.getImageUrl
+        final rawPhoto = targetStudent['photo'] ??
+            targetStudent['photoUrl'] ??
+            widget.studentData?['user']?['photoUrl'] ??
+            widget.studentData?['photoUrl'] ??
+            widget.studentData?['photo'];
+        final String studentPhoto = ApiService.getImageUrl(rawPhoto?.toString());
 
         // Map backend data
         _mappedData = {
@@ -161,6 +147,15 @@ class _SingleProgressCardScreenState extends State<SingleProgressCardScreen> {
 
   Future<void> _shareOrDownload(bool isShare) async {
     try {
+      // Ensure network student photo is loaded into cache before capturing RepaintBoundary
+      final String photoUrl = _mappedData?['photo']?.toString() ?? '';
+      if (photoUrl.startsWith('http://') || photoUrl.startsWith('https://')) {
+        try {
+          await precacheImage(NetworkImage(photoUrl), context).timeout(const Duration(seconds: 3));
+          await Future.delayed(const Duration(milliseconds: 120));
+        } catch (_) {}
+      }
+
       // 1. Capture the widget as an image
       RenderRepaintBoundary boundary = _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       // Use pixel ratio for high quality
