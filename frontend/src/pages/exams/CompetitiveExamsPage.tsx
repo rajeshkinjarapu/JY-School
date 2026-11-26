@@ -578,6 +578,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             loading={loading}
             showInlineCreate={showInlineCreate}
             setShowInlineCreate={setShowInlineCreate}
+            onCloseCreate={() => {
+              setShowInlineCreate(false);
+              if (searchParams.get('create')) {
+                const next = new URLSearchParams(searchParams);
+                next.delete('create');
+                setSearchParams(next, { replace: true });
+              }
+            }}
             onRefresh={fetchExams}
             onOpenAiModal={(exam: any) => setAiModalExam(exam)}
             onOpenQuestionBank={handleOpenQuestionBankForExam}
@@ -673,7 +681,8 @@ const ManageExamsTab = ({
   onChangeFilter,
   loading, 
   showInlineCreate, 
-  setShowInlineCreate, 
+  setShowInlineCreate,
+  onCloseCreate,
   onRefresh, 
   onOpenAiModal, 
   onOpenQuestionBank, 
@@ -690,20 +699,23 @@ const ManageExamsTab = ({
       ? upcomingExams
       : exams;
 
+  // Dedicated clean view when creating an exam (no exam list clutter underneath)
+  if (showInlineCreate) {
+    return (
+      <EduracleCreateExamWizard
+        onClose={() => (onCloseCreate ? onCloseCreate() : setShowInlineCreate(false))}
+        onCreated={(newExam: any) => {
+          if (onCloseCreate) onCloseCreate();
+          else setShowInlineCreate(false);
+          onRefresh();
+          if (onExamCreated && newExam) onExamCreated(newExam);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Eduracle Exam Creation Wizard */}
-      {showInlineCreate && (
-        <EduracleCreateExamWizard 
-          onClose={() => setShowInlineCreate(false)}
-          onCreated={(newExam: any) => {
-            setShowInlineCreate(false);
-            onRefresh();
-            if (onExamCreated && newExam) onExamCreated(newExam);
-          }}
-        />
-      )}
-
       {/* Controls Bar */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
@@ -1153,7 +1165,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   const [selectedPattern, setSelectedPattern] = useState<string>('SCHOOL_GRAND_TEST');
   const [marksPerQuestion, setMarksPerQuestion] = useState<number>(2);
   const [sections, setSections] = useState<ExamBlueprintSection[]>(PATTERN_PRESETS[0].sections);
-  const [showSettingsStudio, setShowSettingsStudio] = useState<boolean>(true);
+  const [wizardStep, setWizardStep] = useState<'PATTERNS' | 'SETTINGS'>('PATTERNS');
 
   const [formData, setFormData] = useState({
     title: PATTERN_PRESETS[0].defaultTitle,
@@ -1232,7 +1244,10 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       passMarks: preset.passMarks,
       negativeMarks: preset.negativeMarks,
     }));
-    setShowSettingsStudio(true);
+    setWizardStep('SETTINGS');
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const handleResetDefaults = () => {
@@ -1341,86 +1356,127 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   const otherClasses = classes.filter((c: any) => !seniorClasses.includes(c));
 
   return (
-    <div className="bg-white rounded-3xl p-5 md:p-8 shadow-xl border border-slate-200 transition-all space-y-7">
-      {/* Wizard Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-slate-100">
+    <div className="space-y-6 pb-8">
+      {/* Top Simple Step Progress Header */}
+      <div className="bg-white rounded-3xl p-4 sm:p-6 shadow-xs border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
-            <Zap className="w-6 h-6 text-amber-300" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+            <Zap className="w-6 h-6 text-white" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-xl font-black text-slate-900">Eduracle Online Exam Creator</h3>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                8 Real Standard Templates
+              <h3 className="text-lg sm:text-xl font-black text-slate-900">Create Online Exam</h3>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                {wizardStep === 'PATTERNS' ? 'Step 1 of 2 • Choose Pattern' : 'Step 2 of 2 • Exam Settings'}
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Choose an official examination blueprint or customize time, date, marks per question, and negative marking rules.
+            <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">
+              {wizardStep === 'PATTERNS'
+                ? 'Select any standard exam template below to open its simple settings page.'
+                : `Configuring "${currentPreset.title}" — customize title, date, marks, and sections.`}
             </p>
           </div>
         </div>
 
-        <button 
-          onClick={onClose} 
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer self-end sm:self-center"
-        >
-          <X size={20} />
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-7">
-        
-        {/* STEP 1: CHOOSE REAL STANDARD EXAM PATTERN */}
-        <div>
-          <div className="flex items-center justify-between mb-3.5">
-            <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-              <Layers className="w-4 h-4 text-indigo-600" />
-              Step 1: Choose Authentic Examination Pattern
-            </label>
-            <span className="text-[11px] font-bold text-slate-500">
-              8 Real School & National Standard Patterns
-            </span>
+        <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
+          {/* Interactive Step Switcher Pills */}
+          <div className="inline-flex items-center p-1 rounded-2xl bg-slate-100 border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setWizardStep('PATTERNS')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+                wizardStep === 'PATTERNS'
+                  ? 'bg-white text-indigo-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${wizardStep === 'PATTERNS' ? 'bg-indigo-600 text-white' : 'bg-emerald-500 text-white'}`}>
+                {wizardStep === 'SETTINGS' ? '✓' : '1'}
+              </span>
+              Choose Pattern
+            </button>
+            <button
+              type="button"
+              onClick={() => setWizardStep('SETTINGS')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 ${
+                wizardStep === 'SETTINGS'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <span className={`w-5 h-5 rounded-full text-[10px] font-black flex items-center justify-center ${wizardStep === 'SETTINGS' ? 'bg-white text-indigo-700' : 'bg-slate-200 text-slate-600'}`}>
+                2
+              </span>
+              Exam Settings
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {PATTERN_PRESETS.map((preset) => {
-              const isSelected = selectedPattern === preset.id;
-              return (
-                <div
-                  key={preset.id}
-                  onClick={() => handleSelectPattern(preset)}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between group ${
-                    isSelected
-                      ? 'border-indigo-600 bg-indigo-50/40 shadow-sm ring-2 ring-indigo-600/10'
-                      : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
-                  }`}
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border ${preset.tagColor}`}>
-                        {preset.badge}
-                      </span>
-                      {isSelected ? (
-                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                          <Check size={12} strokeWidth={3} />
-                        </span>
-                      ) : (
-                        <span className="w-5 h-5 rounded-full border border-slate-200 group-hover:border-slate-300" />
-                      )}
-                    </div>
-                    <h4 className="font-extrabold text-sm text-slate-900 leading-snug">{preset.title}</h4>
-                    <p className="text-[11px] font-medium text-slate-400 mt-0.5">{preset.subtitle}</p>
-                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{preset.description}</p>
-                  </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <X size={15} /> Close
+          </button>
+        </div>
+      </div>
 
-                  <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex flex-col gap-2">
-                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
-                      <span>⏱️ {preset.duration}m</span>
-                      <span>🎯 {preset.totalMarks}M</span>
-                      <span className={preset.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}>
-                        {preset.negativeMarks > 0 ? `Neg: -${preset.negativeMarks}` : 'No Neg'}
-                      </span>
+      {/* PAGE 1: ONLY 8 COLORFUL PATTERN CARDS (CLEAN, ZERO SETTINGS CLUTTER BELOW) */}
+      {wizardStep === 'PATTERNS' && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {PATTERN_PRESETS.map((preset) => {
+            const isSelected = selectedPattern === preset.id;
+            return (
+              <div
+                key={preset.id}
+                onClick={() => handleSelectPattern(preset)}
+                className={`bg-white rounded-3xl overflow-hidden border transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl ${
+                  isSelected
+                    ? 'border-indigo-400 shadow-lg ring-2 ring-indigo-500/20'
+                    : 'border-slate-200/90 shadow-sm hover:border-indigo-300'
+                }`}
+              >
+                {/* Colorful Gradient Card Top Strip */}
+                <div className={`bg-gradient-to-r ${preset.color} p-4 text-white relative overflow-hidden`}>
+                  <div className="pointer-events-none absolute -top-5 -right-5 w-16 h-16 rounded-full bg-white/15" />
+                  <div className="flex items-center justify-between gap-2 relative z-10">
+                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/25 backdrop-blur-xs">
+                      {preset.badge}
+                    </span>
+                    <span className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center group-hover:bg-white group-hover:text-indigo-700 transition-colors">
+                      {isSelected ? <Check size={14} strokeWidth={3} /> : <ArrowRight size={14} />}
+                    </span>
+                  </div>
+                  <h4 className="font-black text-base text-white mt-3 leading-snug relative z-10">
+                    {preset.title}
+                  </h4>
+                  <p className="text-[11px] font-medium text-white/85 mt-0.5 relative z-10">
+                    {preset.subtitle}
+                  </p>
+                </div>
+
+                {/* Clean White Body */}
+                <div className="p-4 flex-1 flex flex-col justify-between gap-4">
+                  <p className="text-xs text-slate-600 font-medium leading-relaxed">
+                    {preset.description}
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-3 gap-1.5 text-center">
+                      <div className="p-2 rounded-xl bg-blue-50/70 border border-blue-100">
+                        <div className="text-[10px] font-bold text-slate-400">Time</div>
+                        <div className="text-xs font-black text-blue-700">{preset.duration}m</div>
+                      </div>
+                      <div className="p-2 rounded-xl bg-purple-50/70 border border-purple-100">
+                        <div className="text-[10px] font-bold text-slate-400">Marks</div>
+                        <div className="text-xs font-black text-purple-700">{preset.totalMarks}</div>
+                      </div>
+                      <div className={`p-2 rounded-xl border ${preset.negativeMarks > 0 ? 'bg-rose-50/70 border-rose-100' : 'bg-emerald-50/70 border-emerald-100'}`}>
+                        <div className="text-[10px] font-bold text-slate-400">Negative</div>
+                        <div className={`text-xs font-black ${preset.negativeMarks > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
+                          {preset.negativeMarks > 0 ? `-${preset.negativeMarks}` : '0'}
+                        </div>
+                      </div>
                     </div>
 
                     <button
@@ -1429,551 +1485,559 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                         e.stopPropagation();
                         handleSelectPattern(preset);
                       }}
-                      className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
-                        isSelected
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                      }`}
+                      className={`w-full py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer text-white bg-gradient-to-r ${preset.color} shadow-sm hover:opacity-95`}
                     >
-                      <Settings2 size={13} />
-                      <span>{isSelected ? '⚙️ Settings & Customize' : 'Select & Configure'}</span>
+                      <Settings2 size={14} />
+                      <span>Settings & Customize</span>
+                      <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                     </button>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
+      )}
 
-        {/* STEP 2: INTEGRATED SETTINGS & BLUEPRINT CUSTOMIZER STUDIO */}
-        <div className="rounded-3xl border-2 border-indigo-200/90 bg-slate-50/70 p-5 md:p-6 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-200">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
-                <Settings2 size={16} />
-              </div>
-              <div>
-                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">
-                  Step 2: Settings & Blueprint Customizer
-                </h4>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Currently Configuring: <strong className="text-indigo-600">{currentPreset.title}</strong> ({currentPreset.badge})
-                </p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleResetDefaults}
-              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
-              title="Reset all fields to template standard values"
-            >
-              <RefreshCw size={13} />
-              <span>↺ Reset Defaults</span>
-            </button>
-          </div>
-
-          {/* GROUP 1: EXAM TITLE, CLASS & SUBJECT */}
-          <div className="space-y-4">
-            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Target size={14} className="text-indigo-600" />
-              1. Basic Information & Target Batch
-            </h5>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Exam Title */}
-              <div className="md:col-span-1">
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Official Exam Title *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. 10th Class Grand Test - Mathematics"
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-xs"
-                />
-              </div>
-
-              {/* Target Class */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Target Class Batch *
-                </label>
-                <select
-                  value={formData.classId}
-                  onChange={e => setFormData({ ...formData, classId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-xs cursor-pointer"
-                >
-                  {classes.length === 0 && <option value="">⏳ Loading classes...</option>}
-                  {seniorClasses.length > 0 && (
-                    <optgroup label="🌟 Senior Classes (10th, 9th, 8th)">
-                      {seniorClasses.map(c => (
-                        <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {otherClasses.length > 0 && (
-                    <optgroup label="Middle & Primary Classes">
-                      {otherClasses.map(c => (
-                        <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-              </div>
-
-              {/* Subject / Stream */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Subject / Stream *
-                </label>
-                <select
-                  value={formData.subjectId}
-                  onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-xs cursor-pointer"
-                >
-                  {subjects.length === 0 && <option value="">⏳ Loading subjects...</option>}
-                  {subjects.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* GROUP 2: DATE, START TIME & DURATION */}
-          <div className="space-y-4 pt-2 border-t border-slate-200">
-            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Clock size={14} className="text-indigo-600" />
-              2. Exam Schedule & Duration Controls
-            </h5>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {/* Exam Date */}
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Exam Date *</label>
-                  <div className="flex items-center gap-1 text-[10px] font-bold">
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, examDate: new Date().toISOString().split('T')[0] }))}
-                      className="text-indigo-600 hover:underline cursor-pointer"
-                    >
-                      Today
-                    </button>
-                    <span className="text-slate-300">•</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const tm = new Date();
-                        tm.setDate(tm.getDate() + 1);
-                        setFormData(prev => ({ ...prev, examDate: tm.toISOString().split('T')[0] }));
-                      }}
-                      className="text-indigo-600 hover:underline cursor-pointer"
-                    >
-                      Tomorrow
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="date"
-                  required
-                  value={formData.examDate}
-                  onChange={e => setFormData({ ...formData, examDate: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs cursor-pointer focus:border-indigo-500"
-                />
-              </div>
-
-              {/* Start Time */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Start Time *</label>
-                <input
-                  type="time"
-                  required
-                  value={formData.startTime}
-                  onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs cursor-pointer focus:border-indigo-500"
-                />
-              </div>
-
-              {/* Duration with Quick Pills */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Duration: <strong className="text-indigo-600">{formData.duration} Mins</strong>
-                </label>
-                <input
-                  type="number"
-                  min={5}
-                  required
-                  value={formData.duration}
-                  onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
-                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs focus:border-indigo-500"
-                />
-                {/* Duration Pills */}
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {[30, 45, 60, 90, 120, 180, 200].map(mins => (
-                    <button
-                      key={mins}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, duration: mins }))}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                        formData.duration === mins
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* GROUP 3: MARKS PER QUESTION & NEGATIVE EVALUATION */}
-          <div className="space-y-4 pt-2 border-t border-slate-200">
-            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Award size={14} className="text-indigo-600" />
-              3. Marking Scheme & Negative Marking Settings
-            </h5>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Marks Per Question */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Marks Per Question *
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min={0.5}
-                    step={0.5}
-                    required
-                    value={marksPerQuestion}
-                    onChange={e => handleMarksPerQuestionChange(Number(e.target.value) || 1)}
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
-                  />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">
-                    Marks / Q
-                  </span>
-                </div>
-                {/* Marks Presets */}
-                <div className="flex items-center gap-1 mt-1.5">
-                  {[1, 2, 4].map(m => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => handleMarksPerQuestionChange(m)}
-                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
-                        marksPerQuestion === m
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                      }`}
-                    >
-                      +{m} Mark
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-slate-400 font-medium mt-1">Each correct MCQ awards this score</p>
-              </div>
-
-              {/* Negative Marking Scheme */}
-              <div className="md:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Does this Exam have Negative Marking? *
-                </label>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {/* Option 1: No Negative */}
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, negativeMarks: 0 }))}
-                    className={`p-3 rounded-2xl border-2 text-left transition cursor-pointer flex items-center justify-between ${
-                      formData.negativeMarks === 0
-                        ? 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/10'
-                        : 'bg-white border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                        <span className="text-xs font-black text-slate-900">No Negative Marking (0)</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 mt-0.5">School Grand Test / SSC / Navodaya</p>
-                    </div>
-                    {formData.negativeMarks === 0 && <Check size={16} className="text-emerald-600 stroke-[3]" />}
-                  </button>
-
-                  {/* Option 2: Yes, Deduct */}
-                  <div
-                    onClick={() => {
-                      if (formData.negativeMarks === 0) {
-                        setFormData(prev => ({ ...prev, negativeMarks: 1 }));
-                      }
-                    }}
-                    className={`p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
-                      formData.negativeMarks > 0
-                        ? 'bg-rose-50 border-rose-500 shadow-xs ring-2 ring-rose-500/10'
-                        : 'bg-white border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
-                        <span className="text-xs font-black text-slate-900">Yes, Deduct Marks</span>
-                      </div>
-                      {formData.negativeMarks > 0 && <Check size={16} className="text-rose-600 stroke-[3]" />}
-                    </div>
-
-                    {formData.negativeMarks > 0 ? (
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-rose-200">
-                        <span className="text-[10px] font-bold text-rose-800">Penalty / Q:</span>
-                        <div className="flex items-center gap-1">
-                          {[1, 0.25, 0.5].map(pen => (
-                            <button
-                              key={pen}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setFormData(prev => ({ ...prev, negativeMarks: pen }));
-                              }}
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
-                                formData.negativeMarks === pen
-                                  ? 'bg-rose-600 text-white'
-                                  : 'bg-white text-rose-700 border border-rose-200'
-                              }`}
-                            >
-                              -{pen}
-                            </button>
-                          ))}
-                        </div>
-                        <input
-                          type="number"
-                          step={0.25}
-                          min={0.1}
-                          value={formData.negativeMarks}
-                          onChange={e => setFormData(prev => ({ ...prev, negativeMarks: Math.max(0, Number(e.target.value)) }))}
-                          className="w-14 px-1.5 py-0.5 bg-white border border-rose-300 rounded text-center text-[10px] font-black text-rose-800 outline-none"
-                        />
-                      </div>
-                    ) : (
-                      <p className="text-[10px] text-slate-500 mt-0.5">IIT-JEE (-1) / NEET (-1) Pattern</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Total Marks & Pass Marks Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
-                  Total Exam Marks * (Calculated: {totalQuestionsCount} Qs × {marksPerQuestion}M)
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={1}
-                    required
-                    value={formData.totalMarks}
-                    onChange={e => setFormData({ ...formData, totalMarks: Number(e.target.value) })}
-                    className="flex-1 px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleSyncTotalMarksFromSections}
-                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition shrink-0"
-                    title="Sync total marks with section sum"
-                  >
-                    Sync
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Pass Marks *</label>
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600">
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.35) }))}
-                      className="hover:underline cursor-pointer"
-                    >
-                      35%
-                    </button>
-                    <span>•</span>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.40) }))}
-                      className="hover:underline cursor-pointer"
-                    >
-                      40%
-                    </button>
-                    <span>•</span>
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.50) }))}
-                      className="hover:underline cursor-pointer"
-                    >
-                      50%
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={formData.passMarks}
-                  onChange={e => setFormData({ ...formData, passMarks: Number(e.target.value) })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* GROUP 4: SUBJECT SECTIONS & BLUEPRINT BUILDER */}
-          <div className="space-y-4 pt-2 border-t border-slate-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Sliders size={14} className="text-indigo-600" />
-                  4. Subject Sections Blueprint Customizer
-                </h5>
-                <p className="text-[11px] text-slate-400 mt-0.5">
-                  Configure question counts and marks for each subject or section
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
-                  Total: {totalQuestionsCount} Qs • {sections.reduce((a, s) => a + (Number(s.marks) || 0), 0)} Marks
+      {/* PAGE 2: SEPARATE CLEAN, SIMPLE & COLORFUL EXAM SETTINGS PAGE */}
+      {wizardStep === 'SETTINGS' && (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Colorful Selected Pattern Banner */}
+          <div className={`rounded-3xl bg-gradient-to-r ${currentPreset.color} p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden`}>
+            <div className="pointer-events-none absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/10" />
+            <div className="relative z-10 space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 border border-white/30">
+                  {currentPreset.badge}
                 </span>
-                <button
-                  type="button"
-                  onClick={handleAddSection}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1 cursor-pointer transition shadow-xs"
-                >
-                  <Plus size={13} /> Add Section
-                </button>
+                <span className="text-xs font-bold text-white/85">Selected Pattern</span>
               </div>
+              <h4 className="text-xl sm:text-2xl font-black text-white">{currentPreset.title}</h4>
+              <p className="text-xs sm:text-sm text-white/85">{currentPreset.subtitle}</p>
             </div>
 
-            <div className="space-y-2.5">
-              {sections.map((sec, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-                >
-                  <div className="flex-1 w-full sm:w-auto">
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
-                      Section #{idx + 1} Name
-                    </span>
+            <div className="relative z-10 flex flex-wrap items-center gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setWizardStep('PATTERNS')}
+                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 text-xs font-black flex items-center gap-1.5 transition cursor-pointer backdrop-blur-xs"
+              >
+                <ArrowLeft size={14} />
+                <span>Change Pattern</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleResetDefaults}
+                className="px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+              >
+                <RefreshCw size={13} />
+                <span>Reset Defaults</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 2-Column Clean Settings Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left 8 Columns: Simple Step Cards */}
+            <div className="lg:col-span-8 space-y-6">
+              {/* Card 1: Basic Exam Information */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-sm">
+                    <Target size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-sm sm:text-base font-black text-slate-900">1. Exam Name, Class & Subject</h5>
+                    <p className="text-xs text-slate-500">Give your exam a clear title and pick the class batch</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Exam Title *
+                    </label>
                     <input
                       type="text"
-                      value={sec.name}
-                      onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
-                      placeholder="e.g. Physics / Section A: Objective"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 focus:bg-white"
+                      required
+                      value={formData.title}
+                      onChange={e => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="e.g. 10th Class Grand Test"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition"
                     />
                   </div>
 
-                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-                    <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
-                        Questions
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={sec.count}
-                        onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
-                        className="w-20 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-800 text-center outline-none focus:border-indigo-500 focus:bg-white"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Target Class *
+                    </label>
+                    <select
+                      value={formData.classId}
+                      onChange={e => setFormData({ ...formData, classId: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer transition"
+                    >
+                      {classes.length === 0 && <option value="">Loading classes...</option>}
+                      {seniorClasses.length > 0 && (
+                        <optgroup label="Senior Classes (10th, 9th, 8th, 5th)">
+                          {seniorClasses.map(c => (
+                            <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                      {otherClasses.length > 0 && (
+                        <optgroup label="Other Classes">
+                          {otherClasses.map(c => (
+                            <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </select>
+                  </div>
 
-                    <div>
-                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
-                        Marks
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        value={sec.marks}
-                        onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
-                        className="w-20 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-indigo-600 text-center outline-none focus:border-indigo-500 focus:bg-white"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Subject / Stream *
+                    </label>
+                    <select
+                      value={formData.subjectId}
+                      onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer transition"
+                    >
+                      {subjects.length === 0 && <option value="">Loading subjects...</option>}
+                      {subjects.map(s => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
 
-                    <div className="pt-4 sm:pt-0">
+              {/* Card 2: Schedule & Duration */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
+                    <Clock size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-sm sm:text-base font-black text-slate-900">2. Schedule & Duration</h5>
+                    <p className="text-xs text-slate-500">Pick exam date, start time, and test duration in minutes</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700">Exam Date *</label>
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, examDate: new Date().toISOString().split('T')[0] }))}
+                          className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md hover:bg-emerald-100 cursor-pointer transition"
+                        >
+                          Today
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const tm = new Date();
+                            tm.setDate(tm.getDate() + 1);
+                            setFormData(prev => ({ ...prev, examDate: tm.toISOString().split('T')[0] }));
+                          }}
+                          className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md hover:bg-teal-100 cursor-pointer transition"
+                        >
+                          Tomorrow
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="date"
+                      required
+                      value={formData.examDate}
+                      onChange={e => setFormData({ ...formData, examDate: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Start Time *</label>
+                    <input
+                      type="time"
+                      required
+                      value={formData.startTime}
+                      onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-500 transition"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Duration: <strong className="text-emerald-700">{formData.duration} Mins</strong>
+                    </label>
+                    <input
+                      type="number"
+                      min={5}
+                      required
+                      value={formData.duration}
+                      onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm focus:border-emerald-500 transition"
+                    />
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {[30, 45, 60, 90, 120, 180, 200].map(mins => {
+                        const label = mins === 200 ? '3h 20m' : mins >= 60 ? `${mins / 60}h` : `${mins}m`;
+                        return (
+                          <button
+                            key={mins}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, duration: mins }))}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                              formData.duration === mins
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Simple Marking Scheme */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm">
+                    <Award size={18} />
+                  </div>
+                  <div>
+                    <h5 className="text-sm sm:text-base font-black text-slate-900">3. Marks & Negative Marking</h5>
+                    <p className="text-xs text-slate-500">Set marks per right answer, pass marks, and optional negative penalty</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Marks Per Right Answer *
+                    </label>
+                    <input
+                      type="number"
+                      min={0.5}
+                      step={0.5}
+                      required
+                      value={marksPerQuestion}
+                      onChange={e => handleMarksPerQuestionChange(Number(e.target.value) || 1)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-500 transition"
+                    />
+                    <div className="flex items-center gap-1.5 mt-2">
+                      {[1, 2, 4].map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => handleMarksPerQuestionChange(m)}
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                            marksPerQuestion === m
+                              ? 'bg-amber-500 text-white shadow-xs'
+                              : 'bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700'
+                          }`}
+                        >
+                          +{m} Mark
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Negative Marking Rule *
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
-                        onClick={() => handleRemoveSection(idx)}
-                        disabled={sections.length <= 1}
-                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
-                        title="Delete Section"
+                        onClick={() => setFormData(prev => ({ ...prev, negativeMarks: 0 }))}
+                        className={`p-3.5 rounded-2xl border-2 text-left transition cursor-pointer flex items-center justify-between ${
+                          formData.negativeMarks === 0
+                            ? 'bg-emerald-50 border-emerald-500 shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200 hover:bg-white'
+                        }`}
                       >
-                        <Trash2 size={16} />
+                        <div>
+                          <div className="text-xs font-black text-slate-900">No Negative Marking (0)</div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">School / SSC / EAMCET</p>
+                        </div>
+                        {formData.negativeMarks === 0 && <Check size={16} className="text-emerald-600 stroke-[3]" />}
+                      </button>
+
+                      <div
+                        onClick={() => {
+                          if (formData.negativeMarks === 0) {
+                            setFormData(prev => ({ ...prev, negativeMarks: 1 }));
+                          }
+                        }}
+                        className={`p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                          formData.negativeMarks > 0
+                            ? 'bg-rose-50 border-rose-500 shadow-xs'
+                            : 'bg-slate-50/70 border-slate-200 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-xs font-black text-slate-900">Deduct Negative Marks</div>
+                            {formData.negativeMarks === 0 && (
+                              <p className="text-[11px] text-slate-500 mt-0.5">JEE (-1) / NEET (-1)</p>
+                            )}
+                          </div>
+                          {formData.negativeMarks > 0 && <Check size={16} className="text-rose-600 stroke-[3]" />}
+                        </div>
+
+                        {formData.negativeMarks > 0 && (
+                          <div className="flex items-center gap-1.5 mt-2 pt-2 border-t border-rose-200">
+                            {[1, 0.5, 0.25].map(pen => (
+                              <button
+                                key={pen}
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFormData(prev => ({ ...prev, negativeMarks: pen }));
+                                }}
+                                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer ${
+                                  formData.negativeMarks === pen
+                                    ? 'bg-rose-600 text-white'
+                                    : 'bg-white text-rose-700 border border-rose-200'
+                                }`}
+                              >
+                                -{pen}
+                              </button>
+                            ))}
+                            <input
+                              type="number"
+                              step={0.25}
+                              min={0.1}
+                              value={formData.negativeMarks}
+                              onChange={e => setFormData(prev => ({ ...prev, negativeMarks: Math.max(0, Number(e.target.value)) }))}
+                              className="w-16 px-2 py-0.5 bg-white border border-rose-300 rounded-md text-center text-xs font-black text-rose-800 outline-none ml-auto"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Total Marks * (Auto: {totalQuestionsCount} Qs × {marksPerQuestion}M)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        required
+                        value={formData.totalMarks}
+                        onChange={e => setFormData({ ...formData, totalMarks: Number(e.target.value) })}
+                        className="flex-1 px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-500 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSyncTotalMarksFromSections}
+                        className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold cursor-pointer transition shrink-0"
+                      >
+                        Sync
+                      </button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center mb-1.5">
+                      <label className="block text-xs font-bold text-slate-700">Pass Marks *</label>
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                        {[
+                          { label: '35%', pct: 0.35 },
+                          { label: '40%', pct: 0.40 },
+                          { label: '50%', pct: 0.50 },
+                        ].map(item => (
+                          <button
+                            key={item.label}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * item.pct) }))}
+                            className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 cursor-pointer transition"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min={1}
+                      required
+                      value={formData.passMarks}
+                      onChange={e => setFormData({ ...formData, passMarks: Number(e.target.value) })}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-indigo-500 transition"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: Subject Sections */}
+              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white flex items-center justify-center shadow-sm">
+                      <Sliders size={18} />
+                    </div>
+                    <div>
+                      <h5 className="text-sm sm:text-base font-black text-slate-900">4. Subject Sections</h5>
+                      <p className="text-xs text-slate-500">Questions & marks breakdown per section</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleAddSection}
+                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-xs self-start sm:self-center"
+                  >
+                    <Plus size={14} /> Add Section
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {sections.map((sec, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                    >
+                      <div className="flex-1 w-full sm:w-auto">
+                        <span className="text-[11px] font-bold text-slate-500 mb-1 block">Section #{idx + 1}</span>
+                        <input
+                          type="text"
+                          value={sec.name}
+                          onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
+                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-purple-500"
+                        />
+                      </div>
+
+                      <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
+                        <div>
+                          <span className="text-[11px] font-bold text-slate-500 mb-1 block">Questions</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={sec.count}
+                            onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
+                            className="w-20 px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 text-center outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <div>
+                          <span className="text-[11px] font-bold text-slate-500 mb-1 block">Marks</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={sec.marks}
+                            onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
+                            className="w-20 px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-purple-700 text-center outline-none focus:border-purple-500"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSection(idx)}
+                          disabled={sections.length <= 1}
+                          className="p-2 mt-4 sm:mt-0 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
+                          title="Delete Section"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Right 4 Columns: Colorful Summary & Publish Box */}
+            <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-5">
+              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+                <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-5 text-white">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full border border-white/25">
+                    Ready to Publish
+                  </span>
+                  <h4 className="text-lg font-black text-white mt-2 leading-snug">
+                    {formData.title || 'Untitled Exam'}
+                  </h4>
+                  <p className="text-xs text-white/85 mt-0.5">{currentPreset.title}</p>
+                </div>
+
+                <div className="p-5 space-y-4">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100">
+                      <div className="text-[10px] font-bold text-blue-600 uppercase">Duration</div>
+                      <div className="text-base font-black text-blue-900 mt-0.5">{formData.duration} Mins</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100">
+                      <div className="text-[10px] font-bold text-purple-600 uppercase">Total Marks</div>
+                      <div className="text-base font-black text-purple-900 mt-0.5">{formData.totalMarks} Marks</div>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100">
+                      <div className="text-[10px] font-bold text-amber-600 uppercase">Questions</div>
+                      <div className="text-base font-black text-amber-900 mt-0.5">{totalQuestionsCount} Qs</div>
+                    </div>
+                    <div className={`p-3 rounded-2xl border ${formData.negativeMarks > 0 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                      <div className={`text-[10px] font-bold uppercase ${formData.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        Negative Rule
+                      </div>
+                      <div className={`text-base font-black mt-0.5 ${formData.negativeMarks > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
+                        {formData.negativeMarks > 0 ? `-${formData.negativeMarks}` : 'None (0)'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-bold text-slate-600">
+                    <span>Pass Marks</span>
+                    <span className="text-slate-900 font-black">{formData.passMarks} Marks</span>
+                  </div>
+
+                  <div className="space-y-2.5 pt-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3.5 px-5 rounded-2xl font-black text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm hover:scale-[1.01]"
+                    >
+                      {loading ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-4 h-4 text-amber-300" /> Publish Online Exam
+                        </>
+                      )}
+                    </button>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWizardStep('PATTERNS')}
+                        className="py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs flex items-center justify-center gap-1"
+                      >
+                        <ArrowLeft size={14} /> Patterns
+                      </button>
+                      <button
+                        type="button"
+                        onClick={onClose}
+                        className="py-2.5 px-3 rounded-xl font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition cursor-pointer text-xs"
+                      >
+                        Cancel
                       </button>
                     </div>
                   </div>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* LIVE BLUEPRINT REVIEW SUMMARY CARD */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200">
-              Exam Summary Before Publishing
-            </span>
-            <h4 className="text-base font-black text-slate-900 mt-1">{formData.title || 'Untitled Exam'}</h4>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600 mt-1">
-              <span>⏱️ {formData.duration} Mins</span>
-              <span>•</span>
-              <span>📝 {totalQuestionsCount} Questions</span>
-              <span>•</span>
-              <span>🎯 {formData.totalMarks} Total Marks</span>
-              <span>•</span>
-              <span>Pass: {formData.passMarks}M</span>
-              <span>•</span>
-              <span className={formData.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}>
-                {formData.negativeMarks > 0 ? `Neg: -${formData.negativeMarks}` : 'Zero Negative'}
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-5 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
-            >
-              Cancel
-            </button>
-            
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-7 py-3 rounded-xl font-extrabold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm hover:scale-[1.02]"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
-                </>
-              ) : (
-                <>
-                  <Zap className="w-4 h-4 text-amber-300" /> Publish School Online Exam
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-      </form>
+        </form>
+      )}
     </div>
   );
 };

@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Eduracle Exam Creator Clean & Colorful 2-Page Wizard (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** Exam Create పేజీలో Pattern కార్డులు, దాని కింద Settings, దాని కింద మళ్ళీ Exams లిస్ట్ అన్నీ ఒకేచోట ఉండి గందరగోళంగా ఉంది — చాలా సింపుల్‌గా, యూజర్ ఫ్రెండ్లీగా ఉండాలి మరియు `Settings & Customize` క్లిక్ చేస్తే సెట్టింగ్స్ **వేరే క్లీన్ & కలర్‌ఫుల్ పేజీ** లాగా ఓపెన్ అవ్వాలి.
+- **చేసిన మార్పులు ([CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+  - `ManageExamsTab`: `showInlineCreate` ఉన్నప్పుడు కింద పరీక్షల జాబితా రాకుండా క్లీన్‌గా Exam Creator మాత్రమే కనిపించేలా మార్చాము (`onCloseCreate` తో `?create=true` పరామీటర్ క్లియర్ అవుతుంది).
+  - `EduracleCreateExamWizard`: `wizardStep` (`'PATTERNS' | 'SETTINGS'`) ద్వారా **2-Step Separate View Wizard** అమలు చేశాము — Step 1 లో కేవలం 8 కలర్‌ఫుల్ Pattern కార్డులు మాత్రమే కనిపిస్తాయి; ఏదైనా కార్డ్/బటన్ క్లిక్ చేస్తే Step 2 గా సులభమైన, కలర్‌ఫుల్ **Dedicated Exam Settings Page** ఓపెన్ అవుతుంది (`← Change Pattern` సహా), మరియు `3.3333333333333335h` బగ్‌ను `3h 20m` గా సరిదిద్దాము.
+
 ## చివరి సంభాషణ - Online Exam Module Colorful Gradient 12-KPI Cards (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** 12 KPI కార్డులను మరింత అందంగా, కలర్‌ఫుల్‌గా మరియు ప్రొఫెషనల్‌గా డిజైన్ చేయాలి.
 - **చేసిన మార్పులు ([CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
