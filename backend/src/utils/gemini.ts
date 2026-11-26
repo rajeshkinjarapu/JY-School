@@ -1,9 +1,14 @@
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 
-// Initialize the Gemini client
-const apiKey = process.env.GEMINI_API_KEY || '';
-const ai = new GoogleGenAI({ apiKey });
+// Initialize the Gemini client (supports custom user-provided API key with .env fallback)
+const envApiKey = process.env.GEMINI_API_KEY || '';
+const ai = new GoogleGenAI({ apiKey: envApiKey });
+
+const getGeminiClient = (customApiKey?: string) => {
+  const key = (customApiKey && customApiKey.trim()) || process.env.GEMINI_API_KEY || '';
+  return key === envApiKey ? ai : new GoogleGenAI({ apiKey: key });
+};
 
 // Candidate Gemini models in priority order (env override first, then gemini-3.0-flash & fallbacks)
 export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
@@ -46,12 +51,15 @@ const CANDIDATE_MODELS = GEMINI_CANDIDATE_MODELS;
 
 export const generateQuizQuestions = async (
     prompt: string,
-    file?: Express.Multer.File
+    file?: Express.Multer.File,
+    customApiKey?: string
 ) => {
+    const client = getGeminiClient(customApiKey);
     let contents: any[] = [];
     
-    const systemInstruction = `You are an expert exam question creator. 
-Generate a list of multiple-choice questions based on the provided text, instructions, or uploaded document.
+    const systemInstruction = `You are an expert exam question creator and OCR digitizer. 
+Generate or extract multiple-choice questions based on the provided text, instructions, or uploaded document/image.
+If math or scientific formulas appear, wrap them nicely in LaTeX with single dollar signs (e.g. $x^2$, $\\frac{a}{b}$). Preserve Telugu/Hindi/English Unicode accurately.
 Always return ONLY a raw JSON array of objects. Do not include any markdown formatting like \`\`\`json.
 Each object in the array must strictly have this structure:
 {
@@ -60,22 +68,32 @@ Each object in the array must strictly have this structure:
   "correctAnswer": "Paris",
   "marks": 4,
   "chapterName": "General",
-  "difficulty": "MEDIUM"
+  "difficulty": "MEDIUM",
+  "questionType": "MCQ",
+  "explanation": "Brief 1-2 line solution"
 }
-Make sure 'options' is an array of exactly 4 strings. 'correctAnswer' must exactly match one of the 'options'.`;
+Make sure 'options' is an array of 4 strings. 'correctAnswer' must exactly match one of the 'options'.`;
 
     if (file) {
         try {
-            const uploadedFile = await ai.files.upload({
+            const uploadedFile = await client.files.upload({
                 file: file.path,
                 config: { mimeType: file.mimetype }
             });
             contents = [
                 uploadedFile,
-                { text: prompt || 'Generate quiz questions from this document.' }
+                { text: prompt || 'Extract or generate quiz questions from this document.' }
             ];
         } catch (e) {
-            contents = [{ text: prompt }];
+            try {
+                const fileBytes = fs.readFileSync(file.path).toString('base64');
+                contents = [
+                    { inlineData: { data: fileBytes, mimeType: file.mimetype } },
+                    { text: prompt || 'Extract or generate quiz questions from this file.' }
+                ];
+            } catch {
+                contents = [{ text: prompt }];
+            }
         }
     } else {
         contents = [{ text: prompt }];
@@ -85,7 +103,7 @@ Make sure 'options' is an array of exactly 4 strings. 'correctAnswer' must exact
     let lastError: any = null;
     for (const modelName of CANDIDATE_MODELS) {
         try {
-            const response = await ai.models.generateContent({
+            const response = await client.models.generateContent({
                 model: modelName,
                 contents: contents,
                 config: {
@@ -121,38 +139,44 @@ Make sure 'options' is an array of exactly 4 strings. 'correctAnswer' must exact
 export const parseRawExamTextToMCQs = async (
     rawText: string,
     defaultMarks = 4,
-    chapterHint = 'General'
+    chapterHint = 'General',
+    customApiKey?: string,
+    autoSolve = true
 ) => {
     if (!rawText || !rawText.trim()) return [];
 
+    const client = getGeminiClient(customApiKey);
     const systemInstruction = `You are an expert exam question digitizer and NTA/Eduracle test parsing engine.
-Your task is to take unformatted, pasted raw text containing multiple-choice questions (MCQs), which might come from Word, PDF, or text papers, and parse every question into a structured JSON array.
+Your task is to take unformatted, pasted raw text containing multiple-choice or objective questions (MCQs), which might come from Word, PDF, or text papers (in English, Telugu, Hindi, or mixed languages), and parse every question into a structured JSON array.
 
 Guidelines:
 1. Extract every distinct question found in the text.
 2. Clean the question text: remove numbering prefixes like "1.", "Q1:", "Question 1)", etc.
 3. If math or scientific formulas appear, keep or wrap them nicely in LaTeX format with single dollar signs (e.g. $E=mc^2$ or $\\frac{a}{b}$).
-4. Extract 4 options. Clean option prefixes like "(A)", "(a)", "A)", "A.", "1.", etc. If only 2 or 3 options are present, provide plausible 4th option.
+4. Extract 4 options cleanly without "(A)", "A)", "A." prefixes. If only 2 or 3 options exist for an MCQ, provide plausible options to complete 4 options.
 5. Identify the correct answer:
-   - If an answer key or solution is indicated in the text (e.g. "Ans: B", "Answer: (C)", bolded, or an answer table at the bottom), map it to the exact text of that option.
-   - If no answer key is provided in the text, use your domain knowledge to accurately determine the correct answer and set 'correctAnswer' to the exact matching option string.
-6. Determine 'difficulty' ('EASY', 'MEDIUM', or 'HARD') based on the problem complexity.
-7. Return strictly a raw JSON array of objects. Do not include markdown code fence formatting like \`\`\`json.
+   - First check if an answer key or solution appears inline ("Ans: B") OR in a separate answer key table at the bottom ("1-A, 2-C"). Match it to the exact text of that option.
+   - ${autoSolve ? "If no answer key is provided in the text, solve the question accurately and set 'correctAnswer' to the exact matching option string, plus write a crisp 1-2 line 'explanation'." : "If no answer key is provided, pick the first option cleanly as default."}
+6. Determine 'difficulty' ('EASY', 'MEDIUM', or 'HARD'), 'topicName' (short sub-topic if clear), and 'questionType' ('MCQ', 'INTEGER', 'ASSERTION_REASON', 'TRUE_FALSE').
+7. Return strictly a raw JSON array of objects without markdown fences.
 
 Each object must follow this schema:
 {
   "questionText": "string",
   "options": ["string", "string", "string", "string"],
-  "correctAnswer": "string (must exactly match one of the 4 options)",
+  "correctAnswer": "string (must exactly match one of the options)",
   "marks": number,
   "chapterName": "string",
-  "difficulty": "EASY" | "MEDIUM" | "HARD"
+  "topicName": "string",
+  "difficulty": "EASY" | "MEDIUM" | "HARD",
+  "questionType": "MCQ" | "INTEGER" | "ASSERTION_REASON" | "TRUE_FALSE",
+  "explanation": "string"
 }`;
 
     // Try candidate models in order
     for (const modelName of CANDIDATE_MODELS) {
         try {
-            const response = await ai.models.generateContent({
+            const response = await client.models.generateContent({
                 model: modelName,
                 contents: [
                     { 

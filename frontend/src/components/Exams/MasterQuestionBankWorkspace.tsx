@@ -119,7 +119,6 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
     open: false,
     mode: 'ADD',
   });
-  const [showAiModal, setShowAiModal] = useState<boolean>(false);
   const [showExcelModal, setShowExcelModal] = useState<boolean>(false);
   const [showAutoPickModal, setShowAutoPickModal] = useState<boolean>(false);
   const [showSendToExamModal, setShowSendToExamModal] = useState<boolean>(false);
@@ -405,7 +404,7 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
 
             <button
               type="button"
-              onClick={() => setShowAiModal(true)}
+              onClick={() => navigate('/competitive-exams/ai-studio')}
               className="px-3 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
             >
               <Sparkles size={14} />
@@ -915,19 +914,6 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
         />
       )}
 
-      {showAiModal && (
-        <MasterAiExtractModal
-          subjectList={subjectList.allNames}
-          classList={classOptions.filter((c) => c !== 'ALL')}
-          onClose={() => setShowAiModal(false)}
-          onSaved={() => {
-            setShowAiModal(false);
-            fetchMasterQuestions();
-            onExamsUpdated();
-          }}
-        />
-      )}
-
       {showExcelModal && (
         <MasterExcelBulkModal
           onClose={() => setShowExcelModal(false)}
@@ -1403,187 +1389,7 @@ const QuestionStudioModal: React.FC<{
 };
 
 // ═══════════════════════════════════════════════════════════════
-// 2. AI SMART EXTRACT MODAL (TEXT + IMAGE / PDF -> EDITABLE PREVIEW)
-// ═══════════════════════════════════════════════════════════════
-
-const MasterAiExtractModal: React.FC<{
-  subjectList: string[];
-  classList: string[];
-  onClose: () => void;
-  onSaved: () => void;
-}> = ({ subjectList, classList, onClose, onSaved }) => {
-  const [mode, setMode] = useState<'TEXT' | 'FILE'>('TEXT');
-  const [rawText, setRawText] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [category, setCategory] = useState('SCHOOL');
-  const [className, setClassName] = useState('10th');
-  const [subjectName, setSubjectName] = useState('Mathematics');
-  const [chapterName, setChapterName] = useState('General');
-  const [count, setCount] = useState(5);
-  const [parsing, setParsing] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [extracted, setExtracted] = useState<any[]>([]);
-
-  const handleExtract = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setParsing(true);
-    try {
-      if (mode === 'TEXT') {
-        const res = await api.post('/api/master-questions/ai-parse-text', {
-          rawText,
-          defaultMarks: 4,
-          chapterName: `${subjectName}: ${chapterName}`,
-        });
-        setExtracted(res.data?.questions || []);
-        toast.success(`Extracted ${res.data?.questions?.length || 0} questions!`);
-      } else {
-        if (!file) {
-          toast.error('Please select a PDF or Image file');
-          setParsing(false);
-          return;
-        }
-        const fd = new FormData();
-        fd.append('file', file);
-        fd.append('category', category);
-        fd.append('className', className);
-        fd.append('subjectName', subjectName);
-        fd.append('chapterName', `${subjectName}: ${chapterName}`);
-        fd.append('count', String(count));
-        fd.append('prompt', rawText || 'Extract all MCQ questions accurately with LaTeX formulas');
-        await api.post('/api/master-questions/generate-ai', fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        toast.success('Extracted & saved questions from file to Master Bank!');
-        onSaved();
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'AI extraction failed');
-    } finally {
-      setParsing(false);
-    }
-  };
-
-  const handleSaveExtracted = async () => {
-    if (extracted.length === 0) return;
-    setSaving(true);
-    try {
-      await api.post('/api/master-questions/bulk', {
-        questions: extracted.map((q) => ({
-          ...q,
-          category,
-          className,
-          subjectName,
-          chapterName: `${subjectName}: ${chapterName || 'General'}`,
-          topicName: chapterName || 'General',
-        })),
-        category,
-        className,
-        subjectName,
-      });
-      toast.success(`Saved ${extracted.length} questions to Master Bank!`);
-      onSaved();
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to save questions');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-200">
-        <div className="px-5 py-4 bg-gradient-to-r from-white to-sky-50/80 border-b border-slate-200 flex justify-between items-center">
-          <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-sky-600" /> AI Smart Extract → Master Bank
-          </h3>
-          <button type="button" onClick={onClose} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="p-5 overflow-y-auto flex-1 space-y-4">
-          {extracted.length === 0 ? (
-            <form onSubmit={handleExtract} className="space-y-4">
-              <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
-                <button type="button" onClick={() => setMode('TEXT')} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${mode === 'TEXT' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600'}`}>
-                  Paste Exam Text
-                </button>
-                <button type="button" onClick={() => setMode('FILE')} className={`px-3.5 py-1.5 rounded-lg text-xs font-bold cursor-pointer ${mode === 'FILE' ? 'bg-white text-indigo-700 shadow-2xs' : 'text-slate-600'}`}>
-                  Upload Photo / PDF
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                <select value={category} onChange={(e) => setCategory(e.target.value)} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
-                  {CATEGORY_OPTIONS.filter((c) => c !== 'ALL').map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select value={className} onChange={(e) => setClassName(e.target.value)} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
-                  {Array.from(new Set([...classList, ...CLASS_PRESETS])).map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select value={subjectName} onChange={(e) => setSubjectName(e.target.value)} className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold">
-                  {subjectList.map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <input type="text" value={chapterName} onChange={(e) => setChapterName(e.target.value)} placeholder="Chapter" className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold" />
-              </div>
-
-              {mode === 'FILE' && (
-                <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-300 space-y-2">
-                  <input type="file" accept="image/*,.pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} className="text-xs font-bold text-slate-700" />
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="font-bold text-slate-600">Questions count:</span>
-                    <input type="number" min={1} max={30} value={count} onChange={(e) => setCount(Number(e.target.value))} className="w-16 p-1 rounded-lg border border-slate-200 bg-white text-center font-bold" />
-                  </div>
-                </div>
-              )}
-
-              <textarea
-                rows={mode === 'TEXT' ? 8 : 3}
-                value={rawText}
-                onChange={(e) => setRawText(e.target.value)}
-                required={mode === 'TEXT'}
-                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-800 outline-none focus:border-indigo-400"
-                placeholder={mode === 'TEXT' ? 'Paste 10–50 questions with options & answer key...' : 'Optional custom instructions...'}
-              />
-
-              <div className="flex justify-end gap-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
-                <button type="submit" disabled={parsing} className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer disabled:opacity-50">
-                  {parsing ? 'Processing with AI...' : mode === 'TEXT' ? 'Extract Questions' : 'Extract & Save'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex justify-between items-center bg-emerald-50 p-3 rounded-xl border border-emerald-200">
-                <span className="text-xs font-black text-emerald-800">{extracted.length} Questions Extracted</span>
-                <button type="button" onClick={() => setExtracted([])} className="text-xs font-bold text-emerald-700 underline cursor-pointer">Back</button>
-              </div>
-              {extracted.map((q, i) => (
-                <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2 text-xs">
-                  <div>
-                    <div className="font-bold text-slate-900">Q{i + 1}. <LatexRenderer text={q.questionText} /></div>
-                  </div>
-                  <button type="button" onClick={() => setExtracted((prev) => prev.filter((_, idx) => idx !== i))} className="text-rose-500 hover:text-rose-700 cursor-pointer shrink-0">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold cursor-pointer">Cancel</button>
-                <button type="button" onClick={handleSaveExtracted} disabled={saving} className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black cursor-pointer disabled:opacity-50">
-                  {saving ? 'Saving...' : `Save All (${extracted.length})`}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
-// 3. EXCEL / CSV BULK IMPORT MODAL (INCLUDES CLASS & TYPE)
+// 2. EXCEL / CSV BULK IMPORT MODAL (INCLUDES CLASS & TYPE)
 // ═══════════════════════════════════════════════════════════════
 
 const MasterExcelBulkModal: React.FC<{ onClose: () => void; onSaved: () => void }> = ({ onClose, onSaved }) => {

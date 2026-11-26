@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Full-Width AI Question Studio Page & Shared Gemini API Key (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** Master Question Bank లో `AI Extract` పాపప్ బదులు **సెపరేట్ ఫుల్-పేజీ AI Question Studio** ఓపెన్ అవ్వాలి మరియు MCQ Paper Generator లో ఇప్పటికే ఉన్న Gemini API Key (`jy_gemini_api_key`) మీదనే ఇక్కడి అన్ని AI ఫీచర్లు పని చేయాలి.
+- **చేసిన మార్పులు:**
+  - [gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts): `getGeminiClient(customApiKey)` ద్వారా యూజర్ యొక్క `jy_gemini_api_key` ను ముందుగా తీసుకొని (`process.env.GEMINI_API_KEY` fallback తో), `generateQuizQuestions` (`inlineData` fallback సహా) & `parseRawExamTextToMCQs` (`autoSolve` ఆప్షన్, `topicName`, `explanation`, bottom answer key matching) లకు కనెక్ట్ చేశాము.
+  - [masterQuestions.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/masterQuestions.controller.ts): `parseMasterTextAI` లో `apiKey` & `autoSolve`, అలాగే `generateMasterQuestionsAI` లో `apiKey` & `previewOnly` (ఆటో-సేవ్ చేయకుండా Review కోసం JSON పంపడం) సపోర్ట్ జోడించాము.
+  - [MasterAiStudioPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/MasterAiStudioPage.tsx) & [router/index.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/router/index.tsx): కొత్త పూర్తి-వెడల్పు Light Theme పేజీ `/competitive-exams/ai-studio` నిర్మించాము — 3 మోడ్స్ (`Paste Exam Text` with 12-question batch chunking, `Photo / PDF Scan` with `Ctrl+V` screenshot paste, `Generate by Topic`), Shared `jy_gemini_api_key` కనెక్షన్, `Auto-Solve Missing Answers & Solutions` టోగుల్, మరియు Step 2 **Review & Inline Edit Workbench** (`All / Ready / Needs Attention / Duplicates` ఫిల్టర్లు, KaTeX ప్రివ్యూ, `Save to Master Bank`, `Open in A4 Paper`).
+  - [MasterQuestionBankWorkspace.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Exams/MasterQuestionBankWorkspace.tsx): `AI Extract` బటన్‌ను నేరుగా `/competitive-exams/ai-studio` కు నావిగేట్ అయ్యేలా మార్చి, పాత `MasterAiExtractModal` ను తొలగించాము.
+
 ## చివరి సంభాషణ - Professional Master Question Bank Complete Build (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** ప్రొఫెషనల్ School ERP & Competitive Exam స్థాయి Master Question Bank పూర్తిగా బిల్డ్ చేయడం (`start`).
 - **చేసిన మార్పులు:**

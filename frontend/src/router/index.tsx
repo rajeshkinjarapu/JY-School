@@ -146,6 +146,7 @@ const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompe
 const PasteCompetitiveExamTextPage = lazy(() => import('../pages/exams/PasteCompetitiveExamTextPage'));
 const BulkImportQuestionsPage = lazy(() => import('../pages/exams/BulkImportQuestionsPage'));
 const CompetitiveExamPaperPage = lazy(() => import('../pages/exams/CompetitiveExamPaperPage'));
+const MasterAiStudioPage = lazy(() => import('../pages/exams/MasterAiStudioPage'));
 const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
 const ChairmanDashboardPage = lazy(routeImports['/chairman']);
 const AttendanceWrapper = () => {
@@ -581,6 +582,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <PasteCompetitiveExamTextPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/ai-studio',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <MasterAiStudioPage />
           </ProtectedRoute>
         ),
       },
