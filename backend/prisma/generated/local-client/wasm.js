@@ -125,12 +125,19 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 exports.Prisma.QuestionPaperScalarFieldEnum = {
   id: 'id',
   classId: 'classId',
-  subject: 'subject',
+  subjectId: 'subjectId',
+  examId: 'examId',
+  section: 'section',
   title: 'title',
-  examType: 'examType',
   fileUrl: 'fileUrl',
-  dateUploaded: 'dateUploaded',
-  uploadedBy: 'uploadedBy'
+  status: 'status',
+  scheduledFor: 'scheduledFor',
+  answerKey: 'answerKey',
+  answerKeyUrl: 'answerKeyUrl',
+  isKeyPublished: 'isKeyPublished',
+  uploadedAt: 'uploadedAt',
+  uploadedBy: 'uploadedBy',
+  approvedBy: 'approvedBy'
 };
 
 exports.Prisma.SortOrder = {
@@ -141,6 +148,11 @@ exports.Prisma.SortOrder = {
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
+};
+
+exports.Prisma.NullsOrder = {
+  first: 'first',
+  last: 'last'
 };
 
 

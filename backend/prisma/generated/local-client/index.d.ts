@@ -856,34 +856,55 @@ export namespace Prisma {
   export type QuestionPaperMinAggregateOutputType = {
     id: string | null
     classId: string | null
-    subject: string | null
+    subjectId: string | null
+    examId: string | null
+    section: string | null
     title: string | null
-    examType: string | null
     fileUrl: string | null
-    dateUploaded: Date | null
+    status: string | null
+    scheduledFor: Date | null
+    answerKey: string | null
+    answerKeyUrl: string | null
+    isKeyPublished: boolean | null
+    uploadedAt: Date | null
     uploadedBy: string | null
+    approvedBy: string | null
   }
 
   export type QuestionPaperMaxAggregateOutputType = {
     id: string | null
     classId: string | null
-    subject: string | null
+    subjectId: string | null
+    examId: string | null
+    section: string | null
     title: string | null
-    examType: string | null
     fileUrl: string | null
-    dateUploaded: Date | null
+    status: string | null
+    scheduledFor: Date | null
+    answerKey: string | null
+    answerKeyUrl: string | null
+    isKeyPublished: boolean | null
+    uploadedAt: Date | null
     uploadedBy: string | null
+    approvedBy: string | null
   }
 
   export type QuestionPaperCountAggregateOutputType = {
     id: number
     classId: number
-    subject: number
+    subjectId: number
+    examId: number
+    section: number
     title: number
-    examType: number
     fileUrl: number
-    dateUploaded: number
+    status: number
+    scheduledFor: number
+    answerKey: number
+    answerKeyUrl: number
+    isKeyPublished: number
+    uploadedAt: number
     uploadedBy: number
+    approvedBy: number
     _all: number
   }
 
@@ -891,34 +912,55 @@ export namespace Prisma {
   export type QuestionPaperMinAggregateInputType = {
     id?: true
     classId?: true
-    subject?: true
+    subjectId?: true
+    examId?: true
+    section?: true
     title?: true
-    examType?: true
     fileUrl?: true
-    dateUploaded?: true
+    status?: true
+    scheduledFor?: true
+    answerKey?: true
+    answerKeyUrl?: true
+    isKeyPublished?: true
+    uploadedAt?: true
     uploadedBy?: true
+    approvedBy?: true
   }
 
   export type QuestionPaperMaxAggregateInputType = {
     id?: true
     classId?: true
-    subject?: true
+    subjectId?: true
+    examId?: true
+    section?: true
     title?: true
-    examType?: true
     fileUrl?: true
-    dateUploaded?: true
+    status?: true
+    scheduledFor?: true
+    answerKey?: true
+    answerKeyUrl?: true
+    isKeyPublished?: true
+    uploadedAt?: true
     uploadedBy?: true
+    approvedBy?: true
   }
 
   export type QuestionPaperCountAggregateInputType = {
     id?: true
     classId?: true
-    subject?: true
+    subjectId?: true
+    examId?: true
+    section?: true
     title?: true
-    examType?: true
     fileUrl?: true
-    dateUploaded?: true
+    status?: true
+    scheduledFor?: true
+    answerKey?: true
+    answerKeyUrl?: true
+    isKeyPublished?: true
+    uploadedAt?: true
     uploadedBy?: true
+    approvedBy?: true
     _all?: true
   }
 
@@ -997,12 +1039,19 @@ export namespace Prisma {
   export type QuestionPaperGroupByOutputType = {
     id: string
     classId: string
-    subject: string
+    subjectId: string | null
+    examId: string | null
+    section: string | null
     title: string
-    examType: string
     fileUrl: string
-    dateUploaded: Date
+    status: string
+    scheduledFor: Date | null
+    answerKey: string | null
+    answerKeyUrl: string | null
+    isKeyPublished: boolean
+    uploadedAt: Date
     uploadedBy: string
+    approvedBy: string | null
     _count: QuestionPaperCountAggregateOutputType | null
     _min: QuestionPaperMinAggregateOutputType | null
     _max: QuestionPaperMaxAggregateOutputType | null
@@ -1025,34 +1074,55 @@ export namespace Prisma {
   export type QuestionPaperSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     classId?: boolean
-    subject?: boolean
+    subjectId?: boolean
+    examId?: boolean
+    section?: boolean
     title?: boolean
-    examType?: boolean
     fileUrl?: boolean
-    dateUploaded?: boolean
+    status?: boolean
+    scheduledFor?: boolean
+    answerKey?: boolean
+    answerKeyUrl?: boolean
+    isKeyPublished?: boolean
+    uploadedAt?: boolean
     uploadedBy?: boolean
+    approvedBy?: boolean
   }, ExtArgs["result"]["questionPaper"]>
 
   export type QuestionPaperSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     classId?: boolean
-    subject?: boolean
+    subjectId?: boolean
+    examId?: boolean
+    section?: boolean
     title?: boolean
-    examType?: boolean
     fileUrl?: boolean
-    dateUploaded?: boolean
+    status?: boolean
+    scheduledFor?: boolean
+    answerKey?: boolean
+    answerKeyUrl?: boolean
+    isKeyPublished?: boolean
+    uploadedAt?: boolean
     uploadedBy?: boolean
+    approvedBy?: boolean
   }, ExtArgs["result"]["questionPaper"]>
 
   export type QuestionPaperSelectScalar = {
     id?: boolean
     classId?: boolean
-    subject?: boolean
+    subjectId?: boolean
+    examId?: boolean
+    section?: boolean
     title?: boolean
-    examType?: boolean
     fileUrl?: boolean
-    dateUploaded?: boolean
+    status?: boolean
+    scheduledFor?: boolean
+    answerKey?: boolean
+    answerKeyUrl?: boolean
+    isKeyPublished?: boolean
+    uploadedAt?: boolean
     uploadedBy?: boolean
+    approvedBy?: boolean
   }
 
 
@@ -1062,12 +1132,19 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       classId: string
-      subject: string
+      subjectId: string | null
+      examId: string | null
+      section: string | null
       title: string
-      examType: string
       fileUrl: string
-      dateUploaded: Date
+      status: string
+      scheduledFor: Date | null
+      answerKey: string | null
+      answerKeyUrl: string | null
+      isKeyPublished: boolean
+      uploadedAt: Date
       uploadedBy: string
+      approvedBy: string | null
     }, ExtArgs["result"]["questionPaper"]>
     composites: {}
   }
@@ -1463,12 +1540,19 @@ export namespace Prisma {
   interface QuestionPaperFieldRefs {
     readonly id: FieldRef<"QuestionPaper", 'String'>
     readonly classId: FieldRef<"QuestionPaper", 'String'>
-    readonly subject: FieldRef<"QuestionPaper", 'String'>
+    readonly subjectId: FieldRef<"QuestionPaper", 'String'>
+    readonly examId: FieldRef<"QuestionPaper", 'String'>
+    readonly section: FieldRef<"QuestionPaper", 'String'>
     readonly title: FieldRef<"QuestionPaper", 'String'>
-    readonly examType: FieldRef<"QuestionPaper", 'String'>
     readonly fileUrl: FieldRef<"QuestionPaper", 'String'>
-    readonly dateUploaded: FieldRef<"QuestionPaper", 'DateTime'>
+    readonly status: FieldRef<"QuestionPaper", 'String'>
+    readonly scheduledFor: FieldRef<"QuestionPaper", 'DateTime'>
+    readonly answerKey: FieldRef<"QuestionPaper", 'String'>
+    readonly answerKeyUrl: FieldRef<"QuestionPaper", 'String'>
+    readonly isKeyPublished: FieldRef<"QuestionPaper", 'Boolean'>
+    readonly uploadedAt: FieldRef<"QuestionPaper", 'DateTime'>
     readonly uploadedBy: FieldRef<"QuestionPaper", 'String'>
+    readonly approvedBy: FieldRef<"QuestionPaper", 'String'>
   }
     
 
@@ -1774,12 +1858,19 @@ export namespace Prisma {
   export const QuestionPaperScalarFieldEnum: {
     id: 'id',
     classId: 'classId',
-    subject: 'subject',
+    subjectId: 'subjectId',
+    examId: 'examId',
+    section: 'section',
     title: 'title',
-    examType: 'examType',
     fileUrl: 'fileUrl',
-    dateUploaded: 'dateUploaded',
-    uploadedBy: 'uploadedBy'
+    status: 'status',
+    scheduledFor: 'scheduledFor',
+    answerKey: 'answerKey',
+    answerKeyUrl: 'answerKeyUrl',
+    isKeyPublished: 'isKeyPublished',
+    uploadedAt: 'uploadedAt',
+    uploadedBy: 'uploadedBy',
+    approvedBy: 'approvedBy'
   };
 
   export type QuestionPaperScalarFieldEnum = (typeof QuestionPaperScalarFieldEnum)[keyof typeof QuestionPaperScalarFieldEnum]
@@ -1799,6 +1890,14 @@ export namespace Prisma {
   };
 
   export type QueryMode = (typeof QueryMode)[keyof typeof QueryMode]
+
+
+  export const NullsOrder: {
+    first: 'first',
+    last: 'last'
+  };
+
+  export type NullsOrder = (typeof NullsOrder)[keyof typeof NullsOrder]
 
 
   /**
@@ -1835,6 +1934,13 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+  /**
    * Reference to a field of type 'Int'
    */
   export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
@@ -1857,23 +1963,37 @@ export namespace Prisma {
     NOT?: QuestionPaperWhereInput | QuestionPaperWhereInput[]
     id?: StringFilter<"QuestionPaper"> | string
     classId?: StringFilter<"QuestionPaper"> | string
-    subject?: StringFilter<"QuestionPaper"> | string
+    subjectId?: StringNullableFilter<"QuestionPaper"> | string | null
+    examId?: StringNullableFilter<"QuestionPaper"> | string | null
+    section?: StringNullableFilter<"QuestionPaper"> | string | null
     title?: StringFilter<"QuestionPaper"> | string
-    examType?: StringFilter<"QuestionPaper"> | string
     fileUrl?: StringFilter<"QuestionPaper"> | string
-    dateUploaded?: DateTimeFilter<"QuestionPaper"> | Date | string
+    status?: StringFilter<"QuestionPaper"> | string
+    scheduledFor?: DateTimeNullableFilter<"QuestionPaper"> | Date | string | null
+    answerKey?: StringNullableFilter<"QuestionPaper"> | string | null
+    answerKeyUrl?: StringNullableFilter<"QuestionPaper"> | string | null
+    isKeyPublished?: BoolFilter<"QuestionPaper"> | boolean
+    uploadedAt?: DateTimeFilter<"QuestionPaper"> | Date | string
     uploadedBy?: StringFilter<"QuestionPaper"> | string
+    approvedBy?: StringNullableFilter<"QuestionPaper"> | string | null
   }
 
   export type QuestionPaperOrderByWithRelationInput = {
     id?: SortOrder
     classId?: SortOrder
-    subject?: SortOrder
+    subjectId?: SortOrderInput | SortOrder
+    examId?: SortOrderInput | SortOrder
+    section?: SortOrderInput | SortOrder
     title?: SortOrder
-    examType?: SortOrder
     fileUrl?: SortOrder
-    dateUploaded?: SortOrder
+    status?: SortOrder
+    scheduledFor?: SortOrderInput | SortOrder
+    answerKey?: SortOrderInput | SortOrder
+    answerKeyUrl?: SortOrderInput | SortOrder
+    isKeyPublished?: SortOrder
+    uploadedAt?: SortOrder
     uploadedBy?: SortOrder
+    approvedBy?: SortOrderInput | SortOrder
   }
 
   export type QuestionPaperWhereUniqueInput = Prisma.AtLeast<{
@@ -1882,23 +2002,37 @@ export namespace Prisma {
     OR?: QuestionPaperWhereInput[]
     NOT?: QuestionPaperWhereInput | QuestionPaperWhereInput[]
     classId?: StringFilter<"QuestionPaper"> | string
-    subject?: StringFilter<"QuestionPaper"> | string
+    subjectId?: StringNullableFilter<"QuestionPaper"> | string | null
+    examId?: StringNullableFilter<"QuestionPaper"> | string | null
+    section?: StringNullableFilter<"QuestionPaper"> | string | null
     title?: StringFilter<"QuestionPaper"> | string
-    examType?: StringFilter<"QuestionPaper"> | string
     fileUrl?: StringFilter<"QuestionPaper"> | string
-    dateUploaded?: DateTimeFilter<"QuestionPaper"> | Date | string
+    status?: StringFilter<"QuestionPaper"> | string
+    scheduledFor?: DateTimeNullableFilter<"QuestionPaper"> | Date | string | null
+    answerKey?: StringNullableFilter<"QuestionPaper"> | string | null
+    answerKeyUrl?: StringNullableFilter<"QuestionPaper"> | string | null
+    isKeyPublished?: BoolFilter<"QuestionPaper"> | boolean
+    uploadedAt?: DateTimeFilter<"QuestionPaper"> | Date | string
     uploadedBy?: StringFilter<"QuestionPaper"> | string
+    approvedBy?: StringNullableFilter<"QuestionPaper"> | string | null
   }, "id">
 
   export type QuestionPaperOrderByWithAggregationInput = {
     id?: SortOrder
     classId?: SortOrder
-    subject?: SortOrder
+    subjectId?: SortOrderInput | SortOrder
+    examId?: SortOrderInput | SortOrder
+    section?: SortOrderInput | SortOrder
     title?: SortOrder
-    examType?: SortOrder
     fileUrl?: SortOrder
-    dateUploaded?: SortOrder
+    status?: SortOrder
+    scheduledFor?: SortOrderInput | SortOrder
+    answerKey?: SortOrderInput | SortOrder
+    answerKeyUrl?: SortOrderInput | SortOrder
+    isKeyPublished?: SortOrder
+    uploadedAt?: SortOrder
     uploadedBy?: SortOrder
+    approvedBy?: SortOrderInput | SortOrder
     _count?: QuestionPaperCountOrderByAggregateInput
     _max?: QuestionPaperMaxOrderByAggregateInput
     _min?: QuestionPaperMinOrderByAggregateInput
@@ -1910,89 +2044,145 @@ export namespace Prisma {
     NOT?: QuestionPaperScalarWhereWithAggregatesInput | QuestionPaperScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"QuestionPaper"> | string
     classId?: StringWithAggregatesFilter<"QuestionPaper"> | string
-    subject?: StringWithAggregatesFilter<"QuestionPaper"> | string
+    subjectId?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
+    examId?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
+    section?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
     title?: StringWithAggregatesFilter<"QuestionPaper"> | string
-    examType?: StringWithAggregatesFilter<"QuestionPaper"> | string
     fileUrl?: StringWithAggregatesFilter<"QuestionPaper"> | string
-    dateUploaded?: DateTimeWithAggregatesFilter<"QuestionPaper"> | Date | string
+    status?: StringWithAggregatesFilter<"QuestionPaper"> | string
+    scheduledFor?: DateTimeNullableWithAggregatesFilter<"QuestionPaper"> | Date | string | null
+    answerKey?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
+    answerKeyUrl?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
+    isKeyPublished?: BoolWithAggregatesFilter<"QuestionPaper"> | boolean
+    uploadedAt?: DateTimeWithAggregatesFilter<"QuestionPaper"> | Date | string
     uploadedBy?: StringWithAggregatesFilter<"QuestionPaper"> | string
+    approvedBy?: StringNullableWithAggregatesFilter<"QuestionPaper"> | string | null
   }
 
   export type QuestionPaperCreateInput = {
     id?: string
     classId: string
-    subject: string
+    subjectId?: string | null
+    examId?: string | null
+    section?: string | null
     title: string
-    examType: string
     fileUrl: string
-    dateUploaded?: Date | string
+    status?: string
+    scheduledFor?: Date | string | null
+    answerKey?: string | null
+    answerKeyUrl?: string | null
+    isKeyPublished?: boolean
+    uploadedAt?: Date | string
     uploadedBy: string
+    approvedBy?: string | null
   }
 
   export type QuestionPaperUncheckedCreateInput = {
     id?: string
     classId: string
-    subject: string
+    subjectId?: string | null
+    examId?: string | null
+    section?: string | null
     title: string
-    examType: string
     fileUrl: string
-    dateUploaded?: Date | string
+    status?: string
+    scheduledFor?: Date | string | null
+    answerKey?: string | null
+    answerKeyUrl?: string | null
+    isKeyPublished?: boolean
+    uploadedAt?: Date | string
     uploadedBy: string
+    approvedBy?: string | null
   }
 
   export type QuestionPaperUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     classId?: StringFieldUpdateOperationsInput | string
-    subject?: StringFieldUpdateOperationsInput | string
+    subjectId?: NullableStringFieldUpdateOperationsInput | string | null
+    examId?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
-    examType?: StringFieldUpdateOperationsInput | string
     fileUrl?: StringFieldUpdateOperationsInput | string
-    dateUploaded?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    answerKey?: NullableStringFieldUpdateOperationsInput | string | null
+    answerKeyUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isKeyPublished?: BoolFieldUpdateOperationsInput | boolean
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     uploadedBy?: StringFieldUpdateOperationsInput | string
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionPaperUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     classId?: StringFieldUpdateOperationsInput | string
-    subject?: StringFieldUpdateOperationsInput | string
+    subjectId?: NullableStringFieldUpdateOperationsInput | string | null
+    examId?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
-    examType?: StringFieldUpdateOperationsInput | string
     fileUrl?: StringFieldUpdateOperationsInput | string
-    dateUploaded?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    answerKey?: NullableStringFieldUpdateOperationsInput | string | null
+    answerKeyUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isKeyPublished?: BoolFieldUpdateOperationsInput | boolean
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     uploadedBy?: StringFieldUpdateOperationsInput | string
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionPaperCreateManyInput = {
     id?: string
     classId: string
-    subject: string
+    subjectId?: string | null
+    examId?: string | null
+    section?: string | null
     title: string
-    examType: string
     fileUrl: string
-    dateUploaded?: Date | string
+    status?: string
+    scheduledFor?: Date | string | null
+    answerKey?: string | null
+    answerKeyUrl?: string | null
+    isKeyPublished?: boolean
+    uploadedAt?: Date | string
     uploadedBy: string
+    approvedBy?: string | null
   }
 
   export type QuestionPaperUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     classId?: StringFieldUpdateOperationsInput | string
-    subject?: StringFieldUpdateOperationsInput | string
+    subjectId?: NullableStringFieldUpdateOperationsInput | string | null
+    examId?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
-    examType?: StringFieldUpdateOperationsInput | string
     fileUrl?: StringFieldUpdateOperationsInput | string
-    dateUploaded?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    answerKey?: NullableStringFieldUpdateOperationsInput | string | null
+    answerKeyUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isKeyPublished?: BoolFieldUpdateOperationsInput | boolean
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     uploadedBy?: StringFieldUpdateOperationsInput | string
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type QuestionPaperUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     classId?: StringFieldUpdateOperationsInput | string
-    subject?: StringFieldUpdateOperationsInput | string
+    subjectId?: NullableStringFieldUpdateOperationsInput | string | null
+    examId?: NullableStringFieldUpdateOperationsInput | string | null
+    section?: NullableStringFieldUpdateOperationsInput | string | null
     title?: StringFieldUpdateOperationsInput | string
-    examType?: StringFieldUpdateOperationsInput | string
     fileUrl?: StringFieldUpdateOperationsInput | string
-    dateUploaded?: DateTimeFieldUpdateOperationsInput | Date | string
+    status?: StringFieldUpdateOperationsInput | string
+    scheduledFor?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    answerKey?: NullableStringFieldUpdateOperationsInput | string | null
+    answerKeyUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    isKeyPublished?: BoolFieldUpdateOperationsInput | boolean
+    uploadedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     uploadedBy?: StringFieldUpdateOperationsInput | string
+    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -2010,6 +2200,37 @@ export namespace Prisma {
     not?: NestedStringFilter<$PrismaModel> | string
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
   export type DateTimeFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2021,37 +2242,63 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
+  }
+
   export type QuestionPaperCountOrderByAggregateInput = {
     id?: SortOrder
     classId?: SortOrder
-    subject?: SortOrder
+    subjectId?: SortOrder
+    examId?: SortOrder
+    section?: SortOrder
     title?: SortOrder
-    examType?: SortOrder
     fileUrl?: SortOrder
-    dateUploaded?: SortOrder
+    status?: SortOrder
+    scheduledFor?: SortOrder
+    answerKey?: SortOrder
+    answerKeyUrl?: SortOrder
+    isKeyPublished?: SortOrder
+    uploadedAt?: SortOrder
     uploadedBy?: SortOrder
+    approvedBy?: SortOrder
   }
 
   export type QuestionPaperMaxOrderByAggregateInput = {
     id?: SortOrder
     classId?: SortOrder
-    subject?: SortOrder
+    subjectId?: SortOrder
+    examId?: SortOrder
+    section?: SortOrder
     title?: SortOrder
-    examType?: SortOrder
     fileUrl?: SortOrder
-    dateUploaded?: SortOrder
+    status?: SortOrder
+    scheduledFor?: SortOrder
+    answerKey?: SortOrder
+    answerKeyUrl?: SortOrder
+    isKeyPublished?: SortOrder
+    uploadedAt?: SortOrder
     uploadedBy?: SortOrder
+    approvedBy?: SortOrder
   }
 
   export type QuestionPaperMinOrderByAggregateInput = {
     id?: SortOrder
     classId?: SortOrder
-    subject?: SortOrder
+    subjectId?: SortOrder
+    examId?: SortOrder
+    section?: SortOrder
     title?: SortOrder
-    examType?: SortOrder
     fileUrl?: SortOrder
-    dateUploaded?: SortOrder
+    status?: SortOrder
+    scheduledFor?: SortOrder
+    answerKey?: SortOrder
+    answerKeyUrl?: SortOrder
+    isKeyPublished?: SortOrder
+    uploadedAt?: SortOrder
     uploadedBy?: SortOrder
+    approvedBy?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
@@ -2072,6 +2319,46 @@ export namespace Prisma {
     _max?: NestedStringFilter<$PrismaModel>
   }
 
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type DateTimeWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel>
@@ -2090,6 +2377,18 @@ export namespace Prisma {
     set?: string
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
   }
@@ -2106,6 +2405,36 @@ export namespace Prisma {
     startsWith?: string | StringFieldRefInput<$PrismaModel>
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     not?: NestedStringFilter<$PrismaModel> | string
+  }
+
+  export type NestedStringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
   }
 
   export type NestedDateTimeFilter<$PrismaModel = never> = {
@@ -2145,6 +2474,56 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedIntNullableFilter<$PrismaModel = never> = {
+    equals?: number | IntFieldRefInput<$PrismaModel> | null
+    in?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    notIn?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    lt?: number | IntFieldRefInput<$PrismaModel>
+    lte?: number | IntFieldRefInput<$PrismaModel>
+    gt?: number | IntFieldRefInput<$PrismaModel>
+    gte?: number | IntFieldRefInput<$PrismaModel>
+    not?: NestedIntNullableFilter<$PrismaModel> | number | null
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type NestedDateTimeWithAggregatesFilter<$PrismaModel = never> = {

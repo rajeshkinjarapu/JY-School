@@ -1,7 +1,8 @@
 // schema_local.prisma
 generator client {
-  provider = "prisma-client-js"
-  output   = "./generated/local-client"
+  provider      = "prisma-client-js"
+  output        = "./generated/local-client"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "windows"]
 }
 
 datasource db {
@@ -10,12 +11,25 @@ datasource db {
 }
 
 model QuestionPaper {
-  id           String   @id @default(uuid())
-  classId      String
-  subject      String
-  title        String
-  examType     String
-  fileUrl      String // URL to access the file from Nginx
-  dateUploaded DateTime @default(now())
-  uploadedBy   String
+  id        String  @id @default(uuid())
+  classId   String
+  subjectId String?
+  examId    String?
+  section   String?
+  title     String
+  fileUrl   String
+
+  // New Status & Workflow Fields
+  status       String    @default("PENDING_APPROVAL") // PENDING_APPROVAL, APPROVED, REJECTED, PUBLISHED
+  scheduledFor DateTime?
+
+  // Answer Key Management
+  answerKey      String?
+  answerKeyUrl   String?
+  isKeyPublished Boolean @default(false)
+
+  // Audit Trail
+  uploadedAt DateTime @default(now())
+  uploadedBy String
+  approvedBy String?
 }
