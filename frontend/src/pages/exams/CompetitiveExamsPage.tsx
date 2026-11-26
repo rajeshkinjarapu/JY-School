@@ -263,10 +263,18 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     const subjectSet = new Set<string>();
     const topicSet = new Set<string>();
     masterQuestionsList.forEach((q: any) => {
-      const sub = (q.subjectName || '').toString().trim().toLowerCase();
+      const sub = (q.subjectName || q.subject?.name || '').toString().trim().toLowerCase();
       if (sub) subjectSet.add(sub);
       const top = (q.topic || q.topicName || q.chapterName || '').toString().trim().toLowerCase();
       if (top) topicSet.add(top);
+    });
+    exams.forEach((ex: any) => {
+      (ex.questions || []).forEach((q: any) => {
+        const sub = (q.subjectName || q.subject || q.subject?.name || '').toString().trim().toLowerCase();
+        if (sub) subjectSet.add(sub);
+        const top = (q.topic || q.topicName || q.chapterName || '').toString().trim().toLowerCase();
+        if (top) topicSet.add(top);
+      });
     });
 
     const studentBase = totalSchoolStudents || activeStudents.length;
@@ -431,9 +439,9 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
       <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-6 flex-1">
 
-      {/* 12-KPI Clean Dashboard Command Hub (Pure Light Theme, Nothing Underneath) */}
+      {/* 12-KPI Clean Dashboard Command Hub (Vibrant Light Theme Cards, Nothing Underneath) */}
       {activeTab === 'DASHBOARD' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           <StatCard
             title="Create New Exam"
             value="+ New Test"
@@ -450,6 +458,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Total Exams"
             value={exams.length}
             subtitle={`${kpiMetrics.publishedExamsCount} Published • ${kpiMetrics.draftExamsCount} Draft`}
+            badgeText="All Tests"
             color="blue"
             icon={<List className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams')}
@@ -458,7 +467,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Live Exams Now"
             value={liveExams.length}
             subtitle={liveExams.length > 0 ? 'Active CBT Sessions' : 'No Active Live Exam'}
-            badgeText={liveExams.length > 0 ? 'LIVE' : undefined}
+            badgeText={liveExams.length > 0 ? 'LIVE' : 'Standby'}
             color="emerald"
             icon={<Activity className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams?filter=LIVE')}
@@ -467,6 +476,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Upcoming Exams"
             value={upcomingExams.length}
             subtitle={kpiMetrics.nextUpcomingLabel}
+            badgeText="Schedule"
             color="cyan"
             icon={<Calendar className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams?filter=UPCOMING')}
@@ -474,7 +484,12 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Master Question Bank"
             value={totalQuestions}
-            subtitle={`${kpiMetrics.uniqueSubjectCount} Subjects • ${kpiMetrics.uniqueTopicCount} Topics`}
+            subtitle={
+              kpiMetrics.uniqueSubjectCount > 0 || kpiMetrics.uniqueTopicCount > 0
+                ? `${kpiMetrics.uniqueSubjectCount} Subjects • ${kpiMetrics.uniqueTopicCount} Topics`
+                : `${exams.length} Exam Sets • Question Bank`
+            }
+            badgeText="Bank"
             color="purple"
             icon={<Database className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/question-bank')}
@@ -483,6 +498,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Bulk Excel Import"
             value="Excel / CSV"
             subtitle="Upload 100–1000+ MCQs Fast"
+            badgeText="Bulk"
             color="amber"
             icon={<FileSpreadsheet className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/bulk-import')}
@@ -491,7 +507,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="AI Smart Text Parser"
             value="Gemini 3.0"
             subtitle="KaTeX & MCQ Auto Digitizer"
-            badgeText="AI"
+            badgeText="AI Powered"
             color="violet"
             icon={<Sparkles className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/paste-ai')}
@@ -500,6 +516,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Student Management"
             value={kpiMetrics.studentBase}
             subtitle={`${activeStudents.length} Attempted (${kpiMetrics.participationPct}%)`}
+            badgeText="Students"
             color="teal"
             icon={<Users className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/students')}
@@ -508,6 +525,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Exam Submissions"
             value={totalSubmissions}
             subtitle="Completed Student Attempts"
+            badgeText="Submitted"
             color="orange"
             icon={<CheckCircle2 className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -516,6 +534,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Results & Merit Ranks"
             value={`${kpiMetrics.highestScorePct}%`}
             subtitle={kpiMetrics.topScorerName ? `Top: ${kpiMetrics.topScorerName}` : 'Highest Score & Ranks'}
+            badgeText="Top Rank"
             color="pink"
             icon={<Trophy className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -524,6 +543,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="A4 Result Cards"
             value={totalSubmissions}
             subtitle="Printable Scorecards Ready"
+            badgeText="Print A4"
             color="rose"
             icon={<Award className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -532,6 +552,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             title="Analytics & Reports"
             value={`${kpiMetrics.overallPassRatePct}% Pass`}
             subtitle={`Avg Score: ${kpiMetrics.avgScorePct}% • Export Excel`}
+            badgeText="Reports"
             color="slate"
             icon={<BarChart3 className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/reports')}
@@ -4959,102 +4980,70 @@ const StatCard: React.FC<StatCardProps> = ({
   active,
   onClick,
 }) => {
-  const activeBorders: Record<StatCardColor, string> = {
-    blue: 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-md',
-    emerald: 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-md',
-    purple: 'border-purple-500 bg-purple-50/70 ring-2 ring-purple-500/20 shadow-md',
-    amber: 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-md',
-    indigo: 'border-indigo-500 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-md',
-    rose: 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-500/20 shadow-md',
-    cyan: 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500/20 shadow-md',
-    violet: 'border-violet-500 bg-violet-50/70 ring-2 ring-violet-500/20 shadow-md',
-    teal: 'border-teal-500 bg-teal-50/70 ring-2 ring-teal-500/20 shadow-md',
-    orange: 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-500/20 shadow-md',
-    pink: 'border-pink-500 bg-pink-50/70 ring-2 ring-pink-500/20 shadow-md',
-    slate: 'border-slate-400 bg-slate-100/80 ring-2 ring-slate-400/20 shadow-md',
-  };
-
-  const badgeBg: Record<StatCardColor, string> = {
-    blue: 'bg-blue-600 text-white',
-    emerald: 'bg-emerald-600 text-white',
-    purple: 'bg-purple-600 text-white',
-    amber: 'bg-amber-600 text-white',
-    indigo: 'bg-indigo-600 text-white',
-    rose: 'bg-rose-600 text-white',
-    cyan: 'bg-cyan-600 text-white',
-    violet: 'bg-violet-600 text-white',
-    teal: 'bg-teal-600 text-white',
-    orange: 'bg-orange-600 text-white',
-    pink: 'bg-pink-600 text-white',
-    slate: 'bg-slate-700 text-white',
-  };
-
-  const defaultBadgeBg: Record<StatCardColor, string> = {
-    blue: 'bg-blue-50 text-blue-600 border border-blue-100',
-    emerald: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-    purple: 'bg-purple-50 text-purple-600 border border-purple-100',
-    amber: 'bg-amber-50 text-amber-600 border border-amber-100',
-    indigo: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
-    rose: 'bg-rose-50 text-rose-600 border border-rose-100',
-    cyan: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
-    violet: 'bg-violet-50 text-violet-600 border border-violet-100',
-    teal: 'bg-teal-50 text-teal-600 border border-teal-100',
-    orange: 'bg-orange-50 text-orange-600 border border-orange-100',
-    pink: 'bg-pink-50 text-pink-600 border border-pink-100',
-    slate: 'bg-slate-100 text-slate-700 border border-slate-200',
-  };
-
-  const pillTagClass: Record<StatCardColor, string> = {
-    blue: 'bg-blue-50 text-blue-700 border-blue-200',
-    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200',
-    amber: 'bg-amber-50 text-amber-700 border-amber-200',
-    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    rose: 'bg-rose-50 text-rose-700 border-rose-200',
-    cyan: 'bg-cyan-50 text-cyan-700 border-cyan-200',
-    violet: 'bg-violet-50 text-violet-700 border-violet-200',
-    teal: 'bg-teal-50 text-teal-700 border-teal-200',
-    orange: 'bg-orange-50 text-orange-700 border-orange-200',
-    pink: 'bg-pink-50 text-pink-700 border-pink-200',
-    slate: 'bg-slate-100 text-slate-700 border-slate-200',
+  const gradientMap: Record<StatCardColor, string> = {
+    indigo: 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40',
+    blue: 'bg-gradient-to-br from-blue-500 via-blue-600 to-sky-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40',
+    emerald: 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
+    cyan: 'bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40',
+    purple: 'bg-gradient-to-br from-purple-500 via-purple-600 to-fuchsia-600 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40',
+    amber: 'bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40',
+    violet: 'bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40',
+    teal: 'bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600 shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40',
+    orange: 'bg-gradient-to-br from-orange-500 via-orange-600 to-rose-500 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40',
+    pink: 'bg-gradient-to-br from-pink-500 via-rose-500 to-fuchsia-600 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40',
+    rose: 'bg-gradient-to-br from-rose-500 via-red-500 to-pink-600 shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40',
+    slate: 'bg-gradient-to-br from-sky-500 via-indigo-500 to-blue-600 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40',
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group w-full flex flex-col justify-between gap-3 ${
-        active
-          ? activeBorders[color]
-          : 'bg-white hover:bg-slate-50/70 border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300'
-      }`}
+      className={`p-5 rounded-3xl text-left transition-all duration-300 cursor-pointer relative overflow-hidden group w-full flex flex-col justify-between gap-4 border border-white/25 hover:-translate-y-1 hover:shadow-xl active:scale-[0.99] ${
+        gradientMap[color]
+      } ${active ? 'ring-4 ring-indigo-300/60 scale-[1.01]' : ''}`}
     >
-      <div className="flex items-start justify-between gap-2 w-full">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-              {title}
+      {/* Decorative Gloss Bubbles */}
+      <div className="pointer-events-none absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/15 group-hover:scale-125 transition-transform duration-500" />
+      <div className="pointer-events-none absolute -bottom-10 -left-8 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform duration-500" />
+
+      {/* Top Bar: Frosted Icon + Pill Badge + Circle Arrow */}
+      <div className="relative z-10 flex items-center justify-between gap-2 w-full">
+        <div className="flex items-center gap-2.5">
+          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs border border-white/30 flex items-center justify-center text-white shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shrink-0">
+            {icon}
+          </div>
+          {badgeText && (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">
+              {badgeText === 'LIVE' && (
+                <span className="w-1.5 h-1.5 rounded-full bg-lime-300 animate-ping" />
+              )}
+              {badgeText}
             </span>
-            {badgeText && (
-              <span
-                className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${pillTagClass[color]}`}
-              >
-                {badgeText}
-              </span>
-            )}
-          </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1.5 tracking-tight truncate">
-            {value}
-          </div>
+          )}
         </div>
-        <div className={`p-2.5 rounded-xl transition-colors shrink-0 ${active ? badgeBg[color] : defaultBadgeBg[color]}`}>
-          {icon}
+
+        <div className="w-8 h-8 rounded-full bg-white/20 group-hover:bg-white text-white group-hover:text-indigo-700 border border-white/25 flex items-center justify-center transition-all duration-300 shrink-0 shadow-xs">
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </div>
       </div>
 
-      <div className="text-xs font-semibold text-slate-500 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 w-full">
+      {/* Main Title & Metric Value */}
+      <div className="relative z-10 w-full">
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-white/85">
+          {title}
+        </div>
+        <div className="text-2xl sm:text-[28px] font-black text-white mt-0.5 tracking-tight truncate drop-shadow-xs leading-tight">
+          {value}
+        </div>
+      </div>
+
+      {/* Bottom Status Strip */}
+      <div className="relative z-10 text-xs font-bold text-white/90 pt-2.5 border-t border-white/20 flex items-center justify-between gap-2 w-full">
         <span className="truncate">{subtitle || 'Click to open'}</span>
-        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
+        <span className="text-[10px] font-black uppercase tracking-wider text-white/80 group-hover:text-white shrink-0">
+          Open
+        </span>
       </div>
     </button>
   );

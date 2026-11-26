@@ -43,6 +43,7 @@ export interface LiveLatexPreviewProps {
   questionSpacing?: string;
   showHeader?: boolean;
   realSubject?: string;
+  hideHeaderSubjectIfEmpty?: boolean;
   showSubjectHeadings?: boolean;
   parseMode?: 'smart' | 'raw';
   showPageBorder?: boolean;
@@ -72,6 +73,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
   questionSpacing = 'normal',
   showHeader = true,
   realSubject = '',
+  hideHeaderSubjectIfEmpty = false,
   showSubjectHeadings = true,
   parseMode = 'smart',
   showPageBorder = false,
@@ -722,7 +724,14 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             <div className="flex flex-col text-[10.5pt] font-medium px-1 gap-0.5">
               <div className="flex justify-between items-center">
                 <div><span className="font-bold">Class:</span> {examClass || examSubject || '_______________'}</div>
-                <div><span className="font-bold">Subject:</span> {realSubject || (selectedSubjects?.length === 1 ? selectedSubjects[0] : (selectedSubjects && selectedSubjects.length > 1 ? selectedSubjects.join(', ') : '')) || examSubject || '_______________'}</div>
+                {(() => {
+                  const subjectText = hideHeaderSubjectIfEmpty
+                    ? (realSubject || '').trim()
+                    : (realSubject || (selectedSubjects?.length === 1 ? selectedSubjects[0] : (selectedSubjects && selectedSubjects.length > 1 ? selectedSubjects.join(', ') : '')) || examSubject || '_______________');
+                  return subjectText ? (
+                    <div><span className="font-bold">Subject:</span> {subjectText}</div>
+                  ) : null;
+                })()}
                 <div><span className="font-bold">Marks:</span> {maxMarks || '100'}</div>
               </div>
               <div className="flex justify-between items-center">

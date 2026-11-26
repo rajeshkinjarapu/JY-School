@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2, Plus } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2, Plus, Calendar, Clock, Check, Type } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -147,7 +147,7 @@ export const formatMCQText = (rawText: string): string => {
 
 export const MCQPaperGeneratorPage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const paperId = searchParams.get('id');
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
@@ -159,12 +159,24 @@ export const MCQPaperGeneratorPage = () => {
   });
   const [leftWidth, setLeftWidth] = useState(50);
 
-  // Paper Settings State
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Paper Settings State (synced with URL ?view=settings for dedicated full-width page navigation)
+  const isSettingsOpen = searchParams.get('view') === 'settings';
+  const openSettingsPage = () => {
+    const next = new URLSearchParams(searchParams);
+    next.set('view', 'settings');
+    setSearchParams(next);
+  };
+  const closeSettingsPage = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete('view');
+    setSearchParams(next);
+  };
   const [isLatexHelpOpen, setIsLatexHelpOpen] = useState(false);
   const [isImageSizeModalOpen, setIsImageSizeModalOpen] = useState(false);
   const [examName, setExamName] = useState<string>(() => localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
   const [examClass, setExamClass] = useState<string>(() => localStorage.getItem('mcq_exam_class') || '10th Class');
+  const [headerSubject, setHeaderSubject] = useState<string>(() => localStorage.getItem('mcq_exam_header_subject') || '');
+  const [customSubjectInput, setCustomSubjectInput] = useState<string>('');
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>(() => {
     try {
       const stored = localStorage.getItem('mcq_exam_subjects');
@@ -702,7 +714,8 @@ export const MCQPaperGeneratorPage = () => {
         questionSpacing,
         showPaperHeader,
         maxMarks,
-        time
+        time,
+        headerSubject
       }
     };
     return "<!--MCQ_DATA_V2-->\n" + JSON.stringify(data);
@@ -1036,6 +1049,7 @@ export const MCQPaperGeneratorPage = () => {
         if (!paperId) {
           setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
           setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
+          setHeaderSubject(localStorage.getItem('mcq_exam_header_subject') || '');
           let currentSubjs: string[] = [];
           try {
             const stored = localStorage.getItem('mcq_exam_subjects');
@@ -1117,10 +1131,12 @@ export const MCQPaperGeneratorPage = () => {
               if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
               if (settings.maxMarks) setMaxMarks(settings.maxMarks);
               if (settings.time) setTime(settings.time);
+              setHeaderSubject(settings.headerSubject ?? '');
             } else {
               setFontSize('medium');
               setQuestionSpacing('normal');
               setShowPaperHeader(true);
+              setHeaderSubject('');
             }
 
             setInlineImages(images);
@@ -1243,14 +1259,624 @@ export const MCQPaperGeneratorPage = () => {
       // Get list of floating images (not inline)
       const floatingImagesList = Object.entries(inlineImages).filter(([_, val]) => typeof val !== 'string');
 
+      const allSelectableSubjects = Array.from(new Set([...AVAILABLE_SUBJECTS, ...selectedSubjects]));
+
+      const handleAddCustomSubject = () => {
+        const clean = customSubjectInput.trim();
+        if (!clean) return;
+        if (!selectedSubjects.includes(clean)) {
+          setSelectedSubjects(prev => [...prev, clean]);
+        }
+        setCustomSubjectInput('');
+        toast.success(`Added subject tab "${clean}"`);
+      };
+
+      const handleSaveSettingsPage = () => {
+        localStorage.setItem('mcq_exam_name', examName);
+        localStorage.setItem('mcq_exam_class', examClass);
+        localStorage.setItem('mcq_exam_header_subject', headerSubject);
+        localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
+        localStorage.setItem('mcq_exam_date', examDate);
+        localStorage.setItem('mcq_exam_max_marks', maxMarks);
+        localStorage.setItem('mcq_exam_marks', time);
+        localStorage.setItem('mcq_exam_instructions', instructions);
+        localStorage.setItem('mcq_exam_font_size', fontSize);
+        localStorage.setItem('mcq_exam_spacing', questionSpacing);
+
+        if (selectedSubjects.length > 0) {
+          if (!selectedSubjects.includes(activeSubjectTab)) {
+            setActiveSubjectTab(selectedSubjects[0]);
+          }
+          setSubjectContents(prev => {
+            const updated: Record<string, string> = {};
+            selectedSubjects.forEach(s => {
+              updated[s] = prev[s] || (s === 'Maths' && prev['Mathematics'] ? prev['Mathematics'] : (s === 'Mathematics' && prev['Maths'] ? prev['Maths'] : ''));
+            });
+            return updated;
+          });
+        }
+
+        closeSettingsPage();
+        toast.success('Paper settings saved!');
+      };
+
       return (
-        <div ref={containerRef} className="flex flex-col h-full bg-gray-50/50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
+        <div ref={containerRef} className="flex flex-col h-full bg-slate-50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
           <PageHeader
-            title="MCQ Paper Generator"
-            icon={<FileText className="w-5 h-5 text-white" />}
+            title={isSettingsOpen ? 'Paper Settings' : 'MCQ Paper Generator'}
+            icon={isSettingsOpen ? <Settings className="w-5 h-5 text-white" /> : <FileText className="w-5 h-5 text-white" />}
+            action={isSettingsOpen ? (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={closeSettingsPage}
+                  className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back to Paper</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveSettingsPage}
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-indigo-50 text-indigo-900 font-black text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Save & Open Paper</span>
+                </button>
+              </div>
+            ) : undefined}
           />
 
-          {/* Actions Toolbar */}
+          {/* FULL-WIDTH DEDICATED PAPER SETTINGS PAGE */}
+          {isSettingsOpen && (
+            <div className="w-full flex-1 bg-slate-50 px-4 sm:px-6 lg:px-8 py-6 pb-20 print:hidden overflow-y-auto custom-scrollbar">
+              <div className="w-full space-y-6">
+                {/* Top Full-Width Summary & Save Bar */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0">
+                      <Settings className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="text-lg sm:text-xl font-black text-slate-900">
+                          Question Paper Settings & Header Layout
+                        </h2>
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          {selectedSubjects.length} {selectedSubjects.length === 1 ? 'Subject Tab' : 'Subject Tabs'}
+                        </span>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                          headerSubject.trim()
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border-slate-200'
+                        }`}>
+                          {headerSubject.trim() ? `Paper Subject: ${headerSubject.trim()}` : 'Paper Header Subject: Hidden'}
+                        </span>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                        Configure exam header metadata, optional Subject line on paper header, subject tabs, instructions, typography, and AI engine.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={closeSettingsPage}
+                      className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Back to Editor & Preview</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveSettingsPage}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-black shadow-sm flex items-center gap-2 transition cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Save Settings & Return to Paper</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Main Full-Width Grid (12 columns) */}
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                  {/* Left 8 Columns: Header Fields, Subjects, Instructions */}
+                  <div className="xl:col-span-8 space-y-6">
+                    {/* Card 1: Exam & Question Paper Header Fields */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                            <FileText className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm sm:text-base font-black text-slate-900">1. Exam & Paper Header Details</h3>
+                            <p className="text-xs text-slate-500">Shown at the top of the A4 Question Paper when Header is enabled</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                        <div className="sm:col-span-2 lg:col-span-2">
+                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
+                            Exam Name / Title
+                          </label>
+                          <input
+                            type="text"
+                            value={examName}
+                            onChange={(e) => setExamName(e.target.value)}
+                            placeholder="e.g., BOARD OBJECTIVE EXAMINATION - 2"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
+                            Class / Grade
+                          </label>
+                          <input
+                            type="text"
+                            value={examClass}
+                            onChange={(e) => setExamClass(e.target.value)}
+                            placeholder="e.g., 6th Class"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* NEW OPTIONAL SUBJECT FIELD FOR QUESTION PAPER HEADER */}
+                        <div className="sm:col-span-2 lg:col-span-3 p-4 rounded-2xl bg-indigo-50/40 border border-indigo-200/80 space-y-2">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <label className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                              Subject (Question Paper Header — Optional)
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                                headerSubject.trim()
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-white text-slate-500 border-slate-200'
+                              }`}>
+                                {headerSubject.trim() ? 'Visible on Question Paper' : 'Hidden on Question Paper'}
+                              </span>
+                              {headerSubject.trim() && (
+                                <button
+                                  type="button"
+                                  onClick={() => setHeaderSubject('')}
+                                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg transition cursor-pointer"
+                                >
+                                  Clear
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          <input
+                            type="text"
+                            value={headerSubject}
+                            onChange={(e) => setHeaderSubject(e.target.value)}
+                            placeholder="Enter subject to print on paper header (e.g., Physics / Mathematics) — Leave blank to hide Subject"
+                            className="w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 outline-none transition-all shadow-2xs"
+                          />
+                          <p className="text-[11px] font-semibold text-slate-500">
+                            ఇక్కడ Subject ఎంటర్ చేస్తే మాత్రమే క్వశ్చన్ పేపర్ పైన <strong className="text-slate-700">Subject: ...</strong> కనిపిస్తుంది. ఖాళీగా ఉంచితే పేపర్ హెడర్‌లో Subject కనిపించదు.
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" /> Exam Date
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const d = new Date();
+                                const formatted = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                                setExamDate(formatted);
+                              }}
+                              className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                            >
+                              Today
+                            </button>
+                          </div>
+                          <input
+                            type="text"
+                            value={examDate}
+                            onChange={(e) => setExamDate(e.target.value)}
+                            placeholder="DD-MM-YYYY"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
+                            Total Marks
+                          </label>
+                          <input
+                            type="text"
+                            value={maxMarks}
+                            onChange={(e) => setMaxMarks(e.target.value)}
+                            placeholder="100"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5 text-slate-400" /> Time / Duration
+                          </label>
+                          <input
+                            type="text"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            placeholder="3 Hours"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card 2: Subject Tabs / Sections Selection */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+                            <BookOpen className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm sm:text-base font-black text-slate-900">2. Subject Sections in Editor</h3>
+                            <p className="text-xs text-slate-500">Choose which subject tabs appear inside the question editor</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={customSubjectInput}
+                            onChange={(e) => setCustomSubjectInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleAddCustomSubject();
+                              }
+                            }}
+                            placeholder="Add custom subject..."
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-purple-500/20 outline-none w-40 sm:w-48"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomSubject}
+                            className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        {allSelectableSubjects.map((subj) => {
+                          const isChecked = selectedSubjects.includes(subj);
+                          return (
+                            <label
+                              key={subj}
+                              className={`flex items-center justify-between gap-2 cursor-pointer p-3 rounded-xl border transition-all select-none ${
+                                isChecked
+                                  ? 'bg-indigo-50/80 border-indigo-400 text-indigo-900 shadow-2xs'
+                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={() => toggleSubject(subj)}
+                                  className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 shrink-0"
+                                />
+                                <span className="text-xs sm:text-sm font-bold truncate">{subj}</span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Card 3: General Instructions */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black text-slate-900">3. General Instructions (One per line)</h3>
+                          <p className="text-xs text-slate-500">Printed directly below the paper header as bullet points</p>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {[
+                            { label: '+ OMR Pen Rule', text: 'Fill only with Blue / Black Ball Pen. Fill the circle completely black.' },
+                            { label: '+ No Negative', text: 'Each question carries 1 Mark. There is no negative marking.' },
+                            { label: '+ JEE (+4/-1)', text: 'Each correct answer carries +4 marks and -1 mark for each wrong answer.' },
+                          ].map((chip) => (
+                            <button
+                              key={chip.label}
+                              type="button"
+                              onClick={() => setInstructions(prev => (prev.trim() ? `${prev.trim()}\n${chip.text}` : chip.text))}
+                              className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 transition cursor-pointer"
+                            >
+                              {chip.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <textarea
+                        value={instructions}
+                        onChange={(e) => setInstructions(e.target.value)}
+                        rows={5}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white p-3.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all resize-y"
+                        placeholder="Enter exam instructions (one per line)..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right 4 Columns: Live Header Preview + Typography & Header Toggle */}
+                  <div className="xl:col-span-4 space-y-6">
+                    {/* Card 4: Live Paper Header Mini Preview */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <Eye className="w-4 h-4 text-emerald-600" /> Live Header Preview
+                        </h3>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                          showPaperHeader
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-amber-50 text-amber-700 border-amber-200'
+                        }`}>
+                          {showPaperHeader ? 'Header ON' : 'Header OFF'}
+                        </span>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        {showPaperHeader ? (
+                          <div className="bg-white border border-slate-300 rounded-lg p-3.5 text-black shadow-2xs space-y-2">
+                            <div className="text-center border-b border-black pb-2">
+                              <div className="text-xs font-black uppercase tracking-wide">SRI VENKATESWARA JY SCHOOL</div>
+                              <div className="text-[11px] font-bold uppercase mt-1">{examName || 'EXAMINATION'}</div>
+                            </div>
+                            <div className="text-[11px] font-semibold space-y-1">
+                              <div className="flex justify-between items-center gap-2 flex-wrap">
+                                <span><strong>Class:</strong> {examClass || '___'}</span>
+                                {headerSubject.trim() && (
+                                  <span className="text-indigo-700"><strong>Subject:</strong> {headerSubject.trim()}</span>
+                                )}
+                                <span><strong>Marks:</strong> {maxMarks || '100'}</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span><strong>Date:</strong> {examDate || '___/___/20__'}</span>
+                                {time && <span><strong>Time:</strong> {time}</span>}
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-6 text-center text-xs font-semibold text-slate-400">
+                            Paper Header is currently turned OFF. Only questions will appear on PDF/Print.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card 5: Typography & Paper Appearance */}
+                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5">
+                      <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3.5">
+                        <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                          <Type className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm sm:text-base font-black text-slate-900">4. Typography & Layout</h3>
+                          <p className="text-xs text-slate-500">Adjust A4 print readability</p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Font Size</label>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          {[
+                            { val: 'small', label: 'Small', sub: '10 pt' },
+                            { val: 'medium', label: 'Medium', sub: '11 pt' },
+                            { val: 'large', label: 'Large', sub: '12 pt' },
+                            { val: 'xlarge', label: 'Extra Large', sub: '14 pt' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.val}
+                              type="button"
+                              onClick={() => setFontSize(opt.val)}
+                              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                                fontSize === opt.val
+                                  ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-1 ring-indigo-500/30'
+                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white'
+                              }`}
+                            >
+                              <div className="text-xs font-black">{opt.label}</div>
+                              <div className="text-[11px] font-semibold text-slate-500">{opt.sub}</div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Question Spacing</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[
+                            { val: 'compact', label: 'Compact' },
+                            { val: 'normal', label: 'Normal' },
+                            { val: 'relaxed', label: 'Relaxed' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.val}
+                              type="button"
+                              onClick={() => setQuestionSpacing(opt.val)}
+                              className={`py-2.5 px-2 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                                questionSpacing === opt.val
+                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-800">Show Paper Header</h4>
+                          <p className="text-xs text-slate-500">Display school logo, exam title, class & instructions at top.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                          <input
+                            type="checkbox"
+                            className="sr-only peer"
+                            checked={showPaperHeader}
+                            onChange={(e) => {
+                              setShowPaperHeader(e.target.checked);
+                              localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
+                            }}
+                          />
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Full-Width AI Model Configuration Card */}
+                  <div className="xl:col-span-12 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+                    <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3.5">
+                      <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-slate-900">5. AI Model Configuration</h3>
+                        <p className="text-xs text-slate-500">Select the AI engine used by AI Gen & Answer Key Solver (optional custom API keys)</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'gemini' ? 'border-purple-500 bg-purple-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="ai_model"
+                            checked={activeAiModel === 'gemini'}
+                            onChange={() => {
+                              setActiveAiModel('gemini');
+                              localStorage.setItem('jy_active_ai_model', 'gemini');
+                            }}
+                            className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                          />
+                          <span className="text-sm font-bold text-slate-800">Google Gemini</span>
+                        </label>
+                        {activeAiModel === 'gemini' && (
+                          <input
+                            type="password"
+                            value={geminiApiKey}
+                            onChange={(e) => {
+                              setGeminiApiKey(e.target.value);
+                              localStorage.setItem('jy_gemini_api_key', e.target.value);
+                            }}
+                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-purple-500/20 outline-none"
+                            placeholder="Custom Gemini API Key (optional)"
+                          />
+                        )}
+                      </div>
+
+                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'claude' ? 'border-orange-500 bg-orange-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="ai_model"
+                            checked={activeAiModel === 'claude'}
+                            onChange={() => {
+                              setActiveAiModel('claude');
+                              localStorage.setItem('jy_active_ai_model', 'claude');
+                            }}
+                            className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                          />
+                          <span className="text-sm font-bold text-slate-800">Anthropic Claude</span>
+                        </label>
+                        {activeAiModel === 'claude' && (
+                          <input
+                            type="password"
+                            value={claudeApiKey}
+                            onChange={(e) => {
+                              setClaudeApiKey(e.target.value);
+                              localStorage.setItem('jy_claude_api_key', e.target.value);
+                            }}
+                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-orange-500/20 outline-none"
+                            placeholder="Claude API Key"
+                          />
+                        )}
+                      </div>
+
+                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="ai_model"
+                            checked={activeAiModel === 'chatgpt'}
+                            onChange={() => {
+                              setActiveAiModel('chatgpt');
+                              localStorage.setItem('jy_active_ai_model', 'chatgpt');
+                            }}
+                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                          />
+                          <span className="text-sm font-bold text-slate-800">OpenAI ChatGPT</span>
+                        </label>
+                        {activeAiModel === 'chatgpt' && (
+                          <input
+                            type="password"
+                            value={chatgptApiKey}
+                            onChange={(e) => {
+                              setChatgptApiKey(e.target.value);
+                              localStorage.setItem('jy_chatgpt_api_key', e.target.value);
+                            }}
+                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                            placeholder="OpenAI API Key"
+                          />
+                        )}
+                      </div>
+
+                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2.5 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="ai_model"
+                            checked={activeAiModel === 'openrouter'}
+                            onChange={() => {
+                              setActiveAiModel('openrouter');
+                              localStorage.setItem('jy_active_ai_model', 'openrouter');
+                            }}
+                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-bold text-slate-800">OpenRouter (Ox Alpha)</span>
+                        </label>
+                        {activeAiModel === 'openrouter' && (
+                          <input
+                            type="password"
+                            value={openRouterApiKey}
+                            onChange={(e) => {
+                              setOpenRouterApiKey(e.target.value);
+                              localStorage.setItem('jy_openrouter_api_key', e.target.value);
+                            }}
+                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            placeholder="sk-or-v1-..."
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Actions Toolbar (Editor & Preview View) */}
+          {!isSettingsOpen && (
           <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-2 md:gap-3 print:hidden shadow-sm z-10 overflow-x-auto whitespace-nowrap custom-scrollbar">
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
@@ -1287,7 +1913,7 @@ export const MCQPaperGeneratorPage = () => {
               </button>
               <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
               <button
-                onClick={() => setIsSettingsOpen(true)}
+                onClick={openSettingsPage}
                 className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
               >
                 <Settings className="w-4 h-4" />
@@ -1329,8 +1955,8 @@ export const MCQPaperGeneratorPage = () => {
                 className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update' : 'Save'}</span>
-              </button>
+              <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update' : 'Save'}</span>
+            </button>
 
               <button
                 onClick={handleDownloadPdf}
@@ -1356,8 +1982,10 @@ export const MCQPaperGeneratorPage = () => {
               </button>
             </div>
           </div>
+          )}
 
           {/* Main Dual Layout Content */}
+          {!isSettingsOpen && (
           <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
             <style>{`
   @media screen and (min-width: 768px) {
@@ -1543,7 +2171,7 @@ export const MCQPaperGeneratorPage = () => {
                   {/* Add / Manage Subjects Button */}
                   <button
                     type="button"
-                    onClick={() => setIsSettingsOpen(true)}
+                    onClick={openSettingsPage}
                     className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 border border-dashed border-slate-300 hover:border-indigo-400 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-2xs flex-shrink-0"
                     title="Add or manage subjects in Paper Settings"
                   >
@@ -1731,7 +2359,8 @@ export const MCQPaperGeneratorPage = () => {
                     examName={examName}
                     examDate={examDate}
                     examClass={examClass}
-                    realSubject={previewSubjectFilter !== 'all' ? previewSubjectFilter : (selectedSubjects.length === 1 ? selectedSubjects[0] : (selectedSubjects.length > 1 ? selectedSubjects.join(', ') : ''))}
+                    realSubject={headerSubject.trim()}
+                    hideHeaderSubjectIfEmpty={true}
                     examSubject={selectedSubjects.join(', ')}
                     selectedSubjects={
                       previewSubjectFilter !== 'all'
@@ -1765,31 +2394,34 @@ export const MCQPaperGeneratorPage = () => {
             </div>
 
           </div>
+          )}
 
           {/* Mobile Bottom Navigation */}
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-between items-center px-4 py-3 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-3xl print:hidden">
+          {!isSettingsOpen && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-4 py-3 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-3xl print:hidden">
             <button
               onClick={() => setMobileTab('editor')}
-              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-400 bg-blue-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
             >
               <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Edit</span>
             </button>
             <button
               onClick={() => setMobileTab('preview')}
-              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-400 bg-emerald-500/20 scale-110' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
             >
               <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Preview</span>
             </button>
             <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-400 hover:bg-slate-800 hover:text-slate-300"
+              onClick={openSettingsPage}
+              className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
             >
               <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
               <span className="text-[11px] font-black tracking-wide">Settings</span>
             </button>
           </div>
+          )}
 
           {/* Dedicated Image Size, Position & Move Modal */}
           {isImageSizeModalOpen && (
@@ -2252,319 +2884,6 @@ export const MCQPaperGeneratorPage = () => {
                   >
                     <Sparkles className="w-4 h-4" />
                     Generate Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Settings Modal */}
-          {isSettingsOpen && (
-            <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
-              <div className="bg-white md:rounded-2xl w-full h-full md:max-w-2xl md:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-600 to-indigo-600 flex-shrink-0">
-                  <h2 className="font-bold text-lg text-white flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-blue-200" /> Paper Settings
-                  </h2>
-                  <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors cursor-pointer">
-                    <X className="w-5 h-5 text-white" />
-                  </button>
-                </div>
-
-                <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Class</label>
-                      <input
-                        type="text"
-                        value={examClass}
-                        onChange={(e) => setExamClass(e.target.value)}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                      <input
-                        type="text"
-                        value={examDate}
-                        onChange={(e) => setExamDate(e.target.value)}
-                        placeholder="DD/MM/YYYY"
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-2 border-t border-slate-100">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Subjects</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {AVAILABLE_SUBJECTS.map((subj) => (
-                        <label key={subj} className="flex items-center gap-2 cursor-pointer bg-slate-50 p-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={selectedSubjects.includes(subj)}
-                            onChange={() => toggleSubject(subj)}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-slate-700">{subj}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-slate-100">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Exam Name</label>
-                      <input
-                        type="text"
-                        value={examName}
-                        onChange={(e) => setExamName(e.target.value)}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Total Marks</label>
-                      <input
-                        type="text"
-                        value={maxMarks}
-                        onChange={(e) => setMaxMarks(e.target.value)}
-                        placeholder="100"
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Time / Duration</label>
-                      <input
-                        type="text"
-                        value={time}
-                        onChange={(e) => setTime(e.target.value)}
-                        placeholder="3 Hours"
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 mt-2 border-t border-slate-100">
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Instructions (One per line)</label>
-                    <textarea
-                      value={instructions}
-                      onChange={(e) => setInstructions(e.target.value)}
-                      rows={3}
-                      className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all resize-none"
-                      placeholder="Enter instructions here..."
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Font Size</label>
-                      <select
-                        value={fontSize}
-                        onChange={(e) => setFontSize(e.target.value)}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      >
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                        <option value="xlarge">Extra Large</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Question Spacing</label>
-                      <select
-                        value={questionSpacing}
-                        onChange={(e) => setQuestionSpacing(e.target.value)}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-2.5 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                      >
-                        <option value="compact">Compact</option>
-                        <option value="normal">Normal</option>
-                        <option value="relaxed">Relaxed</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium text-slate-700">Show Paper Header</h4>
-                      <p className="text-xs text-slate-500">Display school name, logo, class, and instructions at the top.</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="sr-only peer"
-                        checked={showPaperHeader}
-                        onChange={(e) => {
-                          setShowPaperHeader(e.target.checked);
-                          localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
-                        }}
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="pt-4 border-t border-slate-100">
-                    <h4 className="font-medium text-slate-700 flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-purple-500" />
-                      AI Model Configuration
-                    </h4>
-
-                    <div className="space-y-4">
-                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'gemini' ? 'border-purple-500 bg-purple-50' : 'border-slate-200 bg-white'}`}>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'gemini'}
-                            onChange={() => {
-                              setActiveAiModel('gemini');
-                              localStorage.setItem('jy_active_ai_model', 'gemini');
-                            }}
-                            className="w-4 h-4 text-purple-600 focus:ring-purple-500"
-                          />
-                          <span className="font-medium text-slate-700">Google Gemini</span>
-                        </label>
-                        {activeAiModel === 'gemini' && (
-                          <div className="mt-3 pl-7">
-                            <input
-                              type="password"
-                              value={geminiApiKey}
-                              onChange={(e) => {
-                                setGeminiApiKey(e.target.value);
-                                localStorage.setItem('jy_gemini_api_key', e.target.value);
-                              }}
-                              className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none"
-                              placeholder="Gemini API Key"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'claude' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-white'}`}>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'claude'}
-                            onChange={() => {
-                              setActiveAiModel('claude');
-                              localStorage.setItem('jy_active_ai_model', 'claude');
-                            }}
-                            className="w-4 h-4 text-orange-600 focus:ring-orange-500"
-                          />
-                          <span className="font-medium text-slate-700">Anthropic Claude</span>
-                        </label>
-                        {activeAiModel === 'claude' && (
-                          <div className="mt-3 pl-7">
-                            <input
-                              type="password"
-                              value={claudeApiKey}
-                              onChange={(e) => {
-                                setClaudeApiKey(e.target.value);
-                                localStorage.setItem('jy_claude_api_key', e.target.value);
-                              }}
-                              className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-orange-500/20 outline-none"
-                              placeholder="Claude API Key"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'chatgpt'}
-                            onChange={() => {
-                              setActiveAiModel('chatgpt');
-                              localStorage.setItem('jy_active_ai_model', 'chatgpt');
-                            }}
-                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
-                          />
-                          <span className="font-medium text-slate-700">OpenAI ChatGPT</span>
-                        </label>
-                        {activeAiModel === 'chatgpt' && (
-                          <div className="mt-3 pl-7">
-                            <input
-                              type="password"
-                              value={chatgptApiKey}
-                              onChange={(e) => {
-                                setChatgptApiKey(e.target.value);
-                                localStorage.setItem('jy_chatgpt_api_key', e.target.value);
-                              }}
-                              className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-emerald-500/20 outline-none"
-                              placeholder="OpenAI API Key"
-                            />
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={`p-3 rounded-xl border-2 transition-all ${activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white'}`}>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'openrouter'}
-                            onChange={() => {
-                              setActiveAiModel('openrouter');
-                              localStorage.setItem('jy_active_ai_model', 'openrouter');
-                            }}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="font-medium text-slate-700">OpenRouter (Ox Alpha)</span>
-                        </label>
-                        {activeAiModel === 'openrouter' && (
-                          <div className="mt-3 pl-7">
-                            <input
-                              type="password"
-                              value={openRouterApiKey}
-                              onChange={(e) => {
-                                setOpenRouterApiKey(e.target.value);
-                                localStorage.setItem('jy_openrouter_api_key', e.target.value);
-                              }}
-                              className="w-full rounded-lg border-slate-200 bg-white border p-2 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
-                              placeholder="sk-or-v1-..."
-                            />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex-shrink-0">
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('mcq_exam_name', examName);
-                      localStorage.setItem('mcq_exam_class', examClass);
-                      localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
-                      localStorage.setItem('mcq_exam_date', examDate);
-                      localStorage.setItem('mcq_exam_max_marks', maxMarks);
-                      localStorage.setItem('mcq_exam_marks', time);
-                      localStorage.setItem('mcq_exam_instructions', instructions);
-                      localStorage.setItem('mcq_exam_font_size', fontSize);
-                      localStorage.setItem('mcq_exam_spacing', questionSpacing);
-
-                      if (selectedSubjects.length > 0) {
-                        if (!selectedSubjects.includes(activeSubjectTab)) {
-                          setActiveSubjectTab(selectedSubjects[0]);
-                        }
-                        setSubjectContents(prev => {
-                          // Only keep subjects that are currently checked in selectedSubjects
-                          const updated: Record<string, string> = {};
-                          selectedSubjects.forEach(s => {
-                            updated[s] = prev[s] || (s === 'Maths' && prev['Mathematics'] ? prev['Mathematics'] : (s === 'Mathematics' && prev['Maths'] ? prev['Maths'] : ''));
-                          });
-                          return updated;
-                        });
-                      }
-
-                      setIsSettingsOpen(false);
-                      toast.success('Settings saved!');
-                    }}
-                    className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
-                  >
-                    Save Settings
                   </button>
                 </div>
               </div>

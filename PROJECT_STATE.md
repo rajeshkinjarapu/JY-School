@@ -1,5 +1,19 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Online Exam Module Colorful Gradient 12-KPI Cards (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** 12 KPI కార్డులను మరింత అందంగా, కలర్‌ఫుల్‌గా మరియు ప్రొఫెషనల్‌గా డిజైన్ చేయాలి.
+- **చేసిన మార్పులు ([CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+  - `StatCard` ను 12 వైబ్రంట్ మల్టీ-స్టాప్ కలర్‌ఫుల్ గ్రేడియంట్ కార్డులుగా (`indigo`, `blue`, `emerald`, `cyan`, `purple`, `amber`, `violet`, `teal`, `orange`, `pink`, `rose`, `sky`), ఫ్రాస్టెడ్ గ్లాస్ ఐకాన్ బాక్సులతో, గ్లో బబుల్స్, లైవ్ పల్స్ బ్యాడ్జ్‌లు మరియు స్మూత్ హోవర్ యానిమేషన్‌తో రీడిజైన్ చేశాము.
+  - `Master Question Bank` కార్డ్ `kpiMetrics` సబ్జెక్ట్/టాపిక్ లెక్కింపులో exam questions fallback జత చేశాము.
+
+## చివరి సంభాషణ - MCQ Paper Generator Full-Width Paper Settings Page & Conditional Header Subject (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `Paper Settings` మోడల్‌కు బదులు పేజీ పూర్తి వెడల్పులో ప్రత్యేక పేజీగా అందంగా డిజైన్ చేయాలి మరియు క్వశ్చన్ పేపర్ హెడర్‌కు ప్రత్యేక `Subject` ఆప్షన్ ఇచ్చి, అది ఎంటర్ చేస్తేనే పేపర్ మీద కనిపించేలా (లేకపోతే కనిపించకుండా) చేయాలి.
+- **చేసిన మార్పులు:**
+  - [LiveLatexPreview.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx): `hideHeaderSubjectIfEmpty` ప్రాప్ ద్వారా `headerSubject` ఖాళీగా ఉన్నప్పుడు హెడర్‌లో `Subject:` పూర్తిగా హైడ్ అయ్యేలా, ఎంటర్ చేసినప్పుడు మాత్రమే ప్రింట్/ప్రివ్యూ అయ్యేలా అప్‌డేట్ చేశాము (`printPaper`, KaTeX ప్రివ్యూ, మరియు సేవ్/లోడ్ API లకు ఎటువంటి ఆటంకం లేకుండా).
+  - [MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
+    - URL `?view=settings` ద్వారా ఓపెన్ అయ్యే **Full-Width Light Theme Separate Paper Settings Page** (`w-full`, 12-కాలమ్ లేఅవుట్) నిర్మించాము — Exam & Paper Header Details, `Subject (Header — Optional)` ఫీల్డ్ + Live Header Mini Preview కార్డ్, Subject Sections + Custom Subject Add, Quick Instruction Chips, Typography & Question Spacing కార్డులు, AI Model Grid.
+    - `headerSubject` స్టేట్‌ను `serializeContent` / `deserializeContent` & `localStorage` లలో సేవ్/లోడ్ అయ్యేలా జోడించాము.
+
 ## చివరి సంభాషణ - Online Exam Module 12-KPI Clean Dashboard (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** KPI కార్డుల కింద Dashboard సెక్షన్ లేకుండా, కేవలం **12 లైట్-థీమ్ ఇంటరాక్టివ్ KPI కార్డులు** మాత్రమే ఉండే శుభ్రమైన డాష్‌బోర్డ్ (`12-KPI Clean Dashboard`) అమలు చేయాలి.
 - **చేసిన మార్పులు (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
@@ -2449,33 +2463,4 @@
     - 'Download PDF' బటన్ క్లిక్ చేసినప్పుడు కూడా లైవ్ ప్రివ్యూలో కనిపిస్తున్న విధంగానే ఏ ఒక్క అక్షరం లేదా ఫార్ములా చెడిపోకుండా 100% కచ్చితమైన PDF డౌన్‌లోడ్ అవ్వాలి.
 - **సమస్య విశ్లేషణ:**
   1. పాత కోడ్‌లోని `handleDownloadPdf` ఫంక్షన్ `html2canvas` ని ఉపయోగించి `-10000px` వద్ద ఉన్న క్లోన్ ఎలిమెంట్‌ను క్యాప్చర్ చేయడానికి ప్రయత్నిస్తోంది.
-  2. `html2canvas` అనేది KaTeX మ్యాథ్ ఫాంట్లు, సబ్‌పిక్సెల్ స్పేసింగ్, రూట్ సింబల్స్ మరియు వెక్టార్లను సరిగ్గా డ్రా చేయలేదు (అందువల్లే డౌన్‌లోడ్ అయిన PDF లో ఫార్ములాలు చెడిపోతాయి).
-  3. పేజీ స్లైసింగ్ లాజిక్ బ్లైండ్‌గా ప్రతి 297mm కి కట్ చేయడం వల్ల ప్రశ్నలు మధ్యలోకి కట్ అయిపోతున్నాయి.
-- **పూర్తయిన పనులు & మార్పులు:**
-  1. [`MCQPaperGeneratorPage.tsx`](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx):
-     - `html2canvas` ని పూర్తిగా తొలగించాము.
-     - బ్రౌజర్ స్క్రీన్‌పై ఇప్పటికే 100% పర్ఫెక్ట్‌గా రెండర్ అయి ఉన్న `#a4-preview-paper` ని నేరుగా `toCanvas` (`html-to-image`) ద్వారా 2x రెటీనా రిజల్యూషన్‌లో (High Definition) క్యాప్చర్ చేసాము.
-     - **Smart Question Boundary Detection:** ప్రతీ `.question-block`, `.paper-header`, `.section-header` ల బాటమ్ కొలతలను తీసుకుని, ఏ ప్రశ్నా మధ్యలోకి కట్ అవ్వకుండా, ప్రశ్నల మధ్యలోనే పేజీలు విభజించేలా చేసాము.
-     - మొబైల్ లోని గ్రీన్ బటన్‌కి కూడా `handleDownloadPdf` ని లింక్ చేసాము.
-     - ఫలితంగా లైవ్ ప్రివ్యూలో ఏదైతే కనిపిస్తుందో, ఏ ఒక్క అక్షరం లేదా ఫార్ములా మారకుండా 100% కచ్చితమైన ఒరిజినల్ PDF ఫైల్ డౌన్‌లోడ్ అవుతుంది.
-
-## చివరి సంభాషణ - ప్రింట్ ప్రివ్యూలో మ్యాథ్ వేరియబుల్స్ ($A, B, R, a, b, x, y, F, m, a$) BLANK గా రావడంపై శాశ్వత పరిష్కారం (November 17, 2026)
-- **యూజర్ సమస్య & రిపోర్ట్:**
-  - "okasari kallu daggara pettukoni chudu live preview ela undo and print preview ela ela undo mottam questions lo unna formulas and chala text mottam kanapdatam ledu balnk ga vastundi reason enti assalu"
-  - స్క్రీన్‌షాట్లు (`media_1794911546106_9443c9a8.png`, `media_1794911562501_48fbe58a.png`, `media_1794911582195_8843207f.png`, `media_1794911599294_b4b76afb.png`, `media_1794912016764_81c2b386.jpg`):
-    - ప్రింట్ డైలాగ్‌లో 9 పేజీలు వస్తున్నాయి కానీ:
-      - Q1: `Consider the relation ___ on the set {-2,-1,0,1,2} defined by ( , ) \in ___ if and only if 1 + ___ > 0...` (ఇందులో $R$, $a$, $b$, $ab$ అన్నీ BLANK)
-      - Q2: `Let ___ = {0,1,2,3,4,5}... ( ) The number of elements in ___ is 18...` ($A$, $R$, $x$, $y$, $S_1$ BLANK)
-      - Q11: `If ___ = [matrix] then |adj( ___^2)| =` ($A$ మిస్సింగ్)
-      - Q18: `then ___^T ___^{-1} =` ($A$ మిస్సింగ్)
-      - Physics Q26, Q27, Q28, Q30: $F, m, a, v, g, \theta$ అన్ని వేరియబుల్స్ పూర్తిగా BLANK.
-      - నంబర్లు, బ్రాకెట్లు, సాధారణ సింబల్స్ (`+`, `-`, `=`, `\in`, `\times`, `det`, `log`) అన్నీ కనిపిస్తున్నాయి; కేవలం మ్యాథ్ ఇటాలిక్ వేరియబుల్స్ మాత్రమే ఖాళీగా వస్తున్నాయి.
-- **ఖచ్చితమైన సాంకేతిక కారణం (Technical Root Cause):**
-  1. KaTeX లో గణిత వేరియబుల్స్ అన్నీ `<span class="mord mathnormal">` క్లాస్‌తో రెండర్ అవుతాయి. దీనికి KaTeX `KaTeX_Math` అనే వెబ్ ఫాంట్‌ని (`woff2`) ఉపయోగిస్తుంది.
-  2. Chromium / Cốc Cốc బ్రౌజర్ ప్రింట్ ప్రివ్యూ జనరేట్ చేసేటప్పుడు (Skia PDF Renderer), వెబ్ ఫాంట్ అయిన `KaTeX_Math` ను PDF లో ఎంబెడ్ చేయడంలో ఫెయిల్ అవుతోంది. దీనివల్ల Chromium ఆ అక్షరాలను ఖాళీ స్థలాలుగా (Empty/Transparent Glyphs) రెండర్ చేస్తుంది.
-  3. మన మునుపటి CSS లో `font-family: KaTeX_Math, 'Times New Roman' ...` అని `KaTeX_Math` ను మొదటి స్థానంలో పెట్టడం వల్ల, బ్రౌజర్ `KaTeX_Math` ఉందనుకుని ప్రయత్నించి ఫెయిల్ అయ్యింది, కానీ రెండవ ఫాంట్ అయిన 'Times New Roman' కి ఫాల్‌బ్యాక్ అవ్వలేదు.
-- **శాశ్వత పరిష్కారం (The Permanent Solution):**
-  1. ప్రింట్ మోడ్ (`@media print`) లో `KaTeX_Math` ని పూర్తిగా తొలగించి, విండోస్ లోకల్ సిస్టమ్ ఫాంట్స్ అయిన `'Times New Roman', 'Cambria Math', 'TeX Gyre Schola', serif !important` లను ఫస్ట్ ప్రయారిటీగా అమలు చేసాము.
-  2. విండోస్‌లో `Times New Roman` ఇటాలిక్ (`timesi.ttf`) ఇప్పటికే ఉండటం వల్ల, ప్రింట్ ఇంజిన్ ఏ వెబ్ ఫాంట్ కోసమూ వేచి ఉండకుండా వెంటనే డార్క్, క్లియర్ ఇటాలిక్ అక్షరాలతో ప్రింట్ చేస్తుంది.
-  3. Live Preview లో మాత్రం ఒరిజినల్ KaTeX అలాగే ఉంటుంది.
 ... [truncated for diff preview]
