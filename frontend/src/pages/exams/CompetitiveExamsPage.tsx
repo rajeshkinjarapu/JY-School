@@ -13,6 +13,7 @@ import 'katex/dist/katex.min.css';
 import { SingleRawBoxQuestionStudio } from './CompetitiveQuestionBankDashboard';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
@@ -306,76 +307,59 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const currentMeta = pageMeta[activeTab] || pageMeta.DASHBOARD;
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 min-h-screen bg-slate-50">
-      {/* Clean & Professional Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-            className="p-2 md:hidden rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 shadow-xs cursor-pointer shrink-0"
-            aria-label="Open menu"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-          <button
-            onClick={() => navigate(activeTab === 'DASHBOARD' ? '/dashboard' : '/competitive-exams')}
-            className="px-3 py-2 sm:py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 shadow-xs cursor-pointer transition flex items-center gap-1.5 shrink-0 text-xs font-bold"
-            title={activeTab === 'DASHBOARD' ? 'Back to School Dashboard' : 'Back to Online Exam Dashboard'}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            {activeTab !== 'DASHBOARD' && <span className="hidden sm:inline">Exam Dashboard</span>}
-          </button>
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
-            <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                {currentMeta.title}
-              </h1>
-              <span className="hidden sm:inline-flex px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {currentMeta.badge}
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">
-              {currentMeta.subtitle}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => fetchExams()}
-            className="p-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-600 border border-slate-200/90 transition shadow-xs cursor-pointer"
-            title="Refresh Data"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-
-          {activeTab !== 'QUESTIONS' && (
-            <>
+    <div className="flex flex-col min-h-screen bg-slate-50">
+      {/* Standard App PageHeader matching all other modules */}
+      <PageHeader
+        title={currentMeta.title}
+        icon={<BookOpen className="w-5 h-5" />}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
+            {activeTab !== 'DASHBOARD' && (
               <button
-                onClick={() => navigate('/competitive-exams/bulk-import')}
-                className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
+                onClick={() => navigate('/competitive-exams')}
+                className="px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 transition flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+                title="Back to Online Exam Dashboard"
               >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Bulk Import</span>
+                <ArrowLeft className="w-4 h-4" />
+                <span>Exam Dashboard</span>
               </button>
+            )}
 
-              <button
-                onClick={() => {
-                  setShowInlineCreate(true);
-                  navigate('/competitive-exams/exams?create=true');
-                }}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-extrabold text-xs shadow-sm shadow-indigo-500/20 flex items-center gap-2 transition cursor-pointer"
-              >
-                <Plus className="w-4 h-4" />
-                <span>+ Create Exam</span>
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+            <button
+              onClick={() => fetchExams()}
+              className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 transition cursor-pointer"
+              title="Refresh Data"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
+
+            {activeTab !== 'QUESTIONS' && (
+              <>
+                <button
+                  onClick={() => navigate('/competitive-exams/bulk-import')}
+                  className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Bulk Import</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setShowInlineCreate(true);
+                    navigate('/competitive-exams/exams?create=true');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-white hover:bg-indigo-50 text-indigo-900 font-black text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>+ Create Exam</span>
+                </button>
+              </>
+            )}
+          </div>
+        }
+      />
+
+      <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-6 flex-1">
 
       {/* Show 6 KPI Cards ONLY on main Dashboard so sub-pages stay clean & dedicated */}
       {activeTab === 'DASHBOARD' && (
@@ -503,6 +487,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         {activeTab === 'REPORTS' && (
           <OnlineExamReportsTab exams={exams} masterQuestionsList={masterQuestionsList} navigate={navigate} />
         )}
+      </div>
       </div>
 
       {/* AI Question Generator Modal */}
@@ -2386,21 +2371,6 @@ const QuestionBankTab = ({
           if (!addAnother) {
             setIsAddingQuestion(false);
           }
-        }}
-      />
-    );
-  }
-
-  // If AI text parser view is active, render the Dedicated Full AI Parser view
-  if (isAiParsing && activeExam) {
-    return (
-      <DedicatedAiParserView
-        exam={activeExam}
-        onBack={() => setIsAiParsing(false)}
-        onParsedAndAdded={() => {
-          setIsAiParsing(false);
-          fetchQuestions(selectedExamId);
-          onExamsUpdated();
         }}
       />
     );

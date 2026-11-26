@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Standard PageHeader for All Online Exam Module Pages (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `anni pages ki unnattu prati page ki kuda header undali ye page kuda special em kadu`
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/exams/CompetitiveExamsPage.tsx`, `BulkImportQuestionsPage.tsx`, `PasteCompetitiveExamTextPage.tsx`: అన్ని పేజీల పైభాగంలో యాప్‌లోని ఇతర పేజీలలాగే స్టాండర్డ్ `<PageHeader />` బార్‌ను అమర్చాము (మరియు Light Theme నియమాలకు అనుగుణంగా మార్చాము).
+
+## చివరి సంభాషణ - Question Bank `isAiParsing` ReferenceError Fix (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** `/competitive-exams/question-bank` లో వస్తున్న `ReferenceError: isAiParsing is not defined` ఎర్రర్ క్లియర్ చేయాలి.
+- **చేసిన మార్పులు:**
+  - `frontend/src/pages/exams/CompetitiveExamsPage.tsx`: `QuestionBankTab` లో మిగిలిపోయిన పాత `if (isAiParsing && activeExam)` డెడ్ కోడ్‌ను తొలగించాము.
+
 ## చివరి సంభాషణ - Attendance Save & Dashboard Cache Sync Fix (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** `attendance vesina ventane save avvatam ledu`
 - **చేసిన మార్పులు:**

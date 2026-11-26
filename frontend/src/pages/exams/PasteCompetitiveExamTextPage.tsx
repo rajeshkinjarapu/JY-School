@@ -9,6 +9,7 @@ import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
@@ -263,31 +264,26 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-6 bg-slate-50 min-h-screen">
-      {/* Top Breadcrumb & Navigation Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col bg-slate-50 min-h-screen">
+      <PageHeader
+        title="AI Smart Exam Text Importer"
+        icon={<Sparkles className="w-5 h-5" />}
+        action={
           <button
             onClick={() => navigate('/competitive-exams')}
-            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-2 transition cursor-pointer"
+            className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
           >
-            <ArrowLeft size={16} />
-            <span>Back to Competitive Exams</span>
+            <ArrowLeft size={15} />
+            <span>Online Exam Module</span>
           </button>
-          <div className="h-5 w-px bg-slate-200 hidden sm:block" />
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center shadow-xs">
-              <Sparkles size={16} />
-            </span>
-            <div>
-              <h1 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                AI Smart Exam Text Importer
-              </h1>
-              <p className="text-xs text-slate-500 font-medium">
-                Google Gemini 2.5 Flash Automated KaTeX & MCQ Digitizer
-              </p>
-            </div>
-          </div>
+        }
+      />
+
+      <div className="p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6 flex-1">
+      {/* Target Exam Picker Bar */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="text-xs font-bold text-slate-600">
+          Google Gemini Automated KaTeX &amp; MCQ Digitizer
         </div>
 
         {/* Target Exam Dropdown */}
@@ -299,7 +295,7 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
             value={selectedExamId}
             onChange={(e) => setSelectedExamId(e.target.value)}
             disabled={loadingExams}
-            className="w-full sm:w-72 p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs outline-none focus:border-emerald-500 focus:bg-white"
+            className="w-full sm:w-72 p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs outline-none focus:border-indigo-500 focus:bg-white"
           >
             {loadingExams ? (
               <option>Loading exams...</option>
@@ -316,31 +312,31 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Target Exam Details Banner */}
+      {/* Target Exam Details Banner (Light Theme) */}
       {activeExam && (
-        <div className="bg-gradient-to-r from-emerald-900 via-teal-950 to-slate-900 text-white p-6 rounded-3xl shadow-lg border border-emerald-500/20 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-white text-slate-900 p-5 rounded-2xl shadow-xs border border-indigo-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-black uppercase tracking-wider border border-emerald-400/30">
-              <Zap size={13} className="text-amber-400" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-black uppercase tracking-wider border border-indigo-200">
+              <Zap size={12} className="text-amber-500" />
               NTA CBT Blueprint Target
             </div>
-            <h2 className="text-xl sm:text-2xl font-black">{activeExam.title}</h2>
-            <p className="text-xs text-emerald-200/80 font-medium">
-              Class: <strong className="text-white">{activeExam.class?.name || '10th Standard'}</strong> • 
-              Duration: <strong className="text-white">{activeExam.duration} Mins</strong> • 
-              Total Marks: <strong className="text-white">{activeExam.totalMarks}</strong> • 
-              Negative Marking: <strong className="text-rose-300">-{activeExam.negativeMarks || 0}</strong>
+            <h2 className="text-lg sm:text-xl font-black text-slate-900">{activeExam.title}</h2>
+            <p className="text-xs text-slate-600 font-medium">
+              Class: <strong className="text-slate-900">{activeExam.class?.name || 'All'}</strong> • 
+              Duration: <strong className="text-slate-900">{activeExam.duration} Mins</strong> • 
+              Total Marks: <strong className="text-slate-900">{activeExam.totalMarks}</strong> • 
+              Negative Marking: <strong className="text-rose-600">-{activeExam.negativeMarks || 0}</strong>
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-white/10 p-3 rounded-2xl border border-white/10 backdrop-blur-xs">
-            <div className="text-center px-3 border-r border-white/10">
-              <div className="text-xl font-black text-emerald-300">{activeExam._count?.questions || activeExam.questions?.length || 0}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-300">Existing Qs</div>
+          <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div className="text-center px-3 border-r border-slate-200">
+              <div className="text-xl font-black text-indigo-600">{activeExam._count?.questions || activeExam.questions?.length || 0}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-500">Existing Qs</div>
             </div>
             <div className="text-center px-3">
-              <div className="text-xl font-black text-amber-300">{parsedQuestions.length}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-300">Parsed Qs</div>
+              <div className="text-xl font-black text-emerald-600">{parsedQuestions.length}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-500">Parsed Qs</div>
             </div>
           </div>
         </div>
@@ -757,6 +753,7 @@ Key: A`}
 
         </div>
 
+      </div>
       </div>
     </div>
   );

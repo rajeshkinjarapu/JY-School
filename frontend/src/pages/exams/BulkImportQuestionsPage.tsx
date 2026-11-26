@@ -9,6 +9,7 @@ import {
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { LatexRenderer } from './CompetitiveExamsPage';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 interface ParsedRow {
   id?: string;
@@ -269,60 +270,31 @@ export const BulkImportQuestionsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* ══ TOP BRANDED HEADER ══ */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 text-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-bold text-indigo-100 mb-1">
-                <button
-                  type="button"
-                  onClick={() => navigate('/competitive-exams')}
-                  className="hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  Online Exam Module
-                </button>
-                <span>/</span>
-                <button
-                  type="button"
-                  onClick={() => navigate('/competitive-exams/question-bank')}
-                  className="hover:underline cursor-pointer"
-                >
-                  Question Bank
-                </button>
-                <span>/</span>
-                <span className="text-white font-black">Bulk Excel Import</span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-black flex items-center gap-2 text-white">
-                <FileSpreadsheet className="w-6 h-6 text-amber-300" />
-                Bulk Question Import Studio
-              </h1>
-              <p className="text-xs sm:text-sm text-indigo-100 mt-0.5">
-                Upload 100–1000+ Subject & Topic-wise MCQs directly into PostgreSQL with instant KaTeX math verification
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate('/competitive-exams/question-bank')}
-                className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-white/20"
-              >
-                <ArrowLeft size={15} />
-                <span>Question Bank</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleDownloadSample}
-                className="px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
-              >
-                <Download size={15} />
-                <span>Sample Template (.xlsx)</span>
-              </button>
-            </div>
+      {/* ══ STANDARD PAGE HEADER ══ */}
+      <PageHeader
+        title="Bulk Question Import Studio"
+        icon={<FileSpreadsheet className="w-5 h-5" />}
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate('/competitive-exams/question-bank')}
+              className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-white/20"
+            >
+              <ArrowLeft size={15} />
+              <span>Question Bank</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadSample}
+              className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+            >
+              <Download size={15} />
+              <span>Sample Template (.xlsx)</span>
+            </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ══ MAIN BODY ══ */}
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
