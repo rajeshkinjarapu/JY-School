@@ -132,7 +132,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-800">
+    <div className="min-h-screen bg-[#F4F7FC] flex flex-col text-slate-800">
       
       {/* ─── TOP NAVIGATION & CONTROL BAR ─── */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
@@ -216,7 +216,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
           {examData?.id && (
             <button
               onClick={() => navigate(`/take-competitive-exam/${examData.id}`)}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white text-xs font-black flex items-center gap-2 shadow-sm transition cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 active:scale-95 text-white text-xs font-black flex items-center gap-2 shadow-sm transition cursor-pointer"
               title="Start Live CBT Computer Based Test"
             >
               <Play className="w-4 h-4 fill-white" />
@@ -227,24 +227,24 @@ const CompetitiveExamPaperPage: React.FC = () => {
       </header>
 
       {/* ─── EXAM METADATA & SECTION TABS RIBBON ─── */}
-      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600 shadow-xs">
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6">
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <Clock className="w-4 h-4 text-amber-500" />
+      <div className="bg-white border-b border-slate-200/80 px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3 text-xs font-bold text-slate-600 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+          <span className="flex items-center gap-1.5 text-slate-700 bg-[#FFF4E5] border border-[#FDE2BA] px-3 py-1 rounded-xl">
+            <Clock className="w-3.5 h-3.5 text-[#D97706]" />
             Duration: <strong className="text-slate-900">{examData?.duration || 180} Mins</strong>
           </span>
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <Target className="w-4 h-4 text-indigo-600" />
-            Total Marks: <strong className="text-indigo-600">{examData?.totalMarks || 100}</strong>
+          <span className="flex items-center gap-1.5 text-slate-700 bg-[#EAF3FF] border border-[#D4E6FF] px-3 py-1 rounded-xl">
+            <Target className="w-3.5 h-3.5 text-[#2563EB]" />
+            Total Marks: <strong className="text-[#2563EB]">{examData?.totalMarks || 100}</strong>
           </span>
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <Layers className="w-4 h-4 text-emerald-600" />
-            Questions: <strong className="text-emerald-600">{questions.length}</strong>
+          <span className="flex items-center gap-1.5 text-slate-700 bg-[#EAFAEE] border border-[#CBEFD6] px-3 py-1 rounded-xl">
+            <Layers className="w-3.5 h-3.5 text-[#16A34A]" />
+            Questions: <strong className="text-[#16A34A]">{questions.length}</strong>
           </span>
-          <span className="flex items-center gap-1.5 text-slate-700">
-            <Award className="w-4 h-4 text-rose-500" />
+          <span className="flex items-center gap-1.5 text-slate-700 bg-[#FEECEF] border border-[#FBD0D8] px-3 py-1 rounded-xl">
+            <Award className="w-3.5 h-3.5 text-[#E11D48]" />
             Marking:{' '}
-            <strong className={Number(examData?.negativeMarks) > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+            <strong className={Number(examData?.negativeMarks) > 0 ? 'text-[#E11D48]' : 'text-[#16A34A]'}>
               {Number(examData?.negativeMarks) > 0 ? `+4 / -${examData?.negativeMarks}` : '+4 / 0 (No Negative)'}
             </strong>
           </span>
@@ -255,10 +255,10 @@ const CompetitiveExamPaperPage: React.FC = () => {
           <div className="flex items-center gap-1.5 overflow-x-auto py-1">
             <button
               onClick={() => setActiveSection('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                 activeSection === 'ALL'
-                  ? 'bg-indigo-600 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                  ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm'
+                  : 'bg-[#F4F7FC] text-slate-700 hover:bg-slate-200/70 border border-slate-200'
               }`}
             >
               All Sections ({questions.length})
@@ -267,10 +267,10 @@ const CompetitiveExamPaperPage: React.FC = () => {
               <button
                 key={idx}
                 onClick={() => setActiveSection(sec)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                   activeSection === sec
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                    ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm'
+                    : 'bg-[#F4F7FC] text-slate-700 hover:bg-slate-200/70 border border-slate-200'
                 }`}
               >
                 {sec}
@@ -281,16 +281,16 @@ const CompetitiveExamPaperPage: React.FC = () => {
       </div>
 
       {/* ─── PAPER PREVIEW CANVAS ─── */}
-      <main className="flex-1 p-4 sm:p-8 overflow-auto bg-slate-200/60 flex justify-center items-start">
+      <main className="flex-1 p-4 sm:p-8 overflow-auto bg-[#F4F7FC] flex justify-center items-start">
         {loading ? (
           <div className="py-24 text-center w-full my-auto">
-            <RefreshCw className="w-10 h-10 text-indigo-600 animate-spin mx-auto mb-3" />
+            <RefreshCw className="w-10 h-10 text-[#5B3DF5] animate-spin mx-auto mb-3" />
             <p className="text-slate-700 font-black text-base">Loading Question Paper...</p>
             <p className="text-slate-500 text-xs mt-1">Rendering KaTeX mathematical equations and diagrams</p>
           </div>
         ) : filteredQuestions.length === 0 ? (
-          <div className="py-14 px-8 text-center bg-white rounded-3xl border border-dashed border-slate-300 max-w-xl mx-auto space-y-5 my-auto shadow-sm">
-            <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto shadow-xs">
+          <div className="py-14 px-8 text-center bg-white rounded-2xl border border-dashed border-[#C7BDFC] max-w-xl mx-auto space-y-5 my-auto shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+            <div className="w-16 h-16 rounded-2xl bg-[#F3EEFF] text-[#5B3DF5] flex items-center justify-center mx-auto shadow-xs">
               <FileQuestion className="w-8 h-8" />
             </div>
             <div>
@@ -304,7 +304,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
               <button
                 disabled={populating}
                 onClick={handlePopulateSample}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer disabled:opacity-50"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#F59E0B] to-[#EA580C] hover:opacity-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer disabled:opacity-50"
               >
                 {populating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 fill-white" />}
                 <span>{populating ? 'Populating...' : '✨ Auto-Fill Sample NTA Questions'}</span>
@@ -312,7 +312,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
               {examData?.id && (
                 <button
                   onClick={() => navigate(`/competitive-exams/${examData.id}/paste-ai`)}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-[#EAFAEE] hover:bg-[#DCFCE7] text-[#16A34A] border border-[#CBEFD6] font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <FileText className="w-4 h-4" />
                   <span>📄 Paste Exam Text (AI Parser)</span>
@@ -321,7 +321,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
               {examData?.id && (
                 <button
                   onClick={() => navigate(`/competitive-question-bank?examId=${examData.id}`)}
-                  className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs flex items-center gap-1.5 shadow transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>+ Add Questions in Studio</span>
@@ -374,7 +374,7 @@ const CompetitiveExamPaperPage: React.FC = () => {
           {examData?.id && (
             <button
               onClick={() => navigate(`/take-competitive-exam/${examData.id}`)}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-1.5"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs shadow-sm transition cursor-pointer flex items-center gap-1.5"
             >
               <Play className="w-3.5 h-3.5 fill-white" />
               <span>Launch CBT Exam Now</span>

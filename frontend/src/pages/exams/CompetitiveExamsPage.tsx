@@ -472,7 +472,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const currentMeta = pageMeta[activeTab] || pageMeta.DASHBOARD;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50">
+    <div className="flex flex-col min-h-screen bg-[#F4F7FC]">
       {/* Standard App PageHeader matching all other modules */}
       <PageHeader
         title={currentMeta.title}
@@ -1038,18 +1038,111 @@ const ManageExamsTab = ({
     );
   }
 
+  const totalManageQs = exams.reduce((a: number, e: any) => a + (e._count?.questions || e.questions?.length || 0), 0);
+  const totalManageSubs = exams.reduce((a: number, e: any) => a + (e._count?.submissions || e.submissions?.length || 0), 0);
+
   return (
-    <div className="space-y-6">
-      {/* Controls Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h2 className="text-lg font-black text-slate-800">Available Online Exams & Mock Papers</h2>
-          <p className="text-xs text-slate-500 font-medium">Real-time CBT simulated test suite for students with instant scorecards</p>
+    <div className="space-y-5">
+      {/* Unified Pastel KPI + Action Toolbar */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+          <button
+            type="button"
+            onClick={() => onChangeFilter && onChangeFilter('ALL')}
+            className={`rounded-xl px-3.5 py-2.5 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3 text-left cursor-pointer transition hover:opacity-95 ${
+              normalizedFilter === 'ALL' ? 'ring-2 ring-[#5B3DF5]/30' : ''
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black leading-tight">{exams.length}</div>
+              <div className="text-[11px] font-semibold text-indigo-100 truncate">Total Exams</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onChangeFilter && onChangeFilter('LIVE')}
+            className={`rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border flex items-center gap-3 text-left cursor-pointer transition ${
+              normalizedFilter === 'LIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-[#CBEFD6] hover:border-emerald-300'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <Radio className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{liveExams.length}</div>
+              <div className="text-[11px] font-bold text-[#16A34A] truncate">Live Exams</div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onChangeFilter && onChangeFilter('UPCOMING')}
+            className={`rounded-xl px-3.5 py-2.5 bg-[#FFF4E5] border flex items-center gap-3 text-left cursor-pointer transition ${
+              normalizedFilter === 'UPCOMING' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-[#FDE2BA] hover:border-amber-300'
+            }`}
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{upcomingExams.length}</div>
+              <div className="text-[11px] font-bold text-[#D97706] truncate">Upcoming</div>
+            </div>
+          </button>
+
+          <div className="rounded-xl px-3.5 py-2.5 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{totalManageQs}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Total Questions</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-3.5 py-2.5 bg-[#FEECEF] border border-[#FBD0D8] flex items-center gap-3 col-span-2 sm:col-span-1">
+            <div className="w-9 h-9 rounded-xl bg-[#FAD8DF] text-[#E11D48] flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{totalManageSubs}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Submissions</div>
+            </div>
+          </div>
         </div>
-        
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
+          <div className="flex flex-wrap items-center gap-2">
+            {!showInlineCreate && (
+              <button
+                onClick={() => setShowInlineCreate(true)}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+              >
+                <Plus size={15} /> Create New Exam
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => navigate('/competitive-exams/question-bank')}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+            >
+              <Layers size={14} className="text-[#2563EB]" /> Question Bank
+            </button>
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs flex items-center gap-1.5 shadow-2xs transition cursor-pointer"
+            >
+              <RefreshCw size={14} /> Refresh
+            </button>
+          </div>
+
           {exams.length > 0 && onChangeFilter && (
-            <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-xs">
+            <div className="inline-flex items-center p-1 bg-slate-50 border border-slate-200 rounded-xl">
               {[
                 { key: 'ALL', label: `All (${exams.length})` },
                 { key: 'LIVE', label: `Live (${liveExams.length})` },
@@ -1061,23 +1154,14 @@ const ManageExamsTab = ({
                   onClick={() => onChangeFilter(pill.key)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                     normalizedFilter === pill.key
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:bg-slate-50'
+                      ? 'bg-[#5B3DF5] text-white shadow-2xs'
+                      : 'text-slate-600 hover:bg-white'
                   }`}
                 >
                   {pill.label}
                 </button>
               ))}
             </div>
-          )}
-
-          {!showInlineCreate && (
-            <button
-              onClick={() => setShowInlineCreate(true)}
-              className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
-            >
-              <Plus size={16} /> Create Competitive Exam
-            </button>
           )}
         </div>
       </div>
@@ -4093,42 +4177,58 @@ const ResultsAndRanksTab = ({ exams, navigate }: any) => {
 
   return (
     <div className="space-y-5">
-      {/* KPI Stats Ribbon */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Submissions</div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{totalSubmissionsCount}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Tests Completed</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600">Top / Highest Score</div>
-          <div className="text-xl sm:text-2xl font-black text-emerald-600 mt-1">{highestScore}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5 truncate">Topper: {topStudent}</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Average Score</div>
-          <div className="text-xl sm:text-2xl font-black text-indigo-600 mt-1">{averageScore}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Class Mean Performance</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-purple-600">Exam Coverage</div>
-          <div className="text-xl sm:text-2xl font-black text-purple-600 mt-1">{exams.length}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Online Exams Active</div>
-        </div>
-      </div>
+      {/* Unified Pastel KPI + Filter Header */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="rounded-xl px-4 py-3 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <Award className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xl sm:text-2xl font-black leading-tight">{totalSubmissionsCount}</div>
+              <div className="text-[11px] font-semibold text-indigo-100 truncate">Total Submissions</div>
+            </div>
+          </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="flex-1 w-full sm:w-auto">
-          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-            Filter by Exam
-          </label>
+          <div className="rounded-xl px-4 py-3 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <Trophy className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{highestScore}</div>
+              <div className="text-[11px] font-bold text-[#16A34A] truncate">Top: {topStudent}</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{averageScore}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Average Score</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#FFF4E5] border border-[#FDE2BA] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{exams.length}</div>
+              <div className="text-[11px] font-semibold text-slate-600 truncate">Active Exams</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Single-Line Filter & Search Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2.5 pt-0.5">
           <select
             value={selectedExamId}
             onChange={e => setSelectedExamId(e.target.value)}
-            className="w-full sm:max-w-md p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
+            className="w-full sm:max-w-md px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl font-bold text-slate-800 text-xs outline-none focus:border-[#5B3DF5] cursor-pointer transition"
           >
-            <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.submissions || ex.submissions?.length || 0), 0)} Total Submissions)</option>
+            <option value="ALL">All Exams ({exams.reduce((acc, ex) => acc + (ex._count?.submissions || ex.submissions?.length || 0), 0)} Submissions)</option>
             {exams.map((ex: any) => {
               const subCount = ex._count?.submissions || ex.submissions?.length || 0;
               return (
@@ -4138,20 +4238,15 @@ const ResultsAndRanksTab = ({ exams, navigate }: any) => {
               );
             })}
           </select>
-        </div>
 
-        <div className="w-full sm:w-72">
-          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-            Search Student
-          </label>
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <div className="relative w-full sm:w-80">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by student, roll no, class..."
+              placeholder="Search student, roll no, class..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-[#5B3DF5] transition"
             />
           </div>
         </div>
@@ -4366,60 +4461,65 @@ const ActiveStudentsTab = ({ exams, navigate }: any) => {
 
   return (
     <div className="space-y-5">
-      {/* KPI Ribbon */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Test Takers</div>
-          <div className="text-xl sm:text-2xl font-black text-slate-900 mt-1">{studentMap.length}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Students with CBT attempts</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs">
-          <div className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Total Attempts</div>
-          <div className="text-xl sm:text-2xl font-black text-indigo-600 mt-1">{totalAttempts}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Cumulative test submissions</div>
-        </div>
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-xs col-span-2 md:col-span-1">
-          <div className="text-[10px] font-black uppercase tracking-wider text-purple-600">Classes Engaged</div>
-          <div className="text-xl sm:text-2xl font-black text-purple-600 mt-1">{classesList.length}</div>
-          <div className="text-[11px] text-slate-500 font-semibold mt-0.5">Standards participating</div>
-        </div>
-      </div>
+      {/* Unified Pastel KPI + Search Header */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-xl px-4 py-3 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black leading-tight">{studentMap.length}</div>
+              <div className="text-[11px] font-semibold text-indigo-100">Active Test Takers</div>
+            </div>
+          </div>
 
-      {/* Search & Class Filter */}
-      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div className="w-full sm:max-w-md">
-          <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-            Search Active Students
-          </label>
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search by student name, roll number, or exam..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-800 placeholder-slate-400 outline-none focus:border-indigo-500 focus:bg-white transition"
-            />
+          <div className="rounded-xl px-4 py-3 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{totalAttempts}</div>
+              <div className="text-[11px] font-semibold text-slate-600">Total Exam Attempts</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{classesList.length}</div>
+              <div className="text-[11px] font-bold text-[#16A34A]">Classes Engaged</div>
+            </div>
           </div>
         </div>
 
-        {classesList.length > 0 && (
-          <div className="w-full sm:w-auto">
-            <label className="block text-[11px] font-black text-slate-500 uppercase tracking-wider mb-1.5">
-              Filter by Class
-            </label>
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2.5 pt-0.5">
+          <div className="relative w-full sm:max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search student name, roll number, or exam..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 outline-none focus:border-[#5B3DF5] transition"
+            />
+          </div>
+
+          {classesList.length > 0 && (
             <select
               value={selectedClass}
               onChange={e => setSelectedClass(e.target.value)}
-              className="w-full sm:w-48 p-2 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 text-xs outline-none focus:border-indigo-500"
+              className="w-full sm:w-52 px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl font-bold text-slate-800 text-xs outline-none focus:border-[#5B3DF5] cursor-pointer"
             >
               <option value="ALL">All Classes ({studentMap.length})</option>
               {classesList.map(c => (
-                <option key={c} value={c}>{c}</option>
+                <option key={c} value={c}>Class: {c}</option>
               ))}
             </select>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Students Directory Grid */}
@@ -5262,21 +5362,69 @@ const OnlineExamReportsTab: React.FC<{ exams: any[]; masterQuestionsList: any[];
     toast.success('Report exported to Excel!');
   };
 
+  const totalReportAttempts = reportRows.reduce((a, r) => a + r.attempts, 0);
+  const avgReportPassRate = reportRows.length > 0 ? Math.round(reportRows.reduce((a, r) => a + r.passRate, 0) / reportRows.length) : 0;
+
   return (
     <div className="space-y-5">
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-black text-slate-900">Performance Reports & Analytics</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Exam-wise pass percentage, average & highest scores, and Master Question Bank coverage ({masterQuestionsList.length} Qs)
-          </p>
+      {/* Unified Pastel Reports Header */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-xl px-4 py-3 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <FileBarChart2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black leading-tight">{reportRows.length}</div>
+              <div className="text-[11px] font-semibold text-indigo-100">Total Exam Reports</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{totalReportAttempts}</div>
+              <div className="text-[11px] font-semibold text-slate-600">Total Submissions</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{avgReportPassRate}%</div>
+              <div className="text-[11px] font-bold text-[#16A34A]">Average Pass Rate</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#FFF4E5] border border-[#FDE2BA] flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+              <Layers className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{masterQuestionsList.length}</div>
+              <div className="text-[11px] font-semibold text-slate-600">Question Bank Coverage</div>
+            </div>
+          </div>
         </div>
-        <button
-          onClick={handleExportExcel}
-          className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer"
-        >
-          <Download size={15} /> Export Report (.xlsx)
-        </button>
+
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-0.5">
+          <div>
+            <h2 className="text-sm sm:text-base font-black text-slate-900">Performance Reports & Analytics</h2>
+            <p className="text-xs text-slate-500">
+              Exam-wise pass percentage, average & highest scores
+            </p>
+          </div>
+          <button
+            onClick={handleExportExcel}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer transition shrink-0"
+          >
+            <Download size={15} /> Export Report (.xlsx)
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">

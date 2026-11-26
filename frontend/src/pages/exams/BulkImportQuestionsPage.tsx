@@ -269,7 +269,7 @@ export const BulkImportQuestionsPage: React.FC = () => {
   }, [rows, selectedSubject, selectedCategory, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-[#F4F7FC] flex flex-col">
       {/* ══ STANDARD PAGE HEADER ══ */}
       <PageHeader
         title="Bulk Question Import Studio"
@@ -301,9 +301,9 @@ export const BulkImportQuestionsPage: React.FC = () => {
         {/* Step 1 & Step 2 Dual Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Card 1: Sample Template & Format Guide */}
-          <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-black uppercase">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF4E5] text-[#D97706] border border-[#FDE2BA] text-[11px] font-black uppercase">
                 Step 1 • Instructions
               </div>
               <h3 className="text-base font-black text-slate-900 mt-2">
@@ -313,9 +313,9 @@ export const BulkImportQuestionsPage: React.FC = () => {
                 Fill your questions in our standard Excel format. The parser automatically detects LaTeX math equations ($...$), correct option letters, marks, and explanations.
               </p>
 
-              <div className="mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-200 text-[11px] space-y-1.5 font-semibold text-slate-600">
+              <div className="mt-4 p-3.5 bg-[#F8FAFD] rounded-2xl border border-slate-200/80 text-[11px] space-y-1.5 font-semibold text-slate-600">
                 <div className="flex items-center gap-2 text-slate-800 font-bold">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
                   <span>Required Columns:</span>
                 </div>
                 <div className="pl-5 text-slate-500 leading-snug">
@@ -333,7 +333,7 @@ export const BulkImportQuestionsPage: React.FC = () => {
             <button
               type="button"
               onClick={handleDownloadSample}
-              className="w-full py-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 font-black text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              className="w-full py-3 rounded-xl bg-[#FFF4E5] hover:bg-[#FFE9CC] text-[#D97706] border border-[#FDE2BA] font-black text-xs flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <Download size={15} />
               <span>Download Excel Template (.xlsx)</span>
@@ -341,9 +341,9 @@ export const BulkImportQuestionsPage: React.FC = () => {
           </div>
 
           {/* Card 2: Upload Zone */}
-          <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-slate-200/90 shadow-xs flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-black uppercase">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F3EEFF] text-[#5B3DF5] border border-[#DDD4FE] text-[11px] font-black uppercase">
                 Step 2 • File Upload
               </div>
               <h3 className="text-base font-black text-slate-900 mt-2">
@@ -353,8 +353,8 @@ export const BulkImportQuestionsPage: React.FC = () => {
                 Select your completed spreadsheet (.xlsx, .xls, .csv). You can review and verify all questions below before saving.
               </p>
 
-              <label className="mt-4 flex flex-col items-center justify-center p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/60 hover:bg-indigo-50/30 transition cursor-pointer group">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+              <label className="mt-4 flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-[#C7BDFC] hover:border-[#5B3DF5] bg-[#F8F6FF]/60 hover:bg-[#F3EEFF]/70 transition cursor-pointer group">
+                <div className="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#5B3DF5] flex items-center justify-center mb-2 group-hover:scale-110 transition">
                   <Upload className="w-6 h-6" />
                 </div>
                 <span className="text-xs font-black text-slate-800">
@@ -407,45 +407,45 @@ export const BulkImportQuestionsPage: React.FC = () => {
         {/* ══ STEP 3: QUESTIONS PREVIEW & VERIFICATION TABLE ══ */}
         {rows.length > 0 && (
           <div className="space-y-4">
-            {/* KPI Badges */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Questions</span>
-                <div className="text-2xl font-black text-indigo-600 mt-0.5">{rows.length}</div>
-                <div className="text-[11px] font-semibold text-slate-500">Ready to sync</div>
+            {/* KPI Badges - Unified Pastel Stat Ribbon */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+              <div className="bg-gradient-to-br from-[#5B3DF5] to-[#7B3DF5] p-4 rounded-2xl text-white shadow-sm">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-white/80">Total Questions</span>
+                <div className="text-2xl font-black text-white mt-0.5 tabular-nums">{rows.length}</div>
+                <div className="text-[11px] font-semibold text-white/85">Ready to sync</div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Subjects Found</span>
-                <div className="text-2xl font-black text-purple-600 mt-0.5">{Object.keys(subjectStats).length}</div>
-                <div className="text-[11px] font-semibold text-slate-500 truncate">
+              <div className="bg-[#EAF3FF] p-4 rounded-2xl border border-[#D4E6FF]">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#2563EB]">Subjects Found</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5 tabular-nums">{Object.keys(subjectStats).length}</div>
+                <div className="text-[11px] font-semibold text-slate-600 truncate">
                   {Object.keys(subjectStats).join(', ') || 'General'}
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Categories</span>
-                <div className="text-2xl font-black text-emerald-600 mt-0.5">{Object.keys(categoryStats).length}</div>
-                <div className="text-[11px] font-semibold text-slate-500 truncate">
+              <div className="bg-[#EAFAEE] p-4 rounded-2xl border border-[#CBEFD6]">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#16A34A]">Categories</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5 tabular-nums">{Object.keys(categoryStats).length}</div>
+                <div className="text-[11px] font-semibold text-slate-600 truncate">
                   {Object.keys(categoryStats).join(', ') || 'JEE'}
                 </div>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Destination</span>
-                <div className="text-2xl font-black text-amber-600 mt-0.5">PostgreSQL</div>
-                <div className="text-[11px] font-semibold text-slate-500">Master Bank (Permanent)</div>
+              <div className="bg-[#FFF4E5] p-4 rounded-2xl border border-[#FDE2BA]">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#D97706]">Destination</span>
+                <div className="text-2xl font-black text-slate-900 mt-0.5">PostgreSQL</div>
+                <div className="text-[11px] font-semibold text-slate-600">Master Bank (Permanent)</div>
               </div>
             </div>
 
             {/* Filter and Search Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                 {/* Subject Tabs */}
                 <button
                   type="button"
                   onClick={() => setSelectedSubject('ALL')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
                     selectedSubject === 'ALL'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm'
+                      : 'bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
                   All Subjects ({rows.length})
@@ -580,10 +580,10 @@ export const BulkImportQuestionsPage: React.FC = () => {
 
         {/* ══ STICKY BOTTOM SAVE ACTION BAR ══ */}
         {rows.length > 0 && (
-          <div className="sticky bottom-4 z-40 bg-white/95 backdrop-blur-md rounded-3xl p-4 sm:p-5 border border-slate-300 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="sticky bottom-4 z-40 bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-[#DDD4FE] shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Database className="w-4 h-4 text-indigo-600" />
+                <Database className="w-4 h-4 text-[#5B3DF5]" />
                 Ready to Import {rows.length} Questions to Central Master Bank
               </h4>
               <p className="text-xs text-slate-500">
@@ -607,7 +607,7 @@ export const BulkImportQuestionsPage: React.FC = () => {
                 type="button"
                 disabled={saving}
                 onClick={handleSaveAll}
-                className="flex-1 sm:flex-initial px-8 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50 hover:scale-102"
+                className="flex-1 sm:flex-initial px-8 py-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-black shadow-md flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>

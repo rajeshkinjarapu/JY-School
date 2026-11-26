@@ -389,7 +389,7 @@ export const MasterAiStudioPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50" onPaste={handlePasteScreenshot}>
+    <div className="flex flex-col min-h-screen bg-[#F4F7FC]" onPaste={handlePasteScreenshot}>
       <PageHeader
         title="AI Question Studio"
         icon={<Sparkles className="w-5 h-5 text-white" />}
@@ -449,9 +449,9 @@ export const MasterAiStudioPage: React.FC = () => {
         {extractedList.length === 0 ? (
           <form onSubmit={handleAnalyze} className="space-y-5">
             {/* Mode Tabs + Metadata Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 border-b border-slate-100">
-                <div className="inline-flex p-1 rounded-xl bg-slate-100 border border-slate-200 gap-1">
+                <div className="inline-flex p-1 rounded-xl bg-[#F4F7FC] border border-slate-200/80 gap-1">
                   {[
                     { key: 'TEXT', label: 'Paste Exam Text', icon: FileText },
                     { key: 'FILE', label: 'Photo / PDF Scan', icon: ImageIcon },
@@ -463,9 +463,9 @@ export const MasterAiStudioPage: React.FC = () => {
                         key={tab.key}
                         type="button"
                         onClick={() => setInputMode(tab.key as any)}
-                        className={`px-3.5 py-2 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer ${
+                        className={`px-4 py-2 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition cursor-pointer ${
                           inputMode === tab.key
-                            ? 'bg-white text-indigo-700 shadow-2xs'
+                            ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
@@ -477,14 +477,14 @@ export const MasterAiStudioPage: React.FC = () => {
                 </div>
 
                 {/* Smart Auto-Solve Toggle */}
-                <label className="flex items-center gap-2.5 cursor-pointer px-3 py-1.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                <label className="flex items-center gap-2.5 cursor-pointer px-3.5 py-2 rounded-xl bg-[#EAFAEE] border border-[#CBEFD6]">
                   <input
                     type="checkbox"
                     checked={autoSolve}
                     onChange={(e) => setAutoSolve(e.target.checked)}
-                    className="w-4 h-4 text-emerald-600 rounded"
+                    className="w-4 h-4 text-[#16A34A] rounded"
                   />
-                  <span className="text-xs font-bold text-emerald-900">Auto-Solve Missing Answers & Solutions</span>
+                  <span className="text-xs font-bold text-[#15803D]">Auto-Solve Missing Answers & Solutions</span>
                 </label>
               </div>
 
@@ -531,7 +531,7 @@ export const MasterAiStudioPage: React.FC = () => {
             </div>
 
             {/* Mode Content Card */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-2xs space-y-4">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-4">
               {inputMode === 'TEXT' && (
                 <>
                   <label className="block text-xs font-bold text-slate-700">
@@ -615,7 +615,7 @@ export const MasterAiStudioPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={processing}
-                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white text-sm font-black shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-60"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-sm font-black shadow-sm flex items-center gap-2 cursor-pointer disabled:opacity-60 transition"
                 >
                   {processing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   <span>{processing ? 'Processing...' : inputMode === 'TOPIC' ? 'Generate with Gemini AI' : 'Analyze & Extract with AI'}</span>
@@ -627,20 +627,20 @@ export const MasterAiStudioPage: React.FC = () => {
           /* STEP 2: FULL-WIDTH REVIEW & INLINE EDIT WORKBENCH */
           <div className="space-y-4">
             {/* Review Filter Bar */}
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 {[
-                  { key: 'ALL', label: `All (${reviewCounts.all})`, cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-                  { key: 'READY', label: `Ready (${reviewCounts.ready})`, cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                  { key: 'REVIEW', label: `Needs Attention (${reviewCounts.review})`, cls: 'bg-amber-50 text-amber-800 border-amber-200' },
-                  { key: 'DUPLICATE', label: `Duplicates (${reviewCounts.duplicate})`, cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+                  { key: 'ALL', label: `All (${reviewCounts.all})`, cls: 'bg-[#F3EEFF] text-[#5B3DF5] border-[#DDD4FE]' },
+                  { key: 'READY', label: `Ready (${reviewCounts.ready})`, cls: 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6]' },
+                  { key: 'REVIEW', label: `Needs Attention (${reviewCounts.review})`, cls: 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA]' },
+                  { key: 'DUPLICATE', label: `Duplicates (${reviewCounts.duplicate})`, cls: 'bg-[#FEECEF] text-[#E11D48] border-[#FBD0D8]' },
                 ].map((chip) => (
                   <button
                     key={chip.key}
                     type="button"
                     onClick={() => setReviewFilter(chip.key as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
-                      reviewFilter === chip.key ? 'ring-2 ring-indigo-400 ' + chip.cls : chip.cls + ' opacity-75 hover:opacity-100'
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
+                      reviewFilter === chip.key ? 'ring-2 ring-[#5B3DF5]/40 ' + chip.cls : chip.cls + ' opacity-80 hover:opacity-100'
                     }`}
                   >
                     {chip.label}
@@ -660,7 +660,7 @@ export const MasterAiStudioPage: React.FC = () => {
                   type="button"
                   onClick={handleSendToPaperGenerator}
                   disabled={selectedItems.length === 0}
-                  className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  className="px-3.5 py-2 rounded-xl bg-[#EAFAEE] hover:bg-[#DCFCE7] text-[#16A34A] border border-[#CBEFD6] text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                 >
                   <Printer size={14} /> Open in A4 Paper
                 </button>
@@ -668,7 +668,7 @@ export const MasterAiStudioPage: React.FC = () => {
                   type="button"
                   onClick={handleSaveToMasterBank}
                   disabled={saving || selectedItems.length === 0}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                 >
                   <CheckCircle2 size={14} />
                   <span>{saving ? 'Saving...' : `Save ${selectedItems.length} to Master Bank`}</span>
@@ -824,8 +824,8 @@ export const MasterAiStudioPage: React.FC = () => {
       {/* Bottom Viewport-Fixed Light Save Bar rendered via Portal so DashboardLayout transforms never cause scrolling */}
       {extractedList.length > 0 && typeof document !== 'undefined' && createPortal(
         <div className="fixed bottom-3 left-0 right-0 z-50 pointer-events-none flex justify-center px-4 pb-[env(safe-area-inset-bottom)]">
-          <div className="pointer-events-auto w-full max-w-3xl bg-white/95 backdrop-blur-md border-2 border-indigo-300 rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3">
-            <span className="text-xs font-black text-indigo-700">
+          <div className="pointer-events-auto w-full max-w-3xl bg-white/95 backdrop-blur-md border border-[#DDD4FE] rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-black text-[#5B3DF5]">
               {selectedItems.length} of {extractedList.length} Ready to Save
             </span>
 
@@ -834,7 +834,7 @@ export const MasterAiStudioPage: React.FC = () => {
                 type="button"
                 onClick={handleSendToPaperGenerator}
                 disabled={selectedItems.length === 0}
-                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                className="px-3.5 py-2 rounded-xl bg-[#EAFAEE] hover:bg-[#DCFCE7] text-[#16A34A] border border-[#CBEFD6] text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <Printer size={14} /> Open in A4 Paper
               </button>
@@ -842,7 +842,7 @@ export const MasterAiStudioPage: React.FC = () => {
                 type="button"
                 onClick={handleSaveToMasterBank}
                 disabled={saving || selectedItems.length === 0}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-black flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
               >
                 <CheckCircle2 size={14} />
                 <span>{saving ? 'Saving...' : `Save ${selectedItems.length} to Master Bank`}</span>

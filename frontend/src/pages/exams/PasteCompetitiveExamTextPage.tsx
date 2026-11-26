@@ -264,7 +264,7 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col bg-slate-50 min-h-screen">
+    <div className="flex flex-col bg-[#F4F7FC] min-h-screen">
       <PageHeader
         title="AI Smart Exam Text Importer"
         icon={<Sparkles className="w-5 h-5" />}
@@ -279,10 +279,13 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
         }
       />
 
-      <div className="p-4 md:p-8 max-w-7xl w-full mx-auto space-y-6 flex-1">
+      <div className="p-4 md:p-8 max-w-7xl w-full mx-auto space-y-5 flex-1">
       {/* Target Exam Picker Bar */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="text-xs font-bold text-slate-600">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+        <div className="text-xs font-bold text-slate-600 flex items-center gap-2">
+          <span className="w-7 h-7 rounded-xl bg-[#F3EEFF] text-[#5B3DF5] flex items-center justify-center">
+            <Sparkles size={14} />
+          </span>
           Google Gemini Automated KaTeX &amp; MCQ Digitizer
         </div>
 
@@ -312,12 +315,12 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Target Exam Details Banner (Light Theme) */}
+      {/* Target Exam Details Banner (Unified Pastel Theme) */}
       {activeExam && (
-        <div className="bg-white text-slate-900 p-5 rounded-2xl shadow-xs border border-indigo-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="bg-white text-slate-900 p-5 rounded-2xl shadow-[0_2px_10px_rgba(15,23,42,0.03)] border border-slate-200/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-[11px] font-black uppercase tracking-wider border border-indigo-200">
-              <Zap size={12} className="text-amber-500" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#F3EEFF] text-[#5B3DF5] text-[11px] font-black uppercase tracking-wider border border-[#DDD4FE]">
+              <Zap size={12} className="text-[#D97706]" />
               NTA CBT Blueprint Target
             </div>
             <h2 className="text-lg sm:text-xl font-black text-slate-900">{activeExam.title}</h2>
@@ -325,18 +328,18 @@ export const PasteCompetitiveExamTextPage: React.FC = () => {
               Class: <strong className="text-slate-900">{activeExam.class?.name || 'All'}</strong> • 
               Duration: <strong className="text-slate-900">{activeExam.duration} Mins</strong> • 
               Total Marks: <strong className="text-slate-900">{activeExam.totalMarks}</strong> • 
-              Negative Marking: <strong className="text-rose-600">-{activeExam.negativeMarks || 0}</strong>
+              Negative Marking: <strong className="text-[#E11D48]">-{activeExam.negativeMarks || 0}</strong>
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <div className="text-center px-3 border-r border-slate-200">
-              <div className="text-xl font-black text-indigo-600">{activeExam._count?.questions || activeExam.questions?.length || 0}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">Existing Qs</div>
+          <div className="flex items-center gap-3">
+            <div className="bg-[#EAF3FF] border border-[#D4E6FF] px-4 py-2.5 rounded-2xl text-center min-w-[100px]">
+              <div className="text-xl font-black text-[#2563EB] tabular-nums">{activeExam._count?.questions || activeExam.questions?.length || 0}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-600">Existing Qs</div>
             </div>
-            <div className="text-center px-3">
-              <div className="text-xl font-black text-emerald-600">{parsedQuestions.length}</div>
-              <div className="text-[10px] uppercase font-bold text-slate-500">Parsed Qs</div>
+            <div className="bg-[#EAFAEE] border border-[#CBEFD6] px-4 py-2.5 rounded-2xl text-center min-w-[100px]">
+              <div className="text-xl font-black text-[#16A34A] tabular-nums">{parsedQuestions.length}</div>
+              <div className="text-[10px] uppercase font-bold text-slate-600">Parsed Qs</div>
             </div>
           </div>
         </div>
@@ -464,7 +467,7 @@ Key: A`}
               <button
                 type="submit"
                 disabled={parsing || !rawText.trim()}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 hover:from-emerald-700 hover:to-indigo-700 text-white font-extrabold text-sm shadow-md shadow-emerald-500/20 flex items-center justify-center gap-2 transition hover:scale-[1.01] cursor-pointer disabled:opacity-50"
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-sm shadow-md flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-50"
               >
                 {parsing ? (
                   <>
@@ -482,11 +485,11 @@ Key: A`}
           </div>
 
           {/* Quick Guidance Box */}
-          <div className="bg-emerald-50/70 border border-emerald-200 rounded-3xl p-5 text-xs text-emerald-950 space-y-2">
-            <h4 className="font-extrabold flex items-center gap-1.5 text-emerald-900 text-sm">
-              <CheckCircle2 size={16} className="text-emerald-600" /> Supported AI Features
+          <div className="bg-[#EAFAEE] border border-[#CBEFD6] rounded-2xl p-5 text-xs text-slate-800 space-y-2">
+            <h4 className="font-extrabold flex items-center gap-1.5 text-[#15803D] text-sm">
+              <CheckCircle2 size={16} className="text-[#16A34A]" /> Supported AI Features
             </h4>
-            <ul className="list-disc pl-5 space-y-1 text-emerald-800 leading-relaxed font-medium">
+            <ul className="list-disc pl-5 space-y-1 text-slate-700 leading-relaxed font-medium">
               <li><strong>KaTeX LaTeX Formulas:</strong> Automatically renders equations wrapped in <code>$...$</code> or <code>$$...$$</code>.</li>
               <li><strong>Flexible Options:</strong> Recognizes <code>(A)</code>, <code>[B]</code>, <code>C)</code>, <code>1.</code>, or line-by-line options.</li>
               <li><strong>Smart Key Detection:</strong> Detects <code>Ans: B</code>, <code>Answer: (C)</code>, <code>Key: 3</code>, or <code>Correct: D</code>.</li>
@@ -502,9 +505,9 @@ Key: A`}
           
           {parsedQuestions.length === 0 ? (
             /* Empty State Guidance */
-            <div className="bg-white rounded-3xl p-10 sm:p-14 border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center min-h-[500px]">
-              <div className="w-20 h-20 rounded-3xl bg-emerald-50 text-emerald-600 flex items-center justify-center mb-4 shadow-xs">
-                <Sparkles size={36} className="text-emerald-600" />
+            <div className="bg-white rounded-2xl p-10 sm:p-14 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] text-center flex flex-col items-center justify-center min-h-[500px]">
+              <div className="w-20 h-20 rounded-3xl bg-[#F3EEFF] text-[#5B3DF5] flex items-center justify-center mb-4 shadow-xs">
+                <Sparkles size={36} className="text-[#5B3DF5]" />
               </div>
               <h3 className="text-xl font-black text-slate-800">
                 Ready to Digitize Exam Questions
@@ -515,9 +518,9 @@ Key: A`}
               <button
                 type="button"
                 onClick={handleLoadSample}
-                className="mt-6 px-6 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs flex items-center gap-2 shadow transition cursor-pointer hover:scale-105"
+                className="mt-6 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
               >
-                <Copy size={14} className="text-emerald-400" />
+                <Copy size={14} />
                 Try Sample Questions Template
               </button>
             </div>
@@ -525,9 +528,9 @@ Key: A`}
             /* Parsed Questions Review List */
             <div className="space-y-4">
               {/* Review Bar */}
-              <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-xl bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+              <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-xl bg-[#EAFAEE] border border-[#CBEFD6] text-[#16A34A] font-black text-xs flex items-center justify-center">
                     {parsedQuestions.length}
                   </span>
                   <div>
@@ -543,14 +546,14 @@ Key: A`}
                 <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                   <button
                     onClick={() => setParsedQuestions([])}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
                   >
                     Clear Results
                   </button>
                   <button
                     onClick={handleSaveToExam}
                     disabled={saving}
-                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs shadow-md transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs shadow-sm transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                   >
                     {saving ? (
                       <>
@@ -580,16 +583,16 @@ Key: A`}
                       {/* Card Header */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="w-7 h-7 rounded-xl bg-slate-900 text-white font-black text-xs flex items-center justify-center shrink-0">
+                          <span className="px-2.5 py-1 rounded-lg bg-[#F3EEFF] text-[#5B3DF5] border border-[#DDD4FE] font-black text-xs flex items-center justify-center shrink-0">
                             Q{idx + 1}
                           </span>
-                          <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-bold text-[11px] border border-slate-200">
+                          <span className="px-2.5 py-0.5 rounded-lg bg-[#EAF3FF] text-[#2563EB] font-bold text-[11px] border border-[#D4E6FF]">
                             {q.chapterName || chapterHint || 'General'}
                           </span>
-                          <span className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 font-black text-[11px] border border-emerald-200">
+                          <span className="px-2 py-0.5 rounded-lg bg-[#EAFAEE] text-[#16A34A] font-black text-[11px] border border-[#CBEFD6]">
                             +{q.marks || defaultMarks} Marks
                           </span>
-                          <span className="px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-[10px]">
+                          <span className="px-2 py-0.5 rounded-lg bg-[#FFF4E5] text-[#D97706] font-bold text-[10px] border border-[#FDE2BA]">
                             {q.difficulty || difficulty}
                           </span>
                         </div>
@@ -707,14 +710,14 @@ Key: A`}
               </div>
 
               {/* Bottom Sticky Action Bar */}
-              <div className="sticky bottom-4 z-20 bg-slate-900/95 backdrop-blur-md text-white p-4 sm:p-5 rounded-3xl shadow-2xl border border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="sticky bottom-4 z-20 bg-white/95 backdrop-blur-md text-slate-900 p-4 sm:p-5 rounded-2xl shadow-xl border border-[#DDD4FE] flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div>
-                  <h4 className="text-sm font-black text-white flex items-center gap-2">
-                    <CheckCircle2 size={18} className="text-emerald-400" />
+                  <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-[#16A34A]" />
                     {parsedQuestions.length} Questions Ready to Commit
                   </h4>
-                  <p className="text-xs text-slate-300">
-                    Will be added to <strong>{activeExam?.title || 'Exam'}</strong> with full KaTeX math support.
+                  <p className="text-xs text-slate-500">
+                    Will be added to <strong className="text-slate-800">{activeExam?.title || 'Exam'}</strong> with full KaTeX math support.
                   </p>
                 </div>
 
@@ -725,14 +728,14 @@ Key: A`}
                         setParsedQuestions([]);
                       }
                     }}
-                    className="px-4 py-2.5 rounded-xl border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-bold transition cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 text-xs font-bold transition cursor-pointer"
                   >
                     Discard Batch
                   </button>
                   <button
                     onClick={handleSaveToExam}
                     disabled={saving}
-                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-xs shadow-lg shadow-emerald-600/30 transition cursor-pointer flex items-center gap-2 hover:scale-105 disabled:opacity-50"
+                    className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
                   >
                     {saving ? (
                       <>
