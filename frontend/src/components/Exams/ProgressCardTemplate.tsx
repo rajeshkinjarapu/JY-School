@@ -8,10 +8,10 @@ interface ProgressCardTemplateProps {
   settings?: any;
 }
 
-export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({ 
-  data = {}, 
-  exam = {}, 
-  settings = {} 
+export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
+  data = {},
+  exam = {},
+  settings = {}
 }) => {
   const safeData = {
     studentName: data.studentName || "VENKATA SAI KUMAR",
@@ -84,10 +84,10 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
       {/* Double Border Frame: Outer Navy Blue (3px) + Gap + Inner Gold (1.5px) */}
       <div className="w-full h-full flex-1 border-[3px] border-[#0b1a33] p-[2.5px] relative flex flex-col z-10 bg-transparent box-border">
         <div className="w-full h-full flex-1 border border-[#f39c12] flex flex-col justify-between bg-white/95 relative p-5 box-border">
-          
+
           {/* 1. Header Area */}
           <div>
-            <div className="flex items-center gap-5 pb-3 border-b-2 border-slate-900/80">
+            <div className="flex items-center gap-4 pb-3 border-b-2 border-slate-900/80">
               <div className="w-20 h-20 shrink-0 bg-white border border-slate-200 p-1.5 shadow-xs rounded-xl flex items-center justify-center overflow-hidden">
                 {resolveUrl(logoUrl) ? (
                   <img src={resolveUrl(logoUrl)} alt="Logo" className="max-w-full max-h-full object-contain" crossOrigin="anonymous" />
@@ -95,18 +95,18 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
                   <Award className="w-10 h-10 text-[#0b1a33]" />
                 )}
               </div>
-              <div className="flex-1 text-center">
-                <h1 className="text-[22px] font-black uppercase tracking-wider text-[#0b1a33] leading-tight" style={{ fontFamily: '"Georgia", serif' }}>
+              <div className="flex-1 text-center min-w-0">
+                <h1 className="text-[26px] font-black uppercase tracking-wide text-[#0b1a33] leading-tight whitespace-nowrap" style={{ fontFamily: '"Georgia", serif', fontWeight: 900 }}>
                   {settings?.schoolName || "SRI VENKATESWARA JY SCHOOL"}
                 </h1>
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d97706] mt-1">
+                <p className="text-[13.5px] font-extrabold uppercase tracking-[0.16em] text-[#d97706] mt-1">
                   {settings?.schoolSubtitle || "(IIT-JEE / NEET Foundation – Olympiads)"}
                 </p>
-                <p className="text-[11px] font-semibold text-slate-500 mt-1">
+                <p className="text-[12.5px] font-bold text-slate-600 mt-1">
                   {settings?.schoolAddress || settings?.headerAddress || "Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"}
                 </p>
               </div>
-              <div className="w-20 shrink-0 pointer-events-none" aria-hidden="true" />
+              <div className="w-10 shrink-0 pointer-events-none" aria-hidden="true" />
             </div>
 
             {/* Title Badges */}
@@ -245,11 +245,11 @@ export const ProgressCardTemplate: React.FC<ProgressCardTemplateProps> = ({
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
                   <tr className="bg-[#0b1a33] text-white" style={{ backgroundColor: '#0b1a33', color: '#ffffff' }}>
-                    <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-[11px] text-white" style={{ color: '#ffffff' }}>Subject</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Marks Obtained</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Max Marks</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>% Score</th>
-                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}>Status</th>
+                    <th className="py-2.5 px-4 font-bold uppercase tracking-wider text-[11px] text-white" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>Subject</span></th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>Marks Obtained</span></th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>Max Marks</span></th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>% Score</span></th>
+                    <th className="py-2.5 px-3 font-bold uppercase tracking-wider text-[11px] text-center text-white" style={{ color: '#ffffff' }}><span style={{ color: '#ffffff' }}>Status</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
