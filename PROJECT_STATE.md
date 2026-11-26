@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Online Exam Module 12-KPI Clean Dashboard (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** KPI కార్డుల కింద Dashboard సెక్షన్ లేకుండా, కేవలం **12 లైట్-థీమ్ ఇంటరాక్టివ్ KPI కార్డులు** మాత్రమే ఉండే శుభ్రమైన డాష్‌బోర్డ్ (`12-KPI Clean Dashboard`) అమలు చేయాలి.
+- **చేసిన మార్పులు (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
+  - `activeTab === 'DASHBOARD'` లో 12 ఇంటరాక్టివ్ Light Theme KPI కార్డులు (Create New Exam, Total Exams, Live Exams Now, Upcoming Exams, Master Question Bank, Bulk Excel Import, AI Smart Text Parser, Student Management, Exam Submissions, Results & Merit Ranks, A4 Result Cards, Analytics & Reports) లైవ్ డేటాతో జత చేశాము.
+  - KPI కార్డుల కింద ఉన్న `OnlineExamDashboardOverview` ను పూర్తిగా తొలగించాము — డాష్‌బోర్డ్‌లో కేవలం KPI కార్డులు మాత్రమే కనిపిస్తాయి.
+  - `StatCard` ను 12 వైబ్రంట్ లైట్ యాక్సెంట్ రంగులు, `badgeText`, మరియు `ArrowRight` హోవర్ ఇండికేటర్‌తో ఆధునీకరించాము.
+  - `ManageExamsTab` లో `?filter=LIVE` / `?filter=UPCOMING` మరియు `All / Live / Upcoming` ఫిల్టర్ పిల్స్ సపోర్ట్ జత చేశాము.
+
 ## చివరి సంభాషణ - Gemini AI `gemini-3.0-flash` & Auto Fallback Update (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** MCQ Paper Generator `AI Gen` లో వస్తున్న `models/gemini-2.5-flash` 404 ఎర్రర్ ఫిక్స్ చేసి కొత్త మోడల్‌కు అప్‌డేట్ చేయాలి.
 - **చేసిన మార్పులు:**

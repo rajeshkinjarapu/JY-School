@@ -256,6 +256,76 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
     return Array.from(studentMap.values()).sort((a, b) => b.attempts - a.attempts);
   }, [exams]);
 
+  const kpiMetrics = useMemo(() => {
+    const publishedExamsCount = exams.filter((e: any) => e.isPublished !== false).length;
+    const draftExamsCount = Math.max(0, exams.length - publishedExamsCount);
+
+    const subjectSet = new Set<string>();
+    const topicSet = new Set<string>();
+    masterQuestionsList.forEach((q: any) => {
+      const sub = (q.subjectName || '').toString().trim().toLowerCase();
+      if (sub) subjectSet.add(sub);
+      const top = (q.topic || q.topicName || q.chapterName || '').toString().trim().toLowerCase();
+      if (top) topicSet.add(top);
+    });
+
+    const studentBase = totalSchoolStudents || activeStudents.length;
+    const participationPct =
+      studentBase > 0 ? Math.min(100, Math.round((activeStudents.length / studentBase) * 100)) : 0;
+
+    let subCount = 0;
+    let passCount = 0;
+    let sumPct = 0;
+    let highestScorePct = 0;
+    let topScorerName = '';
+
+    exams.forEach((ex: any) => {
+      const totalMarks = Number(ex.totalMarks) > 0 ? Number(ex.totalMarks) : 100;
+      const passMarks =
+        Number(ex.passMarks) > 0 ? Number(ex.passMarks) : Math.round(totalMarks * 0.35);
+
+      (ex.submissions || []).forEach((sub: any) => {
+        const obtained = Number(sub.marksObtained) || 0;
+        const pct = Math.max(0, Math.min(100, Math.round((obtained / totalMarks) * 100)));
+        subCount += 1;
+        sumPct += pct;
+        if (obtained >= passMarks) passCount += 1;
+        if (pct >= highestScorePct) {
+          highestScorePct = pct;
+          topScorerName = sub.student?.user?.name || topScorerName;
+        }
+      });
+    });
+
+    const overallPassRatePct = subCount > 0 ? Math.round((passCount / subCount) * 100) : 0;
+    const avgScorePct = subCount > 0 ? Math.round(sumPct / subCount) : 0;
+
+    const sortedUpcoming = [...upcomingExams].sort(
+      (a: any, b: any) => new Date(a.startTime || 0).getTime() - new Date(b.startTime || 0).getTime()
+    );
+    const nextUpcomingLabel =
+      sortedUpcoming.length > 0 && sortedUpcoming[0].startTime
+        ? `Next: ${new Date(sortedUpcoming[0].startTime).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: 'short',
+          })}`
+        : 'None scheduled';
+
+    return {
+      publishedExamsCount,
+      draftExamsCount,
+      uniqueSubjectCount: subjectSet.size,
+      uniqueTopicCount: topicSet.size,
+      studentBase,
+      participationPct,
+      overallPassRatePct,
+      avgScorePct,
+      highestScorePct,
+      topScorerName,
+      nextUpcomingLabel,
+    };
+  }, [exams, masterQuestionsList, totalSchoolStudents, activeStudents, upcomingExams]);
+
   const handleDeleteExam = async (id: string, title: string) => {
     if (!window.confirm(`Are you sure you want to delete "${title}"?`)) return;
     try {
@@ -361,88 +431,129 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
       <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-6 flex-1">
 
-      {/* Show 6 KPI Cards ONLY on main Dashboard so sub-pages stay clean & dedicated */}
+      {/* 12-KPI Clean Dashboard Command Hub (Pure Light Theme, Nothing Underneath) */}
       {activeTab === 'DASHBOARD' && (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <StatCard
-            title="TOTAL EXAMS"
-            value={exams.length}
-            subtitle="All Created Tests"
-            color="blue"
-            icon={<List className="w-4 h-4" />}
-            onClick={() => navigate('/competitive-exams/exams')}
-          />
-          <StatCard
-            title="LIVE EXAMS"
-            value={liveExams.length}
-            subtitle="Active Right Now"
-            color="emerald"
-            icon={<Activity className="w-4 h-4" />}
-            onClick={() => navigate('/competitive-exams/exams')}
-          />
-          <StatCard
-            title="UPCOMING EXAMS"
-            value={upcomingExams.length}
-            subtitle="Scheduled Tests"
+            title="Create New Exam"
+            value="+ New Test"
+            subtitle="8 Patterns • JEE / NEET / School"
+            badgeText="Create"
             color="indigo"
-            icon={<Calendar className="w-4 h-4" />}
+            icon={<Plus className="w-5 h-5" />}
+            onClick={() => {
+              setShowInlineCreate(true);
+              navigate('/competitive-exams/exams?create=true');
+            }}
+          />
+          <StatCard
+            title="Total Exams"
+            value={exams.length}
+            subtitle={`${kpiMetrics.publishedExamsCount} Published • ${kpiMetrics.draftExamsCount} Draft`}
+            color="blue"
+            icon={<List className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams')}
           />
           <StatCard
-            title="TOTAL QUESTIONS"
+            title="Live Exams Now"
+            value={liveExams.length}
+            subtitle={liveExams.length > 0 ? 'Active CBT Sessions' : 'No Active Live Exam'}
+            badgeText={liveExams.length > 0 ? 'LIVE' : undefined}
+            color="emerald"
+            icon={<Activity className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/exams?filter=LIVE')}
+          />
+          <StatCard
+            title="Upcoming Exams"
+            value={upcomingExams.length}
+            subtitle={kpiMetrics.nextUpcomingLabel}
+            color="cyan"
+            icon={<Calendar className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/exams?filter=UPCOMING')}
+          />
+          <StatCard
+            title="Master Question Bank"
             value={totalQuestions}
-            subtitle="Master Question Bank"
+            subtitle={`${kpiMetrics.uniqueSubjectCount} Subjects • ${kpiMetrics.uniqueTopicCount} Topics`}
             color="purple"
-            icon={<FileQuestion className="w-4 h-4" />}
+            icon={<Database className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/question-bank')}
           />
           <StatCard
-            title="TOTAL STUDENTS"
-            value={totalSchoolStudents || activeStudents.length}
-            subtitle={`${activeStudents.length} Attempted`}
+            title="Bulk Excel Import"
+            value="Excel / CSV"
+            subtitle="Upload 100–1000+ MCQs Fast"
             color="amber"
-            icon={<Users className="w-4 h-4" />}
+            icon={<FileSpreadsheet className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/bulk-import')}
+          />
+          <StatCard
+            title="AI Smart Text Parser"
+            value="Gemini 3.0"
+            subtitle="KaTeX & MCQ Auto Digitizer"
+            badgeText="AI"
+            color="violet"
+            icon={<Sparkles className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/paste-ai')}
+          />
+          <StatCard
+            title="Student Management"
+            value={kpiMetrics.studentBase}
+            subtitle={`${activeStudents.length} Attempted (${kpiMetrics.participationPct}%)`}
+            color="teal"
+            icon={<Users className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/students')}
           />
           <StatCard
-            title="RESULT CARDS"
+            title="Exam Submissions"
             value={totalSubmissions}
-            subtitle="Ranks & Reports"
-            color="rose"
-            icon={<Award className="w-4 h-4" />}
+            subtitle="Completed Student Attempts"
+            color="orange"
+            icon={<CheckCircle2 className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
+          />
+          <StatCard
+            title="Results & Merit Ranks"
+            value={`${kpiMetrics.highestScorePct}%`}
+            subtitle={kpiMetrics.topScorerName ? `Top: ${kpiMetrics.topScorerName}` : 'Highest Score & Ranks'}
+            color="pink"
+            icon={<Trophy className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/results')}
+          />
+          <StatCard
+            title="A4 Result Cards"
+            value={totalSubmissions}
+            subtitle="Printable Scorecards Ready"
+            color="rose"
+            icon={<Award className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/results')}
+          />
+          <StatCard
+            title="Analytics & Reports"
+            value={`${kpiMetrics.overallPassRatePct}% Pass`}
+            subtitle={`Avg Score: ${kpiMetrics.avgScorePct}% • Export Excel`}
+            color="slate"
+            icon={<BarChart3 className="w-5 h-5" />}
+            onClick={() => navigate('/competitive-exams/reports')}
           />
         </div>
       )}
 
-      {/* Dedicated Page Contents */}
+      {/* Dedicated Sub-Page Contents (Dashboard stays clean with KPI cards only) */}
+      {activeTab !== 'DASHBOARD' && (
       <div className="mt-2">
-        {activeTab === 'DASHBOARD' && (
-          <OnlineExamDashboardOverview
-            exams={exams}
-            liveExams={liveExams}
-            upcomingExams={upcomingExams}
-            masterQuestionsList={masterQuestionsList}
-            activeStudents={activeStudents}
-            onCreateExam={() => {
-              setShowInlineCreate(true);
-              navigate('/competitive-exams/exams?create=true');
-            }}
-            onOpenQuestionBank={(subjectFilter?: string) => {
-              navigate(subjectFilter && subjectFilter !== 'ALL'
-                ? `/competitive-exams/question-bank?subject=${encodeURIComponent(subjectFilter)}`
-                : '/competitive-exams/question-bank');
-            }}
-            onOpenBulkImport={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
-            onOpenReports={() => navigate('/competitive-exams/reports')}
-            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
-            navigate={navigate}
-          />
-        )}
-
         {activeTab === 'EXAMS' && (
           <ManageExamsTab
             exams={exams}
+            liveExams={liveExams}
+            upcomingExams={upcomingExams}
+            examFilter={searchParams.get('filter') || 'ALL'}
+            onChangeFilter={(filterVal: string) => {
+              const next = new URLSearchParams(searchParams);
+              if (filterVal === 'ALL') next.delete('filter');
+              else next.set('filter', filterVal);
+              setSearchParams(next, { replace: true });
+            }}
             loading={loading}
             showInlineCreate={showInlineCreate}
             setShowInlineCreate={setShowInlineCreate}
@@ -488,6 +599,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <OnlineExamReportsTab exams={exams} masterQuestionsList={masterQuestionsList} navigate={navigate} />
         )}
       </div>
+      )}
       </div>
 
       {/* AI Question Generator Modal */}
@@ -533,7 +645,11 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 // ═══════════════════════════════════════════════════════════════
 
 const ManageExamsTab = ({ 
-  exams, 
+  exams,
+  liveExams = [],
+  upcomingExams = [],
+  examFilter = 'ALL',
+  onChangeFilter,
   loading, 
   showInlineCreate, 
   setShowInlineCreate, 
@@ -545,6 +661,14 @@ const ManageExamsTab = ({
   onPreviewPaper,
   navigate 
 }: any) => {
+  const normalizedFilter = (examFilter || 'ALL').toUpperCase();
+  const visibleExams =
+    normalizedFilter === 'LIVE'
+      ? liveExams
+      : normalizedFilter === 'UPCOMING'
+      ? upcomingExams
+      : exams;
+
   return (
     <div className="space-y-6">
       {/* Eduracle Exam Creation Wizard */}
@@ -566,16 +690,39 @@ const ManageExamsTab = ({
           <p className="text-xs text-slate-500 font-medium">Real-time CBT simulated test suite for students with instant scorecards</p>
         </div>
         
-        {!showInlineCreate && (
-          <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {exams.length > 0 && onChangeFilter && (
+            <div className="inline-flex items-center p-1 bg-white border border-slate-200 rounded-xl shadow-xs">
+              {[
+                { key: 'ALL', label: `All (${exams.length})` },
+                { key: 'LIVE', label: `Live (${liveExams.length})` },
+                { key: 'UPCOMING', label: `Upcoming (${upcomingExams.length})` },
+              ].map((pill) => (
+                <button
+                  key={pill.key}
+                  type="button"
+                  onClick={() => onChangeFilter(pill.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                    normalizedFilter === pill.key
+                      ? 'bg-indigo-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  {pill.label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {!showInlineCreate && (
             <button
               onClick={() => setShowInlineCreate(true)}
               className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-2 shadow-sm transition cursor-pointer"
             >
               <Plus size={16} /> Create Competitive Exam
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -583,16 +730,32 @@ const ManageExamsTab = ({
           <RefreshCw className="w-10 h-10 animate-spin text-indigo-600 mb-3" />
           <p className="text-slate-600 font-bold">Loading Competitive Exams...</p>
         </div>
-      ) : exams.length === 0 ? (
+      ) : visibleExams.length === 0 ? (
         <div className="p-16 flex flex-col items-center justify-center text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
           <div className="w-20 h-20 rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
             <BookOpen className="w-10 h-10 text-indigo-600" />
           </div>
-          <h3 className="text-xl font-black text-slate-800">No Online Exams Created Yet</h3>
+          <h3 className="text-xl font-black text-slate-800">
+            {normalizedFilter === 'LIVE'
+              ? 'No Live Exams Right Now'
+              : normalizedFilter === 'UPCOMING'
+              ? 'No Upcoming Exams Scheduled'
+              : 'No Online Exams Created Yet'}
+          </h3>
           <p className="text-slate-500 max-w-md mt-2 text-sm">
-            Create an objective CBT exam for your school classes (10th, 9th, 8th). Configure questions, answer options, time duration, and marking scheme.
+            {normalizedFilter !== 'ALL'
+              ? 'Switch back to All Exams to view all tests, or create a new scheduled exam.'
+              : 'Create an objective CBT exam for your school classes (10th, 9th, 8th). Configure questions, answer options, time duration, and marking scheme.'}
           </p>
           <div className="flex items-center justify-center gap-3 mt-6">
+            {normalizedFilter !== 'ALL' && onChangeFilter && (
+              <button
+                onClick={() => onChangeFilter('ALL')}
+                className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs transition cursor-pointer"
+              >
+                Show All Exams ({exams.length})
+              </button>
+            )}
             <button
               onClick={() => setShowInlineCreate(true)}
               className="px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs flex items-center gap-2 shadow-md transition cursor-pointer hover:scale-105"
@@ -603,7 +766,7 @@ const ManageExamsTab = ({
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-          {exams.map((exam: any) => {
+          {visibleExams.map((exam: any) => {
             const qCount = exam._count?.questions || exam.questions?.length || 0;
             const subCount = exam._count?.submissions || exam.submissions?.length || 0;
             const isJee = exam.title.toUpperCase().includes('JEE');
@@ -4620,218 +4783,6 @@ const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void 
 };
 
 // ═══════════════════════════════════════════════════════════════
-// ONLINE EXAM DASHBOARD OVERVIEW
-// ═══════════════════════════════════════════════════════════════
-
-const OnlineExamDashboardOverview: React.FC<any> = ({
-  exams,
-  liveExams,
-  upcomingExams,
-  masterQuestionsList,
-  activeStudents,
-  onCreateExam,
-  onOpenQuestionBank,
-  onOpenBulkImport,
-  onOpenReports,
-  onPreviewPaper,
-  navigate,
-}) => {
-  const subjectBreakdown = useMemo(() => {
-    const counts: Record<string, number> = {};
-    masterQuestionsList.forEach((q: any) => {
-      const sub = normalizeSubject(q.subjectName || q.chapterName);
-      counts[sub] = (counts[sub] || 0) + 1;
-    });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
-  }, [masterQuestionsList]);
-
-  return (
-    <div className="space-y-6">
-      {/* Quick Action Command Bar */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-black text-slate-900">Online Exam Command Center</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Create exams, manage your Subject & Topic Question Bank, monitor live tests, and export performance reports
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button onClick={onCreateExam} className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer">
-            <Plus size={15} /> Create Exam
-          </button>
-          <button onClick={() => onOpenQuestionBank('ALL')} className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
-            <Database size={15} /> Question Bank ({masterQuestionsList.length})
-          </button>
-          <button onClick={() => navigate('/competitive-exams/bulk-import')} className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
-            <FileSpreadsheet size={15} /> Bulk Import
-          </button>
-          <button onClick={onOpenReports} className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
-            <BarChart3 size={15} /> View Reports
-          </button>
-        </div>
-      </div>
-
-      {/* 6 Dedicated Module Cards (Each opens its own separate page) */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-        {[
-          { label: 'Exam Management', sub: `${exams.length} Exams`, icon: List, color: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400', onClick: () => navigate('/competitive-exams/exams') },
-          { label: 'Question Bank', sub: `${masterQuestionsList.length} Saved Qs`, icon: Database, color: 'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-400', onClick: () => onOpenQuestionBank('ALL') },
-          { label: 'Bulk Import', sub: 'Excel / CSV / AI', icon: FileSpreadsheet, color: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400', onClick: () => navigate('/competitive-exams/bulk-import') },
-          { label: 'Student Management', sub: `${activeStudents.length} Active`, icon: Users, color: 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400', onClick: () => navigate('/competitive-exams/students') },
-          { label: 'Results & Cards', sub: 'Ranks & Scorecards', icon: Award, color: 'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-400', onClick: () => navigate('/competitive-exams/results') },
-          { label: 'View Reports', sub: 'Analytics & Excel', icon: BarChart3, color: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:border-indigo-400', onClick: onOpenReports },
-        ].map((mod) => {
-          const Icon = mod.icon;
-          return (
-            <button
-              key={mod.label}
-              type="button"
-              onClick={mod.onClick}
-              className="bg-white p-4 rounded-2xl border border-slate-200 hover:border-indigo-400 hover:shadow-md transition-all text-left cursor-pointer group flex flex-col justify-between gap-3"
-            >
-              <div className={`w-10 h-10 rounded-xl border flex items-center justify-center ${mod.color}`}>
-                <Icon className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs font-black text-slate-900 group-hover:text-indigo-600 transition-colors">{mod.label}</div>
-                <div className="text-[11px] font-semibold text-slate-500 mt-0.5">{mod.sub} →</div>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Live & Upcoming Exams (2 Columns) */}
-        <div className="lg:col-span-2 space-y-5">
-          {/* Live Exams */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live Exams ({liveExams.length})
-              </h3>
-              <span className="text-xs font-bold text-slate-400">Active CBT Tests</span>
-            </div>
-
-            {liveExams.length === 0 ? (
-              <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                <p className="text-xs font-bold text-slate-500">No exams are currently live.</p>
-                <button onClick={onCreateExam} className="mt-3 px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
-                  + Schedule New Exam
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {liveExams.slice(0, 4).map((ex: any) => (
-                  <div key={ex.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">LIVE</span>
-                        <span className="text-xs font-bold text-slate-500">{ex.class?.name || 'All Classes'}</span>
-                      </div>
-                      <h4 className="text-sm font-black text-slate-900 mt-1">{ex.title}</h4>
-                      <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
-                        ⏱️ {ex.duration}m • 📝 {ex._count?.questions || ex.questions?.length || 0} Qs • 🎯 {ex.totalMarks} Marks
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => navigate(`/competitive-exams/${ex.id}/paper`)} className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 cursor-pointer shadow-xs">
-                        View Paper
-                      </button>
-                      <button onClick={() => navigate(`/live-exam-monitor/${ex.id}`)} className="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 hover:bg-rose-100 cursor-pointer">
-                        Live Monitor
-                      </button>
-                      <button onClick={() => navigate(`/take-competitive-exam/${ex.id}`)} className="px-3.5 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black hover:bg-indigo-700 cursor-pointer">
-                        Launch
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Upcoming Exams */}
-          <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-indigo-600" />
-                Upcoming Exams ({upcomingExams.length})
-              </h3>
-            </div>
-
-            {upcomingExams.length === 0 ? (
-              <p className="text-xs font-semibold text-slate-400 py-4 text-center bg-slate-50 rounded-2xl border border-slate-100">
-                No upcoming scheduled exams. Create an exam with a future start time to see it here.
-              </p>
-            ) : (
-              <div className="space-y-2.5">
-                {upcomingExams.slice(0, 4).map((ex: any) => (
-                  <div key={ex.id} className="p-3.5 rounded-2xl bg-indigo-50/50 border border-indigo-100 flex items-center justify-between gap-3">
-                    <div>
-                      <h4 className="text-sm font-black text-slate-900">{ex.title}</h4>
-                      <p className="text-[11px] font-semibold text-indigo-700">
-                        Starts: {new Date(ex.startTime).toLocaleString()} • {ex.duration} Mins
-                      </p>
-                    </div>
-                    <button onClick={() => navigate(`/competitive-exams/${ex.id}/paper`)} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-700 hover:bg-indigo-50 cursor-pointer shadow-xs">
-                      Preview Paper
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Column: Subject-wise Question Bank Summary */}
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-xs space-y-4 h-fit">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              <Database className="w-4 h-4 text-purple-600" />
-              Subject-wise Bank
-            </h3>
-            <button onClick={() => onOpenQuestionBank('ALL')} className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer">
-              View All →
-            </button>
-          </div>
-
-          {subjectBreakdown.length === 0 ? (
-            <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
-              <p className="text-xs font-bold text-slate-500">Question Bank is empty.</p>
-              <button onClick={() => navigate('/competitive-exams/bulk-import')} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
-                + Add / Bulk Import
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-2.5">
-              {subjectBreakdown.map(([subName, count]) => (
-                <button
-                  key={subName}
-                  onClick={() => onOpenQuestionBank(subName)}
-                  className="w-full p-3 rounded-2xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 flex items-center justify-between transition cursor-pointer"
-                >
-                  <span className="text-xs font-black text-slate-800">{subName}</span>
-                  <span className="px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-xs font-black text-indigo-600">
-                    {count} Qs
-                  </span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-500">
-            <span>Participating Students:</span>
-            <span className="text-slate-900 font-black">{activeStudents.length}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════
 // ONLINE EXAM REPORTS & ANALYTICS TAB
 // ═══════════════════════════════════════════════════════════════
 
@@ -4973,70 +4924,137 @@ const TabButton = ({ active, onClick, icon, label }: any) => (
   </button>
 );
 
+type StatCardColor =
+  | 'blue'
+  | 'emerald'
+  | 'purple'
+  | 'amber'
+  | 'indigo'
+  | 'rose'
+  | 'cyan'
+  | 'violet'
+  | 'teal'
+  | 'orange'
+  | 'pink'
+  | 'slate';
+
 interface StatCardProps {
   title: string;
   value: number | string;
-  color: 'blue' | 'emerald' | 'purple' | 'amber' | 'indigo' | 'rose';
+  color: StatCardColor;
   icon: React.ReactNode;
   subtitle?: string;
+  badgeText?: string;
   active?: boolean;
   onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, color, icon, subtitle, active, onClick }) => {
-  const activeBorders: Record<string, string> = {
+const StatCard: React.FC<StatCardProps> = ({
+  title,
+  value,
+  color,
+  icon,
+  subtitle,
+  badgeText,
+  active,
+  onClick,
+}) => {
+  const activeBorders: Record<StatCardColor, string> = {
     blue: 'border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 shadow-md',
     emerald: 'border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 shadow-md',
     purple: 'border-purple-500 bg-purple-50/70 ring-2 ring-purple-500/20 shadow-md',
     amber: 'border-amber-500 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-md',
     indigo: 'border-indigo-500 bg-indigo-50/70 ring-2 ring-indigo-500/20 shadow-md',
     rose: 'border-rose-500 bg-rose-50/70 ring-2 ring-rose-500/20 shadow-md',
+    cyan: 'border-cyan-500 bg-cyan-50/70 ring-2 ring-cyan-500/20 shadow-md',
+    violet: 'border-violet-500 bg-violet-50/70 ring-2 ring-violet-500/20 shadow-md',
+    teal: 'border-teal-500 bg-teal-50/70 ring-2 ring-teal-500/20 shadow-md',
+    orange: 'border-orange-500 bg-orange-50/70 ring-2 ring-orange-500/20 shadow-md',
+    pink: 'border-pink-500 bg-pink-50/70 ring-2 ring-pink-500/20 shadow-md',
+    slate: 'border-slate-400 bg-slate-100/80 ring-2 ring-slate-400/20 shadow-md',
   };
 
-  const badgeBg: Record<string, string> = {
+  const badgeBg: Record<StatCardColor, string> = {
     blue: 'bg-blue-600 text-white',
     emerald: 'bg-emerald-600 text-white',
     purple: 'bg-purple-600 text-white',
     amber: 'bg-amber-600 text-white',
     indigo: 'bg-indigo-600 text-white',
     rose: 'bg-rose-600 text-white',
+    cyan: 'bg-cyan-600 text-white',
+    violet: 'bg-violet-600 text-white',
+    teal: 'bg-teal-600 text-white',
+    orange: 'bg-orange-600 text-white',
+    pink: 'bg-pink-600 text-white',
+    slate: 'bg-slate-700 text-white',
   };
 
-  const defaultBadgeBg: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    purple: 'bg-purple-50 text-purple-600',
-    amber: 'bg-amber-50 text-amber-600',
-    indigo: 'bg-indigo-50 text-indigo-600',
-    rose: 'bg-rose-50 text-rose-600',
+  const defaultBadgeBg: Record<StatCardColor, string> = {
+    blue: 'bg-blue-50 text-blue-600 border border-blue-100',
+    emerald: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+    purple: 'bg-purple-50 text-purple-600 border border-purple-100',
+    amber: 'bg-amber-50 text-amber-600 border border-amber-100',
+    indigo: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+    rose: 'bg-rose-50 text-rose-600 border border-rose-100',
+    cyan: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
+    violet: 'bg-violet-50 text-violet-600 border border-violet-100',
+    teal: 'bg-teal-50 text-teal-600 border border-teal-100',
+    orange: 'bg-orange-50 text-orange-600 border border-orange-100',
+    pink: 'bg-pink-50 text-pink-600 border border-pink-100',
+    slate: 'bg-slate-100 text-slate-700 border border-slate-200',
+  };
+
+  const pillTagClass: Record<StatCardColor, string> = {
+    blue: 'bg-blue-50 text-blue-700 border-blue-200',
+    emerald: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    amber: 'bg-amber-50 text-amber-700 border-amber-200',
+    indigo: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    rose: 'bg-rose-50 text-rose-700 border-rose-200',
+    cyan: 'bg-cyan-50 text-cyan-700 border-cyan-200',
+    violet: 'bg-violet-50 text-violet-700 border-violet-200',
+    teal: 'bg-teal-50 text-teal-700 border-teal-200',
+    orange: 'bg-orange-50 text-orange-700 border-orange-200',
+    pink: 'bg-pink-50 text-pink-700 border-pink-200',
+    slate: 'bg-slate-100 text-slate-700 border-slate-200',
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`p-4 sm:p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group w-full ${
+      className={`p-5 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden group w-full flex flex-col justify-between gap-3 ${
         active
           ? activeBorders[color]
-          : 'bg-white hover:bg-slate-50/90 border-slate-200/90 shadow-xs hover:border-slate-300'
+          : 'bg-white hover:bg-slate-50/70 border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-500">
-          {title}
-        </span>
-        <div className={`p-2 rounded-xl transition-colors ${active ? badgeBg[color] : defaultBadgeBg[color]}`}>
+      <div className="flex items-start justify-between gap-2 w-full">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-500">
+              {title}
+            </span>
+            {badgeText && (
+              <span
+                className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${pillTagClass[color]}`}
+              >
+                {badgeText}
+              </span>
+            )}
+          </div>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1.5 tracking-tight truncate">
+            {value}
+          </div>
+        </div>
+        <div className={`p-2.5 rounded-xl transition-colors shrink-0 ${active ? badgeBg[color] : defaultBadgeBg[color]}`}>
           {icon}
         </div>
       </div>
-      <div className="text-2xl sm:text-3xl font-black text-slate-900">{value}</div>
-      <div className="text-[11px] sm:text-xs font-semibold text-slate-500 mt-1 flex items-center justify-between">
-        <span className="truncate">{subtitle || 'Click to view'}</span>
-        {active && (
-          <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-1.5 py-0.2 rounded shrink-0">
-            Active
-          </span>
-        )}
+
+      <div className="text-xs font-semibold text-slate-500 pt-2 border-t border-slate-100 flex items-center justify-between gap-2 w-full">
+        <span className="truncate">{subtitle || 'Click to open'}</span>
+        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-600 group-hover:translate-x-0.5 transition-all shrink-0" />
       </div>
     </button>
   );
