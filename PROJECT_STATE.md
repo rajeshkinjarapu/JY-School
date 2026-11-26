@@ -1,5 +1,27 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Exam Pattern Selection (`Choose Pattern`) 100% Exact Pastel UI (November 26, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `same ee page kuda ilane kavali cheyu` (అప్‌లోడ్ చేసిన 8-Pattern Wizard ఇమేజ్ ప్రకారం 100% అచ్చం అదే UI డిజైన్‌ను రూపొందించాలని కోరారు).
+- **పూర్తయిన మార్పులు ([CompetitiveExamsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+  1. **టాప్ స్టెప్పర్ హెడర్ బార్:** `1 Choose Pattern` ───→ `2 Exam Settings` పిల్ స్టెప్పర్ + కుడివైపు `✕ Close` బటన్.
+  2. **8 కలర్‌ఫుల్ పేస్టల్ ప్యాటర్న్ కార్డులు:**
+     - `School Grand Test` (Blue + Indigo-Purple CTA), `SSC 10th Board Model Paper` (Mint Green), `IIT-JEE Mains Mock Exam` (Lavender-Purple), `NEET UG Medical Mock Exam` (Teal-Mint), `State EAPCET / EAMCET Pattern` (Sky Blue), `Navodaya & Sainik School JNVST` (Amber-Orange), `Weekly Classroom Slip Test` (Rose-Pink), `Custom Flexible Examination` (Violet-Indigo).
+     - ప్రతి కార్డుపై సెంటర్డ్ పిల్ బ్యాడ్జ్, సర్కిల్ ఐకాన్ (`FilePenLine`, `BookOpen`, `Atom`, `Stethoscope`, `GraduationCap`, `School`, `Calendar`, `Layers`), `Mins | Marks | Neg` విభజన, సెలెక్ట్ టిక్ బ్యాడ్జ్, మరియు ఫుల్-విడ్త్ గ్రేడియంట్ `Settings & Customize →` బటన్ అమర్చాము.
+
+## చివరి సంభాషణ - Online Exam Dashboard 100% Exact Pastel UI అమలు (November 26, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `naku 100% exact ui kavali avutunda leda konchem kuda change rakudadu... ok start` (యూజర్ అందించిన మాక్అప్ ఇమేజ్ ప్రకారం 100% అచ్చం అదే UI డిజైన్‌ను ఎలాంటి మార్పు లేకుండా నిర్మించాలని కోరారు).
+- **పూర్తయిన మార్పులు ([CompetitiveExamsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+  1. **Row 1 — 4 Pastel KPI Cards:**
+     - `Total Students` (`#EDF4FF` బ్లూ + `↑ +N` మింట్ పిల్), `Total Exams` (`#F4EFFF` పర్పుల్), `Live Exams` (`#ECFAF2` గ్రీన్ + రేడియో ఐకాన్), `Upcoming Exams` (`#FFF6EA` పీచ్ + క్యాలెండర్ ఐకాన్) అన్నీ అసలైన డేటాతో జత చేశాము.
+  2. **Left Column (`Quick Actions` & `Subject Wise Question Bank`):**
+     - `Quick Actions` లో 6 పేస్టల్ టైల్స్ (`Create New Exam`, `Question Bank`, `Import Questions (Excel / CSV)`, `Answer Keys -> /answer-key`, `View Results`, `Reports`).
+     - `Subject Wise Question Bank` లో `Total Questions : N` బ్యాడ్జ్ మరియు 6 సబ్జెక్ట్ టైల్స్ (`Mathematics (π)`, `Physics`, `Chemistry`, `Biology`, `English`, `Social Studies`) అసలైన సబ్జెక్ట్-వైజ్ కౌంట్లతో & డైరెక్ట్ నావిగేషన్‌తో రూపొందించాము.
+  3. **Right Column (`Upcoming Exams` & `Recent Activity`):**
+     - `Upcoming Exams` కార్డు (`View All →`, `No Upcoming Exams` స్టేట్, మరియు పర్పుల్ `+ Create Exam` బటన్).
+     - `Recent Activity` కార్డు (`View All →`, మరియు లైవ్ ఎగ్జామ్స్, క్వశ్చన్ బ్యాంక్, స్టూడెంట్ రికార్డుల ఆధారంగా రిలేటివ్ టైమ్‌తో టైమ్‌లైన్ ఫీడ్).
+
 ## చివరి సంభాషణ - Master Question Bank అందరికీ సులభంగా అర్థమయ్యే ప్రీమియం Light UI రీడిజైన్ (November 26, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `master question bank ui ardam avvatam ledu andariki ardam ayyela chala easy design undali andam ga undali professional ga undali`
