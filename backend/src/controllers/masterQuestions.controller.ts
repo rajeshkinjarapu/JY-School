@@ -70,6 +70,25 @@ async function resolveMasterSubjectId(subjectId?: string | null, subjectName?: s
   throw new Error('No subjects found in school database. Please create at least one subject first.');
 }
 
+// Safe numeric parser helper that never returns NaN to Prisma
+const safeParseFloat = (val: any, fallback: number): number => {
+  if (val === undefined || val === null || val === '') return fallback;
+  const n = typeof val === 'number' ? val : parseFloat(String(val).trim());
+  return isNaN(n) ? fallback : n;
+};
+
+// Safe answer key resolver that maps 'A', 'B', 'C', 'D' to the actual option text if needed
+const resolveCorrectAnswer = (ans: any, options: string[]): string => {
+  if (!ans && options.length > 0) return options[0];
+  const strAns = String(ans).trim();
+  const letterIdxMap: Record<string, number> = { A: 0, B: 1, C: 2, D: 3, '1': 0, '2': 1, '3': 2, '4': 3 };
+  const idx = letterIdxMap[strAns.toUpperCase()];
+  if (idx !== undefined && options[idx]) {
+    return options[idx];
+  }
+  return strAns;
+};
+
 export const addMasterQuestion = async (req: Request, res: Response) => {
   try {
     const {
@@ -94,13 +113,18 @@ export const addMasterQuestion = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Question text is required' });
     }
 
-    const formattedOptions = Array.isArray(options)
-      ? JSON.stringify(options)
-      : typeof options === 'string'
+    const optionsArray = Array.isArray(options)
       ? options
-      : JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']);
+      : typeof options === 'string'
+      ? (() => { try { return JSON.parse(options); } catch { return ['Option A', 'Option B', 'Option C', 'Option D']; } })()
+      : ['Option A', 'Option B', 'Option C', 'Option D'];
 
+    const formattedOptions = JSON.stringify(optionsArray);
     const resolvedSubjectId = await resolveMasterSubjectId(subjectId, subjectName || chapterName);
+    const resolvedAnswer = resolveCorrectAnswer(correctAnswer, optionsArray);
+
+    const safeMarks = safeParseFloat(marks, 4);
+    const safeNegativeMarks = safeParseFloat(negativeMarks, 0);
 
     const q = await prisma.masterQuestion.create({
       data: {
@@ -115,9 +139,9 @@ export const addMasterQuestion = async (req: Request, res: Response) => {
         questionText: String(questionText).trim(),
         imageUrl: imageUrl || null,
         options: formattedOptions,
-        correctAnswer: correctAnswer || 'Option A',
-        marks: Number(marks) || 4,
-        negativeMarks: Number(negativeMarks) ?? 1,
+        correctAnswer: resolvedAnswer,
+        marks: safeMarks,
+        negativeMarks: safeNegativeMarks,
         explanation: explanation || null,
       },
       include: { subject: true, _count: { select: { examQuestions: true } } },
@@ -153,28 +177,52 @@ export const bulkAddMasterQuestions = async (req: Request, res: Response) => {
         continue;
       }
 
-      const formattedOptions = Array.isArray(q.options)
-        ? JSON.stringify(q.options)
+      const optionsArray: string[] = Array.isArray(q.options)
+        ? q.options.map((opt: any) => String(opt ?? '').trim())
         : typeof q.options === 'string'
-        ? q.options
-        : JSON.stringify(['A', 'B', 'C', 'D']);
+        ? (() => {
+            try {
+              const parsed = JSON.parse(q.options);
+              return Array.isArray(parsed) ? parsed.map((o: any) => String(o ?? '').trim()) : [q.options];
+            } catch {
+              return ['Option A', 'Option B', 'Option C', 'Option D'];
+            }
+          })()
+        : ['Option A', 'Option B', 'Option C', 'Option D'];
+
+      const formattedOptions = JSON.stringify(optionsArray);
+
+      // Per-row subject resolution if specified
+      const rowSubjectName = q.subjectName || subjectName || (q.chapterName ? String(q.chapterName).split(':')[0].trim() : 'General');
+      let rowSubjectId = q.subjectId || defaultSubjectId;
+      if (!q.subjectId && q.subjectName && q.subjectName !== subjectName) {
+        try {
+          rowSubjectId = await resolveMasterSubjectId(undefined, q.subjectName);
+        } catch {
+          rowSubjectId = defaultSubjectId;
+        }
+      }
+
+      const resolvedAnswer = resolveCorrectAnswer(q.correctAnswer, optionsArray);
+      const safeMarks = safeParseFloat(q.marks, 4);
+      const safeNegativeMarks = safeParseFloat(q.negativeMarks, 0);
 
       const saved = await prisma.masterQuestion.create({
         data: {
           category: q.category || category || 'GENERAL',
-          subjectId: q.subjectId || defaultSubjectId,
-          subjectName: q.subjectName || subjectName || (q.chapterName ? String(q.chapterName).split(':')[0].trim() : 'General'),
+          subjectId: rowSubjectId,
+          subjectName: rowSubjectName,
           className: q.className || className || null,
-          chapterName: q.chapterName || 'General',
+          chapterName: q.chapterName || `${rowSubjectName}: ${q.topicName || 'General'}`,
           topicName: q.topicName || null,
           difficulty: q.difficulty || 'MEDIUM',
           questionType: q.questionType || 'MCQ',
           questionText: qText,
           imageUrl: q.imageUrl || null,
           options: formattedOptions,
-          correctAnswer: q.correctAnswer || (Array.isArray(q.options) ? q.options[0] : 'A'),
-          marks: Number(q.marks) || 4,
-          negativeMarks: Number(q.negativeMarks) ?? 1,
+          correctAnswer: resolvedAnswer,
+          marks: safeMarks,
+          negativeMarks: safeNegativeMarks,
           explanation: q.explanation || null,
         },
       });

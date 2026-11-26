@@ -17,9 +17,10 @@ import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
 // ═══════════════════════════════════════════════════════════════
-export const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
-  if (!text) return null;
-  const trimmed = text.trim();
+export const LatexRenderer: React.FC<{ text?: string; content?: string; className?: string }> = ({ text, content, className = '' }) => {
+  const raw = text ?? content ?? '';
+  if (!raw) return null;
+  const trimmed = raw.trim();
 
   // If text is purely an image URL or data URI
   if (trimmed.startsWith('data:image/') || trimmed.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp|svg)($|\?)/i)) {
@@ -50,15 +51,34 @@ export const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ 
     );
   }
 
+  // Auto-detect bare LaTeX formulas without $ (e.g. \frac{1}{4\pi\varepsilon_0}\frac{q}{a}, \sqrt{3}/2, x^2)
+  const hasDollar = raw.includes('$');
+  const hasLatexCommands = /\\[a-zA-Z]+|\^\{?[0-9a-zA-Z+\-]+\}?|_\{?[0-9a-zA-Z+\-]+\}?/.test(trimmed);
+
+  if (!hasDollar && hasLatexCommands) {
+    try {
+      const html = katex.renderToString(trimmed, { displayMode: false, throwOnError: false });
+      return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch {
+      // Fallback
+    }
+  }
+
+  let normalized = raw;
+  const dollars = (normalized.match(/(?<!\\)\$/g) || []).length;
+  if (dollars % 2 !== 0) {
+    normalized = normalized + '$';
+  }
+
   const parts = [];
   const regex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g;
   let lastIndex = 0;
   let match;
   let keyIndex = 0;
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex, match.index)}</span>);
+      parts.push(<span key={`text-${keyIndex++}`}>{normalized.substring(lastIndex, match.index)}</span>);
     }
     const mathStr = match[0];
     const isDisplay = mathStr.startsWith('$$');
@@ -71,11 +91,11 @@ export const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ 
     }
     lastIndex = regex.lastIndex;
   }
-  if (lastIndex < text.length) {
-    parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex)}</span>);
+  if (lastIndex < normalized.length) {
+    parts.push(<span key={`text-${keyIndex++}`}>{normalized.substring(lastIndex)}</span>);
   }
 
-  return <span className={className}>{parts.length > 0 ? parts : text}</span>;
+  return <span className={className}>{parts.length > 0 ? parts : raw}</span>;
 };
 
 export const CompetitiveExamsPage: React.FC = () => {
@@ -335,7 +355,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           {activeTab !== 'QUESTIONS' && (
             <>
               <button
-                onClick={() => navigate('/competitive-exams/question-bank?bulkImport=true')}
+                onClick={() => navigate('/competitive-exams/bulk-import')}
                 className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-200 font-extrabold text-xs shadow-xs flex items-center gap-1.5 transition cursor-pointer"
               >
                 <FileSpreadsheet className="w-4 h-4" />
@@ -449,7 +469,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             onExamCreated={(newExam: any) => {
               setCreatedExamModal(newExam);
             }}
-            onPreviewPaper={(exam: any) => setPreviewExamPaper(exam)}
+            onPreviewPaper={(exam: any) => navigate(`/competitive-exams/${exam.id}/paper`)}
             navigate={navigate}
           />
         )}
@@ -694,10 +714,10 @@ const ManageExamsTab = ({
                   {/* Primary Launch CBT Exam & View Paper Buttons */}
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => onPreviewPaper(exam)}
-                      className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                      onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
+                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-800 hover:text-indigo-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                     >
-                      <Eye className="w-4 h-4 text-cyan-400" />
+                      <Eye className="w-4 h-4 text-indigo-600" />
                       View Exam Paper
                     </button>
                     <button
@@ -771,58 +791,86 @@ const ManageExamsTab = ({
 };
 
 // ═══════════════════════════════════════════════════════════════
-// EDURACLE EXAM CREATION WIZARD (PROFESSIONAL PATTERN ENGINE)
+// EDURACLE EXAM CREATION WIZARD (REAL STANDARD TEMPLATES & SETTINGS ENGINE)
 // ═══════════════════════════════════════════════════════════════
 
-const PATTERN_PRESETS = [
+export interface ExamBlueprintSection {
+  name: string;
+  count: number;
+  marks: number;
+}
+
+export interface ExamPatternPreset {
+  id: string;
+  badge: string;
+  title: string;
+  subtitle: string;
+  defaultTitle: string;
+  description: string;
+  duration: number;
+  totalMarks: number;
+  marksPerQuestion: number;
+  passMarks: number;
+  negativeMarks: number;
+  color: string;
+  tagColor: string;
+  sections: ExamBlueprintSection[];
+}
+
+const PATTERN_PRESETS: ExamPatternPreset[] = [
   {
     id: 'SCHOOL_GRAND_TEST',
-    badge: 'SCHOOL GRAND TEST',
+    badge: 'CBSE / STATE BOARD',
     title: 'School Grand Test',
+    subtitle: 'Annual & Pre-Final Exam Pattern',
     defaultTitle: '10th Class Grand Test - Mathematics',
-    description: 'School Curriculum Assessment • 100 Marks • 120 Mins • Zero Negative',
+    description: 'Comprehensive School Assessment • 100 Marks • 120 Mins • Zero Negative',
     duration: 120,
     totalMarks: 100,
+    marksPerQuestion: 2,
     passMarks: 35,
     negativeMarks: 0,
     color: 'from-blue-600 to-indigo-700',
-    tagColor: 'bg-blue-100 text-blue-800',
+    tagColor: 'bg-blue-100 text-blue-800 border-blue-200',
     sections: [
-      { name: 'Section 1: Objective MCQs', count: 20, marks: 40 },
-      { name: 'Section 2: Conceptual Questions', count: 10, marks: 30 },
-      { name: 'Section 3: Problem Solving', count: 6, marks: 30 },
+      { name: 'Section A: Objective & Conceptual MCQs', count: 25, marks: 50 },
+      { name: 'Section B: Application & Problem Solving', count: 25, marks: 50 },
     ],
   },
   {
     id: 'SSC_BOARD',
-    badge: 'SSC BOARD PATTERN',
-    title: 'SSC Board Model Paper',
-    defaultTitle: 'SSC Board Practice Examination',
-    description: 'State Board Objective Evaluation • 50 Marks • 60 Mins • Zero Negative',
+    badge: 'SSC 10TH BOARD',
+    title: 'SSC 10th Board Model Paper',
+    subtitle: 'State Board Objective Evaluation',
+    defaultTitle: 'SSC 10th Board Practice Examination',
+    description: 'Part-B Standard Pattern • 50 Marks • 60 Mins • Zero Negative',
     duration: 60,
     totalMarks: 50,
+    marksPerQuestion: 1,
     passMarks: 18,
     negativeMarks: 0,
     color: 'from-emerald-600 to-teal-700',
-    tagColor: 'bg-emerald-100 text-emerald-800',
+    tagColor: 'bg-emerald-100 text-emerald-800 border-emerald-200',
     sections: [
-      { name: 'Section A: Multiple Choice', count: 20, marks: 20 },
-      { name: 'Section B: Fill in Blanks & Match', count: 15, marks: 15 },
-      { name: 'Section C: Very Short Questions', count: 15, marks: 15 },
+      { name: 'Section A: Multiple Choice (Part-B)', count: 20, marks: 20 },
+      { name: 'Section B: Conceptual & Analytical', count: 15, marks: 15 },
+      { name: 'Section C: Very Short Objective Qs', count: 15, marks: 15 },
     ],
   },
   {
     id: 'JEE_MAINS',
-    badge: 'JEE FOUNDATION',
-    title: 'IIT-JEE Foundation Pattern',
-    defaultTitle: '10th Standard JEE Foundation Objective Test',
+    badge: 'NTA JEE MAINS',
+    title: 'IIT-JEE Mains Mock Exam',
+    subtitle: 'Official NTA Examination Pattern',
+    defaultTitle: 'JEE Mains Grand Mock Test (Full Syllabus)',
     description: 'Physics, Chemistry, Mathematics • 300 Marks • 180 Mins • +4 / -1 Marking',
     duration: 180,
     totalMarks: 300,
+    marksPerQuestion: 4,
     passMarks: 100,
     negativeMarks: 1,
     color: 'from-indigo-600 to-purple-700',
-    tagColor: 'bg-indigo-100 text-indigo-800',
+    tagColor: 'bg-indigo-100 text-indigo-800 border-indigo-200',
     sections: [
       { name: 'Section 1: Physics', count: 25, marks: 100 },
       { name: 'Section 2: Chemistry', count: 25, marks: 100 },
@@ -831,55 +879,99 @@ const PATTERN_PRESETS = [
   },
   {
     id: 'NEET',
-    badge: 'NEET FOUNDATION',
-    title: 'NEET Medical Foundation',
-    defaultTitle: 'NEET Medical Foundation Objective Test',
+    badge: 'NTA NEET UG',
+    title: 'NEET UG Medical Mock Exam',
+    subtitle: 'National Medical Foundation Pattern',
+    defaultTitle: 'NEET UG Grand Mock Test (Full Syllabus)',
     description: 'Physics, Chemistry, Botany, Zoology • 720 Marks • 200 Mins • +4 / -1 Marking',
     duration: 200,
     totalMarks: 720,
+    marksPerQuestion: 4,
     passMarks: 250,
     negativeMarks: 1,
     color: 'from-teal-600 to-emerald-700',
-    tagColor: 'bg-teal-100 text-teal-800',
+    tagColor: 'bg-teal-100 text-teal-800 border-teal-200',
     sections: [
-      { name: 'Physics', count: 45, marks: 180 },
-      { name: 'Chemistry', count: 45, marks: 180 },
-      { name: 'Botany', count: 45, marks: 180 },
-      { name: 'Zoology', count: 45, marks: 180 },
+      { name: 'Physics (Sec A & B)', count: 45, marks: 180 },
+      { name: 'Chemistry (Sec A & B)', count: 45, marks: 180 },
+      { name: 'Botany (Sec A & B)', count: 45, marks: 180 },
+      { name: 'Zoology (Sec A & B)', count: 45, marks: 180 },
+    ],
+  },
+  {
+    id: 'EAMCET',
+    badge: 'AP / TS EAPCET',
+    title: 'State EAPCET / EAMCET Pattern',
+    subtitle: 'Engineering & Agriculture Common Entrance',
+    defaultTitle: 'State EAPCET Grand Practice Examination',
+    description: 'Maths (80M), Physics (40M), Chemistry (40M) • 160 Marks • 180 Mins • Zero Negative',
+    duration: 180,
+    totalMarks: 160,
+    marksPerQuestion: 1,
+    passMarks: 40,
+    negativeMarks: 0,
+    color: 'from-cyan-600 to-blue-700',
+    tagColor: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+    sections: [
+      { name: 'Mathematics (Part 1)', count: 80, marks: 80 },
+      { name: 'Physics (Part 2)', count: 40, marks: 40 },
+      { name: 'Chemistry (Part 3)', count: 40, marks: 40 },
     ],
   },
   {
     id: 'NAVODAYA',
-    badge: 'NAVODAYA / OLYMPIAD',
-    title: 'Navodaya & Sainik School',
-    defaultTitle: 'Navodaya Entrance Examination Practice Test',
-    description: 'Mental Ability (50M), Arithmetic (25M), Language (25M) • No Negative',
+    badge: 'NAVODAYA / SAINIK',
+    title: 'Navodaya & Sainik School JNVST',
+    subtitle: 'Class 6th & 9th Entrance Pattern',
+    defaultTitle: 'Navodaya & Sainik School Entrance Practice Test',
+    description: 'Mental Ability (50M), Arithmetic (25M), Language (25M) • 100 Marks • 120 Mins',
     duration: 120,
     totalMarks: 100,
+    marksPerQuestion: 1.25,
     passMarks: 40,
     negativeMarks: 0,
     color: 'from-amber-600 to-orange-700',
-    tagColor: 'bg-amber-100 text-amber-800',
+    tagColor: 'bg-amber-100 text-amber-800 border-amber-200',
     sections: [
-      { name: 'Mental Ability (MAT)', count: 40, marks: 50 },
-      { name: 'Arithmetic Test', count: 20, marks: 25 },
-      { name: 'Language Test', count: 20, marks: 25 },
+      { name: 'Mental Ability Test (MAT)', count: 40, marks: 50 },
+      { name: 'Arithmetic Test (Maths)', count: 20, marks: 25 },
+      { name: 'Language Comprehension', count: 20, marks: 25 },
+    ],
+  },
+  {
+    id: 'SLIP_TEST',
+    badge: 'WEEKLY SLIP TEST',
+    title: 'Weekly Classroom Slip Test',
+    subtitle: 'Formative Assessment (FA / ST)',
+    defaultTitle: 'Weekly Objective Slip Test',
+    description: 'Quick Evaluation • 25 Marks • 45 Mins • Zero Negative',
+    duration: 45,
+    totalMarks: 25,
+    marksPerQuestion: 1,
+    passMarks: 10,
+    negativeMarks: 0,
+    color: 'from-rose-600 to-pink-700',
+    tagColor: 'bg-rose-100 text-rose-800 border-rose-200',
+    sections: [
+      { name: 'Section 1: Objective & Concept MCQs', count: 25, marks: 25 },
     ],
   },
   {
     id: 'CUSTOM',
-    badge: 'CUSTOM SLIP TEST',
-    title: 'Classroom Objective Slip Test',
-    defaultTitle: 'Weekly Objective Slip Test',
-    description: 'Custom duration, total marks, and questions for weekly testing',
-    duration: 45,
-    totalMarks: 25,
-    passMarks: 10,
+    badge: 'CUSTOM BLUEPRINT',
+    title: 'Custom Flexible Examination',
+    subtitle: 'Teacher Configured Blueprint',
+    defaultTitle: 'School Custom Objective Examination',
+    description: 'Completely customizable time, questions, marks, and negative marking',
+    duration: 60,
+    totalMarks: 50,
+    marksPerQuestion: 1,
+    passMarks: 20,
     negativeMarks: 0,
-    color: 'from-slate-700 to-slate-900',
-    tagColor: 'bg-slate-100 text-slate-800',
+    color: 'from-purple-600 to-violet-800',
+    tagColor: 'bg-purple-100 text-purple-800 border-purple-200',
     sections: [
-      { name: 'General Objective Section', count: 25, marks: 25 },
+      { name: 'General Objective Questions', count: 50, marks: 50 },
     ],
   },
 ];
@@ -890,6 +982,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   const [loading, setLoading] = useState(false);
 
   const [selectedPattern, setSelectedPattern] = useState<string>('SCHOOL_GRAND_TEST');
+  const [marksPerQuestion, setMarksPerQuestion] = useState<number>(2);
+  const [sections, setSections] = useState<ExamBlueprintSection[]>(PATTERN_PRESETS[0].sections);
+  const [showSettingsStudio, setShowSettingsStudio] = useState<boolean>(true);
 
   const [formData, setFormData] = useState({
     title: PATTERN_PRESETS[0].defaultTitle,
@@ -900,6 +995,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     negativeMarks: 0,
     examDate: new Date().toISOString().split('T')[0],
     startTime: '09:00',
+    endTime: '11:00',
     classId: '',
     subjectId: '',
   });
@@ -954,8 +1050,10 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     loadClassesAndSubjects();
   }, []);
 
-  const handleSelectPattern = (preset: typeof PATTERN_PRESETS[0]) => {
+  const handleSelectPattern = (preset: ExamPatternPreset) => {
     setSelectedPattern(preset.id);
+    setMarksPerQuestion(preset.marksPerQuestion);
+    setSections(preset.sections.map(s => ({ ...s })));
     setFormData(prev => ({
       ...prev,
       pattern: preset.id,
@@ -965,9 +1063,65 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       passMarks: preset.passMarks,
       negativeMarks: preset.negativeMarks,
     }));
+    setShowSettingsStudio(true);
+  };
+
+  const handleResetDefaults = () => {
+    const preset = PATTERN_PRESETS.find(p => p.id === selectedPattern) || PATTERN_PRESETS[0];
+    setMarksPerQuestion(preset.marksPerQuestion);
+    setSections(preset.sections.map(s => ({ ...s })));
+    setFormData(prev => ({
+      ...prev,
+      title: preset.defaultTitle,
+      duration: preset.duration,
+      totalMarks: preset.totalMarks,
+      passMarks: preset.passMarks,
+      negativeMarks: preset.negativeMarks,
+    }));
+    toast.success('Reset settings to template defaults');
   };
 
   const currentPreset = PATTERN_PRESETS.find(p => p.id === selectedPattern) || PATTERN_PRESETS[0];
+  const totalQuestionsCount = sections.reduce((acc, s) => acc + (Number(s.count) || 0), 0);
+
+  const handleMarksPerQuestionChange = (val: number) => {
+    const safeVal = Math.max(0.5, val);
+    setMarksPerQuestion(safeVal);
+    setSections(prev => prev.map(s => ({ ...s, marks: Math.round(s.count * safeVal) })));
+    setFormData(prev => ({ ...prev, totalMarks: Math.round(totalQuestionsCount * safeVal) }));
+  };
+
+  const handleAddSection = () => {
+    setSections(prev => [
+      ...prev,
+      { name: `Section ${prev.length + 1}: Subject / Topic`, count: 10, marks: Math.round(10 * marksPerQuestion) }
+    ]);
+  };
+
+  const handleRemoveSection = (idx: number) => {
+    if (sections.length <= 1) {
+      toast.error('At least one section is required');
+      return;
+    }
+    setSections(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleUpdateSection = (idx: number, field: keyof ExamBlueprintSection, val: any) => {
+    setSections(prev => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], [field]: val };
+      if (field === 'count') {
+        next[idx].marks = Math.round(Number(val || 0) * marksPerQuestion);
+      }
+      return next;
+    });
+  };
+
+  const handleSyncTotalMarksFromSections = () => {
+    const totalFromSec = sections.reduce((acc, s) => acc + (Number(s.marks) || 0), 0);
+    setFormData(prev => ({ ...prev, totalMarks: totalFromSec }));
+    toast.success(`Total marks updated to ${totalFromSec}M`);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1018,75 +1172,103 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   const otherClasses = classes.filter((c: any) => !seniorClasses.includes(c));
 
   return (
-    <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-slate-200 transition-all space-y-6">
+    <div className="bg-white rounded-3xl p-5 md:p-8 shadow-xl border border-slate-200 transition-all space-y-7">
       {/* Wizard Header */}
-      <div className="flex justify-between items-start pb-5 border-b border-slate-100">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-slate-100">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
             <Zap className="w-6 h-6 text-amber-300" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-xl font-black text-slate-900">Eduracle CBT Exam Creator Wizard</h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-xl font-black text-slate-900">Eduracle Online Exam Creator</h3>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
-                National Standard Testing
+                8 Real Standard Templates
               </span>
             </div>
             <p className="text-xs text-slate-500 font-medium mt-0.5">
-              Select an examination blueprint pattern. All subject sections, marking schemes, and questions are configured automatically.
+              Choose an official examination blueprint or customize time, date, marks per question, and negative marking rules.
             </p>
           </div>
         </div>
 
         <button 
           onClick={onClose} 
-          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer"
+          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition cursor-pointer self-end sm:self-center"
         >
           <X size={20} />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-7">
         
-        {/* STEP 1: CHOOSE PRESET EXAM PATTERN */}
+        {/* STEP 1: CHOOSE REAL STANDARD EXAM PATTERN */}
         <div>
-          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-indigo-600" />
-            Step 1: Choose Standard Exam Pattern
-          </label>
+          <div className="flex items-center justify-between mb-3.5">
+            <label className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <Layers className="w-4 h-4 text-indigo-600" />
+              Step 1: Choose Authentic Examination Pattern
+            </label>
+            <span className="text-[11px] font-bold text-slate-500">
+              8 Real School & National Standard Patterns
+            </span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {PATTERN_PRESETS.map((preset) => {
               const isSelected = selectedPattern === preset.id;
               return (
                 <div
                   key={preset.id}
                   onClick={() => handleSelectPattern(preset)}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between group ${
                     isSelected
-                      ? 'border-indigo-600 bg-indigo-50/50 shadow-md ring-2 ring-indigo-600/10'
+                      ? 'border-indigo-600 bg-indigo-50/40 shadow-sm ring-2 ring-indigo-600/10'
                       : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50'
                   }`}
                 >
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md ${preset.tagColor}`}>
+                      <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-md border ${preset.tagColor}`}>
                         {preset.badge}
                       </span>
-                      {isSelected && (
-                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                      {isSelected ? (
+                        <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-xs">
                           <Check size={12} strokeWidth={3} />
                         </span>
+                      ) : (
+                        <span className="w-5 h-5 rounded-full border border-slate-200 group-hover:border-slate-300" />
                       )}
                     </div>
-                    <h4 className="font-extrabold text-sm text-slate-900">{preset.title}</h4>
-                    <p className="text-xs text-slate-500 mt-1 leading-snug">{preset.description}</p>
+                    <h4 className="font-extrabold text-sm text-slate-900 leading-snug">{preset.title}</h4>
+                    <p className="text-[11px] font-medium text-slate-400 mt-0.5">{preset.subtitle}</p>
+                    <p className="text-xs text-slate-500 mt-2 leading-relaxed">{preset.description}</p>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-600 mt-3 pt-2.5 border-t border-slate-100">
-                    <span>⏱️ {preset.duration} Mins</span>
-                    <span>🎯 {preset.totalMarks} Marks</span>
-                    <span className="text-rose-600">Neg: -{preset.negativeMarks}</span>
+                  <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex flex-col gap-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
+                      <span>⏱️ {preset.duration}m</span>
+                      <span>🎯 {preset.totalMarks}M</span>
+                      <span className={preset.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                        {preset.negativeMarks > 0 ? `Neg: -${preset.negativeMarks}` : 'No Neg'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectPattern(preset);
+                      }}
+                      className={`w-full py-1.5 px-2 rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        isSelected
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      <Settings2 size={13} />
+                      <span>{isSelected ? '⚙️ Settings & Customize' : 'Select & Configure'}</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -1094,171 +1276,540 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
           </div>
         </div>
 
-        {/* SECTION BLUEPRINT CARD */}
-        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-              <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-              Active Blueprint: {currentPreset.title} Sections
-            </span>
-            <span className="text-[11px] font-bold text-indigo-600 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
-              {currentPreset.sections.length} Subject Sections Configured
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-            {currentPreset.sections.map((sec, idx) => (
-              <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 flex items-center justify-between">
-                <div>
-                  <p className="font-bold text-slate-800">{sec.name}</p>
-                  <p className="text-[10px] text-slate-400 font-medium">{sec.count} Questions • +4, -{currentPreset.negativeMarks}</p>
-                </div>
-                <span className="font-black text-indigo-600 text-sm">{sec.marks}M</span>
+        {/* STEP 2: INTEGRATED SETTINGS & BLUEPRINT CUSTOMIZER STUDIO */}
+        <div className="rounded-3xl border-2 border-indigo-200/90 bg-slate-50/70 p-5 md:p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-slate-200">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                <Settings2 size={16} />
               </div>
-            ))}
-          </div>
-        </div>
-
-        {/* STEP 2: EXAM DETAILS & TARGET AUDIENCE */}
-        <div className="space-y-4 pt-2">
-          <label className="block text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <Target className="w-4 h-4 text-indigo-600" />
-            Step 2: Test Details & Target Classes
-          </label>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Exam Name */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">
-                Official Exam Title *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition text-sm"
-              />
+              <div>
+                <h4 className="text-sm font-black text-slate-900 uppercase tracking-wider">
+                  Step 2: Settings & Blueprint Customizer
+                </h4>
+                <p className="text-xs text-slate-500 font-medium mt-0.5">
+                  Currently Configuring: <strong className="text-indigo-600">{currentPreset.title}</strong> ({currentPreset.badge})
+                </p>
+              </div>
             </div>
 
-            {/* Target Class (Smart Filtered) */}
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-bold text-slate-600 uppercase">
+            <button
+              type="button"
+              onClick={handleResetDefaults}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Reset all fields to template standard values"
+            >
+              <RefreshCw size={13} />
+              <span>↺ Reset Defaults</span>
+            </button>
+          </div>
+
+          {/* GROUP 1: EXAM TITLE, CLASS & SUBJECT */}
+          <div className="space-y-4">
+            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Target size={14} className="text-indigo-600" />
+              1. Basic Information & Target Batch
+            </h5>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Exam Title */}
+              <div className="md:col-span-1">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Official Exam Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. 10th Class Grand Test - Mathematics"
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-xs"
+                />
+              </div>
+
+              {/* Target Class */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
                   Target Class Batch *
                 </label>
-                <span className="text-[10px] text-indigo-600 font-bold">Recommended: 10th / 9th</span>
+                <select
+                  value={formData.classId}
+                  onChange={e => setFormData({ ...formData, classId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-xs cursor-pointer"
+                >
+                  {classes.length === 0 && <option value="">⏳ Loading classes...</option>}
+                  {seniorClasses.length > 0 && (
+                    <optgroup label="🌟 Senior Classes (10th, 9th, 8th)">
+                      {seniorClasses.map(c => (
+                        <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {otherClasses.length > 0 && (
+                    <optgroup label="Middle & Primary Classes">
+                      {otherClasses.map(c => (
+                        <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
               </div>
-              <select
-                value={formData.classId}
-                onChange={e => setFormData({ ...formData, classId: e.target.value })}
-                className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer"
-              >
-                {classes.length === 0 && (
-                  <option value="">⏳ Loading classes from school...</option>
-                )}
-                {seniorClasses.length > 0 && (
-                  <optgroup label="🌟 Senior Classes (IIT-JEE / NEET Standard)">
-                    {seniorClasses.map(c => (
-                      <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {otherClasses.length > 0 && (
-                  <optgroup label="Middle & Primary Classes">
-                    {otherClasses.map(c => (
-                      <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
+
+              {/* Subject / Stream */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Subject / Stream *
+                </label>
+                <select
+                  value={formData.subjectId}
+                  onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-xs cursor-pointer"
+                >
+                  {subjects.length === 0 && <option value="">⏳ Loading subjects...</option>}
+                  {subjects.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Exam Date */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Exam Date</label>
-              <input
-                type="date"
-                required
-                value={formData.examDate}
-                onChange={e => setFormData({ ...formData, examDate: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm cursor-pointer"
-              />
+          {/* GROUP 2: DATE, START TIME & DURATION */}
+          <div className="space-y-4 pt-2 border-t border-slate-200">
+            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Clock size={14} className="text-indigo-600" />
+              2. Exam Schedule & Duration Controls
+            </h5>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Exam Date */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase">Exam Date *</label>
+                  <div className="flex items-center gap-1 text-[10px] font-bold">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, examDate: new Date().toISOString().split('T')[0] }))}
+                      className="text-indigo-600 hover:underline cursor-pointer"
+                    >
+                      Today
+                    </button>
+                    <span className="text-slate-300">•</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const tm = new Date();
+                        tm.setDate(tm.getDate() + 1);
+                        setFormData(prev => ({ ...prev, examDate: tm.toISOString().split('T')[0] }));
+                      }}
+                      className="text-indigo-600 hover:underline cursor-pointer"
+                    >
+                      Tomorrow
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="date"
+                  required
+                  value={formData.examDate}
+                  onChange={e => setFormData({ ...formData, examDate: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs cursor-pointer focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Start Time */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Start Time *</label>
+                <input
+                  type="time"
+                  required
+                  value={formData.startTime}
+                  onChange={e => setFormData({ ...formData, startTime: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs cursor-pointer focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Duration with Quick Pills */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Duration: <strong className="text-indigo-600">{formData.duration} Mins</strong>
+                </label>
+                <input
+                  type="number"
+                  min={5}
+                  required
+                  value={formData.duration}
+                  onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 font-bold outline-none text-xs focus:border-indigo-500"
+                />
+                {/* Duration Pills */}
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {[30, 45, 60, 90, 120, 180, 200].map(mins => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, duration: mins }))}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                        formData.duration === mins
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* GROUP 3: MARKS PER QUESTION & NEGATIVE EVALUATION */}
+          <div className="space-y-4 pt-2 border-t border-slate-200">
+            <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+              <Award size={14} className="text-indigo-600" />
+              3. Marking Scheme & Negative Marking Settings
+            </h5>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Marks Per Question */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Marks Per Question *
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={0.5}
+                    step={0.5}
+                    required
+                    value={marksPerQuestion}
+                    onChange={e => handleMarksPerQuestionChange(Number(e.target.value) || 1)}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400">
+                    Marks / Q
+                  </span>
+                </div>
+                {/* Marks Presets */}
+                <div className="flex items-center gap-1 mt-1.5">
+                  {[1, 2, 4].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => handleMarksPerQuestionChange(m)}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition cursor-pointer ${
+                        marksPerQuestion === m
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      +{m} Mark
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium mt-1">Each correct MCQ awards this score</p>
+              </div>
+
+              {/* Negative Marking Scheme */}
+              <div className="md:col-span-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Does this Exam have Negative Marking? *
+                </label>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {/* Option 1: No Negative */}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, negativeMarks: 0 }))}
+                    className={`p-3 rounded-2xl border-2 text-left transition cursor-pointer flex items-center justify-between ${
+                      formData.negativeMarks === 0
+                        ? 'bg-emerald-50 border-emerald-500 shadow-xs ring-2 ring-emerald-500/10'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                        <span className="text-xs font-black text-slate-900">No Negative Marking (0)</span>
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5">School Grand Test / SSC / Navodaya</p>
+                    </div>
+                    {formData.negativeMarks === 0 && <Check size={16} className="text-emerald-600 stroke-[3]" />}
+                  </button>
+
+                  {/* Option 2: Yes, Deduct */}
+                  <div
+                    onClick={() => {
+                      if (formData.negativeMarks === 0) {
+                        setFormData(prev => ({ ...prev, negativeMarks: 1 }));
+                      }
+                    }}
+                    className={`p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                      formData.negativeMarks > 0
+                        ? 'bg-rose-50 border-rose-500 shadow-xs ring-2 ring-rose-500/10'
+                        : 'bg-white border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                        <span className="text-xs font-black text-slate-900">Yes, Deduct Marks</span>
+                      </div>
+                      {formData.negativeMarks > 0 && <Check size={16} className="text-rose-600 stroke-[3]" />}
+                    </div>
+
+                    {formData.negativeMarks > 0 ? (
+                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-rose-200">
+                        <span className="text-[10px] font-bold text-rose-800">Penalty / Q:</span>
+                        <div className="flex items-center gap-1">
+                          {[1, 0.25, 0.5].map(pen => (
+                            <button
+                              key={pen}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFormData(prev => ({ ...prev, negativeMarks: pen }));
+                              }}
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
+                                formData.negativeMarks === pen
+                                  ? 'bg-rose-600 text-white'
+                                  : 'bg-white text-rose-700 border border-rose-200'
+                              }`}
+                            >
+                              -{pen}
+                            </button>
+                          ))}
+                        </div>
+                        <input
+                          type="number"
+                          step={0.25}
+                          min={0.1}
+                          value={formData.negativeMarks}
+                          onChange={e => setFormData(prev => ({ ...prev, negativeMarks: Math.max(0, Number(e.target.value)) }))}
+                          className="w-14 px-1.5 py-0.5 bg-white border border-rose-300 rounded text-center text-[10px] font-black text-rose-800 outline-none"
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-slate-500 mt-0.5">IIT-JEE (-1) / NEET (-1) Pattern</p>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
-            {/* Start Time */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Start Time</label>
-              <input
-                type="time"
-                required
-                value={formData.startTime}
-                onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm cursor-pointer"
-              />
+            {/* Total Marks & Pass Marks Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Total Exam Marks * (Calculated: {totalQuestionsCount} Qs × {marksPerQuestion}M)
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={formData.totalMarks}
+                    onChange={e => setFormData({ ...formData, totalMarks: Number(e.target.value) })}
+                    className="flex-1 px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSyncTotalMarksFromSections}
+                    className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition shrink-0"
+                    title="Sync total marks with section sum"
+                  >
+                    Sync
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase">Pass Marks *</label>
+                  <div className="flex items-center gap-1 text-[10px] font-bold text-indigo-600">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.35) }))}
+                      className="hover:underline cursor-pointer"
+                    >
+                      35%
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.40) }))}
+                      className="hover:underline cursor-pointer"
+                    >
+                      40%
+                    </button>
+                    <span>•</span>
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * 0.50) }))}
+                      className="hover:underline cursor-pointer"
+                    >
+                      50%
+                    </button>
+                  </div>
+                </div>
+                <input
+                  type="number"
+                  min={1}
+                  required
+                  value={formData.passMarks}
+                  onChange={e => setFormData({ ...formData, passMarks: Number(e.target.value) })}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-slate-900 font-black outline-none text-xs focus:border-indigo-500"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* GROUP 4: SUBJECT SECTIONS & BLUEPRINT BUILDER */}
+          <div className="space-y-4 pt-2 border-t border-slate-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h5 className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Sliders size={14} className="text-indigo-600" />
+                  4. Subject Sections Blueprint Customizer
+                </h5>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Configure question counts and marks for each subject or section
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                  Total: {totalQuestionsCount} Qs • {sections.reduce((a, s) => a + (Number(s.marks) || 0), 0)} Marks
+                </span>
+                <button
+                  type="button"
+                  onClick={handleAddSection}
+                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1 cursor-pointer transition shadow-xs"
+                >
+                  <Plus size={13} /> Add Section
+                </button>
+              </div>
             </div>
 
-            {/* Duration */}
-            <div>
-              <label className="block text-xs font-bold text-slate-600 uppercase mb-1.5">Duration (Minutes)</label>
-              <input
-                type="number"
-                required
-                value={formData.duration}
-                onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-800 font-bold outline-none text-sm"
-              />
+            <div className="space-y-2.5">
+              {sections.map((sec, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                >
+                  <div className="flex-1 w-full sm:w-auto">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
+                      Section #{idx + 1} Name
+                    </span>
+                    <input
+                      type="text"
+                      value={sec.name}
+                      onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
+                      placeholder="e.g. Physics / Section A: Objective"
+                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-indigo-500 focus:bg-white"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                    <div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
+                        Questions
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={sec.count}
+                        onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
+                        className="w-20 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-800 text-center outline-none focus:border-indigo-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1 block">
+                        Marks
+                      </span>
+                      <input
+                        type="number"
+                        min={1}
+                        value={sec.marks}
+                        onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
+                        className="w-20 px-2 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-indigo-600 text-center outline-none focus:border-indigo-500 focus:bg-white"
+                      />
+                    </div>
+
+                    <div className="pt-4 sm:pt-0">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSection(idx)}
+                        disabled={sections.length <= 1}
+                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
+                        title="Delete Section"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Original Exam Setup Info */}
-        <div className="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200/80 flex items-center gap-3">
-          <FileQuestion className="w-6 h-6 text-indigo-600 shrink-0" />
-          <div>
-            <span className="text-xs font-black text-indigo-950">
-              Original School Exam Creation
+        {/* LIVE BLUEPRINT REVIEW SUMMARY CARD */}
+        <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider bg-indigo-50 px-2.5 py-0.5 rounded-md border border-indigo-200">
+              Exam Summary Before Publishing
             </span>
-            <p className="text-[11px] text-indigo-800 font-medium mt-0.5">
-              This will create your school's official online exam. After creation, you can add questions manually or synthesize questions for your curriculum in the Question Bank.
-            </p>
+            <h4 className="text-base font-black text-slate-900 mt-1">{formData.title || 'Untitled Exam'}</h4>
+            <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600 mt-1">
+              <span>⏱️ {formData.duration} Mins</span>
+              <span>•</span>
+              <span>📝 {totalQuestionsCount} Questions</span>
+              <span>•</span>
+              <span>🎯 {formData.totalMarks} Total Marks</span>
+              <span>•</span>
+              <span>Pass: {formData.passMarks}M</span>
+              <span>•</span>
+              <span className={formData.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                {formData.negativeMarks > 0 ? `Neg: -${formData.negativeMarks}` : 'Zero Negative'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 w-full md:w-auto justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-5 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
+            >
+              Cancel
+            </button>
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-7 py-3 rounded-xl font-extrabold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm hover:scale-[1.02]"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 text-amber-300" /> Publish School Online Exam
+                </>
+              )}
+            </button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end items-center gap-3 pt-4 border-t border-slate-100">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-6 py-3 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs"
-          >
-            Cancel
-          </button>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-8 py-3.5 rounded-xl font-extrabold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition flex items-center gap-2 cursor-pointer disabled:opacity-50 text-xs sm:text-sm hover:scale-[1.02]"
-          >
-            {loading ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
-              </>
-            ) : (
-              <>
-                <Zap className="w-4 h-4 text-amber-300" /> Publish School Online Exam
-              </>
-            )}
-          </button>
-        </div>
       </form>
     </div>
   );
 };
 
-// ═══════════════════════════════════════════════════════════════
+
 // EXAM LAUNCH SUCCESS MODAL
 // ═══════════════════════════════════════════════════════════════
 
@@ -1668,17 +2219,10 @@ const QuestionBankTab = ({
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const [isAiParsing, setIsAiParsing] = useState(false);
-=======
-  const [showAiTextParserModal, setShowAiTextParserModal] = useState(false);
-=======
   const [showAddMasterModal, setShowAddMasterModal] = useState(false);
   const [showMasterAiModal, setShowMasterAiModal] = useState(false);
   const [showExcelBulkModal, setShowExcelBulkModal] = useState(false);
   const [showPickFromBankModal, setShowPickFromBankModal] = useState(false);
->>>>>>> 9941a20f3e9e7461af12e9a2cd3022f0ef63149f
   
   // Subject, Topic, Category & Search Filters
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
@@ -1686,7 +2230,6 @@ const QuestionBankTab = ({
   const [selectedTopic, setSelectedTopic] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('ALL');
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
 
   useEffect(() => {
     if (presetSubject) {
@@ -1882,107 +2425,12 @@ const QuestionBankTab = ({
   };
 
   return (
-<<<<<<< HEAD
-    <div className="space-y-5">
-      {/* Top Controls Card */}
-      <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-xs flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-        <div className="flex-1 w-full lg:w-auto">
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-wider mb-1.5">
-            Select Exam to View & Manage Questions
-          </label>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <select
-              value={selectedExamId}
-              onChange={e => setSelectedExamId(e.target.value)}
-              className="w-full lg:max-w-md p-2.5 sm:p-3 bg-slate-50 border border-slate-200 rounded-xl font-black text-slate-800 text-xs sm:text-sm outline-none focus:border-indigo-500 focus:bg-white transition"
-            >
-              <option value="ALL">All Competitive Exams ({exams.reduce((acc, ex) => acc + (ex._count?.questions || ex.questions?.length || 0), 0)} Questions)</option>
-              {exams.map((ex: any) => (
-                <option key={ex.id} value={ex.id}>
-                  {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
-                </option>
-              ))}
-            </select>
-            
-            <button
-              onClick={() => fetchQuestions(selectedExamId)}
-              className="p-2.5 sm:p-3 bg-slate-100 hover:bg-slate-200 rounded-xl text-slate-700 transition cursor-pointer shrink-0"
-              title="Refresh Questions"
-            >
-              <RefreshCw size={17} className={loadingQuestions ? 'animate-spin' : ''} />
-            </button>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto justify-start lg:justify-end">
-          <button
-<<<<<<< HEAD
-            onClick={() => setIsAiParsing(true)}
-=======
-            onClick={() => navigate(activeExam ? `/competitive-exams/${activeExam.id}/paste-ai` : '/competitive-exams/paste-ai')}
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition hover:scale-105 cursor-pointer"
-            title="Open Dedicated Full Page AI Text Parser"
-          >
-            <FileText size={15} className="text-emerald-200" />
-            <span>📄 Paste Exam Text (AI Parser)</span>
-          </button>
-
-          <button
-            onClick={() => activeExam && onOpenAiModal(activeExam)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Sparkles size={15} className="text-amber-300" />
-            <span>✨ AI Generate Questions</span>
-          </button>
-
-          <button
-            onClick={() => setIsAddingQuestion(true)}
-            className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
-          >
-            <Plus size={15} />
-            <span>Add Manually</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Subject Wise Filter Tabs (Interactive Pills) */}
-      <div className="bg-white p-3 rounded-2xl border border-slate-200/90 shadow-xs space-y-3">
-        <div className="flex items-center justify-between gap-2 px-1">
-          <span className="text-[11px] font-black text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5 text-indigo-500" /> Filter by Subject:
-          </span>
-          <span className="text-xs font-bold text-slate-500">
-            Showing <strong className="text-indigo-600">{filteredQuestions.length}</strong> of {questions.length} questions
-          </span>
-        </div>
-
-        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-none">
-          {availableSubjects.map((subName) => {
-            const count = subjectStats[subName] || 0;
-            const isSelected = selectedSubject === subName;
-            
-            const subjectColors: Record<string, { active: string; inactive: string }> = {
-              'ALL': { active: 'bg-indigo-600 text-white shadow-xs', inactive: 'bg-slate-100 text-slate-700 hover:bg-slate-200' },
-              'Mathematics': { active: 'bg-blue-600 text-white shadow-xs', inactive: 'bg-blue-50 text-blue-700 hover:bg-blue-100' },
-              'Physics': { active: 'bg-purple-600 text-white shadow-xs', inactive: 'bg-purple-50 text-purple-700 hover:bg-purple-100' },
-              'Chemistry': { active: 'bg-emerald-600 text-white shadow-xs', inactive: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-              'Biology': { active: 'bg-rose-600 text-white shadow-xs', inactive: 'bg-rose-50 text-rose-700 hover:bg-rose-100' },
-              'General': { active: 'bg-amber-600 text-white shadow-xs', inactive: 'bg-amber-50 text-amber-700 hover:bg-amber-100' },
-            };
-
-            const styling = subjectColors[subName] || { active: 'bg-slate-800 text-white', inactive: 'bg-slate-100 text-slate-700' };
-
-            return (
-=======
     <div className="space-y-4">
       {/* Unified Clean Filter & Action Card */}
       <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
         {bankSource === 'EXAM' ? (
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 pb-3 border-b border-slate-100">
             <div className="flex flex-wrap items-center gap-2.5 flex-1 w-full">
->>>>>>> 9941a20f3e9e7461af12e9a2cd3022f0ef63149f
               <button
                 type="button"
                 onClick={() => setBankSource('MASTER')}
@@ -2057,7 +2505,7 @@ const QuestionBankTab = ({
 
             <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
-                onClick={() => setShowExcelBulkModal(true)}
+                onClick={() => navigate('/competitive-exams/bulk-import')}
                 className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200/90 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
               >
                 <FileSpreadsheet size={14} />
@@ -2416,7 +2864,6 @@ const AddMasterQuestionModal: React.FC<{ onClose: () => void; onSaved: () => voi
   const [subjectName, setSubjectName] = useState('Mathematics');
   const [chapterName, setChapterName] = useState('General');
   const [difficulty, setDifficulty] = useState('MEDIUM');
-  const [marks, setMarks] = useState(4);
   const [saving, setSaving] = useState(false);
 
   const parsed = useMemo(() => parseSingleRawQuestionAndOptions(rawInput), [rawInput]);
@@ -2435,7 +2882,8 @@ const AddMasterQuestionModal: React.FC<{ onClose: () => void; onSaved: () => voi
         subjectName,
         chapterName: chapterName.trim() || subjectName,
         difficulty,
-        marks: Number(marks) || 4,
+        marks: 4,
+        negativeMarks: 0,
         questionText: parsed.questionText,
         options: parsed.options,
         correctAnswer: correctOpt,
@@ -2465,7 +2913,7 @@ const AddMasterQuestionModal: React.FC<{ onClose: () => void; onSaved: () => voi
         </div>
 
         <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto flex-1">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Category</label>
               <select value={category} onChange={e => setCategory(e.target.value)} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800">
@@ -2485,10 +2933,6 @@ const AddMasterQuestionModal: React.FC<{ onClose: () => void; onSaved: () => voi
                 <option value="MEDIUM">Medium</option>
                 <option value="HARD">Hard</option>
               </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-black text-slate-500 uppercase mb-1">Marks</label>
-              <input type="number" min={1} value={marks} onChange={e => setMarks(Number(e.target.value))} className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800" />
             </div>
           </div>
 
@@ -2944,10 +3388,10 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
 
                   <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
                     <button
-                      onClick={() => onPreviewPaper(exam)}
-                      className="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                      onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
+                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-800 hover:text-indigo-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                     >
-                      <Eye className="w-4 h-4 text-cyan-400" /> View Paper
+                      <Eye className="w-4 h-4 text-indigo-600" /> View Paper
                     </button>
                     <button
                       onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
@@ -4050,7 +4494,6 @@ const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void 
         'Option D': '3, 4',
         'Correct Answer': 'A',
         Difficulty: 'EASY',
-        Marks: 4,
         Explanation: 'Factoring gives $(x-2)(x-3)=0$.'
       },
       {
@@ -4064,7 +4507,6 @@ const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void 
         'Option D': 'Nucleus',
         'Correct Answer': 'B',
         Difficulty: 'EASY',
-        Marks: 4,
         Explanation: 'Mitochondria produces ATP through cellular respiration.'
       }
     ];
@@ -4108,7 +4550,8 @@ const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void 
             options: opts,
             correctAnswer,
             difficulty: String(r.Difficulty ?? r.difficulty ?? 'MEDIUM').toUpperCase(),
-            marks: Number(r.Marks ?? r.marks ?? 4) || 4,
+            marks: 4,
+            negativeMarks: 0,
             explanation: String(r.Explanation ?? r.explanation ?? '').trim() || null,
           };
         }).filter((q) => q.questionText);
@@ -4153,7 +4596,7 @@ const ExcelBulkImportModal: React.FC<{ onClose: () => void; onSaved: () => void 
           <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <p className="text-xs font-black text-amber-900">Step 1: Download Sample Excel Template</p>
-              <p className="text-[11px] text-amber-700 mt-0.5">Columns: Category, Subject, Topic, Question, Option A-D, Correct Answer, Difficulty, Marks, Explanation</p>
+              <p className="text-[11px] text-amber-700 mt-0.5">Columns: Category, Subject, Topic, Question, Option A-D, Correct Answer, Difficulty, Explanation (Marks & Negative Marks are configured when creating an Exam)</p>
             </div>
             <button
               type="button"
@@ -4249,7 +4692,7 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
           <button onClick={() => onOpenQuestionBank('ALL')} className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
             <Database size={15} /> Question Bank ({masterQuestionsList.length})
           </button>
-          <button onClick={onOpenBulkImport} className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
+          <button onClick={() => navigate('/competitive-exams/bulk-import')} className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
             <FileSpreadsheet size={15} /> Bulk Import
           </button>
           <button onClick={onOpenReports} className="px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-black flex items-center gap-1.5 cursor-pointer">
@@ -4263,7 +4706,7 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
         {[
           { label: 'Exam Management', sub: `${exams.length} Exams`, icon: List, color: 'bg-blue-50 text-blue-600 border-blue-200 hover:border-blue-400', onClick: () => navigate('/competitive-exams/exams') },
           { label: 'Question Bank', sub: `${masterQuestionsList.length} Saved Qs`, icon: Database, color: 'bg-purple-50 text-purple-600 border-purple-200 hover:border-purple-400', onClick: () => onOpenQuestionBank('ALL') },
-          { label: 'Bulk Import', sub: 'Excel / CSV / AI', icon: FileSpreadsheet, color: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400', onClick: onOpenBulkImport },
+          { label: 'Bulk Import', sub: 'Excel / CSV / AI', icon: FileSpreadsheet, color: 'bg-amber-50 text-amber-600 border-amber-200 hover:border-amber-400', onClick: () => navigate('/competitive-exams/bulk-import') },
           { label: 'Student Management', sub: `${activeStudents.length} Active`, icon: Users, color: 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:border-emerald-400', onClick: () => navigate('/competitive-exams/students') },
           { label: 'Results & Cards', sub: 'Ranks & Scorecards', icon: Award, color: 'bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-400', onClick: () => navigate('/competitive-exams/results') },
           { label: 'View Reports', sub: 'Analytics & Excel', icon: BarChart3, color: 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:border-indigo-400', onClick: onOpenReports },
@@ -4323,7 +4766,7 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <button onClick={() => onPreviewPaper(ex)} className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 cursor-pointer">
+                      <button onClick={() => navigate(`/competitive-exams/${ex.id}/paper`)} className="px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-200 cursor-pointer shadow-xs">
                         View Paper
                       </button>
                       <button onClick={() => navigate(`/live-exam-monitor/${ex.id}`)} className="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-xs font-bold text-rose-700 hover:bg-rose-100 cursor-pointer">
@@ -4362,8 +4805,8 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
                         Starts: {new Date(ex.startTime).toLocaleString()} • {ex.duration} Mins
                       </p>
                     </div>
-                    <button onClick={() => onPreviewPaper(ex)} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-700 cursor-pointer">
-                      Preview
+                    <button onClick={() => navigate(`/competitive-exams/${ex.id}/paper`)} className="px-3 py-1.5 rounded-xl bg-white border border-indigo-200 text-xs font-bold text-indigo-700 hover:bg-indigo-50 cursor-pointer shadow-xs">
+                      Preview Paper
                     </button>
                   </div>
                 ))}
@@ -4387,7 +4830,7 @@ const OnlineExamDashboardOverview: React.FC<any> = ({
           {subjectBreakdown.length === 0 ? (
             <div className="p-6 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 space-y-2">
               <p className="text-xs font-bold text-slate-500">Question Bank is empty.</p>
-              <button onClick={onOpenBulkImport} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
+              <button onClick={() => navigate('/competitive-exams/bulk-import')} className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-black cursor-pointer">
                 + Add / Bulk Import
               </button>
             </div>

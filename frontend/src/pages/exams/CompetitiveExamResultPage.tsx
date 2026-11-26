@@ -8,9 +8,10 @@ import "katex/dist/katex.min.css";
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
 // ═══════════════════════════════════════════════════════════════
-const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, className = '' }) => {
-  if (!text) return null;
-  const trimmed = text.trim();
+const LatexRenderer: React.FC<{ text?: string; content?: string; className?: string }> = ({ text, content, className = '' }) => {
+  const raw = text ?? content ?? '';
+  if (!raw) return null;
+  const trimmed = raw.trim();
 
   // Pure image URL or data URI
   if (trimmed.startsWith('data:image/') || trimmed.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp|svg)($|\?)/i)) {
@@ -41,15 +42,34 @@ const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, c
     );
   }
 
+  // Auto-detect bare LaTeX formulas without $ (e.g. \frac{1}{4\pi\varepsilon_0}\frac{q}{a}, \sqrt{3}/2, x^2)
+  const hasDollar = raw.includes('$');
+  const hasLatexCommands = /\\[a-zA-Z]+|\^\{?[0-9a-zA-Z+\-]+\}?|_\{?[0-9a-zA-Z+\-]+\}?/.test(trimmed);
+
+  if (!hasDollar && hasLatexCommands) {
+    try {
+      const html = katex.renderToString(trimmed, { displayMode: false, throwOnError: false });
+      return <span className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch {
+      // Fallback
+    }
+  }
+
+  let normalized = raw;
+  const dollars = (normalized.match(/(?<!\\)\$/g) || []).length;
+  if (dollars % 2 !== 0) {
+    normalized = normalized + '$';
+  }
+
   const parts = [];
   const regex = /(\$\$[\s\S]+?\$\$|\$[^\$]+?\$)/g;
   let lastIndex = 0;
   let match;
   let keyIndex = 0;
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex, match.index)}</span>);
+      parts.push(<span key={`text-${keyIndex++}`}>{normalized.substring(lastIndex, match.index)}</span>);
     }
     const mathStr = match[0];
     const isDisplay = mathStr.startsWith('$$');
@@ -62,11 +82,11 @@ const LatexRenderer: React.FC<{ text: string; className?: string }> = ({ text, c
     }
     lastIndex = regex.lastIndex;
   }
-  if (lastIndex < text.length) {
-    parts.push(<span key={`text-${keyIndex++}`}>{text.substring(lastIndex)}</span>);
+  if (lastIndex < normalized.length) {
+    parts.push(<span key={`text-${keyIndex++}`}>{normalized.substring(lastIndex)}</span>);
   }
 
-  return <span className={className}>{parts.length > 0 ? parts : text}</span>;
+  return <span className={className}>{parts.length > 0 ? parts : raw}</span>;
 };
 
 export const CompetitiveExamResultPage = () => {

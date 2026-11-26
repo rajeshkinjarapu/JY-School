@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { useReactToPrint } from 'react-to-print';
 import { Printer, ArrowLeft, Loader2, Search, CheckSquare, Square, Download } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -115,11 +114,9 @@ const IdCardGeneratorPage: React.FC = () => {
     }
   };
 
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    documentTitle: 'Student_ID_Cards',
-    onAfterPrint: () => toast.success('Sent to printer successfully!'),
-  });
+  const handlePrint = () => {
+    window.print();
+  };
 
   const toggleStudentSelection = (id: string) => {
     const newSelection = new Set(selectedStudentIds);

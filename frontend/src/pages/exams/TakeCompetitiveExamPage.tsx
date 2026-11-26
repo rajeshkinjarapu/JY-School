@@ -8,9 +8,10 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 // KaTeX LaTeX renderer with Diagram & Image support for CBT interface
-const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ content, className = '' }) => {
-  if (!content) return null;
-  const trimmed = content.trim();
+const LatexRenderer: React.FC<{ content?: string; text?: string; className?: string }> = ({ content, text, className = '' }) => {
+  const raw = content ?? text ?? '';
+  if (!raw) return null;
+  const trimmed = raw.trim();
 
   // If content is purely an image URL or data URI
   if (trimmed.startsWith('data:image/') || trimmed.match(/^https?:\/\/.*\.(png|jpg|jpeg|gif|webp|svg)($|\?)/i)) {
@@ -41,7 +42,27 @@ const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ cont
     );
   }
 
-  const parts = content.split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g);
+  // Auto-detect bare LaTeX formulas without $ (e.g. \frac{1}{4\pi\varepsilon_0}\frac{q}{a}, \sqrt{3}/2, x^2)
+  const hasDollar = raw.includes('$');
+  const hasLatexCommands = /\\[a-zA-Z]+|\^\{?[0-9a-zA-Z+\-]+\}?|_\{?[0-9a-zA-Z+\-]+\}?/.test(trimmed);
+
+  if (!hasDollar && hasLatexCommands) {
+    try {
+      const html = katex.renderToString(trimmed, { displayMode: false, throwOnError: false });
+      return <span className={`inline-latex-content ${className}`} dangerouslySetInnerHTML={{ __html: html }} />;
+    } catch {
+      // If direct render fails, fallback to tokenized flow below
+    }
+  }
+
+  // Normalize single dollar imbalance line-by-line
+  let normalized = raw;
+  const dollars = (normalized.match(/(?<!\\)\$/g) || []).length;
+  if (dollars % 2 !== 0) {
+    normalized = normalized + '$';
+  }
+
+  const parts = normalized.split(/(\$\$[\s\S]*?\$\$|\$[^$]+?\$)/g);
   return (
     <span className={`inline-latex-content ${className}`}>
       {parts.map((part, index) => {
@@ -64,6 +85,21 @@ const LatexRenderer: React.FC<{ content: string; className?: string }> = ({ cont
             return <code key={index} className="bg-slate-100 px-1 rounded">{math}</code>;
           }
         }
+
+        // Check if inline part contains bare LaTeX commands like \frac, \sqrt, \alpha, \varepsilon, \pi
+        if (/\\(?:frac|sqrt|vec|mathbf|mathrm|text|operatorname|alpha|beta|theta|pi|varepsilon|times|pm|le|ge|neq|in|ln|log|sin|cos|tan)\b/.test(part)) {
+          try {
+            const rendered = part.replace(/(\\(?:frac|sqrt|vec|mathbf|mathrm|text|operatorname)\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|\\[a-zA-Z]+(?:\^\{[^{}]*\}|_\{[^{}]*\})*)/g, (m) => {
+              try {
+                return katex.renderToString(m, { displayMode: false, throwOnError: false });
+              } catch {
+                return m;
+              }
+            });
+            return <span key={index} dangerouslySetInnerHTML={{ __html: rendered }} />;
+          } catch {}
+        }
+
         return <span key={index}>{part}</span>;
       })}
     </span>
@@ -581,7 +617,12 @@ const TakeCompetitiveExamPage = () => {
               )}
             </div>
             <span className="text-xs font-extrabold text-slate-600 bg-white px-3 py-1 rounded-lg border border-slate-200 shadow-xs">
-              Marks: <span className="text-emerald-600">+{currentQuestion.marks}</span> / <span className="text-rose-500">-{exam.negativeMarks}</span>
+              Marks: <span className="text-emerald-600">+{currentQuestion.marks || 4}</span>
+              {Number(exam.negativeMarks) > 0 ? (
+                <span> / <span className="text-rose-500">-{exam.negativeMarks}</span></span>
+              ) : (
+                <span className="text-emerald-700 ml-1.5 font-bold text-[11px]">(No Negative)</span>
+              )}
             </span>
           </div>
 

@@ -1,5 +1,87 @@
 # JY School Project State
 
+## చివరి సంభాషణ - నిజమైన ఎగ్జామ్ టెంప్లేట్లు (8 Real Standard Patterns) & సమగ్ర సెట్టింగ్స్ కస్టమైజర్ స్టూడియో (November 25, 2026)
+- **యూజర్ అభ్యర్థనలు:**
+  - `ippudu unna templete ni real templets ga marchu` (ఇప్పుడు ఉన్న డమ్మీ టెంప్లేట్లను నిజమైన స్కూల్ & కాంపిటీటివ్ ఎగ్జామ్స్ ఆధారంగా రియల్ టెంప్లేట్లుగా మార్చాలి).
+  - `settings option ivvu change chesukunetattu anulone settings undi exam time date negative marks , marks per question maximum anni details andulo vachela cheyu oka professional developer ga alcohinchi perfect ga cheyu` (టెంప్లేట్ పైనే సెట్టింగ్స్ ఆప్షన్ ఇవ్వాలి, దానిలోనే ఎగ్జామ్ టైమ్, తేదీ, నెగెటివ్ మార్కింగ్, ప్రశ్నకు మార్కులు మొదలైన అన్ని వివరాలు మార్చుకునేలా ప్రొఫెషనల్ గా చేయాలి).
+- **పూర్తయిన పనులు & ఆర్కిటెక్చర్ మెరుగుదలలు:**
+  1. **Git కాన్ఫ్లిక్ట్ పరిష్కారం:**
+     - `CompetitiveExamsPage.tsx` మరియు `PROJECT_STATE.md` లలో గత పుల్ నుండి మిగిలిన గిట్ కాన్ఫ్లిక్ట్ మార్కర్లను పూర్తిగా తొలగించి, లేటెస్ట్ మాస్టర్ క్వశ్చన్ బ్యాంక్ కోడ్‌తో సింక్ చేశాము.
+  2. **8 అధికారిక రియల్ ఎగ్జామ్ టెంప్లేట్ల నిర్మాణం (`PATTERN_PRESETS`):**
+     - **CBSE / State School Grand Test:** 100M, 120 Mins, 50 Qs, +2 Marks/Q, Zero Negative (Section A: 25 Qs x 2M, Section B: 25 Qs x 2M).
+     - **SSC 10th Board Model Paper:** 50M, 60 Mins, 50 Qs, +1 Mark/Q, Zero Negative (Part-B Multiple Choice format).
+     - **NTA IIT-JEE Mains Mock Exam:** 300M, 180 Mins, 75 Qs, +4 Marks/Q, -1 Negative Marking (Physics, Chemistry, Maths 25 Qs each).
+     - **NTA NEET UG Medical Mock Exam:** 720M, 200 Mins, 180 Qs, +4 Marks/Q, -1 Negative Marking (Physics, Chemistry, Botany, Zoology 45 Qs each).
+     - **AP / TS EAPCET (EAMCET):** 160M, 180 Mins, 160 Qs, +1 Mark/Q, Zero Negative (Maths 80, Physics 40, Chemistry 40).
+     - **Navodaya & Sainik School JNVST:** 100M, 120 Mins, 80 Qs, +1.25 Marks/Q, Zero Negative (MAT 40 Qs, Maths 20 Qs, Language 20 Qs).
+     - **Weekly Classroom Slip Test (FA / ST):** 25M, 45 Mins, 25 Qs, +1 Mark/Q, Zero Negative (Objective MCQs).
+     - **Custom Flexible Blueprint:** ఉపాధ్యాయులు తమ ఇష్టానుసారం కాన్ఫిగర్ చేసుకునే కస్టమ్ ప్యాటర్న్.
+  3. **ఇంటిగ్రేటెడ్ సెట్టింగ్స్ & బ్లూప్రింట్ కస్టమైజర్ స్టూడియో (`EduracleCreateExamWizard`):**
+     - ప్రతి టెంప్లేట్ కార్డుపై **"⚙️ Settings & Customize"** బటన్ ఇవ్వబడింది.
+     - టెంప్లేట్ క్రిందే సమగ్రమైన కస్టమైజర్ ప్యానెల్ పొందుపరిచాము:
+       - **ప్రాథమిక వివరాలు:** అఫీషియల్ ఎగ్జామ్ టైటిల్, క్లాస్ సెలెక్టర్ (10th, 9th సీనియర్ క్లాసుల హైలైట్ గ్రూప్), సబ్జెక్ట్ డ్రాప్‌డౌన్.
+       - **షెడ్యూలింగ్ & సమయం:** పరీక్ష తేదీ (Today/Tomorrow క్విక్ షార్ట్‌కట్లతో), ప్రారంభ సమయం, డ్యూరేషన్ క్విక్ పిల్స్ (`30m`, `45m`, `60m`, `90m`, `120m`, `180m`, `200m`).
+       - **మార్కింగ్ రూల్స్ & నెగెటివ్ పెనాల్టీ:**
+         - ప్రశ్నకు ఎన్ని మార్కులు (`+1`, `+2`, `+4`, కస్టమ్ నంబర్/డెసిమల్).
+         - నెగెటివ్ మార్కింగ్ స్కీమ్: 🟢 No Negative (0) vs 🔴 Yes, Deduct Marks (`-1`, `-0.25`, `-0.50`, కస్టమ్).
+         - టోటల్ మార్కులు ఆటో-సింక్ (`Questions × Marks per Question`) మరియు పాస్ మార్కులు (`35%`, `40%`, `50%` క్విక్ పిల్స్).
+       - **సబ్జెక్ట్ సెక్షన్స్ బ్లూప్రింట్ ఎడిటర్:** సెక్షన్ల పేర్లు, ప్రశ్నల సంఖ్య, సెక్షన్ మార్కులను మార్చే సదుపాయం, `+ Add Section` మరియు డిలీట్ బటన్లు.
+       - **లైవ్ బ్లూప్రింట్ ప్రివ్యూ & పబ్లిష్:** పరీక్షను పబ్లిష్ చేసే ముందు మొత్తం వివరాలను ఒక్కచూపుతో చూసుకునే స్పష్టమైన సమ్మరీ కార్డ్.
+  4. **Light Theme డిజైన్ నియమ అనుసరణ:**
+     - ఎక్కడా డార్క్ బ్యాక్‌గ్రౌండ్లు లేకుండా స్వచ్ఛమైన వైట్ కార్డులు (`#FFFFFF`), లైట్ స్లేట్ బ్యాక్‌గ్రౌండ్ (`bg-slate-50`), నీట్ బోర్డర్లు (`border-slate-200`) మరియు ఇండిగో/ఎమరాల్డ్ కలర్లతో అత్యంత ఆకర్షణీయంగా రూపొందించబడింది.
+
+
+## చివరి సంభాషణ - ఎక్సెల్ షీట్ & క్వశ్చన్ బ్యాంక్ నుండి మార్క్స్ తొలగింపు మరియు ఎగ్జామ్ లెవల్ మార్కింగ్ స్కీమ్ (November 25, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `negative marks and question ki enni marks anedi assalu undakudadu exam create chesinappudu matrame aa option untunid negative marks unnaya leda ani and question ki enni marks anedi kuda paper create chesinappudu adagali ila undali excel sheet lo marks gani negative marks tho pani ledu`
+- **విశ్లేషణ & అమలు చేసిన శాశ్వత పరిష్కారాలు:**
+  1. **ఎక్సెల్ ఇంపోర్ట్ & టెంప్లేట్ క్లీనప్ (`BulkImportQuestionsPage.tsx` & `CompetitiveExamsPage.tsx`):**
+     - సాంపుల్ ఎక్సెల్ డౌన్‌లోడ్ టెంప్లేట్ నుండి `Marks` మరియు `Negative Marks` కాలమ్‌లను పూర్తిగా తొలగించాము.
+     - ఎక్సెల్ షీట్ లో కేవలం ప్రశ్న, 4 ఆప్షన్లు, సరైన ఆన్సర్ కీ, సబ్జెక్ట్/టాపిక్ మరియు వివరణ మాత్రమే ఉంటాయి. మార్క్స్ తో పనిలేదు.
+     - ప్రివ్యూ కార్డుల నుండి మార్క్స్ బ్యాడ్జ్‌లను తొలగించి, డేటాబేస్ లో సేవ్ చేయడానికి బ్యాక్‌గ్రౌండ్ లో సేఫ్ డిఫాల్ట్స్ (`marks: 4, negativeMarks: 0`) ఆటోమేటిక్‌గా పాస్ చేశాము.
+  2. **మాస్టర్ క్వశ్చన్ బ్యాంక్ నుండి మార్క్స్ ఇన్‌పుట్ తొలగింపు:**
+     - `AddMasterQuestionModal` లో ప్రశ్నను జోడించేటప్పుడు మార్క్స్ అడిగే ఇన్‌పుట్ బాక్స్‌ను తీసివేశాము.
+     - `masterQuestions.controller.ts` లో నెగెటివ్ మార్క్స్ డిఫాల్ట్ 0 గా మార్చాము.
+  3. **ఎగ్జామ్ క్రియేషన్‌లో మాత్రమే మార్కింగ్ స్కీమ్ కాన్ఫిగరేషన్ (`EduracleCreateExamWizard` & `CreateCompetitiveExamPage.tsx`):**
+     - ఎగ్జామ్ లేదా పేపర్ క్రియేట్ చేసేటప్పుడు మాత్రమే:
+       - **Marks Per Question:** ప్రతి ప్రశ్నకు ఎన్ని మార్కులు ఉండాలో అడిగే ఇన్‌పుట్ (డిఫాల్ట్: 4 మార్కులు).
+       - **Negative Marking Scheme:** నెగెటివ్ మార్కింగ్ ఉందో లేదో ఎంచుకునే ఆప్షన్లు:
+         - 🟢 **No Negative Marking (0):** తప్పు సమాధానాలకు మార్కులు కట్ కావు.
+         - 🔴 **Yes, Deduct Marks:** నెగెటివ్ మార్కులను నిర్దేశించే సదుపాయం (ఉదా: -1 మార్కు).
+  4. **పేపర్ ప్రివ్యూ & CBT ఎగ్జామ్ అప్‌డేట్:**
+     - నెగెటివ్ మార్కులు 0 ఉన్నప్పుడు `"No negative marking for incorrect answers"` అని, నెగెటివ్ మార్కులు ఉంటే మాత్రమే `"-1 mark for each wrong answer"` అని ప్రివ్యూ మరియు ఇన్‌స్ట్రక్షన్లలో స్పష్టంగా సూచించేలా మార్చాము.
+
+## చివరి సంభాషణ - 4-భాగాల ఆన్‌లైన్ ఎగ్జామ్ & పేపర్ లేఅవుట్ మెరుగుదల (November 25, 2026)
+- **యూజర్ అభ్యర్థనలు (4 ముఖ్యమైన అంశాలు):**
+  1. **Image 1 Layout / Column Flow:** `6th question kinda ravali akkadiki question complete ayipote paiki ravali` (2-కాలమ్ మోడ్‌లో 1వ కాలమ్ పూర్తిగా కింద వరకు నిండిన తర్వాతే తదుపరి కాలమ్‌కు వెళ్ళాలి - ప్రింట్‌లో సమానంగా విభజించబడి ఖాళీ స్పేస్ రాకూడదు).
+  2. **Image 1 Vertical Divider:** `instructions tarvata 2 columbs ki madyalo geeta undali` (ఇన్‌స్ట్రక్షన్స్ తర్వాత రెండు కాలమ్‌ల మధ్య స్పష్టమైన వర్టికల్ గీత/డివైడర్ ఉండాలి).
+  3. **Image 2 Dedicated Page:** `image 2 kuda separate page create cheyu` (A4 Question Paper Preview ను చిన్న మోడల్ పాప్-అప్ కాకుండా పూర్తి ప్రత్యేక డెడికేటెడ్ పేజీగా `/competitive-exams/:id/paper` రూపొందించాలి).
+  4. **Image 3 KaTeX Math in Options:** `image 3 formulas perfect ravatam ledu options okasari chudu` (CBT ఎగ్జామ్ ఇంటర్‌ఫేస్ మరియు రిజల్ట్స్‌లో `$ ... $` లేని రా LaTeX ఆప్షన్లు `\frac{1}{4\pi\varepsilon_0}\frac{q}{a}` టెక్స్ట్‌గా కనిపించకుండా KaTeX ఫార్ములాలుగా రెండర్ అవ్వాలి).
+- **చేసిన శాశ్వత పరిష్కారాలు:**
+  1. `frontend/src/components/QuestionBank/LiveLatexPreview.tsx`:
+     - Tailwind `columns-2 gap-6` స్థానంలో `.mcq-double-column` క్లాస్‌ను చేర్చాము.
+     - CSS లో `column-count: 2 !important; column-gap: 22px !important; column-rule: 1.2px solid #000000 !important; column-fill: auto !important; min-height: 195mm;` మరియు `@media print` లో `min-height: 0 !important; column-fill: auto !important;` అప్లై చేశాము. దీనివల్ల 1వ కాలమ్ క్రింది వరకు పూర్తిగా నిండిన తర్వాతే 2వ కాలమ్‌కు ప్రశ్నలు వెళతాయి.
+     - General Instructions క్రింద `border-b border-black pb-2 mb-3` లైన్ మరియు రెండు కాలమ్‌ల మధ్య బ్లాక్ వర్టికల్ డివైడర్ గీత అమర్చాము.
+  2. `frontend/src/pages/exams/TakeCompetitiveExamPage.tsx` & `CompetitiveExamResultPage.tsx` & `CompetitiveExamsPage.tsx`:
+     - `LatexRenderer` ను అప్‌గ్రేడ్ చేశాము: ఒకవేళ టెక్స్ట్‌లో `$` లేకపోయినా, `\frac`, `\sqrt`, `\pi`, `\varepsilon`, `^`, `_` మొదలైన LaTeX కమాండ్లు ఉంటే నేరుగా `katex.renderToString` ద్వారా అందంగా రెండర్ చేసేలా ఆటో-డిటెక్షన్ ఫాల్‌బ్యాక్ అందించాము.
+  3. `frontend/src/pages/exams/CompetitiveExamPaperPage.tsx`:
+     - కొత్త పూర్తి ప్రత్యేక పేజీని నిర్మించాము (`/competitive-exams/:id/paper`).
+     - 1/2 కాలమ్ టోగుల్, జూమ్ కంట్రోల్స్, సబ్జెక్ట్/సెక్షన్ ట్యాబ్‌లు, `printPaper('a4-preview-paper')` తో ప్రింట్ మరియు `Launch CBT Exam` బటన్లు పొందుపరిచాము.
+     - No Black Theme రూల్ ప్రకారం పూర్తి ప్రీమియం Light Theme (`bg-slate-50`, `#FFFFFF` కార్డులు, `border-slate-200`) లో డిజైన్ చేశాము.
+  4. `frontend/src/router/index.tsx` & `CompetitiveExamsPage.tsx`:
+     - `/competitive-exams/:id/paper`, `/competitive-exams/paper/:id`, `/competitive-exam-paper/:id` రూట్లను రిజిస్టర్ చేసి, అన్ని "View Paper" / "Preview" బటన్లను ఈ ప్రత్యేక పేజీకి అనుసంధానించాము.
+
+## చివరి సంభాషణ - Bulk Import ప్రత్యేక పేజీ & Excel NaN బగ్ పరిష్కారం (November 25, 2026)
+- **యూజర్ సమస్య & అభ్యర్థన:**
+  - `separate ga oka page create cheyu error vastundi check cheyu` (స్క్రీన్‌షాట్ ద్వారా Excel ఇంపోర్ట్ లో `Invalid prisma.masterQuestion.create() ... negativeMarks: NaN` ఎర్రర్‌ను చూపించి, చిన్న మోడల్ కాకుండా పూర్తి ప్రత్యేక పేజీ కావాలని కోరారు).
+- **సమస్య విశ్లేషణ & రూట్ కాజ్:**
+  - Excel డేటాలో `negativeMarks` లేనప్పుడు `Number(q.negativeMarks) ?? 1` అనేది `NaN` ఇచ్చి Prisma validation ఫెయిల్ అయింది.
+  - మోడల్ విండో చిన్నదిగా ఉండి చాలా ప్రశ్నలను సమీక్షించడానికి అసౌకర్యంగా ఉంది.
+- **చేసిన శాశ్వత పరిష్కారాలు:**
+  1. `backend/src/controllers/masterQuestions.controller.ts`: `safeParseFloat` మరియు `resolveCorrectAnswer` లతో `negativeMarks` (డిఫాల్ట్ 1/0) మరియు `marks` ఎన్నడూ `NaN` కాకుండా రక్షించాము.
+  2. `frontend/src/pages/exams/BulkImportQuestionsPage.tsx`: ప్రత్యేక పేజీని పూర్తి Light Theme ERP డిజైన్‌తో నిర్మించాము (సాంపుల్ Excel/CSV డౌన్‌లోడ్, ఫైల్ డ్రాప్ జోన్, KaTeX మ్యాథ్ ప్రివ్యూ టేబుల్, సబ్జెక్ట్ ఫిల్టర్లు, ప్రశ్నల ఎడిట్/డిలీట్ మరియు స్టీకీ సేవ్ బార్).
+  3. `frontend/src/router/index.tsx` & `CompetitiveExamsPage.tsx`: `/competitive-exams/bulk-import` రూట్‌ను యాడ్ చేసి, అన్ని "Bulk Excel / Bulk Import" బటన్లను ఈ ప్రత్యేక పేజీకి అనుసంధానించాము.
+
 ## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ & Merge Conflicts పరిష్కారం (November 25, 2026)
 - **యూజర్ అభ్యర్థన:** `git nunchi updates anni download cheyu`
 - **వివరణ & చేసిన పరిష్కారాలు:**
@@ -433,7 +515,6 @@
 - **Frontend (Web App):** Runs on VPS at `http://66.116.252.191:19999` under PM2 name `frontend` (ID: 1).
   - Command: `pm2 restart frontend`
 
-<<<<<<< HEAD
 ## చివరి సంభాషణ - Git నుండి తాజా అప్‌డేట్‌ల డౌన్‌లోడ్ (Git Pull Sync) (November 24, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `git nunchi updates anni download cheyu` (GitHub నుండి తాజా అప్‌డేట్‌లను లోకల్ సిస్టమ్‌లో మరియు VPS సర్వర్‌లో సింక్ చేసుకోవడానికి కమాండ్స్ అడిగారు).
@@ -475,7 +556,6 @@
      - `generateQuizQuestions` మరియు `parseRawExamTextToMCQs` రెండింటికీ ఇంటెలిజెంట్ ఆఫ్-లైన్ సిలబస్ సింథసైజర్ మరియు లోకల్ రెజెక్స్ పార్సర్ ఫాల్‌బ్యాక్‌లను అమర్చాము. దీనివల్ల గూగుల్ ఏపీఐ ఫెయిల్ అయినా లేదా కోటా ఇష్యూ వచ్చినా "AI generation error" రాకుండా 100% సేఫ్ గా ప్రశ్నలు జనరేట్ అవుతాయి.
   4. **ఎన్విరాన్మెంట్ కాన్ఫిగరేషన్ ([`backend/.env`](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/.env)):**
      - `GEMINI_MODEL="gemini-2.0-flash"` మరియు యూజర్ అందించిన తాజా API కీ భద్రపరచబడ్డాయి.
-=======
 ## చివరి సంభాషణ - అటెండెన్స్ డాష్‌బోర్డ్‌లో Double Heading సమస్య పరిష్కారం (November 24, 2026)
 - **యూజర్ ప్రశ్న:**
   - `double heading enduku vachindi` (అటెండెన్స్ డాష్‌బోర్డ్ పేజీ స్క్రీన్‌షాట్ పంపిస్తూ, పైన వైట్ టాప్ బార్‌లో Attendance Dashboard అని, దాని క్రింద ఉన్న బ్లూ బ్యానర్‌లో మళ్లీ Attendance Dashboard అని రెండు హెడ్డింగ్‌లు ఎందుకు వచ్చాయి అని అడిగారు).
@@ -677,7 +757,6 @@
      - క్వశ్చన్ బ్యాంక్ ట్యాబ్ హెడర్ బార్‌లో మరియు ఎంప్టీ స్టేట్‌లో ఉన్న "📄 Paste Exam Text (AI Parser)" బటన్లను క్లిక్ చేయగానే మోడల్ తెరవకుండా నేరుగా ఈ ప్రత్యేక ఫుల్ పేజీకి నావిగేట్ అయ్యేలా చేసాము (`navigate('/competitive-exams/' + activeExam.id + '/paste-ai')`).
      - మేనేజ్ ఎగ్జామ్స్ ట్యాబ్‌లోని ప్రతి ఎగ్జామ్ కార్డుపై కూడా నేరుగా "📄 Paste Exam Text" బటన్‌ను యాడ్ చేసాము.
 
->>>>>>> 7cefb217ef3602c8460af9998143835f32b2a8a3
 
 ## చివరి సంభాషణ - Examination పేజీ నుండి OMR Scanner ఆప్షన్ పూర్తి తొలగింపు (November 23, 2026)
 - **యూజర్ అభ్యర్థన:**

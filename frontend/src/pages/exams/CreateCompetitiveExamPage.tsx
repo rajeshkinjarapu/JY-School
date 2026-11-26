@@ -169,31 +169,96 @@ const CreateCompetitiveExamPage = () => {
                 <Target className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-slate-800">Marks & Scoring</h2>
-                <p className="text-xs text-slate-500">Set total marks and negative marking scheme</p>
+                <h2 className="text-base font-bold text-slate-800">Marks & Scoring Scheme</h2>
+                <p className="text-xs text-slate-500">Configure marks per question and negative marking scheme for this exam</p>
               </div>
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="p-6 space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                  <label className={labelClass}>Total Marks</label>
+                  <label className={labelClass}>Marks Per Question *</label>
                   <div className="relative">
                     <Award className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500" />
-                    <input type="number" required value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/10`} />
+                    <input
+                      type="number"
+                      min={1}
+                      required
+                      value={formData.totalMarks > 0 ? (formData.totalMarks >= 100 ? 4 : Math.max(1, Math.round(formData.totalMarks / 25))) : 4}
+                      onChange={e => {
+                        const m = parseInt(e.target.value) || 4;
+                        setFormData({ ...formData, totalMarks: m * 25 });
+                      }}
+                      className={`${inputClass} pl-12 border-emerald-200 focus:border-emerald-500 focus:ring-emerald-500/10`}
+                      placeholder="e.g. 4 marks per question"
+                    />
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">Each correct question in this exam carries this score</p>
+                </div>
+
+                <div>
+                  <label className={labelClass}>Does this Exam have Negative Marking? *</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, negativeMarks: 0 })}
+                      className={`px-3 py-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        formData.negativeMarks === 0
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs'
+                          : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                      <span>No Negative (0)</span>
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, negativeMarks: formData.negativeMarks > 0 ? formData.negativeMarks : 1 })}
+                        className={`flex-1 px-3 py-2.5 rounded-xl border-2 font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                          formData.negativeMarks > 0
+                            ? 'bg-rose-50 border-rose-500 text-rose-800 shadow-xs'
+                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                        <span>Yes, Deduct</span>
+                      </button>
+
+                      {formData.negativeMarks > 0 && (
+                        <div className="w-20 shrink-0">
+                          <input
+                            type="number"
+                            min={0.25}
+                            step={0.25}
+                            value={formData.negativeMarks}
+                            onChange={e => setFormData({ ...formData, negativeMarks: Math.max(0, parseFloat(e.target.value) || 0) })}
+                            className="w-full px-2 py-2 bg-white border-2 border-rose-400 rounded-xl text-rose-800 font-extrabold text-xs text-center outline-none"
+                            title="Negative marks per wrong answer"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    {formData.negativeMarks === 0 ? 'Zero penalty for wrong answers' : `-${formData.negativeMarks} mark deducted per incorrect answer`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-slate-100">
+                <div>
+                  <label className={labelClass}>Total Exam Marks</label>
+                  <div className="relative">
+                    <Target className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-500" />
+                    <input type="number" required value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value) || 100})} className={`${inputClass} pl-12`} />
                   </div>
                 </div>
                 <div>
                   <label className={labelClass}>Pass Marks</label>
                   <div className="relative">
                     <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-500" />
-                    <input type="number" required value={formData.passMarks} onChange={e => setFormData({...formData, passMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-blue-200 focus:border-blue-500 focus:ring-blue-500/10`} />
-                  </div>
-                </div>
-                <div>
-                  <label className={labelClass}>Negative Marks (Per Q)</label>
-                  <div className="relative">
-                    <Zap className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-rose-500" />
-                    <input type="number" required value={formData.negativeMarks} onChange={e => setFormData({...formData, negativeMarks: parseInt(e.target.value)})} className={`${inputClass} pl-12 border-rose-200 focus:border-rose-500 focus:ring-rose-500/10`} />
+                    <input type="number" required value={formData.passMarks} onChange={e => setFormData({...formData, passMarks: parseInt(e.target.value) || 35})} className={`${inputClass} pl-12`} />
                   </div>
                 </div>
               </div>

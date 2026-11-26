@@ -670,12 +670,28 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .question-option-item { break-inside: avoid !important; overflow-wrap: break-word; }
           .paper-header, .section-header, .paper-instructions { break-inside: avoid !important; }
 
+          .mcq-double-column {
+            column-count: 2 !important;
+            column-gap: 20px !important;
+            column-rule: 1.2px solid #000000 !important;
+            column-fill: auto !important;
+            min-height: 0 !important;
+          }
+
           /* border prathi page lo */
           .page-border {
             position: fixed !important;
             top: 0 !important; bottom: 0 !important;
             left: var(--bp) !important; right: var(--bp) !important;
           }
+        }
+
+        .mcq-double-column {
+          column-count: 2 !important;
+          column-gap: 22px !important;
+          column-rule: 1.2px solid #000000 !important;
+          column-fill: auto !important;
+          min-height: 195mm;
         }
       `}</style>
       <div className="pt-3 pb-3 px-[8mm] lining-nums tabular-nums">
@@ -719,7 +735,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
         {/* Instructions Section */}
         {showHeader && instructions.length > 0 && (
-          <div data-mcq-block="true" className="paper-instructions mb-3 text-[10pt] leading-snug break-inside-avoid">
+          <div data-mcq-block="true" className="paper-instructions mb-3 text-[10pt] leading-snug break-inside-avoid border-b border-black pb-2">
             <h3 className="font-bold mb-1 uppercase underline underline-offset-2">General Instructions:</h3>
             <ul className="list-disc pl-5 m-0 space-y-0.5">
               {instructions.map((inst, i) => (
@@ -730,7 +746,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         )}
 
         {/* Questions Section - Support Double Column */}
-        <div className={isDoubleColumn ? "columns-2 gap-6" : ""}>
+        <div className={isDoubleColumn ? "mcq-double-column" : ""}>
           {parseBlocks()}
         </div>
 

@@ -1,5 +1,18 @@
 import React from 'react';
-import { QRCodeSVG } from 'qrcode.react';
+
+const QRCodeSVG: React.FC<{ value: string; size?: number; className?: string }> = ({ value, size = 28, className = '' }) => {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${Math.round(size * 2)}x${Math.round(size * 2)}&data=${encodeURIComponent(value || 'ID')}`;
+  return (
+    <img
+      src={qrUrl}
+      alt="QR Code"
+      width={size}
+      height={size}
+      className={`object-contain ${className}`}
+      loading="lazy"
+    />
+  );
+};
 
 export interface IDCardData {
   id: string;

@@ -144,6 +144,8 @@ const CompetitiveExamResultPage = lazy(() => import('../pages/exams/CompetitiveE
 const CompetitiveExamLeaderboardPage = lazy(() => import('../pages/exams/CompetitiveExamLeaderboardPage').then(m => ({ default: m.CompetitiveExamLeaderboardPage })));
 const ManageCompetitiveQuestions = lazy(() => import('../pages/exams/ManageCompetitiveQuestions').then(m => ({ default: m.ManageCompetitiveQuestions })));
 const PasteCompetitiveExamTextPage = lazy(() => import('../pages/exams/PasteCompetitiveExamTextPage'));
+const BulkImportQuestionsPage = lazy(() => import('../pages/exams/BulkImportQuestionsPage'));
+const CompetitiveExamPaperPage = lazy(() => import('../pages/exams/CompetitiveExamPaperPage'));
 const UniversityDemoPage = lazy(() => import('../pages/university-demo/UniversityDemoPage'));
 const ChairmanDashboardPage = lazy(routeImports['/chairman']);
 const AttendanceWrapper = () => {
@@ -195,6 +197,14 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={['STUDENT', 'SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
         {withSuspense(<TakeCompetitiveExamPage />)}
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/competitive-exam-paper/:id',
+    element: (
+      <ProtectedRoute allowedRoles={['STUDENT', 'SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+        {withSuspense(<CompetitiveExamPaperPage />)}
       </ProtectedRoute>
     ),
   },
@@ -579,6 +589,38 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
             <PasteCompetitiveExamTextPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/bulk-import',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <BulkImportQuestionsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/question-bank/bulk-import',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <BulkImportQuestionsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/:id/paper',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
+            <CompetitiveExamPaperPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'competitive-exams/paper/:id',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT']}>
+            <CompetitiveExamPaperPage />
           </ProtectedRoute>
         ),
       },
