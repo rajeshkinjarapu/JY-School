@@ -1047,6 +1047,26 @@ export const MCQPaperGeneratorPage = () => {
 
       useEffect(() => {
         if (!paperId) {
+          const importedRaw = localStorage.getItem('mcq_imported_from_bank');
+          if (searchParams.get('fromBank') === 'true' && importedRaw) {
+            try {
+              const imported = JSON.parse(importedRaw);
+              if (Array.isArray(imported?.subjects) && imported.subjects.length > 0 && imported?.subjectContents) {
+                setSelectedSubjects(imported.subjects);
+                setSubjectContents(imported.subjectContents);
+                setActiveSubjectTab(imported.subjects[0]);
+                setAnswerKeys(imported.answerKeys || {});
+                setInlineImages({});
+                localStorage.removeItem('mcq_imported_from_bank');
+                const next = new URLSearchParams(searchParams);
+                next.delete('fromBank');
+                setSearchParams(next, { replace: true });
+                return;
+              }
+            } catch {
+              // fallback to default initialization
+            }
+          }
           setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
           setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
           setHeaderSubject(localStorage.getItem('mcq_exam_header_subject') || '');

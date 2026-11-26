@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Professional Master Question Bank Complete Build (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** ప్రొఫెషనల్ School ERP & Competitive Exam స్థాయి Master Question Bank పూర్తిగా బిల్డ్ చేయడం (`start`).
+- **చేసిన మార్పులు:**
+  - [masterQuestions.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/masterQuestions.controller.ts) & [masterQuestions.routes.ts](file:///d:/JY%20School/JY-School-main/backend/src/routes/masterQuestions.routes.ts): `POST /api/master-questions/sync-from-exams` జోడించాము (పాత exam ప్రశ్నలను Master Bank లోకి 1-క్లిక్ సింక్).
+  - [MasterQuestionBankWorkspace.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/exams/MasterQuestionBankWorkspace.tsx): Soft Light-Colorful 2-Pane `Subjects → Chapters` ట్రీ, Stream/Class/Type/Difficulty/Search ఫిల్టర్లు, KaTeX + Image Diagram కార్డులు, Full Split `Add / Edit / Duplicate` స్టూడియో (`Ctrl+V` Image Paste సహా), `AI Extract` (Text & File), `Bulk Excel`, **`Auto-Pick Paper`**, మరియు మల్టీ-సెలెక్ట్ ద్వారా **`Add to Online Exam`** & **`Send to A4 Paper Generator`** ఫీచర్లు నిర్మించాము.
+  - [CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx): `/competitive-exams/question-bank` కోసం `MasterQuestionBankWorkspace` ను కనెక్ట్ చేశాము.
+  - [MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): `?fromBank=true` ద్వారా Master Bank నుండి పంపిన ప్రశ్నలు & ఆన్సర్ కీలు ఆటోమేటిక్‌గా లోడ్ అయ్యేలా కనెక్ట్ చేశాము (`printPaper` / `/api/generated-papers/${paperId}` కు ఎలాంటి ఆటంకం లేకుండా).
+
 ## చివరి సంభాషణ - Soft Light-Colorful & Simple UI Refinement (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** KPI కార్డులు మరీ అంత గాఢమైన కలర్స్ కాకుండా లైట్‌గా కలర్‌ఫుల్‌గా ఉండాలి, బాక్స్ లోపల సబ్-హెడ్డింగ్‌లు ఏమీ వద్దూ (`box lo sub headings em avasaram ledu`), మరియు Exam Settings + Paper Settings పేజీలు కూడా చాలా సింపుల్ & లైట్ UI లో ఉండాలి.
 - **చేసిన మార్పులు:**

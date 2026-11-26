@@ -9,6 +9,7 @@ import {
   updateMasterQuestion,
   generateMasterQuestionsAI,
   deleteMasterQuestion,
+  syncExamQuestionsToMasterBank,
 } from '../controllers/masterQuestions.controller';
 import { authenticate, authorize } from '../middlewares/auth';
 
@@ -26,6 +27,7 @@ router.use(authorize('SUPER_ADMIN', 'ADMIN', 'TEACHER'));
 router.get('/', getMasterQuestions);
 router.post('/', addMasterQuestion);
 router.post('/bulk', bulkAddMasterQuestions);
+router.post('/sync-from-exams', syncExamQuestionsToMasterBank);
 router.post('/ai-parse-text', parseMasterTextAI);
 router.post('/generate-ai', upload.single('file'), generateMasterQuestionsAI);
 router.put('/:id', updateMasterQuestion);

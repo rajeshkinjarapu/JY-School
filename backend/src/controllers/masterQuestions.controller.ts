@@ -385,3 +385,83 @@ export const deleteMasterQuestion = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Failed to delete question' });
   }
 };
+
+export const syncExamQuestionsToMasterBank = async (_req: Request, res: Response) => {
+  try {
+    const examQuestions = await prisma.competitiveExamQuestion.findMany({
+      include: {
+        competitiveExam: {
+          include: {
+            class: true,
+            subject: true,
+          },
+        },
+      },
+    });
+
+    let syncedCount = 0;
+    for (const eq of examQuestions) {
+      if (eq.masterQuestionId) continue;
+
+      const qText = (eq.questionText || '').trim();
+      if (!qText) continue;
+
+      let existing = await prisma.masterQuestion.findFirst({
+        where: { questionText: qText },
+        select: { id: true },
+      });
+
+      if (!existing) {
+        const subjectName = eq.competitiveExam?.subject?.name || (eq.chapterName ? eq.chapterName.split(':')[0].trim() : 'General');
+        const resolvedSubjectId = await resolveMasterSubjectId(eq.competitiveExam?.subjectId, subjectName);
+        const className = eq.competitiveExam?.class?.name || null;
+        const examTitleUpper = (eq.competitiveExam?.title || '').toUpperCase();
+        const inferredCategory = examTitleUpper.includes('JEE')
+          ? 'JEE'
+          : examTitleUpper.includes('NEET')
+          ? 'NEET'
+          : examTitleUpper.includes('NAVODAYA')
+          ? 'NAVODAYA'
+          : 'SCHOOL';
+
+        existing = await prisma.masterQuestion.create({
+          data: {
+            category: inferredCategory,
+            subjectId: resolvedSubjectId,
+            subjectName,
+            className,
+            chapterName: eq.chapterName || subjectName || 'General',
+            difficulty: eq.difficulty || 'MEDIUM',
+            questionType: eq.questionType || 'MCQ',
+            questionText: qText,
+            imageUrl: eq.imageUrl || null,
+            options: eq.options || JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']),
+            correctAnswer: eq.correctAnswer || 'A',
+            marks: eq.marks || 4,
+            negativeMarks: 0,
+          },
+          select: { id: true },
+        });
+        syncedCount += 1;
+      }
+
+      await prisma.competitiveExamQuestion.update({
+        where: { id: eq.id },
+        data: { masterQuestionId: existing.id },
+      });
+    }
+
+    const totalInBank = await prisma.masterQuestion.count();
+    res.json({
+      success: true,
+      syncedCount,
+      totalInBank,
+      message: syncedCount > 0
+        ? `Synced ${syncedCount} exam questions to Master Question Bank`
+        : 'All exam questions are already in Master Question Bank',
+    });
+  } catch (error: any) {
+    console.error('syncExamQuestionsToMasterBank error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to sync exam questions' });
+  }
+};

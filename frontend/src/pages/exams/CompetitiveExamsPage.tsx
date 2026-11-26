@@ -14,6 +14,7 @@ import { SingleRawBoxQuestionStudio } from './CompetitiveQuestionBankDashboard';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
 import { PageHeader } from '../../components/UI/PageHeader';
+import { MasterQuestionBankWorkspace } from '../../components/exams/MasterQuestionBankWorkspace';
 
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
@@ -571,21 +572,38 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         )}
 
         {activeTab === 'QUESTIONS' && (
-          <SubjectWiseQuestionBankTab 
-            exams={exams} 
-            selectedExamId={selectedExamIdForQB}
-            setSelectedExamId={setSelectedExamIdForQB}
-            onOpenAiModal={(exam: any) => setAiModalExam(exam)}
-            onExamsUpdated={fetchExams}
-            presetSubject={qbPresetSubject}
-            openBulkImportInitially={openBulkImportOnQB}
-            onConsumeBulkImportFlag={() => {
-              const next = new URLSearchParams(searchParams);
-              next.delete('bulkImport');
-              setSearchParams(next, { replace: true });
-            }}
-            navigate={navigate} 
-          />
+          searchParams.get('examId') ? (
+            <SubjectWiseQuestionBankTab 
+              exams={exams} 
+              selectedExamId={selectedExamIdForQB}
+              setSelectedExamId={setSelectedExamIdForQB}
+              onOpenAiModal={(exam: any) => setAiModalExam(exam)}
+              onExamsUpdated={fetchExams}
+              presetSubject={qbPresetSubject}
+              openBulkImportInitially={openBulkImportOnQB}
+              onConsumeBulkImportFlag={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete('bulkImport');
+                setSearchParams(next, { replace: true });
+              }}
+              navigate={navigate} 
+            />
+          ) : (
+            <MasterQuestionBankWorkspace
+              exams={exams}
+              selectedExamId={selectedExamIdForQB}
+              setSelectedExamId={setSelectedExamIdForQB}
+              onExamsUpdated={fetchExams}
+              presetSubject={qbPresetSubject}
+              openBulkImportInitially={openBulkImportOnQB}
+              onConsumeBulkImportFlag={() => {
+                const next = new URLSearchParams(searchParams);
+                next.delete('bulkImport');
+                setSearchParams(next, { replace: true });
+              }}
+              navigate={navigate}
+            />
+          )
         )}
 
         {activeTab === 'RESULTS' && (
@@ -2366,7 +2384,7 @@ const QuestionBankTab = ({
   onConsumeBulkImportFlag,
   navigate 
 }: any) => {
-  const [bankSource, setBankSource] = useState<'MASTER' | 'EXAM'>('MASTER');
+  const [bankSource, setBankSource] = useState<'MASTER' | 'EXAM'>(selectedExamId ? 'EXAM' : 'MASTER');
   const [questions, setQuestions] = useState<any[]>([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [isAddingQuestion, setIsAddingQuestion] = useState(false);
