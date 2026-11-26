@@ -14,7 +14,7 @@ import { SingleRawBoxQuestionStudio } from './CompetitiveQuestionBankDashboard';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
 import { PageHeader } from '../../components/UI/PageHeader';
-import { MasterQuestionBankWorkspace } from '../../components/exams/MasterQuestionBankWorkspace';
+import { MasterQuestionBankWorkspace } from '../../components/Exams/MasterQuestionBankWorkspace';
 
 // ═══════════════════════════════════════════════════════════════
 // KATEX LATEX MATH FORMULA RENDERER
