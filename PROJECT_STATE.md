@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Soft Light-Colorful & Simple UI Refinement (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** KPI కార్డులు మరీ అంత గాఢమైన కలర్స్ కాకుండా లైట్‌గా కలర్‌ఫుల్‌గా ఉండాలి, బాక్స్ లోపల సబ్-హెడ్డింగ్‌లు ఏమీ వద్దూ (`box lo sub headings em avasaram ledu`), మరియు Exam Settings + Paper Settings పేజీలు కూడా చాలా సింపుల్ & లైట్ UI లో ఉండాలి.
+- **చేసిన మార్పులు:**
+  - [CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx): 12 KPI కార్డులను సాఫ్ట్ పేస్టల్ లైట్-కలర్‌ఫుల్ కార్డులుగా మార్చి, లోపల ఉన్న సబ్-టైటిల్స్/బ్యాడ్జ్‌లు/ఫుటర్ అన్నీ తొలగించాము (`Icon + Title + Value` మాత్రమే); Exam Creator Step 1 & Step 2 సెట్టింగ్స్ పేజీలను కూడా సాఫ్ట్ లైట్-కలర్‌ఫుల్ మరియు సింపుల్‌గా తీర్చిదిద్దాము.
+  - [MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): Full-Width Paper Settings పేజీని అదనపు బ్యానర్లు & సబ్-హెడ్డింగ్‌లు లేకుండా సులభమైన, క్లీన్ లైట్-కలర్‌ఫుల్ UI గా అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Eduracle Exam Creator Clean & Colorful 2-Page Wizard (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** Exam Create పేజీలో Pattern కార్డులు, దాని కింద Settings, దాని కింద మళ్ళీ Exams లిస్ట్ అన్నీ ఒకేచోట ఉండి గందరగోళంగా ఉంది — చాలా సింపుల్‌గా, యూజర్ ఫ్రెండ్లీగా ఉండాలి మరియు `Settings & Customize` క్లిక్ చేస్తే సెట్టింగ్స్ **వేరే క్లీన్ & కలర్‌ఫుల్ పేజీ** లాగా ఓపెన్ అవ్వాలి.
 - **చేసిన మార్పులు ([CompetitiveExamsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**

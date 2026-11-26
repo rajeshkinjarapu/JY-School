@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2, Plus, Calendar, Clock, Check, Type } from 'lucide-react';
+import { ChevronLeft, Sparkles, Upload, Save, Printer, Download, FileText, Settings, Maximize, X, Wand2, BookOpen, ImagePlus, HelpCircle, PenTool, Eye, ZoomIn, ZoomOut, Database, Square, Menu, CheckSquare, Sliders, ArrowUp, ArrowDown, AlignLeft, AlignCenter, AlignRight, Move, Pin, Loader2, Plus, Check, Type } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
@@ -1327,146 +1327,71 @@ export const MCQPaperGeneratorPage = () => {
             ) : undefined}
           />
 
-          {/* FULL-WIDTH DEDICATED PAPER SETTINGS PAGE */}
+          {/* FULL-WIDTH SIMPLE & SOFT-COLORFUL PAPER SETTINGS PAGE */}
           {isSettingsOpen && (
             <div className="w-full flex-1 bg-slate-50 px-4 sm:px-6 lg:px-8 py-6 pb-20 print:hidden overflow-y-auto custom-scrollbar">
-              <div className="w-full space-y-6">
-                {/* Top Full-Width Summary & Save Bar */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                  <div className="flex items-start sm:items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center shrink-0">
-                      <Settings className="w-6 h-6" />
-                    </div>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg sm:text-xl font-black text-slate-900">
-                          Question Paper Settings & Header Layout
-                        </h2>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                          {selectedSubjects.length} {selectedSubjects.length === 1 ? 'Subject Tab' : 'Subject Tabs'}
-                        </span>
-                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                          headerSubject.trim()
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-slate-100 text-slate-600 border-slate-200'
-                        }`}>
-                          {headerSubject.trim() ? `Paper Subject: ${headerSubject.trim()}` : 'Paper Header Subject: Hidden'}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                        Configure exam header metadata, optional Subject line on paper header, subject tabs, instructions, typography, and AI engine.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <button
-                      type="button"
-                      onClick={closeSettingsPage}
-                      className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition cursor-pointer"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      <span>Back to Editor & Preview</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSaveSettingsPage}
-                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs sm:text-sm font-black shadow-sm flex items-center gap-2 transition cursor-pointer"
-                    >
-                      <Save className="w-4 h-4" />
-                      <span>Save Settings & Return to Paper</span>
-                    </button>
-                  </div>
-                </div>
-
+              <div className="w-full space-y-5">
                 {/* Main Full-Width Grid (12 columns) */}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                  {/* Left 8 Columns: Header Fields, Subjects, Instructions */}
-                  <div className="xl:col-span-8 space-y-6">
-                    {/* Card 1: Exam & Question Paper Header Fields */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
-                            <FileText className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm sm:text-base font-black text-slate-900">1. Exam & Paper Header Details</h3>
-                            <p className="text-xs text-slate-500">Shown at the top of the A4 Question Paper when Header is enabled</p>
-                          </div>
-                        </div>
-                      </div>
+                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+                  {/* Left 8 Columns */}
+                  <div className="xl:col-span-8 space-y-5">
+                    {/* Card 1: Exam & Paper Header Details */}
+                    <div className="bg-white rounded-2xl border border-blue-200/70 p-5 shadow-2xs space-y-4">
+                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                        <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600"><FileText className="w-4 h-4" /></span>
+                        1. Paper Header Info
+                      </h3>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="sm:col-span-2 lg:col-span-2">
-                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
-                            Exam Name / Title
-                          </label>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Exam Name</label>
                           <input
                             type="text"
                             value={examName}
                             onChange={(e) => setExamName(e.target.value)}
-                            placeholder="e.g., BOARD OBJECTIVE EXAMINATION - 2"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                            placeholder="e.g., BOARD OBJECTIVE EXAMINATION"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
-                            Class / Grade
-                          </label>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Class</label>
                           <input
                             type="text"
                             value={examClass}
                             onChange={(e) => setExamClass(e.target.value)}
-                            placeholder="e.g., 6th Class"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                            placeholder="e.g., 6th"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                           />
                         </div>
 
-                        {/* NEW OPTIONAL SUBJECT FIELD FOR QUESTION PAPER HEADER */}
-                        <div className="sm:col-span-2 lg:col-span-3 p-4 rounded-2xl bg-indigo-50/40 border border-indigo-200/80 space-y-2">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <label className="text-xs font-black uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
-                              <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                              Subject (Question Paper Header — Optional)
+                        <div className="sm:col-span-2 lg:col-span-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-xs font-bold text-slate-600">
+                              Subject (Shown on Question Paper only if entered)
                             </label>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
-                                headerSubject.trim()
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-white text-slate-500 border-slate-200'
-                              }`}>
-                                {headerSubject.trim() ? 'Visible on Question Paper' : 'Hidden on Question Paper'}
-                              </span>
-                              {headerSubject.trim() && (
-                                <button
-                                  type="button"
-                                  onClick={() => setHeaderSubject('')}
-                                  className="text-[11px] font-bold text-rose-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg transition cursor-pointer"
-                                >
-                                  Clear
-                                </button>
-                              )}
-                            </div>
+                            {headerSubject.trim() && (
+                              <button
+                                type="button"
+                                onClick={() => setHeaderSubject('')}
+                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
                           </div>
                           <input
                             type="text"
                             value={headerSubject}
                             onChange={(e) => setHeaderSubject(e.target.value)}
-                            placeholder="Enter subject to print on paper header (e.g., Physics / Mathematics) — Leave blank to hide Subject"
-                            className="w-full rounded-xl border border-indigo-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/25 focus:border-indigo-500 outline-none transition-all shadow-2xs"
+                            placeholder="Leave blank to hide Subject on paper header, or type Subject name"
+                            className="w-full rounded-xl border border-indigo-200 bg-indigo-50/30 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-indigo-400 outline-none"
                           />
-                          <p className="text-[11px] font-semibold text-slate-500">
-                            ఇక్కడ Subject ఎంటర్ చేస్తే మాత్రమే క్వశ్చన్ పేపర్ పైన <strong className="text-slate-700">Subject: ...</strong> కనిపిస్తుంది. ఖాళీగా ఉంచితే పేపర్ హెడర్‌లో Subject కనిపించదు.
-                          </p>
                         </div>
 
                         <div>
                           <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-black uppercase tracking-wider text-slate-600 flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-slate-400" /> Exam Date
-                            </label>
+                            <label className="text-xs font-bold text-slate-600">Date</label>
                             <button
                               type="button"
                               onClick={() => {
@@ -1484,51 +1409,41 @@ export const MCQPaperGeneratorPage = () => {
                             value={examDate}
                             onChange={(e) => setExamDate(e.target.value)}
                             placeholder="DD-MM-YYYY"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5">
-                            Total Marks
-                          </label>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Total Marks</label>
                           <input
                             type="text"
                             value={maxMarks}
                             onChange={(e) => setMaxMarks(e.target.value)}
                             placeholder="100"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                           />
                         </div>
 
                         <div>
-                          <label className="text-xs font-black uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" /> Time / Duration
-                          </label>
+                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Time / Duration</label>
                           <input
                             type="text"
                             value={time}
                             onChange={(e) => setTime(e.target.value)}
                             placeholder="3 Hours"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all"
+                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                           />
                         </div>
                       </div>
                     </div>
 
-                    {/* Card 2: Subject Tabs / Sections Selection */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
-                            <BookOpen className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm sm:text-base font-black text-slate-900">2. Subject Sections in Editor</h3>
-                            <p className="text-xs text-slate-500">Choose which subject tabs appear inside the question editor</p>
-                          </div>
-                        </div>
-
+                    {/* Card 2: Subject Tabs */}
+                    <div className="bg-white rounded-2xl border border-purple-200/70 p-5 shadow-2xs space-y-4">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                          <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><BookOpen className="w-4 h-4" /></span>
+                          2. Subjects
+                        </h3>
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
@@ -1540,56 +1455,51 @@ export const MCQPaperGeneratorPage = () => {
                                 handleAddCustomSubject();
                               }
                             }}
-                            placeholder="Add custom subject..."
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-purple-500/20 outline-none w-40 sm:w-48"
+                            placeholder="Add subject..."
+                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white outline-none w-36 sm:w-44"
                           />
                           <button
                             type="button"
                             onClick={handleAddCustomSubject}
-                            className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition"
+                            className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
                           >
                             <Plus className="w-3.5 h-3.5" /> Add
                           </button>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
                         {allSelectableSubjects.map((subj) => {
                           const isChecked = selectedSubjects.includes(subj);
                           return (
                             <label
                               key={subj}
-                              className={`flex items-center justify-between gap-2 cursor-pointer p-3 rounded-xl border transition-all select-none ${
+                              className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all select-none ${
                                 isChecked
-                                  ? 'bg-indigo-50/80 border-indigo-400 text-indigo-900 shadow-2xs'
-                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300'
+                                  ? 'bg-indigo-50/80 border-indigo-400 text-indigo-900'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
                               }`}
                             >
-                              <div className="flex items-center gap-2 min-w-0">
-                                <input
-                                  type="checkbox"
-                                  checked={isChecked}
-                                  onChange={() => toggleSubject(subj)}
-                                  className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 shrink-0"
-                                />
-                                <span className="text-xs sm:text-sm font-bold truncate">{subj}</span>
-                              </div>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleSubject(subj)}
+                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 shrink-0"
+                              />
+                              <span className="text-xs sm:text-sm font-bold truncate">{subj}</span>
                             </label>
                           );
                         })}
                       </div>
                     </div>
 
-                    {/* Card 3: General Instructions */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
-                        <div>
-                          <h3 className="text-sm sm:text-base font-black text-slate-900">3. General Instructions (One per line)</h3>
-                          <p className="text-xs text-slate-500">Printed directly below the paper header as bullet points</p>
-                        </div>
+                    {/* Card 3: Instructions */}
+                    <div className="bg-white rounded-2xl border border-amber-200/70 p-5 shadow-2xs space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                        <h3 className="text-sm font-black text-slate-900">3. Instructions (One per line)</h3>
                         <div className="flex flex-wrap items-center gap-1.5">
                           {[
-                            { label: '+ OMR Pen Rule', text: 'Fill only with Blue / Black Ball Pen. Fill the circle completely black.' },
+                            { label: '+ OMR Rule', text: 'Fill only with Blue / Black Ball Pen. Fill the circle completely black.' },
                             { label: '+ No Negative', text: 'Each question carries 1 Mark. There is no negative marking.' },
                             { label: '+ JEE (+4/-1)', text: 'Each correct answer carries +4 marks and -1 mark for each wrong answer.' },
                           ].map((chip) => (
@@ -1608,99 +1518,83 @@ export const MCQPaperGeneratorPage = () => {
                       <textarea
                         value={instructions}
                         onChange={(e) => setInstructions(e.target.value)}
-                        rows={5}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50/70 focus:bg-white p-3.5 text-sm font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 outline-none transition-all resize-y"
-                        placeholder="Enter exam instructions (one per line)..."
+                        rows={4}
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white p-3.5 text-sm font-medium text-slate-800 focus:border-amber-400 outline-none resize-y"
+                        placeholder="Enter instructions..."
                       />
                     </div>
                   </div>
 
-                  {/* Right 4 Columns: Live Header Preview + Typography & Header Toggle */}
-                  <div className="xl:col-span-4 space-y-6">
-                    {/* Card 4: Live Paper Header Mini Preview */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3.5">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                          <Eye className="w-4 h-4 text-emerald-600" /> Live Header Preview
-                        </h3>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
-                          showPaperHeader
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-amber-50 text-amber-700 border-amber-200'
-                        }`}>
-                          {showPaperHeader ? 'Header ON' : 'Header OFF'}
-                        </span>
-                      </div>
+                  {/* Right 4 Columns */}
+                  <div className="xl:col-span-4 space-y-5">
+                    {/* Live Mini Header Preview */}
+                    <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-2xl border border-emerald-200/80 p-5 shadow-2xs space-y-3">
+                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><Eye className="w-4 h-4" /></span>
+                        Header Preview
+                      </h3>
 
-                      <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                        {showPaperHeader ? (
-                          <div className="bg-white border border-slate-300 rounded-lg p-3.5 text-black shadow-2xs space-y-2">
-                            <div className="text-center border-b border-black pb-2">
-                              <div className="text-xs font-black uppercase tracking-wide">SRI VENKATESWARA JY SCHOOL</div>
-                              <div className="text-[11px] font-bold uppercase mt-1">{examName || 'EXAMINATION'}</div>
+                      {showPaperHeader ? (
+                        <div className="bg-white border border-slate-300 rounded-xl p-3 text-black space-y-1.5">
+                          <div className="text-center border-b border-black pb-1.5">
+                            <div className="text-xs font-black uppercase">SRI VENKATESWARA JY SCHOOL</div>
+                            <div className="text-[11px] font-bold uppercase mt-0.5">{examName || 'EXAMINATION'}</div>
+                          </div>
+                          <div className="text-[11px] font-semibold space-y-0.5">
+                            <div className="flex justify-between items-center gap-2 flex-wrap">
+                              <span><strong>Class:</strong> {examClass || '___'}</span>
+                              {headerSubject.trim() && (
+                                <span className="text-indigo-700"><strong>Subject:</strong> {headerSubject.trim()}</span>
+                              )}
+                              <span><strong>Marks:</strong> {maxMarks || '100'}</span>
                             </div>
-                            <div className="text-[11px] font-semibold space-y-1">
-                              <div className="flex justify-between items-center gap-2 flex-wrap">
-                                <span><strong>Class:</strong> {examClass || '___'}</span>
-                                {headerSubject.trim() && (
-                                  <span className="text-indigo-700"><strong>Subject:</strong> {headerSubject.trim()}</span>
-                                )}
-                                <span><strong>Marks:</strong> {maxMarks || '100'}</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span><strong>Date:</strong> {examDate || '___/___/20__'}</span>
-                                {time && <span><strong>Time:</strong> {time}</span>}
-                              </div>
+                            <div className="flex justify-between items-center">
+                              <span><strong>Date:</strong> {examDate || '___/___/20__'}</span>
+                              {time && <span><strong>Time:</strong> {time}</span>}
                             </div>
                           </div>
-                        ) : (
-                          <div className="py-6 text-center text-xs font-semibold text-slate-400">
-                            Paper Header is currently turned OFF. Only questions will appear on PDF/Print.
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-xs font-semibold text-slate-400 bg-white rounded-xl border border-slate-200">
+                          Header is OFF
+                        </div>
+                      )}
                     </div>
 
-                    {/* Card 5: Typography & Paper Appearance */}
-                    <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5">
-                      <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3.5">
-                        <div className="p-2 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          <Type className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm sm:text-base font-black text-slate-900">4. Typography & Layout</h3>
-                          <p className="text-xs text-slate-500">Adjust A4 print readability</p>
-                        </div>
-                      </div>
+                    {/* Font Size, Spacing & Header Toggle */}
+                    <div className="bg-white rounded-2xl border border-teal-200/70 p-5 shadow-2xs space-y-4">
+                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                        <span className="p-1.5 rounded-lg bg-teal-50 text-teal-600"><Type className="w-4 h-4" /></span>
+                        4. Font & Spacing
+                      </h3>
 
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Font Size</label>
-                        <div className="grid grid-cols-2 gap-2.5">
+                        <label className="block text-xs font-bold text-slate-600 mb-2">Font Size</label>
+                        <div className="grid grid-cols-2 gap-2">
                           {[
-                            { val: 'small', label: 'Small', sub: '10 pt' },
-                            { val: 'medium', label: 'Medium', sub: '11 pt' },
-                            { val: 'large', label: 'Large', sub: '12 pt' },
-                            { val: 'xlarge', label: 'Extra Large', sub: '14 pt' },
+                            { val: 'small', label: 'Small (10pt)' },
+                            { val: 'medium', label: 'Medium (11pt)' },
+                            { val: 'large', label: 'Large (12pt)' },
+                            { val: 'xlarge', label: 'XL (14pt)' },
                           ].map((opt) => (
                             <button
                               key={opt.val}
                               type="button"
                               onClick={() => setFontSize(opt.val)}
-                              className={`p-3 rounded-xl border text-left transition-all cursor-pointer ${
+                              className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
                                 fontSize === opt.val
-                                  ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-1 ring-indigo-500/30'
-                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white'
+                                  ? 'bg-indigo-50 border-indigo-400 text-indigo-800'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
                               }`}
                             >
-                              <div className="text-xs font-black">{opt.label}</div>
-                              <div className="text-[11px] font-semibold text-slate-500">{opt.sub}</div>
+                              {opt.label}
                             </button>
                           ))}
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 mb-2">Question Spacing</label>
+                        <label className="block text-xs font-bold text-slate-600 mb-2">Question Spacing</label>
                         <div className="grid grid-cols-3 gap-2">
                           {[
                             { val: 'compact', label: 'Compact' },
@@ -1711,10 +1605,10 @@ export const MCQPaperGeneratorPage = () => {
                               key={opt.val}
                               type="button"
                               onClick={() => setQuestionSpacing(opt.val)}
-                              className={`py-2.5 px-2 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
+                              className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer ${
                                 questionSpacing === opt.val
-                                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
-                                  : 'bg-slate-50/70 border-slate-200 text-slate-700 hover:bg-white'
+                                  ? 'bg-indigo-600 text-white border-indigo-600'
+                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
                               }`}
                             >
                               {opt.label}
@@ -1723,11 +1617,8 @@ export const MCQPaperGeneratorPage = () => {
                         </div>
                       </div>
 
-                      <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-bold text-slate-800">Show Paper Header</h4>
-                          <p className="text-xs text-slate-500">Display school logo, exam title, class & instructions at top.</p>
-                        </div>
+                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                        <span className="text-xs font-bold text-slate-700">Show Paper Header</span>
                         <label className="relative inline-flex items-center cursor-pointer shrink-0">
                           <input
                             type="checkbox"
@@ -1738,27 +1629,39 @@ export const MCQPaperGeneratorPage = () => {
                               localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
                             }}
                           />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
+                      </div>
+
+                      <div className="pt-2 flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={closeSettingsPage}
+                          className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveSettingsPage}
+                          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer transition shadow-xs"
+                        >
+                          Save Settings
+                        </button>
                       </div>
                     </div>
                   </div>
 
-                  {/* Bottom Full-Width AI Model Configuration Card */}
-                  <div className="xl:col-span-12 bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                    <div className="flex items-center gap-2.5 border-b border-slate-100 pb-3.5">
-                      <div className="p-2 rounded-xl bg-purple-50 text-purple-600 border border-purple-100">
-                        <Sparkles className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm sm:text-base font-black text-slate-900">5. AI Model Configuration</h3>
-                        <p className="text-xs text-slate-500">Select the AI engine used by AI Gen & Answer Key Solver (optional custom API keys)</p>
-                      </div>
-                    </div>
+                  {/* Bottom AI Configuration Card */}
+                  <div className="xl:col-span-12 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+                    <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                      <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><Sparkles className="w-4 h-4" /></span>
+                      5. AI Model Configuration
+                    </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'gemini' ? 'border-purple-500 bg-purple-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2.5 cursor-pointer">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'gemini' ? 'border-purple-400 bg-purple-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="ai_model"
@@ -1767,7 +1670,7 @@ export const MCQPaperGeneratorPage = () => {
                               setActiveAiModel('gemini');
                               localStorage.setItem('jy_active_ai_model', 'gemini');
                             }}
-                            className="w-4 h-4 text-purple-600 focus:ring-purple-500"
+                            className="w-4 h-4 text-purple-600"
                           />
                           <span className="text-sm font-bold text-slate-800">Google Gemini</span>
                         </label>
@@ -1779,14 +1682,14 @@ export const MCQPaperGeneratorPage = () => {
                               setGeminiApiKey(e.target.value);
                               localStorage.setItem('jy_gemini_api_key', e.target.value);
                             }}
-                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-purple-500/20 outline-none"
-                            placeholder="Custom Gemini API Key (optional)"
+                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
+                            placeholder="Gemini API Key (optional)"
                           />
                         )}
                       </div>
 
-                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'claude' ? 'border-orange-500 bg-orange-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2.5 cursor-pointer">
+                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'claude' ? 'border-orange-400 bg-orange-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="ai_model"
@@ -1795,7 +1698,7 @@ export const MCQPaperGeneratorPage = () => {
                               setActiveAiModel('claude');
                               localStorage.setItem('jy_active_ai_model', 'claude');
                             }}
-                            className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                            className="w-4 h-4 text-orange-600"
                           />
                           <span className="text-sm font-bold text-slate-800">Anthropic Claude</span>
                         </label>
@@ -1807,14 +1710,14 @@ export const MCQPaperGeneratorPage = () => {
                               setClaudeApiKey(e.target.value);
                               localStorage.setItem('jy_claude_api_key', e.target.value);
                             }}
-                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-orange-500/20 outline-none"
+                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
                             placeholder="Claude API Key"
                           />
                         )}
                       </div>
 
-                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-500 bg-emerald-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2.5 cursor-pointer">
+                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="ai_model"
@@ -1823,7 +1726,7 @@ export const MCQPaperGeneratorPage = () => {
                               setActiveAiModel('chatgpt');
                               localStorage.setItem('jy_active_ai_model', 'chatgpt');
                             }}
-                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
+                            className="w-4 h-4 text-emerald-600"
                           />
                           <span className="text-sm font-bold text-slate-800">OpenAI ChatGPT</span>
                         </label>
@@ -1835,14 +1738,14 @@ export const MCQPaperGeneratorPage = () => {
                               setChatgptApiKey(e.target.value);
                               localStorage.setItem('jy_chatgpt_api_key', e.target.value);
                             }}
-                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
                             placeholder="OpenAI API Key"
                           />
                         )}
                       </div>
 
-                      <div className={`p-4 rounded-xl border-2 transition-all ${activeAiModel === 'openrouter' ? 'border-blue-500 bg-blue-50/70' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2.5 cursor-pointer">
+                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'openrouter' ? 'border-blue-400 bg-blue-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input
                             type="radio"
                             name="ai_model"
@@ -1851,9 +1754,9 @@ export const MCQPaperGeneratorPage = () => {
                               setActiveAiModel('openrouter');
                               localStorage.setItem('jy_active_ai_model', 'openrouter');
                             }}
-                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                            className="w-4 h-4 text-blue-600"
                           />
-                          <span className="text-sm font-bold text-slate-800">OpenRouter (Ox Alpha)</span>
+                          <span className="text-sm font-bold text-slate-800">OpenRouter</span>
                         </label>
                         {activeAiModel === 'openrouter' && (
                           <input
@@ -1863,7 +1766,7 @@ export const MCQPaperGeneratorPage = () => {
                               setOpenRouterApiKey(e.target.value);
                               localStorage.setItem('jy_openrouter_api_key', e.target.value);
                             }}
-                            className="mt-3 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
                             placeholder="sk-or-v1-..."
                           />
                         )}

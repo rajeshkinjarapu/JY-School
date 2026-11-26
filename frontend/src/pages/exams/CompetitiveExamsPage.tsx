@@ -439,14 +439,12 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
       <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-6 flex-1">
 
-      {/* 12-KPI Clean Dashboard Command Hub (Vibrant Light Theme Cards, Nothing Underneath) */}
+      {/* 12-KPI Clean & Simple Soft-Colorful Dashboard */}
       {activeTab === 'DASHBOARD' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           <StatCard
             title="Create New Exam"
             value="+ New Test"
-            subtitle="8 Patterns • JEE / NEET / School"
-            badgeText="Create"
             color="indigo"
             icon={<Plus className="w-5 h-5" />}
             onClick={() => {
@@ -457,8 +455,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Total Exams"
             value={exams.length}
-            subtitle={`${kpiMetrics.publishedExamsCount} Published • ${kpiMetrics.draftExamsCount} Draft`}
-            badgeText="All Tests"
             color="blue"
             icon={<List className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams')}
@@ -466,8 +462,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Live Exams Now"
             value={liveExams.length}
-            subtitle={liveExams.length > 0 ? 'Active CBT Sessions' : 'No Active Live Exam'}
-            badgeText={liveExams.length > 0 ? 'LIVE' : 'Standby'}
             color="emerald"
             icon={<Activity className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams?filter=LIVE')}
@@ -475,8 +469,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Upcoming Exams"
             value={upcomingExams.length}
-            subtitle={kpiMetrics.nextUpcomingLabel}
-            badgeText="Schedule"
             color="cyan"
             icon={<Calendar className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/exams?filter=UPCOMING')}
@@ -484,12 +476,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Master Question Bank"
             value={totalQuestions}
-            subtitle={
-              kpiMetrics.uniqueSubjectCount > 0 || kpiMetrics.uniqueTopicCount > 0
-                ? `${kpiMetrics.uniqueSubjectCount} Subjects • ${kpiMetrics.uniqueTopicCount} Topics`
-                : `${exams.length} Exam Sets • Question Bank`
-            }
-            badgeText="Bank"
             color="purple"
             icon={<Database className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/question-bank')}
@@ -497,8 +483,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Bulk Excel Import"
             value="Excel / CSV"
-            subtitle="Upload 100–1000+ MCQs Fast"
-            badgeText="Bulk"
             color="amber"
             icon={<FileSpreadsheet className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/bulk-import')}
@@ -506,8 +490,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="AI Smart Text Parser"
             value="Gemini 3.0"
-            subtitle="KaTeX & MCQ Auto Digitizer"
-            badgeText="AI Powered"
             color="violet"
             icon={<Sparkles className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/paste-ai')}
@@ -515,8 +497,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Student Management"
             value={kpiMetrics.studentBase}
-            subtitle={`${activeStudents.length} Attempted (${kpiMetrics.participationPct}%)`}
-            badgeText="Students"
             color="teal"
             icon={<Users className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/students')}
@@ -524,8 +504,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Exam Submissions"
             value={totalSubmissions}
-            subtitle="Completed Student Attempts"
-            badgeText="Submitted"
             color="orange"
             icon={<CheckCircle2 className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -533,8 +511,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Results & Merit Ranks"
             value={`${kpiMetrics.highestScorePct}%`}
-            subtitle={kpiMetrics.topScorerName ? `Top: ${kpiMetrics.topScorerName}` : 'Highest Score & Ranks'}
-            badgeText="Top Rank"
             color="pink"
             icon={<Trophy className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -542,8 +518,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="A4 Result Cards"
             value={totalSubmissions}
-            subtitle="Printable Scorecards Ready"
-            badgeText="Print A4"
             color="rose"
             icon={<Award className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/results')}
@@ -551,8 +525,6 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           <StatCard
             title="Analytics & Reports"
             value={`${kpiMetrics.overallPassRatePct}% Pass`}
-            subtitle={`Avg Score: ${kpiMetrics.avgScorePct}% • Export Excel`}
-            badgeText="Reports"
             color="slate"
             icon={<BarChart3 className="w-5 h-5" />}
             onClick={() => navigate('/competitive-exams/reports')}
@@ -1421,106 +1393,113 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
         </div>
       </div>
 
-      {/* PAGE 1: ONLY 8 COLORFUL PATTERN CARDS (CLEAN, ZERO SETTINGS CLUTTER BELOW) */}
+      {/* PAGE 1: ONLY 8 SOFT LIGHT-COLORFUL PATTERN CARDS (SIMPLE & CLEAN) */}
       {wizardStep === 'PATTERNS' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {PATTERN_PRESETS.map((preset) => {
             const isSelected = selectedPattern === preset.id;
+            const softThemes: Record<string, { card: string; btn: string }> = {
+              SCHOOL_GRAND_TEST: {
+                card: 'bg-gradient-to-br from-white to-blue-50/80 border-blue-200/80 hover:border-blue-400',
+                btn: 'bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border-blue-200',
+              },
+              SSC_BOARD: {
+                card: 'bg-gradient-to-br from-white to-emerald-50/80 border-emerald-200/80 hover:border-emerald-400',
+                btn: 'bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border-emerald-200',
+              },
+              JEE_MAINS: {
+                card: 'bg-gradient-to-br from-white to-indigo-50/80 border-indigo-200/80 hover:border-indigo-400',
+                btn: 'bg-indigo-50 hover:bg-indigo-600 text-indigo-700 hover:text-white border-indigo-200',
+              },
+              NEET: {
+                card: 'bg-gradient-to-br from-white to-teal-50/80 border-teal-200/80 hover:border-teal-400',
+                btn: 'bg-teal-50 hover:bg-teal-600 text-teal-700 hover:text-white border-teal-200',
+              },
+              EAMCET: {
+                card: 'bg-gradient-to-br from-white to-cyan-50/80 border-cyan-200/80 hover:border-cyan-400',
+                btn: 'bg-cyan-50 hover:bg-cyan-600 text-cyan-700 hover:text-white border-cyan-200',
+              },
+              NAVODAYA: {
+                card: 'bg-gradient-to-br from-white to-amber-50/80 border-amber-200/80 hover:border-amber-400',
+                btn: 'bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border-amber-200',
+              },
+              SLIP_TEST: {
+                card: 'bg-gradient-to-br from-white to-rose-50/80 border-rose-200/80 hover:border-rose-400',
+                btn: 'bg-rose-50 hover:bg-rose-600 text-rose-700 hover:text-white border-rose-200',
+              },
+              CUSTOM: {
+                card: 'bg-gradient-to-br from-white to-purple-50/80 border-purple-200/80 hover:border-purple-400',
+                btn: 'bg-purple-50 hover:bg-purple-600 text-purple-700 hover:text-white border-purple-200',
+              },
+            };
+            const theme = softThemes[preset.id] || softThemes.SCHOOL_GRAND_TEST;
+
             return (
               <div
                 key={preset.id}
                 onClick={() => handleSelectPattern(preset)}
-                className={`bg-white rounded-3xl overflow-hidden border transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl ${
-                  isSelected
-                    ? 'border-indigo-400 shadow-lg ring-2 ring-indigo-500/20'
-                    : 'border-slate-200/90 shadow-sm hover:border-indigo-300'
+                className={`rounded-2xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between gap-4 group hover:-translate-y-0.5 hover:shadow-md ${theme.card} ${
+                  isSelected ? 'ring-2 ring-indigo-500/25 shadow-sm' : 'shadow-2xs'
                 }`}
               >
-                {/* Colorful Gradient Card Top Strip */}
-                <div className={`bg-gradient-to-r ${preset.color} p-4 text-white relative overflow-hidden`}>
-                  <div className="pointer-events-none absolute -top-5 -right-5 w-16 h-16 rounded-full bg-white/15" />
-                  <div className="flex items-center justify-between gap-2 relative z-10">
-                    <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/25 backdrop-blur-xs">
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${preset.tagColor}`}>
                       {preset.badge}
                     </span>
-                    <span className="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center group-hover:bg-white group-hover:text-indigo-700 transition-colors">
-                      {isSelected ? <Check size={14} strokeWidth={3} /> : <ArrowRight size={14} />}
+                    {isSelected && (
+                      <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-black text-base text-slate-900 leading-snug">{preset.title}</h4>
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-600">
+                    <span>{preset.duration} Mins</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{preset.totalMarks} Marks</span>
+                    <span className="text-slate-300">•</span>
+                    <span className={preset.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                      {preset.negativeMarks > 0 ? `-${preset.negativeMarks} Neg` : 'No Neg'}
                     </span>
                   </div>
-                  <h4 className="font-black text-base text-white mt-3 leading-snug relative z-10">
-                    {preset.title}
-                  </h4>
-                  <p className="text-[11px] font-medium text-white/85 mt-0.5 relative z-10">
-                    {preset.subtitle}
-                  </p>
                 </div>
 
-                {/* Clean White Body */}
-                <div className="p-4 flex-1 flex flex-col justify-between gap-4">
-                  <p className="text-xs text-slate-600 font-medium leading-relaxed">
-                    {preset.description}
-                  </p>
-
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-3 gap-1.5 text-center">
-                      <div className="p-2 rounded-xl bg-blue-50/70 border border-blue-100">
-                        <div className="text-[10px] font-bold text-slate-400">Time</div>
-                        <div className="text-xs font-black text-blue-700">{preset.duration}m</div>
-                      </div>
-                      <div className="p-2 rounded-xl bg-purple-50/70 border border-purple-100">
-                        <div className="text-[10px] font-bold text-slate-400">Marks</div>
-                        <div className="text-xs font-black text-purple-700">{preset.totalMarks}</div>
-                      </div>
-                      <div className={`p-2 rounded-xl border ${preset.negativeMarks > 0 ? 'bg-rose-50/70 border-rose-100' : 'bg-emerald-50/70 border-emerald-100'}`}>
-                        <div className="text-[10px] font-bold text-slate-400">Negative</div>
-                        <div className={`text-xs font-black ${preset.negativeMarks > 0 ? 'text-rose-700' : 'text-emerald-700'}`}>
-                          {preset.negativeMarks > 0 ? `-${preset.negativeMarks}` : '0'}
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSelectPattern(preset);
-                      }}
-                      className={`w-full py-2.5 px-3 rounded-2xl text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer text-white bg-gradient-to-r ${preset.color} shadow-sm hover:opacity-95`}
-                    >
-                      <Settings2 size={14} />
-                      <span>Settings & Customize</span>
-                      <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-                    </button>
-                  </div>
-                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectPattern(preset);
+                  }}
+                  className={`w-full py-2.5 px-3 rounded-xl text-xs font-extrabold border flex items-center justify-center gap-1.5 transition cursor-pointer ${theme.btn}`}
+                >
+                  <Settings2 size={14} />
+                  <span>Settings & Customize</span>
+                  <ArrowRight size={14} />
+                </button>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* PAGE 2: SEPARATE CLEAN, SIMPLE & COLORFUL EXAM SETTINGS PAGE */}
+      {/* PAGE 2: SEPARATE SIMPLE & SOFT LIGHT-COLORFUL EXAM SETTINGS PAGE */}
       {wizardStep === 'SETTINGS' && (
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Colorful Selected Pattern Banner */}
-          <div className={`rounded-3xl bg-gradient-to-r ${currentPreset.color} p-5 sm:p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative overflow-hidden`}>
-            <div className="pointer-events-none absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/10" />
-            <div className="relative z-10 space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/20 border border-white/30">
-                  {currentPreset.badge}
-                </span>
-                <span className="text-xs font-bold text-white/85">Selected Pattern</span>
-              </div>
-              <h4 className="text-xl sm:text-2xl font-black text-white">{currentPreset.title}</h4>
-              <p className="text-xs sm:text-sm text-white/85">{currentPreset.subtitle}</p>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Soft Light-Colorful Selected Pattern Bar */}
+          <div className="rounded-2xl bg-gradient-to-r from-white via-indigo-50/50 to-purple-50/60 border border-indigo-200/80 p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-2xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${currentPreset.tagColor}`}>
+                {currentPreset.badge}
+              </span>
+              <h4 className="text-base sm:text-lg font-black text-slate-900">{currentPreset.title}</h4>
             </div>
 
-            <div className="relative z-10 flex flex-wrap items-center gap-2.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setWizardStep('PATTERNS')}
-                className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white border border-white/30 text-xs font-black flex items-center gap-1.5 transition cursor-pointer backdrop-blur-xs"
+                className="px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               >
                 <ArrowLeft size={14} />
                 <span>Change Pattern</span>
@@ -1528,7 +1507,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                className="px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+                className="px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
               >
                 <RefreshCw size={13} />
                 <span>Reset Defaults</span>
@@ -1536,49 +1515,39 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
             </div>
           </div>
 
-          {/* 2-Column Clean Settings Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left 8 Columns: Simple Step Cards */}
-            <div className="lg:col-span-8 space-y-6">
-              {/* Card 1: Basic Exam Information */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-sm">
-                    <Target size={18} />
-                  </div>
-                  <div>
-                    <h5 className="text-sm sm:text-base font-black text-slate-900">1. Exam Name, Class & Subject</h5>
-                    <p className="text-xs text-slate-500">Give your exam a clear title and pick the class batch</p>
-                  </div>
-                </div>
+          {/* 2-Column Simple Light Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div className="lg:col-span-8 space-y-5">
+              {/* Card 1: Basic Details */}
+              <div className="bg-white rounded-2xl border border-blue-200/70 p-5 shadow-2xs space-y-4">
+                <h5 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                  <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600"><Target size={15} /></span>
+                  1. Basic Exam Info
+                </h5>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="md:col-span-1">
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Exam Title *
-                    </label>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Exam Title *</label>
                     <input
                       type="text"
                       required
                       value={formData.title}
                       onChange={e => setFormData({ ...formData, title: e.target.value })}
                       placeholder="e.g. 10th Class Grand Test"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none text-sm transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-blue-400 outline-none text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Target Class *
-                    </label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Class *</label>
                     <select
                       value={formData.classId}
                       onChange={e => setFormData({ ...formData, classId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-blue-400 outline-none text-sm cursor-pointer"
                     >
                       {classes.length === 0 && <option value="">Loading classes...</option>}
                       {seniorClasses.length > 0 && (
-                        <optgroup label="Senior Classes (10th, 9th, 8th, 5th)">
+                        <optgroup label="Senior Classes">
                           {seniorClasses.map(c => (
                             <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
                           ))}
@@ -1595,13 +1564,11 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Subject / Stream *
-                    </label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Subject *</label>
                     <select
                       value={formData.subjectId}
                       onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-indigo-500 outline-none text-sm cursor-pointer transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-blue-400 outline-none text-sm cursor-pointer"
                     >
                       {subjects.length === 0 && <option value="">Loading subjects...</option>}
                       {subjects.map(s => (
@@ -1613,26 +1580,21 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
               </div>
 
               {/* Card 2: Schedule & Duration */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm">
-                    <Clock size={18} />
-                  </div>
-                  <div>
-                    <h5 className="text-sm sm:text-base font-black text-slate-900">2. Schedule & Duration</h5>
-                    <p className="text-xs text-slate-500">Pick exam date, start time, and test duration in minutes</p>
-                  </div>
-                </div>
+              <div className="bg-white rounded-2xl border border-emerald-200/70 p-5 shadow-2xs space-y-4">
+                <h5 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                  <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><Clock size={15} /></span>
+                  2. Date, Time & Duration
+                </h5>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-xs font-bold text-slate-700">Exam Date *</label>
+                      <label className="block text-xs font-bold text-slate-600">Exam Date *</label>
                       <div className="flex items-center gap-1.5 text-[11px] font-bold">
                         <button
                           type="button"
                           onClick={() => setFormData(prev => ({ ...prev, examDate: new Date().toISOString().split('T')[0] }))}
-                          className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md hover:bg-emerald-100 cursor-pointer transition"
+                          className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md hover:bg-emerald-100 cursor-pointer"
                         >
                           Today
                         </button>
@@ -1643,7 +1605,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                             tm.setDate(tm.getDate() + 1);
                             setFormData(prev => ({ ...prev, examDate: tm.toISOString().split('T')[0] }));
                           }}
-                          className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md hover:bg-teal-100 cursor-pointer transition"
+                          className="text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md hover:bg-teal-100 cursor-pointer"
                         >
                           Tomorrow
                         </button>
@@ -1654,24 +1616,24 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                       required
                       value={formData.examDate}
                       onChange={e => setFormData({ ...formData, examDate: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Start Time *</label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Start Time *</label>
                     <input
                       type="time"
                       required
                       value={formData.startTime}
                       onChange={e => setFormData({ ...formData, startTime: e.target.value })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm cursor-pointer focus:border-emerald-400"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Duration: <strong className="text-emerald-700">{formData.duration} Mins</strong>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                      Duration ({formData.duration} Mins)
                     </label>
                     <input
                       type="number"
@@ -1679,7 +1641,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                       required
                       value={formData.duration}
                       onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm focus:border-emerald-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold outline-none text-sm focus:border-emerald-400"
                     />
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {[30, 45, 60, 90, 120, 180, 200].map(mins => {
@@ -1689,9 +1651,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                             key={mins}
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, duration: mins }))}
-                            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                            className={`px-2 py-0.5 rounded-lg text-[11px] font-bold transition cursor-pointer ${
                               formData.duration === mins
-                                ? 'bg-emerald-600 text-white shadow-xs'
+                                ? 'bg-emerald-600 text-white'
                                 : 'bg-slate-100 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                             }`}
                           >
@@ -1704,23 +1666,16 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                 </div>
               </div>
 
-              {/* Card 3: Simple Marking Scheme */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-sm">
-                    <Award size={18} />
-                  </div>
-                  <div>
-                    <h5 className="text-sm sm:text-base font-black text-slate-900">3. Marks & Negative Marking</h5>
-                    <p className="text-xs text-slate-500">Set marks per right answer, pass marks, and optional negative penalty</p>
-                  </div>
-                </div>
+              {/* Card 3: Marks & Negative Marking */}
+              <div className="bg-white rounded-2xl border border-amber-200/70 p-5 shadow-2xs space-y-4">
+                <h5 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                  <span className="p-1.5 rounded-lg bg-amber-50 text-amber-600"><Award size={15} /></span>
+                  3. Marks & Negative Marking
+                </h5>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Marks Per Right Answer *
-                    </label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Marks / Question *</label>
                     <input
                       type="number"
                       min={0.5}
@@ -1728,7 +1683,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                       required
                       value={marksPerQuestion}
                       onChange={e => handleMarksPerQuestionChange(Number(e.target.value) || 1)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-400"
                     />
                     <div className="flex items-center gap-1.5 mt-2">
                       {[1, 2, 4].map(m => (
@@ -1736,37 +1691,32 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                           key={m}
                           type="button"
                           onClick={() => handleMarksPerQuestionChange(m)}
-                          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          className={`px-2.5 py-0.5 rounded-lg text-[11px] font-bold transition cursor-pointer ${
                             marksPerQuestion === m
-                              ? 'bg-amber-500 text-white shadow-xs'
+                              ? 'bg-amber-500 text-white'
                               : 'bg-slate-100 text-slate-600 hover:bg-amber-50 hover:text-amber-700'
                           }`}
                         >
-                          +{m} Mark
+                          +{m}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Negative Marking Rule *
-                    </label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Negative Marking</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => setFormData(prev => ({ ...prev, negativeMarks: 0 }))}
-                        className={`p-3.5 rounded-2xl border-2 text-left transition cursor-pointer flex items-center justify-between ${
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer flex items-center justify-between ${
                           formData.negativeMarks === 0
-                            ? 'bg-emerald-50 border-emerald-500 shadow-xs'
-                            : 'bg-slate-50/70 border-slate-200 hover:bg-white'
+                            ? 'bg-emerald-50 border-emerald-400 text-emerald-900'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
                         }`}
                       >
-                        <div>
-                          <div className="text-xs font-black text-slate-900">No Negative Marking (0)</div>
-                          <p className="text-[11px] text-slate-500 mt-0.5">School / SSC / EAMCET</p>
-                        </div>
-                        {formData.negativeMarks === 0 && <Check size={16} className="text-emerald-600 stroke-[3]" />}
+                        <span className="text-xs font-black">No Negative (0)</span>
+                        {formData.negativeMarks === 0 && <Check size={15} className="text-emerald-600 stroke-[3]" />}
                       </button>
 
                       <div
@@ -1775,20 +1725,15 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                             setFormData(prev => ({ ...prev, negativeMarks: 1 }));
                           }
                         }}
-                        className={`p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between ${
+                        className={`p-3 rounded-xl border transition cursor-pointer flex flex-col justify-between ${
                           formData.negativeMarks > 0
-                            ? 'bg-rose-50 border-rose-500 shadow-xs'
-                            : 'bg-slate-50/70 border-slate-200 hover:bg-white'
+                            ? 'bg-rose-50 border-rose-400 text-rose-900'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-xs font-black text-slate-900">Deduct Negative Marks</div>
-                            {formData.negativeMarks === 0 && (
-                              <p className="text-[11px] text-slate-500 mt-0.5">JEE (-1) / NEET (-1)</p>
-                            )}
-                          </div>
-                          {formData.negativeMarks > 0 && <Check size={16} className="text-rose-600 stroke-[3]" />}
+                          <span className="text-xs font-black">Deduct Marks</span>
+                          {formData.negativeMarks > 0 && <Check size={15} className="text-rose-600 stroke-[3]" />}
                         </div>
 
                         {formData.negativeMarks > 0 && (
@@ -1801,7 +1746,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                                   e.stopPropagation();
                                   setFormData(prev => ({ ...prev, negativeMarks: pen }));
                                 }}
-                                className={`px-2 py-0.5 rounded-md text-[11px] font-bold cursor-pointer ${
+                                className={`px-2 py-0.5 rounded text-[11px] font-bold cursor-pointer ${
                                   formData.negativeMarks === pen
                                     ? 'bg-rose-600 text-white'
                                     : 'bg-white text-rose-700 border border-rose-200'
@@ -1816,7 +1761,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                               min={0.1}
                               value={formData.negativeMarks}
                               onChange={e => setFormData(prev => ({ ...prev, negativeMarks: Math.max(0, Number(e.target.value)) }))}
-                              className="w-16 px-2 py-0.5 bg-white border border-rose-300 rounded-md text-center text-xs font-black text-rose-800 outline-none ml-auto"
+                              className="w-14 px-1.5 py-0.5 bg-white border border-rose-300 rounded text-center text-xs font-black text-rose-800 outline-none ml-auto"
                             />
                           </div>
                         )}
@@ -1827,9 +1772,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                      Total Marks * (Auto: {totalQuestionsCount} Qs × {marksPerQuestion}M)
-                    </label>
+                    <label className="block text-xs font-bold text-slate-600 mb-1.5">Total Marks *</label>
                     <div className="flex items-center gap-2">
                       <input
                         type="number"
@@ -1837,12 +1780,12 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                         required
                         value={formData.totalMarks}
                         onChange={e => setFormData({ ...formData, totalMarks: Number(e.target.value) })}
-                        className="flex-1 px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-500 transition"
+                        className="flex-1 px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-amber-400"
                       />
                       <button
                         type="button"
                         onClick={handleSyncTotalMarksFromSections}
-                        className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold cursor-pointer transition shrink-0"
+                        className="px-3.5 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold cursor-pointer shrink-0"
                       >
                         Sync
                       </button>
@@ -1851,7 +1794,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
-                      <label className="block text-xs font-bold text-slate-700">Pass Marks *</label>
+                      <label className="block text-xs font-bold text-slate-600">Pass Marks *</label>
                       <div className="flex items-center gap-1.5 text-[11px] font-bold">
                         {[
                           { label: '35%', pct: 0.35 },
@@ -1862,7 +1805,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                             key={item.label}
                             type="button"
                             onClick={() => setFormData(prev => ({ ...prev, passMarks: Math.round(prev.totalMarks * item.pct) }))}
-                            className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 cursor-pointer transition"
+                            className="text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md hover:bg-indigo-100 cursor-pointer"
                           >
                             {item.label}
                           </button>
@@ -1875,79 +1818,66 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                       required
                       value={formData.passMarks}
                       onChange={e => setFormData({ ...formData, passMarks: Number(e.target.value) })}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-indigo-500 transition"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-black outline-none text-sm focus:border-indigo-400"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Card 4: Subject Sections */}
-              <div className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-purple-500 to-fuchsia-600 text-white flex items-center justify-center shadow-sm">
-                      <Sliders size={18} />
-                    </div>
-                    <div>
-                      <h5 className="text-sm sm:text-base font-black text-slate-900">4. Subject Sections</h5>
-                      <p className="text-xs text-slate-500">Questions & marks breakdown per section</p>
-                    </div>
-                  </div>
-
+              <div className="bg-white rounded-2xl border border-purple-200/70 p-5 shadow-2xs space-y-4">
+                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                  <h5 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><Sliders size={15} /></span>
+                    4. Sections ({totalQuestionsCount} Qs)
+                  </h5>
                   <button
                     type="button"
                     onClick={handleAddSection}
-                    className="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer transition shadow-xs self-start sm:self-center"
+                    className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition"
                   >
-                    <Plus size={14} /> Add Section
+                    <Plus size={14} /> Add
                   </button>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   {sections.map((sec, idx) => (
                     <div
                       key={idx}
-                      className="bg-slate-50/70 p-3.5 rounded-2xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                      className="bg-slate-50/70 p-3 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
                     >
-                      <div className="flex-1 w-full sm:w-auto">
-                        <span className="text-[11px] font-bold text-slate-500 mb-1 block">Section #{idx + 1}</span>
+                      <input
+                        type="text"
+                        value={sec.name}
+                        onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
+                        className="flex-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-purple-400"
+                      />
+                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
                         <input
-                          type="text"
-                          value={sec.name}
-                          onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
-                          className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-purple-500"
+                          type="number"
+                          min={1}
+                          value={sec.count}
+                          onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
+                          title="Questions"
+                          className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-800 text-center outline-none focus:border-purple-400"
                         />
-                      </div>
-
-                      <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
-                        <div>
-                          <span className="text-[11px] font-bold text-slate-500 mb-1 block">Questions</span>
-                          <input
-                            type="number"
-                            min={1}
-                            value={sec.count}
-                            onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
-                            className="w-20 px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-slate-800 text-center outline-none focus:border-purple-500"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[11px] font-bold text-slate-500 mb-1 block">Marks</span>
-                          <input
-                            type="number"
-                            min={1}
-                            value={sec.marks}
-                            onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
-                            className="w-20 px-2.5 py-2 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-black text-purple-700 text-center outline-none focus:border-purple-500"
-                          />
-                        </div>
+                        <span className="text-[11px] font-bold text-slate-400">Qs</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={sec.marks}
+                          onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
+                          title="Marks"
+                          className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-purple-700 text-center outline-none focus:border-purple-400"
+                        />
+                        <span className="text-[11px] font-bold text-slate-400">M</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveSection(idx)}
                           disabled={sections.length <= 1}
-                          className="p-2 mt-4 sm:mt-0 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
-                          title="Delete Section"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </div>
@@ -1956,81 +1886,69 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
               </div>
             </div>
 
-            {/* Right 4 Columns: Colorful Summary & Publish Box */}
-            <div className="lg:col-span-4 lg:sticky lg:top-6 space-y-5">
-              <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
-                <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-5 text-white">
-                  <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full border border-white/25">
-                    Ready to Publish
-                  </span>
-                  <h4 className="text-lg font-black text-white mt-2 leading-snug">
+            {/* Right 4 Columns: Soft Light Summary & Publish */}
+            <div className="lg:col-span-4 lg:sticky lg:top-6">
+              <div className="bg-gradient-to-br from-white to-indigo-50/70 rounded-2xl border border-indigo-200/80 p-5 shadow-xs space-y-4">
+                <div className="border-b border-indigo-100 pb-3">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600">Exam Summary</span>
+                  <h4 className="text-base font-black text-slate-900 mt-0.5 leading-snug">
                     {formData.title || 'Untitled Exam'}
                   </h4>
-                  <p className="text-xs text-white/85 mt-0.5">{currentPreset.title}</p>
                 </div>
 
-                <div className="p-5 space-y-4">
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="p-3 rounded-2xl bg-blue-50 border border-blue-100">
-                      <div className="text-[10px] font-bold text-blue-600 uppercase">Duration</div>
-                      <div className="text-base font-black text-blue-900 mt-0.5">{formData.duration} Mins</div>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-purple-50 border border-purple-100">
-                      <div className="text-[10px] font-bold text-purple-600 uppercase">Total Marks</div>
-                      <div className="text-base font-black text-purple-900 mt-0.5">{formData.totalMarks} Marks</div>
-                    </div>
-                    <div className="p-3 rounded-2xl bg-amber-50 border border-amber-100">
-                      <div className="text-[10px] font-bold text-amber-600 uppercase">Questions</div>
-                      <div className="text-base font-black text-amber-900 mt-0.5">{totalQuestionsCount} Qs</div>
-                    </div>
-                    <div className={`p-3 rounded-2xl border ${formData.negativeMarks > 0 ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                      <div className={`text-[10px] font-bold uppercase ${formData.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
-                        Negative Rule
-                      </div>
-                      <div className={`text-base font-black mt-0.5 ${formData.negativeMarks > 0 ? 'text-rose-900' : 'text-emerald-900'}`}>
-                        {formData.negativeMarks > 0 ? `-${formData.negativeMarks}` : 'None (0)'}
-                      </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="p-3 rounded-xl bg-white border border-blue-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Duration</div>
+                    <div className="text-sm font-black text-blue-700 mt-0.5">{formData.duration} Mins</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-purple-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Total Marks</div>
+                    <div className="text-sm font-black text-purple-700 mt-0.5">{formData.totalMarks}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-amber-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Questions</div>
+                    <div className="text-sm font-black text-amber-700 mt-0.5">{totalQuestionsCount}</div>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white border border-emerald-100">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase">Negative</div>
+                    <div className={`text-sm font-black mt-0.5 ${formData.negativeMarks > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      {formData.negativeMarks > 0 ? `-${formData.negativeMarks}` : '0'}
                     </div>
                   </div>
+                </div>
 
-                  <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs font-bold text-slate-600">
-                    <span>Pass Marks</span>
-                    <span className="text-slate-900 font-black">{formData.passMarks} Marks</span>
-                  </div>
+                <div className="space-y-2 pt-1">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 px-4 rounded-xl font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm"
+                  >
+                    {loading ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" /> Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="w-4 h-4" /> Publish Online Exam
+                      </>
+                    )}
+                  </button>
 
-                  <div className="space-y-2.5 pt-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      type="submit"
-                      disabled={loading}
-                      className="w-full py-3.5 px-5 rounded-2xl font-black text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm hover:scale-[1.01]"
+                      type="button"
+                      onClick={() => setWizardStep('PATTERNS')}
+                      className="py-2 px-3 rounded-xl font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 transition cursor-pointer text-xs flex items-center justify-center gap-1"
                     >
-                      {loading ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" /> Creating Exam...
-                        </>
-                      ) : (
-                        <>
-                          <Zap className="w-4 h-4 text-amber-300" /> Publish Online Exam
-                        </>
-                      )}
+                      <ArrowLeft size={14} /> Patterns
                     </button>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setWizardStep('PATTERNS')}
-                        className="py-2.5 px-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer text-xs flex items-center justify-center gap-1"
-                      >
-                        <ArrowLeft size={14} /> Patterns
-                      </button>
-                      <button
-                        type="button"
-                        onClick={onClose}
-                        className="py-2.5 px-3 rounded-xl font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 transition cursor-pointer text-xs"
-                      >
-                        Cancel
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="py-2 px-3 rounded-xl font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition cursor-pointer text-xs"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               </div>
@@ -5039,75 +4957,61 @@ const StatCard: React.FC<StatCardProps> = ({
   value,
   color,
   icon,
-  subtitle,
-  badgeText,
   active,
   onClick,
 }) => {
-  const gradientMap: Record<StatCardColor, string> = {
-    indigo: 'bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40',
-    blue: 'bg-gradient-to-br from-blue-500 via-blue-600 to-sky-600 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40',
-    emerald: 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40',
-    cyan: 'bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40',
-    purple: 'bg-gradient-to-br from-purple-500 via-purple-600 to-fuchsia-600 shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40',
-    amber: 'bg-gradient-to-br from-amber-500 via-orange-500 to-amber-600 shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40',
-    violet: 'bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 shadow-lg shadow-violet-500/25 hover:shadow-violet-500/40',
-    teal: 'bg-gradient-to-br from-teal-500 via-teal-600 to-emerald-600 shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40',
-    orange: 'bg-gradient-to-br from-orange-500 via-orange-600 to-rose-500 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40',
-    pink: 'bg-gradient-to-br from-pink-500 via-rose-500 to-fuchsia-600 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40',
-    rose: 'bg-gradient-to-br from-rose-500 via-red-500 to-pink-600 shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40',
-    slate: 'bg-gradient-to-br from-sky-500 via-indigo-500 to-blue-600 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40',
+  const cardThemeMap: Record<StatCardColor, string> = {
+    indigo: 'bg-gradient-to-br from-white via-indigo-50/40 to-indigo-100/70 border-indigo-200/80 hover:border-indigo-400',
+    blue: 'bg-gradient-to-br from-white via-blue-50/40 to-blue-100/70 border-blue-200/80 hover:border-blue-400',
+    emerald: 'bg-gradient-to-br from-white via-emerald-50/40 to-emerald-100/70 border-emerald-200/80 hover:border-emerald-400',
+    cyan: 'bg-gradient-to-br from-white via-cyan-50/40 to-cyan-100/70 border-cyan-200/80 hover:border-cyan-400',
+    purple: 'bg-gradient-to-br from-white via-purple-50/40 to-purple-100/70 border-purple-200/80 hover:border-purple-400',
+    amber: 'bg-gradient-to-br from-white via-amber-50/40 to-amber-100/70 border-amber-200/80 hover:border-amber-400',
+    violet: 'bg-gradient-to-br from-white via-violet-50/40 to-violet-100/70 border-violet-200/80 hover:border-violet-400',
+    teal: 'bg-gradient-to-br from-white via-teal-50/40 to-teal-100/70 border-teal-200/80 hover:border-teal-400',
+    orange: 'bg-gradient-to-br from-white via-orange-50/40 to-orange-100/70 border-orange-200/80 hover:border-orange-400',
+    pink: 'bg-gradient-to-br from-white via-pink-50/40 to-pink-100/70 border-pink-200/80 hover:border-pink-400',
+    rose: 'bg-gradient-to-br from-white via-rose-50/40 to-rose-100/70 border-rose-200/80 hover:border-rose-400',
+    slate: 'bg-gradient-to-br from-white via-sky-50/40 to-sky-100/70 border-sky-200/80 hover:border-sky-400',
+  };
+
+  const iconThemeMap: Record<StatCardColor, string> = {
+    indigo: 'bg-indigo-100/80 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white',
+    blue: 'bg-blue-100/80 text-blue-600 group-hover:bg-blue-600 group-hover:text-white',
+    emerald: 'bg-emerald-100/80 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white',
+    cyan: 'bg-cyan-100/80 text-cyan-600 group-hover:bg-cyan-600 group-hover:text-white',
+    purple: 'bg-purple-100/80 text-purple-600 group-hover:bg-purple-600 group-hover:text-white',
+    amber: 'bg-amber-100/80 text-amber-600 group-hover:bg-amber-600 group-hover:text-white',
+    violet: 'bg-violet-100/80 text-violet-600 group-hover:bg-violet-600 group-hover:text-white',
+    teal: 'bg-teal-100/80 text-teal-600 group-hover:bg-teal-600 group-hover:text-white',
+    orange: 'bg-orange-100/80 text-orange-600 group-hover:bg-orange-600 group-hover:text-white',
+    pink: 'bg-pink-100/80 text-pink-600 group-hover:bg-pink-600 group-hover:text-white',
+    rose: 'bg-rose-100/80 text-rose-600 group-hover:bg-rose-600 group-hover:text-white',
+    slate: 'bg-sky-100/80 text-sky-600 group-hover:bg-sky-600 group-hover:text-white',
   };
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`p-5 rounded-3xl text-left transition-all duration-300 cursor-pointer relative overflow-hidden group w-full flex flex-col justify-between gap-4 border border-white/25 hover:-translate-y-1 hover:shadow-xl active:scale-[0.99] ${
-        gradientMap[color]
-      } ${active ? 'ring-4 ring-indigo-300/60 scale-[1.01]' : ''}`}
+      className={`p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer relative overflow-hidden group w-full flex flex-col justify-between gap-4 shadow-2xs hover:shadow-md hover:-translate-y-0.5 ${
+        cardThemeMap[color]
+      } ${active ? 'ring-2 ring-indigo-500/30 shadow-md' : ''}`}
     >
-      {/* Decorative Gloss Bubbles */}
-      <div className="pointer-events-none absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/15 group-hover:scale-125 transition-transform duration-500" />
-      <div className="pointer-events-none absolute -bottom-10 -left-8 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform duration-500" />
-
-      {/* Top Bar: Frosted Icon + Pill Badge + Circle Arrow */}
-      <div className="relative z-10 flex items-center justify-between gap-2 w-full">
-        <div className="flex items-center gap-2.5">
-          <div className="w-11 h-11 rounded-2xl bg-white/20 backdrop-blur-xs border border-white/30 flex items-center justify-center text-white shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shrink-0">
-            {icon}
-          </div>
-          {badgeText && (
-            <span className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-white/20 text-white border border-white/30 backdrop-blur-xs shadow-2xs">
-              {badgeText === 'LIVE' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-lime-300 animate-ping" />
-              )}
-              {badgeText}
-            </span>
-          )}
+      <div className="flex items-center justify-between w-full">
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors duration-200 ${iconThemeMap[color]}`}>
+          {icon}
         </div>
-
-        <div className="w-8 h-8 rounded-full bg-white/20 group-hover:bg-white text-white group-hover:text-indigo-700 border border-white/25 flex items-center justify-center transition-all duration-300 shrink-0 shadow-xs">
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </div>
+        <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-slate-700 group-hover:translate-x-0.5 transition-all" />
       </div>
 
-      {/* Main Title & Metric Value */}
-      <div className="relative z-10 w-full">
-        <div className="text-[11px] font-extrabold uppercase tracking-wider text-white/85">
+      <div className="w-full">
+        <div className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
           {title}
         </div>
-        <div className="text-2xl sm:text-[28px] font-black text-white mt-0.5 tracking-tight truncate drop-shadow-xs leading-tight">
+        <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-1 tracking-tight truncate">
           {value}
         </div>
-      </div>
-
-      {/* Bottom Status Strip */}
-      <div className="relative z-10 text-xs font-bold text-white/90 pt-2.5 border-t border-white/20 flex items-center justify-between gap-2 w-full">
-        <span className="truncate">{subtitle || 'Click to open'}</span>
-        <span className="text-[10px] font-black uppercase tracking-wider text-white/80 group-hover:text-white shrink-0">
-          Open
-        </span>
       </div>
     </button>
   );
