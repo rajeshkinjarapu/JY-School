@@ -1,5 +1,21 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Sidebar Full Text Visibility & Professional Pastel Light Redesign (November 26, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `sidebar lo unna text mottam kanapdali hide avvakudadau sidebar inka andam ga kavali oka professional look lo kavali` (`Online Exam M...` లాగా టెక్స్ట్ కట్ అవ్వకుండా పూర్తిగా కనిపించాలి, ప్రీమియం ప్రొఫెషనల్ లుక్ రావాలి).
+- **పూర్తయిన మార్పులు ([Sidebar.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/components/Layout/Sidebar.tsx)):**
+  1. **పూర్తి టెక్స్ట్ విజిబిలిటీ:** సైడ్‌బార్ వెడల్పును `w-[260px]` నుండి `w-[280px]` కు పెంచి, లేబుల్స్ పై `truncate` తొలగించి `leading-snug break-words whitespace-normal` పెట్టాము — ఇక ఏ మెనూ ఐటెం పేరు కట్ అవ్వదు.
+  2. **Unified Pastel Light Theme:** డార్క్ నేవీ గ్రేడియంట్ బదులు క్రిస్ప్ వైట్ & సాఫ్ట్ పేస్టల్ కాన్వాస్ (`#FFFFFF → #F4F7FC`), ప్రతి మెనూకు వేర్వేరు సాఫ్ట్ పేస్టల్ ఐకాన్ బ్యాడ్జ్, యాక్టివ్ మెనూపై `#5B3DF5 → #7B3DF5` పర్పుల్ గ్రేడియంట్ పిల్ + స్పష్టమైన స్పెసిఫిక్ రూట్ మ్యాచింగ్, మరియు క్లీన్ ప్రొఫైల్ & బ్రాండ్ హెడర్ కార్డు జత చేశాము.
+
+## చివరి సంభాషణ - Online Exam Module Ultra-Deep Architectural Audit & Roadmap (November 26, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `online examination module mottam ultra deep ga check cheyu assalu okadaniki okati connect ayi levu present... lopalu enti errors enti bugs enti ela cheste complete ga online exam module avutuni` (స్క్రీన్‌షాట్: `/competitive-exam-result/:id` నల్ల బ్యాక్‌గ్రౌండ్ + "No Exam Submission Found").
+- **గుర్తించిన కీలక లోపాలు & బగ్స్:**
+  1. **క్రాష్ & విజిబిలిటీ బగ్స్:** [CompetitiveExamsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx#L978) లో `setActiveTab('QUESTIONS')` undefined క్రాష్ బగ్; [index.css](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/index.css#L171-L178) లో `html, body { background-color: #0f172a !important }` కారణంగా `<DashboardLayout>` బయట ఉన్న [CompetitiveExamResultPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamResultPage.tsx) ఖాళీ/లోడింగ్ స్థితిలో నల్లగా మారడం.
+  2. **డూప్లికేట్ & కనెక్ట్ కాని మాడ్యూల్స్:** సైడ్‌బార్‌లో రెండు వేర్వేరు ఆన్‌లైన్ సిస్టమ్‌లు (`Online Quizzes` `/online-exams` vs `Online Exam Module` `/competitive-exams`); `?examId=` ఉన్నప్పుడు పాత `SubjectWiseQuestionBankTab` ఓపెన్ అవ్వడం; Dashboard లో `Answer Keys` ఆఫ్‌లైన్ `/answer-key` కు వెళ్లడం; పాత నిరుపయోగ పేజీలు (`ManageCompetitiveQuestions` లో alert placeholder + పనిచేయని బటన్లు, `CreateCompetitiveExamPage`, `CompetitiveQuestionBankDashboard`).
+  3. **హార్డ్‌కోడెడ్ డమ్మీ డేటా:** [LiveExamMonitorPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/LiveExamMonitorPage.tsx) పూర్తిగా ఫేక్ స్టూడెంట్లు & కౌంట్లతో (`totalStudents = 250`, `Rahul Kumar`) ఉంది మరియు డార్క్ హెడర్ కలిగి ఉంది.
+  4. **సెట్టింగ్స్ & స్కోరింగ్ బగ్స్:** `EduracleCreateExamWizard` పంపే `sections` & `marksPerQuestion` DB లో సేవ్ అవ్వవు; `/api/competitive-exams/:id/student` లో `correctAnswer` లీక్ అవుతోంది; `submitCompetitiveExam` లో `'A'/'B'/'C'/'D'` లెటర్ vs ఆప్షన్ టెక్స్ట్ సరిపోలకపోవడం; `CompetitiveExamResultPage` లో `+4 / -1` హార్డ్‌కోడ్; CBT లో `F5` టైమర్/సెషన్ పర్సిస్టెన్స్ లేకపోవడం; మల్టీ-సెక్షన్ క్లాస్ విజిబిలిటీ లేకపోవడం (`10th A` vs `10th B`).
+
 ## చివరి సంభాషణ - Online Exam Module Unified Pastel Light UI Complete Rollout (November 26, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `ee okka page ye kadu online exam module lo unna prati okka page kuda nenu ichina design and theme laga prati okka page kuda undali` (Online Exam Module లోని ప్రతి ఒక్క పేజీని `#F4F7FC` ఆఫ్-వైట్ కాన్వాస్, `#5B3DF5 → #7B3DF5` పర్పుల్ గ్రేడియంట్ CTA/KPI కార్డులు, మరియు `#EAF3FF`, `#EAFAEE`, `#FFF4E5`, `#FEECEF` పేస్టల్ టైల్స్‌తో ఒకే ప్రొఫెషనల్ Light Theme లోకి మార్చాలని కోరారు).

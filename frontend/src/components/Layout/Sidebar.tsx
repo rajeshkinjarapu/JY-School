@@ -19,59 +19,59 @@ const roleLabels: Record<string, string> = {
   STUDENT: 'Student', ACCOUNTANT: 'Accountant',
 };
 
-// Each nav item gets a specific vivid color
-const NAV_COLORS: Record<string, { text: string; bg: string; glow: string }> = {
-  Dashboard:     { text: '#a5b4fc', bg: 'rgba(99,102,241,0.18)',  glow: '0 0 12px rgba(99,102,241,.5)'  },
-  Admissions:    { text: '#38bdf8', bg: 'rgba(56,189,248,0.18)',  glow: '0 0 12px rgba(56,189,248,.5)'  },
-  Forms:         { text: '#93c5fd', bg: 'rgba(59,130,246,0.18)',  glow: '0 0 12px rgba(59,130,246,.5)'  },
-  Students:      { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
-  Birthdays:     { text: '#f472b6', bg: 'rgba(244,114,182,0.18)', glow: '0 0 12px rgba(244,114,182,.5)' },
-  'Student Birthdays': { text: '#f472b6', bg: 'rgba(244,114,182,0.18)', glow: '0 0 12px rgba(244,114,182,.5)' },
-  Promotion:     { text: '#f43f5e', bg: 'rgba(244,63,94,0.18)',   glow: '0 0 12px rgba(244,63,94,.5)'   },
-  Teachers:      { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)',  glow: '0 0 12px rgba(16,185,129,.5)'  },
-  Classes:       { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
-  Subjects:      { text: '#d9f99d', bg: 'rgba(132,204,22,0.18)',  glow: '0 0 12px rgba(132,204,22,.5)'  },
-  Attendance:    { text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
-  'Daily Report':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)',  glow: '0 0 12px rgba(245,158,11,.5)'  },
-  'Examination': { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
-  'Online Quizzes': { text: '#c084fc', bg: 'rgba(192,132,252,0.18)', glow: '0 0 12px rgba(192,132,252,.5)' },
-  'Online Exam Module': { text: '#34d399', bg: 'rgba(52,211,153,0.18)', glow: '0 0 12px rgba(52,211,153,.5)' },
-  'My Grades':   { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
-  Timetable:     { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
-  Leave:         { text: '#fdba74', bg: 'rgba(249,115,22,0.18)',  glow: '0 0 12px rgba(249,115,22,.5)'  },
-  'Gate Pass':   { text: '#f9a8d4', bg: 'rgba(236,72,153,0.16)', glow: '0 0 12px rgba(236,72,153,.45)' },
-    'Staff Gate Pass': { text: '#f9a8d4', bg: 'rgba(236,72,153,0.16)', glow: '0 0 12px rgba(236,72,153,.45)' },
-  Finance:       { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  'Fee Approvals': { text: '#a78bfa', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  'Fee Payment': { text: '#a78bfa', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  'My Fees':     { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  Announcements: { text: '#e9d5ff', bg: 'rgba(168,85,247,0.18)', glow: '0 0 12px rgba(168,85,247,.5)'  },
-  Messages:      { text: '#f0abfc', bg: 'rgba(217,70,239,0.18)', glow: '0 0 12px rgba(217,70,239,.5)'  },
-  Reports:       { text: '#fda4af', bg: 'rgba(244,63,94,0.18)',  glow: '0 0 12px rgba(244,63,94,.5)'   },
-  Settings:      { text: '#94a3b8', bg: 'rgba(100,116,139,0.18)',glow: '0 0 12px rgba(100,116,139,.5)' },
-  'Website CMS': { text: '#ec4899', bg: 'rgba(236,72,153,0.18)', glow: '0 0 12px rgba(236,72,153,.5)' },
-  'Office Tools':{ text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
-  'ID Cards':    { text: '#818cf8', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
-  'Question Bank':{ text: '#6366f1', bg: 'rgba(99,102,241,0.18)', glow: '0 0 12px rgba(99,102,241,.5)' },
-  'Answer Key':  { text: '#fca5a5', bg: 'rgba(239,68,68,0.18)',   glow: '0 0 12px rgba(239,68,68,.5)'   },
-  Transport:     { text: '#fcd34d', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
-  Roles:         { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
-  'Staff Roles': { text: '#a5b4fc', bg: 'rgba(99,102,241,0.15)', glow: '0 0 12px rgba(99,102,241,.4)'  },
-  'Total Students': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)',   glow: '0 0 12px rgba(6,182,212,.5)'   },
-  'My Attendance':{ text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)'  },
-  'My Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  Homework:      { text: '#86efac', bg: 'rgba(34,197,94,0.18)',   glow: '0 0 12px rgba(34,197,94,.5)'   },
-  'HR Salary':   { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)'  },
-  'Staff Attendance': { text: '#fde68a', bg: 'rgba(245,158,11,0.18)', glow: '0 0 12px rgba(245,158,11,.5)' },
-  'Address Data': { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)', glow: '0 0 12px rgba(16,185,129,.5)' },
-  'Executive Dashboard': { text: '#fbbf24', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
-  'Consolidated Finance': { text: '#c4b5fd', bg: 'rgba(139,92,246,0.18)', glow: '0 0 12px rgba(139,92,246,.5)' },
-  'Group Analytics': { text: '#fda4af', bg: 'rgba(244,63,94,0.18)', glow: '0 0 12px rgba(244,63,94,.5)' },
-  'Faculty Directory': { text: '#6ee7b7', bg: 'rgba(16,185,129,0.18)', glow: '0 0 12px rgba(16,185,129,.5)' },
-  'Student Directory': { text: '#67e8f9', bg: 'rgba(6,182,212,0.18)', glow: '0 0 12px rgba(6,182,212,.5)' },
-  'Group Broadcasts': { text: '#e9d5ff', bg: 'rgba(168,85,247,0.18)', glow: '0 0 12px rgba(168,85,247,.5)' },
-  'Chairman Portal': { text: '#fbbf24', bg: 'rgba(251,191,36,0.18)', glow: '0 0 12px rgba(251,191,36,.5)' },
-  'University View': { text: '#38bdf8', bg: 'rgba(56,189,248,0.18)', glow: '0 0 12px rgba(56,189,248,.5)' },
+// Soft Pastel Light-Theme icon badges & accents for every nav item
+const NAV_COLORS: Record<string, { iconBg: string; iconText: string }> = {
+  Dashboard:              { iconBg: 'bg-[#EFEAFE]', iconText: 'text-[#5B3DF5]' },
+  Admissions:             { iconBg: 'bg-[#E6F4FE]', iconText: 'text-[#0284C7]' },
+  Forms:                  { iconBg: 'bg-[#EAF3FF]', iconText: 'text-[#2563EB]' },
+  Students:               { iconBg: 'bg-[#E6FAFC]', iconText: 'text-[#0891B2]' },
+  Birthdays:              { iconBg: 'bg-[#FCEBF4]', iconText: 'text-[#DB2777]' },
+  'Student Birthdays':    { iconBg: 'bg-[#FCEBF4]', iconText: 'text-[#DB2777]' },
+  Promotion:              { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  Teachers:               { iconBg: 'bg-[#E8F9EF]', iconText: 'text-[#059669]' },
+  Classes:                { iconBg: 'bg-[#EAFAEE]', iconText: 'text-[#16A34A]' },
+  Subjects:               { iconBg: 'bg-[#F0FAD8]', iconText: 'text-[#65A30D]' },
+  Attendance:             { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'Daily Report':         { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'Examination':          { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  'Online Quizzes':       { iconBg: 'bg-[#F4EEFF]', iconText: 'text-[#7C3AED]' },
+  'Online Exam Module':   { iconBg: 'bg-[#E8F9EF]', iconText: 'text-[#059669]' },
+  'My Grades':            { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  Timetable:              { iconBg: 'bg-[#E6FAFC]', iconText: 'text-[#0891B2]' },
+  Leave:                  { iconBg: 'bg-[#FFF1E6]', iconText: 'text-[#EA580C]' },
+  'Gate Pass':            { iconBg: 'bg-[#FCEBF4]', iconText: 'text-[#DB2777]' },
+  'Staff Gate Pass':      { iconBg: 'bg-[#FCEBF4]', iconText: 'text-[#DB2777]' },
+  Finance:                { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  'Fee Approvals':        { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  'Fee Payment':          { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  'My Fees':              { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  Announcements:          { iconBg: 'bg-[#F5EDFF]', iconText: 'text-[#9333EA]' },
+  Messages:               { iconBg: 'bg-[#FCEFFE]', iconText: 'text-[#C026D3]' },
+  Reports:                { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  Settings:               { iconBg: 'bg-[#EEF2F7]', iconText: 'text-[#475569]' },
+  'Website CMS':          { iconBg: 'bg-[#FCEBF4]', iconText: 'text-[#DB2777]' },
+  'Office Tools':         { iconBg: 'bg-[#E6FAFC]', iconText: 'text-[#0891B2]' },
+  'ID Cards':             { iconBg: 'bg-[#EEF2FF]', iconText: 'text-[#4F46E5]' },
+  'Question Bank':        { iconBg: 'bg-[#EFEAFE]', iconText: 'text-[#5B3DF5]' },
+  'Answer Key':           { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  Transport:              { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  Roles:                  { iconBg: 'bg-[#EEF2FF]', iconText: 'text-[#4F46E5]' },
+  'Staff Roles':          { iconBg: 'bg-[#EEF2FF]', iconText: 'text-[#4F46E5]' },
+  'Total Students':       { iconBg: 'bg-[#E6FAFC]', iconText: 'text-[#0891B2]' },
+  'My Attendance':        { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'My Salary':            { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  Homework:               { iconBg: 'bg-[#EAFAEE]', iconText: 'text-[#16A34A]' },
+  'HR Salary':            { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  'Staff Attendance':     { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'Address Data':         { iconBg: 'bg-[#E8F9EF]', iconText: 'text-[#059669]' },
+  'Executive Dashboard':  { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'Consolidated Finance': { iconBg: 'bg-[#F2EDFF]', iconText: 'text-[#6D28D9]' },
+  'Group Analytics':      { iconBg: 'bg-[#FEECEF]', iconText: 'text-[#E11D48]' },
+  'Faculty Directory':    { iconBg: 'bg-[#E8F9EF]', iconText: 'text-[#059669]' },
+  'Student Directory':    { iconBg: 'bg-[#E6FAFC]', iconText: 'text-[#0891B2]' },
+  'Group Broadcasts':     { iconBg: 'bg-[#F5EDFF]', iconText: 'text-[#9333EA]' },
+  'Chairman Portal':      { iconBg: 'bg-[#FFF4E5]', iconText: 'text-[#D97706]' },
+  'University View':      { iconBg: 'bg-[#E6F4FE]', iconText: 'text-[#0284C7]' },
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -193,30 +193,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderContent = () => (
-    <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="px-5 pt-6 pb-5 border-b border-white/8">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 bg-white overflow-hidden shadow-sm"
-            style={{ boxShadow: '0 4px 16px rgba(99,102,241,.5)' }}>
-            <img src="/logo.png?v=1" alt="School Logo" className="w-full h-full object-contain p-0.5" onError={(e) => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '<span class="text-indigo-600 font-bold text-xs">JY</span>'; }} />
+    <div className="flex flex-col h-full bg-gradient-to-b from-white via-[#FAFBFD] to-[#F4F7FC]">
+      {/* Brand Header */}
+      <div className="px-4 pt-5 pb-4 border-b border-slate-200/80 bg-gradient-to-br from-[#F6F3FF] via-white to-[#F4F7FC]">
+        <div className="flex items-center gap-3 pr-6 lg:pr-0">
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 bg-white overflow-hidden border border-[#DDD4FE] shadow-[0_4px_14px_rgba(91,61,245,0.15)]">
+            <img
+              src="/logo.png?v=1"
+              alt="School Logo"
+              className="w-full h-full object-contain p-1"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<span class="text-[#5B3DF5] font-black text-sm">JY</span>';
+              }}
+            />
           </div>
-          <div className="min-w-0 flex flex-col justify-center">
-            <h1 className="text-[16px] font-black text-white leading-tight break-words tracking-wide">{schoolName || 'JY School'}</h1>
-
+          <div className="min-w-0 flex-1 flex flex-col justify-center">
+            <h1 className="text-[15px] font-black text-slate-900 leading-tight break-words tracking-tight">
+              {schoolName || 'JY School'}
+            </h1>
+            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#EFEAFE] text-[#5B3DF5] border border-[#DDD4FE] text-[9.5px] font-extrabold uppercase tracking-wider w-fit">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A]" />
+              School ERP Portal
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-0.5">
+      {/* Navigation Links (Zero truncation — all labels 100% visible) */}
+      <nav className="flex-1 overflow-y-auto px-3 py-3.5 space-y-1">
         {links.map(l => {
           const { to, label, icon: Icon } = l;
-          const isActive = to === '/dashboard'
-            ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
-            : location.pathname.startsWith(to);
+          const hasMoreSpecificMatch = links.some(
+            other => other.to !== to && other.to.startsWith(to + '/') && (location.pathname === other.to || location.pathname.startsWith(other.to + '/'))
+          );
+          const isActive = !hasMoreSpecificMatch && (
+            to === '/dashboard'
+              ? location.pathname === '/dashboard' || location.pathname.startsWith('/dashboard/')
+              : location.pathname === to || location.pathname.startsWith(to + '/')
+          );
           const c = NAV_COLORS[label] || NAV_COLORS['Settings'];
-          
+
           return (
             <NavLink
               key={to}
@@ -235,77 +252,87 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               onMouseLeave={() => {
                 if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
               }}
-              style={isActive ? { background: c.bg, boxShadow: c.glow } : {}}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ease-out cursor-pointer select-none group will-change-transform border border-transparent
-                ${isActive ? 'text-white border-white/10' : 'text-slate-400 hover:text-white hover:bg-white/5 hover:border-white/5 hover:shadow-lg'}`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 cursor-pointer select-none group border ${
+                isActive
+                  ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white border-transparent shadow-[0_6px_16px_-4px_rgba(91,61,245,0.45)]'
+                  : 'bg-transparent border-transparent text-slate-700 hover:text-slate-950 hover:bg-white hover:border-slate-200/80 hover:shadow-[0_2px_8px_rgba(15,23,42,0.04)]'
+              }`}
             >
               <span
-                style={isActive ? { color: c.text } : {}}
-                className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-all duration-300
-                  ${isActive ? 'scale-110' : 'group-hover:opacity-100 opacity-60 group-hover:scale-110'}`}
+                className={`flex items-center justify-center w-8 h-8 rounded-xl shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                  isActive ? 'bg-white/20 text-white' : `${c.iconBg} ${c.iconText}`
+                }`}
               >
-                <Icon className="w-[18px] h-[18px]" strokeWidth={isActive ? 2.5 : 2} />
+                <Icon className="w-[17px] h-[17px]" strokeWidth={isActive ? 2.4 : 2} />
               </span>
-              <span className="flex-1 truncate tracking-wide">{label}</span>
-              <span
-                className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 shadow-sm"
-                style={{ background: c.text, opacity: isActive ? 1 : 0, transform: isActive ? 'scale(1)' : 'scale(0)' }}
-              />
+              <span className="flex-1 leading-snug break-words whitespace-normal tracking-tight">
+                {label}
+              </span>
+              {isActive && (
+                <span className="w-1.5 h-4 rounded-full bg-white/90 shrink-0 shadow-xs" />
+              )}
             </NavLink>
           );
         })}
       </nav>
 
-      {/* User */}
-      <div className="px-3 pb-4 pt-3 border-t border-white/8">
-        {/* APK Install */}
+      {/* Bottom Footer: App Install + Profile */}
+      <div className="px-3 pb-3.5 pt-3 border-t border-slate-200/80 bg-white/80 backdrop-blur-xs space-y-2.5">
         {!isInstalled && (
-          <div className="px-4 mb-4">
-            <button
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/JYSchool.apk';
-                link.download = 'JYSchool.apk';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-              className="w-full flex items-center justify-between p-2.5 bg-gradient-to-r from-[#6366F1] via-[#7C3AED] to-[#A855F7] hover:brightness-110 text-white rounded-xl shadow-lg transition-all cursor-pointer group border border-white/10"
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-sm">
-                  🚀
-                </div>
-                <div className="text-left">
-                  <p className="font-extrabold text-xs leading-tight">Install App</p>
-                  <p className="text-[9px] font-medium text-white/80 leading-tight">Get a School Application</p>
-                </div>
+          <button
+            onClick={() => {
+              const link = document.createElement('a');
+              link.href = '/JYSchool.apk';
+              link.download = 'JYSchool.apk';
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+            }}
+            className="w-full flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white rounded-xl shadow-[0_4px_14px_rgba(91,61,245,0.3)] transition-all cursor-pointer group"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-sm shrink-0">
+                🚀
               </div>
-              <ChevronRight className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
-            </button>
-          </div>
+              <div className="text-left">
+                <p className="font-extrabold text-xs leading-tight text-white">Install App</p>
+                <p className="text-[10px] font-medium text-white/85 leading-tight">Get School Application</p>
+              </div>
+            </div>
+            <ChevronRight className="w-4 h-4 text-white/80 group-hover:translate-x-0.5 transition-transform shrink-0" />
+          </button>
         )}
 
-        <div className="flex items-center gap-2 px-3 py-3 rounded-2xl relative"
-          style={{ background: 'rgba(255,255,255,0.05)' }}>
-          <NavLink 
-            to="/profile" 
+        <div className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-white border border-slate-200/90 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+          <NavLink
+            to="/profile"
             onClick={() => setIsOpen(false)}
-            className="flex flex-1 items-center gap-3 min-w-0 group cursor-pointer"
+            className="flex flex-1 items-center gap-2.5 min-w-0 group cursor-pointer"
             title="Update Profile"
           >
-            {user.photoUrl && (
-              <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden border border-white/20 group-hover:border-indigo-400 transition-colors">
+            {user.photoUrl ? (
+              <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden border border-[#DDD4FE] group-hover:border-[#5B3DF5] transition-colors">
                 <img src={getPhotoUrl(user.photoUrl)} alt={user.name} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="w-9 h-9 rounded-xl shrink-0 bg-[#EFEAFE] text-[#5B3DF5] font-black text-xs flex items-center justify-center border border-[#DDD4FE]">
+                {(user.name || 'U').charAt(0).toUpperCase()}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white break-words leading-tight group-hover:text-indigo-200 transition-colors">{user.name}</p>
-              <p className="text-[10px] font-semibold" style={{ color: '#818cf8' }}>{roleLabels[user.role]}</p>
+              <p className="text-xs font-extrabold text-slate-900 break-words leading-snug group-hover:text-[#5B3DF5] transition-colors">
+                {user.name}
+              </p>
+              <span className="inline-block mt-0.5 text-[10px] font-bold text-[#5B3DF5] bg-[#F3EEFF] px-2 py-0.5 rounded-full">
+                {roleLabels[user.role] || user.role}
+              </span>
             </div>
           </NavLink>
-          <button onClick={logout} title="Logout"
-            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer z-10 shrink-0">
+          <button
+            onClick={logout}
+            title="Logout"
+            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all cursor-pointer shrink-0"
+          >
             <LogOut className="w-4 h-4" />
           </button>
         </div>
@@ -313,21 +340,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     </div>
   );
 
-  const sidebarStyle = {
-    background: 'linear-gradient(180deg, #312e81 0%, #2e1065 60%, #1e1b4b 100%)',
-    borderRight: '1px solid rgba(255,255,255,0.06)',
-  };
-
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsOpen(false)} />
+        <div
+          className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
       )}
-      <aside className={`print:hidden fixed inset-y-0 left-0 z-50 w-[260px] shrink-0 transform transition-transform duration-300 ease-out ${forceDesktopCollapse ? 'lg:hidden lg:absolute' : 'lg:relative lg:translate-x-0'} ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={sidebarStyle}>
-        <button onClick={() => setIsOpen(false)}
-          className="lg:hidden absolute top-4 right-4 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+      <aside
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[280px] shrink-0 bg-white border-r border-slate-200/90 shadow-[4px_0_24px_rgba(15,23,42,0.04)] transform transition-transform duration-300 ease-out ${forceDesktopCollapse ? 'lg:hidden lg:absolute' : 'lg:relative lg:translate-x-0'} ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <button
+          onClick={() => setIsOpen(false)}
+          className="lg:hidden absolute top-4 right-3 z-10 p-1.5 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200 transition-all cursor-pointer"
+        >
           <X className="w-4 h-4" />
         </button>
         {renderContent()}
