@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
 import axios from 'axios';
+import { generateGeminiContentWithFallback } from '../../utils/gemini';
 
 // Helper to parse standard question structures from raw text
 const parseQuestionFromText = (text: string) => {
@@ -111,8 +112,7 @@ ${text || ''}`;
         ];
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const response = await generateGeminiContentWithFallback(ai, {
         contents: contents,
         config: {
           responseMimeType: 'application/json',
@@ -239,8 +239,7 @@ Return ONLY a raw JSON array (no markdown code blocks) where each element has:
   "negativeMarks": 0
 }`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+    const response = await generateGeminiContentWithFallback(ai, {
       contents: [
         {
           role: 'user',
@@ -315,8 +314,7 @@ ${JSON.stringify(subjectContents)}
       const activeKey = apiKey || process.env.GEMINI_API_KEY;
       if (!activeKey) throw new Error('Gemini API key is missing');
       const ai = new GoogleGenAI({ apiKey: activeKey });
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const response = await generateGeminiContentWithFallback(ai, {
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: { responseMimeType: 'application/json' },
       });

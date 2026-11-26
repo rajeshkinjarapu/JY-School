@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import fs from 'fs';
 import path from 'path';
+import { generateGeminiContentWithFallback } from './gemini';
 
 export interface OMRScanResult {
   student_id: string;
@@ -63,8 +64,7 @@ Return ONLY a raw JSON object with no markdown fences:
   const ext = path.extname(filePath).toLowerCase();
   const mimeType = ext === '.png' ? 'image/png' : 'image/jpeg';
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+  const response = await generateGeminiContentWithFallback(ai, {
     contents: [
       {
         inlineData: {

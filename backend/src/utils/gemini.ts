@@ -5,13 +5,44 @@ import fs from 'fs';
 const apiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
-// Candidate Gemini Flash models in priority order
-const CANDIDATE_MODELS = [
-    process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-2.0-flash-exp',
-    'gemini-1.5-pro',
-];
+// Candidate Gemini models in priority order (env override first, then gemini-3.0-flash & fallbacks)
+export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
+  new Set(
+    [
+      process.env.GEMINI_MODEL,
+      'gemini-3.0-flash',
+      'gemini-3-flash-preview',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+    ].filter((m): m is string => Boolean(m && m.trim()))
+  )
+);
+
+// Shared helper to try candidate Gemini models until one succeeds
+export const generateGeminiContentWithFallback = async (
+  client: GoogleGenAI,
+  params: { contents: any; config?: any }
+) => {
+  let lastError: any = null;
+  for (const modelName of GEMINI_CANDIDATE_MODELS) {
+    try {
+      const response = await client.models.generateContent({
+        model: modelName,
+        contents: params.contents,
+        config: params.config,
+      });
+      if (response?.text) {
+        return response;
+      }
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`Gemini model ${modelName} failed, trying next candidate:`, err?.message || err);
+    }
+  }
+  throw lastError || new Error('All Gemini API models failed to respond');
+};
+
+const CANDIDATE_MODELS = GEMINI_CANDIDATE_MODELS;
 
 export const generateQuizQuestions = async (
     prompt: string,
