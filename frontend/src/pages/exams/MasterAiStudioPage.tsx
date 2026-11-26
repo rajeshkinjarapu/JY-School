@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Sparkles, Upload, FileText, Image as ImageIcon, CheckSquare, Square,
@@ -647,13 +648,30 @@ export const MasterAiStudioPage: React.FC = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setExtractedList([])}
                   className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer"
                 >
-                  Start Over / New Input
+                  Start Over
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendToPaperGenerator}
+                  disabled={selectedItems.length === 0}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Printer size={14} /> Open in A4 Paper
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveToMasterBank}
+                  disabled={saving || selectedItems.length === 0}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+                >
+                  <CheckCircle2 size={14} />
+                  <span>{saving ? 'Saving...' : `Save ${selectedItems.length} to Master Bank`}</span>
                 </button>
               </div>
             </div>
@@ -803,33 +821,36 @@ export const MasterAiStudioPage: React.FC = () => {
         )}
       </div>
 
-      {/* Bottom Sticky Light Save Bar (when extracted items exist) */}
-      {extractedList.length > 0 && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[94%] max-w-3xl bg-white border-2 border-indigo-300 rounded-2xl shadow-xl px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs font-black text-indigo-700">
-            {selectedItems.length} of {extractedList.length} Ready to Save
-          </span>
+      {/* Bottom Viewport-Fixed Light Save Bar rendered via Portal so DashboardLayout transforms never cause scrolling */}
+      {extractedList.length > 0 && typeof document !== 'undefined' && createPortal(
+        <div className="fixed bottom-3 left-0 right-0 z-50 pointer-events-none flex justify-center px-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="pointer-events-auto w-full max-w-3xl bg-white/95 backdrop-blur-md border-2 border-indigo-300 rounded-2xl shadow-2xl px-4 sm:px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+            <span className="text-xs font-black text-indigo-700">
+              {selectedItems.length} of {extractedList.length} Ready to Save
+            </span>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={handleSendToPaperGenerator}
-              disabled={selectedItems.length === 0}
-              className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-            >
-              <Printer size={14} /> Open in A4 Paper
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveToMasterBank}
-              disabled={saving || selectedItems.length === 0}
-              className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              <CheckCircle2 size={14} />
-              <span>{saving ? 'Saving...' : `Save ${selectedItems.length} to Master Bank`}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleSendToPaperGenerator}
+                disabled={selectedItems.length === 0}
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                <Printer size={14} /> Open in A4 Paper
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveToMasterBank}
+                disabled={saving || selectedItems.length === 0}
+                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50"
+              >
+                <CheckCircle2 size={14} />
+                <span>{saving ? 'Saving...' : `Save ${selectedItems.length} to Master Bank`}</span>
+              </button>
+            </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

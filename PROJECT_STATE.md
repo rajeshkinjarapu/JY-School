@@ -1,5 +1,18 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Master Question Bank Premium Clean Light UI Upgrade (November 26, 2026)
+- **యూజర్ అభ్యర్థన:** Master Question Bank UI ని ఇంకా మెరుగ్గా (`ee ui inka better ga cheyagalava`) తీర్చిదిద్దడం.
+- **చేసిన మార్పులు ([MasterQuestionBankWorkspace.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Exams/MasterQuestionBankWorkspace.tsx)):**
+  - **1-లైన్ కమాండ్ & ఫిల్టర్ బార్:** `Stream` పిల్స్ రెండో లైన్ లోకి (`General`) విరిగిపోయే సమస్య తొలగించి, పై వరుసలో లైవ్ సమ్మరీ చిప్స్ (`45 Questions`, `Active Subjects`, `Easy · Med · Hard`) + 5 యాక్షన్ బటన్లు, రెండో వరుసలో సింగిల్-లైన్ `Search + Stream + Class + Type + Level` అమర్చాము.
+  - **స్మార్ట్ లెఫ్ట్ సైడ్‌బార్:** ప్రశ్నలు ఉన్న సబ్జెక్టులను పైభాగంలో హైలైట్ చేసి, ఖాళీ (`0`) సబ్జెక్టులను `Other Subjects (N)` టోగుల్ లోపల సర్దాము.
+  - **Cards / Compact View టోగుల్ & ప్రీమియం ప్రశ్న కార్డులు:** ప్రశ్నలను త్వరగా స్కాన్ చేయడానికి `Cards` / `Compact` మోడ్‌లు, లెఫ్ట్ యాక్సెంట్ బోర్డర్, `Chemistry › Chapter` క్లీన్ బ్రెడ్‌క్రమ్బ్ పిల్, కరెక్ట్ ఆప్షన్ పై `CheckCircle2` టిక్, మరియు సాఫ్ట్ స్కై సొల్యూషన్ బాక్స్ జత చేశాము.
+
+## చివరి సంభాషణ - Fix Sticky "Save to Master Bank" Bar Scrolling Issue via React Portal (November 26, 2026)
+- **సమస్య:** [MasterAiStudioPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/MasterAiStudioPage.tsx) లోని `Save to Master Bank` బాటమ్ యాక్షన్ బార్ స్క్రీన్ అడుగున ఫిక్స్‌డ్‌గా ఉండకుండా ప్రశ్నలతో పాటు పైకి స్క్రోల్ అవుతూ Q3 పైకి వస్తోంది (`DashboardLayout` లోని `PullToRefresh` / `animate-slide-in` CSS `transform` కారణంగా `position: fixed` విరిగిపోవడం వల్ల).
+- **పరిష్కారం:**
+  - [MasterAiStudioPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/MasterAiStudioPage.tsx): బాటమ్ యాక్షన్ బార్‌ను `createPortal(..., document.body)` ద్వారా నేరుగా `document.body` లో రెండర్ చేసి స్క్రీన్ అడుగున శాశ్వతంగా ఫిక్స్ చేశాము; అలాగే పైనున్న Review ఫిల్టర్ బార్ లోనే `Open in A4 Paper` & `Save to Master Bank` బటన్లు కూడా జత చేశాము.
+  - [MasterQuestionBankWorkspace.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Exams/MasterQuestionBankWorkspace.tsx): మల్టీ-సెలెక్ట్ బాటమ్ యాక్షన్ బార్‌ను కూడా `createPortal(..., document.body)` తో అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Master Question Bank "Failed to load Master Question Bank" DB Schema Sync Fix (November 26, 2026)
 - **సమస్య:** `/competitive-exams/question-bank` పేజీలో `Failed to load Master Question Bank` ఎర్రర్ టోస్ట్ కనిపిస్తోంది — ఎందుకంటే `schema.prisma` లో కొత్తగా జతచేసిన కాలమ్‌లు (`topicName`, `questionType`, `category`, `subjectName`, `className`, `explanation`, మరియు `CompetitiveExamQuestion.masterQuestionId`) లైవ్ Supabase PostgreSQL డేటాబేస్‌లో `ADD COLUMN` కాకపోవడంతో `getMasterQuestions` క్వెరీ 500 ఎర్రర్ ఇస్తోంది.
 - **పరిష్కారం:**
