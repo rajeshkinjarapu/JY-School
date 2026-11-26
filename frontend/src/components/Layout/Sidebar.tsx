@@ -126,7 +126,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
       
       { to: '/exams',         label: 'Examination',         icon: ClipboardList },
-      { to: '/online-exams',  label: 'Online Quizzes',      icon: PenTool       },
       { to: '/competitive-exams',  label: 'Online Exam Module',  icon: PenTool   },
       { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
       { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
@@ -158,7 +157,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
       { to: '/homework',          label: 'Homework',       icon: BookOpen      },
       { to: '/exams',             label: 'Examination',    icon: PenTool       },
-      { to: '/online-exams',      label: 'Online Quizzes', icon: PenTool       },
       { to: '/competitive-exams', label: 'Online Exam Module', icon: PenTool    },
       { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
       
@@ -169,7 +167,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     ];
     if (role === 'STUDENT') return [...base,
       { to: '/exams',     label: 'My Grades',     icon: ClipboardList },
-      { to: '/online-exams', label: 'Online Quizzes', icon: PenTool       },
       { to: '/competitive-exams', label: 'Online Exam Module', icon: PenTool },
       { to: '/attendance',label: 'Attendance',    icon: CalendarCheck },
       { to: '/timetable', label: 'Timetable',     icon: Calendar      },

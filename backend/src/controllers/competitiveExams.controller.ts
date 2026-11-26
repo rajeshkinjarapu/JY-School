@@ -131,10 +131,12 @@ const SAMPLE_NEET_QUESTIONS = [
   }
 ];
 
-// Helper to ensure database tables exist in PostgreSQL
+// Helper to ensure database tables & extended exam columns exist in PostgreSQL
+let tablesEnsured = false;
 async function ensureTablesExist() {
-  await prisma.$executeRawUnsafe(`
-    CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
+  if (tablesEnsured) return;
+  const statements = [
+    `CREATE TABLE IF NOT EXISTS "CompetitiveExam" (
       "id" TEXT PRIMARY KEY,
       "title" TEXT NOT NULL,
       "classId" TEXT NOT NULL,
@@ -148,11 +150,18 @@ async function ensureTablesExist() {
       "negativeMarks" DOUBLE PRECISION NOT NULL DEFAULT 1,
       "isPublished" BOOLEAN NOT NULL DEFAULT true,
       "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
+    )`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "pattern" TEXT DEFAULT 'CUSTOM'`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "sectionsJson" TEXT`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "marksPerQuestion" DOUBLE PRECISION DEFAULT 4`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "targetClassNames" TEXT`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "allowRetake" BOOLEAN DEFAULT true`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "shuffleQuestions" BOOLEAN DEFAULT false`,
+    `ALTER TABLE "CompetitiveExam" ADD COLUMN IF NOT EXISTS "showResultImmediately" BOOLEAN DEFAULT true`,
+    `CREATE TABLE IF NOT EXISTS "CompetitiveExamQuestion" (
       "id" TEXT PRIMARY KEY,
       "competitiveExamId" TEXT NOT NULL,
+      "masterQuestionId" TEXT,
       "questionText" TEXT NOT NULL,
       "questionType" TEXT NOT NULL DEFAULT 'MCQ',
       "imageUrl" TEXT,
@@ -160,10 +169,12 @@ async function ensureTablesExist() {
       "correctAnswer" TEXT NOT NULL,
       "marks" DOUBLE PRECISION NOT NULL DEFAULT 4,
       "chapterName" TEXT,
-      "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM'
-    );
-
-    CREATE TABLE IF NOT EXISTS "CompetitiveExamSubmission" (
+      "difficulty" TEXT NOT NULL DEFAULT 'MEDIUM',
+      "explanation" TEXT
+    )`,
+    `ALTER TABLE "CompetitiveExamQuestion" ADD COLUMN IF NOT EXISTS "masterQuestionId" TEXT`,
+    `ALTER TABLE "CompetitiveExamQuestion" ADD COLUMN IF NOT EXISTS "explanation" TEXT`,
+    `CREATE TABLE IF NOT EXISTS "CompetitiveExamSubmission" (
       "id" TEXT PRIMARY KEY,
       "competitiveExamId" TEXT NOT NULL,
       "studentId" TEXT NOT NULL,
@@ -171,9 +182,8 @@ async function ensureTablesExist() {
       "totalTimeTaken" INTEGER NOT NULL DEFAULT 0,
       "submittedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
       CONSTRAINT "CompetitiveExamSubmission_competitiveExamId_studentId_key" UNIQUE ("competitiveExamId", "studentId")
-    );
-
-    CREATE TABLE IF NOT EXISTS "CompetitiveExamResponse" (
+    )`,
+    `CREATE TABLE IF NOT EXISTS "CompetitiveExamResponse" (
       "id" TEXT PRIMARY KEY,
       "submissionId" TEXT NOT NULL,
       "questionId" TEXT NOT NULL,
@@ -181,8 +191,118 @@ async function ensureTablesExist() {
       "isCorrect" BOOLEAN NOT NULL,
       "timeTakenSeconds" INTEGER NOT NULL DEFAULT 0,
       CONSTRAINT "CompetitiveExamResponse_submissionId_questionId_key" UNIQUE ("submissionId", "questionId")
+    )`,
+    `CREATE TABLE IF NOT EXISTS "CompetitiveExamSession" (
+      "id" TEXT PRIMARY KEY,
+      "competitiveExamId" TEXT NOT NULL,
+      "studentId" TEXT NOT NULL,
+      "answersJson" TEXT,
+      "remainingSeconds" INTEGER,
+      "warnings" INTEGER NOT NULL DEFAULT 0,
+      "currentQuestionIndex" INTEGER NOT NULL DEFAULT 0,
+      "status" TEXT NOT NULL DEFAULT 'ACTIVE',
+      "startedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "lastHeartbeat" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT "CompetitiveExamSession_exam_student_key" UNIQUE ("competitiveExamId", "studentId")
+    )`,
+  ];
+  for (const stmt of statements) {
+    await prisma.$executeRawUnsafe(stmt).catch(() => {});
+  }
+  tablesEnsured = true;
+}
+
+// Helper: Match student's chosen answer against both exact text and letter keys (A/B/C/D)
+function isAnswerMatch(correctRaw: string, chosenRaw: string | null, rawOptions: any): boolean {
+  if (!chosenRaw) return false;
+  const chosen = String(chosenRaw).trim();
+  const correct = String(correctRaw || '').trim();
+  if (!chosen || !correct) return false;
+  if (chosen === correct || chosen.toLowerCase() === correct.toLowerCase()) return true;
+
+  let opts: string[] = [];
+  if (Array.isArray(rawOptions)) {
+    opts = rawOptions.map((o) => String(o ?? '').trim());
+  } else if (typeof rawOptions === 'string') {
+    try {
+      const parsed = JSON.parse(rawOptions);
+      if (Array.isArray(parsed)) opts = parsed.map((o) => String(o ?? '').trim());
+    } catch {
+      opts = [];
+    }
+  }
+
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const correctUpper = correct.toUpperCase();
+  const chosenUpper = chosen.toUpperCase();
+
+  // Case 1: Correct key is a letter (e.g., "B") and chosen is the option text
+  const letterIdx = letters.indexOf(correctUpper);
+  if (letterIdx >= 0 && opts[letterIdx]) {
+    if (opts[letterIdx] === chosen || opts[letterIdx].toLowerCase() === chosen.toLowerCase()) {
+      return true;
+    }
+  }
+
+  // Case 2: Chosen is a letter (e.g., "B") and correct key is full text
+  const chosenIdx = letters.indexOf(chosenUpper);
+  if (chosenIdx >= 0 && opts[chosenIdx]) {
+    if (opts[chosenIdx] === correct || opts[chosenIdx].toLowerCase() === correct.toLowerCase()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Helper: Load extended exam metadata columns safely via raw SQL
+async function getExamMetaMap(examIds?: string[]): Promise<Record<string, any>> {
+  const map: Record<string, any> = {};
+  try {
+    const rows: any[] = examIds && examIds.length === 1
+      ? await prisma.$queryRawUnsafe(
+          `SELECT "id", "pattern", "sectionsJson", "marksPerQuestion", "targetClassNames", "allowRetake", "shuffleQuestions", "showResultImmediately" FROM "CompetitiveExam" WHERE "id" = $1`,
+          examIds[0]
+        )
+      : await prisma.$queryRawUnsafe(
+          `SELECT "id", "pattern", "sectionsJson", "marksPerQuestion", "targetClassNames", "allowRetake", "shuffleQuestions", "showResultImmediately" FROM "CompetitiveExam"`
+        );
+    for (const r of rows || []) {
+      let sections: any[] = [];
+      try {
+        if (r.sectionsJson) sections = JSON.parse(r.sectionsJson);
+      } catch {}
+      let targetClassNames: string[] = [];
+      try {
+        if (r.targetClassNames) targetClassNames = JSON.parse(r.targetClassNames);
+      } catch {}
+      map[r.id] = {
+        pattern: r.pattern || 'CUSTOM',
+        sections,
+        marksPerQuestion: Number(r.marksPerQuestion) || 4,
+        targetClassNames,
+        allowRetake: r.allowRetake !== false,
+        shuffleQuestions: Boolean(r.shuffleQuestions),
+        showResultImmediately: r.showResultImmediately !== false,
+      };
+    }
+  } catch {}
+  return map;
+}
+
+// Helper: Load question explanations safely via raw SQL
+async function getQuestionExplanationMap(examId: string): Promise<Record<string, string>> {
+  const map: Record<string, string> = {};
+  try {
+    const rows: any[] = await prisma.$queryRawUnsafe(
+      `SELECT "id", "explanation" FROM "CompetitiveExamQuestion" WHERE "competitiveExamId" = $1 AND "explanation" IS NOT NULL`,
+      examId
     );
-  `).catch(() => {});
+    for (const r of rows || []) {
+      if (r.explanation) map[r.id] = r.explanation;
+    }
+  } catch {}
+  return map;
 }
 
 // ==========================================
@@ -207,7 +327,13 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       isPublished,
       questions,
       autoPopulateSample,
-      pattern
+      pattern,
+      sections,
+      marksPerQuestion,
+      targetClassNames,
+      allowRetake,
+      shuffleQuestions,
+      showResultImmediately
     } = req.body;
     
     // 1. Resolve valid class safely (ensuring it exists in database)
@@ -292,6 +418,23 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       }
     });
 
+    // Save extended metadata columns safely
+    const selectedClassObj = await prisma.class.findUnique({ where: { id: validClassId }, select: { name: true } }).catch(() => null);
+    const resolvedTargetClasses = Array.isArray(targetClassNames) && targetClassNames.length > 0
+      ? targetClassNames
+      : (selectedClassObj?.name ? [selectedClassObj.name] : []);
+    await prisma.$executeRawUnsafe(
+      `UPDATE "CompetitiveExam" SET "pattern" = $1, "sectionsJson" = $2, "marksPerQuestion" = $3, "targetClassNames" = $4, "allowRetake" = $5, "shuffleQuestions" = $6, "showResultImmediately" = $7 WHERE "id" = $8`,
+      String(pattern || 'CUSTOM'),
+      Array.isArray(sections) ? JSON.stringify(sections) : null,
+      Number(marksPerQuestion) || 4,
+      JSON.stringify(resolvedTargetClasses),
+      allowRetake !== undefined ? Boolean(allowRetake) : true,
+      Boolean(shuffleQuestions),
+      showResultImmediately !== undefined ? Boolean(showResultImmediately) : true,
+      exam.id
+    ).catch(() => {});
+
     // Populate questions if provided directly in payload
     let createdQuestionsCount = 0;
     if (Array.isArray(questions) && questions.length > 0) {
@@ -338,10 +481,12 @@ export const createCompetitiveExam = async (req: Request, res: Response) => {
       }
     }
 
+    const metaMap = await getExamMetaMap([exam.id]);
+
     return res.status(201).json({ 
       success: true, 
       message: 'Competitive Exam created successfully with questions',
-      data: exam,
+      data: { ...exam, ...(metaMap[exam.id] || {}) },
       questionsCount: createdQuestionsCount 
     });
 
@@ -395,7 +540,13 @@ export const getAllCompetitiveExams = async (req: Request, res: Response) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json({ success: true, data: exams });
+    const metaMap = await getExamMetaMap();
+    const enriched = exams.map((ex: any) => ({
+      ...ex,
+      ...(metaMap[ex.id] || {}),
+    }));
+
+    res.json({ success: true, data: enriched });
   } catch (error) {
     console.error('getAllCompetitiveExams error:', error);
     try {
@@ -418,7 +569,13 @@ export const getCompetitiveExamsByClass = async (req: Request, res: Response) =>
       include: { subject: true, _count: { select: { questions: true } } },
       orderBy: { createdAt: 'desc' }
     });
-    res.json({ success: true, data: exams });
+    const metaMap = await getExamMetaMap();
+    const enriched = exams.map((ex: any) => ({
+      ...ex,
+      ...(metaMap[ex.id] || {}),
+    }));
+
+    res.json({ success: true, data: enriched });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch competitive exams' });
   }
@@ -685,8 +842,9 @@ export const bulkAddQuestions = async (req: Request, res: Response) => {
 
 export const importFromMasterBank = async (req: Request, res: Response) => {
   try {
+    await ensureTablesExist();
     const { examId } = req.params;
-    const { masterQuestionIds } = req.body;
+    const { masterQuestionIds, sectionName } = req.body;
 
     if (!Array.isArray(masterQuestionIds) || masterQuestionIds.length === 0) {
       return res.status(400).json({ success: false, message: 'Please select at least one question to import' });
@@ -697,12 +855,27 @@ export const importFromMasterBank = async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Competitive exam not found' });
     }
 
+    const metaMap = await getExamMetaMap([examId]);
+    const examMarksPerQ = metaMap[examId]?.marksPerQuestion;
+
+    // Avoid duplicating questions already present in this exam
+    const existingRows = await prisma.competitiveExamQuestion.findMany({
+      where: { competitiveExamId: examId, masterQuestionId: { in: masterQuestionIds } },
+      select: { masterQuestionId: true },
+    });
+    const existingSet = new Set(existingRows.map((x) => x.masterQuestionId).filter(Boolean));
+
     const masterQuestions = await prisma.masterQuestion.findMany({
       where: { id: { in: masterQuestionIds } },
     });
 
     const imported = [];
     for (const mq of masterQuestions) {
+      if (existingSet.has(mq.id)) continue;
+      const chap = sectionName
+        ? `${sectionName}: ${mq.topicName || mq.chapterName || 'General'}`
+        : (mq.chapterName || mq.subjectName || 'General');
+
       const created = await prisma.competitiveExamQuestion.create({
         data: {
           competitiveExamId: examId,
@@ -712,18 +885,28 @@ export const importFromMasterBank = async (req: Request, res: Response) => {
           imageUrl: mq.imageUrl || null,
           options: mq.options,
           correctAnswer: mq.correctAnswer,
-          marks: mq.marks || 4,
-          chapterName: mq.chapterName || mq.subjectName || 'General',
+          marks: examMarksPerQ || mq.marks || 4,
+          chapterName: chap,
           difficulty: mq.difficulty || 'MEDIUM',
         },
       });
+      if (mq.explanation) {
+        await prisma.$executeRawUnsafe(
+          `UPDATE "CompetitiveExamQuestion" SET "explanation" = $1 WHERE "id" = $2`,
+          mq.explanation,
+          created.id
+        ).catch(() => {});
+      }
       imported.push(created);
     }
 
     res.status(201).json({
       success: true,
       count: imported.length,
-      message: `Imported ${imported.length} questions from Master Question Bank`,
+      skippedDuplicates: masterQuestions.length - imported.length,
+      message: imported.length > 0
+        ? `Added ${imported.length} questions to exam${masterQuestions.length - imported.length > 0 ? ` (${masterQuestions.length - imported.length} already existed)` : ''}`
+        : 'All selected questions are already in this exam',
       data: imported,
     });
   } catch (error: any) {
@@ -738,23 +921,49 @@ export const importFromMasterBank = async (req: Request, res: Response) => {
 
 export const getStudentCompetitiveExams = async (req: Request, res: Response) => {
   try {
-    const studentId = (req as any).user?.id; 
-    const student = await prisma.student.findUnique({ where: { userId: studentId } });
+    await ensureTablesExist();
+    const userId = (req as any).user?.id;
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      include: { class: true },
+    });
     if (!student) return res.status(404).json({ success: false, message: 'Student not found' });
 
-    const exams = await prisma.competitiveExam.findMany({
-      where: { classId: student.classId, isPublished: true },
-      include: { 
+    const allPublished = await prisma.competitiveExam.findMany({
+      where: { isPublished: true },
+      include: {
         subject: true,
-        submissions: { where: { studentId: student.id } }
+        class: true,
+        _count: { select: { questions: true } },
+        submissions: { where: { studentId: student.id } },
       },
-      orderBy: { startTime: 'desc' }
+      orderBy: { startTime: 'desc' },
     });
 
-    const mapped = exams.map(e => ({
+    const metaMap = await getExamMetaMap();
+    const activeSessions: any[] = await prisma.$queryRawUnsafe(
+      `SELECT "competitiveExamId", "remainingSeconds", "status" FROM "CompetitiveExamSession" WHERE "studentId" = $1 AND "status" = 'ACTIVE'`,
+      student.id
+    ).catch(() => []);
+    const sessionSet = new Set((activeSessions || []).map((s: any) => s.competitiveExamId));
+
+    const studentClassName = (student.class?.name || '').trim().toLowerCase();
+
+    const matchingExams = allPublished.filter((e: any) => {
+      if (e.classId === student.classId) return true;
+      const examClassName = (e.class?.name || '').trim().toLowerCase();
+      if (studentClassName && examClassName && studentClassName === examClassName) return true;
+      const targets: string[] = metaMap[e.id]?.targetClassNames || [];
+      return targets.some((t) => String(t).trim().toLowerCase() === studentClassName);
+    });
+
+    const mapped = matchingExams.map((e: any) => ({
       ...e,
+      ...(metaMap[e.id] || {}),
+      questionsCount: e._count?.questions || 0,
+      hasActiveSession: sessionSet.has(e.id),
       submission: e.submissions.length > 0 ? e.submissions[0] : null,
-      submissions: undefined
+      submissions: undefined,
     }));
 
     res.json({ success: true, data: mapped });
@@ -765,6 +974,7 @@ export const getStudentCompetitiveExams = async (req: Request, res: Response) =>
 
 export const getCompetitiveExamDetails = async (req: Request, res: Response) => {
   try {
+    await ensureTablesExist();
     const { id } = req.params;
     const exam = await prisma.competitiveExam.findUnique({
       where: { id },
@@ -777,7 +987,11 @@ export const getCompetitiveExamDetails = async (req: Request, res: Response) => 
 
     if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
 
-    // Parse options safely
+    const [metaMap, explanationMap] = await Promise.all([
+      getExamMetaMap([id]),
+      getQuestionExplanationMap(id),
+    ]);
+
     const parsedQuestions = exam.questions.map(q => {
       let parsedOptions: string[] = [];
       try {
@@ -787,13 +1001,300 @@ export const getCompetitiveExamDetails = async (req: Request, res: Response) => 
       }
       return {
         ...q,
-        options: parsedOptions
+        options: parsedOptions,
+        explanation: explanationMap[q.id] || null,
       };
     });
 
-    res.json({ success: true, data: { ...exam, questions: parsedQuestions } });
+    res.json({
+      success: true,
+      data: { ...exam, ...(metaMap[id] || {}), questions: parsedQuestions }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to fetch exam details' });
+  }
+};
+
+// SECURE STUDENT CBT PAPER ENDPOINT (Never leaks correctAnswer or explanation!)
+export const getStudentExamPaper = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+    const { id } = req.params;
+    const user = (req as any).user;
+    const userRole = (user?.role || '').toUpperCase();
+    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole);
+
+    const exam = await prisma.competitiveExam.findUnique({
+      where: { id },
+      include: { subject: true, class: true, questions: true },
+    });
+    if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
+
+    const metaMap = await getExamMetaMap([id]);
+    const meta = metaMap[id] || {};
+
+    let savedSession: any = null;
+    if (!isStaff) {
+      if (!exam.isPublished) {
+        return res.status(403).json({ success: false, message: 'This exam is currently in draft mode and not open for students.' });
+      }
+      const student = await prisma.student.findUnique({ where: { userId: user?.id } });
+      if (student) {
+        const existingSub = await prisma.competitiveExamSubmission.findUnique({
+          where: { competitiveExamId_studentId: { competitiveExamId: id, studentId: student.id } },
+        });
+        if (existingSub && meta.allowRetake === false) {
+          return res.json({
+            success: true,
+            alreadySubmitted: true,
+            submissionId: existingSub.id,
+            data: null,
+          });
+        }
+
+        const sessRows: any[] = await prisma.$queryRawUnsafe(
+          `SELECT * FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1 AND "studentId" = $2 LIMIT 1`,
+          id,
+          student.id
+        ).catch(() => []);
+        if (sessRows && sessRows.length > 0 && sessRows[0].status === 'ACTIVE') {
+          let parsedAns = {};
+          try {
+            if (sessRows[0].answersJson) parsedAns = JSON.parse(sessRows[0].answersJson);
+          } catch {}
+          savedSession = {
+            answers: parsedAns,
+            remainingSeconds: Number(sessRows[0].remainingSeconds) || (exam.duration * 60),
+            warnings: Number(sessRows[0].warnings) || 0,
+            currentQuestionIndex: Number(sessRows[0].currentQuestionIndex) || 0,
+          };
+        }
+      }
+    }
+
+    let safeQuestions = exam.questions.map((q) => {
+      let parsedOptions: string[] = [];
+      try {
+        parsedOptions = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+      } catch {
+        parsedOptions = ['Option A', 'Option B', 'Option C', 'Option D'];
+      }
+      return {
+        id: q.id,
+        competitiveExamId: q.competitiveExamId,
+        questionText: q.questionText,
+        questionType: q.questionType,
+        imageUrl: q.imageUrl,
+        options: parsedOptions,
+        marks: q.marks,
+        chapterName: q.chapterName,
+        difficulty: q.difficulty,
+        // IMPORTANT SECURITY: Strip correctAnswer & explanation from student CBT endpoint!
+      };
+    });
+
+    if (!isStaff && meta.shuffleQuestions && safeQuestions.length > 1) {
+      safeQuestions = [...safeQuestions].sort(() => Math.random() - 0.5);
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...exam,
+        ...meta,
+        questions: safeQuestions,
+        savedSession,
+      },
+    });
+  } catch (error) {
+    console.error('getStudentExamPaper error:', error);
+    res.status(500).json({ success: false, message: 'Failed to load exam paper' });
+  }
+};
+
+// REAL-TIME STUDENT EXAM HEARTBEAT & AUTO-SAVE
+export const saveExamHeartbeat = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+    const { id } = req.params;
+    const { answers, remainingSeconds, warnings, currentQuestionIndex } = req.body;
+    const user = (req as any).user;
+    const userRole = (user?.role || '').toUpperCase();
+    if (['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole)) {
+      return res.json({ success: true, status: 'PREVIEW' });
+    }
+
+    const student = await prisma.student.findUnique({ where: { userId: user?.id } });
+    if (!student) return res.json({ success: true, status: 'OK' });
+
+    const existing: any[] = await prisma.$queryRawUnsafe(
+      `SELECT "status" FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1 AND "studentId" = $2 LIMIT 1`,
+      id,
+      student.id
+    ).catch(() => []);
+
+    if (existing && existing.length > 0 && existing[0].status === 'FORCE_SUBMITTED') {
+      return res.json({ success: true, status: 'FORCE_SUBMITTED' });
+    }
+
+    const sessionId = `${id}_${student.id}`;
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO "CompetitiveExamSession" ("id", "competitiveExamId", "studentId", "answersJson", "remainingSeconds", "warnings", "currentQuestionIndex", "status", "startedAt", "lastHeartbeat")
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+       ON CONFLICT ("competitiveExamId", "studentId")
+       DO UPDATE SET "answersJson" = $4, "remainingSeconds" = $5, "warnings" = $6, "currentQuestionIndex" = $7, "status" = 'ACTIVE', "lastHeartbeat" = CURRENT_TIMESTAMP`,
+      sessionId,
+      id,
+      student.id,
+      JSON.stringify(answers || {}),
+      Math.max(0, Number(remainingSeconds) || 0),
+      Math.max(0, Number(warnings) || 0),
+      Math.max(0, Number(currentQuestionIndex) || 0)
+    );
+
+    res.json({ success: true, status: 'ACTIVE' });
+  } catch (error) {
+    res.status(200).json({ success: true, status: 'OK' });
+  }
+};
+
+// REAL-TIME ADMIN LIVE EXAM MONITOR (100% Real DB Sessions + Submissions)
+export const getExamLiveMonitor = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+    const { id } = req.params;
+    const exam = await prisma.competitiveExam.findUnique({
+      where: { id },
+      include: {
+        class: true,
+        subject: true,
+        _count: { select: { questions: true, submissions: true } },
+      },
+    });
+    if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
+
+    const metaMap = await getExamMetaMap([id]);
+    const meta = metaMap[id] || {};
+    const targetClassNames: string[] = meta.targetClassNames?.length
+      ? meta.targetClassNames
+      : (exam.class?.name ? [exam.class.name] : []);
+
+    // Total eligible students in matching class/sections
+    const eligibleStudents = await prisma.student.findMany({
+      where: targetClassNames.length > 0
+        ? { class: { name: { in: targetClassNames } } }
+        : { classId: exam.classId },
+      include: {
+        user: { select: { name: true, photoUrl: true } },
+        class: { select: { name: true, section: true } },
+      },
+      orderBy: { rollNo: 'asc' },
+    });
+
+    const submissions = await prisma.competitiveExamSubmission.findMany({
+      where: { competitiveExamId: id },
+      select: { id: true, studentId: true, marksObtained: true, totalTimeTaken: true, submittedAt: true },
+    });
+    const subMap = new Map(submissions.map((s) => [s.studentId, s]));
+
+    const sessions: any[] = await prisma.$queryRawUnsafe(
+      `SELECT * FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1`,
+      id
+    ).catch(() => []);
+    const sessMap = new Map((sessions || []).map((s: any) => [s.studentId, s]));
+
+    const totalQuestions = exam._count?.questions || 0;
+    const rows = eligibleStudents.map((st) => {
+      const sub = subMap.get(st.id);
+      const sess = sessMap.get(st.id);
+      let answeredCount = 0;
+      if (sess?.answersJson) {
+        try {
+          const parsed = JSON.parse(sess.answersJson);
+          answeredCount = Object.values(parsed || {}).filter((v: any) => v && String(v.option || '').trim() !== '').length;
+        } catch {}
+      }
+
+      if (sub) {
+        return {
+          studentId: st.id,
+          submissionId: sub.id,
+          name: st.user?.name || 'Student',
+          rollNo: st.rollNo || '-',
+          className: st.class ? `${st.class.name}${st.class.section ? ` - ${st.class.section}` : ''}` : '-',
+          status: 'Submitted',
+          progress: 100,
+          warnings: Number(sess?.warnings || 0),
+          marksObtained: sub.marksObtained,
+          lastActivity: sub.submittedAt,
+        };
+      }
+
+      if (sess && sess.status === 'ACTIVE') {
+        const progress = totalQuestions > 0 ? Math.min(100, Math.round((answeredCount / totalQuestions) * 100)) : 0;
+        return {
+          studentId: st.id,
+          name: st.user?.name || 'Student',
+          rollNo: st.rollNo || '-',
+          className: st.class ? `${st.class.name}${st.class.section ? ` - ${st.class.section}` : ''}` : '-',
+          status: 'Active',
+          progress,
+          answeredCount,
+          warnings: Number(sess.warnings || 0),
+          remainingSeconds: Number(sess.remainingSeconds || 0),
+          lastActivity: sess.lastHeartbeat,
+        };
+      }
+
+      return {
+        studentId: st.id,
+        name: st.user?.name || 'Student',
+        rollNo: st.rollNo || '-',
+        className: st.class ? `${st.class.name}${st.class.section ? ` - ${st.class.section}` : ''}` : '-',
+        status: 'Not Started',
+        progress: 0,
+        warnings: 0,
+        lastActivity: null,
+      };
+    });
+
+    const submittedCount = rows.filter((r) => r.status === 'Submitted').length;
+    const activeCount = rows.filter((r) => r.status === 'Active').length;
+    const notStartedCount = rows.filter((r) => r.status === 'Not Started').length;
+
+    res.json({
+      success: true,
+      data: {
+        exam: { ...exam, ...meta },
+        counts: {
+          totalStudents: eligibleStudents.length,
+          started: activeCount + submittedCount,
+          currentlyWriting: activeCount,
+          submitted: submittedCount,
+          notStarted: notStartedCount,
+        },
+        students: rows,
+      },
+    });
+  } catch (error: any) {
+    console.error('getExamLiveMonitor error:', error);
+    res.status(500).json({ success: false, message: error?.message || 'Failed to load live monitor' });
+  }
+};
+
+// FORCE SUBMIT AN ACTIVE STUDENT SESSION BY ADMIN/TEACHER
+export const forceSubmitSession = async (req: Request, res: Response) => {
+  try {
+    await ensureTablesExist();
+    const { id, studentId } = req.params;
+    await prisma.$executeRawUnsafe(
+      `UPDATE "CompetitiveExamSession" SET "status" = 'FORCE_SUBMITTED' WHERE "competitiveExamId" = $1 AND "studentId" = $2`,
+      id,
+      studentId
+    );
+    res.json({ success: true, message: 'Force-submit signal sent to student exam session.' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to force submit session' });
   }
 };
 
@@ -834,39 +1335,51 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Could not resolve student account for exam submission' });
     }
 
-    // Allow re-attempt if already submitted
+    await ensureTablesExist();
+    const metaMap = await getExamMetaMap([id]);
+    const examMeta = metaMap[id] || {};
+    const userRole = ((req as any).user?.role || '').toUpperCase();
+    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole);
+
+    // Check existing submission & retake permission
     const existing = await prisma.competitiveExamSubmission.findUnique({
       where: { competitiveExamId_studentId: { competitiveExamId: id, studentId: student.id } }
     });
     if (existing) {
+      if (!isStaff && examMeta.allowRetake === false) {
+        return res.status(403).json({
+          success: false,
+          message: 'Retakes are disabled for this examination. Your previous submission is final.',
+          submissionId: existing.id,
+        });
+      }
       await prisma.competitiveExamResponse.deleteMany({ where: { submissionId: existing.id } }).catch(() => {});
       await prisma.competitiveExamSubmission.delete({ where: { id: existing.id } }).catch(() => {});
     }
 
     let marksObtained = 0;
     const responseRecords = [];
+    const ansMap = new Map<string, any>((answers || []).map((a: any) => [a.questionId, a]));
 
-    // Evaluate
-    for (const ans of (answers || [])) {
-      const q = exam.questions.find(x => x.id === ans.questionId);
-      if (q) {
-        const rawOpt = ans.selectedOption !== undefined && ans.selectedOption !== null ? String(ans.selectedOption).trim() : '';
-        const chosenOption = rawOpt !== '' ? rawOpt : null;
-        const isCorrect = chosenOption !== null && String(q.correctAnswer).trim() === chosenOption;
-        
-        if (isCorrect) {
-          marksObtained += q.marks;
-        } else if (chosenOption !== null) {
-          marksObtained -= (exam.negativeMarks || 0);
-        }
-        
-        responseRecords.push({
-          questionId: q.id,
-          selectedOption: chosenOption, // null if empty/unselected, never undefined!
-          isCorrect,
-          timeTakenSeconds: Math.max(0, Number(ans.timeTakenSeconds) || 0)
-        });
+    // Evaluate EVERY question in the exam (including unattempted ones so scorecard shows full breakdown)
+    for (const q of exam.questions) {
+      const ans = ansMap.get(q.id);
+      const rawOpt = ans?.selectedOption !== undefined && ans?.selectedOption !== null ? String(ans.selectedOption).trim() : '';
+      const chosenOption = rawOpt !== '' ? rawOpt : null;
+      const isCorrect = isAnswerMatch(q.correctAnswer, chosenOption, q.options);
+
+      if (isCorrect) {
+        marksObtained += Number(q.marks || examMeta.marksPerQuestion || 4);
+      } else if (chosenOption !== null) {
+        marksObtained -= Number(exam.negativeMarks || 0);
       }
+
+      responseRecords.push({
+        questionId: q.id,
+        selectedOption: chosenOption,
+        isCorrect,
+        timeTakenSeconds: Math.max(0, Number(ans?.timeTakenSeconds) || 0)
+      });
     }
 
     const submission = await prisma.competitiveExamSubmission.create({
@@ -898,6 +1411,13 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
         }
       }
     });
+
+    // Mark active exam session as SUBMITTED
+    await prisma.$executeRawUnsafe(
+      `UPDATE "CompetitiveExamSession" SET "status" = 'SUBMITTED', "lastHeartbeat" = CURRENT_TIMESTAMP WHERE "competitiveExamId" = $1 AND "studentId" = $2`,
+      id,
+      student.id
+    ).catch(() => {});
 
     res.json({ success: true, data: submission, submissionId: submission.id });
   } catch (error: any) {
@@ -1011,52 +1531,31 @@ export const getStudentResult = async (req: Request, res: Response) => {
       });
     }
 
-    // Fallback: If no submission in database at all yet, construct an answer-key preview
+    // Return null cleanly if no submission exists yet (no misleading fake 0-score dummy!)
     if (!submission) {
-      const exam = await prisma.competitiveExam.findUnique({
-        where: { id },
-        include: { questions: true, subject: true, class: true }
-      });
+      const exam = await prisma.competitiveExam.findUnique({ where: { id }, select: { id: true } });
       if (!exam) {
         return res.status(404).json({ success: false, message: "Exam not found" });
       }
-
-      // Safe blueprint preview for staff
-      const dummySubmission = {
-        id: `preview-${exam.id}`,
-        competitiveExamId: exam.id,
-        marksObtained: 0,
-        totalTimeTaken: 0,
-        submittedAt: new Date(),
-        student: {
-          rollNo: 'STAFF-PREVIEW',
-          user: { name: user?.name || 'Staff Member', email: user?.email || '' },
-          class: exam.class || { name: 'Demo Class', section: 'A' }
-        },
-        responses: (exam.questions || []).map(q => ({
-          id: `preview-resp-${q.id}`,
-          questionId: q.id,
-          selectedOption: null,
-          isCorrect: false,
-          timeTakenSeconds: 0,
-          question: q
-        })),
-        competitiveExam: exam,
-        exam: exam,
-        previewOnly: true
-      };
-
-      return res.json({
-        success: true,
-        data: dummySubmission
-      });
+      return res.json({ success: true, data: null });
     }
+
+    const [metaMap, explanationMap] = await Promise.all([
+      getExamMetaMap([id]),
+      getQuestionExplanationMap(id),
+    ]);
+
+    const enrichedResponses = (submission.responses || []).map((r: any) => ({
+      ...r,
+      question: r.question ? { ...r.question, explanation: explanationMap[r.question.id] || null } : r.question,
+    }));
 
     res.json({ 
       success: true, 
       data: { 
-        ...submission, 
-        exam: submission.competitiveExam 
+        ...submission,
+        responses: enrichedResponses,
+        exam: { ...(submission.competitiveExam || {}), ...(metaMap[id] || {}) }
       } 
     });
   } catch (error: any) {
@@ -1077,13 +1576,44 @@ export const deleteCompetitiveExam = async (req: Request, res: Response) => {
 
 export const updateCompetitiveExam = async (req: Request, res: Response) => {
   try {
+    await ensureTablesExist();
     const { id } = req.params;
-    const { title, duration, totalMarks, passMarks, negativeMarks } = req.body;
+    const {
+      title, duration, totalMarks, passMarks, negativeMarks, isPublished,
+      pattern, sections, marksPerQuestion, targetClassNames, allowRetake, shuffleQuestions, showResultImmediately
+    } = req.body;
     
+    const dataToUpdate: any = {};
+    if (title !== undefined) dataToUpdate.title = title;
+    if (duration !== undefined) dataToUpdate.duration = Number(duration);
+    if (totalMarks !== undefined) dataToUpdate.totalMarks = Number(totalMarks);
+    if (passMarks !== undefined) dataToUpdate.passMarks = Number(passMarks);
+    if (negativeMarks !== undefined) dataToUpdate.negativeMarks = Number(negativeMarks);
+    if (isPublished !== undefined) dataToUpdate.isPublished = Boolean(isPublished);
+
     const exam = await prisma.competitiveExam.update({
       where: { id },
-      data: { title, duration, totalMarks, passMarks, negativeMarks }
+      data: dataToUpdate
     });
+
+    if (
+      pattern !== undefined || sections !== undefined || marksPerQuestion !== undefined ||
+      targetClassNames !== undefined || allowRetake !== undefined ||
+      shuffleQuestions !== undefined || showResultImmediately !== undefined
+    ) {
+      const existingMeta = (await getExamMetaMap([id]))[id] || {};
+      await prisma.$executeRawUnsafe(
+        `UPDATE "CompetitiveExam" SET "pattern" = $1, "sectionsJson" = $2, "marksPerQuestion" = $3, "targetClassNames" = $4, "allowRetake" = $5, "shuffleQuestions" = $6, "showResultImmediately" = $7 WHERE "id" = $8`,
+        String(pattern ?? existingMeta.pattern ?? 'CUSTOM'),
+        sections !== undefined ? JSON.stringify(sections) : JSON.stringify(existingMeta.sections || []),
+        Number(marksPerQuestion ?? existingMeta.marksPerQuestion ?? 4),
+        targetClassNames !== undefined ? JSON.stringify(targetClassNames) : JSON.stringify(existingMeta.targetClassNames || []),
+        allowRetake !== undefined ? Boolean(allowRetake) : (existingMeta.allowRetake !== false),
+        shuffleQuestions !== undefined ? Boolean(shuffleQuestions) : Boolean(existingMeta.shuffleQuestions),
+        showResultImmediately !== undefined ? Boolean(showResultImmediately) : (existingMeta.showResultImmediately !== false),
+        id
+      ).catch(() => {});
+    }
 
     res.json({ success: true, data: exam });
   } catch (error) {

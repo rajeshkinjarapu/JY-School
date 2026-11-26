@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
-import { Clock, AlertTriangle, ShieldAlert, Eye, LogOut, CheckCircle2 } from 'lucide-react';
+import { Clock, AlertTriangle, ShieldAlert, Eye, LogOut, LayoutGrid, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import katex from 'katex';
@@ -132,10 +132,18 @@ const TakeCompetitiveExamPage = () => {
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [warningMessage, setWarningMessage] = useState('');
+  const [activeSectionTab, setActiveSectionTab] = useState<string>('ALL');
+  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const activeQuestionTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
+  const latestStateRef = useRef({ answers, timeLeft, warnings, currentQuestionIndex });
+
+  useEffect(() => {
+    latestStateRef.current = { answers, timeLeft, warnings, currentQuestionIndex };
+  }, [answers, timeLeft, warnings, currentQuestionIndex]);
 
   useEffect(() => {
     api.get('/api/settings').then(res => {
@@ -163,39 +171,76 @@ const TakeCompetitiveExamPage = () => {
       sessionStorage.removeItem(tabKey);
       if (timerRef.current) clearInterval(timerRef.current);
       if (activeQuestionTimerRef.current) clearInterval(activeQuestionTimerRef.current);
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
   }, [id]);
 
   useEffect(() => {
     if (hasStartedExam && !isStaff) {
       setupAntiCheat();
+      // Periodic 10s heartbeat to save progress & check force-submit signal
+      heartbeatRef.current = setInterval(async () => {
+        try {
+          const snap = latestStateRef.current;
+          const res = await api.post(`/api/competitive-exams/${id}/heartbeat`, {
+            answers: snap.answers,
+            remainingSeconds: snap.timeLeft,
+            warnings: snap.warnings,
+            currentQuestionIndex: snap.currentQuestionIndex,
+          });
+          if (res.data?.status === 'FORCE_SUBMITTED') {
+            toast.error('Exam has been force-submitted by the proctor.');
+            autoSubmit();
+          }
+        } catch {}
+      }, 10000);
     }
     return () => {
       removeAntiCheat();
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current);
     };
   }, [hasStartedExam, isStaff]);
 
   const fetchExam = async () => {
     try {
       const res = await api.get(`/api/competitive-exams/${id}/student`);
+      if (res.data?.alreadySubmitted) {
+        toast.success('You have already submitted this exam. Opening your scorecard.');
+        navigate(`/competitive-exam-result/${id}${res.data.submissionId ? `?submissionId=${res.data.submissionId}` : ''}`, { replace: true });
+        return;
+      }
       const examData = res.data?.data || res.data;
       if (!examData) throw new Error('No exam data received');
       setExam(examData);
 
-      // Calculate remaining time synced with server end time ideally.
-      // For simplicity here, we use duration in seconds
-      setTimeLeft((examData.duration || 180) * 60);
-
-      // Init statuses
-      const initStatuses: any = {};
+      const savedSession = examData.savedSession;
       const qs = examData.questions || [];
+      const initStatuses: any = {};
       qs.forEach((q: any) => initStatuses[q.id] = 'not_visited');
-      if (qs.length > 0) {
-        initStatuses[qs[0].id] = 'not_answered';
+
+      if (savedSession && savedSession.remainingSeconds > 0) {
+        const restoredAns = savedSession.answers || {};
+        setAnswers(restoredAns);
+        setTimeLeft(savedSession.remainingSeconds);
+        setWarnings(savedSession.warnings || 0);
+        setCurrentQuestionIndex(Math.min(qs.length - 1, savedSession.currentQuestionIndex || 0));
+        qs.forEach((q: any, idx: number) => {
+          if (restoredAns[q.id]?.option) initStatuses[q.id] = 'answered';
+          else if (idx === (savedSession.currentQuestionIndex || 0)) initStatuses[q.id] = 'not_answered';
+        });
+        setInstructionsAccepted(true);
+        setHasStartedExam(true);
+        startTimers();
+        toast.success('Resumed your saved exam session!');
+      } else {
+        setTimeLeft((examData.duration || 180) * 60);
+        if (qs.length > 0) {
+          initStatuses[qs[0].id] = 'not_answered';
+        }
       }
       setQuestionStatuses(initStatuses);
-    } catch (err) {
-      toast.error('Failed to load exam or unauthorized.');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to load exam or unauthorized.');
       navigate('/competitive-exams');
     } finally {
       setLoading(false);
@@ -403,8 +448,30 @@ const TakeCompetitiveExamPage = () => {
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  // Group questions into Section tabs if multiple subjects/chapters exist
+  const sectionTabs = useMemo(() => {
+    const qs: any[] = exam?.questions || [];
+    const secs = new Set<string>();
+    qs.forEach((q: any) => {
+      const ch = String(q.chapterName || '').trim();
+      if (ch) secs.add(ch.includes(':') ? ch.split(':')[0].trim() : ch);
+    });
+    return Array.from(secs);
+  }, [exam?.questions]);
+
+  const visibleQuestionIndices = useMemo(() => {
+    const qs: any[] = exam?.questions || [];
+    if (activeSectionTab === 'ALL') return qs.map((_, idx) => idx);
+    return qs.reduce((acc: number[], q: any, idx: number) => {
+      const ch = String(q.chapterName || '').trim();
+      const sec = ch.includes(':') ? ch.split(':')[0].trim() : ch;
+      if (sec === activeSectionTab) acc.push(idx);
+      return acc;
+    }, []);
+  }, [exam?.questions, activeSectionTab]);
+
   if (loading || !exam) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center font-bold text-slate-700">Loading Exam Environment...</div>;
+    return <div className="min-h-screen bg-[#F4F7FC] flex items-center justify-center font-bold text-slate-700">Loading Exam Environment...</div>;
   }
 
   if (!exam.questions || exam.questions.length === 0) {
@@ -591,20 +658,68 @@ const TakeCompetitiveExamPage = () => {
             </button>
           )}
           {warnings > 0 && !isStaff && (
-            <div className="flex items-center gap-2 text-yellow-300 font-bold bg-red-900/40 border border-red-500/30 px-3 py-1 rounded-xl text-xs">
+            <div className="flex items-center gap-2 text-rose-100 font-bold bg-rose-600/80 border border-rose-300/40 px-3 py-1 rounded-xl text-xs">
               <ShieldAlert size={16} /> Warnings: {warnings}/3
             </div>
           )}
-          <div className="flex items-center gap-2 bg-indigo-950/80 px-3.5 py-1.5 rounded-xl border border-indigo-400/30 shadow-inner">
-            <Clock size={18} className={timeLeft < 300 ? 'text-red-400 animate-pulse' : 'text-indigo-300'} />
-            <span className={`text-lg sm:text-xl font-mono font-black ${timeLeft < 300 ? 'text-red-400' : 'text-white'}`}>
+          <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-white/25 shadow-xs">
+            <Clock size={18} className={timeLeft < 300 ? 'text-amber-300 animate-pulse' : 'text-white'} />
+            <span className={`text-lg sm:text-xl font-mono font-black ${timeLeft < 300 ? 'text-amber-300' : 'text-white'}`}>
               {formatTime(timeLeft)}
             </span>
           </div>
+          <button
+            type="button"
+            onClick={() => setMobilePaletteOpen(v => !v)}
+            className="lg:hidden px-3 py-2 rounded-xl bg-white/20 text-white text-xs font-extrabold flex items-center gap-1.5 border border-white/25 cursor-pointer"
+          >
+            <LayoutGrid size={15} /> Palette
+          </button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden w-full">
+      {/* Section Filter Tabs Bar (Shows when exam has multiple sections/chapters) */}
+      {sectionTabs.length > 1 && (
+        <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-2 flex items-center gap-2 overflow-x-auto shrink-0">
+          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 shrink-0 mr-1">Sections:</span>
+          <button
+            type="button"
+            onClick={() => setActiveSectionTab('ALL')}
+            className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+              activeSectionTab === 'ALL'
+                ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-xs'
+                : 'bg-[#F4F7FC] text-slate-700 hover:bg-slate-200'
+            }`}
+          >
+            All ({exam.questions.length})
+          </button>
+          {sectionTabs.map((sec) => {
+            const firstIdxInSec = exam.questions.findIndex((q: any) => {
+              const ch = String(q.chapterName || '').trim();
+              return (ch.includes(':') ? ch.split(':')[0].trim() : ch) === sec;
+            });
+            return (
+              <button
+                key={sec}
+                type="button"
+                onClick={() => {
+                  setActiveSectionTab(sec);
+                  if (firstIdxInSec >= 0) navigateToQuestion(firstIdxInSec);
+                }}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
+                  activeSectionTab === sec
+                    ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-xs'
+                    : 'bg-[#F4F7FC] text-slate-700 hover:bg-slate-200'
+                }`}
+              >
+                {sec}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="flex flex-1 overflow-hidden w-full relative">
         {/* Left Area: Question */}
         <div className="flex-1 flex flex-col border-r border-slate-200 overflow-hidden bg-white">
           <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex justify-between items-center font-bold text-slate-800 shrink-0">
@@ -691,21 +806,30 @@ const TakeCompetitiveExamPage = () => {
           </div>
         </div>
 
-        {/* Right Area: Palette */}
-        <div className="w-80 flex flex-col bg-gray-50 overflow-hidden">
+        {/* Right Area: Responsive Question Palette Drawer */}
+        <div className={`${mobilePaletteOpen ? 'fixed inset-y-0 right-0 z-40 flex shadow-2xl' : 'hidden lg:flex'} w-80 flex-col bg-[#F4F7FC] overflow-hidden border-l border-slate-200`}>
           {/* User Info */}
-          <div className="p-4 border-b border-gray-300 bg-white flex items-center gap-3">
-            <div className="w-12 h-12 bg-indigo-100 rounded text-indigo-800 flex items-center justify-center font-bold text-xl">
-              S
+          <div className="p-4 border-b border-slate-200 bg-white flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 bg-[#EFEAFE] rounded-xl text-[#5B3DF5] flex items-center justify-center font-black text-lg shrink-0">
+                {(user?.name || 'S').charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0">
+                <p className="font-black text-slate-900 text-sm truncate">{user?.name || 'Candidate'}</p>
+                <p className="text-xs text-slate-500 font-semibold truncate">{exam.subject?.name || 'General'}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-bold text-gray-800">Student Profile</p>
-              <p className="text-xs text-gray-500">{exam.subject.name}</p>
-            </div>
+            <button
+              type="button"
+              onClick={() => setMobilePaletteOpen(false)}
+              className="lg:hidden p-1.5 rounded-lg bg-slate-100 text-slate-600 cursor-pointer"
+            >
+              <X size={16} />
+            </button>
           </div>
 
           {/* Legend */}
-          <div className="p-4 border-b border-gray-300 text-xs font-medium text-gray-700 grid grid-cols-2 gap-y-3 bg-white">
+          <div className="p-4 border-b border-slate-200 text-xs font-medium text-gray-700 grid grid-cols-2 gap-y-3 bg-white">
             <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-t-lg rounded-br-lg bg-green-500 text-white flex items-center justify-center">{stats.answered}</div> Answered</div>
             <div className="flex items-center gap-2"><div className="w-6 h-6 rounded-t-lg rounded-br-lg bg-red-500 text-white flex items-center justify-center">{stats.not_answered}</div> Not Answered</div>
             <div className="flex items-center gap-2"><div className="w-6 h-6 rounded bg-gray-200 text-gray-700 flex items-center justify-center">{stats.not_visited}</div> Not Visited</div>
@@ -714,10 +838,13 @@ const TakeCompetitiveExamPage = () => {
           </div>
 
           {/* Palette Grid */}
-          <div className="flex-1 overflow-y-auto p-4 bg-[#e5f1f8]">
-            <h3 className="font-bold text-gray-700 mb-3">{exam.subject?.name || 'General Subject'}</h3>
-            <div className="grid grid-cols-5 gap-3">
-              {exam.questions.map((q: any, idx: number) => {
+          <div className="flex-1 overflow-y-auto p-4 bg-[#EAF3FF]">
+            <h3 className="font-bold text-slate-800 mb-3 text-xs uppercase tracking-wider">
+              {activeSectionTab === 'ALL' ? (exam.subject?.name || 'All Questions') : activeSectionTab}
+            </h3>
+            <div className="grid grid-cols-5 gap-2.5">
+              {visibleQuestionIndices.map((idx: number) => {
+                const q = exam.questions[idx];
                 const status = questionStatuses[q.id];
                 let bgClass = "bg-gray-200 text-gray-700 rounded";
                 if (status === 'answered') bgClass = "bg-green-500 text-white rounded-t-lg rounded-br-lg";
@@ -728,8 +855,13 @@ const TakeCompetitiveExamPage = () => {
                 return (
                   <button
                     key={q.id}
-                    onClick={() => navigateToQuestion(idx)}
-                    className={`w-10 h-10 flex items-center justify-center font-bold relative ${bgClass} hover:opacity-80`}
+                    onClick={() => {
+                      navigateToQuestion(idx);
+                      setMobilePaletteOpen(false);
+                    }}
+                    className={`w-10 h-10 flex items-center justify-center font-bold relative ${bgClass} hover:opacity-80 cursor-pointer ${
+                      currentQuestionIndex === idx ? 'ring-2 ring-[#5B3DF5] ring-offset-1' : ''
+                    }`}
                   >
                     {idx + 1}
                     {status === 'answered_marked_review' && <span className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-green-400 rounded-full border border-white"></span>}

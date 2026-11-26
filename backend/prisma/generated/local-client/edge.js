@@ -138,7 +138,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "c:\\Users\\Admin\\Desktop\\JY School\\JY ERP\\JY-School\\backend\\prisma\\generated\\local-client",
+      "value": "C:\\Users\\Admin\\Desktop\\JY School\\JY ERP\\JY-School\\backend\\prisma\\generated\\local-client",
       "fromEnvVar": null
     },
     "config": {
@@ -160,7 +160,7 @@ const config = {
       }
     ],
     "previewFeatures": [],
-    "sourceFilePath": "c:\\Users\\Admin\\Desktop\\JY School\\JY ERP\\JY-School\\backend\\prisma\\schema_local.prisma",
+    "sourceFilePath": "C:\\Users\\Admin\\Desktop\\JY School\\JY ERP\\JY-School\\backend\\prisma\\schema_local.prisma",
     "isCustomOutput": true
   },
   "relativeEnvPaths": {

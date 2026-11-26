@@ -169,17 +169,15 @@
 
   @media screen {
     html {
-      background-color: #0f172a !important;
-      /* Full solid dark background for bottom navigation bar */
+      background-color: #F4F7FC !important;
     }
 
     body {
-      background-color: #0f172a !important;
+      background-color: #F4F7FC !important;
     }
 
     body.is-native #root {
-      background-color: #0f172a !important;
-      /* Premium dark blue notch area */
+      background-color: #F4F7FC !important;
     }
   }
 

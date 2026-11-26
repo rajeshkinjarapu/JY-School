@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../api/axios";
-import { CheckCircle, XCircle, Clock, Award, BarChart3, ChevronLeft, AlertTriangle, Play, HelpCircle, Check, Printer } from "lucide-react";
+import { useAuth } from "../../hooks/useAuth";
+import { CheckCircle, XCircle, Clock, Award, BarChart3, ChevronLeft, AlertTriangle, Play, Check, Printer, Trophy, Lightbulb } from "lucide-react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
 
@@ -94,6 +95,8 @@ export const CompetitiveExamResultPage = () => {
   const [searchParams] = useSearchParams();
   const submissionId = searchParams.get('submissionId');
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes((user?.role || '').toUpperCase());
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [schoolInfo, setSchoolInfo] = useState<{ schoolName: string; logoUrl: string }>({
@@ -132,8 +135,8 @@ export const CompetitiveExamResultPage = () => {
 
   if (loading) {
     return (
-      <div className="p-12 flex flex-col items-center justify-center min-h-[60vh] space-y-3">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-[#F4F7FC] p-12 flex flex-col items-center justify-center space-y-3">
+        <div className="w-10 h-10 border-4 border-[#5B3DF5] border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-600 font-bold text-sm">Evaluating test score and loading result...</p>
       </div>
     );
@@ -141,37 +144,51 @@ export const CompetitiveExamResultPage = () => {
 
   if (!result) {
     return (
-      <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 animate-fadeIn">
-        <button 
-          onClick={() => navigate("/competitive-exams")} 
-          className="p-2.5 bg-white rounded-2xl shadow-sm border border-slate-200 hover:bg-slate-50 flex items-center gap-2 text-xs font-bold text-slate-700 transition cursor-pointer"
-        >
-          <ChevronLeft size={16} /> Back to Competitive Exams
-        </button>
+      <div className="min-h-screen bg-[#F4F7FC] p-4 md:p-8 flex items-center justify-center">
+        <div className="max-w-xl w-full space-y-5">
+          <button 
+            onClick={() => navigate("/competitive-exams")} 
+            className="px-4 py-2.5 bg-white rounded-xl shadow-[0_2px_10px_rgba(15,23,42,0.03)] border border-slate-200/80 hover:bg-slate-50 inline-flex items-center gap-2 text-xs font-bold text-slate-700 transition cursor-pointer"
+          >
+            <ChevronLeft size={16} /> Back to Online Exam Module
+          </button>
 
-        <div className="bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm text-center space-y-5">
-          <div className="w-16 h-16 rounded-3xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center mx-auto shadow-xs">
-            <AlertTriangle size={32} />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black text-slate-900">No Exam Submission Found</h2>
-            <p className="text-sm text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
-              No test attempt record is available for this exam yet. If you haven't taken this CBT test, you can launch it now.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
-            <button
-              onClick={() => navigate("/competitive-exams")}
-              className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
-            >
-              Return to Exams List
-            </button>
-            <button
-              onClick={() => navigate(`/take-competitive-exam/${id}`)}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-extrabold text-xs shadow-md transition cursor-pointer flex items-center gap-2"
-            >
-              <Play size={14} className="fill-white" /> Launch CBT Exam Now
-            </button>
+          <div className="bg-white rounded-2xl p-8 sm:p-10 border border-slate-200/80 shadow-[0_4px_20px_rgba(15,23,42,0.05)] text-center space-y-5">
+            <div className="w-16 h-16 rounded-2xl bg-[#FFF4E5] text-[#D97706] border border-[#FDE2BA] flex items-center justify-center mx-auto">
+              <AlertTriangle size={32} />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                {isStaff ? 'No Student Submission Yet' : 'No Exam Submission Found'}
+              </h2>
+              <p className="text-sm text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
+                {isStaff
+                  ? 'No student has submitted an attempt for this exam yet. You can view the exam merit leaderboard or launch a CBT preview.'
+                  : "No test attempt record is available for this exam yet. If you haven't taken this CBT test, you can launch it now."}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => navigate("/competitive-exams/results")}
+                className="px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+              >
+                {isStaff ? 'View All Results' : 'Return to Exams List'}
+              </button>
+              {isStaff && (
+                <button
+                  onClick={() => navigate(`/competitive-exam-leaderboard/${id}`)}
+                  className="px-5 py-2.5 rounded-xl bg-[#FFF4E5] hover:bg-[#FFE9CC] text-[#D97706] border border-[#FDE2BA] font-extrabold text-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <Trophy size={14} /> Merit Leaderboard
+                </button>
+              )}
+              <button
+                onClick={() => navigate(`/take-competitive-exam/${id}`)}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs shadow-sm transition cursor-pointer flex items-center gap-2"
+              >
+                <Play size={14} className="fill-white" /> {isStaff ? 'Launch CBT Preview' : 'Launch CBT Exam Now'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -181,211 +198,260 @@ export const CompetitiveExamResultPage = () => {
   const exam = result.exam || {};
   const responses = result.responses || [];
   const totalQuestions = exam.questions?.length || responses.length;
-  const correct = responses.filter((r: any) => r.isCorrect).length;
-  const incorrect = responses.filter((r: any) => !r.isCorrect && r.selectedOption).length;
-  const unattempted = totalQuestions - (correct + incorrect);
+  const correctResponses = responses.filter((r: any) => r.isCorrect);
+  const incorrectResponses = responses.filter((r: any) => !r.isCorrect && r.selectedOption && String(r.selectedOption).trim() !== '');
+  const correct = correctResponses.length;
+  const incorrect = incorrectResponses.length;
+  const unattempted = Math.max(0, totalQuestions - (correct + incorrect));
   const accuracy = (correct + incorrect) > 0 ? Math.round((correct / (correct + incorrect)) * 100) : 0;
+  const negPerQ = Number(exam.negativeMarks ?? 0);
+  const marksPerQDefault = Number(exam.marksPerQuestion || responses[0]?.question?.marks || 4);
+  const positiveMarksEarned = correctResponses.reduce((sum: number, r: any) => sum + Number(r.question?.marks || marksPerQDefault), 0);
+  const negativeMarksDeducted = Number((incorrect * negPerQ).toFixed(2));
+  const isStaffBlueprintPreview = Boolean(result.previewOnly);
 
   const formatTime = (secs: number) => {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
+    const safe = Math.max(0, Number(secs) || 0);
+    const m = Math.floor(safe / 60);
+    const s = safe % 60;
     return `${m}m ${s}s`;
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto bg-slate-50 min-h-screen">
-      {/* Top Institutional School Branding Header */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 text-white p-6 sm:p-7 rounded-3xl border border-indigo-400/20 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
-        <div className="flex items-center gap-4 sm:gap-5">
-          <button 
-            onClick={() => navigate("/competitive-exams")} 
-            className="p-2.5 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition cursor-pointer shrink-0 border border-white/20"
-            title="Return to Exams"
-          >
-            <ChevronLeft size={20} />
-          </button>
-
-          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-white p-1.5 shadow-lg flex items-center justify-center shrink-0 border border-white/20">
-            <img 
-              src={schoolInfo.logoUrl || '/logo.png?v=1'} 
-              alt="School Logo" 
-              className="w-full h-full object-contain" 
-              onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
-            />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black tracking-widest uppercase bg-amber-400 text-slate-950 px-2.5 py-0.5 rounded-full shadow-xs">
-                OFFICIAL CBT SCORECARD
-              </span>
-              <span className="text-xs text-indigo-200 font-bold">Class: {exam.class?.name || '10th Standard'}</span>
+    <div className="min-h-screen bg-[#F4F7FC]">
+      <div className="p-4 md:p-8 space-y-5 max-w-7xl mx-auto">
+        {isStaffBlueprintPreview && (
+          <div className="bg-[#FFF4E5] border border-[#FDE2BA] rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 text-xs font-bold text-[#9A3412]">
+              <AlertTriangle size={16} className="text-[#D97706] shrink-0" />
+              <span>Staff Answer-Key Preview: No student has submitted this exam yet. Below is the official question &amp; answer key verification sheet.</span>
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-wide text-white mt-1 uppercase">
-              {schoolInfo.schoolName}
-            </h1>
-            <p className="text-xs sm:text-sm text-indigo-200 font-medium mt-0.5">
-              {exam.title || 'Competitive Mock Test'} &bull; Subject: {exam.subject?.name || 'General'}
+            <button
+              onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id || id}`)}
+              className="px-3.5 py-1.5 rounded-xl bg-white border border-[#FDE2BA] text-[#D97706] text-xs font-extrabold cursor-pointer hover:bg-amber-50"
+            >
+              Open Leaderboard
+            </button>
+          </div>
+        )}
+
+        {/* Top Institutional School Branding Header (Unified Pastel Light Card) */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col md:flex-row justify-between items-start md:items-center gap-5">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate(isStaff ? "/competitive-exams/results" : "/competitive-exams")} 
+              className="p-2.5 bg-[#F4F7FC] hover:bg-slate-200/70 text-slate-700 rounded-xl border border-slate-200 transition cursor-pointer shrink-0"
+              title="Return to Exams"
+            >
+              <ChevronLeft size={20} />
+            </button>
+
+            <div className="w-14 h-14 rounded-2xl bg-[#F4F7FC] p-1.5 flex items-center justify-center shrink-0 border border-slate-200">
+              <img 
+                src={schoolInfo.logoUrl || '/logo.png?v=1'} 
+                alt="School Logo" 
+                className="w-full h-full object-contain" 
+                onError={(e) => { (e.currentTarget as any).src = '/logo.png?v=1'; }} 
+              />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-black tracking-widest uppercase bg-[#EFEAFE] text-[#5B3DF5] border border-[#DDD4FE] px-2.5 py-0.5 rounded-full">
+                  OFFICIAL CBT SCORECARD
+                </span>
+                <span className="text-xs text-slate-600 font-bold">
+                  {result.student?.user?.name ? `${result.student.user.name} • ` : ''}
+                  Class: {exam.class?.name || 'All'}
+                </span>
+              </div>
+              <h1 className="text-lg sm:text-xl md:text-2xl font-black tracking-tight text-slate-900 mt-1 uppercase">
+                {schoolInfo.schoolName}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-0.5">
+                {exam.title || 'Competitive Exam'} &bull; Subject: {exam.subject?.name || 'General'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-end print:hidden">
+            {isStaff && (
+              <button
+                onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id || id}`)}
+                className="px-4 py-2.5 rounded-xl bg-[#FFF4E5] hover:bg-[#FFE9CC] text-[#D97706] border border-[#FDE2BA] font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+              >
+                <Trophy size={15} /> Leaderboard
+              </button>
+            )}
+            <button
+              onClick={() => window.print()}
+              className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Printer size={15} /> Print Scorecard
+            </button>
+            <button
+              onClick={() => navigate(`/take-competitive-exam/${exam.id || id}`)}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition cursor-pointer"
+            >
+              <Play size={14} className="fill-white" /> {isStaff ? 'Preview CBT' : 'Retake Test'}
+            </button>
+          </div>
+        </div>
+
+        {/* Unified Pastel 5-Tile KPI Stats Ribbon */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
+          <div className="bg-gradient-to-br from-[#5B3DF5] to-[#7B3DF5] text-white p-5 rounded-2xl shadow-sm flex flex-col justify-between">
+            <p className="text-indigo-100 text-[10px] font-black uppercase tracking-wider">Total Marks</p>
+            <div className="my-1.5">
+              <h2 className="text-3xl font-black tabular-nums">{result.marksObtained}</h2>
+              <span className="text-xs text-indigo-100 font-bold">out of {exam.totalMarks || 100}</span>
+            </div>
+            <span className="text-[10px] font-bold text-white bg-white/15 px-2.5 py-0.5 rounded-full w-fit">
+              Score Earned
+            </span>
+          </div>
+
+          <div className="bg-[#EAFAEE] p-5 rounded-2xl border border-[#CBEFD6] flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <p className="text-[#16A34A] text-[10px] font-black uppercase tracking-wider">Correct</p>
+              <CheckCircle className="w-5 h-5 text-[#16A34A]" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 my-1 tabular-nums">{correct}</h3>
+            <p className="text-[11px] font-bold text-[#16A34A]">+{positiveMarksEarned} Marks</p>
+          </div>
+
+          <div className="bg-[#FEECEF] p-5 rounded-2xl border border-[#FBD0D8] flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <p className="text-[#E11D48] text-[10px] font-black uppercase tracking-wider">Incorrect</p>
+              <XCircle className="w-5 h-5 text-[#E11D48]" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 my-1 tabular-nums">{incorrect}</h3>
+            <p className="text-[11px] font-bold text-[#E11D48]">
+              {negPerQ > 0 ? `-${negativeMarksDeducted} Negative` : '0 Negative Penalty'}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-          <button
-            onClick={() => window.print()}
-            className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 transition cursor-pointer"
-          >
-            <Printer size={15} /> Print Scorecard
-          </button>
-          <button
-            onClick={() => navigate(`/take-competitive-exam/${exam.id || id}`)}
-            className="px-5 py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md transition cursor-pointer"
-          >
-            <Play size={14} className="fill-white" /> Retake Test
-          </button>
-        </div>
-      </div>
-
-      {/* KPI Stats Ribbon */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5">
-        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 rounded-3xl shadow-md flex flex-col justify-between">
-          <p className="text-indigo-200 text-[10px] font-black uppercase tracking-wider">Total Marks</p>
-          <div className="my-2">
-            <h2 className="text-3xl font-black">{result.marksObtained}</h2>
-            <span className="text-xs text-indigo-200 font-bold">out of {exam.totalMarks || 100}</span>
+          <div className="bg-[#EAF3FF] p-5 rounded-2xl border border-[#D4E6FF] flex flex-col justify-between">
+            <div className="flex justify-between items-center">
+              <p className="text-[#2563EB] text-[10px] font-black uppercase tracking-wider">Accuracy</p>
+              <Award className="w-5 h-5 text-[#2563EB]" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 my-1 tabular-nums">{accuracy}%</h3>
+            <p className="text-[11px] font-bold text-slate-600">{unattempted} Unattempted</p>
           </div>
-          <span className="text-[10px] font-bold text-indigo-100 bg-white/10 px-2 py-0.5 rounded-full w-fit">
-            Score Earned
-          </span>
-        </div>
 
-        <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-200 flex flex-col justify-between">
-          <div className="flex justify-between items-center">
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider">Correct</p>
-            <CheckCircle className="w-5 h-5 text-emerald-500" />
+          <div className="bg-[#FFF4E5] p-5 rounded-2xl border border-[#FDE2BA] flex flex-col justify-between col-span-2 md:col-span-1">
+            <div className="flex justify-between items-center">
+              <p className="text-[#D97706] text-[10px] font-black uppercase tracking-wider">Time Spent</p>
+              <Clock className="w-5 h-5 text-[#D97706]" />
+            </div>
+            <h3 className="text-2xl font-black text-slate-900 my-1 tabular-nums">{formatTime(result.totalTimeTaken)}</h3>
+            <p className="text-[11px] font-bold text-slate-600">Limit: {exam.duration || 180}m</p>
           </div>
-          <h3 className="text-2xl font-black text-emerald-600 my-1">{correct}</h3>
-          <p className="text-[11px] font-bold text-slate-500">+{correct * 4} Marks</p>
         </div>
 
-        <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-200 flex flex-col justify-between">
-          <div className="flex justify-between items-center">
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider">Incorrect</p>
-            <XCircle className="w-5 h-5 text-rose-500" />
+        {/* Detailed Question Analysis */}
+        <div className="bg-white rounded-2xl p-5 sm:p-7 shadow-[0_2px_10px_rgba(15,23,42,0.03)] border border-slate-200/80 space-y-5">
+          <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+            <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+              <BarChart3 className="text-[#5B3DF5]" size={20} /> Detailed Question-by-Question Analysis
+            </h3>
+            <span className="text-xs font-bold text-slate-500">
+              {responses.length} Questions Reviewed
+            </span>
           </div>
-          <h3 className="text-2xl font-black text-rose-600 my-1">{incorrect}</h3>
-          <p className="text-[11px] font-bold text-slate-500">-{incorrect * (exam.negativeMarks || 1)} Negative</p>
-        </div>
 
-        <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-200 flex flex-col justify-between">
-          <div className="flex justify-between items-center">
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider">Accuracy</p>
-            <Award className="w-5 h-5 text-indigo-500" />
-          </div>
-          <h3 className="text-2xl font-black text-indigo-600 my-1">{accuracy}%</h3>
-          <p className="text-[11px] font-bold text-slate-500">{unattempted} Unattempted</p>
-        </div>
+          <div className="space-y-4">
+            {responses.map((r: any, idx: number) => {
+              const isCorrect = r.isCorrect;
+              const notAttempted = !r.selectedOption || String(r.selectedOption).trim() === '';
+              const qMarks = Number(r.question?.marks || marksPerQDefault);
 
-        <div className="bg-white p-5 rounded-3xl shadow-xs border border-slate-200 flex flex-col justify-between">
-          <div className="flex justify-between items-center">
-            <p className="text-slate-400 text-[10px] font-black uppercase tracking-wider">Time Spent</p>
-            <Clock className="w-5 h-5 text-amber-500" />
-          </div>
-          <h3 className="text-2xl font-black text-slate-800 my-1">{formatTime(result.totalTimeTaken)}</h3>
-          <p className="text-[11px] font-bold text-slate-500">Limit: {exam.duration || 180}m</p>
-        </div>
-      </div>
-
-      {/* Detailed Question Analysis */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-200 space-y-5">
-        <div className="flex justify-between items-center pb-4 border-b border-slate-100">
-          <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-            <BarChart3 className="text-indigo-600" size={20} /> Detailed Question-by-Question Analysis
-          </h3>
-          <span className="text-xs font-bold text-slate-500">
-            {responses.length} Responses Reviewed
-          </span>
-        </div>
-
-        <div className="space-y-4">
-          {responses.map((r: any, idx: number) => {
-            const isCorrect = r.isCorrect;
-            const notAttempted = !r.selectedOption || r.selectedOption.trim() === '';
-
-            let borderBg = "border-slate-300 bg-slate-50/70";
-            let statusBadge = (
-              <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-black uppercase">
-                Not Attempted (0 Marks)
-              </span>
-            );
-
-            if (isCorrect) {
-              borderBg = "border-emerald-500 bg-emerald-50/50";
-              statusBadge = (
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase flex items-center gap-1">
-                  <Check size={11} /> Correct (+{r.question?.marks || 4})
+              let borderBg = "border-slate-200 bg-slate-50/70";
+              let statusBadge = (
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-black uppercase">
+                  Not Attempted (0 Marks)
                 </span>
               );
-            } else if (!notAttempted) {
-              borderBg = "border-rose-400 bg-rose-50/50";
-              statusBadge = (
-                <span className="px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[10px] font-black uppercase">
-                  Incorrect (-{exam.negativeMarks || 1})
-                </span>
-              );
-            }
 
-            return (
-              <div key={r.id || idx} className={`p-5 rounded-2xl border-2 transition ${borderBg}`}>
-                <div className="flex justify-between items-start gap-3 mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0">
-                      Q{idx + 1}
-                    </span>
-                    {r.question?.chapterName && (
-                      <span className="text-[10px] font-bold text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
-                        {r.question.chapterName}
+              if (isCorrect) {
+                borderBg = "border-[#86EFAC] bg-[#F2FCF5]";
+                statusBadge = (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-[10px] font-black uppercase flex items-center gap-1">
+                    <Check size={11} /> Correct (+{qMarks})
+                  </span>
+                );
+              } else if (!notAttempted) {
+                borderBg = "border-[#FDA4AF] bg-[#FFF5F7]";
+                statusBadge = (
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#FFE4E6] text-[#BE123C] text-[10px] font-black uppercase">
+                    Incorrect ({negPerQ > 0 ? `-${negPerQ}` : '0'})
+                  </span>
+                );
+              }
+
+              return (
+                <div key={r.id || idx} className={`p-5 rounded-2xl border transition ${borderBg}`}>
+                  <div className="flex flex-wrap justify-between items-start gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white font-black text-xs flex items-center justify-center shrink-0">
+                        Q{idx + 1}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {statusBadge}
-                    <span className="text-[11px] font-bold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200 flex items-center gap-1">
-                      <Clock size={11} /> {formatTime(r.timeTakenSeconds)}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Question Statement with KaTeX */}
-                <div className="text-sm font-bold text-slate-800 leading-relaxed pl-1 mb-3">
-                  <LatexRenderer text={r.question?.questionText || "Question text unavailable"} />
-                </div>
-
-                {/* Question Diagram if any */}
-                {r.question?.imageUrl && (
-                  <div className="mb-3 p-2 bg-white rounded-xl border border-slate-200 inline-block">
-                    <img src={r.question.imageUrl} alt="Diagram" className="max-h-40 object-contain rounded" />
-                  </div>
-                )}
-
-                {/* Answer Comparison */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
-                  <div className="bg-white p-3 rounded-xl border border-slate-200">
-                    <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Your Selected Option</span>
-                    <div className={`text-xs font-bold ${isCorrect ? "text-emerald-700" : notAttempted ? "text-slate-500" : "text-rose-700"}`}>
-                      {notAttempted ? "— No Option Chosen —" : <LatexRenderer text={r.selectedOption} />}
+                      {r.question?.chapterName && (
+                        <span className="text-[11px] font-bold text-[#2563EB] bg-[#EAF3FF] px-2.5 py-0.5 rounded-lg border border-[#D4E6FF]">
+                          {r.question.chapterName}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {statusBadge}
+                      <span className="text-[11px] font-bold text-slate-600 bg-white px-2.5 py-0.5 rounded-lg border border-slate-200 flex items-center gap-1">
+                        <Clock size={11} /> {formatTime(r.timeTakenSeconds)}
+                      </span>
                     </div>
                   </div>
 
-                  <div className="bg-white p-3 rounded-xl border border-slate-200">
-                    <span className="text-[10px] uppercase font-black text-emerald-600 block mb-1">Correct Answer Key</span>
-                    <div className="text-xs font-bold text-emerald-700">
-                      <LatexRenderer text={r.question?.correctAnswer || "A"} />
+                  {/* Question Statement with KaTeX */}
+                  <div className="text-sm font-bold text-slate-900 leading-relaxed pl-1 mb-3">
+                    <LatexRenderer text={r.question?.questionText || "Question text unavailable"} />
+                  </div>
+
+                  {/* Question Diagram if any */}
+                  {r.question?.imageUrl && (
+                    <div className="mb-3 p-2 bg-white rounded-xl border border-slate-200 inline-block">
+                      <img src={r.question.imageUrl} alt="Diagram" className="max-h-40 object-contain rounded" />
+                    </div>
+                  )}
+
+                  {/* Answer Comparison */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200/60">
+                    <div className="bg-white p-3 rounded-xl border border-slate-200">
+                      <span className="text-[10px] uppercase font-black text-slate-400 block mb-1">Selected Answer</span>
+                      <div className={`text-xs font-bold ${isCorrect ? "text-[#15803D]" : notAttempted ? "text-slate-500" : "text-[#BE123C]"}`}>
+                        {notAttempted ? "— No Option Chosen —" : <LatexRenderer text={r.selectedOption} />}
+                      </div>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-[#CBEFD6]">
+                      <span className="text-[10px] uppercase font-black text-[#16A34A] block mb-1">Correct Answer Key</span>
+                      <div className="text-xs font-bold text-[#15803D]">
+                        <LatexRenderer text={r.question?.correctAnswer || "A"} />
+                      </div>
                     </div>
                   </div>
+
+                  {r.question?.explanation && (
+                    <div className="mt-3 p-3 rounded-xl bg-[#EAF3FF] border border-[#D4E6FF] text-xs text-slate-700 flex items-start gap-2">
+                      <Lightbulb size={15} className="text-[#2563EB] shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-black text-[#1D4ED8] mr-1">Solution:</span>
+                        <LatexRenderer text={r.question.explanation} />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

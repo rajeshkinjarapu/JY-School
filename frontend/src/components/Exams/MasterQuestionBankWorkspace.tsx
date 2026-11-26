@@ -90,12 +90,19 @@ export interface MasterQuestionBankWorkspaceProps {
 
 export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspaceProps> = ({
   exams,
+  selectedExamId,
+  setSelectedExamId,
   onExamsUpdated,
   presetSubject,
   openBulkImportInitially,
   onConsumeBulkImportFlag,
   navigate,
 }) => {
+  const targetExam = useMemo(
+    () => (selectedExamId ? exams.find((e: any) => e.id === selectedExamId) || null : null),
+    [exams, selectedExamId]
+  );
+  const [addingDirect, setAddingDirect] = useState(false);
   const [questions, setQuestions] = useState<any[]>([]);
   const [schoolSubjects, setSchoolSubjects] = useState<string[]>([]);
   const [schoolClasses, setSchoolClasses] = useState<string[]>([]);
@@ -126,6 +133,23 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
   const [showExcelModal, setShowExcelModal] = useState<boolean>(false);
   const [showAutoPickModal, setShowAutoPickModal] = useState<boolean>(false);
   const [showSendToExamModal, setShowSendToExamModal] = useState<boolean>(false);
+
+  const handleQuickAddSelectedToTargetExam = async () => {
+    if (!targetExam || selectedIds.length === 0) return;
+    setAddingDirect(true);
+    try {
+      const res = await api.post(`/api/competitive-exams/${targetExam.id}/import-from-bank`, {
+        masterQuestionIds: selectedIds,
+      });
+      toast.success(res.data?.message || `Added ${selectedIds.length} questions to ${targetExam.title}!`);
+      setSelectedIds([]);
+      onExamsUpdated();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to add questions to exam');
+    } finally {
+      setAddingDirect(false);
+    }
+  };
 
   const fetchMasterQuestions = async () => {
     setLoading(true);
@@ -456,6 +480,48 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
 
   return (
     <div className="space-y-4 pb-24">
+      {/* TARGET EXAM BANNER (Shown when opened from an Exam's "Questions" button) */}
+      {targetExam && (
+        <div className="bg-gradient-to-r from-[#F3EEFF] via-white to-[#EAF3FF] rounded-2xl border border-[#DDD4FE] p-4 shadow-[0_2px_10px_rgba(91,61,245,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white flex items-center justify-center shrink-0">
+              <Layers size={18} />
+            </div>
+            <div className="min-w-0">
+              <div className="text-[10.5px] font-black uppercase tracking-wider text-[#5B3DF5]">
+                Adding Questions To Exam
+              </div>
+              <div className="text-sm font-black text-slate-900 truncate">
+                {targetExam.title}
+                <span className="ml-2 text-xs font-bold text-[#16A34A]">
+                  ({targetExam._count?.questions || targetExam.questions?.length || 0} Qs in Exam)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => navigate(`/competitive-exams/${targetExam.id}/paper`)}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-indigo-50 text-[#5B3DF5] border border-[#DDD4FE] text-xs font-extrabold cursor-pointer transition"
+            >
+              View Exam Paper
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedExamId?.('');
+                navigate('/competitive-exams/question-bank', { replace: true });
+              }}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 text-xs font-bold cursor-pointer transition"
+            >
+              Clear Exam Context
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 1. CLEAN 7-STAT PASTEL HEADER + SINGLE-ROW ACTION TOOLBAR */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
         {/* Row 1: 7 Equal Pastel Stat Tiles */}
@@ -1236,13 +1302,24 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowSendToExamModal(true)}
-                className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer transition"
-              >
-                <Plus size={14} /> Add to Online Exam
-              </button>
+              {targetExam ? (
+                <button
+                  type="button"
+                  disabled={addingDirect}
+                  onClick={handleQuickAddSelectedToTargetExam}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-extrabold flex items-center gap-1.5 cursor-pointer shadow-sm transition disabled:opacity-50"
+                >
+                  <Plus size={14} /> {addingDirect ? 'Adding...' : `Add ${selectedIds.length} to "${targetExam.title.slice(0, 22)}${targetExam.title.length > 22 ? '...' : ''}"`}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSendToExamModal(true)}
+                  className="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-extrabold flex items-center gap-1.5 cursor-pointer transition"
+                >
+                  <Plus size={14} /> Add to Online Exam
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => handleSendToPaperGenerator(selectedIds)}
@@ -1290,6 +1367,7 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
         <AutoPickPaperModal
           questions={filteredQuestions}
           exams={exams}
+          defaultExamId={targetExam?.id}
           onClose={() => setShowAutoPickModal(false)}
           onSendToPaper={(ids) => {
             setShowAutoPickModal(false);
@@ -1307,6 +1385,7 @@ export const MasterQuestionBankWorkspace: React.FC<MasterQuestionBankWorkspacePr
         <SendSelectedToExamModal
           selectedIds={selectedIds}
           exams={exams}
+          defaultExamId={targetExam?.id}
           onClose={() => setShowSendToExamModal(false)}
           onDone={() => {
             setShowSendToExamModal(false);
@@ -1889,10 +1968,11 @@ const MasterExcelBulkModal: React.FC<{ onClose: () => void; onSaved: () => void 
 const AutoPickPaperModal: React.FC<{
   questions: any[];
   exams: any[];
+  defaultExamId?: string;
   onClose: () => void;
   onSendToPaper: (ids: string[]) => void;
   onAddedToExam: () => void;
-}> = ({ questions, exams, onClose, onSendToPaper, onAddedToExam }) => {
+}> = ({ questions, exams, defaultExamId, onClose, onSendToPaper, onAddedToExam }) => {
   const easyPool = useMemo(() => questions.filter((q) => (q.difficulty || 'MEDIUM').toUpperCase() === 'EASY'), [questions]);
   const medPool = useMemo(() => questions.filter((q) => (q.difficulty || 'MEDIUM').toUpperCase() === 'MEDIUM'), [questions]);
   const hardPool = useMemo(() => questions.filter((q) => (q.difficulty || 'MEDIUM').toUpperCase() === 'HARD'), [questions]);
@@ -1900,7 +1980,7 @@ const AutoPickPaperModal: React.FC<{
   const [easyCount, setEasyCount] = useState(Math.min(5, easyPool.length));
   const [medCount, setMedCount] = useState(Math.min(5, medPool.length));
   const [hardCount, setHardCount] = useState(Math.min(2, hardPool.length));
-  const [targetExamId, setTargetExamId] = useState(exams[0]?.id || '');
+  const [targetExamId, setTargetExamId] = useState(defaultExamId || exams[0]?.id || '');
   const [importing, setImporting] = useState(false);
 
   const shufflePick = (arr: any[], count: number) => {
@@ -2004,10 +2084,11 @@ const AutoPickPaperModal: React.FC<{
 const SendSelectedToExamModal: React.FC<{
   selectedIds: string[];
   exams: any[];
+  defaultExamId?: string;
   onClose: () => void;
   onDone: () => void;
-}> = ({ selectedIds, exams, onClose, onDone }) => {
-  const [targetExamId, setTargetExamId] = useState(exams[0]?.id || '');
+}> = ({ selectedIds, exams, defaultExamId, onClose, onDone }) => {
+  const [targetExamId, setTargetExamId] = useState(defaultExamId || exams[0]?.id || '');
   const [importing, setImporting] = useState(false);
 
   const handleConfirm = async () => {

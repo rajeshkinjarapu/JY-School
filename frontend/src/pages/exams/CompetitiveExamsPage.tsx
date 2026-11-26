@@ -128,10 +128,11 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const activeTab: 'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'RESULTS' | 'STUDENTS' | 'REPORTS' = useMemo(() => {
+  const activeTab: 'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'ANSWER_KEYS' | 'RESULTS' | 'STUDENTS' | 'REPORTS' = useMemo(() => {
     const p = location.pathname;
     if (p.includes('/competitive-exams/exams')) return 'EXAMS';
     if (p.includes('/competitive-exams/question-bank')) return 'QUESTIONS';
+    if (p.includes('/competitive-exams/answer-keys')) return 'ANSWER_KEYS';
     if (p.includes('/competitive-exams/students')) return 'STUDENTS';
     if (p.includes('/competitive-exams/results')) return 'RESULTS';
     if (p.includes('/competitive-exams/reports')) return 'REPORTS';
@@ -422,8 +423,8 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       },
       {
         title: `Student data synced (${kpiMetrics.studentBase} records)`,
-        subtitle: 'by Admin',
-        time: '1 hour ago',
+        subtitle: 'School Roster',
+        time: 'Synced',
         icon: <Upload className="w-4 h-4 text-[#16A34A]" />,
         iconBg: 'bg-[#E3F8EC]',
       },
@@ -452,6 +453,11 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       title: 'Master Question Bank',
       subtitle: 'Subject-wise & Topic-wise permanent PostgreSQL Question Bank with Bulk Excel Import & AI Parser',
       badge: 'Question Repository',
+    },
+    ANSWER_KEYS: {
+      title: 'Online Exam Answer Keys',
+      subtitle: 'Official Question-by-Question Answer Keys, Explanations & Printable Key Sheets for Online Exams',
+      badge: 'Official Key Repository',
     },
     STUDENTS: {
       title: 'Student Management',
@@ -525,6 +531,38 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       />
 
       <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-5 flex-1">
+        {/* Persistent Top Sub-Navigation Pill Bar */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-2 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center gap-1.5 overflow-x-auto">
+          {[
+            { key: 'DASHBOARD', label: 'Dashboard', path: '/competitive-exams', icon: <LayoutDashboard size={14} /> },
+            { key: 'EXAMS', label: `Exams (${exams.length})`, path: '/competitive-exams/exams', icon: <FileText size={14} /> },
+            { key: 'QUESTIONS', label: `Question Bank (${totalQuestions})`, path: '/competitive-exams/question-bank', icon: <Layers size={14} /> },
+            { key: 'ANSWER_KEYS', label: 'Answer Keys', path: '/competitive-exams/answer-keys', icon: <KeyRound size={14} /> },
+            { key: 'RESULTS', label: `Results & Ranks (${totalSubmissions})`, path: '/competitive-exams/results', icon: <Trophy size={14} /> },
+            { key: 'STUDENTS', label: `Students (${activeStudents.length})`, path: '/competitive-exams/students', icon: <Users size={14} /> },
+            { key: 'REPORTS', label: 'Reports', path: '/competitive-exams/reports', icon: <FileBarChart2 size={14} /> },
+          ].map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => {
+                  if (tab.key === 'EXAMS') setShowInlineCreate(false);
+                  navigate(tab.path);
+                }}
+                className={`px-3.5 py-2 rounded-xl text-xs font-extrabold inline-flex items-center gap-1.5 whitespace-nowrap transition cursor-pointer ${
+                  isActive
+                    ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-[#F4F7FC]'
+                }`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
 
       {/* 100% EXACT PROFESSIONAL PASTEL DASHBOARD UI */}
       {activeTab === 'DASHBOARD' && (
@@ -660,7 +698,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
                   {/* 4. Answer Keys */}
                   <button
                     type="button"
-                    onClick={() => navigate('/answer-key')}
+                    onClick={() => navigate('/competitive-exams/answer-keys')}
                     className="rounded-2xl p-4 bg-[#FFF3E2] hover:bg-[#FFE9CB] border border-[#FDE2BE] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
                   >
                     <KeyRound className="w-7 h-7 text-[#D97706]" />
@@ -906,38 +944,30 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         )}
 
         {activeTab === 'QUESTIONS' && (
-          searchParams.get('examId') ? (
-            <SubjectWiseQuestionBankTab 
-              exams={exams} 
-              selectedExamId={selectedExamIdForQB}
-              setSelectedExamId={setSelectedExamIdForQB}
-              onOpenAiModal={(exam: any) => setAiModalExam(exam)}
-              onExamsUpdated={fetchExams}
-              presetSubject={qbPresetSubject}
-              openBulkImportInitially={openBulkImportOnQB}
-              onConsumeBulkImportFlag={() => {
-                const next = new URLSearchParams(searchParams);
-                next.delete('bulkImport');
-                setSearchParams(next, { replace: true });
-              }}
-              navigate={navigate} 
-            />
-          ) : (
-            <MasterQuestionBankWorkspace
-              exams={exams}
-              selectedExamId={selectedExamIdForQB}
-              setSelectedExamId={setSelectedExamIdForQB}
-              onExamsUpdated={fetchExams}
-              presetSubject={qbPresetSubject}
-              openBulkImportInitially={openBulkImportOnQB}
-              onConsumeBulkImportFlag={() => {
-                const next = new URLSearchParams(searchParams);
-                next.delete('bulkImport');
-                setSearchParams(next, { replace: true });
-              }}
-              navigate={navigate}
-            />
-          )
+          <MasterQuestionBankWorkspace
+            exams={exams}
+            selectedExamId={searchParams.get('examId') || ''}
+            setSelectedExamId={(id: string) => {
+              setSelectedExamIdForQB(id);
+              const next = new URLSearchParams(searchParams);
+              if (id) next.set('examId', id);
+              else next.delete('examId');
+              setSearchParams(next, { replace: true });
+            }}
+            onExamsUpdated={fetchExams}
+            presetSubject={qbPresetSubject}
+            openBulkImportInitially={openBulkImportOnQB}
+            onConsumeBulkImportFlag={() => {
+              const next = new URLSearchParams(searchParams);
+              next.delete('bulkImport');
+              setSearchParams(next, { replace: true });
+            }}
+            navigate={navigate}
+          />
+        )}
+
+        {activeTab === 'ANSWER_KEYS' && (
+          <OnlineAnswerKeysTab exams={exams} navigate={navigate} />
         )}
 
         {activeTab === 'RESULTS' && (
@@ -975,8 +1005,8 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
           onLaunchExam={() => navigate(`/take-competitive-exam/${createdExamModal.id}`)}
           onOpenQuestionBank={() => {
             setSelectedExamIdForQB(createdExamModal.id);
-            setActiveTab('QUESTIONS');
             setCreatedExamModal(null);
+            navigate(`/competitive-exams/question-bank?examId=${createdExamModal.id}`);
           }}
         />
       )}
@@ -1215,31 +1245,43 @@ const ManageExamsTab = ({
             const isNavodaya = exam.title.toUpperCase().includes('NAVODAYA');
             const isEamcet = exam.title.toUpperCase().includes('EAMCET');
 
-            let patternTag = 'NTA CBT PATTERN';
-            let patternBadgeBg = 'bg-blue-100 text-blue-800 border-blue-200';
-            let sections = ['General Objective Test'];
+            let patternTag = exam.pattern && exam.pattern !== 'CUSTOM' ? `${exam.pattern.replace(/_/g, ' ')} PATTERN` : 'NTA CBT PATTERN';
+            let patternBadgeBg = 'bg-[#EAF3FF] text-[#2563EB] border-[#D4E6FF]';
+            let sections: string[] = Array.isArray(exam.sections) && exam.sections.length > 0
+              ? exam.sections.map((s: any) => `${s.name} (${s.count}Q)`)
+              : ['General Objective Test'];
             if (isJee) {
               patternTag = 'JEE MAINS PATTERN (+4, -1)';
-              patternBadgeBg = 'bg-indigo-100 text-indigo-800 border-indigo-200';
-              sections = ['Physics', 'Chemistry', 'Mathematics'];
+              patternBadgeBg = 'bg-[#F3EEFF] text-[#5B3DF5] border-[#DDD4FE]';
+              if (!exam.sections?.length) sections = ['Physics', 'Chemistry', 'Mathematics'];
             } else if (isNeet) {
               patternTag = 'NEET UG PATTERN (+4, -1)';
-              patternBadgeBg = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-              sections = ['Physics', 'Chemistry', 'Botany', 'Zoology'];
+              patternBadgeBg = 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6]';
+              if (!exam.sections?.length) sections = ['Physics', 'Chemistry', 'Botany', 'Zoology'];
             } else if (isEamcet) {
               patternTag = 'EAMCET PATTERN (NO NEGATIVE)';
-              patternBadgeBg = 'bg-cyan-100 text-cyan-800 border-cyan-200';
-              sections = ['Mathematics (80Q)', 'Physics (40Q)', 'Chemistry (40Q)'];
+              patternBadgeBg = 'bg-[#EAF3FF] text-[#0284C7] border-[#D4E6FF]';
+              if (!exam.sections?.length) sections = ['Mathematics (80Q)', 'Physics (40Q)', 'Chemistry (40Q)'];
             } else if (isNavodaya) {
               patternTag = 'NAVODAYA ENTRANCE (+5, 0)';
-              patternBadgeBg = 'bg-amber-100 text-amber-800 border-amber-200';
-              sections = ['Mental Ability', 'Arithmetic', 'Language'];
+              patternBadgeBg = 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA]';
+              if (!exam.sections?.length) sections = ['Mental Ability', 'Arithmetic', 'Language'];
             }
+
+            const handleTogglePublish = async () => {
+              try {
+                await api.put(`/api/competitive-exams/${exam.id}`, { isPublished: !exam.isPublished });
+                toast.success(exam.isPublished ? 'Moved to Draft Mode' : 'Exam Published & Live for Students!');
+                onRefresh();
+              } catch {
+                toast.error('Failed to update publish status');
+              }
+            };
 
             return (
               <div
                 key={exam.id}
-                className="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all flex flex-col justify-between group"
+                className="bg-white rounded-2xl p-6 shadow-[0_2px_10px_rgba(15,23,42,0.03)] border border-slate-200/80 hover:shadow-md transition-all flex flex-col justify-between group"
               >
                 <div>
                   {/* Header row */}
@@ -1247,10 +1289,19 @@ const ManageExamsTab = ({
                     <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${patternBadgeBg}`}>
                       {patternTag}
                     </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-xs font-extrabold text-emerald-600">Active</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={handleTogglePublish}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 border cursor-pointer transition ${
+                        exam.isPublished !== false
+                          ? 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6] hover:bg-emerald-100'
+                          : 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA] hover:bg-amber-100'
+                      }`}
+                      title="Click to toggle Published / Draft"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${exam.isPublished !== false ? 'bg-[#16A34A] animate-pulse' : 'bg-[#D97706]'}`} />
+                      <span>{exam.isPublished !== false ? 'Published' : 'Draft'}</span>
+                    </button>
                   </div>
 
                   {/* Exam Title */}
@@ -1304,43 +1355,51 @@ const ManageExamsTab = ({
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
-                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-slate-800 hover:text-indigo-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F3EEFF] border border-slate-200 hover:border-[#DDD4FE] text-slate-800 hover:text-[#5B3DF5] font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
                     >
-                      <Eye className="w-4 h-4 text-indigo-600" />
+                      <Eye className="w-4 h-4 text-[#5B3DF5]" />
                       View Exam Paper
                     </button>
                     <button
                       onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
-                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow transition cursor-pointer"
+                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
                     >
                       <Play className="w-4 h-4 fill-white" />
                       Launch CBT Exam
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       onClick={() => navigate(`/live-exam-monitor/${exam.id}`)}
-                      className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="Live Proctoring"
+                      className="py-2 px-2 rounded-xl border border-[#FBD0D8] bg-[#FEECEF]/60 hover:bg-[#FEECEF] text-[#E11D48] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                      title="Real-Time Live Monitor"
                     >
-                      <Activity className="w-3.5 h-3.5 text-rose-500" /> Live Monitor
+                      <Activity className="w-3.5 h-3.5" /> Live Monitor
                     </button>
 
                     <button
                       onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
-                      className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="View Leaderboard"
+                      className="py-2 px-2 rounded-xl border border-[#FDE2BA] bg-[#FFF4E5]/60 hover:bg-[#FFF4E5] text-[#D97706] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                      title="View Merit Leaderboard"
                     >
-                      <Award className="w-3.5 h-3.5 text-amber-500" /> Rank List
+                      <Award className="w-3.5 h-3.5" /> Ranks
+                    </button>
+
+                    <button
+                      onClick={() => navigate(`/competitive-exams/results?examId=${exam.id}`)}
+                      className="py-2 px-2 rounded-xl border border-[#D4E6FF] bg-[#EAF3FF]/60 hover:bg-[#EAF3FF] text-[#2563EB] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                      title="View Submissions & Results"
+                    >
+                      <BarChart3 className="w-3.5 h-3.5" /> Results ({subCount})
                     </button>
 
                     <button
                       onClick={() => onOpenQuestionBank(exam.id)}
-                      className="py-2 px-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="Manage Questions in Question Bank"
+                      className="py-2 px-2 rounded-xl border border-[#CBEFD6] bg-[#EAFAEE]/60 hover:bg-[#EAFAEE] text-[#16A34A] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                      title="Add/Manage Questions in Master Question Bank"
                     >
-                      <FileQuestion className="w-3.5 h-3.5 text-indigo-500" /> Questions ({qCount})
+                      <FileQuestion className="w-3.5 h-3.5" /> Questions ({qCount})
                     </button>
                   </div>
 
@@ -1587,6 +1646,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     endTime: '11:00',
     classId: '',
     subjectId: '',
+    allowRetake: true,
+    shuffleQuestions: false,
+    showResultImmediately: true,
   });
 
   useEffect(() => {
@@ -1730,9 +1792,16 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       const resolvedClassId = formData.classId || (classes.length > 0 ? classes[0].id : undefined);
       const resolvedSubjectId = formData.subjectId || (subjects.length > 0 ? subjects[0].id : undefined);
 
+      const selectedClsObj = classes.find((c: any) => c.id === resolvedClassId);
       const payload = {
         title: formData.title,
         pattern: formData.pattern,
+        sections,
+        marksPerQuestion: Number(marksPerQuestion) || 4,
+        targetClassNames: selectedClsObj?.name ? [selectedClsObj.name] : [],
+        allowRetake: Boolean(formData.allowRetake),
+        shuffleQuestions: Boolean(formData.shuffleQuestions),
+        showResultImmediately: Boolean(formData.showResultImmediately),
         duration: Number(formData.duration) || 120,
         totalMarks: Number(formData.totalMarks) || 100,
         passMarks: Number(formData.passMarks) || 35,
@@ -2423,11 +2492,43 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                   </div>
                 </div>
 
+                {/* Exam Proctoring & Retake Rules */}
+                <div className="p-3 rounded-xl bg-white border border-slate-200/80 space-y-2 text-xs">
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Exam Rules</div>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer font-bold text-slate-700">
+                    <span>Shuffle Question Order</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.shuffleQuestions}
+                      onChange={e => setFormData({ ...formData, shuffleQuestions: e.target.checked })}
+                      className="w-4 h-4 text-[#5B3DF5] rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer font-bold text-slate-700">
+                    <span>Allow Multiple Attempts</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.allowRetake}
+                      onChange={e => setFormData({ ...formData, allowRetake: e.target.checked })}
+                      className="w-4 h-4 text-[#5B3DF5] rounded"
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-2 cursor-pointer font-bold text-slate-700">
+                    <span>Instant Scorecard After Submit</span>
+                    <input
+                      type="checkbox"
+                      checked={formData.showResultImmediately}
+                      onChange={e => setFormData({ ...formData, showResultImmediately: e.target.checked })}
+                      className="w-4 h-4 text-[#5B3DF5] rounded"
+                    />
+                  </label>
+                </div>
+
                 <div className="space-y-2 pt-1">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 px-4 rounded-xl font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm"
+                    className="w-full py-3 px-4 rounded-xl font-black text-white bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 shadow-sm transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-sm"
                   >
                     {loading ? (
                       <>
@@ -4090,8 +4191,15 @@ const DashboardOverviewTab = ({ exams, totalQuestions, totalSubmissions, onOpenC
 // ═══════════════════════════════════════════════════════════════
 
 const ResultsAndRanksTab = ({ exams, navigate }: any) => {
-  const [selectedExamId, setSelectedExamId] = useState<string>('ALL');
+  const [searchParams] = useSearchParams();
+  const initialExamParam = searchParams.get('examId') || 'ALL';
+  const [selectedExamId, setSelectedExamId] = useState<string>(initialExamParam);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const p = searchParams.get('examId');
+    if (p) setSelectedExamId(p);
+  }, [searchParams]);
 
   // Extract all submissions across all exams or selected exam
   const allSubmissions = useMemo(() => {
@@ -4591,105 +4699,410 @@ const ActiveStudentsTab = ({ exams, navigate }: any) => {
 };
 
 // ═══════════════════════════════════════════════════════════════
-// DEDICATED STUDENT PORTAL
+// ONLINE EXAM ANSWER KEYS TAB (CONNECTED TO EXAM QUESTIONS & KEYS)
+// ═══════════════════════════════════════════════════════════════
+
+const OnlineAnswerKeysTab = ({ exams, navigate }: { exams: any[]; navigate: any }) => {
+  const [selectedExamId, setSelectedExamId] = useState<string>(exams[0]?.id || '');
+
+  useEffect(() => {
+    if (!selectedExamId && exams.length > 0) {
+      setSelectedExamId(exams[0].id);
+    }
+  }, [exams, selectedExamId]);
+
+  const activeExam = useMemo(
+    () => exams.find((e: any) => e.id === selectedExamId) || exams[0] || null,
+    [exams, selectedExamId]
+  );
+
+  const questions: any[] = activeExam?.questions || [];
+
+  const handleExportAnswerKeyExcel = () => {
+    if (!activeExam || questions.length === 0) {
+      toast.error('No questions in selected exam');
+      return;
+    }
+    const rows = questions.map((q: any, idx: number) => {
+      let opts: string[] = [];
+      try {
+        opts = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+      } catch {}
+      const ansIdx = opts.findIndex((o) => String(o).trim() === String(q.correctAnswer || '').trim());
+      const ansLetter = ansIdx >= 0 ? String.fromCharCode(65 + ansIdx) : String(q.correctAnswer || 'A');
+      return {
+        'Q.No': idx + 1,
+        'Subject / Chapter': q.chapterName || 'General',
+        'Question': q.questionText || '',
+        'Correct Option': ansLetter,
+        'Correct Answer Text': q.correctAnswer || '',
+        'Marks': q.marks || activeExam.marksPerQuestion || 4,
+      };
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Answer_Key');
+    XLSX.writeFile(wb, `${(activeExam.title || 'Exam').replace(/\s+/g, '_')}_AnswerKey.xlsx`);
+    toast.success('Official Answer Key exported to Excel!');
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Header Control Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-[#FFF4E5] text-[#D97706] border border-[#FDE2BA] flex items-center justify-center shrink-0">
+            <KeyRound size={18} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <label className="block text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1">
+              Select Online Exam for Answer Key
+            </label>
+            <select
+              value={activeExam?.id || ''}
+              onChange={(e) => setSelectedExamId(e.target.value)}
+              className="w-full max-w-lg px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-extrabold text-slate-900 outline-none focus:border-[#5B3DF5] cursor-pointer"
+            >
+              {exams.length === 0 ? (
+                <option value="">No Online Exams Available</option>
+              ) : (
+                exams.map((ex: any) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.title} ({ex._count?.questions || ex.questions?.length || 0} Questions)
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => navigate('/answer-key')}
+            className="px-3.5 py-2 rounded-xl bg-[#EAF3FF] hover:bg-[#DCEAFE] text-[#2563EB] border border-[#D4E6FF] text-xs font-extrabold cursor-pointer transition"
+          >
+            Offline Paper Keys →
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            disabled={questions.length === 0}
+            className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+          >
+            <Printer size={14} /> Print Key Sheet
+          </button>
+          <button
+            type="button"
+            onClick={handleExportAnswerKeyExcel}
+            disabled={questions.length === 0}
+            className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white text-xs font-extrabold flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+          >
+            <Download size={14} /> Export Key (.xlsx)
+          </button>
+        </div>
+      </div>
+
+      {/* Compact Quick OMR Key Grid + Question Breakdown */}
+      {!activeExam || questions.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-3">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFF4E5] text-[#D97706] flex items-center justify-center mx-auto">
+            <KeyRound size={26} />
+          </div>
+          <h3 className="text-base font-black text-slate-900">No Questions in Selected Exam</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Add questions to this online exam from the Master Question Bank to generate its official answer key automatically.
+          </p>
+          {activeExam && (
+            <button
+              type="button"
+              onClick={() => navigate(`/competitive-exams/question-bank?examId=${activeExam.id}`)}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white text-xs font-extrabold cursor-pointer"
+            >
+              Add Questions to This Exam
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {/* Quick Grid */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+            <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-3">
+              Quick Answer Key Matrix ({questions.length} Questions)
+            </h4>
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-10 gap-2">
+              {questions.map((q: any, idx: number) => {
+                let opts: string[] = [];
+                try {
+                  opts = typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []);
+                } catch {}
+                const ansIdx = opts.findIndex((o) => String(o).trim() === String(q.correctAnswer || '').trim());
+                const ansLetter = ansIdx >= 0 ? String.fromCharCode(65 + ansIdx) : String(q.correctAnswer || 'A');
+                return (
+                  <div key={q.id || idx} className="p-2 rounded-xl bg-[#EAFAEE] border border-[#CBEFD6] text-center">
+                    <div className="text-[10px] font-bold text-slate-500">Q{idx + 1}</div>
+                    <div className="text-xs font-black text-[#16A34A] truncate" title={String(q.correctAnswer)}>
+                      {ansLetter}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Full Questions + Keys */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3">
+            {questions.map((q: any, idx: number) => (
+              <div key={q.id || idx} className="p-4 rounded-xl bg-[#F8FAFD] border border-slate-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <span className="px-2.5 py-1 rounded-lg bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white font-black text-xs shrink-0">
+                    Q{idx + 1}
+                  </span>
+                  <div className="text-xs sm:text-sm font-bold text-slate-900 leading-snug">
+                    <LatexRenderer text={q.questionText} />
+                  </div>
+                </div>
+                <div className="px-3.5 py-2 rounded-xl bg-[#EAFAEE] border border-[#CBEFD6] text-xs font-black text-[#15803D] shrink-0">
+                  Ans: <LatexRenderer text={q.correctAnswer} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════
+// DEDICATED STUDENT PORTAL (UNIFIED PASTEL LIGHT THEME)
 // ═══════════════════════════════════════════════════════════════
 
 const StudentCompetitivePortal = ({ navigate }: { navigate: any }) => {
   const [exams, setExams] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'ALL' | 'AVAILABLE' | 'COMPLETED'>('ALL');
 
-  useEffect(() => {
+  const fetchStudentExams = () => {
+    setLoading(true);
     api.get('/api/competitive-exams/student')
       .then(res => setExams(extractExams(res.data)))
-      .catch(err => {
-        api.get('/api/competitive-exams/admin')
-          .then(res2 => setExams(extractExams(res2.data)))
-          .catch(() => {});
+      .catch(() => {
+        toast.error('Failed to load your exams');
       })
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchStudentExams();
   }, []);
+
+  const availableCount = exams.filter((e) => !e.submission).length;
+  const completedCount = exams.filter((e) => !!e.submission).length;
+  const bestScore = completedCount > 0 ? Math.max(...exams.filter((e) => e.submission).map((e) => Number(e.submission.marksObtained) || 0)) : 0;
+
+  const visibleExams = exams.filter((ex) => {
+    if (filter === 'AVAILABLE') return !ex.submission;
+    if (filter === 'COMPLETED') return !!ex.submission;
+    return true;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-slate-50">
-        <RefreshCw className="w-10 h-10 animate-spin text-indigo-600 mb-3" />
-        <p className="text-slate-600 font-bold">Loading Your NTA Competitive Tests...</p>
+      <div className="min-h-screen p-8 flex flex-col items-center justify-center bg-[#F4F7FC]">
+        <RefreshCw className="w-10 h-10 animate-spin text-[#5B3DF5] mb-3" />
+        <p className="text-slate-600 font-bold text-sm">Loading Your Online Examinations...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      {/* Student Banner */}
-      <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 p-6 md:p-8 rounded-3xl text-white shadow-xl border border-indigo-500/20">
-        <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 border border-blue-400/30 px-3 py-1 text-xs font-semibold text-blue-200 mb-2">
-          <Zap className="w-3.5 h-3.5 text-amber-400" /> NTA CBT Candidate Examination Desk
-        </div>
-        <h1 className="text-2xl md:text-3xl font-black">All-India Competitive Mock Tests</h1>
-        <p className="text-blue-200 text-sm mt-1 max-w-xl">
-          Real JEE Mains, NEET & Navodaya exam practice with official countdown timers, negative marking and instant scorecard analysis.
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#F4F7FC] flex flex-col">
+      <PageHeader
+        title="Online Examination Portal"
+        icon={<GraduationCap className="w-5 h-5" />}
+        action={
+          <button
+            onClick={fetchStudentExams}
+            className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+          >
+            <RefreshCw size={14} /> Refresh
+          </button>
+        }
+      />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {exams.map((exam: any) => {
-          const hasSubmitted = !!exam.submission;
-          return (
-            <div key={exam.id} className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm hover:shadow-md transition flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
-                    Official NTA Pattern
-                  </span>
-                  {hasSubmitted ? (
-                    <span className="text-xs font-black text-emerald-600 flex items-center gap-1">
-                      <CheckCircle2 size={14} /> Completed
-                    </span>
-                  ) : (
-                    <span className="text-xs font-black text-blue-600 flex items-center gap-1 animate-pulse">
-                      <Clock size={14} /> Available Now
-                    </span>
-                  )}
-                </div>
-
-                <h3 className="text-lg font-black text-slate-800">{exam.title}</h3>
-                
-                <div className="grid grid-cols-3 gap-2 my-4 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-center text-xs">
-                  <div>
-                    <span className="text-slate-400">Duration</span>
-                    <p className="font-black text-slate-800">{exam.duration}m</p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Total Marks</span>
-                    <p className="font-black text-indigo-600">{exam.totalMarks}</p>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Negative</span>
-                    <p className="font-black text-rose-600">-{exam.negativeMarks || 0}</p>
-                  </div>
-                </div>
+      <div className="p-4 md:p-6 max-w-7xl w-full mx-auto space-y-5 flex-1">
+        {/* Pastel Student KPI Summary Ribbon */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-xl px-4 py-3 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                <FileText className="w-5 h-5" />
               </div>
-
-              <div className="pt-2 border-t border-slate-100 space-y-2">
-                {hasSubmitted ? (
-                  <button
-                    onClick={() => navigate(`/competitive-exam-result/${exam.id}`)}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Award size={16} /> View Scorecard & Solutions
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
-                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-indigo-500/25 transition flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    <Play size={16} className="fill-white" /> Start NTA CBT Online Exam
-                  </button>
-                )}
+              <div>
+                <div className="text-xl sm:text-2xl font-black leading-tight tabular-nums">{exams.length}</div>
+                <div className="text-[11px] font-semibold text-indigo-100">Assigned Tests</div>
               </div>
             </div>
-          );
-        })}
+
+            <div className="rounded-xl px-4 py-3 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight tabular-nums">{availableCount}</div>
+                <div className="text-[11px] font-bold text-[#2563EB]">Available Now</div>
+              </div>
+            </div>
+
+            <div className="rounded-xl px-4 py-3 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight tabular-nums">{completedCount}</div>
+                <div className="text-[11px] font-bold text-[#16A34A]">Completed</div>
+              </div>
+            </div>
+
+            <div className="rounded-xl px-4 py-3 bg-[#FFF4E5] border border-[#FDE2BA] flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+                <Trophy className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-xl sm:text-2xl font-black text-slate-900 leading-tight tabular-nums">{bestScore}</div>
+                <div className="text-[11px] font-bold text-[#D97706]">Best Score</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="inline-flex p-1 rounded-xl bg-[#F4F7FC] border border-slate-200/80 gap-1">
+              {[
+                { key: 'ALL', label: `All Exams (${exams.length})` },
+                { key: 'AVAILABLE', label: `Available (${availableCount})` },
+                { key: 'COMPLETED', label: `Completed (${completedCount})` },
+              ].map((t) => (
+                <button
+                  key={t.key}
+                  type="button"
+                  onClick={() => setFilter(t.key as any)}
+                  className={`px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition cursor-pointer ${
+                    filter === t.key
+                      ? 'bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {visibleExams.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center space-y-3 shadow-[0_2px_10px_rgba(15,23,42,0.03)]">
+            <div className="w-16 h-16 rounded-2xl bg-[#F3EEFF] text-[#5B3DF5] flex items-center justify-center mx-auto">
+              <GraduationCap className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-black text-slate-900">No Exams Found</h3>
+            <p className="text-xs text-slate-500 max-w-md mx-auto">
+              Published CBT online tests assigned to your class will appear here automatically.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {visibleExams.map((exam: any) => {
+              const hasSubmitted = !!exam.submission;
+              const isResumable = !!exam.hasActiveSession && !hasSubmitted;
+              const canRetake = exam.allowRetake !== false;
+
+              return (
+                <div key={exam.id} className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] hover:shadow-md transition flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#F3EEFF] text-[#5B3DF5] border border-[#DDD4FE]">
+                        {exam.subject?.name || 'Online CBT'}
+                      </span>
+                      {hasSubmitted ? (
+                        <span className="px-2.5 py-1 rounded-full bg-[#EAFAEE] text-[#16A34A] border border-[#CBEFD6] text-[11px] font-black flex items-center gap-1">
+                          <CheckCircle2 size={13} /> Scored: {exam.submission.marksObtained} / {exam.totalMarks}
+                        </span>
+                      ) : isResumable ? (
+                        <span className="px-2.5 py-1 rounded-full bg-[#FFF4E5] text-[#D97706] border border-[#FDE2BA] text-[11px] font-black flex items-center gap-1 animate-pulse">
+                          <Clock size={13} /> In Progress (Resume)
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full bg-[#EAF3FF] text-[#2563EB] border border-[#D4E6FF] text-[11px] font-black flex items-center gap-1">
+                          <Radio size={13} /> Available Now
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-lg font-black text-slate-900">{exam.title}</h3>
+
+                    <div className="grid grid-cols-4 gap-2 my-4 p-3 rounded-xl bg-[#F8FAFD] border border-slate-200/70 text-center text-xs">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Questions</span>
+                        <p className="font-black text-slate-900">{exam.questionsCount || 0}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Duration</span>
+                        <p className="font-black text-slate-900">{exam.duration}m</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Total Marks</span>
+                        <p className="font-black text-[#5B3DF5]">{exam.totalMarks}</p>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase">Negative</span>
+                        <p className={`font-black ${Number(exam.negativeMarks) > 0 ? 'text-[#E11D48]' : 'text-[#16A34A]'}`}>
+                          {Number(exam.negativeMarks) > 0 ? `-${exam.negativeMarks}` : '0'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex flex-wrap gap-2">
+                    {hasSubmitted ? (
+                      <>
+                        {exam.showResultImmediately !== false && (
+                          <button
+                            onClick={() => navigate(`/competitive-exam-result/${exam.id}?submissionId=${exam.submission.id}`)}
+                            className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Award size={15} /> View Scorecard
+                          </button>
+                        )}
+                        <button
+                          onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
+                          className="py-2.5 px-3.5 rounded-xl bg-[#FFF4E5] hover:bg-[#FFE9CC] text-[#D97706] border border-[#FDE2BA] font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Trophy size={14} /> Ranks
+                        </button>
+                        {canRetake && (
+                          <button
+                            onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
+                            className="py-2.5 px-3.5 rounded-xl bg-[#EAF3FF] hover:bg-[#DCEAFE] text-[#2563EB] border border-[#D4E6FF] font-extrabold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Play size={13} /> Retake
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
+                        className="w-full py-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Play size={15} className="fill-white" /> {isResumable ? 'Resume Active CBT Exam' : 'Start CBT Online Exam'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

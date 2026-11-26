@@ -578,6 +578,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'competitive-exams/answer-keys',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
+            <CompetitiveExamsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: 'competitive-exams/paste-ai',
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TEACHER']}>
