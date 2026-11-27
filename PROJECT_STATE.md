@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Complete 2-Column Profile Page & Real Backend Profile Update (`/profile`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** ప్రొఫెషనల్ డెవలపర్‌గా ఆలోచించి పూర్తిస్థాయి `/profile` పేజీని క్రియేట్ చేయాలి మరియు అందులో ఏం ఏం ఉండాలో వివరంగా చెప్పాలి.
+- **చేసిన మార్పులు:**
+  - [auth.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/auth.controller.ts): `updateProfile` లో అన్ని రోల్స్ (`Admin / Super Admin / Teacher / Accountant`) కోసం `name` & `phone` అప్‌డేట్ సపోర్ట్ మరియు పూర్తి `student`/`teacher` రిలేషన్స్ రిటర్న్ అయ్యేలా అప్‌డేట్ చేశాము.
+  - [ProfilePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/profile/ProfilePage.tsx): Dashboard లైట్ పేస్టల్ థీమ్‌లో పూర్తి 2-కాలమ్ ప్రొఫైల్ హబ్‌గా రీడిజైన్ చేశాము — టాప్ కలర్‌ఫుల్ హీరో బ్యానర్ (అవతార్ ఫోటో అప్‌లోడ్, యాక్టివ్ స్టేటస్, క్విక్ ఎడిట్), ఎడమవైపు 4 పేస్టల్ అకౌంట్ టైల్స్ + రోల్-ఆధారిత **School Institution Details / Faculty Details / Student Academic Profile** కార్డు (రియల్ DB డేటాతో), కుడివైపు **Account Information & Inline Edit** + **Security & Change Password** (Eye షో/హైడ్ టోగుల్, పాస్‌వర్డ్ స్ట్రెంత్ మీటర్ & మ్యాచ్ చెక్) కార్డులు అమర్చాము.
+
 ## చివరి సంభాషణ - Student Register / Edit Page 2-Column Dashboard Pastel Redesign (`/students/new`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Student Register (`/students/new`) పేజీని 2-కాలమ్ లేఅవుట్‌లో, ప్రొఫెషనల్ లుక్‌తో Dashboard లోని లైట్ పేస్టల్ థీమ్‌లో అందంగా డిజైన్ చేయాలి.
 - **చేసిన మార్పులు ([StudentFormPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentFormPage.tsx)):**
