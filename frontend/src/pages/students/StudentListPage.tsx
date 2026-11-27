@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer } from "lucide-react";
+import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, ChevronDown, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer, Users } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -13,12 +13,10 @@ import { useAcademicYear } from "../../contexts/AcademicYearContext";
 const LIMIT = 50;
 
 const avatarColors = [
-  "from-indigo-500 to-purple-600",
-  "from-teal-400 to-emerald-500",
-  "from-rose-400 to-pink-600",
-  "from-amber-400 to-orange-500",
-  "from-cyan-400 to-blue-500",
-  "from-violet-400 to-purple-600",
+  "from-[#8B5CF6] to-[#6D28D9]",
+  "from-[#7C3AED] to-[#4F46E5]",
+  "from-[#6366F1] to-[#4338CA]",
+  "from-[#8B5CF6] to-[#7C3AED]",
 ];
 
 const getInitials = (n: string) =>
@@ -72,13 +70,13 @@ const StudentAvatar = ({ name, photoUrl, isActive }: { name?: string, photoUrl?:
   return (
     <div className="relative shrink-0 inline-block">
       {url ? (
-        <img src={url} alt={safeName} loading="lazy" className="w-12 h-16 rounded object-cover border border-gray-300 shadow-sm" />
+        <img src={url} alt={safeName} loading="lazy" className="w-10 h-11 rounded-xl object-cover border border-indigo-100 shadow-xs" />
       ) : (
-        <div className={`w-12 h-16 rounded bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-gray-200`}>
+        <div className={`w-10 h-11 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-xs shadow-xs`}>
           {getInitials(safeName)}
         </div>
       )}
-      <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+      <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${isActive !== false ? 'bg-emerald-500' : 'bg-slate-400'}`} />
     </div>
   );
 };
@@ -303,25 +301,34 @@ export const StudentListPage: React.FC = () => {
   const totalPages = Math.ceil(total / LIMIT);
 
   return (
-    <div className="flex flex-col h-full">
-      {/* ── Colorful Hero Header ── */}
-      <div className="px-3.5 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
-        <div className="hidden md:flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
+    <div className="relative flex flex-col h-full bg-gradient-to-br from-[#F3F4FC] via-[#F7F5FF] to-[#EEF2FC] overflow-hidden">
+      {/* Soft Pastel Ambient Highlights */}
+      <div className="absolute -top-24 -left-24 w-80 h-80 bg-indigo-200/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 right-1/4 w-80 h-80 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ── Soft Light Pastel Header & Toolbar ── */}
+      <div className="relative z-10 px-4 sm:px-6 pt-4 pb-3 space-y-3">
+        {/* Top Row: Total Count + Pastel Pill Action Buttons */}
+        <div className="hidden md:flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#8F7BF7] to-[#6D5CE7] text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
             <div>
-              <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
-              <p className="text-2xl font-black text-white">{total} Students</p>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500 leading-tight">TOTAL</p>
+              <p className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">{total} Students</p>
             </div>
           </div>
-          <div className="hidden md:flex gap-2">
+
+          <div className="hidden md:flex items-center gap-2 flex-wrap">
             {isSuperAdmin && (
               <>
                 <button
                   onClick={() => setShowImportModal(true)}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#2E2A5E] bg-white/95 hover:bg-white border border-indigo-100 rounded-2xl shadow-[0_2px_8px_rgba(79,70,229,0.06)] transition-all cursor-pointer"
                   title="Upload Students"
                 >
-                  <Upload className="w-4 h-4" /> Upload Students
+                  <Upload className="w-3.5 h-3.5 text-indigo-600" /> Upload Students
                 </button>
                 <button
                   onClick={() => {
@@ -329,24 +336,24 @@ export const StudentListPage: React.FC = () => {
                     setPhotoZipFile(null);
                     setShowPhotoModal(true);
                   }}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-[#2E2A5E] bg-white/95 hover:bg-white border border-indigo-100 rounded-2xl shadow-[0_2px_8px_rgba(79,70,229,0.06)] transition-all cursor-pointer"
                   title="Upload Photos"
                 >
-                  <ImageIcon className="w-4 h-4" /> Upload Photos
+                  <ImageIcon className="w-3.5 h-3.5 text-violet-600" /> Upload Photos
                 </button>
                 <Link
                   to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-black text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 hover:shadow-md transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-gradient-to-r from-[#7352F6] to-[#5636E8] hover:brightness-105 rounded-2xl shadow-[0_4px_14px_rgba(109,77,245,0.30)] transition-all cursor-pointer"
                   title="Custom Student Report & Print Studio (కస్టమ్ రిపోర్ట్ & ప్రింట్ స్టూడియో)"
                 >
-                  <Printer className="w-4 h-4 text-indigo-600" /> Print Studio
+                  <Printer className="w-3.5 h-3.5" /> Print Studio
                 </Link>
                 <button
                   onClick={() => setExportDialog({ open: true, type: 'excel' })}
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-emerald-700 bg-white rounded-xl shadow hover:bg-emerald-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-[#059669] bg-[#E8FAF1] hover:bg-[#D5F5E5] border border-[#BDEFD5] rounded-2xl shadow-2xs transition-all cursor-pointer"
                   title="Export Excel"
                 >
-                  <FileSpreadsheet className="w-4 h-4" /> Excel
+                  <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
                 </button>
               </>
             )}
@@ -354,63 +361,63 @@ export const StudentListPage: React.FC = () => {
               <>
                 <Link
                   to="/students/promotion"
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-pink-700 bg-white rounded-xl shadow hover:bg-pink-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-[#DB2777] bg-[#FDF0F6] hover:bg-[#FCE2EE] border border-[#FAD0E3] rounded-2xl shadow-2xs transition-all"
                   title="Promote Students"
                 >
-                  <GraduationCap className="w-4 h-4" /> Promote
+                  <GraduationCap className="w-3.5 h-3.5" /> Promote
                 </Link>
                 <Link
                   to="/students/new"
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-indigo-700 bg-white rounded-xl shadow hover:bg-indigo-50 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-[#4338CA] bg-white/95 hover:bg-white border border-indigo-200/80 rounded-2xl shadow-[0_2px_8px_rgba(79,70,229,0.06)] transition-all"
                 >
-                  <UserPlus className="w-4 h-4" /> Add
+                  <UserPlus className="w-3.5 h-3.5" /> Add
                 </Link>
               </>
             )}
           </div>
         </div>
 
-        {/* Search + Filter */}
-        <div className="flex gap-2 items-center">
+        {/* Search + Filter Row */}
+        <div className="flex gap-2.5 items-center">
           {/* Hamburger Menu - Mobile Only */}
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-            className="p-2.5 md:hidden bg-white/15 hover:bg-white/25 text-white rounded-xl transition-colors cursor-pointer border border-white/25 shadow-sm"
+            className="p-2.5 md:hidden bg-white hover:bg-indigo-50 text-[#1E1B4B] rounded-2xl transition-colors cursor-pointer border border-indigo-100 shadow-xs"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>
           
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
               placeholder="Search students..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-white border border-indigo-100/90 rounded-2xl text-slate-800 placeholder:text-slate-400 font-medium shadow-[0_3px_12px_rgba(79,70,229,0.05)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
             />
           </div>
-          <div className="relative">
-            <Filter className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/60 pointer-events-none" />
+          <div className="relative shrink-0">
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
             <select
               value={classId}
               onChange={(e) => { setClassId(e.target.value); setPage(1); }}
-              className="pl-8 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white font-semibold focus:outline-none appearance-none cursor-pointer"
-              style={{ colorScheme: 'dark' }}
+              className="pl-9 pr-8 py-2.5 text-xs sm:text-sm bg-white border border-indigo-100/90 rounded-2xl text-[#1E1B4B] font-bold shadow-[0_3px_12px_rgba(79,70,229,0.05)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
             >
-              <option value="" className="text-gray-900 bg-white">All Classes</option>
+              <option value="">All Classes</option>
               {classes.map((cls) => (
-                <option key={cls.id} value={cls.id} className="text-gray-900 bg-white">
+                <option key={cls.id} value={cls.id}>
                   {cls.name} {cls.section}
                 </option>
               ))}
             </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
           </div>
           {/* Mobile Print Studio Shortcut */}
           <Link
             to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
-            className="md:hidden p-2.5 bg-white text-indigo-700 rounded-xl transition-all shadow-sm hover:bg-indigo-50 flex items-center justify-center shrink-0"
+            className="md:hidden p-2.5 bg-gradient-to-r from-[#7352F6] to-[#5636E8] text-white rounded-2xl transition-all shadow-sm flex items-center justify-center shrink-0"
             title="Print Studio"
           >
             <Printer className="w-4 h-4" />
@@ -418,24 +425,24 @@ export const StudentListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Student List (Tabular) ── */}
-      <div className="flex-1 overflow-auto bg-gray-50/50 p-4 hidden md:block">
-        <div className="min-w-[800px] w-full bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      {/* ── Student List (Tabular with Signature Purple Header) ── */}
+      <div className="relative z-10 flex-1 overflow-auto px-4 sm:px-6 pb-3 hidden md:block">
+        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_8px_28px_-6px_rgba(79,70,229,0.10)] border border-indigo-100/90 overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead>
-              <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
-                <th className="px-5 py-4 text-center w-12 border-r border-gray-100">#</th>
-                <th className="px-5 py-4 border-r border-gray-100">Student</th>
-                <th className="px-5 py-4 border-r border-gray-100">Roll No / ID</th>
-                <th className="px-5 py-4 border-r border-gray-100">Class</th>
-                <th className="px-5 py-4 border-r border-gray-100">Father Name</th>
-                <th className="px-5 py-4">Mobile No</th>
+              <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] text-white font-extrabold uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-3.5 text-center w-12">#</th>
+                <th className="px-4 py-3.5">Student</th>
+                <th className="px-4 py-3.5 text-center">Roll No / ID</th>
+                <th className="px-4 py-3.5 text-center">Class</th>
+                <th className="px-4 py-3.5">Father Name</th>
+                <th className="px-4 py-3.5">Mobile No</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-slate-100/90">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-12 text-center">
+                  <td colSpan={6} className="py-12 text-center">
                     <div className="animate-pulse flex flex-col items-center gap-2">
                       <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
                       <p className="text-gray-400 text-xs font-bold uppercase tracking-wider">Loading Students...</p>
@@ -444,7 +451,7 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-16 text-center text-gray-400">
+                  <td colSpan={6} className="py-16 text-center text-gray-400">
                     <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
                       <Search className="w-7 h-7 text-indigo-300" />
                     </div>
@@ -454,41 +461,39 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               ) : (
                 students.map((student, idx) => (
-                  <tr key={student.id} className="hover:bg-indigo-50/50 transition-colors bg-white">
-                    <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
+                  <tr key={student.id} className="even:bg-[#FAF9FF]/75 hover:bg-indigo-50/45 transition-colors bg-white">
+                    <td className="px-4 py-3 text-center text-xs font-bold text-slate-600">
                       {(page - 1) * LIMIT + idx + 1}
                     </td>
-                    <td className="px-5 py-4 border-r border-gray-100">
-                      <div className="flex items-center gap-4">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3.5">
                         <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
-                        <div>
-                          <Link to={`/students/${student.id}`} className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors cursor-pointer">
-                            {student.user?.name || "Unknown"}
-                          </Link>
-                        </div>
+                        <Link to={`/students/${student.id}`} className="font-extrabold text-[#1E1B4B] text-xs uppercase tracking-tight hover:text-[#6D28D9] transition-colors cursor-pointer">
+                          {student.user?.name || "Unknown"}
+                        </Link>
                       </div>
                     </td>
-                    <td className="px-5 py-4 border-r border-gray-100">
-                      <span className="text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded font-mono shadow-sm">
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE]/80 font-mono">
                         {student.rollNo || "–"}
                       </span>
                     </td>
-                    <td className="px-5 py-4 border-r border-gray-100">
-                      <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded uppercase shadow-sm">
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#059669] bg-[#E6F9EE] border border-[#C1F0D6] uppercase">
                         {student.class?.name || "–"} {student.class?.section || ""}
                       </span>
                     </td>
-                    <td className="px-5 py-4 border-r border-gray-100">
-                      <p className="font-bold text-gray-800 text-sm">{student.fatherName || "–"}</p>
+                    <td className="px-4 py-3">
+                      <p className="font-extrabold text-slate-800 text-xs uppercase">{student.fatherName || "–"}</p>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-4 py-3">
                       {student.user?.phone ? (
-                        <a href={`tel:${student.user.phone}`} className="text-indigo-600 hover:text-indigo-800 text-sm font-medium flex items-center gap-1.5 transition-colors">
-                          <Phone className="w-4 h-4" />
+                        <a href={`tel:${student.user.phone}`} className="text-[#5B21B6] hover:text-[#4C1D95] text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
+                          <Phone className="w-3.5 h-3.5" />
                           {student.user.phone}
                         </a>
                       ) : (
-                        <span className="text-gray-400 text-sm font-medium">—</span>
+                        <span className="text-slate-400 text-xs font-medium">—</span>
                       )}
                     </td>
                   </tr>
@@ -583,25 +588,25 @@ export const StudentListPage: React.FC = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="px-3 pb-4 flex items-center justify-between">
-            <p className="text-xs font-bold text-gray-500">
+          <div className="relative z-10 px-4 sm:px-6 py-3 flex items-center justify-between">
+            <p className="text-xs font-bold text-slate-600">
               {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}
             </p>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-sm"
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-indigo-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="flex items-center px-3 text-xs font-black text-indigo-600 bg-indigo-50 rounded-xl">
+              <span className="flex items-center px-3.5 py-1.5 text-xs font-black text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE] rounded-xl">
                 {page} / {totalPages}
               </span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={page >= totalPages}
-                className="p-2 rounded-xl bg-white border border-gray-200 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-sm"
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-indigo-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
