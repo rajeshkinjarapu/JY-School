@@ -10,68 +10,71 @@ import toast from 'react-hot-toast';
 import {
   Eye, EyeOff, Lock, User, ArrowRight,
   GraduationCap, Shield, Users, BookOpen, Award,
-  CheckCircle2, MessageCircle, Sparkles,
+  CheckCircle2, MessageCircle, Bus, Sparkles,
 } from 'lucide-react';
 
-/* ─── Validation Schema ─── */
 const loginSchema = z.object({
   email: z.string().min(1, 'Username or Email is required'),
   password: z.string().min(1, 'Password is required'),
 });
+
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-/* ─── WhatsApp contact config ─── */
-const ADMIN_WHATSAPP = '919502924437';
-const WHATSAPP_MSG   = encodeURIComponent(
-  'Hello! I am contacting from JY School website. I need help with ERP login access.'
+// Direct WhatsApp helpline link for Administrator (pre-filled JY School website message)
+const ADMIN_WHATSAPP_NUMBER = '919502924437';
+const ADMIN_WHATSAPP_MESSAGE = encodeURIComponent(
+  'Hello JY School Administrator, I am contacting you from the JY School website login page. I need assistance with my ERP login account.'
 );
-const WHATSAPP_URL   = `https://wa.me/${ADMIN_WHATSAPP}?text=${WHATSAPP_MSG}`;
+const ADMIN_WHATSAPP_URL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${ADMIN_WHATSAPP_MESSAGE}`;
 
-/* ─── Feature list ─── */
-const FEATURES = [
-  { icon: Users,    label: 'Student & Staff Management',    color: '#60A5FA' },
-  { icon: BookOpen, label: 'Academic Performance Tracking', color: '#A78BFA' },
-  { icon: Award,    label: 'Exams, Results & Progress Cards', color: '#F472B6' },
-  { icon: Shield,   label: 'Secure & Role-Based Access',    color: '#34D399' },
+const MODULE_CARDS = [
+  {
+    icon: Users,
+    title: 'Student & Staff ERP',
+    desc: 'Admissions, Attendance & Profiles',
+    tint: 'bg-sky-400/20 text-sky-100 border-sky-300/30',
+  },
+  {
+    icon: BookOpen,
+    title: 'Academics & Reports',
+    desc: 'Marks, Progress Cards & Certificates',
+    tint: 'bg-indigo-400/20 text-indigo-100 border-indigo-300/30',
+  },
+  {
+    icon: Award,
+    title: 'Online Exams & Q-Bank',
+    desc: 'CBT Tests, A4 Papers & OMR',
+    tint: 'bg-amber-400/20 text-amber-100 border-amber-300/30',
+  },
+  {
+    icon: Bus,
+    title: 'Transport & Finance',
+    desc: 'Routes, Fee Receipts & Alerts',
+    tint: 'bg-emerald-400/20 text-emerald-100 border-emerald-300/30',
+  },
 ];
 
-/* ─── Floating particle positions (deterministic, no random on render) ─── */
-const PARTICLES = [
-  { w: 6,  h: 6,  top: '12%',  left: '8%',  dur: 4,  del: 0 },
-  { w: 4,  h: 4,  top: '28%',  left: '18%', dur: 6,  del: 1 },
-  { w: 8,  h: 8,  top: '55%',  left: '5%',  dur: 5,  del: 2 },
-  { w: 5,  h: 5,  top: '72%',  left: '22%', dur: 7,  del: 0.5 },
-  { w: 10, h: 10, top: '88%',  left: '12%', dur: 4.5,del: 1.5 },
-  { w: 4,  h: 4,  top: '40%',  left: '45%', dur: 6,  del: 2.5 },
-  { w: 6,  h: 6,  top: '20%',  left: '55%', dur: 5,  del: 3 },
-  { w: 7,  h: 7,  top: '65%',  left: '48%', dur: 4,  del: 1 },
-];
-
-/* ══════════════════════════════════════════════════════════════
-   LOGIN PAGE COMPONENT
-══════════════════════════════════════════════════════════════ */
 export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  const [showPassword, setShowPassword]   = useState(false);
-  const [isSubmitting, setIsSubmitting]   = useState(false);
-  const [mounted, setMounted]             = useState(false);
-  const [focusedField, setFocusedField]   = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  /* mount animation trigger */
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(t);
-  }, []);
-
-  /* redirect if already logged in */
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(user?.role === 'GROUP_CHAIRMAN' ? '/chairman' : '/dashboard', { replace: true });
+      if (user?.role === 'GROUP_CHAIRMAN') {
+        navigate('/chairman', { replace: true });
+      } else {
+        navigate('/dashboard', { replace: true });
+      }
     }
   }, [isAuthenticated, user, navigate]);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -80,13 +83,20 @@ export const LoginPage: React.FC = () => {
     try {
       const response: any = await loginApi(values);
       const accessToken =
-        response?.accessToken || response?.data?.accessToken ||
-        response?.data?.data?.accessToken || response?.token;
+        response?.accessToken ||
+        response?.data?.accessToken ||
+        response?.data?.data?.accessToken ||
+        response?.token;
+
       const refreshToken =
-        response?.refreshToken || response?.data?.refreshToken ||
+        response?.refreshToken ||
+        response?.data?.refreshToken ||
         response?.data?.data?.refreshToken;
+
       let authUser =
-        response?.user || response?.data?.user || response?.data?.data?.user;
+        response?.user ||
+        response?.data?.user ||
+        response?.data?.data?.user;
 
       if (accessToken) {
         if (!authUser) {
@@ -97,15 +107,21 @@ export const LoginPage: React.FC = () => {
             console.warn('Failed to fetch user profile after login:', e);
           }
         }
+
         login(accessToken, refreshToken, authUser || { role: 'STUDENT', name: 'User' });
         toast.success(`Welcome back, ${authUser?.name || 'User'}!`);
-        navigate(authUser?.role === 'GROUP_CHAIRMAN' ? '/chairman' : '/dashboard', { replace: true });
+        if (authUser?.role === 'GROUP_CHAIRMAN') {
+          navigate('/chairman', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         toast.error(response?.message || 'Login response format error. Please try again.');
       }
     } catch (error: any) {
       const message =
-        error?.response?.data?.message || error?.message ||
+        error?.response?.data?.message ||
+        error?.message ||
         'Login failed. Please check your credentials.';
       toast.error(message);
     } finally {
@@ -113,532 +129,342 @@ export const LoginPage: React.FC = () => {
     }
   };
 
-  /* ─── keyframe styles injected once ─── */
-  const inlineStyles = `
-    @keyframes float-up {
-      0%,100% { transform: translateY(0px) scale(1);   opacity: 0.4; }
-      50%      { transform: translateY(-18px) scale(1.1); opacity: 0.7; }
-    }
-    @keyframes orbit {
-      from { transform: rotate(0deg) translateX(60px) rotate(0deg); }
-      to   { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
-    }
-    @keyframes slide-up {
-      from { opacity: 0; transform: translateY(32px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes slide-in-left {
-      from { opacity: 0; transform: translateX(-40px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes glow-pulse {
-      0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
-      50%      { box-shadow: 0 0 40px rgba(99,102,241,0.6), 0 0 80px rgba(99,102,241,0.2); }
-    }
-    @keyframes shimmer {
-      from { background-position: -200% center; }
-      to   { background-position: 200% center; }
-    }
-    @keyframes spin-slow {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    @keyframes bounce-in {
-      0%   { transform: scale(0.3); opacity: 0; }
-      60%  { transform: scale(1.05); }
-      80%  { transform: scale(0.95); }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    .anim-slide-up  { animation: slide-up 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
-    .anim-slide-left{ animation: slide-in-left 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
-    .anim-fade      { animation: fade-in 0.5s ease forwards; }
-    .anim-bounce    { animation: bounce-in 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
-    .btn-hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .btn-hover-lift:hover { transform: translateY(-2px); }
-    .btn-hover-lift:active { transform: translateY(0) scale(0.98); }
-    .input-field {
-      width: 100%; padding: 13px 16px 13px 44px;
-      border-radius: 14px; font-size: 14px; font-weight: 500;
-      color: #1e293b; background: #f8faff;
-      border: 1.5px solid #e2e8f0;
-      outline: none; transition: all 0.25s ease;
-    }
-    .input-field:focus {
-      background: #fff; border-color: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
-    }
-    .input-field.error {
-      background: #fff5f5; border-color: #fc8181;
-      box-shadow: 0 0 0 3px rgba(252,129,129,0.12);
-    }
-    .feature-row {
-      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
-      border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.04); backdrop-filter: blur(4px);
-      transition: all 0.25s ease; cursor: default;
-    }
-    .feature-row:hover {
-      background: rgba(255,255,255,0.09);
-      border-color: rgba(255,255,255,0.14);
-      transform: translateX(4px);
-    }
-    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
-    .wa-btn {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-weight: 700; font-size: 12px; color: #25D366;
-      text-decoration: none; padding: 4px 10px 4px 6px;
-      border-radius: 20px; border: 1px solid #25D36630;
-      background: #25D36610; transition: all 0.2s ease;
-    }
-    .wa-btn:hover { background: #25D36620; border-color: #25D36660; transform: scale(1.03); }
-  `;
-
   return (
-    <>
-      <style>{inlineStyles}</style>
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 font-sans bg-[#F8FAFC] overflow-x-hidden">
+      <style>{`
+        @keyframes jyFadeUp {
+          from { opacity: 0; transform: translateY(18px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes jyFadeRight {
+          from { opacity: 0; transform: translateX(-18px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes jyFloatSlow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        .jy-anim-up { animation: jyFadeUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .jy-anim-right { animation: jyFadeRight 0.6s cubic-bezier(0.16, 1, 0.3, 1) both; }
+        .jy-float { animation: jyFloatSlow 6s ease-in-out infinite; }
+      `}</style>
 
-      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Inter','Poppins',sans-serif", overflow: 'hidden' }}>
-
-        {/* ════════════════════════════════════════
-            LEFT PANEL — Brand Showcase
-        ════════════════════════════════════════ */}
-        <div
-          className="hidden lg:flex"
-          style={{
-            width: '58%', flexDirection: 'column', position: 'relative',
-            overflow: 'hidden',
-            background: 'linear-gradient(145deg, #0A0F2E 0%, #0F1B4D 25%, #1A1060 50%, #0D2F7A 75%, #1142A6 100%)',
-          }}
-        >
-          {/* Background Orbs */}
-          <div className="orb" style={{ width: 480, height: 480, top: -120, left: -120, background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }} />
-          <div className="orb" style={{ width: 350, height: 350, top: '40%', right: -80, background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)' }} />
-          <div className="orb" style={{ width: 300, height: 300, bottom: -60, left: '30%', background: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)' }} />
-          <div className="orb" style={{ width: 200, height: 200, top: '60%', left: '10%', background: 'radial-gradient(circle, rgba(244,114,182,0.15) 0%, transparent 70%)' }} />
-
-          {/* Subtle Grid */}
-          <div style={{
-            position: 'absolute', inset: 0, opacity: 0.03,
-            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)',
-            backgroundSize: '52px 52px',
-          }} />
-
-          {/* Floating Particles */}
-          {PARTICLES.map((p, i) => (
-            <div key={i} style={{
-              position: 'absolute', width: p.w, height: p.h,
-              top: p.top, left: p.left, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.35)',
-              animation: `float-up ${p.dur}s ${p.del}s ease-in-out infinite`,
-            }} />
-          ))}
-
-          {/* Rotating Ring */}
-          <div style={{
-            position: 'absolute', top: '15%', right: '12%',
-            width: 140, height: 140, opacity: 0.12,
-            border: '1px dashed rgba(255,255,255,0.6)',
-            borderRadius: '50%', animation: 'spin-slow 20s linear infinite',
-          }} />
-          <div style={{
-            position: 'absolute', top: '15%', right: '12%',
-            width: 100, height: 100, margin: 20, opacity: 0.1,
-            border: '1px dashed rgba(255,255,255,0.4)',
-            borderRadius: '50%', animation: 'spin-slow 14s linear infinite reverse',
-          }} />
-
-          {/* Top Logo */}
+      {/* ══════════════════════════════════════════════════════
+          LEFT PANEL — Balanced Royal Blue Institutional Showcase
+      ══════════════════════════════════════════════════════ */}
+      <div
+        className="hidden lg:flex flex-col justify-between relative p-8 xl:p-12 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #1E3A8A 0%, #2563EB 45%, #4F46E5 100%)',
+        }}
+      >
+        {/* Subtle decorative background accents */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
-            className="anim-slide-left"
+            className="absolute -top-28 -left-28 w-96 h-96 rounded-full opacity-25 jy-float"
+            style={{ background: 'radial-gradient(circle, #93C5FD, transparent 70%)' }}
+          />
+          <div
+            className="absolute bottom-10 -right-24 w-96 h-96 rounded-full opacity-20 jy-float"
+            style={{ background: 'radial-gradient(circle, #C4B5FD, transparent 70%)', animationDelay: '2s' }}
+          />
+          <div
+            className="absolute inset-0 opacity-[0.06]"
             style={{
-              position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center',
-              gap: 14, padding: '32px 44px 0',
-              opacity: mounted ? undefined : 0,
-              animationDelay: '0.1s',
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.85) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.85) 1px, transparent 1px)',
+              backgroundSize: '44px 44px',
             }}
-          >
-            <div style={{
-              width: 52, height: 52, borderRadius: 16, overflow: 'hidden',
-              background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.22)',
-              padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
-            }}>
-              <img src="/logo.png" alt="JY School" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-            <div>
-              <div style={{ color: '#fff', fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em' }}>JY SCHOOL</div>
-              <div style={{ color: '#93C5FD', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', marginTop: 2 }}>MANAGEMENT SYSTEM</div>
-            </div>
-          </div>
-
-          {/* Center Content */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 44px', position: 'relative', zIndex: 10 }}>
-
-            {/* Live Badge */}
-            <div
-              className="anim-slide-left"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
-                border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999,
-                padding: '7px 16px', width: 'fit-content', marginBottom: 28,
-                opacity: mounted ? undefined : 0, animationDelay: '0.15s',
-              }}
-            >
-              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34D399', animation: 'float-up 2s ease-in-out infinite' }} />
-              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em' }}>School Management Platform</span>
-            </div>
-
-            {/* Headline */}
-            <div
-              className="anim-slide-left"
-              style={{ opacity: mounted ? undefined : 0, animationDelay: '0.2s', marginBottom: 20 }}
-            >
-              <h1 style={{ fontSize: 46, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
-                Empowering
-              </h1>
-              <h1 style={{ fontSize: 46, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
-                <span style={{
-                  background: 'linear-gradient(90deg, #60A5FA 0%, #A78BFA 40%, #F472B6 100%)',
-                  backgroundSize: '200% auto',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                  animation: 'shimmer 4s linear infinite',
-                }}>
-                  Education
-                </span>
-              </h1>
-              <h1 style={{ fontSize: 46, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
-                Excellence
-              </h1>
-            </div>
-
-            <p
-              className="anim-slide-left"
-              style={{
-                color: 'rgba(165,180,252,0.8)', fontSize: 15, lineHeight: 1.75,
-                maxWidth: 360, marginBottom: 36,
-                opacity: mounted ? undefined : 0, animationDelay: '0.25s',
-              }}
-            >
-              A unified platform for students, teachers, and administrators to collaborate, learn, and grow together.
-            </p>
-
-            {/* Features */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 380, marginBottom: 40 }}>
-              {FEATURES.map(({ icon: Icon, label, color }, i) => (
-                <div
-                  key={label}
-                  className="feature-row anim-slide-left"
-                  style={{ opacity: mounted ? undefined : 0, animationDelay: `${0.3 + i * 0.08}s` }}
-                >
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
-                    background: `${color}1A`, border: `1px solid ${color}35`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    <Icon style={{ width: 16, height: 16, color }} />
-                  </div>
-                  <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 500, flex: 1 }}>{label}</span>
-                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>›</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Stats */}
-            <div
-              className="anim-slide-left"
-              style={{
-                display: 'flex', gap: 36,
-                opacity: mounted ? undefined : 0, animationDelay: '0.65s',
-              }}
-            >
-              {[{ v: '500+', l: 'Students' }, { v: '34', l: 'Teachers' }, { v: '24', l: 'Classes' }].map(({ v, l }) => (
-                <div key={l}>
-                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{v}</div>
-                  <div style={{ color: 'rgba(147,197,253,0.65)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>{l}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom Quote */}
-          <div style={{ position: 'relative', zIndex: 10, padding: '0 44px 32px' }}>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 20 }}>
-              <p style={{ color: 'rgba(165,180,252,0.5)', fontSize: 13, fontStyle: 'italic', margin: 0 }}>
-                "Education is the most powerful weapon which you can use to change the world."
-              </p>
-              <p style={{ color: 'rgba(147,197,253,0.4)', fontSize: 11, fontWeight: 700, marginTop: 6 }}>— Nelson Mandela</p>
-            </div>
-          </div>
+          />
         </div>
 
-        {/* ════════════════════════════════════════
-            RIGHT PANEL — Login Form
-        ════════════════════════════════════════ */}
-        <div style={{
-          flex: 1, display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center',
-          background: 'linear-gradient(160deg, #F0F4FF 0%, #F8FAFF 40%, #EEF2FF 100%)',
-          padding: '24px 24px',
-          position: 'relative', overflow: 'hidden',
-        }}>
-
-          {/* Subtle BG Orbs */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -120, right: -100, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, #EEF2FF, transparent 70%)', opacity: 0.7 }} />
-            <div style={{ position: 'absolute', bottom: -80, left: -60, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, #EDE9FE, transparent 70%)', opacity: 0.6 }} />
-          </div>
-
-          {/* Mobile Logo */}
-          <div className="lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <img src="/logo.png" alt="JY School" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
-            <div>
-              <div style={{ color: '#0f172a', fontWeight: 900, fontSize: 20 }}>JY SCHOOL</div>
-              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600 }}>Management System</div>
-            </div>
-          </div>
-
-          {/* Login Card */}
-          <div
-            className="anim-slide-up"
-            style={{
-              width: '100%', maxWidth: 420, position: 'relative', zIndex: 10,
-              opacity: mounted ? undefined : 0, animationDelay: '0.15s',
-            }}
-          >
-            {/* Card */}
-            <div style={{
-              background: '#fff', borderRadius: 28,
-              boxShadow: '0 32px 72px -12px rgba(79,70,229,0.14), 0 12px 28px -8px rgba(0,0,0,0.07)',
-              border: '1px solid rgba(226,232,240,0.7)',
-              overflow: 'hidden',
-            }}>
-
-              {/* Top gradient bar */}
-              <div style={{ height: 4, background: 'linear-gradient(90deg, #2563EB 0%, #6366F1 40%, #A855F7 70%, #EC4899 100%)' }} />
-
-              <div style={{ padding: '36px 36px 32px' }}>
-
-                {/* Icon + Title */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
-                  <div
-                    className="anim-bounce"
-                    style={{
-                      width: 72, height: 72, borderRadius: 22,
-                      background: 'linear-gradient(145deg, #2563EB, #7C3AED)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      boxShadow: '0 12px 32px rgba(99,102,241,0.4)',
-                      marginBottom: 18, animation: `glow-pulse 3s ease-in-out infinite`,
-                      opacity: mounted ? undefined : 0, animationDelay: '0.3s',
-                    }}
-                  >
-                    <GraduationCap style={{ width: 34, height: 34, color: '#fff', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <Sparkles style={{ width: 14, height: 14, color: '#6366F1' }} />
-                    <h2 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Welcome Back</h2>
-                    <Sparkles style={{ width: 14, height: 14, color: '#6366F1' }} />
-                  </div>
-                  <p style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500, margin: 0 }}>Sign in to your JY School account</p>
-                </div>
-
-                {/* Form */}
-                <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-                  {/* Username Field */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 7, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                      Username or Email
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{
-                        position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                        transition: 'color 0.2s',
-                        color: focusedField === 'email' ? '#6366F1' : '#94a3b8',
-                      }}>
-                        <User style={{ width: 16, height: 16 }} />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Enter your username or email"
-                        className={`input-field${errors.email ? ' error' : ''}`}
-                        onFocus={() => setFocusedField('email')}
-                        onBlur={() => setFocusedField(null)}
-                        {...register('email')}
-                      />
-                    </div>
-                    {errors.email && (
-                      <p style={{ color: '#ef4444', fontSize: 11, fontWeight: 600, marginTop: 6, marginLeft: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span>⚠</span> {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Password Field */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 7, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                      Password
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <div style={{
-                        position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
-                        transition: 'color 0.2s',
-                        color: focusedField === 'password' ? '#6366F1' : '#94a3b8',
-                      }}>
-                        <Lock style={{ width: 16, height: 16 }} />
-                      </div>
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Enter your password"
-                        className={`input-field${errors.password ? ' error' : ''}`}
-                        style={{ paddingRight: 44 }}
-                        onFocus={() => setFocusedField('password')}
-                        onBlur={() => setFocusedField(null)}
-                        {...register('password')}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        style={{
-                          position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
-                          color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer',
-                          padding: 4, borderRadius: 6, transition: 'color 0.2s',
-                        }}
-                        onMouseEnter={e => (e.currentTarget.style.color = '#6366F1')}
-                        onMouseLeave={e => (e.currentTarget.style.color = '#94a3b8')}
-                      >
-                        {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
-                      </button>
-                    </div>
-                    {errors.password && (
-                      <p style={{ color: '#ef4444', fontSize: 11, fontWeight: 600, marginTop: 6, marginLeft: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span>⚠</span> {errors.password.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Remember + Forgot */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                      <input
-                        type="checkbox"
-                        style={{ width: 15, height: 15, accentColor: '#6366F1', cursor: 'pointer', borderRadius: 4 }}
-                      />
-                      <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b' }}>Remember me</span>
-                    </label>
-                    <Link
-                      to="/forgot-password"
-                      style={{ fontSize: 13, fontWeight: 700, color: '#6366F1', textDecoration: 'none', transition: 'color 0.2s' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = '#4338CA')}
-                      onMouseLeave={e => (e.currentTarget.style.color = '#6366F1')}
-                    >
-                      Forgot Password?
-                    </Link>
-                  </div>
-
-                  {/* Sign In Button */}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-hover-lift"
-                    style={{
-                      width: '100%', padding: '14px 24px', borderRadius: 14,
-                      border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                      opacity: isSubmitting ? 0.7 : 1,
-                      background: 'linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #9333EA 100%)',
-                      boxShadow: '0 10px 24px -4px rgba(99,102,241,0.5)',
-                      color: '#fff', fontWeight: 800, fontSize: 14, letterSpacing: '0.01em',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      position: 'relative', overflow: 'hidden',
-                    }}
-                  >
-                    {/* shimmer overlay */}
-                    <div style={{
-                      position: 'absolute', inset: 0, pointerEvents: 'none',
-                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
-                      backgroundSize: '200% auto',
-                      animation: isSubmitting ? 'none' : 'shimmer 2.5s linear infinite',
-                    }} />
-                    {isSubmitting ? (
-                      <>
-                        <svg style={{ width: 18, height: 18, animation: 'spin-slow 0.8s linear infinite' }} fill="none" viewBox="0 0 24 24">
-                          <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                        </svg>
-                        Signing In...
-                      </>
-                    ) : (
-                      <>
-                        <ArrowRight style={{ width: 17, height: 17 }} />
-                        Sign In to Dashboard
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Divider */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
-                  <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Secure Login</span>
-                  <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
-                </div>
-
-                {/* Trust Badges */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 20 }}>
-                  {[
-                    { icon: Shield, label: 'SSL Secured' },
-                    { icon: CheckCircle2, label: 'Verified System' },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#94a3b8' }}>
-                      <Icon style={{ width: 14, height: 14, color: '#10b981' }} />
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>{label}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Contact Admin → WhatsApp */}
-                <div style={{ textAlign: 'center', marginBottom: 8 }}>
-                  <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500, marginBottom: 8 }}>
-                    Having trouble with login?
-                  </p>
-                  <a
-                    href={WHATSAPP_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="wa-btn"
-                  >
-                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <MessageCircle style={{ width: 13, height: 13, color: '#fff' }} />
-                    </div>
-                    Contact Administrator on WhatsApp
-                  </a>
-                </div>
-
-                {/* Copyright */}
-                <p style={{ textAlign: 'center', fontSize: 11, color: '#cbd5e1', fontWeight: 500, marginTop: 12 }}>
-                  © {new Date().getFullYear()} JY Education. All rights reserved.
+        {/* Content container filling full panel width cleanly with zero dead space */}
+        <div className="relative z-10 w-full max-w-xl mx-auto flex flex-col justify-between h-full gap-6">
+          {/* Top Brand Header */}
+          <div className="flex items-center justify-between gap-4 jy-anim-right">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-white p-1.5 flex items-center justify-center shadow-lg shrink-0">
+                <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
+              </div>
+              <div>
+                <h2 className="text-white font-black text-lg tracking-tight leading-none">
+                  SRI VENKATESWARA JY SCHOOL
+                </h2>
+                <p className="text-blue-100 text-[11px] font-bold tracking-widest uppercase mt-1">
+                  School ERP &amp; Academic Portal
                 </p>
               </div>
             </div>
 
-            {/* Below-card */}
-            <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 14 }}>
-              🔒 Protected by JY School Security System
+            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/25 rounded-full px-3.5 py-1.5 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+              <span className="text-white text-[11px] font-bold tracking-wide">Live Portal</span>
+            </div>
+          </div>
+
+          {/* Center Hero + 2x2 Feature Cards + 3-Stat Row */}
+          <div className="space-y-6 my-auto">
+            <div className="jy-anim-right" style={{ animationDelay: '0.08s' }}>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 border border-white/25 text-blue-50 text-[11px] font-bold mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                Unified Smart Campus Platform
+              </div>
+              <h1 className="text-3xl xl:text-4xl font-black text-white leading-[1.15] tracking-tight">
+                Empowering{' '}
+                <span className="text-amber-300">Education</span>{' '}
+                Excellence Every Day
+              </h1>
+              <p className="text-blue-100/90 text-sm xl:text-[15px] leading-relaxed mt-3 font-medium">
+                A unified digital workspace for students, parents, faculty, and school administration to learn, track progress, and grow together.
+              </p>
+            </div>
+
+            {/* 2x2 Module Cards Grid — fills full width cleanly */}
+            <div className="grid grid-cols-2 gap-3.5 jy-anim-right" style={{ animationDelay: '0.16s' }}>
+              {MODULE_CARDS.map(({ icon: Icon, title, desc, tint }) => (
+                <div
+                  key={title}
+                  className="p-4 rounded-2xl bg-white/12 hover:bg-white/18 backdrop-blur-md border border-white/20 transition-all duration-300 hover:-translate-y-0.5 shadow-sm"
+                >
+                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center mb-2.5 ${tint}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <h3 className="text-white font-extrabold text-sm leading-tight">{title}</h3>
+                  <p className="text-blue-100/80 text-xs font-medium mt-1 leading-snug">{desc}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 3-Column Stats Bar */}
+            <div className="grid grid-cols-3 gap-3.5 jy-anim-right" style={{ animationDelay: '0.24s' }}>
+              {[
+                { value: '500+', label: 'Active Students' },
+                { value: '34+', label: 'Expert Faculty' },
+                { value: '24+', label: 'Smart Classes' },
+              ].map(({ value, label }) => (
+                <div
+                  key={label}
+                  className="px-4 py-3 rounded-2xl bg-white/12 backdrop-blur-md border border-white/20 text-center"
+                >
+                  <div className="text-white font-black text-2xl leading-none">{value}</div>
+                  <div className="text-blue-100/85 text-[11px] font-semibold mt-1">{label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Quote Bar */}
+          <div className="border-t border-white/20 pt-4 flex items-center justify-between gap-4 jy-anim-right" style={{ animationDelay: '0.32s' }}>
+            <p className="text-blue-100/85 text-xs font-medium italic">
+              &ldquo;Education is the most powerful weapon which you can use to change the world.&rdquo;
             </p>
+            <span className="text-[11px] font-bold text-blue-100 bg-white/15 px-3 py-1 rounded-full border border-white/20 shrink-0">
+              AY 2026–27
+            </span>
           </div>
         </div>
       </div>
-    </>
+
+      {/* ══════════════════════════════════════════════════════
+          RIGHT PANEL — Bright Light Theme Login Card
+      ══════════════════════════════════════════════════════ */}
+      <div className="flex flex-col items-center justify-center relative px-5 sm:px-8 py-8 bg-gradient-to-br from-[#F8FAFF] via-[#F1F5FF] to-[#EEF2FF] overflow-hidden">
+        {/* Soft pastel orbs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -top-36 -right-36 w-80 h-80 rounded-full opacity-60"
+            style={{ background: 'radial-gradient(circle, #DBEAFE, transparent 70%)' }}
+          />
+          <div
+            className="absolute -bottom-36 -left-24 w-80 h-80 rounded-full opacity-60"
+            style={{ background: 'radial-gradient(circle, #E0E7FF, transparent 70%)' }}
+          />
+        </div>
+
+        {/* Mobile Brand Header (strictly hidden on desktop) */}
+        <div className="flex lg:hidden items-center gap-3 mb-6 relative z-10 jy-anim-up">
+          <div className="w-12 h-12 rounded-2xl bg-white border border-indigo-100 shadow-md p-1.5 flex items-center justify-center shrink-0">
+            <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
+          </div>
+          <div>
+            <h2 className="text-slate-800 font-black text-lg leading-tight">JY SCHOOL</h2>
+            <p className="text-slate-500 text-xs font-semibold">School ERP Portal</p>
+          </div>
+        </div>
+
+        {/* Centered Login Card */}
+        <div className="w-full max-w-[430px] relative z-10 jy-anim-up">
+          <div className="bg-white rounded-3xl border border-indigo-100/90 shadow-[0_24px_60px_-15px_rgba(37,99,235,0.14)] overflow-hidden">
+            {/* Top vibrant accent bar */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600" />
+
+            <div className="p-7 sm:p-8">
+              {/* Header */}
+              <div className="flex flex-col items-center text-center mb-7">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 mb-3.5 transition-transform duration-300 hover:scale-105">
+                  <GraduationCap className="w-7 h-7 text-white" />
+                </div>
+                <h2 className="text-2xl font-black text-slate-800 tracking-tight">Welcome Back</h2>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
+                  Sign in to access your JY School ERP dashboard
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Username or Email */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 tracking-wider uppercase">
+                    Username or Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <User className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter your username or email"
+                      className={`w-full box-border pl-10 pr-4 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all duration-200 border ${
+                        errors.email
+                          ? 'border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10'
+                          : 'border-slate-200 bg-slate-50 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10'
+                      }`}
+                      {...register('email')}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-rose-500 text-[11px] font-semibold mt-1.5 ml-1">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-600 mb-1.5 tracking-wider uppercase">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      className={`w-full box-border pl-10 pr-11 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all duration-200 border ${
+                        errors.password
+                          ? 'border-rose-300 bg-rose-50 focus:border-rose-400 focus:ring-4 focus:ring-rose-500/10'
+                          : 'border-slate-200 bg-slate-50 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10'
+                      }`}
+                      {...register('password')}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                      aria-label="Toggle password visibility"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-rose-500 text-[11px] font-semibold mt-1.5 ml-1">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Remember me + Forgot Password */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 rounded text-indigo-600 border-slate-300 accent-indigo-600 cursor-pointer"
+                    />
+                    <span className="text-xs sm:text-sm font-medium text-slate-600">Remember me</span>
+                  </label>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs sm:text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
+
+                {/* Sign In Button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 px-6 rounded-xl text-white font-black text-sm bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 hover:from-blue-700 hover:via-indigo-700 hover:to-violet-700 shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Signing In...
+                    </>
+                  ) : (
+                    <>
+                      <span>Sign In to Dashboard</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative my-5">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-white px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Secure Access
+                  </span>
+                </div>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="flex items-center justify-center gap-5 mb-5">
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <Shield className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-xs font-semibold">SSL Secured</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-slate-500">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-xs font-semibold">Verified System</span>
+                </div>
+              </div>
+
+              {/* Direct WhatsApp Contact Administrator */}
+              <div className="pt-4 border-t border-slate-100 text-center space-y-2.5">
+                <p className="text-slate-500 text-xs font-medium">
+                  Having trouble logging in?
+                </p>
+                <a
+                  href={ADMIN_WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-extrabold transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <MessageCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Contact Administrator (WhatsApp)</span>
+                </a>
+                <p className="text-[11px] text-slate-400 font-medium pt-1">
+                  &copy; {new Date().getFullYear()} Sri Venkateswara JY School. All rights reserved.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-xs text-slate-400 font-medium mt-4">
+            Protected by JY School Security System
+          </p>
+        </div>
+      </div>
+    </div>
   );
 };
 

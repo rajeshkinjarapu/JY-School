@@ -103,8 +103,9 @@ export const LatexRenderer: React.FC<{ text?: string; content?: string; classNam
 export const CompetitiveExamsPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isStudent = (user?.role || '').toUpperCase() === 'STUDENT';
-  
+  const role = (user?.role || '').toUpperCase();
+  const isStudent = role === 'STUDENT';
+
   if (isStudent) {
     return <StudentCompetitivePortal navigate={navigate} />;
   }
@@ -127,6 +128,22 @@ const extractExams = (payload: any): any[] => {
 const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user } = useAuth();
+
+  // ══════════════════════════════════════════════════════
+  // TEACHER ROLE RESTRICTIONS
+  // Teacher can ONLY: Create Exam, Question Bank, Paper Preview & Download
+  // Teacher CANNOT: Answer Keys, Results, Students, Reports
+  // ══════════════════════════════════════════════════════
+  const isTeacher = (user?.role || '').toUpperCase() === 'TEACHER';
+
+  // If teacher tries to access restricted tab via URL, redirect to dashboard
+  const restrictedPaths = ['/competitive-exams/answer-keys', '/competitive-exams/results', '/competitive-exams/students', '/competitive-exams/reports'];
+  React.useEffect(() => {
+    if (isTeacher && restrictedPaths.some(p => location.pathname.startsWith(p))) {
+      navigate('/competitive-exams', { replace: true });
+    }
+  }, [isTeacher, location.pathname]);
 
   const activeTab: 'DASHBOARD' | 'EXAMS' | 'QUESTIONS' | 'ANSWER_KEYS' | 'RESULTS' | 'STUDENTS' | 'REPORTS' = useMemo(() => {
     const p = location.pathname;
@@ -416,27 +433,31 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       },
       {
         title: `Question Bank updated (${totalQuestions} questions)`,
-        subtitle: 'by Admin',
+        subtitle: 'by Faculty / Admin',
         time: latestMq ? formatRelativeTime(latestMq.createdAt) : 'Recently',
         icon: <Layers className="w-4 h-4 text-[#D97706]" />,
         iconBg: 'bg-[#FFF1DC]',
       },
-      {
-        title: `Student data synced (${kpiMetrics.studentBase} records)`,
-        subtitle: 'School Roster',
-        time: 'Synced',
-        icon: <Upload className="w-4 h-4 text-[#16A34A]" />,
-        iconBg: 'bg-[#E3F8EC]',
-      },
-      {
-        title: liveExams.length > 0 ? 'Live exam started' : 'CBT Simulator standby',
-        subtitle: latestLive?.title || 'Ready for Online Testing',
-        time: latestLive ? formatRelativeTime(latestLive.startTime || latestLive.createdAt) : 'Recently',
-        icon: <Radio className="w-4 h-4 text-[#E11D48]" />,
-        iconBg: 'bg-[#FEE8EE]',
-      },
+      ...(!isTeacher
+        ? [
+            {
+              title: `Student data synced (${kpiMetrics.studentBase} records)`,
+              subtitle: 'School Roster',
+              time: 'Synced',
+              icon: <Upload className="w-4 h-4 text-[#16A34A]" />,
+              iconBg: 'bg-[#E3F8EC]',
+            },
+            {
+              title: liveExams.length > 0 ? 'Live exam started' : 'CBT Simulator standby',
+              subtitle: latestLive?.title || 'Ready for Online Testing',
+              time: latestLive ? formatRelativeTime(latestLive.startTime || latestLive.createdAt) : 'Recently',
+              icon: <Radio className="w-4 h-4 text-[#E11D48]" />,
+              iconBg: 'bg-[#FEE8EE]',
+            },
+          ]
+        : []),
     ];
-  }, [exams, liveExams, masterQuestionsList, totalQuestions, kpiMetrics.studentBase]);
+  }, [exams, liveExams, masterQuestionsList, totalQuestions, kpiMetrics.studentBase, isTeacher]);
 
   const pageMeta: Record<string, { title: string; subtitle: string; badge: string }> = {
     DASHBOARD: {
@@ -506,13 +527,16 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
 
             {activeTab !== 'QUESTIONS' && (
               <>
-                <button
-                  onClick={() => navigate('/competitive-exams/bulk-import')}
-                  className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <FileSpreadsheet className="w-4 h-4" />
-                  <span>Bulk Import</span>
-                </button>
+                {/* Bulk Import — only for non-teachers */}
+                {!isTeacher && (
+                  <button
+                    onClick={() => navigate('/competitive-exams/bulk-import')}
+                    className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer"
+                  >
+                    <FileSpreadsheet className="w-4 h-4" />
+                    <span>Bulk Import</span>
+                  </button>
+                )}
 
                 <button
                   onClick={() => {
@@ -534,14 +558,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
         {/* Persistent Top Sub-Navigation Pill Bar */}
         <div className="bg-white rounded-2xl border border-slate-200/80 p-2 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex items-center gap-1.5 overflow-x-auto">
           {[
-            { key: 'DASHBOARD', label: 'Dashboard', path: '/competitive-exams', icon: <LayoutDashboard size={14} /> },
-            { key: 'EXAMS', label: `Exams (${exams.length})`, path: '/competitive-exams/exams', icon: <FileText size={14} /> },
-            { key: 'QUESTIONS', label: `Question Bank (${totalQuestions})`, path: '/competitive-exams/question-bank', icon: <Layers size={14} /> },
-            { key: 'ANSWER_KEYS', label: 'Answer Keys', path: '/competitive-exams/answer-keys', icon: <KeyRound size={14} /> },
-            { key: 'RESULTS', label: `Results & Ranks (${totalSubmissions})`, path: '/competitive-exams/results', icon: <Trophy size={14} /> },
-            { key: 'STUDENTS', label: `Students (${activeStudents.length})`, path: '/competitive-exams/students', icon: <Users size={14} /> },
-            { key: 'REPORTS', label: 'Reports', path: '/competitive-exams/reports', icon: <FileBarChart2 size={14} /> },
-          ].map((tab) => {
+            { key: 'DASHBOARD', label: 'Dashboard', path: '/competitive-exams', icon: <LayoutDashboard size={14} />, teacherAllowed: true },
+            { key: 'EXAMS', label: `Exams (${exams.length})`, path: '/competitive-exams/exams', icon: <FileText size={14} />, teacherAllowed: true },
+            { key: 'QUESTIONS', label: `Question Bank (${totalQuestions})`, path: '/competitive-exams/question-bank', icon: <Layers size={14} />, teacherAllowed: true },
+            { key: 'ANSWER_KEYS', label: 'Answer Keys', path: '/competitive-exams/answer-keys', icon: <KeyRound size={14} />, teacherAllowed: false },
+            { key: 'RESULTS', label: `Results & Ranks (${totalSubmissions})`, path: '/competitive-exams/results', icon: <Trophy size={14} />, teacherAllowed: false },
+            { key: 'STUDENTS', label: `Students (${activeStudents.length})`, path: '/competitive-exams/students', icon: <Users size={14} />, teacherAllowed: false },
+            { key: 'REPORTS', label: 'Reports', path: '/competitive-exams/reports', icon: <FileBarChart2 size={14} />, teacherAllowed: false },
+          ].filter(tab => !isTeacher || tab.teacherAllowed).map((tab) => {
             const isActive = activeTab === tab.key;
             return (
               <button
@@ -567,29 +591,31 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       {/* 100% EXACT PROFESSIONAL PASTEL DASHBOARD UI */}
       {activeTab === 'DASHBOARD' && (
         <div className="space-y-5">
-          {/* ROW 1: 4 PASTEL KPI CARDS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* 1. Total Students */}
-            <button
-              type="button"
-              onClick={() => navigate('/competitive-exams/students')}
-              className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#EDF4FF] to-[#E2EEFF] border border-[#D4E4FF] shadow-[0_2px_8px_rgba(37,99,235,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-12 h-12 rounded-full bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Total Students</div>
-                  <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
-                    {kpiMetrics.studentBase}
+          {/* ROW 1: PASTEL KPI CARDS (Teacher sees only Exam/Question/Paper KPIs) */}
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${isTeacher ? 'lg:grid-cols-3' : 'lg:grid-cols-4'} gap-4`}>
+            {/* 1. Total Students — ADMIN/PRINCIPAL only */}
+            {!isTeacher && (
+              <button
+                type="button"
+                onClick={() => navigate('/competitive-exams/students')}
+                className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#EDF4FF] to-[#E2EEFF] border border-[#D4E4FF] shadow-[0_2px_8px_rgba(37,99,235,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center justify-between gap-3"
+              >
+                <div className="flex items-center gap-3.5 min-w-0">
+                  <div className="w-12 h-12 rounded-full bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Total Students</div>
+                    <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
+                      {kpiMetrics.studentBase}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <span className="px-2.5 py-1 rounded-full bg-[#CCF5DF] text-[#059669] text-[11px] font-extrabold shrink-0">
-                ↑ +{activeStudents.length > 0 ? activeStudents.length : 12}
-              </span>
-            </button>
+                <span className="px-2.5 py-1 rounded-full bg-[#CCF5DF] text-[#059669] text-[11px] font-extrabold shrink-0">
+                  ↑ +{activeStudents.length > 0 ? activeStudents.length : 12}
+                </span>
+              </button>
+            )}
 
             {/* 2. Total Exams */}
             <button
@@ -608,39 +634,81 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
               </div>
             </button>
 
-            {/* 3. Live Exams */}
-            <button
-              type="button"
-              onClick={() => navigate('/competitive-exams/exams?filter=LIVE')}
-              className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#ECFAF2] to-[#DCF6E7] border border-[#C6EED7] shadow-[0_2px_8px_rgba(22,163,74,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
-            >
-              <div className="w-12 h-12 rounded-full bg-[#CEF3DD] text-[#16A34A] flex items-center justify-center shrink-0">
-                <Radio className="w-6 h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Live Exams</div>
-                <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
-                  {liveExams.length}
+            {/* Teacher-only Question Bank KPI Card */}
+            {isTeacher && (
+              <button
+                type="button"
+                onClick={() => navigate('/competitive-exams/question-bank')}
+                className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#EDF4FF] to-[#E2EEFF] border border-[#D4E4FF] shadow-[0_2px_8px_rgba(37,99,235,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
+                  <Layers className="w-6 h-6" />
                 </div>
-              </div>
-            </button>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Question Bank</div>
+                  <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
+                    {totalQuestions}
+                  </div>
+                </div>
+              </button>
+            )}
 
-            {/* 4. Upcoming Exams */}
-            <button
-              type="button"
-              onClick={() => navigate('/competitive-exams/exams?filter=UPCOMING')}
-              className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#FFF6EA] to-[#FFEDD6] border border-[#FDE0B6] shadow-[0_2px_8px_rgba(234,88,12,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
-            >
-              <div className="w-12 h-12 rounded-full bg-[#FDE4C0] text-[#EA580C] flex items-center justify-center shrink-0">
-                <Calendar className="w-6 h-6" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Upcoming Exams</div>
-                <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
-                  {upcomingExams.length}
+            {/* Teacher-only Ready Papers KPI Card */}
+            {isTeacher && (
+              <button
+                type="button"
+                onClick={() => navigate('/competitive-exams/exams')}
+                className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#ECFAF2] to-[#DCF6E7] border border-[#C6EED7] shadow-[0_2px_8px_rgba(22,163,74,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#CEF3DD] text-[#16A34A] flex items-center justify-center shrink-0">
+                  <Printer className="w-6 h-6" />
                 </div>
-              </div>
-            </button>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Papers Ready to Download</div>
+                  <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
+                    {exams.filter((e: any) => (e._count?.questions || e.questions?.length || 0) > 0).length}
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {/* 3. Live Exams — ADMIN/PRINCIPAL only */}
+            {!isTeacher && (
+              <button
+                type="button"
+                onClick={() => navigate('/competitive-exams/exams?filter=LIVE')}
+                className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#ECFAF2] to-[#DCF6E7] border border-[#C6EED7] shadow-[0_2px_8px_rgba(22,163,74,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#CEF3DD] text-[#16A34A] flex items-center justify-center shrink-0">
+                  <Radio className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Live Exams</div>
+                  <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
+                    {liveExams.length}
+                  </div>
+                </div>
+              </button>
+            )}
+
+            {/* 4. Upcoming Exams — ADMIN/PRINCIPAL only */}
+            {!isTeacher && (
+              <button
+                type="button"
+                onClick={() => navigate('/competitive-exams/exams?filter=UPCOMING')}
+                className="rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-[#FFF6EA] to-[#FFEDD6] border border-[#FDE0B6] shadow-[0_2px_8px_rgba(234,88,12,0.06)] hover:shadow-md transition-all text-left cursor-pointer flex items-center gap-3.5"
+              >
+                <div className="w-12 h-12 rounded-full bg-[#FDE4C0] text-[#EA580C] flex items-center justify-center shrink-0">
+                  <Calendar className="w-6 h-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs sm:text-[13px] font-bold text-slate-600 truncate">Upcoming Exams</div>
+                  <div className="text-2xl sm:text-[28px] font-black text-slate-900 leading-tight mt-0.5">
+                    {upcomingExams.length}
+                  </div>
+                </div>
+              </button>
+            )}
           </div>
 
           {/* ROW 2: 2-COLUMN MAIN GRID (LEFT 8 COLS + RIGHT 4 COLS) */}
@@ -654,7 +722,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
                   <h3 className="text-base font-black text-slate-900">Quick Actions</h3>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                <div className={`grid gap-3 ${isTeacher ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-6'}`}>
                   {/* 1. Create New Exam */}
                   <button
                     type="button"
@@ -678,58 +746,80 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
                   >
                     <Layers className="w-7 h-7 text-[#2563EB]" />
                     <span className="text-xs font-extrabold text-slate-800 leading-tight">
-                      Question<br />Bank
+                      Add Questions<br />(Question Bank)
                     </span>
                   </button>
 
-                  {/* 3. Import Questions (Excel / CSV) */}
-                  <button
-                    type="button"
-                    onClick={() => navigate('/competitive-exams/bulk-import')}
-                    className="rounded-2xl p-4 bg-[#E8F9EF] hover:bg-[#D7F4E3] border border-[#CBEFD9] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 min-h-[126px] hover:-translate-y-0.5"
-                  >
-                    <Upload className="w-7 h-7 text-[#16A34A]" />
-                    <div className="leading-tight">
-                      <div className="text-xs font-extrabold text-slate-800">Import<br />Questions</div>
-                      <div className="text-[10px] font-bold text-[#16A34A] mt-0.5">(Excel / CSV)</div>
-                    </div>
-                  </button>
+                  {/* Teacher-only: Preview & Download Paper */}
+                  {isTeacher && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/competitive-exams/exams')}
+                      className="rounded-2xl p-4 bg-[#E8F9EF] hover:bg-[#D7F4E3] border border-[#CBEFD9] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
+                    >
+                      <Printer className="w-7 h-7 text-[#16A34A]" />
+                      <span className="text-xs font-extrabold text-slate-800 leading-tight">
+                        Exam Preview<br />&amp; Paper Download
+                      </span>
+                    </button>
+                  )}
 
-                  {/* 4. Answer Keys */}
-                  <button
-                    type="button"
-                    onClick={() => navigate('/competitive-exams/answer-keys')}
-                    className="rounded-2xl p-4 bg-[#FFF3E2] hover:bg-[#FFE9CB] border border-[#FDE2BE] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
-                  >
-                    <KeyRound className="w-7 h-7 text-[#D97706]" />
-                    <span className="text-xs font-extrabold text-slate-800 leading-tight">
-                      Answer<br />Keys
-                    </span>
-                  </button>
+                  {/* 3. Import Questions — ADMIN/PRINCIPAL only */}
+                  {!isTeacher && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/competitive-exams/bulk-import')}
+                      className="rounded-2xl p-4 bg-[#E8F9EF] hover:bg-[#D7F4E3] border border-[#CBEFD9] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 min-h-[126px] hover:-translate-y-0.5"
+                    >
+                      <Upload className="w-7 h-7 text-[#16A34A]" />
+                      <div className="leading-tight">
+                        <div className="text-xs font-extrabold text-slate-800">Import<br />Questions</div>
+                        <div className="text-[10px] font-bold text-[#16A34A] mt-0.5">(Excel / CSV)</div>
+                      </div>
+                    </button>
+                  )}
 
-                  {/* 5. View Results */}
-                  <button
-                    type="button"
-                    onClick={() => navigate('/competitive-exams/results')}
-                    className="rounded-2xl p-4 bg-[#FEEBF1] hover:bg-[#FDDCE7] border border-[#FCD2E0] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
-                  >
-                    <BarChart3 className="w-7 h-7 text-[#E11D48]" />
-                    <span className="text-xs font-extrabold text-slate-800 leading-tight">
-                      View<br />Results
-                    </span>
-                  </button>
+                  {/* 4. Answer Keys — ADMIN/PRINCIPAL only */}
+                  {!isTeacher && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/competitive-exams/answer-keys')}
+                      className="rounded-2xl p-4 bg-[#FFF3E2] hover:bg-[#FFE9CB] border border-[#FDE2BE] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
+                    >
+                      <KeyRound className="w-7 h-7 text-[#D97706]" />
+                      <span className="text-xs font-extrabold text-slate-800 leading-tight">
+                        Answer<br />Keys
+                      </span>
+                    </button>
+                  )}
 
-                  {/* 6. Reports */}
-                  <button
-                    type="button"
-                    onClick={() => navigate('/competitive-exams/reports')}
-                    className="rounded-2xl p-4 bg-[#EBF4FF] hover:bg-[#DCEBFF] border border-[#D4E6FE] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
-                  >
-                    <FileBarChart2 className="w-7 h-7 text-[#2563EB]" />
-                    <span className="text-xs font-extrabold text-slate-800 leading-tight">
-                      Reports
-                    </span>
-                  </button>
+                  {/* 5. View Results — ADMIN/PRINCIPAL only */}
+                  {!isTeacher && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/competitive-exams/results')}
+                      className="rounded-2xl p-4 bg-[#FEEBF1] hover:bg-[#FDDCE7] border border-[#FCD2E0] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
+                    >
+                      <BarChart3 className="w-7 h-7 text-[#E11D48]" />
+                      <span className="text-xs font-extrabold text-slate-800 leading-tight">
+                        View<br />Results
+                      </span>
+                    </button>
+                  )}
+
+                  {/* 6. Reports — ADMIN/PRINCIPAL only */}
+                  {!isTeacher && (
+                    <button
+                      type="button"
+                      onClick={() => navigate('/competitive-exams/reports')}
+                      className="rounded-2xl p-4 bg-[#EBF4FF] hover:bg-[#DCEBFF] border border-[#D4E6FE] transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2.5 min-h-[126px] hover:-translate-y-0.5"
+                    >
+                      <FileBarChart2 className="w-7 h-7 text-[#2563EB]" />
+                      <span className="text-xs font-extrabold text-slate-800 leading-tight">
+                        Reports
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -913,6 +1003,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
             exams={exams}
             liveExams={liveExams}
             upcomingExams={upcomingExams}
+            isTeacher={isTeacher}
             examFilter={searchParams.get('filter') || 'ALL'}
             onChangeFilter={(filterVal: string) => {
               const next = new URLSearchParams(searchParams);
@@ -1001,8 +1092,14 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       {createdExamModal && (
         <ExamLaunchSuccessModal
           exam={createdExamModal}
+          isTeacher={isTeacher}
           onClose={() => setCreatedExamModal(null)}
           onLaunchExam={() => navigate(`/take-competitive-exam/${createdExamModal.id}`)}
+          onPreviewPaper={() => {
+            const targetId = createdExamModal.id;
+            setCreatedExamModal(null);
+            navigate(`/competitive-exams/${targetId}/paper`);
+          }}
           onOpenQuestionBank={() => {
             setSelectedExamIdForQB(createdExamModal.id);
             setCreatedExamModal(null);
@@ -1015,6 +1112,7 @@ const AdminCompetitiveDashboard = ({ navigate }: { navigate: any }) => {
       {previewExamPaper && (
         <ExamPaperPreviewModal
           exam={previewExamPaper}
+          isTeacher={isTeacher}
           onClose={() => setPreviewExamPaper(null)}
           navigate={navigate}
         />
@@ -1031,6 +1129,7 @@ const ManageExamsTab = ({
   exams,
   liveExams = [],
   upcomingExams = [],
+  isTeacher = false,
   examFilter = 'ALL',
   onChangeFilter,
   loading, 
@@ -1045,7 +1144,7 @@ const ManageExamsTab = ({
   onPreviewPaper,
   navigate 
 }: any) => {
-  const normalizedFilter = (examFilter || 'ALL').toUpperCase();
+  const normalizedFilter = isTeacher ? 'ALL' : (examFilter || 'ALL').toUpperCase();
   const visibleExams =
     normalizedFilter === 'LIVE'
       ? liveExams
@@ -1070,12 +1169,13 @@ const ManageExamsTab = ({
 
   const totalManageQs = exams.reduce((a: number, e: any) => a + (e._count?.questions || e.questions?.length || 0), 0);
   const totalManageSubs = exams.reduce((a: number, e: any) => a + (e._count?.submissions || e.submissions?.length || 0), 0);
+  const readyPapersCount = exams.filter((e: any) => (e._count?.questions || e.questions?.length || 0) > 0).length;
 
   return (
     <div className="space-y-5">
       {/* Unified Pastel KPI + Action Toolbar */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-3.5">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+        <div className={`grid grid-cols-2 sm:grid-cols-3 ${isTeacher ? 'lg:grid-cols-3' : 'lg:grid-cols-5'} gap-2.5`}>
           <button
             type="button"
             onClick={() => onChangeFilter && onChangeFilter('ALL')}
@@ -1092,37 +1192,41 @@ const ManageExamsTab = ({
             </div>
           </button>
 
-          <button
-            type="button"
-            onClick={() => onChangeFilter && onChangeFilter('LIVE')}
-            className={`rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border flex items-center gap-3 text-left cursor-pointer transition ${
-              normalizedFilter === 'LIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-[#CBEFD6] hover:border-emerald-300'
-            }`}
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
-              <Radio className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{liveExams.length}</div>
-              <div className="text-[11px] font-bold text-[#16A34A] truncate">Live Exams</div>
-            </div>
-          </button>
+          {!isTeacher && (
+            <button
+              type="button"
+              onClick={() => onChangeFilter && onChangeFilter('LIVE')}
+              className={`rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border flex items-center gap-3 text-left cursor-pointer transition ${
+                normalizedFilter === 'LIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-[#CBEFD6] hover:border-emerald-300'
+              }`}
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Radio className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{liveExams.length}</div>
+                <div className="text-[11px] font-bold text-[#16A34A] truncate">Live Exams</div>
+              </div>
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={() => onChangeFilter && onChangeFilter('UPCOMING')}
-            className={`rounded-xl px-3.5 py-2.5 bg-[#FFF4E5] border flex items-center gap-3 text-left cursor-pointer transition ${
-              normalizedFilter === 'UPCOMING' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-[#FDE2BA] hover:border-amber-300'
-            }`}
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
-              <Calendar className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{upcomingExams.length}</div>
-              <div className="text-[11px] font-bold text-[#D97706] truncate">Upcoming</div>
-            </div>
-          </button>
+          {!isTeacher && (
+            <button
+              type="button"
+              onClick={() => onChangeFilter && onChangeFilter('UPCOMING')}
+              className={`rounded-xl px-3.5 py-2.5 bg-[#FFF4E5] border flex items-center gap-3 text-left cursor-pointer transition ${
+                normalizedFilter === 'UPCOMING' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-[#FDE2BA] hover:border-amber-300'
+              }`}
+            >
+              <div className="w-9 h-9 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{upcomingExams.length}</div>
+                <div className="text-[11px] font-bold text-[#D97706] truncate">Upcoming</div>
+              </div>
+            </button>
+          )}
 
           <div className="rounded-xl px-3.5 py-2.5 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0">
@@ -1134,15 +1238,27 @@ const ManageExamsTab = ({
             </div>
           </div>
 
-          <div className="rounded-xl px-3.5 py-2.5 bg-[#FEECEF] border border-[#FBD0D8] flex items-center gap-3 col-span-2 sm:col-span-1">
-            <div className="w-9 h-9 rounded-xl bg-[#FAD8DF] text-[#E11D48] flex items-center justify-center shrink-0">
-              <Users className="w-5 h-5" />
+          {isTeacher ? (
+            <div className="rounded-xl px-3.5 py-2.5 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3 col-span-2 sm:col-span-1">
+              <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+                <Printer className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{readyPapersCount}</div>
+                <div className="text-[11px] font-bold text-[#16A34A] truncate">Ready Papers</div>
+              </div>
             </div>
-            <div className="min-w-0">
-              <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{totalManageSubs}</div>
-              <div className="text-[11px] font-semibold text-slate-600 truncate">Submissions</div>
+          ) : (
+            <div className="rounded-xl px-3.5 py-2.5 bg-[#FEECEF] border border-[#FBD0D8] flex items-center gap-3 col-span-2 sm:col-span-1">
+              <div className="w-9 h-9 rounded-xl bg-[#FAD8DF] text-[#E11D48] flex items-center justify-center shrink-0">
+                <Users className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-lg sm:text-xl font-black text-slate-900 leading-tight">{totalManageSubs}</div>
+                <div className="text-[11px] font-semibold text-slate-600 truncate">Submissions</div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-0.5">
@@ -1171,7 +1287,7 @@ const ManageExamsTab = ({
             </button>
           </div>
 
-          {exams.length > 0 && onChangeFilter && (
+          {!isTeacher && exams.length > 0 && onChangeFilter && (
             <div className="inline-flex items-center p-1 bg-slate-50 border border-slate-200 rounded-xl">
               {[
                 { key: 'ALL', label: `All (${exams.length})` },
@@ -1289,19 +1405,32 @@ const ManageExamsTab = ({
                     <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${patternBadgeBg}`}>
                       {patternTag}
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleTogglePublish}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 border cursor-pointer transition ${
-                        exam.isPublished !== false
-                          ? 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6] hover:bg-emerald-100'
-                          : 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA] hover:bg-amber-100'
-                      }`}
-                      title="Click to toggle Published / Draft"
-                    >
-                      <span className={`w-2 h-2 rounded-full ${exam.isPublished !== false ? 'bg-[#16A34A] animate-pulse' : 'bg-[#D97706]'}`} />
-                      <span>{exam.isPublished !== false ? 'Published' : 'Draft'}</span>
-                    </button>
+                    {!isTeacher ? (
+                      <button
+                        type="button"
+                        onClick={handleTogglePublish}
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 border cursor-pointer transition ${
+                          exam.isPublished !== false
+                            ? 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6] hover:bg-emerald-100'
+                            : 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA] hover:bg-amber-100'
+                        }`}
+                        title="Click to toggle Published / Draft"
+                      >
+                        <span className={`w-2 h-2 rounded-full ${exam.isPublished !== false ? 'bg-[#16A34A] animate-pulse' : 'bg-[#D97706]'}`} />
+                        <span>{exam.isPublished !== false ? 'Published' : 'Draft'}</span>
+                      </button>
+                    ) : (
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold inline-flex items-center gap-1.5 border ${
+                          qCount > 0
+                            ? 'bg-[#EAFAEE] text-[#16A34A] border-[#CBEFD6]'
+                            : 'bg-[#FFF4E5] text-[#D97706] border-[#FDE2BA]'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${qCount > 0 ? 'bg-[#16A34A]' : 'bg-[#D97706]'}`} />
+                        <span>{qCount > 0 ? 'Paper Ready' : 'Needs Questions'}</span>
+                      </span>
+                    )}
                   </div>
 
                   {/* Exam Title */}
@@ -1323,9 +1452,11 @@ const ManageExamsTab = ({
                     <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
                       📚 Class: {exam.class?.name || '10th Standard'}
                     </span>
-                    <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
-                      👥 Submissions: {subCount}
-                    </span>
+                    {!isTeacher && (
+                      <span className="bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-lg">
+                        👥 Submissions: {subCount}
+                      </span>
+                    )}
                   </div>
 
                   {/* Stats Grid */}
@@ -1351,83 +1482,123 @@ const ManageExamsTab = ({
 
                 {/* Action Buttons */}
                 <div className="space-y-2 pt-2 border-t border-slate-100">
-                  {/* Primary Launch CBT Exam & View Paper Buttons */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
-                      className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F3EEFF] border border-slate-200 hover:border-[#DDD4FE] text-slate-800 hover:text-[#5B3DF5] font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
-                    >
-                      <Eye className="w-4 h-4 text-[#5B3DF5]" />
-                      View Exam Paper
-                    </button>
-                    <button
-                      onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
-                      className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
-                    >
-                      <Play className="w-4 h-4 fill-white" />
-                      Launch CBT Exam
-                    </button>
-                  </div>
+                  {isTeacher ? (
+                    <>
+                      {/* Teacher View: ONLY Preview & Download Paper + Add Questions */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
+                          className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4" />
+                          Preview &amp; Download Paper
+                        </button>
+                        <button
+                          onClick={() => onOpenQuestionBank(exam.id)}
+                          className="py-2.5 px-3 rounded-xl border border-[#CBEFD6] bg-[#EAFAEE] hover:bg-[#DCFCE7] text-[#16A34A] text-xs font-black flex items-center justify-center gap-1.5 transition cursor-pointer"
+                          title="Add Questions in Master Question Bank"
+                        >
+                          <FileQuestion className="w-4 h-4" />
+                          Add Questions ({qCount})
+                        </button>
+                      </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    <button
-                      onClick={() => navigate(`/live-exam-monitor/${exam.id}`)}
-                      className="py-2 px-2 rounded-xl border border-[#FBD0D8] bg-[#FEECEF]/60 hover:bg-[#FEECEF] text-[#E11D48] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="Real-Time Live Monitor"
-                    >
-                      <Activity className="w-3.5 h-3.5" /> Live Monitor
-                    </button>
+                      <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                        <button
+                          onClick={() => navigate(`/competitive-exams/${exam.id}/paste-ai`)}
+                          className="text-xs font-extrabold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-emerald-500" /> Paste Exam Text (AI)
+                        </button>
+                        <button
+                          onClick={() => onOpenAiModal(exam)}
+                          className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> AI Generate Questions
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Admin/Principal View */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => navigate(`/competitive-exams/${exam.id}/paper`)}
+                          className="py-2.5 px-3 rounded-xl bg-white hover:bg-[#F3EEFF] border border-slate-200 hover:border-[#DDD4FE] text-slate-800 hover:text-[#5B3DF5] font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4 text-[#5B3DF5]" />
+                          View Exam Paper
+                        </button>
+                        <button
+                          onClick={() => navigate(`/take-competitive-exam/${exam.id}`)}
+                          className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer"
+                        >
+                          <Play className="w-4 h-4 fill-white" />
+                          Launch CBT Exam
+                        </button>
+                      </div>
 
-                    <button
-                      onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
-                      className="py-2 px-2 rounded-xl border border-[#FDE2BA] bg-[#FFF4E5]/60 hover:bg-[#FFF4E5] text-[#D97706] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="View Merit Leaderboard"
-                    >
-                      <Award className="w-3.5 h-3.5" /> Ranks
-                    </button>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button
+                          onClick={() => navigate(`/live-exam-monitor/${exam.id}`)}
+                          className="py-2 px-2 rounded-xl border border-[#FBD0D8] bg-[#FEECEF]/60 hover:bg-[#FEECEF] text-[#E11D48] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                          title="Real-Time Live Monitor"
+                        >
+                          <Activity className="w-3.5 h-3.5" /> Live Monitor
+                        </button>
 
-                    <button
-                      onClick={() => navigate(`/competitive-exams/results?examId=${exam.id}`)}
-                      className="py-2 px-2 rounded-xl border border-[#D4E6FF] bg-[#EAF3FF]/60 hover:bg-[#EAF3FF] text-[#2563EB] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="View Submissions & Results"
-                    >
-                      <BarChart3 className="w-3.5 h-3.5" /> Results ({subCount})
-                    </button>
+                        <button
+                          onClick={() => navigate(`/competitive-exam-leaderboard/${exam.id}`)}
+                          className="py-2 px-2 rounded-xl border border-[#FDE2BA] bg-[#FFF4E5]/60 hover:bg-[#FFF4E5] text-[#D97706] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                          title="View Merit Leaderboard"
+                        >
+                          <Award className="w-3.5 h-3.5" /> Ranks
+                        </button>
 
-                    <button
-                      onClick={() => onOpenQuestionBank(exam.id)}
-                      className="py-2 px-2 rounded-xl border border-[#CBEFD6] bg-[#EAFAEE]/60 hover:bg-[#EAFAEE] text-[#16A34A] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
-                      title="Add/Manage Questions in Master Question Bank"
-                    >
-                      <FileQuestion className="w-3.5 h-3.5" /> Questions ({qCount})
-                    </button>
-                  </div>
+                        <button
+                          onClick={() => navigate(`/competitive-exams/results?examId=${exam.id}`)}
+                          className="py-2 px-2 rounded-xl border border-[#D4E6FF] bg-[#EAF3FF]/60 hover:bg-[#EAF3FF] text-[#2563EB] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                          title="View Submissions & Results"
+                        >
+                          <BarChart3 className="w-3.5 h-3.5" /> Results ({subCount})
+                        </button>
 
-                  <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => navigate(`/competitive-exams/${exam.id}/paste-ai`)}
-                        className="text-xs font-extrabold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
-                        title="Open Dedicated AI Text Parser Workspace"
-                      >
-                        <FileText className="w-3.5 h-3.5 text-emerald-500" /> 📄 Paste Exam Text (AI Parser)
-                      </button>
+                        <button
+                          onClick={() => onOpenQuestionBank(exam.id)}
+                          className="py-2 px-2 rounded-xl border border-[#CBEFD6] bg-[#EAFAEE]/60 hover:bg-[#EAFAEE] text-[#16A34A] text-xs font-bold flex items-center justify-center gap-1 transition cursor-pointer"
+                          title="Add/Manage Questions in Master Question Bank"
+                        >
+                          <FileQuestion className="w-3.5 h-3.5" /> Questions ({qCount})
+                        </button>
+                      </div>
 
-                      <button
-                        onClick={() => onOpenAiModal(exam)}
-                        className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> ✨ AI Generate
-                      </button>
-                    </div>
+                      <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => navigate(`/competitive-exams/${exam.id}/paste-ai`)}
+                            className="text-xs font-extrabold text-emerald-600 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+                            title="Open Dedicated AI Text Parser Workspace"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-emerald-500" /> 📄 Paste Exam Text (AI Parser)
+                          </button>
 
-                    <button
-                      onClick={() => onDelete(exam.id, exam.title)}
-                      className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" /> Delete
-                    </button>
-                  </div>
+                          <button
+                            onClick={() => onOpenAiModal(exam)}
+                            className="text-xs font-extrabold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Sparkles className="w-3.5 h-3.5 text-amber-500" /> ✨ AI Generate
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => onDelete(exam.id, exam.title)}
+                          className="text-xs font-bold text-rose-500 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -2794,16 +2965,18 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 // EXAM LAUNCH SUCCESS MODAL
 // ═══════════════════════════════════════════════════════════════
 
-const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBank }: any) => {
+const ExamLaunchSuccessModal = ({ exam, isTeacher = false, onClose, onLaunchExam, onPreviewPaper, onOpenQuestionBank }: any) => {
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white p-6 text-center relative">
           <div className="w-16 h-16 rounded-3xl bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto mb-3 shadow-inner">
             <CheckCircle2 size={36} className="text-emerald-300" />
           </div>
-          <h3 className="text-xl font-black">CBT Examination Published!</h3>
-          <p className="text-xs text-indigo-100 mt-1">Configured for Eduracle Computer Based Testing</p>
+          <h3 className="text-xl font-black">{isTeacher ? 'Exam Created Successfully!' : 'CBT Examination Published!'}</h3>
+          <p className="text-xs text-indigo-100 mt-1">
+            {isTeacher ? 'Now add questions or preview & download the question paper' : 'Configured for Eduracle Computer Based Testing'}
+          </p>
         </div>
 
         <div className="p-6 space-y-4">
@@ -2820,20 +2993,30 @@ const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBan
           </div>
 
           <div className="space-y-2 pt-2">
-            <button
-              onClick={onLaunchExam}
-              className="w-full py-3.5 px-4 rounded-xl text-white font-black text-xs shadow-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
-            >
-              <Play className="w-4 h-4 fill-white" />
-              Launch CBT Exam Simulator Now (Test Mode)
-            </button>
+            {isTeacher ? (
+              <button
+                onClick={onPreviewPaper}
+                className="w-full py-3.5 px-4 rounded-xl text-white font-black text-xs shadow-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+              >
+                <Printer className="w-4 h-4" />
+                Preview &amp; Download Question Paper
+              </button>
+            ) : (
+              <button
+                onClick={onLaunchExam}
+                className="w-full py-3.5 px-4 rounded-xl text-white font-black text-xs shadow-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
+              >
+                <Play className="w-4 h-4 fill-white" />
+                Launch CBT Exam Simulator Now (Test Mode)
+              </button>
+            )}
 
             <button
               onClick={onOpenQuestionBank}
               className="w-full py-3 px-4 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer"
             >
               <FileQuestion size={16} className="text-indigo-600" />
-              View & Edit Questions in Question Bank
+              Add Questions in Question Bank
             </button>
 
             <button
@@ -2853,7 +3036,7 @@ const ExamLaunchSuccessModal = ({ exam, onClose, onLaunchExam, onOpenQuestionBan
 // EXAM PAPER FULL PREVIEW MODAL (OFFICIAL QUESTION PAPER VIEW)
 // ═══════════════════════════════════════════════════════════════
 
-const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate: any }> = ({ exam, onClose, navigate }) => {
+const ExamPaperPreviewModal: React.FC<{ exam: any; isTeacher?: boolean; onClose: () => void; navigate: any }> = ({ exam, isTeacher = false, onClose, navigate }) => {
   const [loading, setLoading] = useState(true);
   const [populating, setPopulating] = useState(false);
   const [examData, setExamData] = useState<any>(exam);
@@ -3005,18 +3188,20 @@ const ExamPaperPreviewModal: React.FC<{ exam: any; onClose: () => void; navigate
               title="Print Clean A4 Question Paper"
             >
               <Printer className="w-4 h-4" />
-              <span>Print Paper</span>
+              <span>Print / Download Paper</span>
             </button>
-            <button
-              onClick={() => {
-                onClose();
-                navigate(`/take-competitive-exam/${examData.id}`);
-              }}
-              className="px-4 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
-            >
-              <Play className="w-3.5 h-3.5 fill-indigo-700" />
-              <span className="hidden sm:inline">Launch CBT Exam</span>
-            </button>
+            {!isTeacher && (
+              <button
+                onClick={() => {
+                  onClose();
+                  navigate(`/take-competitive-exam/${examData.id}`);
+                }}
+                className="px-4 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 shadow transition cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5 fill-indigo-700" />
+                <span className="hidden sm:inline">Launch CBT Exam</span>
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-2 rounded-xl hover:bg-white/20 text-white transition cursor-pointer"

@@ -5,6 +5,7 @@ import {
   FileText, Plus, Columns, Check, ChevronRight, Layers, Clock, Target, Award
 } from 'lucide-react';
 import api from '../../api/axios';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { LiveLatexPreview } from '../../components/QuestionBank/LiveLatexPreview';
 import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
@@ -12,6 +13,8 @@ import { printPaper } from '../question-bank/MCQPaperGeneratorPage';
 const CompetitiveExamPaperPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isTeacher = (user?.role || '').toUpperCase() === 'TEACHER';
 
   const [loading, setLoading] = useState(true);
   const [examData, setExamData] = useState<any>(null);
@@ -201,19 +204,19 @@ const CompetitiveExamPaperPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Print Paper Button */}
+          {/* Print / Download Paper Button */}
           <button
             onClick={handlePrint}
             disabled={filteredQuestions.length === 0}
             className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 active:scale-95 text-slate-950 text-xs font-black flex items-center gap-2 transition cursor-pointer shadow-sm disabled:opacity-50"
-            title="Print Clean A4 Question Paper"
+            title="Print or Save A4 Question Paper as PDF"
           >
             <Printer className="w-4 h-4" />
-            <span>Print Paper</span>
+            <span>Print / Download Paper</span>
           </button>
 
-          {/* Launch CBT Exam Button */}
-          {examData?.id && (
+          {/* Launch CBT Exam Button (Hidden for Teacher) */}
+          {!isTeacher && examData?.id && (
             <button
               onClick={() => navigate(`/take-competitive-exam/${examData.id}`)}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 active:scale-95 text-white text-xs font-black flex items-center gap-2 shadow-sm transition cursor-pointer"
@@ -366,12 +369,12 @@ const CompetitiveExamPaperPage: React.FC = () => {
           <button
             onClick={handlePrint}
             disabled={filteredQuestions.length === 0}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+            className="px-4 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs transition cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
-            <span>Print</span>
+            <span>Print / Download PDF</span>
           </button>
-          {examData?.id && (
+          {!isTeacher && examData?.id && (
             <button
               onClick={() => navigate(`/take-competitive-exam/${examData.id}`)}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] hover:opacity-95 text-white font-extrabold text-xs shadow-sm transition cursor-pointer flex items-center gap-1.5"

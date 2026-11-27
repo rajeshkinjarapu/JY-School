@@ -1,6 +1,17 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Login Page 2-Column Content-Filled Redesign & Teacher Exam Module Restrictions (November 27, 2026)
+- **Login Page (`frontend/src/pages/auth/LoginPage.tsx`)**:
+  - వేస్ట్ గ్యాప్స్ లేని బ్యాలెన్స్‌డ్ 50/50 2-column లేఅవుట్ (`grid-cols-1 lg:grid-cols-2`).
+  - ఎడమవైపు Royal Blue-Indigo గ్లాస్ కార్డులతో 2×2 మాడ్యూల్ గ్రిడ్, 3-కాలమ్ గణాంకాలు (`500+ Active Students`, `34+ Expert Faculty`, `24+ Smart Classes`), మరియు కింది కోట్/AY బ్యాడ్జ్ అన్నీ ఒకే స్క్రీన్‌లో కట్ అవ్వకుండా అమర్చాము.
+  - కుడివైపు క్లీన్ లైట్ బ్యాక్‌గ్రౌండ్ + తెల్లటి కార్డ్, డెస్క్‌టాప్ లో పొరపాటున కనిపించిన మొబైల్ లోగో & input overflow బగ్‌లు పరిష్కరించాము, స్మూత్ CSS ట్రాన్సిషన్స్/యానిమేషన్లు జోడించాము.
+  - `Contact Administrator (WhatsApp)` బటన్ నేరుగా `https://wa.me/919502924437` కి JY School website నుండి వచ్చిన ప్రీ-ఫిల్డ్ మెసేజ్‌తో ఓపెన్ అయ్యేలా సెట్ చేశాము.
+- **Teacher Login Online Exam Module (`CompetitiveExamsPage.tsx` & `CompetitiveExamPaperPage.tsx`)**:
+  - `TEACHER` రోల్‌కు Answer Keys, Results & Ranks, Students, Reports, Bulk Import, Live Monitor, Launch CBT Exam, Submissions, Delete అన్నీ హైడ్ చేసి, కేవలం **Create Exam, Question Bank (Add Questions), Exam Preview & Paper Download/Print** మాత్రమే ఉంచాము.
+- **స్టేటస్**: కోడ్ లోకల్‌లో సేవ్ అయింది. యూజర్ లోకల్ బిల్డ్ చెక్, `git push` మరియు VPS డిప్లాయ్‌మెంట్ చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Login Page Premium Redesign with Animations & WhatsApp Contact (November 27, 2026)
+
 - **పూర్తి చేసిన మార్పులు (`frontend/src/pages/auth/LoginPage.tsx`)**:
   - **Smooth Animations**: `slide-up` (card entry), `slide-in-left` (left panel), `bounce-in` (logo), `glow-pulse` (logo aura), `shimmer` ("Education" text + button), `float-up` (8 particles), `spin-slow` (rotating rings), `fade-in`.
   - **Left Panel**: Deeper dark blue gradient, floating particles, rotating dashed rings, 4 orbs, feature rows with hover-translate animation, `mounted` state cascade delays.
@@ -9,6 +20,7 @@
 - **Status**: Local save పూర్తి. User git push + VPS deploy చేయాల్సి ఉంది.
 
 ## చివరి సంభాషణ - Website Full Responsive Fix (`Website/index.html`) (November 27, 2026)
+
 - **పూర్తి చేసిన మార్పులు**:
   - `Website/index.html` — Chinna screen (mobile) నుండి pedda screen (desktop) వరకు అన్ని screen sizes కి perfectly fit అయ్యేలా full responsive redesign చేశాము.
   - **Top Bar**: Mobile lo column layout, desktop lo row. Contact info + social links wrap అవుతాయి.
