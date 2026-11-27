@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Flutter Responsive View & Consistent Scaling Across Screen Sizes (November 27, 2026)
+- **సమస్య:** చిన్న మొబైల్ స్క్రీన్‌లపై Flutter యాప్ జూమ్ అయినట్లు పెద్దగా కనిపిస్తోంది, ప్రొఫైల్ పేరు (`NETINTI VEN...`) కట్ అవుతోంది, మరియు అన్ని స్క్రీన్ సైజులలో ఒకే విధమైన వ్యూ రావడం లేదు.
+- **పరిష్కారం (Universal + అన్ని Flavors కోసం):**
+  - [main.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/main.dart): `MaterialApp.builder` లో `MediaQuery.textScaler` ను `392dp` బేస్‌లైన్ ప్రకారం ప్రొపోర్షనల్‌గా (`0.78`–`1.02`) నార్మలైజ్ చేశాము — చిన్న ఫోన్లలో OS ఫాంట్/డిస్‌ప్లే జూమ్ లేకుండా పెద్ద స్క్రీన్ లాగానే ఒకే క్లీన్ వ్యూ వస్తుంది.
+  - [dashboard_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/dashboard_screen.dart): `_uiScale(context)` ఆధారంగా `AppBar`, ప్రొఫైల్ కార్డ్ (`FittedBox` తో పేరు కట్ కాకుండా), `Students / Teachers / Revenue` బాక్స్, మరియు `90x90` ఫిక్స్‌డ్ గ్రిడ్ కార్డులను రెస్పాన్సివ్‌గా మార్చాము.
+  - [main_layout.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/main_layout.dart): బాటమ్ నేవిగేషన్ బార్ ఐకాన్ & ప్యాడింగ్‌లను రెస్పాన్సివ్‌గా సర్దుబాటు చేశాము (**Shorebird Patch** ద్వారా అప్‌డేట్ చేయవచ్చు).
+
 ## చివరి సంభాషణ - 3-Option MCQ Perfect Alignment in LaTeX Preview (`LiveLatexPreview.tsx`) (November 27, 2026)
 - **సమస్య:** MCQ Paper Generator లో కేవలం **3 ఆప్షన్స్ (`(A)`, `(B)`, `(C)`)** మాత్రమే ఉన్న ప్రశ్నలు (ఉదా: Q29 `Go / wait / stop`) గతంలో `4 options` ఉన్నప్పుడే గ్రిడ్‌లోకి వచ్చేవి కాబట్టి, 3 ఆప్షన్స్ ఉన్నవి 3 లైన్లలో విడివిడిగా నిలువుగా పడిపోయాయి.
 - **పరిష్కారం ([LiveLatexPreview.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**

@@ -101,7 +101,19 @@ class MyApp extends StatelessWidget {
         ),
       ),
       builder: (context, child) {
-        return OfflineBanner(child: child!);
+        final mq = MediaQuery.of(context);
+        final shortest = mq.size.shortestSide;
+        // Normalize textScaler proportionally to 392dp baseline so small phones match large phones without OS zoom distortion
+        final double scaleFactor = shortest > 0 && shortest < 600
+            ? (shortest / 392.0).clamp(0.78, 1.02)
+            : 1.0;
+
+        return MediaQuery(
+          data: mq.copyWith(
+            textScaler: TextScaler.linear(scaleFactor),
+          ),
+          child: OfflineBanner(child: child!),
+        );
       },
       routes: {
         '/student/fees': (context) => const StudentFeeOverviewScreen(),

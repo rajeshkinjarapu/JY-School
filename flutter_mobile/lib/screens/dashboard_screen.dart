@@ -327,8 +327,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  double _uiScale(BuildContext context) {
+    final double w = MediaQuery.of(context).size.width;
+    return (w / 392.0).clamp(0.78, 1.04);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double s = _uiScale(context);
     final userName = _user?['name'] ?? 'User';
     final userRole = _user?['role'] ?? 'STUDENT';
     
@@ -355,7 +361,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       backgroundColor: const Color(0xFFF4F7FE),
       appBar: AppBar(
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        toolbarHeight: 70,
+        toolbarHeight: (62 * s).clamp(52.0, 68.0),
         iconTheme: const IconThemeData(color: Colors.white),
         flexibleSpace: Container(
           decoration: const BoxDecoration(
@@ -368,32 +374,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.menu_rounded, color: Colors.white, size: 30),
+          icon: Icon(Icons.menu_rounded, color: Colors.white, size: (28 * s).clamp(22.0, 30.0)),
           onPressed: () => _scaffoldKey.currentState?.openDrawer(),
         ),
         titleSpacing: 0,
         title: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset('assets/images/logo.png', height: 48, fit: BoxFit.contain),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'SRI VENKATESWARA',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+            Image.asset('assets/images/logo.png', height: (42 * s).clamp(34.0, 46.0), fit: BoxFit.contain),
+            SizedBox(width: 8 * s),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'SRI VENKATESWARA',
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.5),
+                    ),
+                    Text(
+                      'JY SCHOOL',
+                      style: GoogleFonts.outfit(color: const Color(0xFFFFD12A), fontSize: 21, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: 0.5),
+                    ),
+                    Text(
+                      'Narasannapeta',
+                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ),
-                Text(
-                  'JY SCHOOL',
-                  style: GoogleFonts.outfit(color: const Color(0xFFFFD12A), fontSize: 22, fontWeight: FontWeight.w900, height: 1.1, letterSpacing: 0.5),
-                ),
-                Text(
-                  'Narasannapeta',
-                  style: GoogleFonts.poppins(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w500),
-                ),
-              ],
+              ),
             ),
           ],
         ),
@@ -866,9 +878,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildProfileCard(String name, String role, String metaLabel, String metaValue) {
+    final double s = _uiScale(context);
+    final double avatarSize = (70 * s).clamp(56.0, 76.0);
     return Container(
-      margin: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      margin: EdgeInsets.fromLTRB(12 * s, 8 * s, 12 * s, 6 * s),
+      padding: EdgeInsets.symmetric(horizontal: 14 * s, vertical: 12 * s),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF4C4296), Color(0xFF2E2A66)],
@@ -912,20 +926,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.outfit(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                SizedBox(height: 5 * s),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    style: GoogleFonts.outfit(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(height: 3),
+                SizedBox(height: 3 * s),
                 Text(
                   '${role.replaceAll('_', ' ')} • JY School',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.poppins(
                     color: Colors.white70,
                     fontSize: 12,
@@ -935,14 +954,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          SizedBox(width: 12 * s),
           GestureDetector(
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen()));
             },
             child: Container(
-              width: 78,
-              height: 78,
+              width: avatarSize,
+              height: avatarSize,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(16),
@@ -1346,16 +1365,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildAdminCombinedGrid(BuildContext context) {
+    final double s = _uiScale(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // ====== OVERVIEW STATS ROW ======
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          padding: const EdgeInsets.symmetric(vertical: 18.0),
+          margin: EdgeInsets.symmetric(horizontal: 12 * s, vertical: 6 * s),
+          padding: EdgeInsets.symmetric(vertical: 13 * s, horizontal: 8 * s),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.04),
@@ -1366,35 +1386,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
             border: Border.all(color: Colors.grey.withOpacity(0.15)),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildMiniStatBox('Students', '$_adminTotalStudents', const Color(0xFF3B82F6)),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-              _buildMiniStatBox('Teachers', '$_adminTotalTeachers', const Color(0xFF10B981)),
-              Container(width: 1, height: 40, color: Colors.grey.withOpacity(0.2)),
-              _buildMiniStatBox('Revenue', '₹${_formatIndianCurrency(_adminFeeCollected)}', const Color(0xFFF59E0B)),
+              Expanded(child: _buildMiniStatBox('Students', '$_adminTotalStudents', const Color(0xFF3B82F6))),
+              Container(width: 1, height: 34 * s, color: Colors.grey.withOpacity(0.2)),
+              Expanded(child: _buildMiniStatBox('Teachers', '$_adminTotalTeachers', const Color(0xFF10B981))),
+              Container(width: 1, height: 34 * s, color: Colors.grey.withOpacity(0.2)),
+              Expanded(flex: 2, child: _buildMiniStatBox('Revenue', '₹${_formatIndianCurrency(_adminFeeCollected)}', const Color(0xFFF59E0B))),
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 10 * s),
         
         // ====== ACADEMIC GRID ======
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          padding: EdgeInsets.symmetric(horizontal: 14 * s),
           child: Text(
             'Academic & Management',
-            style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87),
+            style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 10 * s),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          padding: EdgeInsets.symmetric(horizontal: 10 * s),
           child: GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 3,
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
+            crossAxisSpacing: 8 * s,
+            mainAxisSpacing: 8 * s,
             childAspectRatio: 1.0,
             children: [
               _buildImageCard(
@@ -1495,12 +1514,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildMiniStatBox(String title, String value, Color color) {
-    return Column(
-      children: [
-        Text(value, style: GoogleFonts.outfit(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 2),
-        Text(title, style: GoogleFonts.poppins(color: Colors.black54, fontSize: 11, fontWeight: FontWeight.w500)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: GoogleFonts.outfit(color: color, fontSize: 19, fontWeight: FontWeight.bold),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(title, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.poppins(color: Colors.black54, fontSize: 11, fontWeight: FontWeight.w500)),
+        ],
+      ),
     );
   }
 
@@ -2892,12 +2922,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required Color borderColor,
     required VoidCallback onTap,
   }) {
+    final double s = _uiScale(context);
+    final double cardSize = (88 * s).clamp(68.0, 96.0);
     return GestureDetector(
       onTap: onTap,
       child: Center(
         child: Container(
-          width: 90,
-          height: 90,
+          width: cardSize,
+          height: cardSize,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),

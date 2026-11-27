@@ -72,7 +72,8 @@ class _MainLayoutState extends State<MainLayout> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     
-    final isTeacher = _userRole == 'TEACHER';
+    final bool isTeacher = _userRole == 'TEACHER';
+    final double s = (MediaQuery.of(context).size.width / 392.0).clamp(0.80, 1.04);
     
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -93,15 +94,15 @@ class _MainLayoutState extends State<MainLayout> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: EdgeInsets.symmetric(horizontal: 10 * s, vertical: 6 * s),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildNavItem(0, Icons.home_rounded, 'Home', const Color(0xFF6366F1), const Color(0xFF4F46E5)),
-              if (_userRole != 'ACCOUNTANT') _buildNavItem(1, Icons.assignment_rounded, 'Exam', const Color(0xFF10B981), const Color(0xFF059669)),
-              if (!isTeacher) _buildNavItem(_userRole == 'ACCOUNTANT' ? 1 : 2, Icons.account_balance_wallet_rounded, 'Finance', const Color(0xFFF59E0B), const Color(0xFFD97706)),
-              if (!isTeacher && _userRole != 'ACCOUNTANT') _buildNavItem(3, Icons.directions_bus_rounded, 'Transport', const Color(0xFFEC4899), const Color(0xFFDB2777)),
-              _buildNavItem(isTeacher ? 2 : (_userRole == 'ACCOUNTANT' ? 2 : 4), Icons.grid_view_rounded, 'More', const Color(0xFF64748B), const Color(0xFF475569)),
+              _buildNavItem(0, Icons.home_rounded, 'Home', const Color(0xFF6366F1), const Color(0xFF4F46E5), s),
+              if (_userRole != 'ACCOUNTANT') _buildNavItem(1, Icons.assignment_rounded, 'Exam', const Color(0xFF10B981), const Color(0xFF059669), s),
+              if (!isTeacher) _buildNavItem(_userRole == 'ACCOUNTANT' ? 1 : 2, Icons.account_balance_wallet_rounded, 'Finance', const Color(0xFFF59E0B), const Color(0xFFD97706), s),
+              if (!isTeacher && _userRole != 'ACCOUNTANT') _buildNavItem(3, Icons.directions_bus_rounded, 'Transport', const Color(0xFFEC4899), const Color(0xFFDB2777), s),
+              _buildNavItem(isTeacher ? 2 : (_userRole == 'ACCOUNTANT' ? 2 : 4), Icons.grid_view_rounded, 'More', const Color(0xFF64748B), const Color(0xFF475569), s),
             ],
           ),
         ),
@@ -110,7 +111,7 @@ class _MainLayoutState extends State<MainLayout> {
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, Color color1, Color color2) {
+  Widget _buildNavItem(int index, IconData icon, String label, Color color1, Color color2, double s) {
     final isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () {
@@ -122,13 +123,13 @@ class _MainLayoutState extends State<MainLayout> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 350),
         curve: Curves.easeOutQuint,
-        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 4.0),
+        padding: EdgeInsets.symmetric(horizontal: 4.0 * s, vertical: 3.0 * s),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              padding: EdgeInsets.symmetric(horizontal: 13 * s, vertical: 5 * s),
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? LinearGradient(
@@ -137,24 +138,24 @@ class _MainLayoutState extends State<MainLayout> {
                         end: Alignment.bottomRight,
                       )
                     : null,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
                 icon,
                 color: isSelected ? Colors.white : const Color(0xFF94A3B8),
-                size: 24,
+                size: (22 * s).clamp(18.0, 24.0),
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 3),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: GoogleFonts.outfit(
                 color: isSelected ? color1 : const Color(0xFF94A3B8),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                 fontSize: 12,
               ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
