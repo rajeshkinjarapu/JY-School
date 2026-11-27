@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Flutter Telugu Cleanup (Shorebird Patch Ready) & Full Website Admin CMS + Live Public Website Sync (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** పెండింగ్‌లో ఉన్న Flutter తెలుగు టెక్స్ట్ క్లీనప్ మరియు పూర్తిస్థాయి Website Admin CMS + Public Website Sync లను కన్ఫర్మ్ చేసి అమలు చేయాలి.
+- **Flutter యాప్ మార్పులు (Shorebird Patch OTA రెడీ — అన్ని Flavors కు సింక్):**
+  1. [student_pay_fee_screen.dart](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/flutter_mobile/lib/screens/student_pay_fee_screen.dart): పేమెంట్ సబ్మిషన్ సక్సెస్ డైలాగ్ సందేశాన్ని ఇంగ్లీష్‌లోకి మార్చాము.
+  2. [student_profile_screen.dart](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/flutter_mobile/lib/screens/student_profile_screen.dart): ప్రైవసీ నోటీస్ & ఫోటో పికర్ ఆప్షన్లలోని తెలుగు టెక్స్ట్ మొత్తాన్ని ఇంగ్లీష్‌లోకి మార్చాము.
+- **Website Admin CMS & Live Public Website Sync:**
+  1. [schema.prisma](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/prisma/schema.prisma) & [website.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/website.controller.ts): `WebsiteSettings` లో `heroImageUrl`, `admissionsBannerTitle`, `admissionsYear`, `missionText`, `visionText` ఫీల్డ్స్ జోడించి CRUD సేఫ్టీ అప్‌గ్రేడ్ చేశాము (`npx prisma db push` అవసరం).
+  2. [WebsiteManagerPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/settings/WebsiteManagerPage.tsx): పాత డమ్మీ ఫారమ్ స్థానంలో `<PageHeader />`, 4 పాస్టెల్ KPI కార్డులు, `Overview & Live Preview`, `Hero / Admissions / Vision`, `Stats Counters` (Add/Edit/Delete + Icon/Color Picker), `Programs` (Add/Edit/Delete), `Testimonials` (5-Star Rating CRUD), `News & Events` CRUD, మరియు `Contact & Social Links` తో పూర్తి **Website Admin Command Center** నిర్మించాము.
+  3. [website/index.html](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/website/index.html) & [website/cms.js](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/website/cms.js): ERP లోని Website Admin నుండి సేవ్ చేసే Hero, Admissions Banner, Mission/Vision, Stats, Programs, Testimonials, News, Contact, మరియు Social Links అన్నీ పబ్లిక్ వెబ్‌సైట్‌లోకి లైవ్‌గా సింక్ అయ్యేలా అప్‌గ్రేడ్ చేశాము.
+
 ## చివరి సంభాషణ - Settings & Administration Complete Command Center Redesign (`/settings`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Settings పేజీ డిజైన్ అస్సలు బాగోలేదు — ఒక ప్రొఫెషనల్ డెవలపర్‌గా ఆలోచించి ఈ School ERP ప్రాజెక్ట్ Settings లో ఏమేం ఉండాలో అవన్నీ పూర్తిగా, అందంగా డిజైన్ చేయాలి.
 - **సరిదిద్దిన ముఖ్య బగ్ & చేసిన మార్పులు:**
