@@ -233,32 +233,39 @@ export const changePassword = async (req: AuthRequest, res: Response, next: Next
 };
 
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const { photoUrl, email, qualification, joiningDate } = req.body;
+  const { photoUrl, email, name, phone, qualification, joiningDate } = req.body;
 
   if (Object.keys(req.body).length === 0) return next(createError('Nothing to update', 400));
 
   const updateData: any = {};
   if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
-  if (email !== undefined) updateData.email = email;
+  if (email !== undefined && String(email).trim()) updateData.email = String(email).trim();
+  if (name !== undefined && String(name).trim()) updateData.name = String(name).trim();
+  if (phone !== undefined) updateData.phone = phone ? String(phone).trim() : null;
 
-  const user = await prisma.user.update({
-    where: { id: req.user!.id },
-    data: updateData,
-  });
+  const currentUser = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if (!currentUser) return next(createError('User not found', 404));
 
-  if (user.role === 'TEACHER' && (qualification !== undefined || joiningDate !== undefined)) {
+  if (currentUser.role === 'TEACHER' && (qualification !== undefined || joiningDate !== undefined)) {
     const teacherUpdate: any = {};
     if (qualification !== undefined) teacherUpdate.qualification = qualification;
-    if (joiningDate !== undefined) teacherUpdate.joiningDate = new Date(joiningDate);
-    
+    if (joiningDate !== undefined) teacherUpdate.joiningDate = joiningDate ? new Date(joiningDate) : null;
+
     await prisma.teacher.update({
-      where: { userId: user.id },
+      where: { userId: currentUser.id },
       data: teacherUpdate,
     });
   }
 
+  const user = await prisma.user.update({
+    where: { id: req.user!.id },
+    data: updateData,
+    include: {
+      student: { include: { class: true } },
+      teacher: { include: { homeRoomClass: true } },
+    },
+  });
+
   const { password: _p, refreshToken: _rt, resetOtp: _o, resetOtpExp: _e, ...safeUser } = user as any;
-  
-  // also fetch the teacher if it is one to send it back safely? No, the frontend just updates context with response
   successResponse(res, safeUser, 'Profile updated successfully');
 };

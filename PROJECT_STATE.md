@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Register / Edit Page 2-Column Dashboard Pastel Redesign (`/students/new`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Student Register (`/students/new`) పేజీని 2-కాలమ్ లేఅవుట్‌లో, ప్రొఫెషనల్ లుక్‌తో Dashboard లోని లైట్ పేస్టల్ థీమ్‌లో అందంగా డిజైన్ చేయాలి.
+- **చేసిన మార్పులు ([StudentFormPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentFormPage.tsx)):**
+  - సింగిల్-కాలమ్ స్టాక్ బదులుగా బ్యాలెన్స్‌డ్ **2-Column Layout (`lg:col-span-5` + `lg:col-span-7`)** అమర్చాము.
+  - ఎడమ కాలమ్‌లో **Student Identity & Personal Info** (ఇండిగో-పర్పుల్ పేస్టల్ హెడర్ + ఫోటో అప్‌లోడ్ కార్డ్) & **Govt & UDISE+ Identifiers** (ఎమరాల్డ్ పేస్టల్ హెడర్ కార్డ్); కుడి కాలమ్‌లో **Parents & Guardian Details** (రోజ్-పర్పుల్ పేస్టల్ హెడర్) & **Residential Address & Finalize** (యాంబర్-స్కై పేస్టల్ హెడర్ + సబ్మిట్ యాక్షన్ బార్) డిజైన్ చేశాము.
+  - పూర్తిగా లైట్ థీమ్ (`#F4F7FC`), `PageHeader` బ్యాక్ యాక్షన్, మరియు `isSubmitting` లోడింగ్ ఇండికేటర్ జోడించాము.
+
 ## చివరి సంభాషణ - Student Birthdays Page Unified Header & Dashboard Pastel Theme Redesign (`/students/birthdays`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Birthdays పేజీ కూడా Dashboard పేజీలోని లైట్ పేస్టల్ థీమ్‌లో ఉండాలి, మరియు టాప్ హెడర్ అన్ని పేజీల లాగానే ఒకే కలర్ & ఒకే సైజులో ఉండాలి.
 - **చేసిన మార్పులు ([StudentBirthdayPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentBirthdayPage.tsx)):**
