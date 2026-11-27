@@ -3,7 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 import type { Role } from '../types';
-import { getCachedRbacMatrix, resolveModuleFromRoutePath, RbacRole } from '../utils/rbac';
+import { getCachedRbacMatrix, resolveModuleFromRoutePath, type RbacRole } from '../utils/rbac';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
