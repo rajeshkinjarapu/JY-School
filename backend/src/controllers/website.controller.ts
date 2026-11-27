@@ -247,6 +247,7 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
       studentsCount,
       teachersCount,
       classesCount,
+      schoolSettings,
     ] = await Promise.all([
       prisma.websiteStat.findMany({ orderBy: { order: 'asc' } }).catch(() => []),
       prisma.websiteProgram.findMany({ orderBy: { order: 'asc' } }).catch(() => []),
@@ -266,6 +267,7 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
       prisma.student.count().catch(() => 0),
       prisma.teacher.count().catch(() => 0),
       prisma.class.count().catch(() => 0),
+      prisma.schoolSettings.findFirst().catch(() => null),
     ]);
 
     const publishedIds = new Set(parseIdArray(settings?.publicResultExamIds));
@@ -302,6 +304,16 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
         admitCardExams,
         faculty,
         erpCounts: { studentsCount, teachersCount, classesCount },
+        paymentConfig: schoolSettings
+          ? {
+              schoolName: schoolSettings.schoolName || 'SRI VENKATESWARA JY SCHOOL',
+              upiId: schoolSettings.upiId || null,
+              qrCodeUrl: schoolSettings.qrCodeUrl || null,
+              bankName: schoolSettings.bankName || null,
+              bankAccountNumber: schoolSettings.bankAccountNumber || null,
+              bankIfsc: schoolSettings.bankIfsc || null,
+            }
+          : null,
       },
     });
   } catch (error: any) {
@@ -552,6 +564,224 @@ export const lookupAdmissionStatus = async (req: Request, res: Response) => {
     res.json({ success: true, data: inquiries });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error?.message || 'Status lookup failed' });
+  }
+};
+
+const verifyStudentByRollAndDob = async (rollNo: string, dob: string) => {
+  const student = await prisma.student.findFirst({
+    where: { rollNo: { equals: String(rollNo).trim(), mode: 'insensitive' } },
+    include: {
+      user: { select: { name: true, photoUrl: true, phone: true } },
+      class: { select: { id: true, name: true, section: true, academicYear: true } },
+    },
+  });
+  if (!student) return { errorStatus: 404, errorMessage: 'Student not found. Please check your Roll Number.' };
+  if (!student.dob) return { errorStatus: 400, errorMessage: 'Date of Birth is not updated in school records. Please contact the office.' };
+  const storedDob = new Date(student.dob).toISOString().split('T')[0];
+  const enteredDob = new Date(dob).toISOString().split('T')[0];
+  if (isNaN(new Date(dob).getTime()) || storedDob !== enteredDob) {
+    return { errorStatus: 401, errorMessage: 'Date of Birth does not match school records.' };
+  }
+  return { student, storedDob };
+};
+
+export const lookupPublicFeeStatus = async (req: Request, res: Response) => {
+  try {
+    const { rollNo, dob } = req.body || {};
+    if (!rollNo || !dob) {
+      return res.status(400).json({ success: false, message: 'Roll Number and Date of Birth are required' });
+    }
+
+    const verified = await verifyStudentByRollAndDob(rollNo, dob);
+    if ('errorMessage' in verified) {
+      return res.status(verified.errorStatus).json({ success: false, message: verified.errorMessage });
+    }
+    const { student, storedDob } = verified;
+
+    const structureWhere: any = student.classId
+      ? { OR: [{ classId: student.classId, studentId: null }, { studentId: student.id }] }
+      : { studentId: student.id };
+
+    const [structures, payments, discounts, schoolMeta] = await Promise.all([
+      prisma.feeStructure.findMany({ where: structureWhere, orderBy: { dueDate: 'asc' } }),
+      prisma.feePayment.findMany({
+        where: { studentId: student.id },
+        include: { feeStructure: { select: { name: true, term: true } } },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.feeDiscount.findMany({ where: { studentId: student.id } }),
+      prisma.schoolSettings.findFirst().catch(() => null),
+    ]);
+
+    const discountMap = new Map<string, number>();
+    for (const d of discounts) {
+      discountMap.set(d.feeStructureId, Number(d.amount) || 0);
+    }
+
+    const paidMap = new Map<string, number>();
+    const pendingMap = new Map<string, number>();
+    for (const p of payments) {
+      if (p.status === 'PAID') {
+        paidMap.set(p.feeStructureId, (paidMap.get(p.feeStructureId) || 0) + (Number(p.amountPaid) || 0));
+      } else if (p.status === 'PENDING') {
+        pendingMap.set(p.feeStructureId, (pendingMap.get(p.feeStructureId) || 0) + (Number(p.amountPaid) || 0));
+      }
+    }
+
+    let totalFee = 0;
+    let totalDiscount = 0;
+    let totalPaid = 0;
+    let totalPendingApproval = 0;
+    let totalBalance = 0;
+
+    const feeItems = structures.map(st => {
+      const discount = discountMap.get(st.id) || 0;
+      const effectiveAmount = Math.max(0, Number(st.amount) - discount);
+      const paidAmount = paidMap.get(st.id) || 0;
+      const pendingApprovalAmount = pendingMap.get(st.id) || 0;
+      const amountDue = Math.max(0, effectiveAmount - paidAmount);
+      let status = 'PENDING';
+      if (paidAmount >= effectiveAmount) status = 'PAID';
+      else if (pendingApprovalAmount > 0) status = 'PENDING_APPROVAL';
+      else if (paidAmount > 0) status = 'PARTIAL';
+      else if (st.dueDate < new Date()) status = 'OVERDUE';
+
+      totalFee += Number(st.amount) || 0;
+      totalDiscount += discount;
+      totalPaid += paidAmount;
+      totalPendingApproval += pendingApprovalAmount;
+      totalBalance += amountDue;
+
+      return {
+        id: st.id,
+        name: st.name,
+        term: st.term,
+        dueDate: st.dueDate,
+        originalAmount: Number(st.amount),
+        discount,
+        effectiveAmount,
+        paidAmount,
+        pendingApprovalAmount,
+        amountDue,
+        status,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        student: {
+          id: student.id,
+          name: student.user?.name || 'Student',
+          rollNo: student.rollNo,
+          fatherName: student.fatherName || '',
+          phone: student.fatherPhone || student.user?.phone || '',
+          className: `${student.class?.name || ''} ${student.class?.section || ''}`.trim(),
+          academicYear: student.class?.academicYear || schoolMeta?.currentYear || '2026-2027',
+          dob: storedDob,
+        },
+        summary: {
+          totalFee,
+          totalDiscount,
+          totalPaid,
+          totalPendingApproval,
+          totalBalance,
+        },
+        feeItems,
+        recentPayments: payments.slice(0, 12).map(p => ({
+          id: p.id,
+          receiptNo: p.receiptNo,
+          feeName: p.feeStructure?.name || 'School Fee',
+          term: p.feeStructure?.term || '',
+          amountPaid: p.amountPaid,
+          paymentDate: p.paymentDate,
+          method: p.method,
+          status: p.status,
+          utrNumber: p.utrNumber,
+        })),
+        paymentConfig: {
+          schoolName: schoolMeta?.schoolName || 'SRI VENKATESWARA JY SCHOOL',
+          upiId: schoolMeta?.upiId || null,
+          qrCodeUrl: schoolMeta?.qrCodeUrl || null,
+          bankName: schoolMeta?.bankName || null,
+          bankAccountNumber: schoolMeta?.bankAccountNumber || null,
+          bankIfsc: schoolMeta?.bankIfsc || null,
+          phone: schoolMeta?.phone || '+91 95029 24437',
+        },
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Fee lookup failed' });
+  }
+};
+
+export const submitPublicFeePayment = async (req: Request, res: Response) => {
+  try {
+    const { rollNo, dob, feeStructureId, amountPaid, method, utrNumber, screenshotUrl, remarks } = req.body || {};
+    if (!rollNo || !dob || !feeStructureId || !amountPaid) {
+      return res.status(400).json({ success: false, message: 'Roll Number, Date of Birth, Fee Item, and Amount are required' });
+    }
+
+    const amt = Number(amountPaid);
+    if (isNaN(amt) || amt <= 0) {
+      return res.status(400).json({ success: false, message: 'Please enter a valid payment amount' });
+    }
+
+    const cleanUtr = String(utrNumber || '').trim();
+    if (!cleanUtr || cleanUtr.length < 4) {
+      return res.status(400).json({ success: false, message: 'Valid UTR / Transaction Reference Number is required' });
+    }
+
+    const verified = await verifyStudentByRollAndDob(rollNo, dob);
+    if ('errorMessage' in verified) {
+      return res.status(verified.errorStatus).json({ success: false, message: verified.errorMessage });
+    }
+    const { student } = verified;
+
+    const feeStructure = await prisma.feeStructure.findUnique({ where: { id: String(feeStructureId) } });
+    if (!feeStructure) {
+      return res.status(404).json({ success: false, message: 'Selected fee structure was not found' });
+    }
+
+    const isEligible =
+      feeStructure.studentId === student.id ||
+      (feeStructure.studentId === null && feeStructure.classId === student.classId);
+    if (!isEligible) {
+      return res.status(403).json({ success: false, message: 'Selected fee item does not belong to this student' });
+    }
+
+    const payment = await prisma.feePayment.create({
+      data: {
+        studentId: student.id,
+        feeStructureId: feeStructure.id,
+        amountPaid: amt,
+        method: String(method || 'UPI').toUpperCase(),
+        utrNumber: cleanUtr,
+        screenshotUrl: screenshotUrl ? String(screenshotUrl).trim() : null,
+        remarks: remarks ? `[Website] ${String(remarks).trim()}` : '[Website Online Fee Payment]',
+        status: 'PENDING',
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Payment submitted successfully! Office verification is pending.',
+      data: {
+        id: payment.id,
+        receiptNo: payment.receiptNo,
+        amountPaid: payment.amountPaid,
+        feeName: feeStructure.name,
+        method: payment.method,
+        utrNumber: payment.utrNumber,
+        status: payment.status,
+        paymentDate: payment.paymentDate,
+        studentName: student.user?.name || 'Student',
+        rollNo: student.rollNo,
+        className: `${student.class?.name || ''} ${student.class?.section || ''}`.trim(),
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error?.message || 'Failed to submit fee payment' });
   }
 };
 

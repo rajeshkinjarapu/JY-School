@@ -17,6 +17,8 @@ import {
   lookupPublicResult,
   lookupPublicHallTicket,
   lookupAdmissionStatus,
+  lookupPublicFeeStatus,
+  submitPublicFeePayment,
   getAdminExamsForWebsite,
   toggleWebsiteExamPublish,
   createNavLink,
@@ -39,6 +41,8 @@ router.get('/data', getWebsiteData);
 router.post('/public/results', lookupPublicResult);
 router.post('/public/hall-ticket', lookupPublicHallTicket);
 router.get('/public/admission-status', lookupAdmissionStatus);
+router.post('/public/fees/lookup', lookupPublicFeeStatus);
+router.post('/public/fees/pay', submitPublicFeePayment);
 
 // Protected Admin Routes
 router.use(authenticate);

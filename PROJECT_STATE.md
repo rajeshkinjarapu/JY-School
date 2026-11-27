@@ -1,5 +1,24 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Complete Website Redesign, Multi-Page Router & Integrated Online Fee Payment (November 27, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`, `backend/src/routes/website.routes.ts`)**:
+  - **Strict 2-Page Home View + Light Theme (`Website/index.html`)**:
+    - 100% full-width (`max-width: 100%`), ఎక్కడా బ్లాక్/డార్క్ థీమ్ లేకుండా ప్రీమియం Light School Theme (`#F8FAFC` / `#FFFFFF` / `#1E3A8A` Royal Blue accent / `#EEF2FF` Light Pastel Footer).
+    - **Page 1**: Interactive **2-Slide Hero** (`01 Campus & Foundation`, `02 Digital Portals & Fee Pay`) + 6 Quick-Access Cards + 5 Live Stats Cards (`#stats-grid`).
+    - **Page 2**: Academic Wings (`#programs-grid`), Mission/Vision/Principal Desk, Latest News & Parent Testimonials.
+  - **Bottom Navigation Bar**:
+    - Mobile/Tablet (`< 1024px`) లో fixed app-style bottom dock (`Home`, `Admission`, `Pay Fees`, `Portals`, `More`) with `env(safe-area-inset-bottom)`.
+    - Desktop లో floating pill Bottom Navigation Bar (`Home`, `Admission`, `Student Life`, `Facilities`, `Results / Admit Card`, `Downloads`, `Pay Fees`).
+  - **Dedicated Pages for ALL Header & Dropdown Nav Items (`Website/pages.js`)**:
+    - `Admission`: Existing Student (Results/Hall Ticket/Status), Admission Procedure, School Campus, Online Admission Registration (live `POST /api/admissions/apply`), Fee Structure, Scholarships, FAQ's.
+    - `Student Life`: Holiday List, Academics, Sports, Cultural, In-School Services, School Uniform, Co-curricular, Houses.
+    - `Facilities`: Laboratory, Library, Medical, Transport, Scholarship/Award (Toppers Hall), Counselling Session.
+    - `Staffs`, `Downloads` (filter + search), `Contact` (Map + WhatsApp inquiry), మరియు **`Pay Fees Online`** (`#/pay-fees`).
+  - **Real ERP-Connected Online Fee Payment (`backend/src/controllers/website.controller.ts`, `backend/src/routes/website.routes.ts`, `Website/cms.js`)**:
+    - `POST /api/website/public/fees/lookup`: Roll No + DOB వెరిఫికేషన్‌తో live fee heads, discounts, paid/pending amounts, payment history & School UPI QR/Bank config చూపిస్తుంది.
+    - `POST /api/website/public/fees/pay`: Website నుండే UPI QR / Deep-Link / NEFT ద్వారా చెల్లించి UTR + Screenshot (`/api/uploads/share`) సబ్మిట్ చేస్తే `FeePayment` (`status: 'PENDING'`) గా క్రియేట్ అయ్యి Admin ERP `Pending Fee Approvals` లో కనిపిస్తుంది + Printable Payment Acknowledgement Slip వస్తుంది.
+- **స్టేటస్**: కోడ్ లోకల్‌లో పూర్తిగా సేవ్ అయింది. `git push` (Vercel website auto-deploy) + VPS backend build & PM2 restart చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Dashboard Content-Fit Correction (November 27, 2026)
 - **గుర్తించిన సమస్య:** మొదటి no-scroll layoutలో దిగువ Recent Payments మరియు Teachers attendance strip కొంత clip అయ్యాయి.
 - **పరిష్కారం (`frontend/src/index.css`):** 920px లోపు desktop viewport heightలో admin dashboardను 92% proportional scaleతో full canvasలో fit అయ్యేలా మార్చాము. Recent Payments inner scroll కూడా తీసివేశాము, కాబట్టి అన్ని ఐదు rows మరియు attendance bottom strip ఒకే పేజీలో కనిపిస్తాయి.
