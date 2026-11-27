@@ -154,7 +154,7 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden min-w-0 print:overflow-visible print:block">
         <Header onMenuClick={() => setSidebarOpen(true)} title={getPageTitle(location.pathname)} />
         <main
-          className="flex-1 overflow-hidden print:overflow-visible print:h-auto pb-4 print:bg-white print:block"
+          className="flex-1 overflow-hidden print:overflow-visible print:h-auto print:bg-white print:block"
         >
           <PullToRefresh onRefresh={async () => {
             await new Promise(r => setTimeout(r, 600));

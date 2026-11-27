@@ -427,7 +427,7 @@ export const StudentListPage: React.FC = () => {
       </div>
 
       {/* ── Student List (Full Grid Table Form with Locked Sticky Purple Header) ── */}
-      <div className="relative z-10 flex-1 min-h-0 px-4 sm:px-6 pb-3 hidden md:flex flex-col">
+      <div className="relative z-10 flex-1 min-h-0 px-4 sm:px-6 pb-2 hidden md:flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DDD7F3]">
           <table className="min-w-[800px] w-full text-sm text-left border-separate border-spacing-0 student-grid-table">
             <thead className="sticky top-0 z-20 bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6]">
@@ -590,31 +590,28 @@ export const StudentListPage: React.FC = () => {
         )}
       </div>
 
-        {/* Pagination */}
+        {/* Compact Floating Corner Pagination (No wasted bottom bar/padding) */}
         {totalPages > 1 && (
-          <div className="relative z-10 px-4 sm:px-6 py-3 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-600">
-              {(page - 1) * LIMIT + 1}–{Math.min(page * LIMIT, total)} of {total}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-indigo-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="flex items-center px-3.5 py-1.5 text-xs font-black text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE] rounded-xl">
-                {page} / {totalPages}
-              </span>
-              <button
-                onClick={() => setPage((p) => p + 1)}
-                disabled={page >= totalPages}
-                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white border border-indigo-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 disabled:opacity-40 transition-colors cursor-pointer shadow-xs"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+          <div className="absolute bottom-3.5 right-6 z-30 flex items-center gap-1 bg-white/95 backdrop-blur-md border border-[#DDD6FE] shadow-[0_8px_24px_rgba(91,33,182,0.16)] rounded-2xl p-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="w-7 h-7 flex items-center justify-center rounded-xl text-slate-600 hover:bg-[#EFEAFE] hover:text-[#5B21B6] disabled:opacity-35 transition-colors cursor-pointer"
+              title="Previous Page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="flex items-center px-2.5 py-1 text-[11px] font-black text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE] rounded-xl">
+              {page} / {totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              disabled={page >= totalPages}
+              className="w-7 h-7 flex items-center justify-center rounded-xl text-slate-600 hover:bg-[#EFEAFE] hover:text-[#5B21B6] disabled:opacity-35 transition-colors cursor-pointer"
+              title="Next Page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         )}
 
