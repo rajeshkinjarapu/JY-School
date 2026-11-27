@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { createError } from './errorHandler';
 import { Role } from '../types/enums';
+import { getRbacMatrix, resolveModuleFromBaseUrl, RbacRole } from '../utils/rbac';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -45,9 +46,54 @@ export const authenticate = (
   }
 };
 
+const MANAGED_STAFF_ROLES: RbacRole[] = ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'TRANSPORT_MANAGER', 'SECURITY'];
+
 export const authorize = (...roles: Role[]) => {
   return (req: AuthRequest, _res: Response, next: NextFunction): void => {
-    if (!req.user || !roles.includes(req.user.role)) {
+    if (!req.user) {
+      return next(createError('You do not have permission to perform this action', 403));
+    }
+
+    const userRole = req.user.role;
+    if (userRole === 'SUPER_ADMIN') {
+      next();
+      return;
+    }
+
+    const moduleKey = resolveModuleFromBaseUrl(req.baseUrl);
+    if (moduleKey && MANAGED_STAFF_ROLES.includes(userRole as RbacRole)) {
+      getRbacMatrix()
+        .then((matrix) => {
+          const level = matrix[moduleKey]?.[userRole as RbacRole];
+          if (level === 'Full' || level === 'Manage') {
+            next();
+            return;
+          }
+          if (level === 'View') {
+            if (req.method === 'GET' || req.method === 'HEAD') {
+              next();
+              return;
+            }
+            return next(createError(`Read-only permission configured for ${userRole} in this module`, 403));
+          }
+          if (level === 'None') {
+            return next(createError('Access to this module has been disabled for your role', 403));
+          }
+          if (!roles.includes(userRole)) {
+            return next(createError('You do not have permission to perform this action', 403));
+          }
+          next();
+        })
+        .catch(() => {
+          if (!roles.includes(userRole)) {
+            return next(createError('You do not have permission to perform this action', 403));
+          }
+          next();
+        });
+      return;
+    }
+
+    if (!roles.includes(userRole)) {
       return next(createError('You do not have permission to perform this action', 403));
     }
     next();

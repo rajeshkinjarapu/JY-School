@@ -27,12 +27,22 @@ import {
   Copy,
   UserCheck,
   UserX,
-  ChevronRight
+  ChevronRight,
+  RotateCcw
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
+import {
+  RBAC_MODULES,
+  RbacMatrixMap,
+  RbacModuleKey,
+  RbacRole,
+  AccessLevel,
+  getCachedRbacMatrix,
+  saveRbacMatrixCache
+} from '../../utils/rbac';
 
 interface StaffMember {
   id: string;
@@ -97,24 +107,11 @@ const ROLE_META: Record<string, { label: string; badge: string; cardBg: string; 
   },
 };
 
-const RBAC_MATRIX = [
-  { module: 'Students & Admissions', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'View', TEACHER: 'Assigned*', TRANSPORT_MANAGER: 'View', SECURITY: 'None' },
-  { module: 'Finance & Fee Approvals', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'Full', TEACHER: 'None', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-  { module: 'Exams, Marks & OMR', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'None', TEACHER: 'Manage', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-  { module: 'Question Bank & AI Studio', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'None', TEACHER: 'Assigned*', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-  { module: 'Attendance & Homework', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'View', TEACHER: 'Full', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-  { module: 'HR Salary & Payroll', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'Manage', TEACHER: 'Self', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-  { module: 'Transport & Fleet', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'View', TEACHER: 'None', TRANSPORT_MANAGER: 'Full', SECURITY: 'None' },
-  { module: 'Gate Pass Verification', SUPER_ADMIN: 'Full', ADMIN: 'Full', ACCOUNTANT: 'None', TEACHER: 'Approve', TRANSPORT_MANAGER: 'None', SECURITY: 'Verify' },
-  { module: 'Website CMS & Settings', SUPER_ADMIN: 'Full', ADMIN: 'Manage', ACCOUNTANT: 'None', TEACHER: 'None', TRANSPORT_MANAGER: 'None', SECURITY: 'None' },
-];
-
-const getAccessChip = (level: string) => {
+const getAccessChip = (level: AccessLevel) => {
   if (level === 'Full') return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
-  if (level === 'Manage' || level === 'Approve' || level === 'Verify') return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
-  if (level.includes('Assigned')) return 'bg-amber-100 text-amber-800 border border-amber-200';
-  if (level === 'View' || level === 'Self') return 'bg-sky-100 text-sky-800 border border-sky-200';
-  return 'bg-slate-100 text-slate-400 border border-slate-200';
+  if (level === 'Manage') return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
+  if (level === 'View') return 'bg-sky-100 text-sky-800 border border-sky-200';
+  return 'bg-slate-100 text-slate-500 border border-slate-200';
 };
 
 export const StaffManagement: React.FC = () => {
@@ -144,9 +141,79 @@ export const StaffManagement: React.FC = () => {
   const [newPasswordValue, setNewPasswordValue] = useState('');
   const [resettingPwd, setResettingPwd] = useState(false);
 
+  // Live Interactive RBAC Matrix
+  const [rbacMatrix, setRbacMatrix] = useState<RbacMatrixMap>(() => getCachedRbacMatrix());
+  const [savingMatrix, setSavingMatrix] = useState(false);
+
   useEffect(() => {
     fetchStaff();
+    fetchRbacMatrix();
   }, []);
+
+  const fetchRbacMatrix = async () => {
+    try {
+      const res: any = await api.get('/api/users/rbac-matrix');
+      const payload = res?.data?.data !== undefined ? res.data.data : res?.data;
+      if (payload?.matrix) {
+        setRbacMatrix(payload.matrix);
+        saveRbacMatrixCache(payload.matrix);
+      }
+    } catch {
+      // Fall back cleanly to cached/default RBAC matrix
+    }
+  };
+
+  const handleMatrixChange = async (
+    modKey: RbacModuleKey,
+    roleKey: RbacRole,
+    newLevel: AccessLevel
+  ) => {
+    if (roleKey === 'SUPER_ADMIN') return;
+    const prevMatrix = rbacMatrix;
+    const updated: RbacMatrixMap = {
+      ...prevMatrix,
+      [modKey]: {
+        ...prevMatrix[modKey],
+        [roleKey]: newLevel,
+      },
+    };
+    setRbacMatrix(updated);
+    saveRbacMatrixCache(updated);
+    setSavingMatrix(true);
+    try {
+      const res: any = await api.put('/api/users/rbac-matrix', { matrix: updated });
+      const payload = res?.data?.data !== undefined ? res.data.data : res?.data;
+      if (payload?.matrix) {
+        setRbacMatrix(payload.matrix);
+        saveRbacMatrixCache(payload.matrix);
+      }
+      const modLabel = RBAC_MODULES.find(m => m.key === modKey)?.label || modKey;
+      toast.success(`${ROLE_META[roleKey]?.label || roleKey} • ${modLabel} → ${newLevel}`);
+    } catch (err: any) {
+      setRbacMatrix(prevMatrix);
+      saveRbacMatrixCache(prevMatrix);
+      toast.error(err?.response?.data?.message || 'Failed to update RBAC permission');
+    } finally {
+      setSavingMatrix(false);
+    }
+  };
+
+  const handleResetMatrix = async () => {
+    setSavingMatrix(true);
+    try {
+      const res: any = await api.post('/api/users/rbac-matrix/reset');
+      const payload = res?.data?.data !== undefined ? res.data.data : res?.data;
+      if (payload?.matrix) {
+        setRbacMatrix(payload.matrix);
+        saveRbacMatrixCache(payload.matrix);
+      }
+      toast.success('RBAC permission matrix restored to defaults');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || 'Failed to reset RBAC matrix');
+    } finally {
+      setSavingMatrix(false);
+    }
+  };
 
   const fetchStaff = async () => {
     try {
@@ -948,16 +1015,68 @@ export const StaffManagement: React.FC = () => {
         {activeTab === 'matrix' && (
           <div className="space-y-5">
 
-            {/* RBAC Blueprint Table */}
+            {/* Interactive Live RBAC Permission Matrix */}
             <div className="bg-white rounded-[24px] border border-indigo-100/90 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 bg-gradient-to-r from-[#EEF2FF] via-[#F5F3FF] to-[#FCE7F3] border-b border-indigo-100/80">
-                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
-                  <span>Module-Wise RBAC Permission Matrix</span>
-                </h3>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Standard system authorization across operational &amp; teaching roles (*Assigned flags configurable below)
-                </p>
+              <div className="px-6 py-4 bg-gradient-to-r from-[#EEF2FF] via-[#F5F3FF] to-[#FCE7F3] border-b border-indigo-100/80 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                    <span>Module-Wise RBAC Permission Matrix</span>
+                  </h3>
+                  <p className="text-xs text-slate-600 font-medium mt-0.5">
+                    Click any role permission badge to edit live — instantly updates ERP menus, route access &amp; API authorization
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-extrabold border ${
+                    savingMatrix
+                      ? 'bg-amber-50 text-amber-700 border-amber-200'
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    {savingMatrix ? (
+                      <>
+                        <Loader className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving to DB...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Enforced Live • Auto-Saved</span>
+                      </>
+                    )}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={handleResetMatrix}
+                    disabled={savingMatrix}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 text-xs font-extrabold shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset Defaults</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Access Level Legend */}
+              <div className="px-6 py-2.5 bg-[#FAFBFD] border-b border-slate-100 flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-600">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-black">Full</span>
+                  <span>Full CRUD &amp; Approvals</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 text-[10px] font-black">Manage</span>
+                  <span>Create &amp; Update Operations</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-200 text-[10px] font-black">View</span>
+                  <span>Read-Only (Mutations Blocked)</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-black">None</span>
+                  <span>Hidden &amp; API Blocked (403)</span>
+                </span>
               </div>
 
               <div className="overflow-x-auto">
@@ -971,18 +1090,53 @@ export const StaffManagement: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {RBAC_MATRIX.map(row => (
-                      <tr key={row.module} className="hover:bg-[#FAFBFD]">
-                        <td className="py-3 px-5 font-extrabold text-slate-800">{row.module}</td>
-                        {(['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'TRANSPORT_MANAGER', 'SECURITY'] as const).map(roleKey => (
-                          <td key={roleKey} className="py-3 px-3 text-center">
-                            <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black ${getAccessChip((row as any)[roleKey])}`}>
-                              {(row as any)[roleKey]}
-                            </span>
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                    {RBAC_MODULES.map(mod => {
+                      const rowPerms = rbacMatrix[mod.key] || {
+                        SUPER_ADMIN: 'Full',
+                        ADMIN: 'Full',
+                        ACCOUNTANT: 'None',
+                        TEACHER: 'None',
+                        TRANSPORT_MANAGER: 'None',
+                        SECURITY: 'None',
+                      };
+                      return (
+                        <tr key={mod.key} className="hover:bg-[#FAFBFD] transition-colors">
+                          <td className="py-3 px-5 font-extrabold text-slate-800 whitespace-nowrap">{mod.label}</td>
+                          {(['SUPER_ADMIN', 'ADMIN', 'ACCOUNTANT', 'TEACHER', 'TRANSPORT_MANAGER', 'SECURITY'] as RbacRole[]).map(roleKey => {
+                            const level: AccessLevel = roleKey === 'SUPER_ADMIN' ? 'Full' : (rowPerms[roleKey] || 'None');
+                            if (roleKey === 'SUPER_ADMIN') {
+                              return (
+                                <td key={roleKey} className="py-3 px-3 text-center">
+                                  <span
+                                    title="Super Admin always retains locked Full access"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                  >
+                                    <Lock className="w-2.5 h-2.5" />
+                                    <span>Full</span>
+                                  </span>
+                                </td>
+                              );
+                            }
+                            return (
+                              <td key={roleKey} className="py-3 px-3 text-center">
+                                <select
+                                  aria-label={`${mod.label} permission for ${ROLE_META[roleKey]?.label || roleKey}`}
+                                  value={level}
+                                  disabled={savingMatrix}
+                                  onChange={e => handleMatrixChange(mod.key, roleKey, e.target.value as AccessLevel)}
+                                  className={`px-2.5 py-1 rounded-full text-[11px] font-black text-center cursor-pointer outline-none transition-all focus:ring-2 focus:ring-indigo-400/40 ${getAccessChip(level)}`}
+                                >
+                                  <option value="Full" className="bg-white text-emerald-800 font-bold">Full</option>
+                                  <option value="Manage" className="bg-white text-indigo-800 font-bold">Manage</option>
+                                  <option value="View" className="bg-white text-sky-800 font-bold">View</option>
+                                  <option value="None" className="bg-white text-slate-600 font-bold">None</option>
+                                </select>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

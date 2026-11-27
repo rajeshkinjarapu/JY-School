@@ -11,7 +11,7 @@ export interface User {
   teacher?: Teacher;
 }
 
-export type Role = 'GROUP_CHAIRMAN' | 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'ACCOUNTANT' | 'SECURITY';
+export type Role = 'GROUP_CHAIRMAN' | 'SUPER_ADMIN' | 'ADMIN' | 'TEACHER' | 'STUDENT' | 'ACCOUNTANT' | 'TRANSPORT_MANAGER' | 'SECURITY';
 
 export interface Student {
   id: string;

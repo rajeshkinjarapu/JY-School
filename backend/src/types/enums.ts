@@ -5,6 +5,7 @@ export const Role = {
   TEACHER: 'TEACHER',
   STUDENT: 'STUDENT',
   ACCOUNTANT: 'ACCOUNTANT',
+  TRANSPORT_MANAGER: 'TRANSPORT_MANAGER',
   SECURITY: 'SECURITY'
 } as const;
 export type Role = typeof Role[keyof typeof Role];

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
+import { getCachedRbacMatrix, syncRbacMatrixFromServer, RbacMatrixMap, RbacRole, RbacModuleKey } from '../../utils/rbac';
 
 interface SidebarProps { isOpen: boolean; setIsOpen: (v: boolean) => void; }
 
@@ -17,6 +18,7 @@ const roleLabels: Record<string, string> = {
   GROUP_CHAIRMAN: 'Group Chairman',
   SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', TEACHER: 'Teacher',
   STUDENT: 'Student', ACCOUNTANT: 'Accountant',
+  TRANSPORT_MANAGER: 'Transport Mgr', SECURITY: 'Security',
 };
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
@@ -25,6 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const [schoolName, setSchoolName] = useState('JY SCHOOL');
   const { isInstallable, isInstalled, installApp } = usePWA();
   const [forceDesktopCollapse, setForceDesktopCollapse] = useState(false);
+  const [rbacMatrix, setRbacMatrix] = useState<RbacMatrixMap>(getCachedRbacMatrix);
 
   useEffect(() => {
     setForceDesktopCollapse(
@@ -45,11 +48,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     api.get('/api/settings').then((r: any) => {
       if (r.data?.schoolName) setSchoolName(r.data.schoolName);
     }).catch(() => {});
+    syncRbacMatrixFromServer().then(setRbacMatrix).catch(() => {});
+    const onMatrixChange = () => setRbacMatrix(getCachedRbacMatrix());
+    window.addEventListener('rbacMatrixUpdated', onMatrixChange);
+    return () => window.removeEventListener('rbacMatrixUpdated', onMatrixChange);
   }, []);
 
   if (!user) return null;
 
   const role = (user.role || '').toUpperCase();
+  const canAccessModule = (modKey: RbacModuleKey) => {
+    if (role === 'SUPER_ADMIN') return true;
+    const lvl = rbacMatrix[modKey]?.[role as RbacRole];
+    return lvl !== undefined && lvl !== 'None';
+  };
 
   const getLinks = () => {
     const base = [
@@ -64,57 +76,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/announcements', label: 'Group Broadcasts', icon: Megaphone },
       { to: '/university-demo', label: 'University View', icon: School },
     ];
-    if (role === 'SUPER_ADMIN' || role === 'ADMIN') return [...base,
-      { to: '/students',      label: 'Students',      icon: Users         },
-      { to: '/students/birthdays', label: 'Birthdays', icon: Cake         },
-      { to: '/students/promotion', label: 'Promotion', icon: GraduationCap },
-      { to: '/admissions',    label: 'Admissions',    icon: UserPlus      },
-      { to: '/teachers',      label: 'Teachers',      icon: GraduationCap },
-      { to: '/classes',       label: 'Classes',       icon: School        },
-      { to: '/address-collection/admin', label: 'Address Data', icon: Users },
-      { to: '/subjects',      label: 'Subjects',      icon: BookOpen      },
-      { to: '/attendance',    label: 'Attendance',    icon: CalendarCheck },
-      
-      { to: '/exams',         label: 'Examination',         icon: ClipboardList },
-      { to: '/competitive-exams',  label: 'Online Exam Module',  icon: PenTool   },
-      { to: '/timetable',     label: 'Timetable',     icon: Calendar      },
-      { to: '/leave/gate-pass', label: 'Gate Pass',    icon: MapPin       },
-      { to: '/leave',    label: 'Leave',         icon: UserCheck     },
-      { to: '/finance',       label: 'Finance',       icon: CreditCard    },
-      { to: '/finance/pending-approvals', label: 'Fee Approvals', icon: CreditCard },
-      { to: '/announcements', label: 'Announcements', icon: Megaphone     },
-      { to: '/messages',      label: 'Messages',      icon: MessageSquare },
-      { to: '/reports',       label: 'Reports',       icon: BarChart3     },
-      // HR Section
-      { to: '/hr/salary',        label: 'HR Salary',         icon: Shield    },
-      { to: '/teacher-attendance', label: 'Staff Attendance', icon: UserCheck },
-      { to: '/homework',         label: 'Homework',          icon: BookOpen  },
-      ...(role === 'SUPER_ADMIN' ? [{ to: '/office-tools', label: 'Office Tools', icon: Briefcase }] : []),
-      ...(role === 'SUPER_ADMIN' || role === 'ADMIN' ? [{ to: '/id-cards', label: 'ID Cards', icon: IdCard }] : []),
-      ...(role === 'SUPER_ADMIN' ? [{ to: '/question-bank', label: 'Question Bank', icon: Database }] : []),
-      
-      { to: '/transport',     label: 'Transport',     icon: Bus },
-      { to: '/staff-management', label: 'Staff Roles', icon: Shield },
-      { to: '/settings/website', label: 'Website CMS', icon: Target },
-      { to: '/settings',      label: 'Settings',      icon: Settings      },
-    ];
-    if (role === 'TEACHER') return [...base, 
-      { to: '/admissions/register', label: 'Admissions', icon: UserPlus },
-      { to: '/students',          label: 'Total Students', icon: Users         },
-      { to: '/students/birthdays', label: 'Birthdays', icon: Cake              },
-      { to: '/attendance',        label: 'Attendance',     icon: CalendarCheck },
-      { to: '/address-collection/teacher', label: 'Address Data', icon: Users },
-      { to: '/answer-key',        label: 'Answer Key',     icon: Key           },
-      { to: '/homework',          label: 'Homework',       icon: BookOpen      },
-      { to: '/exams',             label: 'Examination',    icon: PenTool       },
-      { to: '/competitive-exams', label: 'Online Exam Module', icon: PenTool    },
-      { to: '/timetable',         label: 'Timetable',      icon: Calendar      },
-      
-      { to: '/leave', label: 'Leave',          icon: UserCheck     },
-      { to: '/salary',            label: 'My Salary',      icon: CreditCard    },
-      { to: '/announcements',     label: 'Announcements',  icon: Megaphone     },
-      { to: '/messages',          label: 'Messages',       icon: MessageSquare },
-    ];
     if (role === 'STUDENT') return [...base,
       { to: '/exams',     label: 'My Grades',     icon: ClipboardList },
       { to: '/competitive-exams', label: 'Online Exam Module', icon: PenTool },
@@ -122,18 +83,96 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       { to: '/timetable', label: 'Timetable',     icon: Calendar      },
       { to: '/homework',  label: 'Homework',      icon: BookOpen      },
       { to: '/finance',   label: 'My Fees',       icon: CreditCard    },
-      
       { to: '/announcements', label: 'Announcements', icon: Megaphone },
       { to: '/messages',  label: 'Messages',      icon: MessageSquare },
     ];
-    if (role === 'ACCOUNTANT') return [...base,
-      { to: '/finance',   label: 'Finance',       icon: CreditCard    },
-      { to: '/finance/pending-approvals', label: 'Fee Approvals', icon: CreditCard },
-      
+
+    const items: any[] = [...base];
+
+    if (canAccessModule('students')) {
+      if (role === 'TEACHER') {
+        items.push(
+          { to: '/admissions/register', label: 'Admissions', icon: UserPlus },
+          { to: '/students', label: 'Total Students', icon: Users },
+          { to: '/students/birthdays', label: 'Birthdays', icon: Cake },
+          { to: '/address-collection/teacher', label: 'Address Data', icon: Users },
+        );
+      } else {
+        items.push(
+          { to: '/students', label: 'Students', icon: Users },
+          { to: '/students/birthdays', label: 'Birthdays', icon: Cake },
+          { to: '/students/promotion', label: 'Promotion', icon: GraduationCap },
+          { to: '/admissions', label: 'Admissions', icon: UserPlus },
+          ...(role === 'SUPER_ADMIN' || role === 'ADMIN' ? [{ to: '/teachers', label: 'Teachers', icon: GraduationCap }] : []),
+          { to: '/classes', label: 'Classes', icon: School },
+          { to: '/address-collection/admin', label: 'Address Data', icon: Users },
+          { to: '/subjects', label: 'Subjects', icon: BookOpen },
+        );
+      }
+    }
+
+    if (canAccessModule('attendance')) {
+      items.push(
+        { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
+        ...(role === 'SUPER_ADMIN' || role === 'ADMIN' ? [{ to: '/teacher-attendance', label: 'Staff Attendance', icon: UserCheck }] : []),
+        { to: '/homework', label: 'Homework', icon: BookOpen },
+      );
+    }
+
+    if (canAccessModule('exams')) {
+      items.push(
+        { to: '/exams', label: 'Examination', icon: ClipboardList },
+        { to: '/competitive-exams', label: 'Online Exam Module', icon: PenTool },
+        { to: '/timetable', label: 'Timetable', icon: Calendar },
+        ...(role === 'TEACHER' ? [{ to: '/answer-key', label: 'Answer Key', icon: Key }] : []),
+        ...(role !== 'TEACHER' ? [{ to: '/reports', label: 'Reports', icon: BarChart3 }] : []),
+      );
+    }
+
+    if (canAccessModule('gatePass')) {
+      items.push({ to: '/leave/gate-pass', label: 'Gate Pass', icon: MapPin });
+    }
+
+    if (canAccessModule('hrSalary')) {
+      items.push(
+        { to: '/leave', label: 'Leave', icon: UserCheck },
+        ...(role === 'TEACHER'
+          ? [{ to: '/salary', label: 'My Salary', icon: CreditCard }]
+          : [{ to: '/hr/salary', label: 'HR Salary', icon: Shield }]),
+      );
+    }
+
+    if (canAccessModule('finance')) {
+      items.push(
+        { to: '/finance', label: 'Finance', icon: CreditCard },
+        { to: '/finance/pending-approvals', label: 'Fee Approvals', icon: CreditCard },
+      );
+    }
+
+    items.push(
       { to: '/announcements', label: 'Announcements', icon: Megaphone },
-      { to: '/messages',  label: 'Messages',      icon: MessageSquare },
-    ];
-    return base;
+      { to: '/messages', label: 'Messages', icon: MessageSquare },
+    );
+
+    if (canAccessModule('questionBank') && (role === 'SUPER_ADMIN' || rbacMatrix.questionBank?.[role as RbacRole] === 'Full')) {
+      items.push({ to: '/question-bank', label: 'Question Bank', icon: Database });
+    }
+
+    if (canAccessModule('transport')) {
+      items.push({ to: '/transport', label: 'Transport', icon: Bus });
+    }
+
+    if (canAccessModule('settings')) {
+      items.push(
+        ...(role === 'SUPER_ADMIN' ? [{ to: '/office-tools', label: 'Office Tools', icon: Briefcase }] : []),
+        { to: '/id-cards', label: 'ID Cards', icon: IdCard },
+        { to: '/staff-management', label: 'Staff Roles', icon: Shield },
+        { to: '/settings/website', label: 'Website CMS', icon: Target },
+        { to: '/settings', label: 'Settings', icon: Settings },
+      );
+    }
+
+    return items;
   };
 
   const links = getLinks();

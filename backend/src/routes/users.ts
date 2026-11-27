@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authenticate, authorize } from '../middlewares/auth';
-import { getAll, getById, createUser, update, deleteUser, saveDeviceToken, updateAppInfo, getAppInstalls, getUserPhoto } from '../controllers/users.controller';
+import { getAll, getById, createUser, update, deleteUser, saveDeviceToken, updateAppInfo, getAppInstalls, getUserPhoto, fetchRbacMatrix, updateRbacMatrixHandler, resetRbacMatrixHandler } from '../controllers/users.controller';
 
 const router = Router();
 
@@ -11,6 +11,10 @@ router.use(authenticate);
 
 router.post('/device-token', saveDeviceToken);
 router.post('/app-info', updateAppInfo);
+
+router.get('/rbac-matrix', fetchRbacMatrix);
+router.put('/rbac-matrix', authorize('SUPER_ADMIN', 'ADMIN'), updateRbacMatrixHandler);
+router.post('/rbac-matrix/reset', authorize('SUPER_ADMIN', 'ADMIN'), resetRbacMatrixHandler);
 
 router.get('/app-installs', authorize('SUPER_ADMIN', 'ADMIN'), getAppInstalls);
 router.get('/', authorize('SUPER_ADMIN', 'ADMIN'), getAll);

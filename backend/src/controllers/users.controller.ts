@@ -5,6 +5,34 @@ import { prisma } from '../utils/prisma';
 import { successResponse, paginatedResponse } from '../utils/response';
 import { generateEmployeeId } from '../utils/helpers';
 import bcrypt from 'bcryptjs';
+import { getRbacMatrix, saveRbacMatrix, resetRbacMatrix, RBAC_MODULES } from '../utils/rbac';
+
+export const fetchRbacMatrix = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const matrix = await getRbacMatrix();
+    successResponse(res, { modules: RBAC_MODULES, matrix }, 'RBAC permission matrix fetched');
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateRbacMatrixHandler = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const matrix = await saveRbacMatrix(req.body?.matrix || req.body || {});
+    successResponse(res, { modules: RBAC_MODULES, matrix }, 'RBAC permissions saved & enforced');
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resetRbacMatrixHandler = async (_req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const matrix = await resetRbacMatrix();
+    successResponse(res, { modules: RBAC_MODULES, matrix }, 'RBAC permissions reset to defaults');
+  } catch (err) {
+    next(err);
+  }
+};
 
 export const saveDeviceToken = async (req: AuthRequest, res: Response): Promise<void> => {
   const { deviceToken } = req.body;
@@ -306,17 +334,94 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
   successResponse(res, user, 'User updated successfully');
 };
 
-export const deleteUser = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const deleteUser = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
   const isHardDelete = req.query.hard === 'true';
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return next(createError('User not found', 404));
-  
+
+  const actorId = req.user?.id;
+  if (actorId && actorId === id) {
+    return next(createError('You cannot delete your own active account', 400));
+  }
+  if (existing.role === 'SUPER_ADMIN' && req.user?.role !== 'SUPER_ADMIN') {
+    return next(createError('Only Super Admin can delete a Super Admin account', 403));
+  }
+
   if (isHardDelete) {
-    // Delete related records manually if cascade is not fully configured on all relations
-    await prisma.student.deleteMany({ where: { userId: id } }).catch(() => {});
-    await prisma.teacher.deleteMany({ where: { userId: id } }).catch(() => {});
-    await prisma.user.delete({ where: { id } });
+    const fallbackAdminId = actorId && actorId !== id ? actorId : null;
+
+    await prisma.$transaction(async (tx) => {
+      // 1. Clean up Teacher relations if this user has a Teacher profile
+      const teacher = await tx.teacher.findUnique({ where: { userId: id } });
+      if (teacher) {
+        await tx.class.updateMany({ where: { classTeacherId: teacher.id }, data: { classTeacherId: null } });
+        await tx.classSubjectTeacher.deleteMany({ where: { teacherId: teacher.id } });
+        await tx.timetable.deleteMany({ where: { teacherId: teacher.id } });
+        await tx.timetable.updateMany({ where: { originalTeacherId: teacher.id }, data: { originalTeacherId: null } });
+        await tx.substitute.deleteMany({
+          where: { OR: [{ absentTeacherId: teacher.id }, { substituteTeacherId: teacher.id }] },
+        });
+        await tx.attendance.updateMany({ where: { teacherId: teacher.id }, data: { teacherId: null } });
+        await tx.competitiveExam.updateMany({ where: { teacherId: teacher.id }, data: { teacherId: null } });
+        await tx.studentAddressCollection.updateMany({
+          where: { referenceTeacherId: teacher.id },
+          data: { referenceTeacherId: null },
+        });
+        await tx.homework.deleteMany({ where: { teacherId: teacher.id } });
+        await tx.teacherAttendance.deleteMany({ where: { teacherId: teacher.id } });
+        await tx.salary.deleteMany({ where: { teacherId: teacher.id } });
+        await tx.teacher.delete({ where: { id: teacher.id } });
+      }
+
+      // 2. Clean up Student relations if this user has a Student profile
+      const student = await tx.student.findUnique({ where: { userId: id } });
+      if (student) {
+        await tx.attendance.deleteMany({ where: { studentId: student.id } });
+        await tx.mark.deleteMany({ where: { studentId: student.id } });
+        await tx.slipTestMark.deleteMany({ where: { studentId: student.id } });
+        await tx.feePayment.deleteMany({ where: { studentId: student.id } });
+        await tx.feeDiscount.deleteMany({ where: { studentId: student.id } });
+        await tx.feeStructure.deleteMany({ where: { studentId: student.id } });
+        await tx.onlineExamSubmission.deleteMany({ where: { studentId: student.id } });
+        await tx.competitiveExamSubmission.deleteMany({ where: { studentId: student.id } });
+        await tx.gatePass.deleteMany({ where: { studentId: student.id } });
+        await tx.studentTransport.deleteMany({ where: { studentId: student.id } });
+        await tx.student.delete({ where: { id: student.id } });
+      }
+
+      // 3. Reassign school-wide authored records (or clean up if no fallback admin)
+      if (fallbackAdminId) {
+        await tx.announcement.updateMany({ where: { createdById: id }, data: { createdById: fallbackAdminId } });
+        await tx.attendance.updateMany({ where: { markedById: id }, data: { markedById: fallbackAdminId } });
+        await tx.paper.updateMany({ where: { createdById: id }, data: { createdById: fallbackAdminId } });
+        await tx.timetableHistory.updateMany({ where: { changedById: id }, data: { changedById: fallbackAdminId } });
+      } else {
+        await tx.announcement.deleteMany({ where: { createdById: id } });
+        await tx.attendance.deleteMany({ where: { markedById: id } });
+        await tx.paper.deleteMany({ where: { createdById: id } });
+        await tx.timetableHistory.deleteMany({ where: { changedById: id } });
+      }
+
+      await tx.question.updateMany({ where: { createdById: id }, data: { createdById: null } });
+
+      // 4. Clean up personal User relations (including Messages, GatePasses, Leaves, Logs)
+      await tx.message.deleteMany({ where: { OR: [{ senderId: id }, { receiverId: id }] } });
+      await tx.gatePass.updateMany({ where: { approvedById: id }, data: { approvedById: null } });
+      await tx.gatePass.deleteMany({ where: { requesterId: id } });
+      await tx.leaveRequest.updateMany({ where: { approvedById: id }, data: { approvedById: null } });
+      await tx.leaveRequest.deleteMany({ where: { userId: id } });
+      await tx.leaveBalance.deleteMany({ where: { userId: id } });
+      await tx.auditLog.deleteMany({ where: { userId: id } });
+      await tx.pushSubscription.deleteMany({ where: { userId: id } });
+      await tx.notification.deleteMany({ where: { userId: id } });
+      await tx.transportStaff.deleteMany({ where: { userId: id } });
+      await tx.announcementRead.deleteMany({ where: { userId: id } });
+
+      // 5. Finally delete User
+      await tx.user.delete({ where: { id } });
+    }, { timeout: 15000 });
+
     successResponse(res, null, 'User permanently deleted');
   } else {
     await prisma.user.update({ where: { id }, data: { isActive: false } });

@@ -1,13 +1,16 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { LoadingSpinner } from '../components/UI/LoadingSpinner';
 import type { Role } from '../types';
+import { getCachedRbacMatrix, resolveModuleFromRoutePath, RbacRole } from '../utils/rbac';
 
 interface ProtectedRouteProps {
   children: React.ReactElement;
   allowedRoles?: Role[];
 }
+
+const MANAGED_STAFF_ROLES: RbacRole[] = ['ADMIN', 'ACCOUNTANT', 'TEACHER', 'TRANSPORT_MANAGER', 'SECURITY'];
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
@@ -15,10 +18,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
+  const [matrix, setMatrix] = useState(getCachedRbacMatrix);
+
+  useEffect(() => {
+    const handleRefresh = () => setMatrix(getCachedRbacMatrix());
+    window.addEventListener('rbacMatrixUpdated', handleRefresh);
+    return () => window.removeEventListener('rbacMatrixUpdated', handleRefresh);
+  }, []);
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
+      <div className="flex h-screen items-center justify-center bg-gray-50">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -29,6 +39,21 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       return <Navigate to="/apply" replace />;
     }
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (user.role === 'SUPER_ADMIN') {
+    return children;
+  }
+
+  const modKey = resolveModuleFromRoutePath(location.pathname);
+  if (modKey && MANAGED_STAFF_ROLES.includes(user.role as RbacRole)) {
+    const level = matrix[modKey]?.[user.role as RbacRole];
+    if (level === 'None') {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (level === 'Full' || level === 'Manage' || level === 'View') {
+      return children;
+    }
   }
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
