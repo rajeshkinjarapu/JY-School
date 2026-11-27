@@ -10,10 +10,10 @@ import { AccountantDashboard } from './AccountantDashboard';
 import { StudentMobileDashboard } from './StudentMobileDashboard';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Users, GraduationCap, School, Wallet, CalendarDays,
+  Users, GraduationCap, School, Wallet, CalendarDays, CalendarCheck,
   FileText, Award, ArrowUpRight, Clock, Activity,
   PieChart as PieChartIcon, TrendingUp, BarChart3,
-  BookOpen, CheckCircle2, XCircle, Megaphone, Star,
+  BookOpen, CheckCircle2, XCircle, Megaphone, Star, Check,
   ChevronRight, Zap, Target, BookMarked, UserCheck, PenTool, CreditCard, Key, UserPlus, Sparkles, User
 } from 'lucide-react';
 import {
@@ -233,19 +233,19 @@ const ChartCard: React.FC<{ children: React.ReactNode; className?: string }> = (
 const TT = { borderRadius: '14px', border: 'none', boxShadow: '0 8px 32px rgba(0,0,0,0.12)', fontSize: '12px', fontWeight: 600 };
 const COLORS = ['#6366f1', '#10b981', '#f43f5e', '#f59e0b', '#06b6d4'];
 
-/* ── Admin View (Exact Match to Reference Design) ─────────── */
+/* ── Admin View (100% Exact Match to Pastel Reference Design) ── */
 interface ActionCardData {
   label: string;
   value: string | number;
-  trend: string;
   icon: React.ElementType;
-  gradient: string;
+  cardBg: string;
+  iconBg: string;
+  valueColor: string;
+  arrowColor: string;
   link: string;
 }
 
 const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
-  const h = new Date().getHours();
-  const greeting = h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening';
   const todayFormatted = new Date().toLocaleDateString('en-IN', {
     weekday: 'short',
     day: 'numeric',
@@ -290,70 +290,100 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
       label: 'TOTAL STUDENTS',
       value: totalStudentsCount,
       icon: Users,
-      gradient: 'from-[#6366F1] to-[#4F46E5]',
+      cardBg: 'from-[#EAF2FF] to-[#CBE0FF] border-[#B6D2FF]',
+      iconBg: 'from-[#2563EB] to-[#1D4ED8]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#2563EB]',
       link: '/students',
     },
     {
       label: 'TOTAL TEACHERS',
       value: totalTeachersCount,
       icon: GraduationCap,
-      gradient: 'from-[#10B981] to-[#059669]',
+      cardBg: 'from-[#E5FAEF] to-[#C2F2D9] border-[#ACEAD0]',
+      iconBg: 'from-[#10B981] to-[#059669]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#059669]',
       link: '/teachers',
     },
     {
       label: 'TOTAL CLASSES',
       value: totalClassesCount,
       icon: School,
-      gradient: 'from-[#F59E0B] to-[#D97706]',
+      cardBg: 'from-[#FFF6E5] to-[#FFE4B8] border-[#FAD79B]',
+      iconBg: 'from-[#F59E0B] to-[#D97706]',
+      valueColor: 'text-[#9A3412]',
+      arrowColor: 'text-[#D97706]',
       link: '/classes',
     },
     {
       label: 'TOTAL INCOME',
       value: totalRevenueFormatted,
       icon: Wallet,
-      gradient: 'from-[#EF4444] to-[#DC2626]',
+      cardBg: 'from-[#FFEFEF] to-[#FFD2D7] border-[#FFC0C7]',
+      iconBg: 'from-[#EF4444] to-[#DC2626]',
+      valueColor: 'text-[#991B1B]',
+      arrowColor: 'text-[#DC2626]',
       link: '/finance?tab=transaction',
     },
     {
       label: 'COLLECT PAYMENT',
       value: 'Fees',
       icon: CreditCard,
-      gradient: 'from-[#8B5CF6] to-[#7C3AED]',
+      cardBg: 'from-[#F2EDFF] to-[#DDD2FF] border-[#CEC0FF]',
+      iconBg: 'from-[#8B5CF6] to-[#6D28D9]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#6D28D9]',
       link: '/collect-payment',
     },
     {
       label: 'RESULTS',
       value: 'Exams',
       icon: FileText,
-      gradient: 'from-[#0284C7] to-[#0369A1]',
+      cardBg: 'from-[#E6FAFC] to-[#C4F1F9] border-[#B0E9F5]',
+      iconBg: 'from-[#06B6D4] to-[#0891B2]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#0891B2]',
       link: '/exams?tab=results',
     },
     {
       label: 'FEE DETAILS',
       value: 'Student Fees',
       icon: BookMarked,
-      gradient: 'from-[#EC4899] to-[#DB2777]',
+      cardBg: 'from-[#FFEBF3] to-[#FFD0E4] border-[#FFBDDA]',
+      iconBg: 'from-[#EC4899] to-[#DB2777]',
+      valueColor: 'text-[#9D174D]',
+      arrowColor: 'text-[#DB2777]',
       link: '/finance?tab=student-fee-details',
     },
     {
       label: 'PROGRESS CARDS',
       value: 'Reports',
       icon: Award,
-      gradient: 'from-[#0D9488] to-[#0F766E]',
+      cardBg: 'from-[#EEF0FF] to-[#D8DEFF] border-[#C6CEFE]',
+      iconBg: 'from-[#7C3AED] to-[#4F46E5]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#5B3DF5]',
       link: '/exams?tab=progress-card',
     },
     {
       label: 'APP INSTALLS',
       value: appInstallsStr,
       icon: Zap,
-      gradient: 'from-[#06B6D4] to-[#0891B2]',
+      cardBg: 'from-[#E6F4FF] to-[#C5E5FF] border-[#B2DCFF]',
+      iconBg: 'from-[#38BDF8] to-[#0284C7]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#0284C7]',
       link: '/app-installs',
     },
     {
       label: 'ADMISSIONS',
       value: 'Manage',
       icon: UserPlus,
-      gradient: 'from-[#3B82F6] to-[#1D4ED8]',
+      cardBg: 'from-[#ECFDF2] to-[#C8F7D6] border-[#B2EEC6]',
+      iconBg: 'from-[#22C55E] to-[#16A34A]',
+      valueColor: 'text-slate-900',
+      arrowColor: 'text-[#16A34A]',
       link: '/admissions',
     },
   ];
@@ -442,7 +472,7 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         </div>
       </div>
 
-      {/* ── 2. 10 Colorful Action / Metric Cards (Simple, Clean, No Subtext, Full Numbers) ── */}
+      {/* ── 2. 10 Soft Pastel Metric Cards (Exact Reference Match) ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5">
         {actionCards.map((card, idx) => {
           const valStr = String(card.value);
@@ -453,26 +483,26 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
             <Link
               key={idx}
               to={card.link}
-              className={`relative overflow-hidden rounded-[20px] p-3.5 sm:p-4 text-white shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex items-center justify-between group bg-gradient-to-r ${card.gradient}`}
+              className={`relative overflow-hidden rounded-[20px] p-3.5 sm:p-4 border bg-gradient-to-br ${card.cardBg} shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group`}
             >
-              {/* Top glass gloss overlay */}
-              <div className="absolute inset-x-0 top-0 h-[50%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-t-[20px]" />
+              {/* Subtle top glossy highlight */}
+              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
 
               {/* Icon & Details */}
-              <div className="relative z-10 flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white shadow-inner shrink-0 group-hover:scale-105 transition-transform">
-                  <card.icon className="w-5 h-5 drop-shadow-xs" />
+              <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1">
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br ${card.iconBg} flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
+                  <card.icon className="w-5 h-5" />
                 </div>
-                <div className="min-w-0 flex-1 pr-1">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-white/85 leading-tight whitespace-nowrap">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 leading-tight truncate">
                     {card.label}
                   </p>
                   <p
-                    className={`font-black text-white tracking-tight leading-tight mt-1 drop-shadow-sm ${isLargeValue
+                    className={`font-black ${card.valueColor} tracking-tight leading-tight mt-0.5 ${isLargeValue
                         ? 'text-xs sm:text-[13px] lg:text-[14px] whitespace-nowrap'
                         : isMediumValue
-                          ? 'text-sm sm:text-base lg:text-lg'
-                          : 'text-lg sm:text-xl lg:text-2xl'
+                          ? 'text-sm sm:text-base lg:text-[17px] whitespace-nowrap'
+                          : 'text-lg sm:text-xl lg:text-[22px]'
                       }`}
                   >
                     {card.value}
@@ -480,9 +510,9 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
                 </div>
               </div>
 
-              {/* Right Chevron Arrow */}
-              <div className="relative z-10 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-white/90 group-hover:bg-white/30 group-hover:translate-x-0.5 transition-all shrink-0">
-                <ChevronRight className="w-3.5 h-3.5" />
+              {/* Crisp White Circular Arrow */}
+              <div className={`relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center ${card.arrowColor} group-hover:translate-x-0.5 transition-all shrink-0`}>
+                <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
               </div>
             </Link>
           );
@@ -490,65 +520,65 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
       </div>
 
       {/* ── 3. Bottom Two Master Cards (Recent Payments & Today's Attendance) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Left Card: Recent Payments (~58% / col-span-7) */}
-        <div className="lg:col-span-7 bg-white rounded-[22px] p-5 sm:p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#6366F1] text-white flex items-center justify-center shadow-xs">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <h2 className="text-base font-black text-slate-800 leading-tight">Recent Payments</h2>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+        {/* Left Card: Recent Payments (~58% / col-span-7) with Signature Purple Header */}
+        <div className="lg:col-span-7 bg-white rounded-[22px] overflow-hidden shadow-[0_8px_24px_-6px_rgba(91,33,182,0.12)] border border-indigo-100/90 flex flex-col">
+          {/* Purple Gradient Header Banner */}
+          <div className="bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] px-5 py-3.5 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md border border-white/25 text-white flex items-center justify-center shadow-xs">
+                <Wallet className="w-4.5 h-4.5" />
               </div>
-              <Link
-                to="/fee-payment"
-                className="px-3.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-600 border border-slate-200/80 transition-colors flex items-center gap-1"
-              >
-                View All <span className="text-[10px]">→</span>
-              </Link>
+              <h2 className="text-base font-black text-white tracking-tight">Recent Payments</h2>
             </div>
+            <Link
+              to="/fee-payment"
+              className="px-4 py-1.5 rounded-full bg-white hover:bg-indigo-50 text-xs font-extrabold text-slate-800 shadow-xs transition-colors flex items-center gap-1"
+            >
+              View All <span className="text-[11px]">→</span>
+            </Link>
+          </div>
 
-            {/* Table */}
-            <div className="w-full overflow-hidden rounded-xl border border-slate-100">
+          {/* Payments Table */}
+          <div className="p-4 sm:p-5 flex-1">
+            <div className="w-full overflow-hidden rounded-xl border border-slate-200/70">
               <table className="w-full table-fixed text-left">
                 <thead>
-                  <tr className="bg-[#F0F4FA] text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                    <th className="py-2.5 px-4 w-[40%]">STUDENT</th>
-                    <th className="py-2.5 px-3 w-[22%]">DATE</th>
-                    <th className="py-2.5 px-3 w-[22%]">AMOUNT</th>
-                    <th className="py-2.5 px-3 w-[16%] text-center">STATUS</th>
+                  <tr className="bg-[#F3F5FC] text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                    <th className="py-2.5 px-4 w-[42%]">STUDENT</th>
+                    <th className="py-2.5 px-3 w-[20%]">DATE</th>
+                    <th className="py-2.5 px-3 w-[20%]">AMOUNT</th>
+                    <th className="py-2.5 px-3 w-[18%] text-center">STATUS</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 text-xs">
+                <tbody className="divide-y divide-slate-100 text-xs bg-white">
                   {recentPayments.map((p, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <tr key={idx} className="hover:bg-indigo-50/30 transition-colors">
                       <td className="py-2.5 px-4">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-indigo-50 border border-indigo-200/80 shrink-0 flex items-center justify-center">
                             {p.avatar ? (
                               <img src={p.avatar} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-xs font-bold text-indigo-600">{p.name.charAt(0)}</span>
+                              <span className="text-xs font-black text-indigo-700">{p.name.charAt(0)}</span>
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">{p.name}</p>
-                            <p className="text-[10px] text-slate-400 font-medium truncate">{p.stream}</p>
+                            <p className="text-xs font-extrabold text-slate-800 truncate">{p.name}</p>
+                            <p className="text-[10px] text-slate-500 font-semibold truncate">{p.stream}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="py-2.5 px-3 text-xs font-medium text-slate-600">
+                      <td className="py-2.5 px-3 text-xs font-semibold text-slate-600">
                         {p.date}
                       </td>
                       <td className="py-2.5 px-3 text-xs font-black text-slate-800">
                         {p.amount}
                       </td>
                       <td className="py-2.5 px-3 text-center">
-                        <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-[#DCFCE7] text-[#16A34A] border border-emerald-200/60 inline-flex items-center justify-center">
-                          {p.status}
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-extrabold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0] inline-flex items-center justify-center gap-1">
+                          <Check className="w-3 h-3" strokeWidth={3} />
+                          <span>{p.status}</span>
                         </span>
                       </td>
                     </tr>
@@ -560,29 +590,24 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         </div>
 
         {/* Right Card: Today's Attendance (~42% / col-span-5) */}
-        <div className="lg:col-span-5 relative overflow-hidden bg-gradient-to-br from-white via-white to-blue-50/30 rounded-[26px] p-5 sm:p-6 shadow-xl shadow-indigo-900/5 border border-slate-200/80 flex flex-col justify-between">
-          {/* Subtle Ambient Decorative Glow */}
-          <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-bl from-indigo-200/25 via-emerald-200/15 to-transparent rounded-full blur-2xl pointer-events-none" />
-
+        <div className="lg:col-span-5 relative overflow-hidden bg-white rounded-[22px] p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.08)] border border-slate-200/80 flex flex-col justify-between">
           {/* Card Header */}
           <div className="relative z-10 flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/25 shrink-0">
-                <FileText className="w-5 h-5 drop-shadow-sm" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white flex items-center justify-center shadow-sm shrink-0">
+                <CalendarCheck className="w-4.5 h-4.5" />
               </div>
-              <div>
-                <h2 className="text-base font-black text-slate-800 leading-tight flex items-center gap-2">
-                  <span>Today's Attendance</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Live Today" />
-                </h2>
-              </div>
+              <h2 className="text-base font-black text-slate-800 leading-tight flex items-center gap-2">
+                <span>Today's Attendance</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" title="Live Today" />
+              </h2>
             </div>
             <Link
               to="/attendance"
-              className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-indigo-50 to-blue-50 hover:from-indigo-100 hover:to-blue-100 text-xs font-black text-indigo-600 border border-indigo-200/70 shadow-2xs hover:scale-105 active:scale-95 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 text-xs font-extrabold text-slate-700 border border-slate-200 shadow-2xs transition-all flex items-center gap-1"
             >
               <span>View Details</span>
-              <span className="text-[11px] font-bold">→</span>
+              <span className="text-[11px]">→</span>
             </Link>
           </div>
 
@@ -594,33 +619,34 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
                 <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
                   <defs>
                     <linearGradient id="attendanceGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#10B981" />
-                      <stop offset="100%" stopColor="#06B6D4" />
+                      <stop offset="0%" stopColor="#16A34A" />
+                      <stop offset="55%" stopColor="#10B981" />
+                      <stop offset="100%" stopColor="#0D9488" />
                     </linearGradient>
                   </defs>
-                  <circle cx="50" cy="50" r="40" stroke="#F1F5F9" strokeWidth="8" fill="transparent" />
+                  <circle cx="50" cy="50" r="39" stroke="#EEF2F7" strokeWidth="10" fill="transparent" />
                   <circle
                     cx="50"
                     cy="50"
-                    r="40"
+                    r="39"
                     stroke="url(#attendanceGradient)"
-                    strokeWidth="8"
-                    strokeDasharray="251.32"
-                    strokeDashoffset={251.32 * (1 - (displayAttendancePct / 100))}
+                    strokeWidth="10"
+                    strokeDasharray="245.04"
+                    strokeDashoffset={245.04 * (1 - (displayAttendancePct / 100))}
                     strokeLinecap="round"
                     fill="transparent"
-                    className="transition-all duration-1000 ease-out drop-shadow-xs"
+                    className="transition-all duration-1000 ease-out"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl sm:text-3xl font-black bg-gradient-to-br from-slate-900 to-indigo-950 bg-clip-text text-transparent tracking-tight">
+                  <span className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                     {displayAttendancePct}%
                   </span>
-                  <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 -mt-0.5">Rate</span>
+                  <span className="text-[9.5px] font-extrabold uppercase tracking-wider text-slate-500 -mt-0.5">RATE</span>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-gradient-to-r from-emerald-500/10 via-teal-500/15 to-emerald-500/10 text-[10px] font-extrabold text-emerald-700 border border-emerald-200/80 shadow-2xs">
-                <BarChart3 className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="flex items-center gap-1.5 mt-2.5 px-3 py-1 rounded-full bg-[#DCFCE7]/80 text-[10.5px] font-extrabold text-[#166534] border border-[#BBF7D0]">
+                <BarChart3 className="w-3.5 h-3.5 text-[#16A34A]" />
                 <span>Overall Performance</span>
               </div>
             </div>
@@ -628,65 +654,65 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
             {/* Metrics 2x2 Grid */}
             <div className="flex-1 w-full grid grid-cols-2 gap-2.5">
               {/* Tile 1: Total */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-blue-500/10 via-indigo-50/60 to-white rounded-2xl p-3 border border-blue-200/70 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-[#EEF4FF] rounded-2xl p-3 border border-[#D8E6FF] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-blue-600 uppercase tracking-wider">Total</p>
-                  <div className="w-5 h-5 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center">
-                    <Users className="w-3 h-3" />
+                  <p className="text-[10px] font-black text-[#2563EB] uppercase tracking-wider">TOTAL</p>
+                  <div className="w-6 h-6 rounded-lg bg-white/80 text-[#2563EB] flex items-center justify-center">
+                    <Users className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <p className="text-xl sm:text-2xl font-black text-blue-950 my-0.5 tracking-tight">{totalStudentsCount}</p>
-                <p className="text-[10px] font-bold text-blue-600/80">Students</p>
+                <p className="text-xl sm:text-2xl font-black text-[#1E3A8A] my-0.5 tracking-tight">{totalStudentsCount}</p>
+                <p className="text-[10px] font-bold text-[#2563EB]/90">Students</p>
               </div>
 
               {/* Tile 2: Present */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500/10 via-teal-50/60 to-white rounded-2xl p-3 border border-emerald-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-[#EBFBF2] rounded-2xl p-3 border border-[#C6F4D8] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-emerald-700 uppercase tracking-wider">Present</p>
-                  <div className="w-5 h-5 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                    <CheckCircle2 className="w-3 h-3" />
+                  <p className="text-[10px] font-black text-[#15803D] uppercase tracking-wider">PRESENT</p>
+                  <div className="w-6 h-6 rounded-lg bg-white/80 text-[#16A34A] flex items-center justify-center">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <p className="text-xl sm:text-2xl font-black text-emerald-800 my-0.5 tracking-tight">{presentCount}</p>
-                <p className="text-[10px] font-bold text-emerald-700/80">Present</p>
+                <p className="text-xl sm:text-2xl font-black text-[#14532D] my-0.5 tracking-tight">{presentCount}</p>
+                <p className="text-[10px] font-bold text-[#15803D]/90">Present</p>
               </div>
 
               {/* Tile 3: Absent */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-rose-500/10 via-pink-50/60 to-white rounded-2xl p-3 border border-rose-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-[#FFF0F2] rounded-2xl p-3 border border-[#FFD6DC] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-rose-600 uppercase tracking-wider">Absent</p>
-                  <div className="w-5 h-5 rounded-md bg-rose-100 text-rose-600 flex items-center justify-center">
-                    <XCircle className="w-3 h-3" />
+                  <p className="text-[10px] font-black text-[#DC2626] uppercase tracking-wider">ABSENT</p>
+                  <div className="w-6 h-6 rounded-lg bg-white/80 text-[#DC2626] flex items-center justify-center">
+                    <XCircle className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <p className="text-xl sm:text-2xl font-black text-rose-700 my-0.5 tracking-tight">{absentCount}</p>
-                <p className="text-[10px] font-bold text-rose-600/80">Absent</p>
+                <p className="text-xl sm:text-2xl font-black text-[#991B1B] my-0.5 tracking-tight">{absentCount}</p>
+                <p className="text-[10px] font-bold text-[#DC2626]/90">Absent</p>
               </div>
 
               {/* Tile 4: On Leave */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-50/60 to-white rounded-2xl p-3 border border-amber-200/80 shadow-xs flex flex-col justify-between group hover:shadow-md transition-all">
+              <div className="bg-[#FFF8EB] rounded-2xl p-3 border border-[#FDE5B8] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black text-amber-700 uppercase tracking-wider">On Leave</p>
-                  <div className="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center">
-                    <Clock className="w-3 h-3" />
+                  <p className="text-[10px] font-black text-[#D97706] uppercase tracking-wider">ON LEAVE</p>
+                  <div className="w-6 h-6 rounded-lg bg-white/80 text-[#D97706] flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5" />
                   </div>
                 </div>
-                <p className="text-xl sm:text-2xl font-black text-amber-800 my-0.5 tracking-tight">{leaveCount}</p>
-                <p className="text-[10px] font-bold text-amber-700/80">Students</p>
+                <p className="text-xl sm:text-2xl font-black text-[#92400E] my-0.5 tracking-tight">{leaveCount}</p>
+                <p className="text-[10px] font-bold text-[#D97706]/90">Students</p>
               </div>
             </div>
           </div>
 
-          {/* Bottom Bar: Live Teacher Attendance */}
-          <div className="relative z-10 pt-3.5 border-t border-slate-100/90 flex flex-wrap items-center justify-between gap-3 text-xs">
+          {/* Bottom Bar: Live Teacher Attendance Pill Strip */}
+          <div className="relative z-10 mt-2 px-3.5 py-2.5 rounded-2xl bg-[#F4F6FD] border border-[#E4E9F7] flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-xs shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] text-white flex items-center justify-center shadow-xs shrink-0">
                 <GraduationCap className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-extrabold text-slate-600 text-xs">Teachers: </span>
+                <span className="font-bold text-slate-600 text-xs">Teachers: </span>
                 {isTeacherAttMarked ? (
-                  <span className="font-black text-indigo-700 text-xs sm:text-sm">
+                  <span className="font-black text-slate-900 text-xs sm:text-sm">
                     {teacherPresentCount} / {teacherTotalCount} Present
                   </span>
                 ) : (
@@ -697,9 +723,8 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
               </div>
             </div>
             {isTeacherAttMarked ? (
-              <span className={`px-3 py-1 rounded-full text-white text-[10px] sm:text-[11px] font-black shadow-md flex items-center gap-1.5 shrink-0 ${teacherAttendancePct >= 90 ? 'bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/20' : 'bg-gradient-to-r from-amber-500 to-orange-500 shadow-amber-500/20'
-                }`}>
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              <span className={`px-3.5 py-1.5 rounded-full text-white text-[11px] font-extrabold shadow-sm flex items-center gap-1.5 shrink-0 ${teacherAttendancePct >= 90 ? 'bg-[#16A34A]' : 'bg-[#D97706]'}`}>
+                <Check className="w-3.5 h-3.5" strokeWidth={3} />
                 <span>{teacherAttendancePct}% Present</span>
               </span>
             ) : (
