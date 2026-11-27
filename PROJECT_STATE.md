@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Print Studio 2-Pane Split Redesign (`/students/custom-report`) (November 27, 2026)
+- **సమస్య:** Student Print Studio (`/students/custom-report`) లో 3 పెద్ద బాక్సులు ఒకదాని కింద ఒకటి ఉండటం వల్ల గందరగోళంగా ఉండి, Live Paper Preview కింద దాగిపోయి ప్రివ్యూ సరిగా అర్థం కావడం లేదు.
+- **పరిష్కారం ([StudentReportPrintPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**
+  - **2-Pane Split Studio:** ఎడమవైపు కాంపాక్ట్ కంట్రోల్ ప్యానెల్ (`1. Filter & Presets`, `2. Columns`, `3. Page & Size` అనే 3 సింపుల్ ట్యాబ్‌లు) + కుడివైపు **ఎల్లప్పుడూ కనిపించే Live A4 Paper View** (Fit Page / Zoom +/- కంట్రోల్స్‌తో) అమర్చాము.
+  - **క్లీన్ Dark Blue టాప్ బార్:** సైడ్‌బార్‌తో మ్యాచ్ అయ్యే Dark Blue హెడర్ + `Print`, `PDF`, `Excel` బటన్లు (సబ్‌టైటిల్ మరియు డార్క్/బ్లాక్ కలర్లు తొలగించాము).
+  - **Academic Year Integration:** Dashboard లో ఎంచుకున్న `selectedYear` ప్రకారం క్లాసులు & విద్యార్థులు ఫిల్టర్ అవుతారు (`Print`, `PDF`, `Excel` అన్నీ యథాతథంగా పనిచేస్తాయి).
+
 ## చివరి సంభాషణ - Dark Blue Sidebar & Top Bar + Light Colourful Hero Banner (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** సైడ్‌బార్ మరియు టాప్ బార్ రెండూ డార్క్ బ్లూ (`Dark Blue`) లో ఉండాలి (టాప్ బార్ వైట్ వద్దు), మరియు ఫోటో ఉన్న హీరో బ్యానర్ డార్క్ కాకుండా లైట్ కలర్‌ఫుల్‌గా (`Light Colourful`) ఉండాలి.
 - **చేసిన మార్పులు:**
