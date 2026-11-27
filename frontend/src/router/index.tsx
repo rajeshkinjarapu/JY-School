@@ -127,6 +127,8 @@ const TransportVehiclesPage = lazy(() => import('../pages/transport/VehiclesPage
 const TransportStudentsPage = lazy(() => import('../pages/transport/StudentTransportPage'));
 const TransportFuelLogsPage = lazy(() => import('../pages/transport/FuelLogsPage'));
 const TransportMaintenanceLogsPage = lazy(() => import('../pages/transport/MaintenanceLogsPage'));
+const TransportCrewPage = lazy(() => import('../pages/transport/DriversCrewPage'));
+const TransportTripsPage = lazy(() => import('../pages/transport/TripLogsPage'));
 const AnswerKeyPage = lazy(() => import('../pages/question-bank/AnswerKeyPage'));
 const IdCardDashboard = lazy(() => import('../pages/idcards/IdCardDashboard'));
 const IdCardGeneratorPage = lazy(() => import('../pages/idcards/IdCardGeneratorPage'));
@@ -845,7 +847,7 @@ export const router = createBrowserRouter([
       {
         path: 'transport',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
             <TransportDashboard />
           </ProtectedRoute>
         ),
@@ -853,7 +855,7 @@ export const router = createBrowserRouter([
       {
         path: 'transport/routes',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
             <TransportRoutesPage />
           </ProtectedRoute>
         ),
@@ -861,7 +863,7 @@ export const router = createBrowserRouter([
       {
         path: 'transport/vehicles',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
             <TransportVehiclesPage />
           </ProtectedRoute>
         ),
@@ -869,8 +871,24 @@ export const router = createBrowserRouter([
       {
         path: 'transport/students',
         element: withSuspense(
-          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
             <TransportStudentsPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/crew',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
+            <TransportCrewPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'transport/trips',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN', 'TRANSPORT_MANAGER']}>
+            <TransportTripsPage />
           </ProtectedRoute>
         ),
       },

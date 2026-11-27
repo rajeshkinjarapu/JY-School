@@ -8,6 +8,7 @@ import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { AccountantDashboard } from './AccountantDashboard';
 import { StudentMobileDashboard } from './StudentMobileDashboard';
+import { TransportDashboard } from '../transport/TransportDashboard';
 import { useQuery } from '@tanstack/react-query';
 import {
   Users, GraduationCap, School, Wallet, CalendarDays, CalendarCheck,
@@ -69,12 +70,13 @@ export const DashboardPage: React.FC = () => {
       }
     },
     initialDataUpdatedAt: 0, // Immediately render cached dashboard while background refresh updates seamlessly
-    enabled: !!user && user.role !== 'ACCOUNTANT',
+    enabled: !!user && user.role !== 'ACCOUNTANT' && user.role !== 'TRANSPORT_MANAGER',
     staleTime: 1000 * 60 * 2, // 2 minutes fresh cache
     refetchOnWindowFocus: true,
   });
 
   if (user?.role === 'ACCOUNTANT') return <AccountantDashboard />;
+  if (user?.role === 'TRANSPORT_MANAGER') return <TransportDashboard />;
 
   if (loading) return <LoadingSpinner size="lg" className="h-[70vh]" />;
   if (!data)
