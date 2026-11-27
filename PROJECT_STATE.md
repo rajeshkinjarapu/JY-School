@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Enterprise Staff Roles & Management Command Center (`/staff-management`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** పెద్ద ఎంటర్‌ప్రైజ్ ERP లతో అనలైజ్ చేసి Staff Roles & Management పేజీని KPI కార్డులు, డ్యాష్‌బోర్డ్, మరియు పూర్తి ఫీచర్లతో ప్రొఫెషనల్‌గా నిర్మించాలి.
+- **చేసిన మార్పులు:**
+  1. [users.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/users.controller.ts): `getAll` లో `excludeRole`, Multi-Role & `isActive` ఫిల్టర్లు, మొబైల్ యాప్ స్టేటస్ (`isAppInstalled`, `lastAppLoginAt`), మరియు `teacher` రిలేషన్ జోడించాము; `update()` లో `isActive` టోగుల్ & Teacher Granular Permissions (`canEditStudents`, `canUploadQuestionPapers`, `canViewAllStudents`) సపోర్ట్ జోడించాము.
+  2. [StaffManagement.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/settings/StaffManagement.tsx): 5 పాస్టెల్ KPI కార్డులు (`Total Staff`, `Admin & Finance`, `Faculty Perms`, `Account Status`, `App Adoption`), 3 ట్యాబ్లు (**Executive Dashboard** రోల్ బ్రేక్‌డౌన్ & సెక్యూరిటీ హైజీన్, **Unified Staff Directory** సెర్చ్/రోల్-ఫిల్టర్/పాస్‌వర్డ్ రివీల్ & కాపీ/ఎడిట్/పాస్‌వర్డ్ రీసెట్/Suspend-Activate/డిలీట్ & PDF ఎక్స్‌పోర్ట్, మరియు **RBAC Matrix & Live Teacher Privileges**) పూర్తి Light Pastel థీమ్‌లో నిర్మించాము.
+
 ## చివరి సంభాషణ - Website CMS Save Fix (Auto-Heal Schema + Fallback Upsert) (November 27, 2026)
 - **యూజర్ సమస్య:** `/settings/website` లో `Save Contact & Social Links` నొక్కినప్పుడు `Failed to update website settings` ఎర్రర్ వచ్చింది.
 - **మూల కారణం & పరిష్కారం ([website.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/website.controller.ts)):**

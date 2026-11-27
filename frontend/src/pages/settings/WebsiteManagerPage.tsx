@@ -118,8 +118,8 @@ export const WebsiteManagerPage: React.FC = () => {
         setTestimonials(payload.testimonials || []);
         setNews(payload.news || []);
       }
-    } catch (err) {
-      toast.error('Failed to load Website CMS data');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to load Website CMS data');
     } finally {
       setLoading(false);
     }

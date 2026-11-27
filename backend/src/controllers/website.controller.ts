@@ -3,73 +3,79 @@ import { prisma } from '../utils/prisma';
 
 let websiteTablesEnsured = false;
 
+const WEBSITE_DDL_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS "WebsiteSettings" (
+    "id" TEXT PRIMARY KEY DEFAULT '1',
+    "heroTitle" TEXT NOT NULL DEFAULT 'Shaping Brilliant Minds, Building Futures',
+    "heroSubtitle" TEXT NOT NULL DEFAULT 'IIT / NEET / OLYMPIAD FOUNDATION',
+    "heroDescription" TEXT NOT NULL DEFAULT 'At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and skills to become responsible global citizens.',
+    "heroImageUrl" TEXT,
+    "admissionsBannerTitle" TEXT NOT NULL DEFAULT 'ADMISSIONS OPEN FOR',
+    "admissionsYear" TEXT NOT NULL DEFAULT '2027 – 2028',
+    "missionText" TEXT NOT NULL DEFAULT 'To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.',
+    "visionText" TEXT NOT NULL DEFAULT 'To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.',
+    "contactPhone" TEXT NOT NULL DEFAULT '+91 98765 43210',
+    "contactEmail" TEXT NOT NULL DEFAULT 'info@svjyschool.edu.in',
+    "contactAddress" TEXT NOT NULL DEFAULT '123 Education Street, Knowledge City, KL 560001',
+    "facebookUrl" TEXT,
+    "instagramUrl" TEXT,
+    "youtubeUrl" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "heroImageUrl" TEXT`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "admissionsBannerTitle" TEXT NOT NULL DEFAULT 'ADMISSIONS OPEN FOR'`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "admissionsYear" TEXT NOT NULL DEFAULT '2027 – 2028'`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "missionText" TEXT NOT NULL DEFAULT 'To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.'`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "visionText" TEXT NOT NULL DEFAULT 'To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.'`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "facebookUrl" TEXT`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT`,
+  `ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "youtubeUrl" TEXT`,
+  `CREATE TABLE IF NOT EXISTS "WebsiteStat" (
+    "id" TEXT PRIMARY KEY,
+    "label" TEXT NOT NULL,
+    "value" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
+    "icon" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "WebsiteProgram" (
+    "id" TEXT PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "icon" TEXT NOT NULL,
+    "color" TEXT NOT NULL,
+    "order" INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "WebsiteTestimonial" (
+    "id" TEXT PRIMARY KEY,
+    "name" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
+    "rating" INTEGER NOT NULL DEFAULT 5,
+    "order" INTEGER NOT NULL DEFAULT 0
+  )`,
+  `CREATE TABLE IF NOT EXISTS "WebsiteNews" (
+    "id" TEXT PRIMARY KEY,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "date" TIMESTAMP(3) NOT NULL,
+    "tag" TEXT NOT NULL DEFAULT 'News',
+    "order" INTEGER NOT NULL DEFAULT 0
+  )`
+];
+
 const ensureWebsiteTablesExist = async () => {
   if (websiteTablesEnsured) return;
-  try {
-    await prisma.$executeRawUnsafe(`
-      CREATE TABLE IF NOT EXISTS "WebsiteSettings" (
-        "id" TEXT PRIMARY KEY DEFAULT '1',
-        "heroTitle" TEXT NOT NULL DEFAULT 'Shaping Brilliant Minds, Building Futures',
-        "heroSubtitle" TEXT NOT NULL DEFAULT 'IIT / NEET / OLYMPIAD FOUNDATION',
-        "heroDescription" TEXT NOT NULL DEFAULT 'At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and skills to become responsible global citizens.',
-        "heroImageUrl" TEXT,
-        "admissionsBannerTitle" TEXT NOT NULL DEFAULT 'ADMISSIONS OPEN FOR',
-        "admissionsYear" TEXT NOT NULL DEFAULT '2027 – 2028',
-        "missionText" TEXT NOT NULL DEFAULT 'To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.',
-        "visionText" TEXT NOT NULL DEFAULT 'To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.',
-        "contactPhone" TEXT NOT NULL DEFAULT '+91 98765 43210',
-        "contactEmail" TEXT NOT NULL DEFAULT 'info@svjyschool.edu.in',
-        "contactAddress" TEXT NOT NULL DEFAULT '123 Education Street, Knowledge City, KL 560001',
-        "facebookUrl" TEXT,
-        "instagramUrl" TEXT,
-        "youtubeUrl" TEXT,
-        "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "heroImageUrl" TEXT;
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "admissionsBannerTitle" TEXT NOT NULL DEFAULT 'ADMISSIONS OPEN FOR';
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "admissionsYear" TEXT NOT NULL DEFAULT '2027 – 2028';
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "missionText" TEXT NOT NULL DEFAULT 'To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.';
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "visionText" TEXT NOT NULL DEFAULT 'To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.';
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "facebookUrl" TEXT;
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "instagramUrl" TEXT;
-      ALTER TABLE "WebsiteSettings" ADD COLUMN IF NOT EXISTS "youtubeUrl" TEXT;
-      CREATE TABLE IF NOT EXISTS "WebsiteStat" (
-        "id" TEXT PRIMARY KEY,
-        "label" TEXT NOT NULL,
-        "value" TEXT NOT NULL,
-        "color" TEXT NOT NULL,
-        "icon" TEXT NOT NULL,
-        "order" INTEGER NOT NULL DEFAULT 0
-      );
-      CREATE TABLE IF NOT EXISTS "WebsiteProgram" (
-        "id" TEXT PRIMARY KEY,
-        "title" TEXT NOT NULL,
-        "description" TEXT NOT NULL,
-        "icon" TEXT NOT NULL,
-        "color" TEXT NOT NULL,
-        "order" INTEGER NOT NULL DEFAULT 0
-      );
-      CREATE TABLE IF NOT EXISTS "WebsiteTestimonial" (
-        "id" TEXT PRIMARY KEY,
-        "name" TEXT NOT NULL,
-        "role" TEXT NOT NULL,
-        "text" TEXT NOT NULL,
-        "rating" INTEGER NOT NULL DEFAULT 5,
-        "order" INTEGER NOT NULL DEFAULT 0
-      );
-      CREATE TABLE IF NOT EXISTS "WebsiteNews" (
-        "id" TEXT PRIMARY KEY,
-        "title" TEXT NOT NULL,
-        "description" TEXT NOT NULL,
-        "date" TIMESTAMP(3) NOT NULL,
-        "tag" TEXT NOT NULL DEFAULT 'News',
-        "order" INTEGER NOT NULL DEFAULT 0
-      );
-    `);
-    websiteTablesEnsured = true;
-  } catch (err) {
-    console.warn('Notice ensuring WebsiteSettings columns:', err);
+  let allOk = true;
+  for (const sql of WEBSITE_DDL_STATEMENTS) {
+    try {
+      await prisma.$executeRawUnsafe(sql);
+    } catch (err: any) {
+      allOk = false;
+      console.warn('Notice ensuring Website CMS DDL:', err?.message);
+    }
   }
+  if (allOk) websiteTablesEnsured = true;
 };
 
 export const getWebsiteData = async (_req: Request, res: Response) => {
@@ -81,15 +87,15 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
       try {
         settings = await prisma.websiteSettings.create({ data: { id: '1' } });
       } catch {
-        const rows: any[] = await prisma.$queryRaw`SELECT * FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`;
+        const rows: any[] = await prisma.$queryRaw`SELECT * FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`.catch(() => []);
         settings = rows?.[0] || null;
       }
     }
 
-    const stats = await prisma.websiteStat.findMany({ orderBy: { order: 'asc' } });
-    const programs = await prisma.websiteProgram.findMany({ orderBy: { order: 'asc' } });
-    const testimonials = await prisma.websiteTestimonial.findMany({ orderBy: { order: 'asc' } });
-    const news = await prisma.websiteNews.findMany({ orderBy: { order: 'asc' } });
+    const stats = await prisma.websiteStat.findMany({ orderBy: { order: 'asc' } }).catch(() => []);
+    const programs = await prisma.websiteProgram.findMany({ orderBy: { order: 'asc' } }).catch(() => []);
+    const testimonials = await prisma.websiteTestimonial.findMany({ orderBy: { order: 'asc' } }).catch(() => []);
+    const news = await prisma.websiteNews.findMany({ orderBy: { order: 'asc' } }).catch(() => []);
 
     res.status(200).json({
       success: true,

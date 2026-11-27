@@ -74,16 +74,29 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
   const limit = parseInt(req.query.limit as string) || 10;
   const search = (req.query.search as string) || '';
   const role = (req.query.role as string) || '';
+  const excludeRole = (req.query.excludeRole as string) || '';
+  const isActiveParam = req.query.isActive as string | undefined;
   const skip = (page - 1) * limit;
 
   const where: any = {};
   if (search) {
     where.OR = [
-      { name: { contains: search } },
-      { email: { contains: search } },
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search } },
     ];
   }
-  if (role) where.role = role;
+  if (role) {
+    where.role = role.includes(',')
+      ? { in: role.split(',').map(r => r.trim()).filter(Boolean) }
+      : role;
+  } else if (excludeRole) {
+    where.role = excludeRole.includes(',')
+      ? { notIn: excludeRole.split(',').map(r => r.trim()).filter(Boolean) }
+      : { not: excludeRole };
+  }
+  if (isActiveParam === 'true') where.isActive = true;
+  else if (isActiveParam === 'false') where.isActive = false;
 
   const [users, total] = await Promise.all([
     prisma.user.findMany({
@@ -95,6 +108,18 @@ export const getAll = async (req: AuthRequest, res: Response): Promise<void> => 
         id: true, name: true, email: true, role: true,
         phone: true, photoUrl: true, isActive: true, createdAt: true,
         plainPassword: true,
+        isAppInstalled: true, lastAppLoginAt: true, deviceModel: true, appVersion: true,
+        teacher: {
+          select: {
+            id: true,
+            employeeId: true,
+            qualification: true,
+            specialization: true,
+            canEditStudents: true,
+            canUploadQuestionPapers: true,
+            canViewAllStudents: true,
+          },
+        },
       },
     }),
     prisma.user.count({ where }),
@@ -221,7 +246,10 @@ export const createUser = async (req: Request, res: Response, next: NextFunction
 
 export const update = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const { name, email, password, role, phone, photoUrl } = req.body;
+  const {
+    name, email, password, role, phone, photoUrl, isActive,
+    canEditStudents, canUploadQuestionPapers, canViewAllStudents
+  } = req.body;
 
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return next(createError('User not found', 404));
@@ -231,7 +259,11 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
     if (duplicate) return next(createError('Email / User ID already in use', 409));
   }
 
-  const updateData: any = { name, phone, photoUrl };
+  const updateData: any = {};
+  if (name !== undefined) updateData.name = name;
+  if (phone !== undefined) updateData.phone = phone;
+  if (photoUrl !== undefined) updateData.photoUrl = photoUrl;
+  if (typeof isActive === 'boolean') updateData.isActive = isActive;
   if (email) updateData.email = email;
   if (role) updateData.role = role;
   if (password) {
@@ -239,17 +271,18 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
     updateData.plainPassword = password;
   }
 
-  const user = await prisma.user.update({
-    where: { id },
-    data: updateData,
-    select: { id: true, name: true, email: true, role: true, phone: true, photoUrl: true, isActive: true },
-  });
+  const user = Object.keys(updateData).length > 0
+    ? await prisma.user.update({
+        where: { id },
+        data: updateData,
+        select: { id: true, name: true, email: true, role: true, phone: true, photoUrl: true, isActive: true, plainPassword: true },
+      })
+    : existing;
 
   if (role && role !== existing.role) {
     if (role === 'TEACHER') {
       const hasTeacher = await prisma.teacher.findUnique({ where: { userId: id } });
       if (!hasTeacher) {
-        const count = await prisma.teacher.count();
         await prisma.teacher.create({ data: { userId: id, employeeId: generateEmployeeId() } });
       }
     } else if (role === 'STUDENT') {
@@ -260,6 +293,14 @@ export const update = async (req: Request, res: Response, next: NextFunction): P
         await prisma.student.create({ data: { userId: id, rollNo: `JY${year}-${String(count + 1).padStart(4, '0')}` } });
       }
     }
+  }
+
+  const teacherUpdates: any = {};
+  if (typeof canEditStudents === 'boolean') teacherUpdates.canEditStudents = canEditStudents;
+  if (typeof canUploadQuestionPapers === 'boolean') teacherUpdates.canUploadQuestionPapers = canUploadQuestionPapers;
+  if (typeof canViewAllStudents === 'boolean') teacherUpdates.canViewAllStudents = canViewAllStudents;
+  if (Object.keys(teacherUpdates).length > 0) {
+    await prisma.teacher.updateMany({ where: { userId: id }, data: teacherUpdates });
   }
 
   successResponse(res, user, 'User updated successfully');
