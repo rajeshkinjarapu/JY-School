@@ -23,7 +23,7 @@ export const OfficeToolsDashboard = () => {
     },
     { 
       title: 'TRANSFER CERTIFICATE', 
-      description: 'Issue transfer certificates (TC)', 
+      description: 'Nur–V: A4 Record Sheet · VI–X: Legal Transfer Certificate (TC)', 
       icon: Server, 
       gradient: 'from-rose-500 to-orange-400',
       shadow: 'shadow-rose-500/30'
@@ -57,13 +57,15 @@ export const OfficeToolsDashboard = () => {
                     navigate('/office-tools/slip-test');
                   } else if (tool.title === 'STUDY CERTIFICATE') {
                     navigate('/office-tools/study-certificate');
+                  } else if (tool.title === 'TRANSFER CERTIFICATE') {
+                    navigate('/office-tools/transfer-certificate');
                   } else if (tool.title === 'ACADEMIC PROGRESS CARD') {
                     navigate('/office-tools/academic-progress-card');
                   } else if (tool.title === 'PAYSLIP') {
                     navigate('/hr/salary');
                   }
                 }}
-                className="group relative bg-white/60 dark:bg-slate-900/40 backdrop-blur-md border border-white/20 dark:border-slate-800 p-6 rounded-3xl shadow-lg hover:shadow-xl hover:bg-white/80 dark:hover:bg-slate-900/60 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4 animate-fade-in-up"
+                className="group relative bg-white border border-slate-200/80 p-6 rounded-3xl shadow-sm hover:shadow-xl hover:border-indigo-200 transition-all duration-300 hover:-translate-y-1 cursor-pointer overflow-hidden flex flex-col items-start gap-4 animate-fade-in-up"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Top accent */}
@@ -78,10 +80,10 @@ export const OfficeToolsDashboard = () => {
                 
                 <div className="relative z-10 w-full mt-2">
                   <div className="flex items-center justify-between w-full">
-                    <h3 className="font-extrabold text-slate-800 dark:text-white text-lg group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-slate-800 group-hover:to-slate-600 transition-colors leading-tight">{tool.title}</h3>
-                    <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors transform group-hover:translate-x-1 shrink-0" />
+                    <h3 className="font-extrabold text-slate-800 text-lg group-hover:text-indigo-700 transition-colors leading-tight">{tool.title}</h3>
+                    <ChevronRight className="w-5 h-5 text-slate-300 group-hover:text-indigo-600 transition-colors transform group-hover:translate-x-1 shrink-0" />
                   </div>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-3 font-semibold leading-relaxed bg-slate-50/50 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800">{tool.description}</p>
+                  <p className="text-slate-500 text-sm mt-3 font-semibold leading-relaxed bg-[#F8FAFF] p-3 rounded-xl border border-indigo-100/80">{tool.description}</p>
                 </div>
               </div>
             );

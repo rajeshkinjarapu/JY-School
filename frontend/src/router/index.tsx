@@ -110,6 +110,7 @@ const SalaryPage = lazy(routeImports['/hr/salary']);
 const OfficeToolsDashboard = lazy(routeImports['/office-tools']);
 const SlipTestManualPage = lazy(() => import('../pages/office-tools/SlipTestManualPage'));
 const StudyCertificatePage = lazy(() => import('../pages/office-tools/StudyCertificatePage'));
+const TransferCertificatePage = lazy(() => import('../pages/office-tools/TransferCertificatePage'));
 const AcademicProgressCardPage = lazy(() => import('../pages/office-tools/AcademicProgressCardPage'));
 const AdmissionsManagementPage = lazy(() => import('../pages/admissions/AdmissionsManagementPage'));
 const AdmissionRegistrationPage = lazy(() => import('../pages/admissions/AdmissionRegistrationPage').then(m => ({ default: m.default || m.AdmissionRegistrationPage })));
@@ -769,6 +770,14 @@ export const router = createBrowserRouter([
         element: withSuspense(
           <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
             <StudyCertificatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'office-tools/transfer-certificate',
+        element: withSuspense(
+          <ProtectedRoute allowedRoles={['SUPER_ADMIN', 'ADMIN']}>
+            <TransferCertificatePage />
           </ProtectedRoute>
         ),
       },

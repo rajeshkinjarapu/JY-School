@@ -1,5 +1,34 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Transfer Certificate (Legal) & Record Sheet (A4) Studio (`/office-tools/transfer-certificate`) (November 27, 2026)
+- **పూర్తి చేసిన ఫైల్స్ & ఫీచర్లు**:
+  - `frontend/src/pages/office-tools/tcTemplates.ts`:
+    - **Auto Class-to-Document Rule (`isRecordSheetClass`)**: Nursery నుండి Class V వరకు ఆటోమేటిక్‌గా **A4 Record Sheet (`210 × 297 mm`)** మరియు Class VI నుండి X+ వరకు **Legal Transfer Certificate (`215.9 × 355.6 mm`)** ఎంపిక అవుతుంది (మాన్యువల్ ఓవర్‌రైడ్ కూడా ఉంటుంది).
+    - **Date of Birth in Words (`dobToWords`)**: పుట్టిన తేదీని స్వయంచాలకంగా అక్షరాలలో మారుస్తుంది.
+    - **Real Student Gov IDs & Photo**: `penNumber`, `childId`, `apaarId`, `aadharNo`, స్టూడెంట్ ఫోటో (`?includePhoto=true`), మరియు `/api/settings` నుండి వచ్చే `principalSignatureUrl` లైవ్ ప్రివ్యూ, ప్రింట్, PDF లో రెండర్ అవుతాయి.
+    - **15-Clause Primary Record Sheet (A4)** + Study Progression Mini-Table మరియు **18-Clause Legal Transfer Certificate (Legal)** + Official Alteration Warning Note + Clerk / Coordinator / Principal Signature & Seal Box + QR Verify.
+  - `frontend/src/pages/office-tools/TransferCertificatePage.tsx`: Light Pastel KPI Analytics Strip (4 cards), 3-Tab Interactive Studio (`Class & Setup`, `Pupil & IDs`, `TC / Marks`), Single & Bulk Mode, 4 Official Border Themes, unscaled 1:1 Single PDF (`Legal` / `A4`), Bulk ZIP PDF Export, మరియు exact `@page { size: 215.9mm 355.6mm }` / `@page { size: A4 portrait }` Iframe Printing.
+  - `frontend/src/router/index.tsx` & `frontend/src/pages/office-tools/OfficeToolsDashboard.tsx`: `/office-tools/transfer-certificate` రూట్ మరియు Dashboard కార్డు క్లిక్ నావిగేషన్ + Light Theme అప్‌గ్రేడ్.
+- **స్టేటస్**: కోడ్ సేవ్ చేయబడింది. యూజర్ లోకల్ `npx tsc --noEmit`, `npm run build`, `git push` మరియు VPS డిప్లాయ్‌మెంట్ చేయాల్సి ఉంది.
+
+## చివరి సంభాషణ - Study & Conduct Certificate Studio Deep Audit & Upgrade (`/office-tools/study-certificate`) (November 27, 2026)
+- **పూర్తి చేసిన మార్పులు (`frontend/src/pages/office-tools/StudyCertificatePage.tsx`)**:
+  - **6 కీలక లోపాల పరిష్కారం**:
+    1. `principalSignatureUrl` లైవ్ ప్రివ్యూ మరియు ప్రింట్‌లో రెండర్ అయ్యేలా సవరణ.
+    2. `NUR`/`LKG`/`UKG` విద్యార్థులకు Class `VI/VII/VIII` అని తప్పుగా చూపించే `parseInt` బగ్ స్థానంలో `CLASS_SEQUENCE` + `resolveClassIndex` అమలు.
+    3. స్టూడెంట్ `Photo`, `Date of Birth`, `Mother's Name`, Gender-aware `S/o` / `D/o`, `Certificate Ref No`, మరియు `QR Verification` చేర్పు.
+    4. జూమ్ స్కేల్ ప్రభావం లేకుండా unscaled `210mm × 297mm` `pdfCaptureRef` ద్వారా 1:1 Single PDF (`toJpeg` + `jsPDF`), Bulk ZIP Export మరియు `printCertificatesIframe` A4 ప్రింటింగ్.
+    5. 3 సర్టిఫికెట్ ఫార్మాట్‌లు (`STUDY_CONDUCT`, `BONAFIDE`, `CHARACTER`), 3 ప్రొఫెషనల్ బోర్డర్ థీమ్‌లు (`Royal Navy & Gold`, `Heritage Maroon`, `Campus Emerald`), మరియు టోగుల్ ఆప్షన్స్ (`Photo`, `DOB`, `Principal Sign`, `QR Verify`).
+    6. Light Pastel ERP Analytics Strip (4 KPI కార్డులు: `Class Strength`, `Father / DOB Ready`, `Incomplete Profiles`, `Certificate Format`) మరియు Father Name / DOB మిస్సింగ్ అలర్ట్‌లు.
+- **స్టేటస్**: కోడ్ సేవ్ చేయబడింది. యూజర్ లోకల్ `npx tsc --noEmit`, `npm run build`, `git push` మరియు VPS డిప్లాయ్‌మెంట్ చేయాల్సి ఉంది.
+
+## చివరి సంభాషణ - University-Grade Website & Public Self-Service Portals (`/settings/website` + `website/`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** పబ్లిక్ వెబ్‌సైట్ లో డమ్మీ డేటా తొలగించి, పెద్ద యూనివర్సిటీ స్థాయిలో **Results, Hall Tickets Download, Video Gallery, Custom Menu Links, Dynamic Education Pages, Circulars & Ticker** అన్నీ Admin లోనే మేనేజ్ అయ్యేలా పూర్తిస్థాయిలో నిర్మించాలి.
+- **చేసిన మార్పులు:**
+  1. **Backend University CMS & Public Portals ([website.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/website.controller.ts), [website.routes.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/routes/website.routes.ts)):** `WebsiteNavLink`, `WebsiteCustomPage`, `WebsiteMedia`, `WebsiteDownload`, `WebsiteTopper` ఆటో-హీల్ SQL టేబుల్స్; `Curriculum`, `Promotion Policy`, `Behavioral Policy`, `Awards` డీఫాల్ట్ పేజీల సీడింగ్; `POST /api/website/public/results` & `POST /api/website/public/hall-ticket` (`Roll No + DOB` వెరిఫికేషన్), `GET /api/website/public/admission-status`, మరియు Admin Exam Publish Toggles (`GET /api/website/admin/exams`, `PUT /api/website/admin/exams/:id/publish`) నిర్మించాము.
+  2. **Website Admin Command Center ([WebsiteManagerPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/settings/WebsiteManagerPage.tsx)):** 5 పాస్టెల్ KPI కార్డులు మరియు 12 ట్యాబ్‌లు (`Overview`, `Hero & Principal`, `Results & Hall Tickets + Toppers`, `Menus & Links`, `Custom Pages`, `Videos & Gallery`, `Circulars & Ticker`, `Stats + ERP Sync`, `Programs`, `News`, `Reviews`, `Contact + WhatsApp + Google Map`) నిర్మించాము.
+  3. **Public University Portal ([website/index.html](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/website/index.html), [website/cms.js](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/website/cms.js)):** లైవ్ Notice Ticker, Dynamic Header/Academics/Footer మెనూలు, Self-Service **Results Marks Memo Print**, **Official Hall Ticket Download & Print**, **Admission Tracker**, Video Popup Player, Dynamic Custom Page Reader Modal, Toppers, ERP Faculty Directory, Google Map & WhatsApp ఫ్లోటింగ్ బటన్ నిర్మించాము.
+
 ## చివరి సంభాషణ - Enterprise Transport & Fleet Command Center + Manager Login Dashboard (`/transport`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Transport UI పూర్తిగా మార్చి బెస్ట్ KPI కార్డులతో రియల్-టైమ్ ట్రాన్స్‌పోర్ట్ డ్యాష్‌బోర్డ్, `TRANSPORT_MANAGER` లాగిన్ డ్యాష్‌బోర్డ్, మరియు పెద్ద స్కూల్/కాలేజీ స్థాయి ఫీచర్లు నిర్మించాలి.
 - **చేసిన మార్పులు:**
