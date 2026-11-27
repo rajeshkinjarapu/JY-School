@@ -1,5 +1,9 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Compact Sidebar Width Fit (`280px` -> `224px`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** సైడ్‌బార్ వెడల్పు టెక్స్ట్ కంటే ఎక్కువగా ఖాళీగా ఉంది (`side bar width ekkava unnattu undi text kante ekkuva undi`).
+- **చేసిన మార్పు ([Sidebar.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx)):** సైడ్‌బార్ వెడల్పును `280px` నుండి స్లిమ్ **`224px`** (`w-[224px]`) కు తగ్గించి, ఐకాన్ బాక్స్‌లు & ప్యాడింగ్‌లను కాంపాక్ట్‌గా సర్దుబాటు చేశాము — టెక్స్ట్‌కు సరిపడా ఫిట్ ఉండి పేజీ కంటెంట్‌కు ఎక్కువ స్పేస్ వస్తుంది.
+
 ## చివరి సంభాషణ - Student Print Studio 2-Pane Split Redesign (`/students/custom-report`) (November 27, 2026)
 - **సమస్య:** Student Print Studio (`/students/custom-report`) లో 3 పెద్ద బాక్సులు ఒకదాని కింద ఒకటి ఉండటం వల్ల గందరగోళంగా ఉండి, Live Paper Preview కింద దాగిపోయి ప్రివ్యూ సరిగా అర్థం కావడం లేదు.
 - **పరిష్కారం ([StudentReportPrintPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx)):**

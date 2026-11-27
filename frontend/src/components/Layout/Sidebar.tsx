@@ -137,9 +137,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const renderContent = () => (
     <div className="flex flex-col h-full bg-gradient-to-b from-[#0E2666] via-[#0B1F54] to-[#081742] text-white">
       {/* Brand Header */}
-      <div className="px-4 pt-5 pb-4 border-b border-white/12 bg-white/5 backdrop-blur-xs">
-        <div className="flex items-center gap-3 pr-6 lg:pr-0">
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 bg-white overflow-hidden border-2 border-white/80 shadow-[0_6px_18px_rgba(4,12,40,0.45)]">
+      <div className="px-3 pt-4 pb-3.5 border-b border-white/12 bg-white/5 backdrop-blur-xs">
+        <div className="flex items-center gap-2.5 pr-6 lg:pr-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-white overflow-hidden border-2 border-white/80 shadow-[0_6px_18px_rgba(4,12,40,0.45)]">
             <img
               src="/logo.png?v=1"
               alt="School Logo"
@@ -151,10 +151,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
             />
           </div>
           <div className="min-w-0 flex-1 flex flex-col justify-center">
-            <h1 className="text-[15px] font-black text-white leading-tight break-words tracking-tight drop-shadow-2xs">
+            <h1 className="text-sm font-black text-white leading-tight truncate tracking-tight drop-shadow-2xs">
               {schoolName || 'JY School'}
             </h1>
-            <span className="inline-flex items-center gap-1.5 mt-1 px-2.5 py-0.5 rounded-full bg-white/12 text-blue-100 border border-white/20 text-[9.5px] font-extrabold uppercase tracking-wider w-fit">
+            <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-white/12 text-blue-100 border border-white/20 text-[9px] font-extrabold uppercase tracking-wider w-fit">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               School ERP Portal
             </span>
@@ -162,8 +162,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         </div>
       </div>
 
-      {/* Navigation Links (Zero truncation — crisp contrast on Dark Blue) */}
-      <nav className="flex-1 overflow-y-auto px-3 py-3.5 space-y-1">
+      {/* Navigation Links (Compact & crisp contrast on Dark Blue) */}
+      <nav className="flex-1 overflow-y-auto px-2.5 py-3 space-y-1">
         {links.map(l => {
           const { to, label, icon: Icon } = l;
           const hasMoreSpecificMatch = links.some(
@@ -193,26 +193,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               onMouseLeave={() => {
                 if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
               }}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-bold transition-all duration-200 cursor-pointer select-none group border ${
+              className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[12.5px] font-bold transition-all duration-200 cursor-pointer select-none group border ${
                 isActive
                   ? 'bg-white text-[#0B1F54] border-white shadow-[0_8px_20px_-4px_rgba(4,12,40,0.5)]'
                   : 'bg-transparent border-transparent text-blue-100/90 hover:text-white hover:bg-white/10 hover:border-white/15'
               }`}
             >
               <span
-                className={`flex items-center justify-center w-8 h-8 rounded-xl shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                   isActive
                     ? 'bg-[#E8F0FF] text-[#143D99]'
                     : 'bg-white/12 text-blue-100 group-hover:bg-white/20 group-hover:text-white'
                 }`}
               >
-                <Icon className="w-[17px] h-[17px]" strokeWidth={isActive ? 2.4 : 2} />
+                <Icon className="w-4 h-4" strokeWidth={isActive ? 2.4 : 2} />
               </span>
-              <span className="flex-1 leading-snug break-words whitespace-normal tracking-tight">
+              <span className="flex-1 leading-snug truncate tracking-tight">
                 {label}
               </span>
               {isActive && (
-                <span className="w-1.5 h-4 rounded-full bg-[#143D99] shrink-0" />
+                <span className="w-1 h-3.5 rounded-full bg-[#143D99] shrink-0" />
               )}
             </NavLink>
           );
@@ -220,7 +220,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
       </nav>
 
       {/* Bottom Footer: App Install + Profile */}
-      <div className="px-3 pb-3.5 pt-3 border-t border-white/12 bg-[#07143A]/45 backdrop-blur-xs space-y-2.5">
+      <div className="px-2.5 pb-3 pt-2.5 border-t border-white/12 bg-[#07143A]/45 backdrop-blur-xs space-y-2">
         {!isInstalled && (
           <button
             onClick={() => {
@@ -231,42 +231,42 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
               link.click();
               document.body.removeChild(link);
             }}
-            className="w-full flex items-center justify-between px-3 py-2.5 bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:brightness-110 text-white rounded-xl border border-white/20 shadow-[0_6px_18px_rgba(14,165,233,0.3)] transition-all cursor-pointer group"
+            className="w-full flex items-center justify-between px-2.5 py-2 bg-gradient-to-r from-[#0EA5E9] to-[#2563EB] hover:brightness-110 text-white rounded-xl border border-white/20 shadow-[0_6px_18px_rgba(14,165,233,0.3)] transition-all cursor-pointer group"
           >
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-sm shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-white/20 flex items-center justify-center text-xs shrink-0">
                 🚀
               </div>
-              <div className="text-left">
-                <p className="font-extrabold text-xs leading-tight text-white">Install App</p>
-                <p className="text-[10px] font-medium text-sky-100 leading-tight">Get School Application</p>
+              <div className="text-left min-w-0">
+                <p className="font-extrabold text-[11px] leading-tight text-white truncate">Install App</p>
+                <p className="text-[9.5px] font-medium text-sky-100 leading-tight truncate">Get School App</p>
               </div>
             </div>
-            <ChevronRight className="w-4 h-4 text-white/85 group-hover:translate-x-0.5 transition-transform shrink-0" />
+            <ChevronRight className="w-3.5 h-3.5 text-white/85 group-hover:translate-x-0.5 transition-transform shrink-0" />
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur-sm shadow-sm">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm shadow-sm">
           <NavLink
             to="/profile"
             onClick={() => setIsOpen(false)}
-            className="flex flex-1 items-center gap-2.5 min-w-0 group cursor-pointer"
+            className="flex flex-1 items-center gap-2 min-w-0 group cursor-pointer"
             title="Update Profile"
           >
             {user.photoUrl ? (
-              <div className="w-9 h-9 rounded-xl shrink-0 overflow-hidden border-2 border-white/70 group-hover:border-white transition-colors">
+              <div className="w-8 h-8 rounded-lg shrink-0 overflow-hidden border border-white/70 group-hover:border-white transition-colors">
                 <img src={getPhotoUrl(user.photoUrl)} alt={user.name} className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="w-9 h-9 rounded-xl shrink-0 bg-white text-[#0E2666] font-black text-xs flex items-center justify-center border border-white/80">
+              <div className="w-8 h-8 rounded-lg shrink-0 bg-white text-[#0E2666] font-black text-xs flex items-center justify-center border border-white/80">
                 {(user.name || 'U').charAt(0).toUpperCase()}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-extrabold text-white break-words leading-snug group-hover:text-sky-200 transition-colors">
+              <p className="text-[11px] font-extrabold text-white truncate leading-snug group-hover:text-sky-200 transition-colors">
                 {user.name}
               </p>
-              <span className="inline-block mt-0.5 text-[10px] font-bold text-blue-100 bg-white/15 border border-white/20 px-2 py-0.5 rounded-full">
+              <span className="inline-block mt-0.5 text-[9.5px] font-bold text-blue-100 bg-white/15 border border-white/20 px-1.5 py-0.5 rounded-full">
                 {roleLabels[user.role] || user.role}
               </span>
             </div>
@@ -274,9 +274,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           <button
             onClick={logout}
             title="Logout"
-            className="p-2 rounded-xl text-blue-100 hover:text-white hover:bg-rose-500/80 transition-all cursor-pointer shrink-0"
+            className="p-1.5 rounded-lg text-blue-100 hover:text-white hover:bg-rose-500/80 transition-all cursor-pointer shrink-0"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -292,7 +292,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
         />
       )}
       <aside
-        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[280px] shrink-0 bg-[#0B1F54] border-r border-blue-900/50 shadow-[4px_0_24px_rgba(8,23,66,0.22)] transform transition-transform duration-300 ease-out ${forceDesktopCollapse ? 'lg:hidden lg:absolute' : 'lg:relative lg:translate-x-0'} ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`print:hidden fixed inset-y-0 left-0 z-50 w-[224px] shrink-0 bg-[#0B1F54] border-r border-blue-900/50 shadow-[4px_0_24px_rgba(8,23,66,0.22)] transform transition-transform duration-300 ease-out ${forceDesktopCollapse ? 'lg:hidden lg:absolute' : 'lg:relative lg:translate-x-0'} ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <button
           onClick={() => setIsOpen(false)}
