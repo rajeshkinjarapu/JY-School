@@ -21,9 +21,20 @@
         /* ===== BASE RESETS ===== */
         *, *::before, *::after { box-sizing: border-box; }
         html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
-
-        /* ===== FONTS & GLOBAL ===== */
         body { font-family: 'Poppins', sans-serif; color: #1e293b; background: #F8FAFC; }
+
+        /* ===== FULL SCREEN-FIT CONTAINER ===== */
+        .screen-fit {
+            width: 100%;
+            max-width: 1560px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        @media (min-width: 640px) { .screen-fit { padding-left: 24px; padding-right: 24px; } }
+        @media (min-width: 1024px) { .screen-fit { padding-left: 40px; padding-right: 40px; } }
+        @media (min-width: 1280px) { .screen-fit { padding-left: 52px; padding-right: 52px; } }
 
         /* ===== HOVER LIFT ===== */
         .hover-lift { transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -57,98 +68,50 @@
             overflow: hidden;
         }
         #mobile-menu.open {
-            max-height: 600px;
+            max-height: 620px;
             opacity: 1;
-        }
-
-        /* ===== NAVBAR ===== */
-        nav { width: 100%; }
-        .nav-inner {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: 64px;
-            padding: 0 16px;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-        @media (min-width: 640px) {
-            .nav-inner { height: 72px; padding: 0 24px; }
-        }
-        @media (min-width: 1024px) {
-            .nav-inner { padding: 0 32px; }
         }
 
         /* ===== HERO SECTION ===== */
         .hero-section {
-            padding: 32px 16px 48px;
+            padding: 28px 0 48px;
             background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 50%, #f0fdf4 100%);
         }
-        @media (min-width: 640px) {
-            .hero-section { padding: 40px 24px 56px; }
-        }
         @media (min-width: 1024px) {
-            .hero-section { padding: 56px 32px 72px; }
-        }
-        .hero-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 32px;
-            align-items: center;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-        @media (min-width: 1024px) {
-            .hero-grid { grid-template-columns: 1fr 1fr; }
+            .hero-section { padding: 38px 0 64px; }
         }
         .hero-title {
-            font-size: clamp(1.75rem, 5vw, 3.25rem);
+            font-size: clamp(1.85rem, 3.8vw, 3.35rem);
             font-weight: 900;
-            line-height: 1.15;
+            line-height: 1.14;
             color: #0f172a;
-            margin-bottom: 16px;
         }
         .hero-desc {
-            font-size: clamp(0.825rem, 2vw, 1rem);
+            font-size: clamp(0.875rem, 1.3vw, 1.05rem);
             color: #475569;
             line-height: 1.7;
-            margin-bottom: 24px;
-        }
-        .hero-image {
-            width: 100%;
-            max-width: 520px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.18);
-            border: 4px solid #fff;
-            object-fit: cover;
-            margin: 0 auto;
-            display: block;
         }
 
         /* ===== QUICK ACCESS STRIP ===== */
         .quick-strip {
-            max-width: 1280px;
-            margin: -28px auto 0;
-            padding: 0 16px;
+            margin-top: -32px;
             position: relative;
             z-index: 20;
         }
-        @media (min-width: 640px) { .quick-strip { padding: 0 24px; } }
-        @media (min-width: 1024px) { .quick-strip { padding: 0 32px; } }
         .quick-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 10px;
         }
         @media (min-width: 768px) {
-            .quick-grid { grid-template-columns: repeat(6, 1fr); }
+            .quick-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
         }
         .quick-card {
             background: #fff;
             border: 1px solid #e0e7ff;
-            border-radius: 16px;
-            padding: 14px 8px;
-            box-shadow: 0 4px 12px rgba(30,58,138,0.07);
+            border-radius: 18px;
+            padding: 16px 10px;
+            box-shadow: 0 8px 24px -6px rgba(30,58,138,0.09);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -157,7 +120,7 @@
             text-decoration: none;
             transition: all 0.25s ease;
         }
-        .quick-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(30,58,138,0.12); }
+        .quick-card:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -8px rgba(30,58,138,0.16); }
         .quick-icon {
             width: 44px; height: 44px;
             border-radius: 12px;
@@ -165,7 +128,7 @@
             font-size: 18px;
         }
         .quick-label {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             color: #1e293b;
             line-height: 1.3;
@@ -173,7 +136,7 @@
 
         /* ===== SECTION HEADINGS ===== */
         .section-title {
-            font-size: clamp(1.5rem, 4vw, 2.25rem);
+            font-size: clamp(1.5rem, 3.2vw, 2.25rem);
             font-weight: 900;
             color: #0f172a;
         }
@@ -188,95 +151,80 @@
             #printable-portal-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 16px; }
         }
 
-        /* ===== TOP BAR RESPONSIVE ===== */
-        .top-bar-inner {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            align-items: center;
-            padding: 8px 16px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        @media (min-width: 768px) {
-            .top-bar-inner {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                padding: 8px 24px;
-            }
-        }
-
-        /* ===== UTILITY ===== */
         img { max-width: 100%; height: auto; }
-        .container-pad { padding-left: 16px; padding-right: 16px; }
-        @media (min-width: 640px) { .container-pad { padding-left: 24px; padding-right: 24px; } }
-        @media (min-width: 1024px) { .container-pad { padding-left: 32px; padding-right: 32px; } }
     </style>
 </head>
 <body class="font-sans text-slate-800 bg-[#F8FAFC] overflow-x-hidden">
 
     <!-- Top Utility Bar -->
-    <div class="bg-brandOrange text-white">
-        <div class="top-bar-inner">
-            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
-                <a id="top-phone" href="tel:+919876543210" class="flex items-center gap-2 hover:text-orange-100 text-[11px] font-semibold">
-                    <i class="fa-solid fa-phone"></i> +91 98765 43210
+    <div class="bg-brandOrange text-white w-full">
+        <div class="screen-fit py-2 flex flex-col md:flex-row justify-between items-center gap-2 text-[11px] font-semibold">
+            <div class="flex flex-wrap gap-5 justify-center md:justify-start">
+                <a id="top-phone" href="tel:+919502924437" class="flex items-center gap-2 hover:text-orange-100">
+                    <i class="fa-solid fa-phone"></i> +91 95029 24437
                 </a>
-                <a id="top-email" href="mailto:info@svjyschool.edu.in" class="flex items-center gap-2 hover:text-orange-100 text-[11px] font-semibold">
+                <a id="top-email" href="mailto:info@svjyschool.edu.in" class="flex items-center gap-2 hover:text-orange-100">
                     <i class="fa-solid fa-envelope"></i> info@svjyschool.edu.in
                 </a>
+                <span class="hidden sm:inline-flex items-center gap-1.5 text-orange-50/95">
+                    <i class="fa-solid fa-location-dot"></i> SVL Paradise Campus, Narasannapeta
+                </span>
             </div>
             <div class="flex items-center gap-3 flex-wrap justify-center">
-                <a href="#student-portals" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black">Results &amp; Hall Tickets</a>
-                <a href="#downloads-hub" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black">Circulars</a>
+                <a href="#student-portals" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black transition">Results &amp; Hall Tickets</a>
+                <a href="#downloads-hub" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black transition">Circulars</a>
                 <div class="flex items-center gap-1.5">
-                    <a id="social-facebook-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-facebook-f text-[10px]"></i></a>
-                    <a id="social-instagram-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-instagram text-[10px]"></i></a>
-                    <a id="social-youtube-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-youtube text-[10px]"></i></a>
+                    <a id="social-facebook-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition"><i class="fa-brands fa-facebook-f text-[10px]"></i></a>
+                    <a id="social-instagram-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition"><i class="fa-brands fa-instagram text-[10px]"></i></a>
+                    <a id="social-youtube-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange transition"><i class="fa-brands fa-youtube text-[10px]"></i></a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Live University Notice Ticker -->
-    <div class="bg-[#EEF2FF] border-b border-indigo-200 py-2 overflow-hidden flex items-center gap-3">
-        <div class="bg-brandBlue text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 ml-3 rounded-full shrink-0 z-10 shadow-sm flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Notices
-        </div>
-        <div class="flex-1 overflow-hidden">
-            <div id="notice-ticker-track" class="ticker-animate text-xs font-bold text-slate-700 gap-10">
-                <span>Admissions Open for 2027-2028 • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span>Admissions Open for 2027-2028 • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-                <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+    <!-- Live Notice Ticker -->
+    <div class="bg-[#EEF2FF] border-b border-indigo-200 py-2 overflow-hidden w-full">
+        <div class="screen-fit flex items-center gap-3">
+            <div class="bg-brandBlue text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shrink-0 z-10 shadow-sm flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Notices
+            </div>
+            <div class="flex-1 overflow-hidden">
+                <div id="notice-ticker-track" class="ticker-animate text-xs font-bold text-slate-700 gap-10">
+                    <span>Admissions Open for 2027-2028 (Nursery to X + IIT-JEE / NEET Foundation) • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <span>Admissions Open for 2027-2028 (Nursery to X + IIT-JEE / NEET Foundation) • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Sticky Navbar -->
     <nav class="sticky top-0 z-50 bg-brandBlue shadow-md w-full">
-        <div class="nav-inner">
+        <div class="screen-fit flex justify-between items-center h-16 sm:h-[74px]">
             <!-- Logo -->
-            <a href="#" class="flex items-center gap-2.5 shrink-0">
-                <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-13 sm:h-13 object-contain bg-white rounded-xl p-1">
+            <a href="#" class="flex items-center gap-3 shrink-0">
+                <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-12 sm:h-12 object-contain bg-white rounded-xl p-1 shadow-sm">
                 <div class="flex flex-col leading-tight">
                     <span class="text-[9px] sm:text-[10px] font-bold text-blue-200 tracking-wider uppercase">SRI VENKATESWARA</span>
-                    <span class="text-base sm:text-lg text-brandOrange font-black tracking-widest uppercase">JY School</span>
+                    <span class="text-base sm:text-xl text-brandOrange font-black tracking-widest uppercase">JY School</span>
                 </div>
             </a>
 
             <!-- Desktop Nav Links -->
-            <div class="hidden lg:flex items-center space-x-5 text-[11px] font-bold text-blue-100">
+            <div class="hidden lg:flex items-center space-x-6 text-xs font-bold text-blue-100">
                 <a href="#" class="hover:text-white transition-colors">Home</a>
                 <div class="relative group">
                     <button class="hover:text-white flex items-center gap-1 py-2 transition-colors">
                         Academics &amp; Policies <i class="fa-solid fa-chevron-down text-[9px] ml-0.5"></i>
                     </button>
                     <div id="academics-dropdown" class="absolute left-0 mt-1 w-56 bg-white rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-indigo-100 py-2 z-50 text-slate-700">
-                        <!-- Populated by cms.js -->
+                        <a href="#programs" class="px-4 py-2 text-xs font-bold hover:bg-indigo-50 hover:text-brandBlue block">Academic Programs</a>
+                        <a href="#mission" class="px-4 py-2 text-xs font-bold hover:bg-indigo-50 hover:text-brandBlue block">Mission &amp; Vision</a>
+                        <a href="#student-portals" class="px-4 py-2 text-xs font-bold hover:bg-indigo-50 hover:text-brandBlue block">Exam Results &amp; Hall Tickets</a>
                     </div>
                 </div>
+                <a href="#programs" class="hover:text-white transition-colors">Programs</a>
                 <a href="#student-portals" class="hover:text-white transition-colors">Results &amp; Hall Tickets</a>
                 <a href="#media-showcase" class="hover:text-white transition-colors">Videos &amp; Gallery</a>
                 <a href="#downloads-hub" class="hover:text-white transition-colors">Circulars</a>
@@ -285,11 +233,11 @@
             </div>
 
             <!-- Desktop CTA Buttons -->
-            <div class="hidden md:flex items-center gap-2">
-                <a href="http://66.116.252.191:19999/login" class="px-4 py-2 text-[11px] font-bold text-white border border-white/40 rounded-full hover:bg-white hover:text-brandBlue transition-all">
+            <div class="hidden md:flex items-center gap-2.5 shrink-0">
+                <a href="http://66.116.252.191:19999/login" class="px-4 py-2 text-xs font-bold text-white border border-white/40 rounded-full hover:bg-white hover:text-brandBlue transition-all">
                     <i class="fa-solid fa-right-to-bracket mr-1"></i> ERP Login
                 </a>
-                <a href="http://66.116.252.191:19999/apply" class="px-4 py-2 text-[11px] font-black text-white bg-brandOrange rounded-full shadow-md hover:bg-orange-600 transition-all">
+                <a href="http://66.116.252.191:19999/apply" class="px-5 py-2 text-xs font-black text-white bg-brandOrange rounded-full shadow-md hover:bg-orange-600 transition-all">
                     Apply Now <i class="fa-solid fa-arrow-right ml-1"></i>
                 </a>
             </div>
@@ -317,79 +265,161 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
+    <!-- HERO SECTION (Full Screen-Fit & Content-Rich) -->
     <section class="hero-section">
-        <div class="hero-grid">
-            <!-- Text Side -->
-            <div class="order-2 lg:order-1">
-                <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider mb-4">
-                    Excellence in Education Since 2005
-                </span>
-                <h1 id="hero-title" class="hero-title">
-                    Shaping Brilliant Minds, Building Futures
-                </h1>
-                <p id="hero-description" class="hero-desc">
-                    At Sri Venkateswara JY School, we empower students with knowledge, values, and analytical skills for IIT-JEE, NEET, Olympiads &amp; holistic leadership.
-                </p>
-                <div class="flex flex-wrap gap-3">
-                    <a href="http://66.116.252.191:19999/apply" class="px-6 py-3 bg-brandBlue text-white text-[11px] font-black rounded-full shadow-lg hover:bg-blue-900 transition-all">
-                        Online Admission <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </a>
-                    <a href="#student-portals" class="px-6 py-3 bg-white text-brandBlue border-2 border-brandBlue text-[11px] font-black rounded-full hover:bg-brandBlue hover:text-white transition-all">
-                        <i class="fa-solid fa-award text-brandOrange mr-1"></i> Check Results / Hall Ticket
-                    </a>
-                    <button id="hero-video-btn" onclick="openHeroVideo()" class="hidden px-6 py-3 bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-black rounded-full hover:bg-rose-600 hover:text-white transition-all">
-                        <i class="fa-solid fa-play mr-1"></i> Watch Campus Video
-                    </button>
+        <div class="screen-fit">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center">
+                <!-- Text & Highlights Column (6 cols) -->
+                <div class="lg:col-span-6 order-2 lg:order-1 space-y-5">
+                    <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider">
+                        <i class="fa-solid fa-graduation-cap text-brandOrange"></i> Excellence in Education Since 2005
+                    </span>
+
+                    <h1 id="hero-title" class="hero-title">
+                        Shaping Brilliant Minds, Building Futures
+                    </h1>
+
+                    <p id="hero-description" class="hero-desc max-w-2xl">
+                        At Sri Venkateswara JY School, we empower students with strong foundational knowledge, values, and analytical skills for IIT-JEE, NEET, Navodaya, Olympiads &amp; holistic leadership.
+                    </p>
+
+                    <div class="flex flex-wrap gap-3 pt-1">
+                        <a href="http://66.116.252.191:19999/apply" class="px-7 py-3.5 bg-brandBlue text-white text-xs font-black rounded-full shadow-lg shadow-blue-900/20 hover:bg-blue-900 transition-all hover:-translate-y-0.5">
+                            Online Admission <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </a>
+                        <a href="#student-portals" class="px-7 py-3.5 bg-white text-brandBlue border-2 border-brandBlue text-xs font-black rounded-full hover:bg-brandBlue hover:text-white transition-all hover:-translate-y-0.5">
+                            <i class="fa-solid fa-award text-brandOrange mr-1"></i> Check Results / Hall Ticket
+                        </a>
+                        <button id="hero-video-btn" onclick="openHeroVideo()" class="hidden px-6 py-3.5 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black rounded-full hover:bg-rose-600 hover:text-white transition-all">
+                            <i class="fa-solid fa-play mr-1"></i> Watch Campus Video
+                        </button>
+                    </div>
+
+                    <!-- 3 Compact Hero Feature Highlights (Fills space cleanly with useful institutional highlights) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
+                        <div class="bg-white/90 backdrop-blur-sm border border-indigo-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-brandBlue flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-atom text-base"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-xs font-black text-slate-900 leading-tight">IIT-JEE &amp; NEET</div>
+                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Integrated Foundation</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm border border-emerald-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-trophy text-base"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-xs font-black text-slate-900 leading-tight">100% Pass Record</div>
+                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Board &amp; State Toppers</div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white/90 backdrop-blur-sm border border-orange-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 text-brandOrange flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-laptop-code text-base"></i>
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-xs font-black text-slate-900 leading-tight">Smart Digital ERP</div>
+                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Live Parent Tracking</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <!-- Image Side -->
-            <div class="order-1 lg:order-2 flex justify-center">
-                <img id="hero-image" src="./image.png" alt="JY School Campus" class="hero-image">
+
+                <!-- Campus Image Column (6 cols — balanced full-bleed framing) -->
+                <div class="lg:col-span-6 order-1 lg:order-2 flex justify-center lg:justify-end">
+                    <div class="relative w-full max-w-[680px]">
+                        <img id="hero-image" src="./image.png" alt="JY School Campus"
+                             class="w-full rounded-3xl shadow-2xl border-4 border-white object-cover aspect-[16/10] sm:aspect-[16/10]">
+                        <div class="hidden sm:flex items-center justify-between gap-3 absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-lg border border-indigo-100">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <img src="./logo_.png" alt="Logo" class="w-9 h-9 object-contain rounded-lg bg-indigo-50 p-1 shrink-0">
+                                <div class="min-w-0">
+                                    <div class="text-xs font-black text-slate-900 truncate">Sri Venkateswara JY School</div>
+                                    <div class="text-[10px] font-semibold text-slate-500 truncate">SVL Paradise Campus, Narasannapeta • Recognized School</div>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0">
+                                Admissions Open 2027–28
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- QUICK-ACCESS UTILITY STRIP -->
+    <!-- QUICK-ACCESS UTILITY STRIP (Full Screen-Fit) -->
     <div class="quick-strip">
-        <div class="quick-grid">
-            <a href="#student-portals" onclick="switchPortalTab('results')" class="quick-card">
-                <div class="quick-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-square-poll-vertical"></i></div>
-                <span class="quick-label">Exam Results</span>
-            </a>
-            <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="quick-card" style="border-color:#d1fae5">
-                <div class="quick-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-id-card"></i></div>
-                <span class="quick-label">Hall Tickets</span>
-            </a>
-            <a href="#student-portals" onclick="switchPortalTab('admission')" class="quick-card" style="border-color:#fef3c7">
-                <div class="quick-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <span class="quick-label">Track Admission</span>
-            </a>
-            <a href="#downloads-hub" class="quick-card" style="border-color:#e0f2fe">
-                <div class="quick-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-file-pdf"></i></div>
-                <span class="quick-label">Syllabus &amp; Circulars</span>
-            </a>
-            <a href="#media-showcase" class="quick-card" style="border-color:#ffe4e6">
-                <div class="quick-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-circle-play"></i></div>
-                <span class="quick-label">Campus Videos</span>
-            </a>
-            <a href="http://66.116.252.191:19999/login" class="quick-card" style="border-color:#ede9fe">
-                <div class="quick-icon bg-violet-50 text-violet-600"><i class="fa-solid fa-mobile-screen"></i></div>
-                <span class="quick-label">ERP / Parent Login</span>
-            </a>
+        <div class="screen-fit">
+            <div class="quick-grid">
+                <a href="#student-portals" onclick="switchPortalTab('results')" class="quick-card">
+                    <div class="quick-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                    <span class="quick-label">Exam Results</span>
+                </a>
+                <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="quick-card" style="border-color:#d1fae5">
+                    <div class="quick-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-id-card"></i></div>
+                    <span class="quick-label">Hall Tickets</span>
+                </a>
+                <a href="#student-portals" onclick="switchPortalTab('admission')" class="quick-card" style="border-color:#fef3c7">
+                    <div class="quick-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <span class="quick-label">Track Admission</span>
+                </a>
+                <a href="#downloads-hub" class="quick-card" style="border-color:#e0f2fe">
+                    <div class="quick-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-file-pdf"></i></div>
+                    <span class="quick-label">Syllabus &amp; Circulars</span>
+                </a>
+                <a href="#media-showcase" class="quick-card" style="border-color:#ffe4e6">
+                    <div class="quick-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-circle-play"></i></div>
+                    <span class="quick-label">Campus Videos</span>
+                </a>
+                <a href="http://66.116.252.191:19999/login" class="quick-card" style="border-color:#ede9fe">
+                    <div class="quick-icon bg-violet-50 text-violet-600"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <span class="quick-label">ERP / Parent Login</span>
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- STATS SECTION -->
-    <section class="pt-16 pb-10 bg-white mt-4">
-        <div class="max-w-7xl mx-auto container-pad">
-            <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
+    <!-- STATS SECTION (Pre-filled Professional Defaults, Live Overridden by CMS) -->
+    <section class="pt-14 pb-10 bg-white mt-4">
+        <div class="screen-fit">
+            <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div class="stat-card-1 rounded-2xl p-6 text-center text-white hover-lift">
+                    <i class="fa-solid fa-award text-2xl mb-2 opacity-90"></i>
+                    <h3 class="text-2xl font-black">20+</h3>
+                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Years of Excellence</p>
+                </div>
+                <div class="stat-card-2 rounded-2xl p-6 text-center text-white hover-lift">
+                    <i class="fa-solid fa-user-graduate text-2xl mb-2 opacity-90"></i>
+                    <h3 class="text-2xl font-black">1,200+</h3>
+                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Happy Students</p>
+                </div>
+                <div class="stat-card-3 rounded-2xl p-6 text-center text-white hover-lift">
+                    <i class="fa-solid fa-chalkboard-user text-2xl mb-2 opacity-90"></i>
+                    <h3 class="text-2xl font-black">45+</h3>
+                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Experienced Faculty</p>
+                </div>
+                <div class="stat-card-4 rounded-2xl p-6 text-center text-white hover-lift">
+                    <i class="fa-solid fa-medal text-2xl mb-2 opacity-90"></i>
+                    <h3 class="text-2xl font-black">100%</h3>
+                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Board Pass Record</p>
+                </div>
+                <div class="stat-card-5 rounded-2xl p-6 text-center text-white hover-lift col-span-2 sm:col-span-1">
+                    <i class="fa-solid fa-bus text-2xl mb-2 opacity-90"></i>
+                    <h3 class="text-2xl font-black">100%</h3>
+                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Safe GPS Campus</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- STUDENT SELF-SERVICE PORTALS -->
     <section id="student-portals" class="py-14 sm:py-16 bg-gradient-to-br from-[#F4F7FC] to-[#EEF2FF] border-y border-indigo-100">
-        <div class="max-w-6xl mx-auto container-pad">
+        <div class="screen-fit">
             <div class="text-center mb-10">
                 <span class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase tracking-wider mb-3">Live ERP Connected Services</span>
                 <h2 class="section-title">Student &amp; Parent Self-Service Portal</h2>
@@ -398,14 +428,14 @@
 
             <div class="bg-white rounded-3xl shadow-lg border border-indigo-100 overflow-hidden">
                 <!-- Tabs -->
-                <div class="flex flex-wrap border-b border-indigo-100 bg-[#F8FAFF] p-2 gap-2">
-                    <button id="ptab-results" onclick="switchPortalTab('results')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black bg-brandBlue text-white cursor-pointer">
+                <div class="flex flex-wrap border-b border-indigo-100 bg-[#F8FAFF] p-2.5 gap-2">
+                    <button id="ptab-results" onclick="switchPortalTab('results')" class="portal-tab-btn flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black bg-brandBlue text-white cursor-pointer">
                         <i class="fa-solid fa-award mr-1.5"></i> Check Exam Results
                     </button>
-                    <button id="ptab-hallticket" onclick="switchPortalTab('hallticket')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
+                    <button id="ptab-hallticket" onclick="switchPortalTab('hallticket')" class="portal-tab-btn flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
                         <i class="fa-solid fa-ticket mr-1.5"></i> Download Hall Ticket
                     </button>
-                    <button id="ptab-admission" onclick="switchPortalTab('admission')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
+                    <button id="ptab-admission" onclick="switchPortalTab('admission')" class="portal-tab-btn flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
                         <i class="fa-solid fa-user-check mr-1.5"></i> Track Admission Status
                     </button>
                 </div>
@@ -461,8 +491,8 @@
 
                     <!-- Panel 3: Admission Status -->
                     <div id="portal-panel-admission" class="portal-panel hidden space-y-6">
-                        <form id="admission-lookup-form" class="flex flex-col sm:flex-row gap-3 max-w-lg">
-                            <input id="adm-phone" required type="text" placeholder="Enter Registered Mobile Number (e.g. 9876543210)" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
+                        <form id="admission-lookup-form" class="flex flex-col sm:flex-row gap-3 max-w-xl">
+                            <input id="adm-phone" required type="text" placeholder="Enter Registered Mobile Number (e.g. 9502924437)" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
                             <button type="submit" class="px-6 py-2.5 rounded-xl bg-brandOrange hover:bg-orange-600 text-white text-xs font-black cursor-pointer">
                                 Check Status
                             </button>
@@ -476,17 +506,21 @@
 
     <!-- MISSION, VISION & PRINCIPAL MESSAGE -->
     <section id="mission" class="py-14 sm:py-16 bg-white">
-        <div class="max-w-7xl mx-auto container-pad space-y-10">
+        <div class="screen-fit space-y-10">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="p-6 sm:p-7 rounded-3xl bg-[#F8FAFF] border border-indigo-100 hover-lift">
-                    <span class="text-xs font-black text-brandOrange uppercase">What We Do</span>
+                <div class="p-6 sm:p-8 rounded-3xl bg-[#F8FAFF] border border-indigo-100 hover-lift">
+                    <span class="text-xs font-black text-brandOrange uppercase tracking-wider">What We Do</span>
                     <h3 class="text-xl font-black text-slate-900 mt-1 mb-3">Our Mission</h3>
-                    <p id="mission-text" class="text-sm text-slate-600 leading-relaxed"></p>
+                    <p id="mission-text" class="text-sm text-slate-600 leading-relaxed">
+                        To nurture curious learners into confident, disciplined, and compassionate achievers through conceptual clarity, IIT-JEE / NEET foundation coaching, moral values, and modern digital learning systems.
+                    </p>
                 </div>
-                <div class="p-6 sm:p-7 rounded-3xl bg-[#FFFBEB] border border-amber-200/80 hover-lift">
-                    <span class="text-xs font-black text-brandBlue uppercase">Where We're Headed</span>
+                <div class="p-6 sm:p-8 rounded-3xl bg-[#FFFBEB] border border-amber-200/80 hover-lift">
+                    <span class="text-xs font-black text-brandBlue uppercase tracking-wider">Where We're Headed</span>
                     <h3 class="text-xl font-black text-slate-900 mt-1 mb-3">Our Vision</h3>
-                    <p id="vision-text" class="text-sm text-slate-600 leading-relaxed"></p>
+                    <p id="vision-text" class="text-sm text-slate-600 leading-relaxed">
+                        To be a benchmark school in Andhra Pradesh delivering holistic academic excellence, competitive exam readiness, smart classroom innovation, and individual mentorship for every student.
+                    </p>
                 </div>
             </div>
 
@@ -503,18 +537,39 @@
 
     <!-- PROGRAMS SECTION -->
     <section id="programs" class="py-14 sm:py-16 bg-[#F8FAFC]">
-        <div class="max-w-7xl mx-auto container-pad">
+        <div class="screen-fit">
             <div class="text-center mb-10">
                 <span class="px-4 py-1 rounded-full bg-orange-100 text-brandOrange text-[11px] font-black uppercase">Academic Excellence</span>
                 <h2 class="section-title mt-3">Programs We Offer</h2>
             </div>
-            <div id="programs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
+            <div id="programs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-3xl p-6 text-center hover-lift">
+                    <div class="w-14 h-14 mx-auto bg-brandBlue rounded-2xl flex items-center justify-center text-white mb-4 shadow-md"><i class="fa-solid fa-child-reaching text-xl"></i></div>
+                    <h3 class="text-base font-black text-slate-900 mb-2">Pre-Primary &amp; Primary</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Joyful activity-based foundation for Nursery, LKG, UKG &amp; Classes I–V focusing on reading, numeracy, and communication.</p>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-3xl p-6 text-center hover-lift">
+                    <div class="w-14 h-14 mx-auto bg-brandOrange rounded-2xl flex items-center justify-center text-white mb-4 shadow-md"><i class="fa-solid fa-book-open-reader text-xl"></i></div>
+                    <h3 class="text-base font-black text-slate-900 mb-2">High School (VI – X)</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Concept-driven State Board / SSC curriculum with weekly slip tests, CCE assessments, and 100% Board exam mentorship.</p>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-100 rounded-3xl p-6 text-center hover-lift">
+                    <div class="w-14 h-14 mx-auto bg-emerald-600 rounded-2xl flex items-center justify-center text-white mb-4 shadow-md"><i class="fa-solid fa-atom text-xl"></i></div>
+                    <h3 class="text-base font-black text-slate-900 mb-2">IIT-JEE &amp; NEET Foundation</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Structured Maths, Physics, Chemistry &amp; Biology foundation with OMR &amp; CBT mock tests starting from Class VI.</p>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-fuchsia-50 border border-purple-100 rounded-3xl p-6 text-center hover-lift">
+                    <div class="w-14 h-14 mx-auto bg-purple-600 rounded-2xl flex items-center justify-center text-white mb-4 shadow-md"><i class="fa-solid fa-trophy text-xl"></i></div>
+                    <h3 class="text-base font-black text-slate-900 mb-2">Navodaya &amp; Olympiads</h3>
+                    <p class="text-xs text-slate-600 leading-relaxed">Dedicated coaching for JNVST, Sainik School entrance, Mental Ability, and National Science &amp; Maths Olympiads.</p>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- TOPPERS HALL OF FAME + FACULTY DIRECTORY -->
     <section id="toppers-section" class="py-14 sm:py-16 bg-white hidden">
-        <div class="max-w-7xl mx-auto container-pad space-y-12">
+        <div class="screen-fit space-y-12">
             <div id="toppers-block" class="hidden">
                 <div class="text-center mb-8">
                     <span class="px-4 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-black uppercase">Merit &amp; Pride</span>
@@ -535,31 +590,83 @@
 
     <!-- CAMPUS VIDEOS & PHOTO GALLERY -->
     <section id="media-showcase" class="py-14 sm:py-16 bg-[#F4F7FC]">
-        <div class="max-w-7xl mx-auto container-pad">
+        <div class="screen-fit">
             <div class="text-center mb-10">
                 <span class="px-4 py-1 rounded-full bg-violet-100 text-violet-700 text-[11px] font-black uppercase">Campus Life &amp; Tour</span>
                 <h2 class="section-title mt-2">Videos &amp; Campus Gallery</h2>
             </div>
-            <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+            <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift">
+                    <img src="./image.png" alt="SVL Paradise Campus" class="w-full h-52 object-cover">
+                    <div class="p-4">
+                        <span class="text-[10px] font-black uppercase text-sky-700">Campus Infrastructure</span>
+                        <h4 class="font-black text-slate-900 text-sm mt-0.5">SVL Paradise Academic Block</h4>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift flex flex-col justify-between p-6 bg-gradient-to-br from-indigo-50 to-white">
+                    <div class="w-12 h-12 rounded-2xl bg-brandBlue text-white flex items-center justify-center mb-4"><i class="fa-solid fa-flask text-lg"></i></div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase text-brandBlue">Laboratories &amp; Smart Class</span>
+                        <h4 class="font-black text-slate-900 text-base mt-1">Modern Science &amp; Computer Labs</h4>
+                        <p class="text-xs text-slate-600 mt-1">Hands-on Physics, Chemistry &amp; Digital CBT Practice Computer Lab for students.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift flex flex-col justify-between p-6 bg-gradient-to-br from-emerald-50 to-white">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center mb-4"><i class="fa-solid fa-shield-halved text-lg"></i></div>
+                    <div>
+                        <span class="text-[10px] font-black uppercase text-emerald-700">Safety &amp; Transport</span>
+                        <h4 class="font-black text-slate-900 text-base mt-1">CCTV Monitored Campus &amp; Buses</h4>
+                        <p class="text-xs text-slate-600 mt-1">Safe, verified school transport routes with dedicated crew and parent notifications.</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- CIRCULARS, SYLLABUS & DOWNLOADS HUB -->
     <section id="downloads-hub" class="py-14 sm:py-16 bg-white">
-        <div class="max-w-7xl mx-auto container-pad">
+        <div class="screen-fit">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3">
                 <div>
                     <span class="px-4 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase">Official Repository</span>
                     <h2 class="section-title mt-2">Circulars, Syllabus &amp; Downloads</h2>
                 </div>
+                <a href="#student-portals" class="text-xs font-black text-brandBlue hover:underline">
+                    Looking for Hall Tickets or Marks? Visit Portal &rarr;
+                </a>
             </div>
-            <div id="downloads-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="downloads-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="http://66.116.252.191:19999/apply" class="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100 hover-lift flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="px-2 py-0.5 rounded bg-indigo-50 text-brandBlue text-[10px] font-black">ADMISSIONS</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-1 truncate">2027–2028 Online Admission Application</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Nursery to Class X • Apply Online</p>
+                    </div>
+                    <span class="w-10 h-10 rounded-xl bg-brandBlue text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-arrow-right"></i></span>
+                </a>
+                <a href="#student-portals" onclick="switchPortalTab('results')" class="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100 hover-lift flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-black">EXAMINATIONS</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-1 truncate">Published Exam Results &amp; Score Cards</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Verify using Roll No &amp; DOB</p>
+                    </div>
+                    <span class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-award"></i></span>
+                </a>
+                <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100 hover-lift flex items-center justify-between gap-3">
+                    <div class="min-w-0">
+                        <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-black">ADMIT CARDS</span>
+                        <h4 class="font-bold text-slate-900 text-sm mt-1 truncate">Download Student Hall Tickets</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Instant Printable Official Hall Ticket</p>
+                    </div>
+                    <span class="w-10 h-10 rounded-xl bg-brandOrange text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-ticket"></i></span>
+                </a>
+            </div>
         </div>
     </section>
 
     <!-- ADMISSIONS CTA BANNER -->
     <section class="py-12 sm:py-14 bg-gradient-to-r from-brandOrange to-amber-500 text-white">
-        <div class="max-w-7xl mx-auto container-pad flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+        <div class="screen-fit flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             <div>
                 <h2 id="admissions-heading" class="text-2xl sm:text-3xl font-black">ADMISSIONS OPEN FOR 2027 – 2028</h2>
                 <p class="text-white/90 text-sm mt-1">Limited seats available! Register online for academic counseling &amp; admission assessment.</p>
@@ -572,78 +679,128 @@
 
     <!-- NEWS & TESTIMONIALS -->
     <section class="py-14 sm:py-16 bg-[#F8FAFC]">
-        <div class="max-w-7xl mx-auto container-pad space-y-14">
+        <div class="screen-fit space-y-14">
             <div>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mb-6">Latest Campus News &amp; Events</h2>
-                <div id="news-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div id="news-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-3xl p-6 border border-indigo-100 shadow-xs hover-lift">
+                        <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-brandBlue text-[10px] font-black">ADMISSIONS</span>
+                        <h3 class="text-base font-black text-slate-900 mt-3 mb-2">Admissions Open for Academic Year 2027–28</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">Registrations open for Nursery to Class X along with IIT-JEE, NEET &amp; Navodaya foundation batches.</p>
+                        <span class="text-[11px] font-bold text-slate-400">SVL Paradise Campus</span>
+                    </div>
+                    <div class="bg-white rounded-3xl p-6 border border-indigo-100 shadow-xs hover-lift">
+                        <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black">DIGITAL ERP</span>
+                        <h3 class="text-base font-black text-slate-900 mt-3 mb-2">Live Parent Portal &amp; Instant Marks Memos</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">Parents can now verify FA/SA marks, attendance, homework, and fee receipts directly from web &amp; mobile app.</p>
+                        <span class="text-[11px] font-bold text-slate-400">JY School Tech</span>
+                    </div>
+                    <div class="bg-white rounded-3xl p-6 border border-indigo-100 shadow-xs hover-lift">
+                        <span class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black">MOCK EXAMS</span>
+                        <h3 class="text-base font-black text-slate-900 mt-3 mb-2">Weekly OMR &amp; CBT Competitive Practice</h3>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">Structured weekly objective assessments help students master speed, accuracy, and exam confidence.</p>
+                        <span class="text-[11px] font-bold text-slate-400">Academic Cell</span>
+                    </div>
+                </div>
             </div>
             <div>
                 <h2 class="text-xl sm:text-2xl font-black text-slate-900 mb-6">Parent &amp; Alumni Testimonials</h2>
-                <div id="testimonials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+                <div id="testimonials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs hover-lift">
+                        <div class="text-amber-400 text-xs mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-xs text-slate-600 italic leading-relaxed mb-4">"Teachers give personal care to every child. Regular tests and the parent app keep us updated on daily homework and progress."</p>
+                        <h4 class="font-black text-slate-900 text-sm">Srinivas Rao</h4>
+                        <p class="text-[11px] text-slate-500">Parent of Class IX Student</p>
+                    </div>
+                    <div class="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs hover-lift">
+                        <div class="text-amber-400 text-xs mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-xs text-slate-600 italic leading-relaxed mb-4">"The IIT-JEE &amp; Navodaya foundation coaching helped my daughter build strong Maths and Science fundamentals right from 6th class."</p>
+                        <h4 class="font-black text-slate-900 text-sm">Lakshmi Narayana</h4>
+                        <p class="text-[11px] text-slate-500">Parent of Class VII Student</p>
+                    </div>
+                    <div class="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs hover-lift">
+                        <div class="text-amber-400 text-xs mb-3"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                        <p class="text-xs text-slate-600 italic leading-relaxed mb-4">"Clean campus, disciplined atmosphere, and dedicated faculty. Very proud of our school's consistent board results."</p>
+                        <h4 class="font-black text-slate-900 text-sm">Padmavathi Devi</h4>
+                        <p class="text-[11px] text-slate-500">Parent of Class X Topper</p>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- CONTACT & GOOGLE MAP -->
     <section id="contact-section" class="py-14 sm:py-16 bg-white border-t border-indigo-100">
-        <div class="max-w-7xl mx-auto container-pad grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        <div class="screen-fit grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div class="space-y-4">
                 <span class="px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase">Visit Campus</span>
                 <h2 class="section-title">Get in Touch With Admissions Office</h2>
                 <div class="space-y-3 text-sm text-slate-700 pt-2">
-                    <p class="flex items-start gap-3"><i class="fa-solid fa-location-dot text-brandOrange mt-1 shrink-0"></i> <span id="contact-address-val"></span></p>
-                    <p class="flex items-center gap-3"><i class="fa-solid fa-phone text-brandBlue shrink-0"></i> <a id="contact-phone-val" href="#" class="font-bold"></a></p>
-                    <p class="flex items-center gap-3"><i class="fa-solid fa-envelope text-emerald-600 shrink-0"></i> <a id="contact-email-val" href="#" class="font-bold break-all"></a></p>
+                    <p class="flex items-start gap-3"><i class="fa-solid fa-location-dot text-brandOrange mt-1 shrink-0"></i> <span id="contact-address-val">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, Srikakulam Dist., AP</span></p>
+                    <p class="flex items-center gap-3"><i class="fa-solid fa-phone text-brandBlue shrink-0"></i> <a id="contact-phone-val" href="tel:+919502924437" class="font-bold">+91 95029 24437</a></p>
+                    <p class="flex items-center gap-3"><i class="fa-solid fa-envelope text-emerald-600 shrink-0"></i> <a id="contact-email-val" href="mailto:info@svjyschool.edu.in" class="font-bold break-all">info@svjyschool.edu.in</a></p>
+                </div>
+                <div class="pt-2 flex flex-wrap gap-3">
+                    <a href="https://wa.me/919502924437?text=Hello!%20I%20am%20contacting%20from%20the%20JY%20School%20website%20regarding%20admissions." target="_blank" rel="noopener"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-black shadow-sm transition">
+                        <i class="fa-brands fa-whatsapp text-base"></i> Chat on WhatsApp
+                    </a>
+                    <a href="http://66.116.252.191:19999/apply"
+                       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-brandBlue hover:bg-blue-900 text-white text-xs font-black shadow-sm transition">
+                        Apply Online <i class="fa-solid fa-arrow-right"></i>
+                    </a>
                 </div>
             </div>
-            <div id="map-container" class="rounded-3xl overflow-hidden border border-indigo-100 shadow-sm h-64 sm:h-72 bg-[#EEF2FF] flex items-center justify-center text-xs font-bold text-slate-500">
-                Campus Map (Configure Embed URL in Website CMS)
+            <div id="map-container" class="rounded-3xl overflow-hidden border border-indigo-100 shadow-sm h-64 sm:h-72 bg-[#EEF2FF] flex flex-col items-center justify-center text-center p-6 text-xs font-bold text-slate-600 gap-2">
+                <i class="fa-solid fa-map-location-dot text-3xl text-brandBlue"></i>
+                <span>SVL Paradise Campus, Opp. Hero Showroom, Narasannapeta</span>
+                <span class="text-[11px] font-medium text-slate-400">Google Map Embed can also be updated anytime from Website CMS</span>
             </div>
         </div>
     </section>
 
-    <!-- FOOTER -->
-    <footer class="bg-brandNavy text-blue-100 pt-12 sm:pt-14 pb-8">
-        <div class="max-w-7xl mx-auto container-pad">
+    <!-- LIGHT PASTEL INSTITUTIONAL FOOTER (Strict Light Theme) -->
+    <footer class="bg-gradient-to-b from-[#EEF2FF] to-[#E0E7FF] text-slate-700 border-t border-indigo-200 pt-12 sm:pt-14 pb-8">
+        <div class="screen-fit">
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10 mb-10">
                 <div>
                     <div class="flex items-center gap-3 mb-4">
-                        <img src="./logo_.png" alt="Logo" class="w-11 h-11 object-contain bg-white rounded-xl p-1">
+                        <img src="./logo_.png" alt="Logo" class="w-11 h-11 object-contain bg-white rounded-xl p-1 shadow-xs border border-indigo-100">
                         <div>
-                            <span class="block text-xs font-bold text-blue-200">SRI VENKATESWARA</span>
+                            <span class="block text-xs font-bold text-brandBlue">SRI VENKATESWARA</span>
                             <span class="block text-lg font-black text-brandOrange uppercase">JY School</span>
                         </div>
                     </div>
-                    <p class="text-xs text-blue-200/80 leading-relaxed">Empowering students with IIT-JEE / NEET foundation, values, and future-ready skills.</p>
+                    <p class="text-xs text-slate-600 leading-relaxed">Empowering students with IIT-JEE / NEET foundation, academic discipline, moral values, and future-ready digital skills.</p>
                 </div>
                 <div>
-                    <h4 class="text-sm font-black text-white mb-4">Academics &amp; Portals</h4>
-                    <ul id="footer-links-list" class="space-y-2 text-xs">
-                        <li><a href="#student-portals" class="hover:text-brandOrange transition-colors">Exam Results &amp; Hall Tickets</a></li>
-                        <li><a href="http://66.116.252.191:19999/apply" class="hover:text-brandOrange transition-colors">Online Admissions</a></li>
-                        <li><a href="#downloads-hub" class="hover:text-brandOrange transition-colors">Circulars &amp; Syllabus PDFs</a></li>
-                        <li><a href="http://66.116.252.191:19999/login" class="hover:text-brandOrange transition-colors">ERP Login</a></li>
+                    <h4 class="text-sm font-black text-slate-900 mb-4">Academics &amp; Portals</h4>
+                    <ul id="footer-links-list" class="space-y-2 text-xs font-semibold text-slate-600">
+                        <li><a href="#student-portals" class="hover:text-brandBlue transition-colors">Exam Results &amp; Hall Tickets</a></li>
+                        <li><a href="http://66.116.252.191:19999/apply" class="hover:text-brandBlue transition-colors">Online Admissions</a></li>
+                        <li><a href="#downloads-hub" class="hover:text-brandBlue transition-colors">Circulars &amp; Syllabus PDFs</a></li>
+                        <li><a href="http://66.116.252.191:19999/login" class="hover:text-brandBlue transition-colors">Student / Staff ERP Login</a></li>
                     </ul>
                 </div>
                 <div>
-                    <h4 class="text-sm font-black text-white mb-4">Connect</h4>
-                    <p id="footer-address" class="text-xs text-blue-200/90 mb-3 leading-relaxed"></p>
+                    <h4 class="text-sm font-black text-slate-900 mb-4">Connect With Us</h4>
+                    <p id="footer-address" class="text-xs text-slate-600 mb-3 leading-relaxed">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</p>
                     <div class="flex gap-2.5">
-                        <a id="social-facebook-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-facebook-f text-xs"></i></a>
-                        <a id="social-instagram-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-instagram text-xs"></i></a>
-                        <a id="social-youtube-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-youtube text-xs"></i></a>
+                        <a id="social-facebook-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white border border-indigo-200 text-brandBlue flex items-center justify-center hover:bg-brandBlue hover:text-white transition-colors"><i class="fa-brands fa-facebook-f text-xs"></i></a>
+                        <a id="social-instagram-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white border border-indigo-200 text-rose-600 flex items-center justify-center hover:bg-rose-600 hover:text-white transition-colors"><i class="fa-brands fa-instagram text-xs"></i></a>
+                        <a id="social-youtube-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white border border-indigo-200 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-colors"><i class="fa-brands fa-youtube text-xs"></i></a>
                     </div>
                 </div>
             </div>
-            <div class="border-t border-white/15 pt-6 text-center text-xs text-blue-200/70">
+            <div class="border-t border-indigo-200 pt-6 text-center text-xs font-semibold text-slate-500">
                 &copy; 2026 SRI VENKATESWARA JY SCHOOL. All Rights Reserved.
             </div>
         </div>
     </footer>
 
     <!-- Floating WhatsApp -->
-    <a id="whatsapp-float" href="#" target="_blank" rel="noopener"
-       class="hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl flex items-center justify-center text-2xl transition-transform hover:scale-110">
+    <a id="whatsapp-float" href="https://wa.me/919502924437?text=Hello!%20I%20am%20contacting%20from%20JY%20School%20website." target="_blank" rel="noopener"
+       class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl flex items-center justify-center text-2xl transition-transform hover:scale-110">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
@@ -677,7 +834,6 @@
     </div>
 
     <script>
-        // ===== MOBILE HAMBURGER MENU =====
         document.addEventListener('DOMContentLoaded', () => {
             const btn  = document.getElementById('mobile-menu-btn');
             const menu = document.getElementById('mobile-menu');
@@ -687,7 +843,6 @@
                     const isOpen = menu.classList.toggle('open');
                     icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
                 });
-                // Close mobile menu when any menu link is clicked
                 menu.querySelectorAll('a').forEach(link => {
                     link.addEventListener('click', () => {
                         menu.classList.remove('open');

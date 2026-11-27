@@ -1,4 +1,15 @@
-const API_BASE = 'http://66.116.252.191:19998';
+// Use relative path on HTTPS (Vercel rewrites /api/* and /uploads/* to VPS) to avoid Mixed Content blocks
+const API_BASE = window.location.protocol === 'https:' ? '' : 'http://66.116.252.191:19998';
+
+const resolveMediaUrl = (url) => {
+    if (!url) return '';
+    const s = String(url).trim();
+    if (s.startsWith('/')) return `${API_BASE}${s}`;
+    if (window.location.protocol === 'https:' && s.startsWith('http://66.116.252.191:19998/')) {
+        return s.replace('http://66.116.252.191:19998', '');
+    }
+    return s;
+};
 
 const esc = (str) => {
     if (str === null || str === undefined) return '';
@@ -49,7 +60,7 @@ window.openCustomPage = (slug) => {
     document.getElementById('cp-content').textContent = page.content || '';
     const pdfBtn = document.getElementById('cp-pdf-btn');
     if (page.pdfUrl) {
-        pdfBtn.href = page.pdfUrl;
+        pdfBtn.href = resolveMediaUrl(page.pdfUrl);
         pdfBtn.classList.remove('hidden');
     } else {
         pdfBtn.classList.add('hidden');
@@ -130,7 +141,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (settings.heroSubtitle) document.getElementById('hero-subtitle').textContent = settings.heroSubtitle;
             if (settings.heroTitle) document.getElementById('hero-title').textContent = settings.heroTitle;
             if (settings.heroDescription) document.getElementById('hero-description').textContent = settings.heroDescription;
-            if (settings.heroImageUrl) document.getElementById('hero-image').src = settings.heroImageUrl;
+            if (settings.heroImageUrl) document.getElementById('hero-image').src = resolveMediaUrl(settings.heroImageUrl);
             if (settings.heroVideoUrl) document.getElementById('hero-video-btn')?.classList.remove('hidden');
 
             document.getElementById('admissions-heading').textContent = `${settings.admissionsBannerTitle || 'ADMISSIONS OPEN FOR'} ${settings.admissionsYear || '2027 – 2028'}`;
@@ -141,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 document.getElementById('principal-section')?.classList.remove('hidden');
                 document.getElementById('principal-name').textContent = settings.principalName || 'Principal';
                 document.getElementById('principal-message').textContent = `"${settings.principalMessage}"`;
-                if (settings.principalPhotoUrl) document.getElementById('principal-photo').src = settings.principalPhotoUrl;
+                if (settings.principalPhotoUrl) document.getElementById('principal-photo').src = resolveMediaUrl(settings.principalPhotoUrl);
             }
 
             if (settings.contactPhone) {
@@ -211,18 +222,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const downloadsGrid = document.getElementById('downloads-grid');
-        if (downloadsGrid) {
-            downloadsGrid.innerHTML = (downloads && downloads.length > 0)
-                ? downloads.map(d => `
-                    <a href="${esc(d.fileUrl)}" target="_blank" rel="noopener" class="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100 hover-lift flex items-center justify-between gap-3">
+        if (downloadsGrid && Array.isArray(downloads) && downloads.length > 0) {
+            downloadsGrid.innerHTML = downloads.map(d => `
+                    <a href="${esc(resolveMediaUrl(d.fileUrl))}" target="_blank" rel="noopener" class="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100 hover-lift flex items-center justify-between gap-3">
                         <div class="min-w-0">
                             <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-black">${esc(d.category)}</span>
                             <h4 class="font-bold text-slate-900 text-sm mt-1 truncate">${esc(d.title)}</h4>
                             <p class="text-[11px] text-slate-500 mt-0.5">${new Date(d.publishDate).toLocaleDateString('en-IN')}</p>
                         </div>
                         <span class="w-10 h-10 rounded-xl bg-brandBlue text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-download"></i></span>
-                    </a>`).join('')
-                : '<p class="col-span-full text-center text-sm text-slate-400 py-6">No circulars published yet.</p>';
+                    </a>`).join('');
         }
 
         // 4. Exam Dropdowns for Self-Service Portals
@@ -239,7 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 5. Stats, Programs, Toppers, Faculty, Videos/Photos, News, Testimonials
         const statsGrid = document.getElementById('stats-grid');
-        if (statsGrid && Array.isArray(stats)) {
+        if (statsGrid && Array.isArray(stats) && stats.length > 0) {
             statsGrid.innerHTML = stats.map((st, idx) => `
                 <div class="${STAT_COLOR_CLASSES[st.color] || `stat-card-${(idx % 5) + 1}`} rounded-2xl p-6 text-center text-white hover-lift">
                     <i class="fa-solid ${esc(st.icon || 'fa-star')} text-2xl mb-2 opacity-90"></i>
@@ -249,7 +258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const programsGrid = document.getElementById('programs-grid');
-        if (programsGrid && Array.isArray(programs)) {
+        if (programsGrid && Array.isArray(programs) && programs.length > 0) {
             programsGrid.innerHTML = programs.map(p => {
                 const th = PROGRAM_STYLE_MAP[p.color] || PROGRAM_STYLE_MAP.blue;
                 return `
@@ -285,13 +294,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const mediaGrid = document.getElementById('media-grid');
-        if (mediaGrid) {
-            mediaGrid.innerHTML = (media && media.length > 0)
-                ? media.map(m => {
+        if (mediaGrid && Array.isArray(media) && media.length > 0) {
+            mediaGrid.innerHTML = media.map(m => {
                     if (m.mediaType === 'VIDEO') {
-                        const thumb = m.thumbnailUrl || getYoutubeThumb(m.url);
+                        const thumb = resolveMediaUrl(m.thumbnailUrl) || getYoutubeThumb(m.url);
                         return `
-                            <div onclick="openVideoModal('${esc(m.title)}', '${esc(m.url)}')" class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift cursor-pointer group">
+                            <div onclick="openVideoModal('${esc(m.title)}', '${esc(resolveMediaUrl(m.url))}')" class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift cursor-pointer group">
                                 <div class="relative h-48 bg-indigo-900 flex items-center justify-center">
                                     ${thumb ? `<img src="${esc(thumb)}" class="w-full h-full object-cover opacity-85">` : ''}
                                     <div class="absolute w-14 h-14 rounded-full bg-rose-600 text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform"><i class="fa-solid fa-play text-lg ml-0.5"></i></div>
@@ -304,18 +312,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     return `
                         <div class="bg-white rounded-3xl overflow-hidden border border-indigo-100 shadow-xs hover-lift">
-                            <img src="${esc(m.url)}" class="w-full h-48 object-cover">
+                            <img src="${esc(resolveMediaUrl(m.url))}" class="w-full h-48 object-cover">
                             <div class="p-4">
                                 <span class="text-[10px] font-black uppercase text-sky-700">${esc(m.category)}</span>
                                 <h4 class="font-black text-slate-900 text-sm mt-0.5">${esc(m.title)}</h4>
                             </div>
                         </div>`;
-                }).join('')
-                : '<p class="col-span-full text-center text-sm text-slate-400 py-8">No campus videos or gallery photos uploaded yet.</p>';
+                }).join('');
         }
 
         const newsGrid = document.getElementById('news-grid');
-        if (newsGrid && Array.isArray(news)) {
+        if (newsGrid && Array.isArray(news) && news.length > 0) {
             newsGrid.innerHTML = news.map(n => `
                 <div class="bg-white rounded-3xl p-6 border border-indigo-100 shadow-xs hover-lift">
                     <span class="px-2.5 py-1 rounded-full bg-indigo-50 text-brandBlue text-[10px] font-black">${esc(n.tag)}</span>
@@ -326,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         const testimonialsGrid = document.getElementById('testimonials-grid');
-        if (testimonialsGrid && Array.isArray(testimonials)) {
+        if (testimonialsGrid && Array.isArray(testimonials) && testimonials.length > 0) {
             testimonialsGrid.innerHTML = testimonials.map(t => `
                 <div class="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs hover-lift">
                     <div class="text-amber-400 text-xs mb-3">${'<i class="fa-solid fa-star"></i>'.repeat(Math.min(5, t.rating || 5))}</div>

@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Website Full Screen-Fit, Content-Rich Redesign & HTTPS Proxy Fix (November 27, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/cms.js`, `Website/vercel.json`)**:
+  - **Screen-Fit Layout (`.screen-fit`)**: `max-width: 1560px` తో డెస్క్‌టాప్/ల్యాప్‌టాప్‌లో పక్కల అనవసర ఖాళీ స్థలం లేకుండా మరియు మొబైల్/ట్యాబ్లెట్ లో పూర్తిగా స్క్రీన్‌కి ఫిట్ అయ్యేలా అప్‌గ్రేడ్ చేశాము.
+  - **Hero & Full Content**: ఎడమవైపు `IIT-JEE & NEET`, `100% Pass Record`, `Smart Digital ERP` హైలైట్ కార్డులు, కుడివైపు క్యాంపస్ ఫోటోపై ఫ్లోటింగ్ అడ్మిషన్ బ్యాడ్జ్ పెట్టాము. Stats, Mission, Vision, Programs, Campus Gallery, Downloads, News, Testimonials అన్నీ రిచ్ డిఫాల్ట్ కంటెంట్‌తో నిండుగా ఉంటాయి మరియు లైవ్ CMS డేటా ఉన్నప్పుడు ఆటోమేటిక్‌గా అప్‌డేట్ అవుతాయి.
+  - **HTTPS Mixed Content Fix**: `Website/cms.js` లో `HTTPS` పై ఉన్నప్పుడు రిలేటివ్ `/api/*` (`Website/vercel.json` రీరైట్) వాడేలా చేసి, `/uploads/:path*` రీరైట్ కూడా `vercel.json` లో జోడించాము.
+  - **Light Theme Footer**: డార్క్ నేవీ ఫుటర్‌ను లైట్ పాస్టెల్ (`#EEF2FF → #E0E7FF`) ప్రొఫెషనల్ స్కూల్ ఫుటర్‌గా మార్చాము.
+- **స్టేటస్**: లోకల్‌గా సేవ్ అయింది. GitHub push (Vercel ఆటో-డిప్లాయ్ + VPS pull) చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Login Page 2-Column Content-Filled Redesign & Teacher Exam Module Restrictions (November 27, 2026)
 - **Login Page (`frontend/src/pages/auth/LoginPage.tsx`)**:
   - వేస్ట్ గ్యాప్స్ లేని బ్యాలెన్స్‌డ్ 50/50 2-column లేఅవుట్ (`grid-cols-1 lg:grid-cols-2`).
