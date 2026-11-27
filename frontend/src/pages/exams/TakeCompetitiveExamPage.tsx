@@ -357,10 +357,15 @@ const TakeCompetitiveExamPage = () => {
         totalTimeTaken
       });
 
-      const submissionId = res.data?.submissionId || res.data?.data?.id;
-      toast.success("Exam submitted successfully!");
       sessionStorage.removeItem(`exam_running_${id}`);
       exitFullScreen();
+      if (res.data?.isPreview) {
+        toast.success(res.data?.message || `Staff Preview Completed! Score: ${res.data?.previewScore ?? 0}`);
+        navigate('/competitive-exams', { replace: true });
+        return;
+      }
+      const submissionId = res.data?.submissionId || res.data?.data?.id;
+      toast.success("Exam submitted successfully!");
       navigate(`/competitive-exam-result/${id}${submissionId ? `?submissionId=${submissionId}` : ''}`, { replace: true });
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to submit exam. Please contact admin.");

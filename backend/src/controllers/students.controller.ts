@@ -534,17 +534,50 @@ export const changeClass = async (req: AuthRequest, res: Response, next: NextFun
 
 export const deleteStudent = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const id = req.params.id as string;
-  const student = await prisma.student.findUnique({ where: { id } });
+  const student = await prisma.student.findUnique({
+    where: { id },
+    include: { user: { select: { id: true, role: true } } },
+  });
   if (!student) return next(createError('Student not found', 404));
 
   try {
-    await prisma.$transaction([
-      prisma.attendance.deleteMany({ where: { studentId: id } }),
-      prisma.mark.deleteMany({ where: { studentId: id } }),
-      prisma.feePayment.deleteMany({ where: { studentId: id } }),
-      prisma.student.deleteMany({ where: { id } }),
-      prisma.user.deleteMany({ where: { id: student.userId } }),
-    ]);
+    // Clean optional raw-table CBT sessions if table exists
+    await prisma.$executeRawUnsafe(
+      `DELETE FROM "CompetitiveExamSession" WHERE "studentId" = $1`,
+      id
+    ).catch(() => {});
+
+    await prisma.$transaction(async (tx) => {
+      await tx.attendance.deleteMany({ where: { studentId: id } });
+      await tx.mark.deleteMany({ where: { studentId: id } });
+      await tx.slipTestMark.deleteMany({ where: { studentId: id } });
+      await tx.feePayment.deleteMany({ where: { studentId: id } });
+      await tx.feeDiscount.deleteMany({ where: { studentId: id } });
+      await tx.feeStructure.deleteMany({ where: { studentId: id } });
+      await tx.gatePass.deleteMany({ where: { studentId: id } });
+      await tx.studentTransport.deleteMany({ where: { studentId: id } });
+      await tx.onlineExamSubmission.deleteMany({ where: { studentId: id } });
+      await tx.competitiveExamSubmission.deleteMany({ where: { studentId: id } });
+      await tx.student.deleteMany({ where: { id } });
+
+      // Only delete the linked User account if it is actually a STUDENT user (never delete SUPER_ADMIN/ADMIN/TEACHER users!)
+      if (student.user && student.user.role === 'STUDENT' && student.userId !== req.user?.id) {
+        await tx.auditLog.deleteMany({ where: { userId: student.userId } });
+        await tx.message.deleteMany({
+          where: { OR: [{ senderId: student.userId }, { receiverId: student.userId }] },
+        });
+        await tx.gatePass.deleteMany({
+          where: { OR: [{ requesterId: student.userId }, { approvedById: student.userId }] },
+        });
+        await tx.announcementRead.deleteMany({ where: { userId: student.userId } });
+        await tx.notification.deleteMany({ where: { userId: student.userId } });
+        await tx.pushSubscription.deleteMany({ where: { userId: student.userId } });
+        await tx.leaveBalance.deleteMany({ where: { userId: student.userId } });
+        await tx.leaveRequest.deleteMany({ where: { userId: student.userId } });
+        await tx.user.deleteMany({ where: { id: student.userId } });
+      }
+    });
+
     cache.delPattern('students:list:*');
     cache.delPattern('student:*');
     cache.delPattern('class:students:*');

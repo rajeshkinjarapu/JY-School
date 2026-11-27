@@ -1,5 +1,24 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Gemini 429 Free Tier Quota Fallback (`gemini-2.5-flash-lite`) & Clean Diagnostics (November 27, 2026)
+- **సమస్య:** MCQ Paper Generator `AI Gen` లో Google Gemini API `429 RESOURCE_EXHAUSTED` (Free Tier daily limit exceeded — retry in 2h 50m) ఎర్రర్ వస్తోంది.
+- **పరిష్కారం ([gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts)):**
+  - ఎక్కువ Free Tier RPD కోటా ఉన్న **`gemini-2.5-flash-lite`** ను అదనపు ఫాల్‌బ్యాక్ మోడల్‌గా జత చేశాము (`gemini-3.8-flash`, `gemini-3.8-flash-lite`, `gemini-2.5-flash`, `gemini-3-flash-preview`, `gemini-2.5-pro` లతో పాటు).
+  - `extractCompactGeminiError()` ద్వారా raw JSON కు బదులు స్పష్టమైన 429 కోటా / మోడల్ స్టేటస్ (`[model:code]`) చూపించేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Prevent Fake `ATTEMPT-*` Student Creation on Staff Exam Preview Submit (November 27, 2026)
+- **సమస్య / సందేహం:** ఆన్‌లైన్ టెస్ట్ ప్రయత్నించినప్పుడు క్రియేట్ అయిన `JY SCHOOL (ATTEMPT-8745)` విద్యార్థుల జాబితాలో ఎందుకు కనిపిస్తోంది?
+- **కారణం & పరిష్కారం:**
+  - [competitiveExams.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts): `submitCompetitiveExam` లో పాత కోడ్ ప్రకారం Admin/Staff టెస్ట్ ప్రివ్యూ Submit చేసినప్పుడు `rollNo: ATTEMPT-xxxx` తో ఒక నకిలీ `Student` రో క్రియేట్ అయ్యేది (లేదా మొదటి విద్యార్థి ఖాతాలోకి సేవ్ అయ్యేది).
+  - ఇప్పుడు `isStaff` (`SUPER_ADMIN`, `ADMIN`, `TEACHER`) Submit చేసినప్పుడు DB లో ఎలాంటి `Student` లేదా `Submission` రో క్రియేట్ చేయకుండా మెమరీలోనే స్కోర్ లెక్కించి `isPreview: true` రిటర్న్ చేసేలా ఫిక్స్ చేశాము.
+  - [TakeCompetitiveExamPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/TakeCompetitiveExamPage.tsx): స్టాఫ్ ప్రివ్యూ Submit తర్వాత ప్రివ్యూ స్కోర్ చూపించి `/competitive-exams` కు వెళ్ళేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Fix 500 Error on Student Delete in Settings (`ATTEMPT-*` & Foreign Keys) (November 27, 2026)
+- **సమస్య:** Settings -> Delete Records లో `JY SCHOOL (Roll: ATTEMPT-8745)` లేదా ఫీజు/గేట్‌పాస్/స్లిప్‌టెస్ట్ రికార్డులు ఉన్న విద్యార్థిని డిలీట్ చేసినప్పుడు `Request failed with status code 500` వస్తోంది (`AuditLog`, `FeeStructure`, `GatePass`, `SlipTestMark`, `CompetitiveExamSession` మొదలైన foreign key ల వల్ల, మరియు `ATTEMPT-*` టెస్ట్ రికార్డు `SUPER_ADMIN` User ID కి లింక్ అయి ఉండటం వల్ల!).
+- **పరిష్కారం:**
+  - [students.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/students.controller.ts): `deleteStudent` లో అన్ని సంబంధిత టేబుల్స్ (`slipTestMark`, `feeDiscount`, `feeStructure`, `gatePass`, `studentTransport`, `onlineExamSubmission`, `competitiveExamSubmission`, `CompetitiveExamSession`) శుభ్రంగా డిలీట్ అయ్యేలా అప్‌డేట్ చేశాము; అలాగే `student.user.role === 'STUDENT'` అయితేనే `User` ఖాతా డిలీట్ అయ్యేలా (ఎట్టి పరిస్థితుల్లోనూ `SUPER_ADMIN` / `ADMIN` / `TEACHER` యూజర్లను డిలీట్ చేయకుండా) రక్షణ కల్పించాము.
+  - [DeleteRecordsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/settings/DeleteRecordsTab.tsx): డిలీట్ ఎర్రర్ వచ్చినప్పుడు బ్యాకెండ్ మెసేజ్ స్పష్టంగా చూపించేలా మార్చాము.
+
 ## చివరి సంభాషణ - Paper Settings Database Persistence Fix (`MCQPaperGeneratorPage.tsx`) (November 27, 2026)
 - **సమస్య:** సేవ్ చేసిన పేపర్ (`?id=...&view=settings`) లో Paper Settings మార్చి `Save Settings` / `Save & Open Paper` నొక్కినా, రీఫ్రెష్ లేదా మళ్ళీ ఓపెన్ చేస్తే పాత విలువలకే (`modati stage`) వెళ్లిపోతున్నాయి — ఎందుకంటే `handleSaveSettingsPage` కేవలం `localStorage` లో మాత్రమే సేవ్ చేసి `/api/generated-papers/${paperId}` DB లో `PUT` చేయడం లేదు.
 - **పరిష్కారం ([MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**

@@ -1303,6 +1303,8 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
     const { id } = req.params; // examId
     const { answers, totalTimeTaken } = req.body;
     const studentUserId = (req as any).user?.id;
+    const userRole = ((req as any).user?.role || '').toUpperCase();
+    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole);
 
     const exam = await prisma.competitiveExam.findUnique({
       where: { id },
@@ -1310,36 +1312,39 @@ export const submitCompetitiveExam = async (req: Request, res: Response) => {
     });
     if (!exam) return res.status(404).json({ success: false, message: 'Exam not found' });
 
-    let student = await prisma.student.findUnique({ where: { userId: studentUserId } });
-    if (!student) {
-      student = await prisma.student.findFirst({ where: { userId: studentUserId } });
-    }
-    if (!student) {
-      student = (await prisma.student.findFirst({ where: { classId: exam.classId } })) || (await prisma.student.findFirst());
-    }
-    if (!student) {
-      const defaultClass = await prisma.class.findFirst();
-      student = await prisma.student.create({
-        data: {
-          userId: studentUserId,
-          classId: defaultClass?.id || '',
-          rollNo: `ATTEMPT-${Date.now().toString().slice(-4)}`,
-          admissionDate: new Date()
-        }
-      }).catch(async () => {
-        return await prisma.student.findFirst();
-      });
-    }
-
-    if (!student) {
-      return res.status(400).json({ success: false, message: 'Could not resolve student account for exam submission' });
-    }
-
     await ensureTablesExist();
     const metaMap = await getExamMetaMap([id]);
     const examMeta = metaMap[id] || {};
-    const userRole = ((req as any).user?.role || '').toUpperCase();
-    const isStaff = ['SUPER_ADMIN', 'ADMIN', 'TEACHER'].includes(userRole);
+
+    // Staff Preview Mode: evaluate score in memory ONLY — NEVER create fake ATTEMPT-* Student rows or hijack a real student!
+    if (isStaff) {
+      let previewMarks = 0;
+      const ansMap = new Map<string, any>((answers || []).map((a: any) => [a.questionId, a]));
+      for (const q of exam.questions) {
+        const ans = ansMap.get(q.id);
+        const rawOpt = ans?.selectedOption !== undefined && ans?.selectedOption !== null ? String(ans.selectedOption).trim() : '';
+        const chosenOption = rawOpt !== '' ? rawOpt : null;
+        if (isAnswerMatch(q.correctAnswer, chosenOption, q.options)) {
+          previewMarks += Number(q.marks || examMeta.marksPerQuestion || 4);
+        } else if (chosenOption !== null) {
+          previewMarks -= Number(exam.negativeMarks || 0);
+        }
+      }
+      return res.json({
+        success: true,
+        isPreview: true,
+        previewScore: previewMarks,
+        totalQuestions: exam.questions.length,
+        message: `Preview completed! Score: ${previewMarks} marks`,
+      });
+    }
+
+    const student = await prisma.student.findUnique({ where: { userId: studentUserId } })
+      || await prisma.student.findFirst({ where: { userId: studentUserId } });
+
+    if (!student) {
+      return res.status(400).json({ success: false, message: 'Student profile not found for this account' });
+    }
 
     // Check existing submission & retake permission
     const existing = await prisma.competitiveExamSubmission.findUnique({

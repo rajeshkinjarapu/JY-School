@@ -97,7 +97,7 @@ export const DeleteRecordsTab: React.FC = () => {
       setStudents(students.filter(s => s.id !== studentId));
       DataCache.invalidate('students');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete student');
+      toast.error(error?.response?.data?.message || error?.message || 'Failed to delete student');
     }
   };
 

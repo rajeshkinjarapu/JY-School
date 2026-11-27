@@ -18,15 +18,32 @@ export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
   new Set(
     [
       !isRetiredModel ? envModel : undefined,
+      'gemini-2.5-flash-lite',
       'gemini-3.8-flash',
       'gemini-3.8-flash-lite',
       'gemini-2.5-flash',
-      'gemini-2.5-pro',
-      'gemini-3.0-flash',
       'gemini-3-flash-preview',
+      'gemini-2.5-pro',
     ].filter((m): m is string => Boolean(m && m.trim()))
   )
 );
+
+const extractCompactGeminiError = (err: any): { code: string; shortMsg: string } => {
+  const raw = err?.message || String(err || 'Unknown error');
+  const codeMatch = raw.match(/"code"\s*:\s*(\d+)/) || raw.match(/\b(400|401|403|404|429|500|503)\b/);
+  const code = codeMatch ? codeMatch[1] : String(err?.status || 'ERR');
+  if (code === '429' || /RESOURCE_EXHAUSTED|quota|rate/i.test(raw)) {
+    const retryMatch = raw.match(/retry in ([0-9hms.]+)/i);
+    return {
+      code: '429',
+      shortMsg: `Free Tier quota exceeded${retryMatch ? ` (retry in ${retryMatch[1]})` : ''}`,
+    };
+  }
+  if (code === '404' || /NOT_FOUND/i.test(raw)) {
+    return { code: '404', shortMsg: 'Model not available' };
+  }
+  return { code, shortMsg: raw.slice(0, 120) };
+};
 
 // Shared helper to try candidate Gemini models until one succeeds
 export const generateGeminiContentWithFallback = async (
@@ -34,7 +51,9 @@ export const generateGeminiContentWithFallback = async (
   params: { contents: any; config?: any }
 ) => {
   let lastError: any = null;
-  const failures: string[] = [];
+  let quotaHitMsg: string | null = null;
+  const compactLog: string[] = [];
+
   for (const modelName of GEMINI_CANDIDATE_MODELS) {
     try {
       const response = await client.models.generateContent({
@@ -47,15 +66,21 @@ export const generateGeminiContentWithFallback = async (
       }
     } catch (err: any) {
       lastError = err;
-      const msg = err?.message || String(err);
-      failures.push(`${modelName}: ${msg}`);
-      console.warn(`Gemini model ${modelName} failed, trying next candidate:`, msg);
+      const info = extractCompactGeminiError(err);
+      compactLog.push(`${modelName}:${info.code}`);
+      if (info.code === '429') quotaHitMsg = info.shortMsg;
+      console.warn(`Gemini model ${modelName} failed [${info.code}]:`, info.shortMsg);
     }
   }
-  const summaryError: any = new Error(
-    `All Gemini models failed (${GEMINI_CANDIDATE_MODELS.join(', ')}). Last error: ${lastError?.message || failures.join(' | ')}`
+
+  if (quotaHitMsg) {
+    throw new Error(
+      `Gemini ${quotaHitMsg}. Try a new Gemini API key in Paper Settings or switch AI model. [${compactLog.join(', ')}]`
+    );
+  }
+  throw new Error(
+    `All Gemini models failed [${compactLog.join(', ')}]: ${lastError?.message || 'No response'}`
   );
-  throw summaryError;
 };
 
 const CANDIDATE_MODELS = GEMINI_CANDIDATE_MODELS;
