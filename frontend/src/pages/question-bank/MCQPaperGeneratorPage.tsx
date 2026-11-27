@@ -288,14 +288,14 @@ export const MCQPaperGeneratorPage = () => {
 
     selected.forEach((q, i) => {
       const qNum = maxQ + i + 1;
-      generatedText += `${ qNum }. ${ (q.questionText || '').trim() }\n`;
+      generatedText += `${qNum}. ${(q.questionText || '').trim()}\n`;
       if (q.imageUrl) {
-        generatedText += `[IMAGE:${ q.imageUrl }]\n`;
+        generatedText += `[IMAGE:${q.imageUrl}]\n`;
       }
       try {
         const opts = JSON.parse(q.options || '[]');
         opts.forEach((opt: string, idx: number) => {
-          generatedText += `(${ String.fromCharCode(65 + idx) }) ${ (opt || '').trim() }\n`;
+          generatedText += `(${String.fromCharCode(65 + idx)}) ${(opt || '').trim()}\n`;
         });
       } catch (e) { }
       generatedText += '\n';
@@ -319,7 +319,7 @@ export const MCQPaperGeneratorPage = () => {
 
     setIsBankModalOpen(false);
     setBankSelectedIds(new Set());
-    toast.success(`Imported ${ selected.length } questions from Master Bank!`);
+    toast.success(`Imported ${selected.length} questions from Master Bank!`);
   };
 
   // Settings State
@@ -431,7 +431,7 @@ export const MCQPaperGeneratorPage = () => {
     if (size) newParams.push(size);
     if (align) newParams.push(align);
 
-    const replacement = `[IMAGE:${ newParams.join('|') }]`;
+    const replacement = `[IMAGE:${newParams.join('|')}]`;
     const text = subjectContents[activeSubjectTab] || '';
     const newContent = text.replace(fullMatch, replacement);
     setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: newContent }));
@@ -487,7 +487,7 @@ export const MCQPaperGeneratorPage = () => {
       const prevQIdx = questions.indexOf(lastQBefore);
       if (prevQIdx > 0) {
         moveImageToQuestion(imgMatch, questions[prevQIdx - 1]);
-        toast.success(`Image moved up to Question ${ questions[prevQIdx - 1] } !`);
+        toast.success(`Image moved up to Question ${questions[prevQIdx - 1]} !`);
       } else {
         moveImageToQuestion(imgMatch, 'top');
         toast.success('Image moved to top of paper!');
@@ -496,14 +496,14 @@ export const MCQPaperGeneratorPage = () => {
       if (lastQBefore === null) {
         if (questions.length > 0) {
           moveImageToQuestion(imgMatch, questions[0]);
-          toast.success(`Image moved to Question ${ questions[0] } !`);
+          toast.success(`Image moved to Question ${questions[0]} !`);
         }
         return;
       }
       const nextQIdx = questions.indexOf(lastQBefore) + 1;
       if (nextQIdx < questions.length) {
         moveImageToQuestion(imgMatch, questions[nextQIdx]);
-        toast.success(`Image moved down to Question ${ questions[nextQIdx] } !`);
+        toast.success(`Image moved down to Question ${questions[nextQIdx]} !`);
       } else {
         moveImageToQuestion(imgMatch, 'bottom');
         toast.success('Image moved to end of paper!');
@@ -529,7 +529,7 @@ export const MCQPaperGeneratorPage = () => {
         height: 220
       }
     }));
-    toast.success(`Image[${ id }] converted to Free Drag! You can now drag it anywhere on the preview paper.`);
+    toast.success(`Image[${id}] converted to Free Drag! You can now drag it anywhere on the preview paper.`);
   };
 
   // Helper to convert free-floating image back to inline text
@@ -542,12 +542,12 @@ export const MCQPaperGeneratorPage = () => {
       [id]: src
     }));
 
-    const textToInsert = `\n[IMAGE:${ id }]\n`;
+    const textToInsert = `\n[IMAGE:${id}]\n`;
     setSubjectContents(prev => ({
       ...prev,
       [activeSubjectTab]: (prev[activeSubjectTab] || '').trim() + '\n' + textToInsert
     }));
-    toast.success(`Image[${ id }] placed back as inline in text!`);
+    toast.success(`Image[${id}] placed back as inline in text!`);
   };
 
   // Inline Images State: { id: FloatingImage | string }
@@ -579,7 +579,7 @@ export const MCQPaperGeneratorPage = () => {
       [id]: dataUrl
     }));
 
-    const textToInsert = `\n[IMAGE:${ id }]\n`;
+    const textToInsert = `\n[IMAGE:${id}]\n`;
     const textarea = textareaRef.current;
 
     if (textarea) {
@@ -784,2260 +784,2219 @@ export const MCQPaperGeneratorPage = () => {
     }
   };
 
-      const handlePrint = async () => {
-        await printPaper('a4-preview-paper');
-      };
+  const handlePrint = async () => {
+    await printPaper('a4-preview-paper');
+  };
 
-      const toggleFullScreen = () => {
-        if (!document.fullscreenElement) {
-          if (containerRef.current) {
-            containerRef.current.requestFullscreen().catch((err) => {
-              toast.error(`Error attempting to enable fullscreen: ${ err.message } `);
-            });
-          }
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen();
-          }
-        }
-      };
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      if (containerRef.current) {
+        containerRef.current.requestFullscreen().catch((err) => {
+          toast.error(`Error attempting to enable fullscreen: ${err.message} `);
+        });
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
-      const handleAiPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-        const items = e.clipboardData.items;
-        for (let i = 0; i < items.length; i++) {
-          if (items[i].type.indexOf('image') !== -1) {
-            const blob = items[i].getAsFile();
-            if (blob) {
-              const reader = new FileReader();
-              reader.onload = (event) => {
-                const result = event.target?.result as string;
-                const [prefix, base64] = result.split(',');
-                const mime = prefix.split(':')[1].split(';')[0];
-                setAiImageBase64(base64);
-                setAiImageMimeType(mime);
-                toast.success("Image pasted successfully! You can now generate.");
-              };
-              reader.readAsDataURL(blob);
-            }
-          }
-        }
-      };
-
-      const handleAiFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (file.size > 10 * 1024 * 1024) {
-          toast.error('File too large! Maximum size is 10MB.');
-          return;
-        }
-
-        const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
-        if (fileExt === '.doc') {
-          toast.error('Old Word documents (.doc) are not supported. Please save as .docx and try again.');
-          return;
-        }
-
-        if (fileExt === '.docx') {
-          const toastId = toast.loading('Uploading Word document to AI... Please wait.');
-          try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('subject', selectedSubjects.join(', '));
-            if (activeAiModel === 'gemini' && geminiApiKey) {
-              formData.append('apiKey', geminiApiKey);
-            }
-
-            const response = await api.post('/api/questions/import-docx', formData, {
-              headers: { 'Content-Type': 'multipart/form-data' },
-              timeout: 120000,
-            });
-
-            const questions = response.data.questions;
-            if (!questions || questions.length === 0) {
-              toast.error('No questions found in document.', { id: toastId });
-              return;
-            }
-
-            let generatedText = '\n\n';
-            const currentContent = subjectContents[activeSubjectTab] || '';
-            const lines = currentContent.split('\n');
-            let maxQ = 0;
-            for (const line of lines) {
-              const match = line.match(/^(\d+)\.\s/);
-              if (match) {
-                const num = parseInt(match[1], 10);
-                if (num > maxQ) maxQ = num;
-              }
-            }
-
-            questions.forEach((q: any, i: number) => {
-              generatedText += `${ maxQ + i + 1 }. ${ (q.questionText || '').trim() }\n`;
-              if (q.optionA) generatedText += `(A) ${ (q.optionA || '').trim() }\n`;
-              if (q.optionB) generatedText += `(B) ${ (q.optionB || '').trim() }\n`;
-              if (q.optionC) generatedText += `(C) ${ (q.optionC || '').trim() }\n`;
-              if (q.optionD) generatedText += `(D) ${ (q.optionD || '').trim() }\n`;
-              generatedText += '\n';
-            });
-
-            setSubjectContents(prev => ({
-              ...prev,
-              [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
-            }));
-            toast.success(`✅ ${ questions.length } questions extracted from Word document!`, { id: toastId });
-            setIsAiModalOpen(false);
-          } catch (err: any) {
-            console.error(err);
-            toast.error('Failed to process Word document: ' + (err.response?.data?.message || err.message), { id: toastId });
-          }
-          return;
-        }
-        const textTypes = ['.tex', '.txt', '.csv', '.md'];
-        const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-        if (textTypes.includes(ext) || file.type.startsWith('text/')) {
+  const handleAiPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile();
+        if (blob) {
           const reader = new FileReader();
           reader.onload = (event) => {
-            const text = event.target?.result as string;
-            setAiInput(text);
-            setAiSourceType('text');
-            toast.success(`${ file.name } loaded as text! You can now add instructions and generate.`);
+            const result = event.target?.result as string;
+            const [prefix, base64] = result.split(',');
+            const mime = prefix.split(':')[1].split(';')[0];
+            setAiImageBase64(base64);
+            setAiImageMimeType(mime);
+            toast.success("Image pasted successfully! You can now generate.");
           };
-          reader.readAsText(file);
-          return;
+          reader.readAsDataURL(blob);
         }
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const result = event.target?.result as string;
-          const [prefix, base64] = result.split(',');
-          const mime = prefix.split(':')[1].split(';')[0];
-          setAiImageBase64(base64);
-          setAiImageMimeType(mime);
-          setAiSourceType('text');
-          toast.success(`${ file.name } uploaded! You can now add text instructions and generate.`);
-        };
-        reader.readAsDataURL(file);
-      };
+      }
+    }
+  };
 
-      const handleAiGenerate = async () => {
-        if (aiSourceType === 'file') {
-          toast.error("Please select an image file first.");
-          return;
-        }
+  const handleAiFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File too large! Maximum size is 10MB.');
+      return;
+    }
 
-        if (!aiInput.trim() && !aiImageBase64) {
-          toast.error("Please enter some text, paste an image, or provide a URL.");
-          return;
-        }
+    const fileExt = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (fileExt === '.doc') {
+      toast.error('Old Word documents (.doc) are not supported. Please save as .docx and try again.');
+      return;
+    }
 
-        setIsGenerating(true);
-        toast.loading("AI is analyzing and generating...", { id: 'ai-gen' });
-
-        try {
-          const finalPrompt = aiInstructions
-            ? `Instructions: ${ aiInstructions } \n\nContent: \n${ aiInput } `
-            : aiInput;
-
-          let selectedKey = undefined;
-          if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
-          else if (activeAiModel === 'claude') selectedKey = claudeApiKey;
-          else if (activeAiModel === 'chatgpt') selectedKey = chatgptApiKey;
-          else if (activeAiModel === 'deepseek') selectedKey = deepseekApiKey;
-
-          const payload: any = {
-            text: finalPrompt,
-            subject: selectedSubjects.join(', '),
-            apiKey: selectedKey || undefined,
-            aiModel: activeAiModel
-          };
-
-          if (aiImageBase64) {
-            payload.imageBase64 = aiImageBase64;
-            payload.imageMimeType = aiImageMimeType;
-          }
-
-          const response = await api.post('/api/questions/import-ai', payload, { timeout: 90000 });
-
-          const questions = response.data.questions || [];
-
-          if (questions.length === 0) {
-            toast.error("No questions could be generated. Try different text.", { id: 'ai-gen' });
-            setIsGenerating(false);
-            return;
-          }
-
-          let generatedText = '\n\n';
-          const currentContent = subjectContents[activeSubjectTab] || '';
-          const lines = currentContent.split('\n');
-          let maxQ = 0;
-          for (const line of lines) {
-            const match = line.match(/^(\d+)\.\s/);
-            if (match) {
-              const num = parseInt(match[1], 10);
-              if (num > maxQ) maxQ = num;
-            }
-          }
-
-          questions.forEach((q: any, i: number) => {
-            generatedText += `${ maxQ + i + 1 }. ${ (q.questionText || '').trim() }\n`;
-            if (q.optionA) generatedText += `(A) ${ (q.optionA || '').trim() }\n`;
-            if (q.optionB) generatedText += `(B) ${ (q.optionB || '').trim() }\n`;
-            if (q.optionC) generatedText += `(C) ${ (q.optionC || '').trim() }\n`;
-            if (q.optionD) generatedText += `(D) ${ (q.optionD || '').trim() }\n`;
-            generatedText += '\n';
-          });
-
-          setSubjectContents(prev => ({
-            ...prev,
-            [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
-          }));
-          setIsGenerating(false);
-          setAiImageBase64('');
-          setAiImageMimeType('');
-          toast.success(`${ questions.length } questions generated successfully!`, { id: 'ai-gen' });
-        } catch (error: any) {
-          console.error(error);
-          setIsGenerating(false);
-          toast.error("AI Generation failed: " + (error.response?.data?.message || error.message), { id: 'ai-gen' });
-        }
-      };
-
-      const handleAiSolve = async () => {
-        setIsAiSolving(true);
-        const toastId = toast.loading('AI is solving the question paper... Please wait.');
-        try {
-          let selectedKey = undefined;
-          if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
-          else if (activeAiModel === 'claude') selectedKey = claudeApiKey;
-          else if (activeAiModel === 'chatgpt') selectedKey = chatgptApiKey;
-          else if (activeAiModel === 'openrouter') selectedKey = openRouterApiKey;
-
-          const payload = {
-            subjectContents,
-            provider: activeAiModel,
-            apiKey: selectedKey || undefined
-          };
-          const response = await api.post('/api/questions/solve-ai', payload);
-          const generatedKey = response.data.answerKey;
-
-          if (generatedKey && Object.keys(generatedKey).length > 0) {
-            setAnswerKeys(prev => ({
-              ...prev,
-              ...generatedKey
-            }));
-            toast.success('AI successfully generated the answer key!', { id: toastId });
-          } else {
-            toast.error('AI failed to generate answers.', { id: toastId });
-          }
-        } catch (error: any) {
-          console.error(error);
-          toast.error("AI Solve failed: " + (error.response?.data?.message || error.message), { id: toastId });
-        } finally {
-          setIsAiSolving(false);
-        }
-      };
-
-      const autoFormatText = () => {
-        const currentContent = subjectContents[activeSubjectTab] || '';
-        const formatted = formatMCQText(currentContent);
-        setSubjectContents(prev => ({
-          ...prev,
-          [activeSubjectTab]: formatted
-        }));
-        toast.success("Auto-formatted text with clean option & question spacing! ✨");
-      };
-
-      useEffect(() => {
-        if (!paperId) {
-          const importedRaw = localStorage.getItem('mcq_imported_from_bank');
-          if (searchParams.get('fromBank') === 'true' && importedRaw) {
-            try {
-              const imported = JSON.parse(importedRaw);
-              if (Array.isArray(imported?.subjects) && imported.subjects.length > 0 && imported?.subjectContents) {
-                setSelectedSubjects(imported.subjects);
-                setSubjectContents(imported.subjectContents);
-                setActiveSubjectTab(imported.subjects[0]);
-                setAnswerKeys(imported.answerKeys || {});
-                setInlineImages({});
-                localStorage.removeItem('mcq_imported_from_bank');
-                const next = new URLSearchParams(searchParams);
-                next.delete('fromBank');
-                setSearchParams(next, { replace: true });
-                return;
-              }
-            } catch {
-              // fallback to default initialization
-            }
-          }
-          setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
-          setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
-          setHeaderSubject(localStorage.getItem('mcq_exam_header_subject') || '');
-          let currentSubjs: string[] = [];
-          try {
-            const stored = localStorage.getItem('mcq_exam_subjects');
-            currentSubjs = stored ? JSON.parse(stored) : [];
-          } catch {
-            currentSubjs = [];
-          }
-          setSelectedSubjects(currentSubjs);
-          const firstSubj = currentSubjs.length > 0 ? currentSubjs[0] : 'Maths';
-          setExamDate(localStorage.getItem('mcq_exam_date') || '');
-          setMaxMarks(localStorage.getItem('mcq_exam_max_marks') || '100');
-          setTime(localStorage.getItem('mcq_exam_marks') || '3 Hours');
-          setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
-          setFontSize(localStorage.getItem('mcq_exam_font_size') || 'medium');
-          setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
-          setShowPaperHeader(localStorage.getItem('mcq_exam_show_header') !== 'false');
-          setSubjectContents({
-            [firstSubj]: '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
-          });
-          setAnswerKeys({});
-          setActiveSubjectTab(firstSubj);
-          setInlineImages({});
-          return;
-        }
-        const loadPaper = async () => {
-          try {
-            toast.loading('Loading paper...', { id: 'load' });
-            const res = await api.get(`/api/generated-papers/${paperId}`);
-            const p = res.data;
-            setExamName(p.examName || '');
-            setExamClass(p.examClass ?? '');
-            let loadedSubjects: string[] = [];
-            if (p.examSubject) {
-              loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
-            }
-            const { textData, images, keys, settings } = deserializeContent(p.content || '');
-            setExamDate(p.examDate || '');
-            setTime(p.time || settings?.time || '3 Hours');
-            setMaxMarks(settings?.maxMarks || (p.time && !isNaN(Number(p.time)) ? p.time : '100'));
-            setInstructions(p.instructions || '');
-
-            // 1. Synonym matching: normalize "Mathematics" and "Maths" so they share the same content
-            if (textData['Mathematics'] && !textData['Maths']) {
-              textData['Maths'] = textData['Mathematics'];
-            } else if (textData['Maths'] && !textData['Mathematics']) {
-              textData['Mathematics'] = textData['Maths'];
-            }
-
-            // 2. Determine subjects:
-            // If p.examSubject is present in DB, that is the definitive list of subjects chosen for this paper!
-            // Never force-resurrect old unselected subjects from textData.
-            const normalizedDbSubjects = loadedSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
-            const contentSubjects = Object.keys(textData).filter(s => s && textData[s]?.trim() !== '');
-            const normalizedContentSubjects = contentSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
-
-            let finalSubjects: string[] = [];
-            if (normalizedDbSubjects.length > 0) {
-              finalSubjects = normalizedDbSubjects;
-            } else if (normalizedContentSubjects.length > 0) {
-              finalSubjects = normalizedContentSubjects;
-            } else {
-              finalSubjects = ['Physics'];
-            }
-
-            // 3. Keep only subjects that are in finalSubjects so unselected subjects are purged
-            const cleanedTextData: Record<string, string> = {};
-            finalSubjects.forEach(s => {
-              cleanedTextData[s] = textData[s] || (s === 'Maths' && textData['Mathematics'] ? textData['Mathematics'] : '');
-            });
-
-            setSelectedSubjects(finalSubjects);
-            setActiveSubjectTab(finalSubjects[0]);
-            setSubjectContents(cleanedTextData);
-            setAnswerKeys(keys);
-
-            if (settings) {
-              if (settings.fontSize) setFontSize(settings.fontSize);
-              if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
-              if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
-              if (settings.maxMarks) setMaxMarks(settings.maxMarks);
-              if (settings.time) setTime(settings.time);
-              setHeaderSubject(settings.headerSubject ?? '');
-            } else {
-              setFontSize('medium');
-              setQuestionSpacing('normal');
-              setShowPaperHeader(true);
-              setHeaderSubject('');
-            }
-
-            setInlineImages(images);
-            toast.success('Paper loaded!', { id: 'load' });
-          } catch (loadErr) {
-            console.error('Failed to load paper error:', loadErr);
-            toast.error('Failed to load paper.', { id: 'load' });
-          }
-        };
-        loadPaper();
-      }, [paperId]);
-
-      // Safely sync activeSubjectTab with selectedSubjects
-      useEffect(() => {
-        if (selectedSubjects.length > 0) {
-          if (!selectedSubjects.includes(activeSubjectTab)) {
-            const withContent = selectedSubjects.find(s => (subjectContents[s] || '').trim() !== '');
-            setActiveSubjectTab(withContent || selectedSubjects[0]);
-          }
-          if (previewSubjectFilter !== 'all' && !selectedSubjects.includes(previewSubjectFilter)) {
-            setPreviewSubjectFilter('all');
-          }
-          setSubjectContents(prev => {
-            let changed = false;
-            const updated = { ...prev };
-            selectedSubjects.forEach(s => {
-              if (updated[s] === undefined) {
-                updated[s] = '';
-                changed = true;
-              }
-            });
-            return changed ? updated : prev;
-          });
-        }
-      }, [selectedSubjects]);
-
-      // Auto-scroll Live Preview to active subject when tab changes
-      useEffect(() => {
-        if (activeSubjectTab) {
-          const el = document.getElementById(`preview-subject-${activeSubjectTab}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }
-      }, [activeSubjectTab]);
-
-      const handleSave = async () => {
-        let finalExamName = examName;
-        if (!paperId) {
-          const userTitle = window.prompt("Enter a Title/Name for this MCQ Paper to save:", examName);
-          if (userTitle === null) return;
-          if (userTitle.trim()) {
-            finalExamName = userTitle.trim();
-            setExamName(finalExamName);
-          }
+    if (fileExt === '.docx') {
+      const toastId = toast.loading('Uploading Word document to AI... Please wait.');
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('subject', selectedSubjects.join(', '));
+        if (activeAiModel === 'gemini' && geminiApiKey) {
+          formData.append('apiKey', geminiApiKey);
         }
 
-        setIsSaving(true);
-        toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
-        try {
-          const serializedContent = serializeContent();
-          const payload = {
-            examName: finalExamName,
-            examClass,
-            examSubject: selectedSubjects.join(', '),
-            examDate,
-            time,
-            instructions,
-            content: serializedContent
-          };
-
-          if (paperId) {
-            await api.put(`/api/generated-papers/${paperId}`, payload);
-            toast.success('Paper updated successfully!', { id: 'save' });
-          } else {
-            const res = await api.post('/api/generated-papers', payload);
-            toast.success('Paper saved! You can now find it in Saved Papers.', { id: 'save' });
-            navigate(`/question-bank/mcq-generator?id=${res.data.id}`, { replace: true });
-          }
-        } catch (err) {
-          toast.error('Failed to save paper.', { id: 'save' });
-        } finally {
-          setIsSaving(false);
-        }
-      };
-
-      const toggleSubject = (subj: string) => {
-        setSelectedSubjects(prev =>
-          prev.includes(subj) ? prev.filter(s => s !== subj) : [...prev, subj]
-        );
-      };
-
-      const handleRemoveSubject = (subjToRemove: string) => {
-        if (selectedSubjects.length <= 1) {
-          toast.error('Cannot remove the only subject in the paper. Change the subject in Paper Settings instead.');
-          return;
-        }
-        const confirmed = window.confirm(`Are you sure you want to remove "${subjToRemove}" from this paper?`);
-        if (!confirmed) return;
-
-        const nextSubjs = selectedSubjects.filter(s => s !== subjToRemove);
-        setSelectedSubjects(nextSubjs);
-        localStorage.setItem('mcq_exam_subjects', JSON.stringify(nextSubjs));
-
-        setSubjectContents(prev => {
-          const updated = { ...prev };
-          delete updated[subjToRemove];
-          if (subjToRemove === 'Maths') delete updated['Mathematics'];
-          if (subjToRemove === 'Mathematics') delete updated['Maths'];
-          return updated;
+        const response = await api.post('/api/questions/import-docx', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 120000,
         });
 
-        if (activeSubjectTab === subjToRemove) {
-          setActiveSubjectTab(nextSubjs[0] || 'Physics');
+        const questions = response.data.questions;
+        if (!questions || questions.length === 0) {
+          toast.error('No questions found in document.', { id: toastId });
+          return;
         }
 
-        toast.success(`Removed ${subjToRemove} from this paper!`);
-      };
-
-      // Get list of floating images (not inline)
-      const floatingImagesList = Object.entries(inlineImages).filter(([_, val]) => typeof val !== 'string');
-
-      const allSelectableSubjects = Array.from(new Set([...AVAILABLE_SUBJECTS, ...selectedSubjects]));
-
-      const handleAddCustomSubject = () => {
-        const clean = customSubjectInput.trim();
-        if (!clean) return;
-        if (!selectedSubjects.includes(clean)) {
-          setSelectedSubjects(prev => [...prev, clean]);
-        }
-        setCustomSubjectInput('');
-        toast.success(`Added subject tab "${clean}"`);
-      };
-
-      const handleSaveSettingsPage = () => {
-        localStorage.setItem('mcq_exam_name', examName);
-        localStorage.setItem('mcq_exam_class', examClass);
-        localStorage.setItem('mcq_exam_header_subject', headerSubject);
-        localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
-        localStorage.setItem('mcq_exam_date', examDate);
-        localStorage.setItem('mcq_exam_max_marks', maxMarks);
-        localStorage.setItem('mcq_exam_marks', time);
-        localStorage.setItem('mcq_exam_instructions', instructions);
-        localStorage.setItem('mcq_exam_font_size', fontSize);
-        localStorage.setItem('mcq_exam_spacing', questionSpacing);
-
-        if (selectedSubjects.length > 0) {
-          if (!selectedSubjects.includes(activeSubjectTab)) {
-            setActiveSubjectTab(selectedSubjects[0]);
+        let generatedText = '\n\n';
+        const currentContent = subjectContents[activeSubjectTab] || '';
+        const lines = currentContent.split('\n');
+        let maxQ = 0;
+        for (const line of lines) {
+          const match = line.match(/^(\d+)\.\s/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxQ) maxQ = num;
           }
-          setSubjectContents(prev => {
-            const updated: Record<string, string> = {};
-            selectedSubjects.forEach(s => {
-              updated[s] = prev[s] || (s === 'Maths' && prev['Mathematics'] ? prev['Mathematics'] : (s === 'Mathematics' && prev['Maths'] ? prev['Maths'] : ''));
-            });
-            return updated;
-          });
         }
 
-        closeSettingsPage();
-        toast.success('Paper settings saved!');
+        questions.forEach((q: any, i: number) => {
+          generatedText += `${maxQ + i + 1}. ${(q.questionText || '').trim()}\n`;
+          if (q.optionA) generatedText += `(A) ${(q.optionA || '').trim()}\n`;
+          if (q.optionB) generatedText += `(B) ${(q.optionB || '').trim()}\n`;
+          if (q.optionC) generatedText += `(C) ${(q.optionC || '').trim()}\n`;
+          if (q.optionD) generatedText += `(D) ${(q.optionD || '').trim()}\n`;
+          generatedText += '\n';
+        });
+
+        setSubjectContents(prev => ({
+          ...prev,
+          [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
+        }));
+        toast.success(`✅ ${questions.length} questions extracted from Word document!`, { id: toastId });
+        setIsAiModalOpen(false);
+      } catch (err: any) {
+        console.error(err);
+        toast.error('Failed to process Word document: ' + (err.response?.data?.message || err.message), { id: toastId });
+      }
+      return;
+    }
+    const textTypes = ['.tex', '.txt', '.csv', '.md'];
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
+    if (textTypes.includes(ext) || file.type.startsWith('text/')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        setAiInput(text);
+        setAiSourceType('text');
+        toast.success(`${file.name} loaded as text! You can now add instructions and generate.`);
+      };
+      reader.readAsText(file);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      const [prefix, base64] = result.split(',');
+      const mime = prefix.split(':')[1].split(';')[0];
+      setAiImageBase64(base64);
+      setAiImageMimeType(mime);
+      setAiSourceType('text');
+      toast.success(`${file.name} uploaded! You can now add text instructions and generate.`);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAiGenerate = async () => {
+    if (aiSourceType === 'file') {
+      toast.error("Please select an image file first.");
+      return;
+    }
+
+    if (!aiInput.trim() && !aiImageBase64) {
+      toast.error("Please enter some text, paste an image, or provide a URL.");
+      return;
+    }
+
+    setIsGenerating(true);
+    toast.loading("AI is analyzing and generating...", { id: 'ai-gen' });
+
+    try {
+      const finalPrompt = aiInstructions
+        ? `Instructions: ${aiInstructions} \n\nContent: \n${aiInput} `
+        : aiInput;
+
+      let selectedKey = undefined;
+      if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
+      else if (activeAiModel === 'claude') selectedKey = claudeApiKey;
+      else if (activeAiModel === 'chatgpt') selectedKey = chatgptApiKey;
+      else if (activeAiModel === 'deepseek') selectedKey = deepseekApiKey;
+
+      const payload: any = {
+        text: finalPrompt,
+        subject: selectedSubjects.join(', '),
+        apiKey: selectedKey || undefined,
+        aiModel: activeAiModel
       };
 
-      return (
-        <div ref={containerRef} className="flex flex-col h-full bg-slate-50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
-          <PageHeader
-            title={isSettingsOpen ? 'Paper Settings' : 'MCQ Paper Generator'}
-            icon={isSettingsOpen ? <Settings className="w-5 h-5 text-white" /> : <FileText className="w-5 h-5 text-white" />}
-            action={isSettingsOpen ? (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={closeSettingsPage}
-                  className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Back to Paper</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSaveSettingsPage}
-                  className="px-4 py-2 rounded-xl bg-white hover:bg-indigo-50 text-indigo-900 font-black text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer"
-                >
-                  <Check className="w-4 h-4" />
-                  <span>Save & Open Paper</span>
-                </button>
-              </div>
-            ) : undefined}
-          />
+      if (aiImageBase64) {
+        payload.imageBase64 = aiImageBase64;
+        payload.imageMimeType = aiImageMimeType;
+      }
 
-          {/* FULL-WIDTH SIMPLE & SOFT-COLORFUL PAPER SETTINGS PAGE */}
-          {isSettingsOpen && (
-            <div className="w-full flex-1 bg-slate-50 px-4 sm:px-6 lg:px-8 py-6 pb-20 print:hidden overflow-y-auto custom-scrollbar">
-              <div className="w-full space-y-5">
-                {/* Main Full-Width Grid (12 columns) */}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-                  {/* Left 8 Columns */}
-                  <div className="xl:col-span-8 space-y-5">
-                    {/* Card 1: Exam & Paper Header Details */}
-                    <div className="bg-white rounded-2xl border border-blue-200/70 p-5 shadow-2xs space-y-4">
-                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                        <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600"><FileText className="w-4 h-4" /></span>
-                        1. Paper Header Info
-                      </h3>
+      const response = await api.post('/api/questions/import-ai', payload, { timeout: 90000 });
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="sm:col-span-2 lg:col-span-2">
-                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Exam Name</label>
-                          <input
-                            type="text"
-                            value={examName}
-                            onChange={(e) => setExamName(e.target.value)}
-                            placeholder="e.g., BOARD OBJECTIVE EXAMINATION"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
-                          />
-                        </div>
+      const questions = response.data.questions || [];
 
-                        <div>
-                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Class</label>
-                          <input
-                            type="text"
-                            value={examClass}
-                            onChange={(e) => setExamClass(e.target.value)}
-                            placeholder="e.g., 6th"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
-                          />
-                        </div>
+      if (questions.length === 0) {
+        toast.error("No questions could be generated. Try different text.", { id: 'ai-gen' });
+        setIsGenerating(false);
+        return;
+      }
 
-                        <div className="sm:col-span-2 lg:col-span-3">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-bold text-slate-600">
-                              Subject (Shown on Question Paper only if entered)
-                            </label>
-                            {headerSubject.trim() && (
-                              <button
-                                type="button"
-                                onClick={() => setHeaderSubject('')}
-                                className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
-                              >
-                                Clear
-                              </button>
-                            )}
-                          </div>
-                          <input
-                            type="text"
-                            value={headerSubject}
-                            onChange={(e) => setHeaderSubject(e.target.value)}
-                            placeholder="Leave blank to hide Subject on paper header, or type Subject name"
-                            className="w-full rounded-xl border border-indigo-200 bg-indigo-50/30 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-indigo-400 outline-none"
-                          />
-                        </div>
+      let generatedText = '\n\n';
+      const currentContent = subjectContents[activeSubjectTab] || '';
+      const lines = currentContent.split('\n');
+      let maxQ = 0;
+      for (const line of lines) {
+        const match = line.match(/^(\d+)\.\s/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxQ) maxQ = num;
+        }
+      }
 
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-xs font-bold text-slate-600">Date</label>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const d = new Date();
-                                const formatted = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
-                                setExamDate(formatted);
-                              }}
-                              className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
-                            >
-                              Today
-                            </button>
-                          </div>
-                          <input
-                            type="text"
-                            value={examDate}
-                            onChange={(e) => setExamDate(e.target.value)}
-                            placeholder="DD-MM-YYYY"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
-                          />
-                        </div>
+      questions.forEach((q: any, i: number) => {
+        generatedText += `${maxQ + i + 1}. ${(q.questionText || '').trim()}\n`;
+        if (q.optionA) generatedText += `(A) ${(q.optionA || '').trim()}\n`;
+        if (q.optionB) generatedText += `(B) ${(q.optionB || '').trim()}\n`;
+        if (q.optionC) generatedText += `(C) ${(q.optionC || '').trim()}\n`;
+        if (q.optionD) generatedText += `(D) ${(q.optionD || '').trim()}\n`;
+        generatedText += '\n';
+      });
 
-                        <div>
-                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Total Marks</label>
-                          <input
-                            type="text"
-                            value={maxMarks}
-                            onChange={(e) => setMaxMarks(e.target.value)}
-                            placeholder="100"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
-                          />
-                        </div>
+      setSubjectContents(prev => ({
+        ...prev,
+        [activeSubjectTab]: formatMCQText((prev[activeSubjectTab] || '').trim() + generatedText)
+      }));
+      setIsGenerating(false);
+      setAiImageBase64('');
+      setAiImageMimeType('');
+      toast.success(`${questions.length} questions generated successfully!`, { id: 'ai-gen' });
+    } catch (error: any) {
+      console.error(error);
+      setIsGenerating(false);
+      toast.error("AI Generation failed: " + (error.response?.data?.message || error.message), { id: 'ai-gen' });
+    }
+  };
 
-                        <div>
-                          <label className="block text-xs font-bold text-slate-600 mb-1.5">Time / Duration</label>
-                          <input
-                            type="text"
-                            value={time}
-                            onChange={(e) => setTime(e.target.value)}
-                            placeholder="3 Hours"
-                            className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
-                          />
-                        </div>
-                      </div>
+  const handleAiSolve = async () => {
+    setIsAiSolving(true);
+    const toastId = toast.loading('AI is solving the question paper... Please wait.');
+    try {
+      let selectedKey = undefined;
+      if (activeAiModel === 'gemini') selectedKey = geminiApiKey;
+      else if (activeAiModel === 'claude') selectedKey = claudeApiKey;
+      else if (activeAiModel === 'chatgpt') selectedKey = chatgptApiKey;
+      else if (activeAiModel === 'openrouter') selectedKey = openRouterApiKey;
+
+      const payload = {
+        subjectContents,
+        provider: activeAiModel,
+        apiKey: selectedKey || undefined
+      };
+      const response = await api.post('/api/questions/solve-ai', payload);
+      const generatedKey = response.data.answerKey;
+
+      if (generatedKey && Object.keys(generatedKey).length > 0) {
+        setAnswerKeys(prev => ({
+          ...prev,
+          ...generatedKey
+        }));
+        toast.success('AI successfully generated the answer key!', { id: toastId });
+      } else {
+        toast.error('AI failed to generate answers.', { id: toastId });
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error("AI Solve failed: " + (error.response?.data?.message || error.message), { id: toastId });
+    } finally {
+      setIsAiSolving(false);
+    }
+  };
+
+  const autoFormatText = () => {
+    const currentContent = subjectContents[activeSubjectTab] || '';
+    const formatted = formatMCQText(currentContent);
+    setSubjectContents(prev => ({
+      ...prev,
+      [activeSubjectTab]: formatted
+    }));
+    toast.success("Auto-formatted text with clean option & question spacing! ✨");
+  };
+
+  useEffect(() => {
+    if (!paperId) {
+      const importedRaw = localStorage.getItem('mcq_imported_from_bank');
+      if (searchParams.get('fromBank') === 'true' && importedRaw) {
+        try {
+          const imported = JSON.parse(importedRaw);
+          if (Array.isArray(imported?.subjects) && imported.subjects.length > 0 && imported?.subjectContents) {
+            setSelectedSubjects(imported.subjects);
+            setSubjectContents(imported.subjectContents);
+            setActiveSubjectTab(imported.subjects[0]);
+            setAnswerKeys(imported.answerKeys || {});
+            setInlineImages({});
+            localStorage.removeItem('mcq_imported_from_bank');
+            const next = new URLSearchParams(searchParams);
+            next.delete('fromBank');
+            setSearchParams(next, { replace: true });
+            return;
+          }
+        } catch {
+          // fallback to default initialization
+        }
+      }
+      setExamName(localStorage.getItem('mcq_exam_name') || 'GRAND TEST');
+      setExamClass(localStorage.getItem('mcq_exam_class') || '10th Class');
+      setHeaderSubject(localStorage.getItem('mcq_exam_header_subject') || '');
+      let currentSubjs: string[] = [];
+      try {
+        const stored = localStorage.getItem('mcq_exam_subjects');
+        currentSubjs = stored ? JSON.parse(stored) : [];
+      } catch {
+        currentSubjs = [];
+      }
+      setSelectedSubjects(currentSubjs);
+      const firstSubj = currentSubjs.length > 0 ? currentSubjs[0] : 'Maths';
+      setExamDate(localStorage.getItem('mcq_exam_date') || '');
+      setMaxMarks(localStorage.getItem('mcq_exam_max_marks') || '100');
+      setTime(localStorage.getItem('mcq_exam_marks') || '3 Hours');
+      setInstructions(localStorage.getItem('mcq_exam_instructions') || 'Answer all questions.\nEach question carries equal marks.\nRead questions carefully before answering.');
+      setFontSize(localStorage.getItem('mcq_exam_font_size') || 'medium');
+      setQuestionSpacing(localStorage.getItem('mcq_exam_spacing') || 'normal');
+      setShowPaperHeader(localStorage.getItem('mcq_exam_show_header') !== 'false');
+      setSubjectContents({
+        [firstSubj]: '1. What is 25% of 200?\n(A) 25\n(B) 50\n(C) 75\n(D) 100\n\n2. Solve for x: $2x + 5 = 15$\n(A) 2\n(B) 4\n(C) 5\n(D) 10\n\n3. The perimeter of a rectangle is 40 cm. If its length is 12 cm, what is its breadth?\n(A) 8 cm\n(B) 10 cm\n(C) 12 cm\n(D) 16 cm'
+      });
+      setAnswerKeys({});
+      setActiveSubjectTab(firstSubj);
+      setInlineImages({});
+      return;
+    }
+    const loadPaper = async () => {
+      try {
+        toast.loading('Loading paper...', { id: 'load' });
+        const res = await api.get(`/api/generated-papers/${paperId}`);
+        const p = res.data;
+        setExamName(p.examName || '');
+        setExamClass(p.examClass ?? '');
+        let loadedSubjects: string[] = [];
+        if (p.examSubject) {
+          loadedSubjects = p.examSubject.split(',').map((s: string) => s.trim()).filter(Boolean);
+        }
+        const { textData, images, keys, settings } = deserializeContent(p.content || '');
+        setExamDate(p.examDate || '');
+        setTime(p.time || settings?.time || '3 Hours');
+        setMaxMarks(settings?.maxMarks || (p.time && !isNaN(Number(p.time)) ? p.time : '100'));
+        setInstructions(p.instructions || '');
+
+        // 1. Synonym matching: normalize "Mathematics" and "Maths" so they share the same content
+        if (textData['Mathematics'] && !textData['Maths']) {
+          textData['Maths'] = textData['Mathematics'];
+        } else if (textData['Maths'] && !textData['Mathematics']) {
+          textData['Mathematics'] = textData['Maths'];
+        }
+
+        // 2. Determine subjects:
+        // If p.examSubject is present in DB, that is the definitive list of subjects chosen for this paper!
+        // Never force-resurrect old unselected subjects from textData.
+        const normalizedDbSubjects = loadedSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+        const contentSubjects = Object.keys(textData).filter(s => s && textData[s]?.trim() !== '');
+        const normalizedContentSubjects = contentSubjects.map(s => s === 'Mathematics' ? 'Maths' : s);
+
+        let finalSubjects: string[] = [];
+        if (normalizedDbSubjects.length > 0) {
+          finalSubjects = normalizedDbSubjects;
+        } else if (normalizedContentSubjects.length > 0) {
+          finalSubjects = normalizedContentSubjects;
+        } else {
+          finalSubjects = ['Physics'];
+        }
+
+        // 3. Keep only subjects that are in finalSubjects so unselected subjects are purged
+        const cleanedTextData: Record<string, string> = {};
+        finalSubjects.forEach(s => {
+          cleanedTextData[s] = textData[s] || (s === 'Maths' && textData['Mathematics'] ? textData['Mathematics'] : '');
+        });
+
+        setSelectedSubjects(finalSubjects);
+        setActiveSubjectTab(finalSubjects[0]);
+        setSubjectContents(cleanedTextData);
+        setAnswerKeys(keys);
+
+        if (settings) {
+          if (settings.fontSize) setFontSize(settings.fontSize);
+          if (settings.questionSpacing) setQuestionSpacing(settings.questionSpacing);
+          if (settings.showPaperHeader !== undefined) setShowPaperHeader(settings.showPaperHeader);
+          if (settings.maxMarks) setMaxMarks(settings.maxMarks);
+          if (settings.time) setTime(settings.time);
+          setHeaderSubject(settings.headerSubject ?? '');
+        } else {
+          setFontSize('medium');
+          setQuestionSpacing('normal');
+          setShowPaperHeader(true);
+          setHeaderSubject('');
+        }
+
+        setInlineImages(images);
+        toast.success('Paper loaded!', { id: 'load' });
+      } catch (loadErr) {
+        console.error('Failed to load paper error:', loadErr);
+        toast.error('Failed to load paper.', { id: 'load' });
+      }
+    };
+    loadPaper();
+  }, [paperId]);
+
+  // Safely sync activeSubjectTab with selectedSubjects
+  useEffect(() => {
+    if (selectedSubjects.length > 0) {
+      if (!selectedSubjects.includes(activeSubjectTab)) {
+        const withContent = selectedSubjects.find(s => (subjectContents[s] || '').trim() !== '');
+        setActiveSubjectTab(withContent || selectedSubjects[0]);
+      }
+      if (previewSubjectFilter !== 'all' && !selectedSubjects.includes(previewSubjectFilter)) {
+        setPreviewSubjectFilter('all');
+      }
+      setSubjectContents(prev => {
+        let changed = false;
+        const updated = { ...prev };
+        selectedSubjects.forEach(s => {
+          if (updated[s] === undefined) {
+            updated[s] = '';
+            changed = true;
+          }
+        });
+        return changed ? updated : prev;
+      });
+    }
+  }, [selectedSubjects]);
+
+  // Auto-scroll Live Preview to active subject when tab changes
+  useEffect(() => {
+    if (activeSubjectTab) {
+      const el = document.getElementById(`preview-subject-${activeSubjectTab}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }, [activeSubjectTab]);
+
+  const handleSave = async () => {
+    let finalExamName = examName;
+    if (!paperId) {
+      const userTitle = window.prompt("Enter a Title/Name for this MCQ Paper to save:", examName);
+      if (userTitle === null) return;
+      if (userTitle.trim()) {
+        finalExamName = userTitle.trim();
+        setExamName(finalExamName);
+      }
+    }
+
+    setIsSaving(true);
+    toast.loading(paperId ? 'Updating paper...' : 'Saving paper...', { id: 'save' });
+    try {
+      const serializedContent = serializeContent();
+      const payload = {
+        examName: finalExamName,
+        examClass,
+        examSubject: selectedSubjects.join(', '),
+        examDate,
+        time,
+        instructions,
+        content: serializedContent
+      };
+
+      if (paperId) {
+        await api.put(`/api/generated-papers/${paperId}`, payload);
+        toast.success('Paper updated successfully!', { id: 'save' });
+      } else {
+        const res = await api.post('/api/generated-papers', payload);
+        toast.success('Paper saved! You can now find it in Saved Papers.', { id: 'save' });
+        navigate(`/question-bank/mcq-generator?id=${res.data.id}`, { replace: true });
+      }
+    } catch (err) {
+      toast.error('Failed to save paper.', { id: 'save' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const toggleSubject = (subj: string) => {
+    setSelectedSubjects(prev =>
+      prev.includes(subj) ? prev.filter(s => s !== subj) : [...prev, subj]
+    );
+  };
+
+  const handleRemoveSubject = (subjToRemove: string) => {
+    if (selectedSubjects.length <= 1) {
+      toast.error('Cannot remove the only subject in the paper. Change the subject in Paper Settings instead.');
+      return;
+    }
+    const confirmed = window.confirm(`Are you sure you want to remove "${subjToRemove}" from this paper?`);
+    if (!confirmed) return;
+
+    const nextSubjs = selectedSubjects.filter(s => s !== subjToRemove);
+    setSelectedSubjects(nextSubjs);
+    localStorage.setItem('mcq_exam_subjects', JSON.stringify(nextSubjs));
+
+    setSubjectContents(prev => {
+      const updated = { ...prev };
+      delete updated[subjToRemove];
+      if (subjToRemove === 'Maths') delete updated['Mathematics'];
+      if (subjToRemove === 'Mathematics') delete updated['Maths'];
+      return updated;
+    });
+
+    if (activeSubjectTab === subjToRemove) {
+      setActiveSubjectTab(nextSubjs[0] || 'Physics');
+    }
+
+    toast.success(`Removed ${subjToRemove} from this paper!`);
+  };
+
+  // Get list of floating images (not inline)
+  const floatingImagesList = Object.entries(inlineImages).filter(([_, val]) => typeof val !== 'string');
+
+  const allSelectableSubjects = Array.from(new Set([...AVAILABLE_SUBJECTS, ...selectedSubjects]));
+
+  const handleAddCustomSubject = () => {
+    const clean = customSubjectInput.trim();
+    if (!clean) return;
+    if (!selectedSubjects.includes(clean)) {
+      setSelectedSubjects(prev => [...prev, clean]);
+    }
+    setCustomSubjectInput('');
+    toast.success(`Added subject tab "${clean}"`);
+  };
+
+  const handleSaveSettingsPage = async () => {
+    localStorage.setItem('mcq_exam_name', examName);
+    localStorage.setItem('mcq_exam_class', examClass);
+    localStorage.setItem('mcq_exam_header_subject', headerSubject);
+    localStorage.setItem('mcq_exam_subjects', JSON.stringify(selectedSubjects));
+    localStorage.setItem('mcq_exam_date', examDate);
+    localStorage.setItem('mcq_exam_max_marks', maxMarks);
+    localStorage.setItem('mcq_exam_marks', time);
+    localStorage.setItem('mcq_exam_instructions', instructions);
+    localStorage.setItem('mcq_exam_font_size', fontSize);
+    localStorage.setItem('mcq_exam_spacing', questionSpacing);
+    localStorage.setItem('mcq_exam_show_header', showPaperHeader ? 'true' : 'false');
+
+    const nextContents: Record<string, string> = {};
+    if (selectedSubjects.length > 0) {
+      selectedSubjects.forEach(s => {
+        nextContents[s] =
+          subjectContents[s] ??
+          (s === 'Maths' && subjectContents['Mathematics']
+            ? subjectContents['Mathematics']
+            : s === 'Mathematics' && subjectContents['Maths']
+              ? subjectContents['Maths']
+              : '');
+      });
+      if (!selectedSubjects.includes(activeSubjectTab)) {
+        setActiveSubjectTab(selectedSubjects[0]);
+      }
+      setSubjectContents(nextContents);
+    }
+
+    if (paperId) {
+      setIsSaving(true);
+      toast.loading('Saving paper settings...', { id: 'save-settings' });
+      try {
+        const activeSubs = selectedSubjects.length > 0 ? selectedSubjects : Object.keys(subjectContents);
+        const filteredContents: Record<string, string> = {};
+        activeSubs.forEach(s => {
+          const val = nextContents[s] ?? subjectContents[s];
+          if (val !== undefined) {
+            filteredContents[s] = val;
+          }
+        });
+
+        const serializedContent =
+          '<!--MCQ_DATA_V2-->\n' +
+          JSON.stringify({
+            subjectContents: filteredContents,
+            inlineImages,
+            answerKeys,
+            settings: {
+              fontSize,
+              questionSpacing,
+              showPaperHeader,
+              maxMarks,
+              time,
+              headerSubject,
+            },
+          });
+
+        await api.put(`/api/generated-papers/${paperId}`, {
+          examName,
+          examClass,
+          examSubject: selectedSubjects.join(', '),
+          examDate,
+          time,
+          instructions,
+          content: serializedContent,
+        });
+        toast.success('Paper settings saved permanently!', { id: 'save-settings' });
+      } catch (err) {
+        toast.error('Failed to save settings to server.', { id: 'save-settings' });
+        setIsSaving(false);
+        return;
+      } finally {
+        setIsSaving(false);
+      }
+    } else {
+      toast.success('Paper settings applied! Click Save in the editor to keep in Saved Papers.');
+    }
+
+    closeSettingsPage();
+  };
+
+  return (
+    <div ref={containerRef} className="flex flex-col h-full bg-slate-50 print:block" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader
+        title={isSettingsOpen ? 'Paper Settings' : 'MCQ Paper Generator'}
+        icon={isSettingsOpen ? <Settings className="w-5 h-5 text-white" /> : <FileText className="w-5 h-5 text-white" />}
+        action={isSettingsOpen ? (
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={closeSettingsPage}
+              className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span>Back to Paper</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveSettingsPage}
+              disabled={isSaving}
+              className="px-4 py-2 rounded-xl bg-white hover:bg-indigo-50 text-indigo-900 font-black text-xs shadow-sm flex items-center gap-1.5 transition cursor-pointer disabled:opacity-60"
+            >
+              <Check className="w-4 h-4" />
+              <span>{isSaving ? 'Saving...' : 'Save & Open Paper'}</span>
+            </button>
+          </div>
+        ) : undefined}
+      />
+
+      {/* FULL-WIDTH SIMPLE & SOFT-COLORFUL PAPER SETTINGS PAGE */}
+      {isSettingsOpen && (
+        <div className="w-full flex-1 bg-slate-50 px-4 sm:px-6 lg:px-8 py-6 pb-20 print:hidden overflow-y-auto custom-scrollbar">
+          <div className="w-full space-y-5">
+            {/* Main Full-Width Grid (12 columns) */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+              {/* Left 8 Columns */}
+              <div className="xl:col-span-8 space-y-5">
+                {/* Card 1: Exam & Paper Header Details */}
+                <div className="bg-white rounded-2xl border border-blue-200/70 p-5 shadow-2xs space-y-4">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                    <span className="p-1.5 rounded-lg bg-blue-50 text-blue-600"><FileText className="w-4 h-4" /></span>
+                    1. Paper Header Info
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="sm:col-span-2 lg:col-span-2">
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Exam Name</label>
+                      <input
+                        type="text"
+                        value={examName}
+                        onChange={(e) => setExamName(e.target.value)}
+                        placeholder="e.g., BOARD OBJECTIVE EXAMINATION"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
+                      />
                     </div>
 
-                    {/* Card 2: Subject Tabs */}
-                    <div className="bg-white rounded-2xl border border-purple-200/70 p-5 shadow-2xs space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                        <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                          <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><BookOpen className="w-4 h-4" /></span>
-                          2. Subjects
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={customSubjectInput}
-                            onChange={(e) => setCustomSubjectInput(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                e.preventDefault();
-                                handleAddCustomSubject();
-                              }
-                            }}
-                            placeholder="Add subject..."
-                            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white outline-none w-36 sm:w-44"
-                          />
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Class</label>
+                      <input
+                        type="text"
+                        value={examClass}
+                        onChange={(e) => setExamClass(e.target.value)}
+                        placeholder="e.g., 6th"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-bold text-slate-600">
+                          Subject (Shown on Question Paper only if entered)
+                        </label>
+                        {headerSubject.trim() && (
                           <button
                             type="button"
-                            onClick={handleAddCustomSubject}
-                            className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                            onClick={() => setHeaderSubject('')}
+                            className="text-[11px] font-bold text-rose-600 hover:underline cursor-pointer"
                           >
-                            <Plus className="w-3.5 h-3.5" /> Add
+                            Clear
                           </button>
-                        </div>
+                        )}
                       </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-                        {allSelectableSubjects.map((subj) => {
-                          const isChecked = selectedSubjects.includes(subj);
-                          return (
-                            <label
-                              key={subj}
-                              className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all select-none ${
-                                isChecked
-                                  ? 'bg-indigo-50/80 border-indigo-400 text-indigo-900'
-                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => toggleSubject(subj)}
-                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 shrink-0"
-                              />
-                              <span className="text-xs sm:text-sm font-bold truncate">{subj}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
+                      <input
+                        type="text"
+                        value={headerSubject}
+                        onChange={(e) => setHeaderSubject(e.target.value)}
+                        placeholder="Leave blank to hide Subject on paper header, or type Subject name"
+                        className="w-full rounded-xl border border-indigo-200 bg-indigo-50/30 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-indigo-400 outline-none"
+                      />
                     </div>
 
-                    {/* Card 3: Instructions */}
-                    <div className="bg-white rounded-2xl border border-amber-200/70 p-5 shadow-2xs space-y-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
-                        <h3 className="text-sm font-black text-slate-900">3. Instructions (One per line)</h3>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {[
-                            { label: '+ OMR Rule', text: 'Fill only with Blue / Black Ball Pen. Fill the circle completely black.' },
-                            { label: '+ No Negative', text: 'Each question carries 1 Mark. There is no negative marking.' },
-                            { label: '+ JEE (+4/-1)', text: 'Each correct answer carries +4 marks and -1 mark for each wrong answer.' },
-                          ].map((chip) => (
-                            <button
-                              key={chip.label}
-                              type="button"
-                              onClick={() => setInstructions(prev => (prev.trim() ? `${prev.trim()}\n${chip.text}` : chip.text))}
-                              className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 transition cursor-pointer"
-                            >
-                              {chip.label}
-                            </button>
-                          ))}
-                        </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-xs font-bold text-slate-600">Date</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const d = new Date();
+                            const formatted = `${String(d.getDate()).padStart(2, '0')}-${String(d.getMonth() + 1).padStart(2, '0')}-${d.getFullYear()}`;
+                            setExamDate(formatted);
+                          }}
+                          className="text-[11px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                        >
+                          Today
+                        </button>
                       </div>
+                      <input
+                        type="text"
+                        value={examDate}
+                        onChange={(e) => setExamDate(e.target.value)}
+                        placeholder="DD-MM-YYYY"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
+                      />
+                    </div>
 
-                      <textarea
-                        value={instructions}
-                        onChange={(e) => setInstructions(e.target.value)}
-                        rows={4}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white p-3.5 text-sm font-medium text-slate-800 focus:border-amber-400 outline-none resize-y"
-                        placeholder="Enter instructions..."
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Total Marks</label>
+                      <input
+                        type="text"
+                        value={maxMarks}
+                        onChange={(e) => setMaxMarks(e.target.value)}
+                        placeholder="100"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1.5">Time / Duration</label>
+                      <input
+                        type="text"
+                        value={time}
+                        onChange={(e) => setTime(e.target.value)}
+                        placeholder="3 Hours"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 focus:border-blue-400 outline-none"
                       />
                     </div>
                   </div>
+                </div>
 
-                  {/* Right 4 Columns */}
-                  <div className="xl:col-span-4 space-y-5">
-                    {/* Live Mini Header Preview */}
-                    <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-2xl border border-emerald-200/80 p-5 shadow-2xs space-y-3">
-                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                        <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><Eye className="w-4 h-4" /></span>
-                        Header Preview
-                      </h3>
-
-                      {showPaperHeader ? (
-                        <div className="bg-white border border-slate-300 rounded-xl p-3 text-black space-y-1.5">
-                          <div className="text-center border-b border-black pb-1.5">
-                            <div className="text-xs font-black uppercase">SRI VENKATESWARA JY SCHOOL</div>
-                            <div className="text-[11px] font-bold uppercase mt-0.5">{examName || 'EXAMINATION'}</div>
-                          </div>
-                          <div className="text-[11px] font-semibold space-y-0.5">
-                            <div className="flex justify-between items-center gap-2 flex-wrap">
-                              <span><strong>Class:</strong> {examClass || '___'}</span>
-                              {headerSubject.trim() && (
-                                <span className="text-indigo-700"><strong>Subject:</strong> {headerSubject.trim()}</span>
-                              )}
-                              <span><strong>Marks:</strong> {maxMarks || '100'}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span><strong>Date:</strong> {examDate || '___/___/20__'}</span>
-                              {time && <span><strong>Time:</strong> {time}</span>}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-xs font-semibold text-slate-400 bg-white rounded-xl border border-slate-200">
-                          Header is OFF
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Font Size, Spacing & Header Toggle */}
-                    <div className="bg-white rounded-2xl border border-teal-200/70 p-5 shadow-2xs space-y-4">
-                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                        <span className="p-1.5 rounded-lg bg-teal-50 text-teal-600"><Type className="w-4 h-4" /></span>
-                        4. Font & Spacing
-                      </h3>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-2">Font Size</label>
-                        <div className="grid grid-cols-2 gap-2">
-                          {[
-                            { val: 'small', label: 'Small (10pt)' },
-                            { val: 'medium', label: 'Medium (11pt)' },
-                            { val: 'large', label: 'Large (12pt)' },
-                            { val: 'xlarge', label: 'XL (14pt)' },
-                          ].map((opt) => (
-                            <button
-                              key={opt.val}
-                              type="button"
-                              onClick={() => setFontSize(opt.val)}
-                              className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                                fontSize === opt.val
-                                  ? 'bg-indigo-50 border-indigo-400 text-indigo-800'
-                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-bold text-slate-600 mb-2">Question Spacing</label>
-                        <div className="grid grid-cols-3 gap-2">
-                          {[
-                            { val: 'compact', label: 'Compact' },
-                            { val: 'normal', label: 'Normal' },
-                            { val: 'relaxed', label: 'Relaxed' },
-                          ].map((opt) => (
-                            <button
-                              key={opt.val}
-                              type="button"
-                              onClick={() => setQuestionSpacing(opt.val)}
-                              className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                                questionSpacing === opt.val
-                                  ? 'bg-indigo-600 text-white border-indigo-600'
-                                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
-                        <span className="text-xs font-bold text-slate-700">Show Paper Header</span>
-                        <label className="relative inline-flex items-center cursor-pointer shrink-0">
-                          <input
-                            type="checkbox"
-                            className="sr-only peer"
-                            checked={showPaperHeader}
-                            onChange={(e) => {
-                              setShowPaperHeader(e.target.checked);
-                              localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
-                            }}
-                          />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                        </label>
-                      </div>
-
-                      <div className="pt-2 flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={closeSettingsPage}
-                          className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleSaveSettingsPage}
-                          className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer transition shadow-xs"
-                        >
-                          Save Settings
-                        </button>
-                      </div>
+                {/* Card 2: Subject Tabs */}
+                <div className="bg-white rounded-2xl border border-purple-200/70 p-5 shadow-2xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                    <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><BookOpen className="w-4 h-4" /></span>
+                      2. Subjects
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={customSubjectInput}
+                        onChange={(e) => setCustomSubjectInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCustomSubject();
+                          }
+                        }}
+                        placeholder="Add subject..."
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-800 focus:bg-white outline-none w-36 sm:w-44"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddCustomSubject}
+                        className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> Add
+                      </button>
                     </div>
                   </div>
 
-                  {/* Bottom AI Configuration Card */}
-                  <div className="xl:col-span-12 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
-                    <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                      <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><Sparkles className="w-4 h-4" /></span>
-                      5. AI Model Configuration
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
-                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'gemini' ? 'border-purple-400 bg-purple-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2 cursor-pointer">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+                    {allSelectableSubjects.map((subj) => {
+                      const isChecked = selectedSubjects.includes(subj);
+                      return (
+                        <label
+                          key={subj}
+                          className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border transition-all select-none ${isChecked
+                            ? 'bg-indigo-50/80 border-indigo-400 text-indigo-900'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
+                            }`}
+                        >
                           <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'gemini'}
-                            onChange={() => {
-                              setActiveAiModel('gemini');
-                              localStorage.setItem('jy_active_ai_model', 'gemini');
-                            }}
-                            className="w-4 h-4 text-purple-600"
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleSubject(subj)}
+                            className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 shrink-0"
                           />
-                          <span className="text-sm font-bold text-slate-800">Google Gemini</span>
+                          <span className="text-xs sm:text-sm font-bold truncate">{subj}</span>
                         </label>
-                        {activeAiModel === 'gemini' && (
-                          <input
-                            type="password"
-                            value={geminiApiKey}
-                            onChange={(e) => {
-                              setGeminiApiKey(e.target.value);
-                              localStorage.setItem('jy_gemini_api_key', e.target.value);
-                            }}
-                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
-                            placeholder="Gemini API Key (optional)"
-                          />
-                        )}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Card 3: Instructions */}
+                <div className="bg-white rounded-2xl border border-amber-200/70 p-5 shadow-2xs space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+                    <h3 className="text-sm font-black text-slate-900">3. Instructions (One per line)</h3>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[
+                        { label: '+ OMR Rule', text: 'Fill only with Blue / Black Ball Pen. Fill the circle completely black.' },
+                        { label: '+ No Negative', text: 'Each question carries 1 Mark. There is no negative marking.' },
+                        { label: '+ JEE (+4/-1)', text: 'Each correct answer carries +4 marks and -1 mark for each wrong answer.' },
+                      ].map((chip) => (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => setInstructions(prev => (prev.trim() ? `${prev.trim()}\n${chip.text}` : chip.text))}
+                          className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 transition cursor-pointer"
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    rows={4}
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 focus:bg-white p-3.5 text-sm font-medium text-slate-800 focus:border-amber-400 outline-none resize-y"
+                    placeholder="Enter instructions..."
+                  />
+                </div>
+              </div>
+
+              {/* Right 4 Columns */}
+              <div className="xl:col-span-4 space-y-5">
+                {/* Live Mini Header Preview */}
+                <div className="bg-gradient-to-br from-white to-emerald-50/50 rounded-2xl border border-emerald-200/80 p-5 shadow-2xs space-y-3">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600"><Eye className="w-4 h-4" /></span>
+                    Header Preview
+                  </h3>
+
+                  {showPaperHeader ? (
+                    <div className="bg-white border border-slate-300 rounded-xl p-3 text-black space-y-1.5">
+                      <div className="text-center border-b border-black pb-1.5">
+                        <div className="text-xs font-black uppercase">SRI VENKATESWARA JY SCHOOL</div>
+                        <div className="text-[11px] font-bold uppercase mt-0.5">{examName || 'EXAMINATION'}</div>
                       </div>
-
-                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'claude' ? 'border-orange-400 bg-orange-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'claude'}
-                            onChange={() => {
-                              setActiveAiModel('claude');
-                              localStorage.setItem('jy_active_ai_model', 'claude');
-                            }}
-                            className="w-4 h-4 text-orange-600"
-                          />
-                          <span className="text-sm font-bold text-slate-800">Anthropic Claude</span>
-                        </label>
-                        {activeAiModel === 'claude' && (
-                          <input
-                            type="password"
-                            value={claudeApiKey}
-                            onChange={(e) => {
-                              setClaudeApiKey(e.target.value);
-                              localStorage.setItem('jy_claude_api_key', e.target.value);
-                            }}
-                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
-                            placeholder="Claude API Key"
-                          />
-                        )}
-                      </div>
-
-                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'chatgpt'}
-                            onChange={() => {
-                              setActiveAiModel('chatgpt');
-                              localStorage.setItem('jy_active_ai_model', 'chatgpt');
-                            }}
-                            className="w-4 h-4 text-emerald-600"
-                          />
-                          <span className="text-sm font-bold text-slate-800">OpenAI ChatGPT</span>
-                        </label>
-                        {activeAiModel === 'chatgpt' && (
-                          <input
-                            type="password"
-                            value={chatgptApiKey}
-                            onChange={(e) => {
-                              setChatgptApiKey(e.target.value);
-                              localStorage.setItem('jy_chatgpt_api_key', e.target.value);
-                            }}
-                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
-                            placeholder="OpenAI API Key"
-                          />
-                        )}
-                      </div>
-
-                      <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'openrouter' ? 'border-blue-400 bg-blue-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="ai_model"
-                            checked={activeAiModel === 'openrouter'}
-                            onChange={() => {
-                              setActiveAiModel('openrouter');
-                              localStorage.setItem('jy_active_ai_model', 'openrouter');
-                            }}
-                            className="w-4 h-4 text-blue-600"
-                          />
-                          <span className="text-sm font-bold text-slate-800">OpenRouter</span>
-                        </label>
-                        {activeAiModel === 'openrouter' && (
-                          <input
-                            type="password"
-                            value={openRouterApiKey}
-                            onChange={(e) => {
-                              setOpenRouterApiKey(e.target.value);
-                              localStorage.setItem('jy_openrouter_api_key', e.target.value);
-                            }}
-                            className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
-                            placeholder="sk-or-v1-..."
-                          />
-                        )}
+                      <div className="text-[11px] font-semibold space-y-0.5">
+                        <div className="flex justify-between items-center gap-2 flex-wrap">
+                          <span><strong>Class:</strong> {examClass || '___'}</span>
+                          {headerSubject.trim() && (
+                            <span className="text-indigo-700"><strong>Subject:</strong> {headerSubject.trim()}</span>
+                          )}
+                          <span><strong>Marks:</strong> {maxMarks || '100'}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span><strong>Date:</strong> {examDate || '___/___/20__'}</span>
+                          {time && <span><strong>Time:</strong> {time}</span>}
+                        </div>
                       </div>
                     </div>
+                  ) : (
+                    <div className="p-4 text-center text-xs font-semibold text-slate-400 bg-white rounded-xl border border-slate-200">
+                      Header is OFF
+                    </div>
+                  )}
+                </div>
+
+                {/* Font Size, Spacing & Header Toggle */}
+                <div className="bg-white rounded-2xl border border-teal-200/70 p-5 shadow-2xs space-y-4">
+                  <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                    <span className="p-1.5 rounded-lg bg-teal-50 text-teal-600"><Type className="w-4 h-4" /></span>
+                    4. Font & Spacing
+                  </h3>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-2">Font Size</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { val: 'small', label: 'Small (10pt)' },
+                        { val: 'medium', label: 'Medium (11pt)' },
+                        { val: 'large', label: 'Large (12pt)' },
+                        { val: 'xlarge', label: 'XL (14pt)' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setFontSize(opt.val)}
+                          className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${fontSize === opt.val
+                            ? 'bg-indigo-50 border-indigo-400 text-indigo-800'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 mb-2">Question Spacing</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { val: 'compact', label: 'Compact' },
+                        { val: 'normal', label: 'Normal' },
+                        { val: 'relaxed', label: 'Relaxed' },
+                      ].map((opt) => (
+                        <button
+                          key={opt.val}
+                          type="button"
+                          onClick={() => setQuestionSpacing(opt.val)}
+                          className={`py-2 px-2 rounded-xl border text-xs font-bold transition cursor-pointer ${questionSpacing === opt.val
+                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white'
+                            }`}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <span className="text-xs font-bold text-slate-700">Show Paper Header</span>
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={showPaperHeader}
+                        onChange={(e) => {
+                          setShowPaperHeader(e.target.checked);
+                          localStorage.setItem('mcq_exam_show_header', e.target.checked ? 'true' : 'false');
+                        }}
+                      />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={closeSettingsPage}
+                      className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold cursor-pointer transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveSettingsPage}
+                      disabled={isSaving}
+                      className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black cursor-pointer transition shadow-xs disabled:opacity-60"
+                    >
+                      {isSaving ? 'Saving...' : 'Save Settings'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom AI Configuration Card */}
+              <div className="xl:col-span-12 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-4">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 pb-2.5 border-b border-slate-100">
+                  <span className="p-1.5 rounded-lg bg-purple-50 text-purple-600"><Sparkles className="w-4 h-4" /></span>
+                  5. AI Model Configuration
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+                  <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'gemini' ? 'border-purple-400 bg-purple-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ai_model"
+                        checked={activeAiModel === 'gemini'}
+                        onChange={() => {
+                          setActiveAiModel('gemini');
+                          localStorage.setItem('jy_active_ai_model', 'gemini');
+                        }}
+                        className="w-4 h-4 text-purple-600"
+                      />
+                      <span className="text-sm font-bold text-slate-800">Google Gemini</span>
+                    </label>
+                    {activeAiModel === 'gemini' && (
+                      <input
+                        type="password"
+                        value={geminiApiKey}
+                        onChange={(e) => {
+                          setGeminiApiKey(e.target.value);
+                          localStorage.setItem('jy_gemini_api_key', e.target.value);
+                        }}
+                        className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
+                        placeholder="Gemini API Key (optional)"
+                      />
+                    )}
+                  </div>
+
+                  <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'claude' ? 'border-orange-400 bg-orange-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ai_model"
+                        checked={activeAiModel === 'claude'}
+                        onChange={() => {
+                          setActiveAiModel('claude');
+                          localStorage.setItem('jy_active_ai_model', 'claude');
+                        }}
+                        className="w-4 h-4 text-orange-600"
+                      />
+                      <span className="text-sm font-bold text-slate-800">Anthropic Claude</span>
+                    </label>
+                    {activeAiModel === 'claude' && (
+                      <input
+                        type="password"
+                        value={claudeApiKey}
+                        onChange={(e) => {
+                          setClaudeApiKey(e.target.value);
+                          localStorage.setItem('jy_claude_api_key', e.target.value);
+                        }}
+                        className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
+                        placeholder="Claude API Key"
+                      />
+                    )}
+                  </div>
+
+                  <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'chatgpt' ? 'border-emerald-400 bg-emerald-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ai_model"
+                        checked={activeAiModel === 'chatgpt'}
+                        onChange={() => {
+                          setActiveAiModel('chatgpt');
+                          localStorage.setItem('jy_active_ai_model', 'chatgpt');
+                        }}
+                        className="w-4 h-4 text-emerald-600"
+                      />
+                      <span className="text-sm font-bold text-slate-800">OpenAI ChatGPT</span>
+                    </label>
+                    {activeAiModel === 'chatgpt' && (
+                      <input
+                        type="password"
+                        value={chatgptApiKey}
+                        onChange={(e) => {
+                          setChatgptApiKey(e.target.value);
+                          localStorage.setItem('jy_chatgpt_api_key', e.target.value);
+                        }}
+                        className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
+                        placeholder="OpenAI API Key"
+                      />
+                    )}
+                  </div>
+
+                  <div className={`p-3.5 rounded-xl border transition-all ${activeAiModel === 'openrouter' ? 'border-blue-400 bg-blue-50/50' : 'border-slate-200 bg-slate-50/50'}`}>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="ai_model"
+                        checked={activeAiModel === 'openrouter'}
+                        onChange={() => {
+                          setActiveAiModel('openrouter');
+                          localStorage.setItem('jy_active_ai_model', 'openrouter');
+                        }}
+                        className="w-4 h-4 text-blue-600"
+                      />
+                      <span className="text-sm font-bold text-slate-800">OpenRouter</span>
+                    </label>
+                    {activeAiModel === 'openrouter' && (
+                      <input
+                        type="password"
+                        value={openRouterApiKey}
+                        onChange={(e) => {
+                          setOpenRouterApiKey(e.target.value);
+                          localStorage.setItem('jy_openrouter_api_key', e.target.value);
+                        }}
+                        className="mt-2.5 w-full rounded-lg border-slate-200 bg-white border p-2 text-xs outline-none"
+                        placeholder="sk-or-v1-..."
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* Actions Toolbar (Editor & Preview View) */}
-          {!isSettingsOpen && (
-          <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-2 md:gap-3 print:hidden shadow-sm z-10 overflow-x-auto whitespace-nowrap custom-scrollbar">
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <button
-                onClick={() => window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'))}
-                className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors hidden lg:flex items-center justify-center border border-indigo-200 cursor-pointer"
-                title="Toggle Sidebar"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => navigate('/question-bank')}
-                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center cursor-pointer"
-                title="Go Back"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-            </div>
+      {/* Actions Toolbar (Editor & Preview View) */}
+      {!isSettingsOpen && (
+        <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-2 md:gap-3 print:hidden shadow-sm z-10 overflow-x-auto whitespace-nowrap custom-scrollbar">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'))}
+              className="p-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-colors hidden lg:flex items-center justify-center border border-indigo-200 cursor-pointer"
+              title="Toggle Sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => navigate('/question-bank')}
+              className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-colors flex items-center justify-center cursor-pointer"
+              title="Go Back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+          </div>
 
-            <div className="flex items-center gap-3 flex-shrink-0">
-              <button
-                onClick={() => navigate('/question-bank/saved-papers')}
-                className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium cursor-pointer"
-                title="Saved Papers"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Saved Papers</span>
-              </button>
-              <button
-                onClick={toggleFullScreen}
-                className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 cursor-pointer"
-                title="Full Screen"
-              >
-                <Maximize className="w-5 h-5" />
-              </button>
-              <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
-              <button
-                onClick={openSettingsPage}
-                className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
-              >
-                <Settings className="w-4 h-4" />
-                Paper Settings
-              </button>
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <button
+              onClick={() => navigate('/question-bank/saved-papers')}
+              className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 text-sm font-medium cursor-pointer"
+              title="Saved Papers"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span className="hidden sm:inline">Saved Papers</span>
+            </button>
+            <button
+              onClick={toggleFullScreen}
+              className="p-2 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-all flex items-center gap-2 cursor-pointer"
+              title="Full Screen"
+            >
+              <Maximize className="w-5 h-5" />
+            </button>
+            <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
+            <button
+              onClick={openSettingsPage}
+              className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
+            >
+              <Settings className="w-4 h-4" />
+              Paper Settings
+            </button>
 
-              <button
-                onClick={() => setIsBankModalOpen(true)}
-                className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
-              >
-                <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">Import from Bank</span>
-              </button>
+            <button
+              onClick={() => setIsBankModalOpen(true)}
+              className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-blue-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
+            >
+              <Database className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">Import from Bank</span>
+            </button>
 
-              <button
-                onClick={() => setIsAiModalOpen(true)}
-                className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
-              >
-                <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                <span className="hidden sm:inline">AI Gen</span>
-              </button>
+            <button
+              onClick={() => setIsAiModalOpen(true)}
+              className="px-3 py-1.5 md:px-4 md:py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg md:rounded-xl hover:shadow-lg hover:shadow-purple-500/30 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 shadow-sm cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 md:w-4 md:h-4" />
+              <span className="hidden sm:inline">AI Gen</span>
+            </button>
 
-              <button
-                onClick={handleDownloadPdf}
-                disabled={isDownloadingPdf}
-                className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 active:scale-95"
-              >
-                {isDownloadingPdf ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Download className="w-3.5 h-3.5" />
-                )}
-                <span>{isDownloadingPdf ? 'Wait...' : 'PDF'}</span>
-              </button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="px-3 py-1.5 md:hidden bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-lg shadow-sm font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60 active:scale-95"
+            >
+              {isDownloadingPdf ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Download className="w-3.5 h-3.5" />
+              )}
+              <span>{isDownloadingPdf ? 'Wait...' : 'PDF'}</span>
+            </button>
 
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
-              >
-                <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-3 py-1.5 md:px-4 md:py-2 bg-indigo-600 text-white rounded-lg md:rounded-xl hover:bg-indigo-700 font-bold text-xs md:text-sm md:font-medium transition-all flex items-center gap-1.5 md:gap-2 disabled:opacity-60 shadow-sm cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5 md:w-4 md:h-4" />
               <span className="hidden sm:inline">{isSaving ? 'Saving...' : paperId ? 'Update' : 'Save'}</span>
             </button>
 
-              <button
-                onClick={handleDownloadPdf}
-                disabled={isDownloadingPdf}
-                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer active:scale-95"
-                title="Download PDF directly to device (Instant Vector PDF)"
-              >
-                {isDownloadingPdf ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <Download className="w-4 h-4" />
-                )}
-                <span>{isDownloadingPdf ? 'Opening PDF...' : 'Download PDF'}</span>
-              </button>
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isDownloadingPdf}
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/30 transition-all items-center gap-2 hidden md:flex disabled:opacity-60 cursor-pointer active:scale-95"
+              title="Download PDF directly to device (Instant Vector PDF)"
+            >
+              {isDownloadingPdf ? (
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <Download className="w-4 h-4" />
+              )}
+              <span>{isDownloadingPdf ? 'Opening PDF...' : 'Download PDF'}</span>
+            </button>
 
-              <button
-                onClick={handlePrint}
-                disabled={isDownloadingPdf}
-                className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
-              >
-                <Printer className="w-4 h-4" />
-                Print A4
-              </button>
-            </div>
+            <button
+              onClick={handlePrint}
+              disabled={isDownloadingPdf}
+              className="px-4 py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 font-medium transition-all items-center gap-2 hidden md:flex cursor-pointer"
+            >
+              <Printer className="w-4 h-4" />
+              Print A4
+            </button>
           </div>
-          )}
+        </div>
+      )}
 
-          {/* Main Dual Layout Content */}
-          {!isSettingsOpen && (
-          <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
-            <style>{`
+      {/* Main Dual Layout Content */}
+      {!isSettingsOpen && (
+        <div className="flex-1 flex overflow-hidden print:overflow-visible h-[calc(100vh-80px)] print:h-auto print:block">
+          <style>{`
   @media screen and (min-width: 768px) {
     .split-left { width: ${leftWidth}% !important; }
     .split-right { width: ${100 - leftWidth}% !important; }
   }
 `}</style>
-            {/* Left Side: Editor (Hidden on Print) */}
-            <div className={`w-full split-left p-4 md:p-6 overflow-y-auto border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
-              <div className="h-full flex flex-col pb-20">
+          {/* Left Side: Editor (Hidden on Print) */}
+          <div className={`w-full split-left p-4 md:p-6 overflow-y-auto border-slate-200 bg-white print:hidden custom-scrollbar pb-24 md:pb-6 ${mobileTab === 'editor' ? 'block' : 'hidden md:block'}`}>
+            <div className="h-full flex flex-col pb-20">
 
-                {/* Desktop Editor Header Toolbar */}
-                <div className="border-b border-slate-100 pb-3 mb-3 hidden md:flex items-center justify-between gap-3 flex-wrap">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <input
-                      type="file"
-                      ref={imageInputRef}
-                      accept="image/*"
-                      onChange={handleImageUploadForEditor}
-                      className="hidden"
-                    />
+              {/* Desktop Editor Header Toolbar */}
+              <div className="border-b border-slate-100 pb-3 mb-3 hidden md:flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <input
+                    type="file"
+                    ref={imageInputRef}
+                    accept="image/*"
+                    onChange={handleImageUploadForEditor}
+                    className="hidden"
+                  />
 
-                    {/* 1. Insert Image Button */}
-                    <button
-                      type="button"
-                      onClick={() => imageInputRef.current?.click()}
-                      className="px-3.5 py-2 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-purple-500/25 hover:shadow-md hover:shadow-purple-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-purple-400/30"
-                      title="Insert or Upload Image"
-                    >
-                      <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
-                        <ImagePlus className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <span>Insert Image</span>
-                    </button>
+                  {/* 1. Insert Image Button */}
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="px-3.5 py-2 bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-purple-500/25 hover:shadow-md hover:shadow-purple-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-purple-400/30"
+                    title="Insert or Upload Image"
+                  >
+                    <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
+                      <ImagePlus className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span>Insert Image</span>
+                  </button>
 
-                    {/* 2. Image Sizes & Move Button */}
-                    <button
-                      type="button"
-                      onClick={() => setIsImageSizeModalOpen(true)}
-                      className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 border shadow-sm cursor-pointer hover:scale-[1.02] active:scale-95 ${
-                        (activeImages.length > 0 || floatingImagesList.length > 0)
-                          ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white border-indigo-400/30 shadow-indigo-500/25 hover:shadow-md'
-                          : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 border-slate-200 hover:border-indigo-300 shadow-slate-200/50 hover:shadow-xs'
+                  {/* 2. Image Sizes & Move Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsImageSizeModalOpen(true)}
+                    className={`px-3.5 py-2 text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 border shadow-sm cursor-pointer hover:scale-[1.02] active:scale-95 ${(activeImages.length > 0 || floatingImagesList.length > 0)
+                      ? 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-pink-600 hover:from-indigo-700 hover:to-pink-700 text-white border-indigo-400/30 shadow-indigo-500/25 hover:shadow-md'
+                      : 'bg-white hover:bg-slate-50 text-slate-700 hover:text-indigo-600 border-slate-200 hover:border-indigo-300 shadow-slate-200/50 hover:shadow-xs'
                       }`}
-                      title="Change Image Sizes, Alignments & Question Positions"
-                    >
-                      <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
-                        (activeImages.length > 0 || floatingImagesList.length > 0)
-                          ? 'bg-white/20 text-white'
-                          : 'bg-indigo-50 text-indigo-600'
+                    title="Change Image Sizes, Alignments & Question Positions"
+                  >
+                    <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${(activeImages.length > 0 || floatingImagesList.length > 0)
+                      ? 'bg-white/20 text-white'
+                      : 'bg-indigo-50 text-indigo-600'
                       }`}>
-                        <Sliders className="w-3.5 h-3.5" />
-                      </div>
-                      <span>Image Sizes & Move</span>
-                      {(activeImages.length + floatingImagesList.length) > 0 ? (
-                        <span className="bg-white text-indigo-700 font-black rounded-full px-2 py-0.5 text-[10px] leading-tight shadow-xs">
-                          {activeImages.length + floatingImagesList.length}
+                      <Sliders className="w-3.5 h-3.5" />
+                    </div>
+                    <span>Image Sizes & Move</span>
+                    {(activeImages.length + floatingImagesList.length) > 0 ? (
+                      <span className="bg-white text-indigo-700 font-black rounded-full px-2 py-0.5 text-[10px] leading-tight shadow-xs">
+                        {activeImages.length + floatingImagesList.length}
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-500 font-semibold rounded-full px-1.5 py-0.5 text-[10px]">
+                        0
+                      </span>
+                    )}
+                  </button>
+
+                  {/* 3. Auto-Align Format Button */}
+                  <button
+                    type="button"
+                    onClick={autoFormatText}
+                    className="px-3.5 py-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-cyan-400/30"
+                    title="Auto-align Options (A), (B), (C), (D) and Clean Formatting"
+                  >
+                    <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
+                      <Wand2 className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <span>Auto-Align Format</span>
+                  </button>
+                </div>
+
+                {/* Status / Question Count indicator */}
+                <div className="text-[11px] font-semibold text-slate-400 hidden xl:flex items-center gap-2">
+                  <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-700 font-bold border border-slate-200/70">{availableQuestions.length} Questions</span>
+                  <span className="text-slate-300">•</span>
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    LaTeX & Math Supported
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Quick Action Buttons Bar */}
+              <div className="md:hidden flex items-center justify-between gap-1.5 pb-2.5 border-b border-slate-100 mb-2.5">
+                <span className="text-xs font-bold text-slate-700">Questions Editor</span>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => imageInputRef.current?.click()}
+                    className="px-2.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
+                  >
+                    <ImagePlus className="w-3 h-3" /> Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsImageSizeModalOpen(true)}
+                    className={`px-2.5 py-1.5 text-xs font-bold rounded-lg shadow-xs flex items-center gap-1 ${(activeImages.length + floatingImagesList.length) > 0
+                      ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white'
+                      : 'bg-white text-slate-700 border border-slate-200'
+                      }`}
+                  >
+                    <Sliders className="w-3 h-3" /> Sizes {(activeImages.length + floatingImagesList.length) > 0 && `(${activeImages.length + floatingImagesList.length})`}
+                  </button>
+                  <button
+                    onClick={autoFormatText}
+                    className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-teal-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
+                  >
+                    <Wand2 className="w-3 h-3" /> Align
+                  </button>
+                </div>
+              </div>
+
+              {/* Subject Buttons Bar - Premium Executive Styling */}
+              <div className="flex items-center gap-2 mt-1 mb-3.5 p-1.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl overflow-x-auto custom-scrollbar flex-shrink-0 shadow-inner">
+                <div className="flex items-center gap-1.5 px-2 py-1 text-slate-500 text-[11px] font-black uppercase tracking-wider flex-shrink-0 select-none">
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Subjects:</span>
+                </div>
+
+                {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
+                  const content = subjectContents[subj] || '';
+                  const hasContent = content.trim() !== '';
+                  const subjQuestions = (content.match(/^\s*(?:\d+|Q\d+|Question\s*\d+)[\.\)]/gim) || []).length;
+                  const isActive = activeSubjectTab === subj;
+
+                  return (
+                    <button
+                      key={subj}
+                      onClick={() => setActiveSubjectTab(subj)}
+                      type="button"
+                      className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 flex items-center gap-2 cursor-pointer ${isActive
+                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-md shadow-blue-500/25 border border-indigo-400/40 scale-[1.02]'
+                        : hasContent
+                          ? 'bg-white text-slate-800 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 shadow-2xs hover:shadow-xs'
+                          : 'bg-slate-50/80 text-slate-500 hover:text-slate-800 hover:bg-white border border-transparent hover:border-slate-200'
+                        }`}
+                    >
+                      <span className="tracking-wide">{subj}</span>
+
+                      {/* Question Count or Status Badge */}
+                      {subjQuestions > 0 ? (
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isActive
+                          ? 'bg-white/20 text-white border border-white/30'
+                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}>
+                          {subjQuestions} Qs
                         </span>
-                      ) : (
-                        <span className="bg-slate-100 text-slate-500 font-semibold rounded-full px-1.5 py-0.5 text-[10px]">
-                          0
+                      ) : hasContent ? (
+                        <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white animate-pulse' : 'bg-emerald-500'
+                          }`} />
+                      ) : null}
+
+                      {/* Remove Subject Button (X) if multiple subjects exist */}
+                      {selectedSubjects.length > 1 && (
+                        <span
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveSubject(subj);
+                          }}
+                          className={`ml-1 p-0.5 rounded-md transition-colors hover:bg-rose-500 hover:text-white ${isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-white'
+                            }`}
+                          title={`Remove ${subj} from paper`}
+                        >
+                          <X className="w-3.5 h-3.5" />
                         </span>
                       )}
                     </button>
+                  );
+                })}
 
-                    {/* 3. Auto-Align Format Button */}
-                    <button
-                      type="button"
-                      onClick={autoFormatText}
-                      className="px-3.5 py-2 bg-gradient-to-r from-blue-600 via-cyan-600 to-teal-600 hover:from-blue-700 hover:to-teal-700 text-white text-xs font-bold rounded-xl transition-all duration-200 flex items-center gap-2 shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35 hover:scale-[1.02] active:scale-95 cursor-pointer border border-cyan-400/30"
-                      title="Auto-align Options (A), (B), (C), (D) and Clean Formatting"
-                    >
-                      <div className="w-5 h-5 rounded-lg bg-white/20 flex items-center justify-center">
-                        <Wand2 className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <span>Auto-Align Format</span>
-                    </button>
-                  </div>
+                {/* Add / Manage Subjects Button */}
+                <button
+                  type="button"
+                  onClick={openSettingsPage}
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 border border-dashed border-slate-300 hover:border-indigo-400 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-2xs flex-shrink-0"
+                  title="Add or manage subjects in Paper Settings"
+                >
+                  <Plus className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Manage Subjects</span>
+                </button>
+              </div>
 
-                  {/* Status / Question Count indicator */}
-                  <div className="text-[11px] font-semibold text-slate-400 hidden xl:flex items-center gap-2">
-                    <span className="bg-slate-100 px-2.5 py-1 rounded-lg text-slate-700 font-bold border border-slate-200/70">{availableQuestions.length} Questions</span>
-                    <span className="text-slate-300">•</span>
-                    <span className="bg-emerald-50 text-emerald-700 border border-emerald-200/60 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      LaTeX & Math Supported
-                    </span>
-                  </div>
-                </div>
+              {/* Clean Editor Textarea - Full vertical space */}
+              <textarea
+                ref={textareaRef}
+                value={subjectContents[activeSubjectTab] || ''}
+                onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
+                onPaste={handleEditorPaste}
+                onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
+                className="w-full flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[450px] resize-none shadow-inner"
+                placeholder={`Enter questions for ${activeSubjectTab}...\n1.Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
+              />
+            </div>
+          </div>
 
-                {/* Mobile Quick Action Buttons Bar */}
-                <div className="md:hidden flex items-center justify-between gap-1.5 pb-2.5 border-b border-slate-100 mb-2.5">
-                  <span className="text-xs font-bold text-slate-700">Questions Editor</span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => imageInputRef.current?.click()}
-                      className="px-2.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
-                    >
-                      <ImagePlus className="w-3 h-3" /> Image
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIsImageSizeModalOpen(true)}
-                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg shadow-xs flex items-center gap-1 ${
-                        (activeImages.length + floatingImagesList.length) > 0
-                          ? 'bg-gradient-to-r from-indigo-600 to-pink-600 text-white'
-                          : 'bg-white text-slate-700 border border-slate-200'
+          {/* Resizer */}
+          <div
+            className="w-2.5 bg-slate-100 hover:bg-blue-100 active:bg-blue-200 cursor-col-resize flex flex-col justify-center items-center group transition-colors print:hidden hidden md:flex border-l border-r border-slate-200 z-10"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              const startX = e.clientX;
+              const startWidth = leftWidth;
+              const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
+
+              const onMove = (eMove: PointerEvent) => {
+                const deltaX = eMove.clientX - startX;
+                const deltaPct = (deltaX / containerWidth) * 100;
+                let newWidth = startWidth + deltaPct;
+                if (newWidth < 20) newWidth = 20;
+                if (newWidth > 80) newWidth = 80;
+                setLeftWidth(newWidth);
+              };
+
+              const onUp = () => {
+                window.removeEventListener('pointermove', onMove);
+                window.removeEventListener('pointerup', onUp);
+              };
+
+              window.addEventListener('pointermove', onMove);
+              window.addEventListener('pointerup', onUp);
+            }}
+          >
+            <div className="flex flex-col gap-1 items-center justify-center h-8 w-4 rounded-full bg-white shadow-sm border border-slate-300 text-slate-400 group-hover:text-blue-500 group-hover:border-blue-400 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18-6-6 6-6" /><path d="m15 6 6 6-6 6" /></svg>
+            </div>
+          </div>
+
+          {/* Right Side: Live Preview */}
+          <div className={`w-full split-right overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
+
+            {/* Unified Executive Header Toolbar with Zoom Controls (Desktop + Mobile) */}
+            <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center print:hidden shadow-xs">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <h3 className="font-bold text-slate-800 text-xs md:text-sm tracking-wide">
+                  Live Preview
+                </h3>
+                <span className="text-[11px] text-slate-400 font-medium hidden lg:inline">
+                  • A4 Page Layout
+                </span>
+              </div>
+
+              {/* Quick Subject / Single Paper Switcher */}
+              {selectedSubjects.length > 1 && (
+                <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-inner">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewSubjectFilter('all')}
+                    className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${previewSubjectFilter === 'all'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-blue-600 hover:bg-white'
                       }`}
-                    >
-                      <Sliders className="w-3 h-3" /> Sizes {(activeImages.length + floatingImagesList.length) > 0 && `(${activeImages.length + floatingImagesList.length})`}
-                    </button>
-                    <button
-                      onClick={autoFormatText}
-                      className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-teal-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1"
-                    >
-                      <Wand2 className="w-3 h-3" /> Align
-                    </button>
-                  </div>
-                </div>
-
-                {/* Subject Buttons Bar - Premium Executive Styling */}
-                <div className="flex items-center gap-2 mt-1 mb-3.5 p-1.5 bg-slate-100/80 border border-slate-200/80 rounded-2xl overflow-x-auto custom-scrollbar flex-shrink-0 shadow-inner">
-                  <div className="flex items-center gap-1.5 px-2 py-1 text-slate-500 text-[11px] font-black uppercase tracking-wider flex-shrink-0 select-none">
-                    <BookOpen className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Subjects:</span>
-                  </div>
-
-                  {(selectedSubjects.length > 0 ? selectedSubjects : ['General']).map(subj => {
-                    const content = subjectContents[subj] || '';
-                    const hasContent = content.trim() !== '';
-                    const subjQuestions = (content.match(/^\s*(?:\d+|Q\d+|Question\s*\d+)[\.\)]/gim) || []).length;
-                    const isActive = activeSubjectTab === subj;
-
+                    title="Preview and Print ALL subjects combined"
+                  >
+                    All ({selectedSubjects.length})
+                  </button>
+                  {selectedSubjects.map(subj => {
+                    const count = (subjectContents[subj]?.match(/^\s*(?:\d+|Q\d+)[\.\)]/gim) || []).length;
+                    const isFilterActive = previewSubjectFilter === subj;
                     return (
                       <button
                         key={subj}
-                        onClick={() => setActiveSubjectTab(subj)}
                         type="button"
-                        className={`px-4 py-2 rounded-xl font-bold text-xs md:text-sm transition-all duration-200 whitespace-nowrap flex-shrink-0 flex items-center gap-2 cursor-pointer ${
-                          isActive
-                            ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white shadow-md shadow-blue-500/25 border border-indigo-400/40 scale-[1.02]'
-                            : hasContent
-                              ? 'bg-white text-slate-800 border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 shadow-2xs hover:shadow-xs'
-                              : 'bg-slate-50/80 text-slate-500 hover:text-slate-800 hover:bg-white border border-transparent hover:border-slate-200'
-                        }`}
+                        onClick={() => setPreviewSubjectFilter(subj)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${isFilterActive
+                          ? 'bg-indigo-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:text-indigo-600 hover:bg-white'
+                          }`}
+                        title={`Preview and Print ONLY ${subj} paper`}
                       >
-                        <span className="tracking-wide">{subj}</span>
-
-                        {/* Question Count or Status Badge */}
-                        {subjQuestions > 0 ? (
-                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                            isActive
-                              ? 'bg-white/20 text-white border border-white/30'
-                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          }`}>
-                            {subjQuestions} Qs
-                          </span>
-                        ) : hasContent ? (
-                          <span className={`w-2 h-2 rounded-full ${
-                            isActive ? 'bg-white animate-pulse' : 'bg-emerald-500'
-                          }`} />
-                        ) : null}
-
-                        {/* Remove Subject Button (X) if multiple subjects exist */}
-                        {selectedSubjects.length > 1 && (
-                          <span
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleRemoveSubject(subj);
-                            }}
-                            className={`ml-1 p-0.5 rounded-md transition-colors hover:bg-rose-500 hover:text-white ${
-                              isActive ? 'text-white/70 hover:text-white' : 'text-slate-400 hover:text-white'
-                            }`}
-                            title={`Remove ${subj} from paper`}
-                          >
-                            <X className="w-3.5 h-3.5" />
+                        <span>{subj}</span>
+                        {count > 0 && (
+                          <span className={`text-[10px] px-1 py-0.2 rounded-full font-black ${isFilterActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                            }`}>
+                            {count}
                           </span>
                         )}
                       </button>
                     );
                   })}
+                </div>
+              )}
 
-                  {/* Add / Manage Subjects Button */}
+              {/* Professional Zoom Control Toolbar */}
+              <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(z => Math.max(0.3, Number((z - 0.1).toFixed(2))))}
+                  className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                  title="Zoom Out (-10%)"
+                  disabled={zoomLevel <= 0.3}
+                >
+                  <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+
+                <span className="text-xs font-black text-slate-800 min-w-[52px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200/90 shadow-2xs select-none font-mono">
+                  {Math.round(zoomLevel * 100)}%
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(z => Math.min(1.8, Number((z + 0.1).toFixed(2))))}
+                  className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+                  title="Zoom In (+10%)"
+                  disabled={zoomLevel >= 1.8}
+                >
+                  <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                </button>
+
+                <div className="h-5 w-[1px] bg-slate-200 mx-1" />
+
+                {/* Dedicated 100% Button */}
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(1.0)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95 ${Math.round(zoomLevel * 100) === 100
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs border border-indigo-500/50'
+                    : 'bg-white hover:bg-indigo-50/50 text-slate-700 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300'
+                    }`}
+                  title="Actual 100% A4 Print Size"
+                >
+                  <span>100%</span>
+                </button>
+
+                {/* Dedicated Fit Button */}
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel(window.innerWidth <= 768 ? 0.52 : 0.85)}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 ${(window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-xs border border-blue-500/50'
+                    : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 hover:text-blue-800 border border-blue-200/80'
+                    }`}
+                  title="Fit to Screen Width"
+                >
+                  <Maximize className="w-3 h-3" />
+                  <span>Fit</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-center p-2 md:p-8 print:p-0 print:block overflow-x-auto custom-scrollbar">
+              <div
+                className="dynamic-paper-scale origin-top transition-all duration-150 print:!transform-none"
+                style={{
+                  zoom: zoomLevel,
+                  ['--paper-zoom' as any]: zoomLevel,
+                }}
+              >
+                <LiveLatexPreview
+                  subjectContents={subjectContents}
+                  examName={examName}
+                  examDate={examDate}
+                  examClass={examClass}
+                  realSubject={headerSubject.trim()}
+                  hideHeaderSubjectIfEmpty={true}
+                  examSubject={selectedSubjects.join(', ')}
+                  selectedSubjects={
+                    previewSubjectFilter !== 'all'
+                      ? [previewSubjectFilter]
+                      : selectedSubjects.length > 0
+                        ? selectedSubjects
+                        : Object.keys(subjectContents).length > 0
+                          ? Object.keys(subjectContents)
+                          : ['General']
+                  }
+                  logoBase64={logoBase64}
+                  maxMarks={maxMarks}
+                  time={time}
+                  instructions={instructions.split('\n').filter(i => i.trim() !== '')}
+                  isDoubleColumn={false}
+                  inlineImages={inlineImages}
+                  onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...(prev[id] as FloatingImage), ...updates } }))}
+                  onImageDelete={(id) => {
+                    setInlineImages(prev => {
+                      const newImgs = { ...prev };
+                      delete newImgs[id];
+                      return newImgs;
+                    });
+                  }}
+                  fontSize={fontSize}
+                  questionSpacing={questionSpacing}
+                  showHeader={showPaperHeader}
+                />
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      {!isSettingsOpen && (
+        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-4 py-3 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-3xl print:hidden">
+          <button
+            onClick={() => setMobileTab('editor')}
+            className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
+          >
+            <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
+            <span className="text-[11px] font-black tracking-wide">Edit</span>
+          </button>
+          <button
+            onClick={() => setMobileTab('preview')}
+            className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
+          >
+            <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
+            <span className="text-[11px] font-black tracking-wide">Preview</span>
+          </button>
+          <button
+            onClick={openSettingsPage}
+            className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
+          >
+            <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
+            <span className="text-[11px] font-black tracking-wide">Settings</span>
+          </button>
+        </div>
+      )}
+
+      {/* Dedicated Image Size, Position & Move Modal */}
+      {isImageSizeModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
+                  <Sliders className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-base md:text-lg text-white">
+                    చిత్రాల సైజు & స్థానం మార్చుకోండి (Image Sizes & Position Controls)
+                  </h2>
+                  <p className="text-xs text-purple-100">
+                    Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} inline images {floatingImagesList.length > 0 && `• ${floatingImagesList.length} free drag`}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsImageSizeModalOpen(false)}
+                className="p-2 hover:bg-white/20 rounded-full transition-colors text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick Bulk Actions Bar */}
+            {activeImages.length > 1 && (
+              <div className="px-6 py-3 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
+                <span className="text-xs font-bold text-indigo-900">
+                  అన్ని చిత్రాలకు ఒకేసారి (Apply to All Images):
+                </span>
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={openSettingsPage}
-                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white hover:bg-indigo-50 text-slate-600 hover:text-indigo-600 border border-dashed border-slate-300 hover:border-indigo-400 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap shadow-2xs flex-shrink-0"
-                    title="Add or manage subjects in Paper Settings"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}| large]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images set to Large (380px)! ⭐');
+                    }}
+                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Manage Subjects</span>
+                    All Large (380px) ⭐
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}| full]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images set to Full Width (100%)!');
+                    }}
+                    className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
+                  >
+                    All Full Width (100%)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      let content = subjectContents[activeSubjectTab] || '';
+                      activeImages.forEach(img => {
+                        content = content.replace(img.fullMatch, `[IMAGE:${img.id}]`);
+                      });
+                      setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
+                      toast.success('All images reset to Medium (240px)!');
+                    }}
+                    className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
+                  >
+                    Reset All (Medium)
                   </button>
                 </div>
+              </div>
+            )}
 
-                {/* Clean Editor Textarea - Full vertical space */}
-                <textarea
-                  ref={textareaRef}
-                  value={subjectContents[activeSubjectTab] || ''}
-                  onChange={(e) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: e.target.value })}
-                  onPaste={handleEditorPaste}
-                  onKeyDown={(e) => handleEditorKeyDown(e, subjectContents[activeSubjectTab] || '', (val) => setSubjectContents({ ...subjectContents, [activeSubjectTab]: val }))}
-                  className="w-full flex-1 rounded-2xl border border-slate-200 bg-slate-50 p-5 font-mono text-sm leading-relaxed focus:ring-2 focus:ring-blue-500/20 outline-none min-h-[450px] resize-none shadow-inner"
-                  placeholder={`Enter questions for ${ activeSubjectTab }...\n1.Question text\n(A) Option A\n(B) Option B\n(C) Option C\n(D) Option D`}
+            {/* Modal Body: List of Images */}
+            <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
+
+              {/* Free-Floating Images List if any */}
+              {floatingImagesList.length > 0 && (
+                <div className="space-y-3 p-4 bg-purple-50/70 border border-purple-200 rounded-2xl">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                      <Move className="w-4 h-4 text-purple-600" />
+                      పేపర్‌పై ఫ్రీగా డ్రాగ్ చేయబడుతున్న చిత్రాలు (Free Drag on Paper):
+                    </span>
+                    <span className="text-[11px] text-purple-700">
+                      (ప్రివ్యూ పేపర్‌పై మౌస్‌తో ఎక్కడికైనా డ్రాగ్ చేయవచ్చు)
+                    </span>
+                  </div>
+                  {floatingImagesList.map(([id, imgObj]) => {
+                    const fImg = imgObj as FloatingImage;
+                    return (
+                      <div key={id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex-wrap gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                            <img src={fImg.dataUrl} alt="Floating" className="max-w-full max-h-full object-contain" />
+                          </div>
+                          <div>
+                            <span className="font-mono text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-md">
+                              [IMG:{id}]
+                            </span>
+                            <span className="text-xs text-slate-500 ml-2">X: {Math.round(fImg.x)}px, Y: {Math.round(fImg.y)}px</span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => convertToInline(id)}
+                          className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition-colors cursor-pointer"
+                        >
+                          📌 Convert back to Inline (టెక్స్ట్‌లోకి మార్చు)
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {activeImages.length === 0 && floatingImagesList.length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <ImagePlus className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p className="font-semibold text-slate-700">ఈ సబ్జెక్ట్‌లో ఇంకా చిత్రాలు లేవు (No images found)</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    ఎడిటర్‌లో పైనున్న "Insert Image" నొక్కి లేదా చిత్రం కాపీ చేసి పేస్ట్ (Ctrl+V) చేయండి.
+                  </p>
+                </div>
+              ) : (
+                activeImages.map((img, idx) => {
+                  const currentSize = (img.size || '').toLowerCase();
+                  const currentAlign = (img.align || 'center').toLowerCase();
+                  const imgData = inlineImages[img.id];
+                  const imgSrc = typeof imgData === 'string' ? imgData : (imgData ? (imgData as FloatingImage).dataUrl : '');
+
+                  return (
+                    <div
+                      key={idx}
+                      className="p-4 md:p-5 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 shadow-sm transition-all flex flex-col gap-4"
+                    >
+                      {/* Top Row: Thumbnail + Info + Free Drag Toggle */}
+                      <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-3">
+                          {imgSrc ? (
+                            <div className="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
+                              <img src={imgSrc} alt="Preview" className="max-w-full max-h-full object-contain" />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl border border-purple-100 bg-purple-50 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-xs">
+                              IMG #{idx + 1}
+                            </div>
+                          )}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-xs font-black text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
+                                [IMAGE:{img.id}]
+                              </span>
+                              <span className="text-xs font-bold text-slate-700">
+                                చిత్రం {idx + 1}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
+                              <span>సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong></span>
+                              <span>•</span>
+                              <span>స్థానం: <strong className="text-purple-700 uppercase font-black">{currentAlign || 'center'}</strong></span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Free Drag on Paper Toggle */}
+                        <button
+                          type="button"
+                          onClick={() => convertToFreeFloating(img.fullMatch, img.id)}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                          title="Convert to mouse draggable anywhere on preview paper"
+                        >
+                          <Move className="w-3.5 h-3.5" />
+                          <span>మౌస్‌తో ఫ్రీగా డ్రాగ్ చేయండి (Free Drag 🖱️)</span>
+                        </button>
+                      </div>
+
+                      {/* Control Section 1: సైజు ఎంపిక (Size Options) */}
+                      <div>
+                        <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                          1. చిత్రం సైజు మార్చుకోండి (Size):
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Small (130px)', val: 'small' },
+                            { label: 'Medium (240px)', val: 'medium' },
+                            { label: 'Large (380px) ⭐', val: 'large' },
+                            { label: 'Full Width (100%)', val: 'full' },
+                          ].map((opt) => {
+                            const isActive = (currentSize === opt.val) || (opt.val === 'medium' && (!img.size || currentSize === 'medium'));
+                            return (
+                              <button
+                                key={opt.val}
+                                type="button"
+                                onClick={() => {
+                                  updateImageTag(img.fullMatch, img.id, { size: opt.val });
+                                  toast.success(`Image[${img.id}] size set to ${opt.label}!`);
+                                }}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${isActive
+                                  ? 'bg-purple-600 text-white shadow-xs scale-105'
+                                  : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                                  }`}
+                              >
+                                {opt.label}
+                              </button>
+                            );
+                          })}
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
+                              if (customWidth) {
+                                const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
+                                updateImageTag(img.fullMatch, img.id, { size: cleanWidth });
+                                toast.success(`Image[${img.id}] width set to ${cleanWidth}!`);
+                              }
+                            }}
+                            className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
+                          >
+                            Custom px...
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Control Section 2: స్థానం & అలైన్‌మెంట్ (Horizontal Alignment) */}
+                      <div>
+                        <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
+                          2. స్థానం / అలైన్‌మెంట్ (Alignment):
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: 'Left (ఎడమ)', val: 'left', icon: <AlignLeft className="w-3.5 h-3.5" /> },
+                            { label: 'Center (మధ్య)', val: 'center', icon: <AlignCenter className="w-3.5 h-3.5" /> },
+                            { label: 'Right (కుడి)', val: 'right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                            { label: 'Float Right (టెక్స్ట్ పక్కన)', val: 'float-right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                          ].map((alignOpt) => {
+                            const isAlignActive = (currentAlign === alignOpt.val) || (alignOpt.val === 'center' && (!img.align || currentAlign === 'center'));
+                            return (
+                              <button
+                                key={alignOpt.val}
+                                type="button"
+                                onClick={() => {
+                                  updateImageTag(img.fullMatch, img.id, { align: alignOpt.val });
+                                  toast.success(`Image[${img.id}] aligned ${alignOpt.label}!`);
+                                }}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${isAlignActive
+                                  ? 'bg-indigo-600 text-white shadow-xs scale-105'
+                                  : 'bg-slate-100 hover:bg-indigo-50 text-slate-700 border border-slate-200'
+                                  }`}
+                              >
+                                {alignOpt.icon}
+                                <span>{alignOpt.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Control Section 3: కావలసిన ప్రశ్న వద్దకు తరలించండి (Move to Any Question) */}
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+                        <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block mb-2">
+                          3. ఏ ప్రశ్న వద్దకు కావాలో అక్కడికి తరలించండి (Move to Any Question):
+                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <select
+                            id={`move-select-${img.id}`}
+                            className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
+                            defaultValue=""
+                          >
+                            <option value="" disabled>ప్రశ్నను ఎంచుకోండి (Select Question)...</option>
+                            <option value="top">⬆️ పేపర్ ప్రారంభంలో (Top of Paper)</option>
+                            {availableQuestions.map((qNum) => (
+                              <option key={qNum} value={qNum}>
+                                📌 Question {qNum} క్రిందకు (Under Q.{qNum})
+                              </option>
+                            ))}
+                            <option value="bottom">⬇️ పేపర్ చివరలో (End of Paper)</option>
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const sel = document.getElementById(`move-select-${img.id}`) as HTMLSelectElement;
+                              if (!sel || !sel.value) {
+                                toast.error('దయచేసి ఒక ప్రశ్నను ఎంచుకోండి (Please select a question)');
+                                return;
+                              }
+                              const val = sel.value === 'top' || sel.value === 'bottom' ? sel.value : parseInt(sel.value, 10);
+                              moveImageToQuestion(img.fullMatch, val);
+                              toast.success(`Image[${img.id}] moved ${sel.options[sel.selectedIndex].text}!`);
+                            }}
+                            className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                          >
+                            <Pin className="w-3.5 h-3.5" />
+                            <span>ఇక్కడికి తరలించు (Move Here)</span>
+                          </button>
+
+                          <div className="flex items-center gap-1 ml-auto">
+                            <button
+                              type="button"
+                              onClick={() => shiftImagePosition(img.fullMatch, 'up')}
+                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                              title="పై ప్రశ్న వద్దకు జరుపు (Move Up)"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>పైకి (Up)</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => shiftImagePosition(img.fullMatch, 'down')}
+                              className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
+                              title="క్రింది ప్రశ్న వద్దకు జరుపు (Move Down)"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
+                              <span>క్రిందికి (Down)</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
+              <span className="text-xs text-slate-500">
+                మార్చిన వెంటనే లైవ్ ప్రివ్యూలో కనిపిస్తుంది (Instant Live Preview update)
+              </span>
+              <button
+                onClick={() => setIsImageSizeModalOpen(false)}
+                className="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
+              >
+                పూర్తయింది (Done)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Generate Modal */}
+      {isAiModalOpen && (
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
+          <div className="bg-white md:rounded-2xl w-full h-full md:h-auto md:max-w-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
+              <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-purple-600" /> AI Generate
+              </h2>
+              <button onClick={() => setIsAiModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            <div className="p-4 md:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar pb-24 md:pb-6">
+              {/* Source Tabs */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
+                <button
+                  onClick={() => setAiSourceType('text')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  📝 Text Prompt
+                </button>
+                <button
+                  onClick={() => setAiSourceType('file')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  📄 Upload File
+                </button>
+                <button
+                  onClick={() => setAiSourceType('url')}
+                  className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  🔗 Website Link
+                </button>
+              </div>
+
+              {/* Dynamic Input Area */}
+              {aiSourceType === 'text' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Paste text, or <span className="text-blue-600 font-bold">Paste an Image (Ctrl+V)</span></label>
+                  <textarea
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    onPaste={handleAiPaste}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none resize-none h-32 transition-all custom-scrollbar"
+                    placeholder="E.g., Generate 10 MCQ Model questions..."
+                  />
+                  {aiImageBase64 && (
+                    <div className="mt-3 relative inline-block">
+                      <img src={`data:${aiImageMimeType};base64,${aiImageBase64}`} alt="Pasted" className="h-24 rounded-lg shadow-sm border border-slate-200 object-contain" />
+                      <button onClick={() => { setAiImageBase64(''); setAiImageMimeType(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md cursor-pointer">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+              {aiSourceType === 'file' && (
+                <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer group">
+                  <input type="file" accept="image/*,application/pdf,.tex,.txt,.csv,.md,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                    <Upload className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-700">Click to upload a file</p>
+                  <p className="text-xs text-slate-500 mt-1">Supports JPG, PNG, PDF, <strong className="text-purple-600">DOCX (Word with Equations)</strong>, TEX and more (Max 20MB)</p>
+                </div>
+              )}
+              {aiSourceType === 'url' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Website URL</label>
+                  <input
+                    type="url"
+                    value={aiInput}
+                    onChange={(e) => setAiInput(e.target.value)}
+                    className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                    placeholder="https://example.com/article"
+                  />
+                </div>
+              )}
+
+              {/* Specific Instructions */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Custom AI Instructions (Optional)</label>
+                <input
+                  type="text"
+                  value={aiInstructions}
+                  onChange={(e) => setAiInstructions(e.target.value)}
+                  className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
+                  placeholder="E.g., Only extract multiple choice questions, ignore theory..."
                 />
               </div>
             </div>
 
-            {/* Resizer */}
-            <div
-              className="w-2.5 bg-slate-100 hover:bg-blue-100 active:bg-blue-200 cursor-col-resize flex flex-col justify-center items-center group transition-colors print:hidden hidden md:flex border-l border-r border-slate-200 z-10"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                const startX = e.clientX;
-                const startWidth = leftWidth;
-                const containerWidth = containerRef.current?.offsetWidth || window.innerWidth;
-
-                const onMove = (eMove: PointerEvent) => {
-                  const deltaX = eMove.clientX - startX;
-                  const deltaPct = (deltaX / containerWidth) * 100;
-                  let newWidth = startWidth + deltaPct;
-                  if (newWidth < 20) newWidth = 20;
-                  if (newWidth > 80) newWidth = 80;
-                  setLeftWidth(newWidth);
-                };
-
-                const onUp = () => {
-                  window.removeEventListener('pointermove', onMove);
-                  window.removeEventListener('pointerup', onUp);
-                };
-
-                window.addEventListener('pointermove', onMove);
-                window.addEventListener('pointerup', onUp);
-              }}
-            >
-              <div className="flex flex-col gap-1 items-center justify-center h-8 w-4 rounded-full bg-white shadow-sm border border-slate-300 text-slate-400 group-hover:text-blue-500 group-hover:border-blue-400 transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18-6-6 6-6" /><path d="m15 6 6 6-6 6" /></svg>
-              </div>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+              <button
+                onClick={() => setIsAiModalOpen(false)}
+                className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setIsAiModalOpen(false);
+                  handleAiGenerate();
+                }}
+                disabled={isGenerating}
+                className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                Generate Now
+              </button>
             </div>
-
-            {/* Right Side: Live Preview */}
-            <div className={`w-full split-right overflow-y-auto bg-slate-100 print:w-full print:bg-white custom-scrollbar flex flex-col relative print:overflow-visible print:block pb-40 md:pb-0 ${mobileTab === 'preview' ? 'block' : 'hidden md:block'}`}>
-
-              {/* Unified Executive Header Toolbar with Zoom Controls (Desktop + Mobile) */}
-              <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 md:px-6 py-2.5 flex justify-between items-center print:hidden shadow-xs">
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                  </span>
-                  <h3 className="font-bold text-slate-800 text-xs md:text-sm tracking-wide">
-                    Live Preview
-                  </h3>
-                  <span className="text-[11px] text-slate-400 font-medium hidden lg:inline">
-                    • A4 Page Layout
-                  </span>
-                </div>
-
-                {/* Quick Subject / Single Paper Switcher */}
-                {selectedSubjects.length > 1 && (
-                  <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200 shadow-inner">
-                    <button
-                      type="button"
-                      onClick={() => setPreviewSubjectFilter('all')}
-                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        previewSubjectFilter === 'all'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'text-slate-600 hover:text-blue-600 hover:bg-white'
-                      }`}
-                      title="Preview and Print ALL subjects combined"
-                    >
-                      All ({selectedSubjects.length})
-                    </button>
-                    {selectedSubjects.map(subj => {
-                      const count = (subjectContents[subj]?.match(/^\s*(?:\d+|Q\d+)[\.\)]/gim) || []).length;
-                      const isFilterActive = previewSubjectFilter === subj;
-                      return (
-                        <button
-                          key={subj}
-                          type="button"
-                          onClick={() => setPreviewSubjectFilter(subj)}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
-                            isFilterActive
-                              ? 'bg-indigo-600 text-white shadow-xs'
-                              : 'text-slate-600 hover:text-indigo-600 hover:bg-white'
-                          }`}
-                          title={`Preview and Print ONLY ${subj} paper`}
-                        >
-                          <span>{subj}</span>
-                          {count > 0 && (
-                            <span className={`text-[10px] px-1 py-0.2 rounded-full font-black ${
-                              isFilterActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-                            }`}>
-                              {count}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Professional Zoom Control Toolbar */}
-                <div className="flex items-center gap-1.5 bg-slate-100/90 p-1.5 rounded-xl border border-slate-200 shadow-inner">
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(z => Math.max(0.3, Number((z - 0.1).toFixed(2))))}
-                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                    title="Zoom Out (-10%)"
-                    disabled={zoomLevel <= 0.3}
-                  >
-                    <ZoomOut className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </button>
-
-                  <span className="text-xs font-black text-slate-800 min-w-[52px] text-center bg-white py-1 px-2 rounded-lg border border-slate-200/90 shadow-2xs select-none font-mono">
-                    {Math.round(zoomLevel * 100)}%
-                  </span>
-
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(z => Math.min(1.8, Number((z + 0.1).toFixed(2))))}
-                    className="p-1.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-blue-600 rounded-lg transition-all cursor-pointer shadow-2xs border border-slate-200/80 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
-                    title="Zoom In (+10%)"
-                    disabled={zoomLevel >= 1.8}
-                  >
-                    <ZoomIn className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  </button>
-
-                  <div className="h-5 w-[1px] bg-slate-200 mx-1" />
-
-                  {/* Dedicated 100% Button */}
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(1.0)}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1 shadow-2xs active:scale-95 ${
-                      Math.round(zoomLevel * 100) === 100
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-xs border border-indigo-500/50'
-                        : 'bg-white hover:bg-indigo-50/50 text-slate-700 hover:text-indigo-600 border border-slate-200 hover:border-indigo-300'
-                    }`}
-                    title="Actual 100% A4 Print Size"
-                  >
-                    <span>100%</span>
-                  </button>
-
-                  {/* Dedicated Fit Button */}
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(window.innerWidth <= 768 ? 0.52 : 0.85)}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-2xs active:scale-95 ${
-                      (window.innerWidth <= 768 ? Math.round(zoomLevel * 100) === 52 : Math.round(zoomLevel * 100) === 85)
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-xs border border-blue-500/50'
-                        : 'bg-blue-50/80 hover:bg-blue-100/80 text-blue-700 hover:text-blue-800 border border-blue-200/80'
-                    }`}
-                    title="Fit to Screen Width"
-                  >
-                    <Maximize className="w-3 h-3" />
-                    <span>Fit</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex justify-center p-2 md:p-8 print:p-0 print:block overflow-x-auto custom-scrollbar">
-                <div
-                  className="dynamic-paper-scale origin-top transition-all duration-150 print:!transform-none"
-                  style={{
-                    zoom: zoomLevel,
-                    ['--paper-zoom' as any]: zoomLevel,
-                  }}
-                >
-                  <LiveLatexPreview
-                    subjectContents={subjectContents}
-                    examName={examName}
-                    examDate={examDate}
-                    examClass={examClass}
-                    realSubject={headerSubject.trim()}
-                    hideHeaderSubjectIfEmpty={true}
-                    examSubject={selectedSubjects.join(', ')}
-                    selectedSubjects={
-                      previewSubjectFilter !== 'all'
-                        ? [previewSubjectFilter]
-                        : selectedSubjects.length > 0
-                          ? selectedSubjects
-                          : Object.keys(subjectContents).length > 0
-                            ? Object.keys(subjectContents)
-                            : ['General']
-                    }
-                    logoBase64={logoBase64}
-                    maxMarks={maxMarks}
-                    time={time}
-                    instructions={instructions.split('\n').filter(i => i.trim() !== '')}
-                    isDoubleColumn={false}
-                    inlineImages={inlineImages}
-                    onImageUpdate={(id, updates) => setInlineImages(prev => ({ ...prev, [id]: { ...(prev[id] as FloatingImage), ...updates } }))}
-                    onImageDelete={(id) => {
-                      setInlineImages(prev => {
-                        const newImgs = { ...prev };
-                        delete newImgs[id];
-                        return newImgs;
-                      });
-                    }}
-                    fontSize={fontSize}
-                    questionSpacing={questionSpacing}
-                    showHeader={showPaperHeader}
-                  />
-                </div>
-              </div>
-            </div>
-
           </div>
-          )}
+        </div>
+      )}
 
-          {/* Mobile Bottom Navigation */}
-          {!isSettingsOpen && (
-          <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-between items-center px-4 py-3 pb-[max(20px,env(safe-area-inset-bottom))] z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)] rounded-t-3xl print:hidden">
-            <button
-              onClick={() => setMobileTab('editor')}
-              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'editor' ? 'text-blue-600 bg-blue-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              <div className="w-6 h-6 mb-1"><PenTool className="w-full h-full" /></div>
-              <span className="text-[11px] font-black tracking-wide">Edit</span>
-            </button>
-            <button
-              onClick={() => setMobileTab('preview')}
-              className={`flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all ${mobileTab === 'preview' ? 'text-emerald-600 bg-emerald-50 scale-105' : 'text-slate-500 hover:bg-slate-50'}`}
-            >
-              <div className="w-6 h-6 mb-1"><Eye className="w-full h-full" /></div>
-              <span className="text-[11px] font-black tracking-wide">Preview</span>
-            </button>
-            <button
-              onClick={openSettingsPage}
-              className="flex-1 flex flex-col items-center justify-center p-2 rounded-2xl transition-all text-slate-500 hover:bg-slate-50 hover:text-indigo-600"
-            >
-              <div className="w-6 h-6 mb-1"><Settings className="w-full h-full" /></div>
-              <span className="text-[11px] font-black tracking-wide">Settings</span>
-            </button>
-          </div>
-          )}
+      {/* LaTeX Help Modal */}
+      {isLatexHelpOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsLatexHelpOpen(false)}></div>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
+              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                <HelpCircle className="text-amber-500 w-6 h-6" /> LaTeX Formatting Guide
+              </h2>
+              <button onClick={() => setIsLatexHelpOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
-          {/* Dedicated Image Size, Position & Move Modal */}
-          {isImageSizeModalOpen && (
-            <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-6 animate-in fade-in duration-200">
-              <div className="bg-white rounded-3xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-                {/* Modal Header */}
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 text-white flex-shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/20 rounded-xl backdrop-blur-md">
-                      <Sliders className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <h2 className="font-bold text-base md:text-lg text-white">
-                        చిత్రాల సైజు & స్థానం మార్చుకోండి (Image Sizes & Position Controls)
-                      </h2>
-                      <p className="text-xs text-purple-100">
-                        Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} inline images {floatingImagesList.length > 0 && `• ${ floatingImagesList.length } free drag`}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsImageSizeModalOpen(false)}
-                    className="p-2 hover:bg-white/20 rounded-full transition-colors text-white cursor-pointer"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
+            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar text-sm text-slate-700">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Text Formatting</h3>
+                  <ul className="space-y-3 font-mono">
+                    <li><span className="text-blue-600">\textbf&#123;Bold Text&#125;</span> &rarr; <strong>Bold Text</strong></li>
+                    <li><span className="text-blue-600">\textit&#123;Italic Text&#125;</span> &rarr; <em>Italic Text</em></li>
+                    <li><span className="text-blue-600">\underline&#123;Underline&#125;</span> &rarr; <u>Underline</u></li>
+                  </ul>
                 </div>
 
-                {/* Quick Bulk Actions Bar */}
-                {activeImages.length > 1 && (
-                  <div className="px-6 py-3 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
-                    <span className="text-xs font-bold text-indigo-900">
-                      అన్ని చిత్రాలకు ఒకేసారి (Apply to All Images):
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          let content = subjectContents[activeSubjectTab] || '';
-                          activeImages.forEach(img => {
-                            content = content.replace(img.fullMatch, `[IMAGE:${ img.id }| large]`);
-                          });
-                          setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
-                          toast.success('All images set to Large (380px)! ⭐');
-                        }}
-                        className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
-                      >
-                        All Large (380px) ⭐
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          let content = subjectContents[activeSubjectTab] || '';
-                          activeImages.forEach(img => {
-                            content = content.replace(img.fullMatch, `[IMAGE:${ img.id }| full]`);
-                          });
-                          setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
-                          toast.success('All images set to Full Width (100%)!');
-                        }}
-                        className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-xs transition-all cursor-pointer"
-                      >
-                        All Full Width (100%)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          let content = subjectContents[activeSubjectTab] || '';
-                          activeImages.forEach(img => {
-                            content = content.replace(img.fullMatch, `[IMAGE:${ img.id }]`);
-                          });
-                          setSubjectContents(prev => ({ ...prev, [activeSubjectTab]: content }));
-                          toast.success('All images reset to Medium (240px)!');
-                        }}
-                        className="px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-lg transition-all cursor-pointer"
-                      >
-                        Reset All (Medium)
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Modal Body: List of Images */}
-                <div className="p-4 md:p-6 overflow-y-auto flex-1 custom-scrollbar space-y-5">
-
-                  {/* Free-Floating Images List if any */}
-                  {floatingImagesList.length > 0 && (
-                    <div className="space-y-3 p-4 bg-purple-50/70 border border-purple-200 rounded-2xl">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                          <Move className="w-4 h-4 text-purple-600" />
-                          పేపర్‌పై ఫ్రీగా డ్రాగ్ చేయబడుతున్న చిత్రాలు (Free Drag on Paper):
-                        </span>
-                        <span className="text-[11px] text-purple-700">
-                          (ప్రివ్యూ పేపర్‌పై మౌస్‌తో ఎక్కడికైనా డ్రాగ్ చేయవచ్చు)
-                        </span>
-                      </div>
-                      {floatingImagesList.map(([id, imgObj]) => {
-                        const fImg = imgObj as FloatingImage;
-                        return (
-                          <div key={id} className="flex items-center justify-between bg-white p-3 rounded-xl border border-purple-100 shadow-xs flex-wrap gap-2">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-lg border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
-                                <img src={fImg.dataUrl} alt="Floating" className="max-w-full max-h-full object-contain" />
-                              </div>
-                              <div>
-                                <span className="font-mono text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-md">
-                                  [IMG:{id}]
-                                </span>
-                                <span className="text-xs text-slate-500 ml-2">X: {Math.round(fImg.x)}px, Y: {Math.round(fImg.y)}px</span>
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => convertToInline(id)}
-                              className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition-colors cursor-pointer"
-                            >
-                              📌 Convert back to Inline (టెక్స్ట్‌లోకి మార్చు)
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {activeImages.length === 0 && floatingImagesList.length === 0 ? (
-                    <div className="text-center py-12 text-slate-400">
-                      <ImagePlus className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p className="font-semibold text-slate-700">ఈ సబ్జెక్ట్‌లో ఇంకా చిత్రాలు లేవు (No images found)</p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        ఎడిటర్‌లో పైనున్న "Insert Image" నొక్కి లేదా చిత్రం కాపీ చేసి పేస్ట్ (Ctrl+V) చేయండి.
-                      </p>
-                    </div>
-                  ) : (
-                    activeImages.map((img, idx) => {
-                      const currentSize = (img.size || '').toLowerCase();
-                      const currentAlign = (img.align || 'center').toLowerCase();
-                      const imgData = inlineImages[img.id];
-                      const imgSrc = typeof imgData === 'string' ? imgData : (imgData ? (imgData as FloatingImage).dataUrl : '');
-
-                      return (
-                        <div
-                          key={idx}
-                          className="p-4 md:p-5 rounded-2xl border border-slate-200 bg-white hover:border-purple-300 shadow-sm transition-all flex flex-col gap-4"
-                        >
-                          {/* Top Row: Thumbnail + Info + Free Drag Toggle */}
-                          <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
-                            <div className="flex items-center gap-3">
-                              {imgSrc ? (
-                                <div className="w-16 h-16 rounded-xl border border-slate-200 bg-slate-50 overflow-hidden flex-shrink-0 flex items-center justify-center p-1">
-                                  <img src={imgSrc} alt="Preview" className="max-w-full max-h-full object-contain" />
-                                </div>
-                              ) : (
-                                <div className="w-16 h-16 rounded-xl border border-purple-100 bg-purple-50 flex-shrink-0 flex items-center justify-center text-purple-600 font-bold text-xs">
-                                  IMG #{idx + 1}
-                                </div>
-                              )}
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-mono text-xs font-black text-purple-800 bg-purple-100 px-2.5 py-0.5 rounded-lg border border-purple-200">
-                                    [IMAGE:{img.id}]
-                                  </span>
-                                  <span className="text-xs font-bold text-slate-700">
-                                    చిత్రం {idx + 1}
-                                  </span>
-                                </div>
-                                <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
-                                  <span>సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong></span>
-                                  <span>•</span>
-                                  <span>స్థానం: <strong className="text-purple-700 uppercase font-black">{currentAlign || 'center'}</strong></span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Free Drag on Paper Toggle */}
-                            <button
-                              type="button"
-                              onClick={() => convertToFreeFloating(img.fullMatch, img.id)}
-                              className="px-3 py-1.5 text-xs font-bold rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-                              title="Convert to mouse draggable anywhere on preview paper"
-                            >
-                              <Move className="w-3.5 h-3.5" />
-                              <span>మౌస్‌తో ఫ్రీగా డ్రాగ్ చేయండి (Free Drag 🖱️)</span>
-                            </button>
-                          </div>
-
-                          {/* Control Section 1: సైజు ఎంపిక (Size Options) */}
-                          <div>
-                            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                              1. చిత్రం సైజు మార్చుకోండి (Size):
-                            </span>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {[
-                                { label: 'Small (130px)', val: 'small' },
-                                { label: 'Medium (240px)', val: 'medium' },
-                                { label: 'Large (380px) ⭐', val: 'large' },
-                                { label: 'Full Width (100%)', val: 'full' },
-                              ].map((opt) => {
-                                const isActive = (currentSize === opt.val) || (opt.val === 'medium' && (!img.size || currentSize === 'medium'));
-                                return (
-                                  <button
-                                    key={opt.val}
-                                    type="button"
-                                    onClick={() => {
-                                      updateImageTag(img.fullMatch, img.id, { size: opt.val });
-                                      toast.success(`Image[${img.id}] size set to ${opt.label}!`);
-                                    }}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                                      isActive
-                                        ? 'bg-purple-600 text-white shadow-xs scale-105'
-                                        : 'bg-slate-100 hover:bg-purple-50 text-slate-700 border border-slate-200'
-                                    }`}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                );
-                              })}
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
-                                  if (customWidth) {
-                                    const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
-                                    updateImageTag(img.fullMatch, img.id, { size: cleanWidth });
-                                    toast.success(`Image[${img.id}] width set to ${cleanWidth}!`);
-                                  }
-                                }}
-                                className="px-2.5 py-1.5 text-xs font-bold rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 cursor-pointer"
-                              >
-                                Custom px...
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Control Section 2: స్థానం & అలైన్‌మెంట్ (Horizontal Alignment) */}
-                          <div>
-                            <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                              2. స్థానం / అలైన్‌మెంట్ (Alignment):
-                            </span>
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {[
-                                { label: 'Left (ఎడమ)', val: 'left', icon: <AlignLeft className="w-3.5 h-3.5" /> },
-                                { label: 'Center (మధ్య)', val: 'center', icon: <AlignCenter className="w-3.5 h-3.5" /> },
-                                { label: 'Right (కుడి)', val: 'right', icon: <AlignRight className="w-3.5 h-3.5" /> },
-                                { label: 'Float Right (టెక్స్ట్ పక్కన)', val: 'float-right', icon: <AlignRight className="w-3.5 h-3.5" /> },
-                              ].map((alignOpt) => {
-                                const isAlignActive = (currentAlign === alignOpt.val) || (alignOpt.val === 'center' && (!img.align || currentAlign === 'center'));
-                                return (
-                                  <button
-                                    key={alignOpt.val}
-                                    type="button"
-                                    onClick={() => {
-                                      updateImageTag(img.fullMatch, img.id, { align: alignOpt.val });
-                                      toast.success(`Image[${img.id}] aligned ${alignOpt.label}!`);
-                                    }}
-                                    className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                                      isAlignActive
-                                        ? 'bg-indigo-600 text-white shadow-xs scale-105'
-                                        : 'bg-slate-100 hover:bg-indigo-50 text-slate-700 border border-slate-200'
-                                    }`}
-                                  >
-                                    {alignOpt.icon}
-                                    <span>{alignOpt.label}</span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Control Section 3: కావలసిన ప్రశ్న వద్దకు తరలించండి (Move to Any Question) */}
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                            <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block mb-2">
-                              3. ఏ ప్రశ్న వద్దకు కావాలో అక్కడికి తరలించండి (Move to Any Question):
-                            </span>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <select
-                                id={`move-select-${img.id}`}
-                                className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
-                                defaultValue=""
-                              >
-                                <option value="" disabled>ప్రశ్నను ఎంచుకోండి (Select Question)...</option>
-                                <option value="top">⬆️ పేపర్ ప్రారంభంలో (Top of Paper)</option>
-                                {availableQuestions.map((qNum) => (
-                                  <option key={qNum} value={qNum}>
-                                    📌 Question {qNum} క్రిందకు (Under Q.{qNum})
-                                  </option>
-                                ))}
-                                <option value="bottom">⬇️ పేపర్ చివరలో (End of Paper)</option>
-                              </select>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const sel = document.getElementById(`move-select-${img.id}`) as HTMLSelectElement;
-                                  if (!sel || !sel.value) {
-                                    toast.error('దయచేసి ఒక ప్రశ్నను ఎంచుకోండి (Please select a question)');
-                                    return;
-                                  }
-                                  const val = sel.value === 'top' || sel.value === 'bottom' ? sel.value : parseInt(sel.value, 10);
-                                  moveImageToQuestion(img.fullMatch, val);
-                                  toast.success(`Image[${img.id}] moved ${sel.options[sel.selectedIndex].text}!`);
-                                }}
-                                className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
-                              >
-                                <Pin className="w-3.5 h-3.5" />
-                                <span>ఇక్కడికి తరలించు (Move Here)</span>
-                              </button>
-
-                              <div className="flex items-center gap-1 ml-auto">
-                                <button
-                                  type="button"
-                                  onClick={() => shiftImagePosition(img.fullMatch, 'up')}
-                                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                                  title="పై ప్రశ్న వద్దకు జరుపు (Move Up)"
-                                >
-                                  <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
-                                  <span>పైకి (Up)</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => shiftImagePosition(img.fullMatch, 'down')}
-                                  className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                                  title="క్రింది ప్రశ్న వద్దకు జరుపు (Move Down)"
-                                >
-                                  <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
-                                  <span>క్రిందికి (Down)</span>
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* Modal Footer */}
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
-                  <span className="text-xs text-slate-500">
-                    మార్చిన వెంటనే లైవ్ ప్రివ్యూలో కనిపిస్తుంది (Instant Live Preview update)
-                  </span>
-                  <button
-                    onClick={() => setIsImageSizeModalOpen(false)}
-                    className="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
-                  >
-                    పూర్తయింది (Done)
-                  </button>
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Math & Equations</h3>
+                  <ul className="space-y-3 font-mono">
+                    <li>Inline math: <span className="text-blue-600">$x^2 + y^2 = z^2$</span></li>
+                    <li>Fractions: <span className="text-blue-600">$\frac&#123;1&#125;&#123;2&#125;$</span></li>
+                    <li>Roots: <span className="text-blue-600">$\sqrt&#123;x&#125;$</span></li>
+                    <li>Angles: <span className="text-blue-600">$45^\circ$</span></li>
+                  </ul>
                 </div>
               </div>
+
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">చిత్రాలు & సైజు మార్పు (Images & Resizing)</h3>
+                <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
+                <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు & స్థానం మార్చుకోవడానికి (How to Resize & Move):</p>
+                <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
+                  <li>ఎడిటర్ పైనున్న <strong>[Image Sizes & Move]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు, అలైన్‌మెంట్ మరియు ఏ ప్రశ్న క్రింద కావాలో ఎంచుకోవచ్చు.</li>
+                  <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large|center]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px|right]</code></li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100">
+                <h3 className="font-bold mb-1">Tip: Auto-Align Format</h3>
+                <p>Use the <strong>Auto-Align Format</strong> button to automatically fix the spacing and alignment of all multiple-choice options (A, B, C, D) in your text.</p>
+              </div>
             </div>
-          )}
 
-          {/* AI Generate Modal */}
-          {isAiModalOpen && (
-            <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center p-0 md:p-4">
-              <div className="bg-white md:rounded-2xl w-full h-full md:h-auto md:max-w-2xl flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 flex-shrink-0">
-                  <h2 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-purple-600" /> AI Generate
-                  </h2>
-                  <button onClick={() => setIsAiModalOpen(false)} className="p-2 hover:bg-slate-200 rounded-full transition-colors cursor-pointer">
-                    <X className="w-5 h-5 text-slate-500" />
-                  </button>
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setIsLatexHelpOpen(false)}
+                className="px-6 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import from Bank Modal */}
+      {isBankModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsBankModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Database className="w-5 h-5" />
                 </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Import from Master Question Bank</h2>
+                  <p className="text-sm text-slate-500">Select questions to add to {activeSubjectTab}</p>
+                </div>
+              </div>
+              <button onClick={() => setIsBankModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
 
-                <div className="p-4 md:p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar pb-24 md:pb-6">
-                  {/* Source Tabs */}
-                  <div className="flex gap-2 p-1 bg-slate-100 rounded-lg">
-                    <button
-                      onClick={() => setAiSourceType('text')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'text' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-                    >
-                      📝 Text Prompt
-                    </button>
-                    <button
-                      onClick={() => setAiSourceType('file')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'file' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-                    >
-                      📄 Upload File
-                    </button>
-                    <button
-                      onClick={() => setAiSourceType('url')}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all cursor-pointer ${aiSourceType === 'url' ? 'bg-white shadow text-blue-600' : 'text-slate-600 hover:text-slate-800'}`}
-                    >
-                      🔗 Website Link
-                    </button>
-                  </div>
-
-                  {/* Dynamic Input Area */}
-                  {aiSourceType === 'text' && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Paste text, or <span className="text-blue-600 font-bold">Paste an Image (Ctrl+V)</span></label>
-                      <textarea
-                        value={aiInput}
-                        onChange={(e) => setAiInput(e.target.value)}
-                        onPaste={handleAiPaste}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none resize-none h-32 transition-all custom-scrollbar"
-                        placeholder="E.g., Generate 10 MCQ Model questions..."
-                      />
-                      {aiImageBase64 && (
-                        <div className="mt-3 relative inline-block">
-                          <img src={`data:${aiImageMimeType};base64,${aiImageBase64}`} alt="Pasted" className="h-24 rounded-lg shadow-sm border border-slate-200 object-contain" />
-                          <button onClick={() => { setAiImageBase64(''); setAiImageMimeType(''); }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md cursor-pointer">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {aiSourceType === 'file' && (
-                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors relative cursor-pointer group">
-                      <input type="file" accept="image/*,application/pdf,.tex,.txt,.csv,.md,.doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={handleAiFileUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                      <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
-                        <Upload className="w-6 h-6 text-blue-500" />
-                      </div>
-                      <p className="text-sm font-medium text-slate-700">Click to upload a file</p>
-                      <p className="text-xs text-slate-500 mt-1">Supports JPG, PNG, PDF, <strong className="text-purple-600">DOCX (Word with Equations)</strong>, TEX and more (Max 20MB)</p>
-                    </div>
-                  )}
-                  {aiSourceType === 'url' && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Website URL</label>
-                      <input
-                        type="url"
-                        value={aiInput}
-                        onChange={(e) => setAiInput(e.target.value)}
-                        className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
-                        placeholder="https://example.com/article"
-                      />
-                    </div>
-                  )}
-
-                  {/* Specific Instructions */}
+            <div className="flex flex-1 overflow-hidden">
+              {/* Left Sidebar: Filters */}
+              <div className="w-64 bg-slate-50 border-r border-slate-100 p-5 overflow-y-auto hidden md:block">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Filters</h3>
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Custom AI Instructions (Optional)</label>
-                    <input
-                      type="text"
-                      value={aiInstructions}
-                      onChange={(e) => setAiInstructions(e.target.value)}
-                      className="w-full rounded-lg border-slate-200 bg-white border p-3 text-sm focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
-                      placeholder="E.g., Only extract multiple choice questions, ignore theory..."
-                    />
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Class</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.classId} onChange={e => setBankFilters({ ...bankFilters, classId: e.target.value })}>
+                      <option value="">All Classes</option>
+                      {bankClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
                   </div>
-                </div>
-
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-3 flex-shrink-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
-                  <button
-                    onClick={() => setIsAiModalOpen(false)}
-                    className="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAiModalOpen(false);
-                      handleAiGenerate();
-                    }}
-                    disabled={isGenerating}
-                    className="px-6 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-xl hover:shadow-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-                  >
-                    <Sparkles className="w-4 h-4" />
-                    Generate Now
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* LaTeX Help Modal */}
-          {isLatexHelpOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsLatexHelpOpen(false)}></div>
-              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
-                <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50/50">
-                  <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-                    <HelpCircle className="text-amber-500 w-6 h-6" /> LaTeX Formatting Guide
-                  </h2>
-                  <button onClick={() => setIsLatexHelpOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar text-sm text-slate-700">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Text Formatting</h3>
-                      <ul className="space-y-3 font-mono">
-                        <li><span className="text-blue-600">\textbf&#123;Bold Text&#125;</span> &rarr; <strong>Bold Text</strong></li>
-                        <li><span className="text-blue-600">\textit&#123;Italic Text&#125;</span> &rarr; <em>Italic Text</em></li>
-                        <li><span className="text-blue-600">\underline&#123;Underline&#125;</span> &rarr; <u>Underline</u></li>
-                      </ul>
-                    </div>
-
-                    <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Math & Equations</h3>
-                      <ul className="space-y-3 font-mono">
-                        <li>Inline math: <span className="text-blue-600">$x^2 + y^2 = z^2$</span></li>
-                        <li>Fractions: <span className="text-blue-600">$\frac&#123;1&#125;&#123;2&#125;$</span></li>
-                        <li>Roots: <span className="text-blue-600">$\sqrt&#123;x&#125;$</span></li>
-                        <li>Angles: <span className="text-blue-600">$45^\circ$</span></li>
-                      </ul>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.subjectId} onChange={e => setBankFilters({ ...bankFilters, subjectId: e.target.value })}>
+                      <option value="">All Subjects</option>
+                      {bankSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
                   </div>
-
-                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                    <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">చిత్రాలు & సైజు మార్పు (Images & Resizing)</h3>
-                    <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
-                    <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు & స్థానం మార్చుకోవడానికి (How to Resize & Move):</p>
-                    <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
-                      <li>ఎడిటర్ పైనున్న <strong>[Image Sizes & Move]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు, అలైన్‌మెంట్ మరియు ఏ ప్రశ్న క్రింద కావాలో ఎంచుకోవచ్చు.</li>
-                      <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large|center]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px|right]</code></li>
-                    </ul>
-                  </div>
-
-                  <div className="bg-blue-50 text-blue-800 p-4 rounded-xl border border-blue-100">
-                    <h3 className="font-bold mb-1">Tip: Auto-Align Format</h3>
-                    <p>Use the <strong>Auto-Align Format</strong> button to automatically fix the spacing and alignment of all multiple-choice options (A, B, C, D) in your text.</p>
-                  </div>
-                </div>
-
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
-                  <button
-                    onClick={() => setIsLatexHelpOpen(false)}
-                    className="px-6 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm cursor-pointer"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Import from Bank Modal */}
-          {isBankModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsBankModalOpen(false)}></div>
-              <div className="relative bg-white w-full max-w-5xl h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                      <Database className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-800">Import from Master Question Bank</h2>
-                      <p className="text-sm text-slate-500">Select questions to add to {activeSubjectTab}</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setIsBankModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
-                    <X className="w-5 h-5 text-slate-400" />
-                  </button>
-                </div>
-
-                <div className="flex flex-1 overflow-hidden">
-                  {/* Left Sidebar: Filters */}
-                  <div className="w-64 bg-slate-50 border-r border-slate-100 p-5 overflow-y-auto hidden md:block">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Filters</h3>
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Class</label>
-                        <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.classId} onChange={e => setBankFilters({ ...bankFilters, classId: e.target.value })}>
-                          <option value="">All Classes</option>
-                          {bankClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Subject</label>
-                        <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.subjectId} onChange={e => setBankFilters({ ...bankFilters, subjectId: e.target.value })}>
-                          <option value="">All Subjects</option>
-                          {bankSubjects.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-600 mb-1">Difficulty</label>
-                        <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.difficulty} onChange={e => setBankFilters({ ...bankFilters, difficulty: e.target.value })}>
-                          <option value="">All Difficulties</option>
-                          <option value="EASY">Easy</option>
-                          <option value="MEDIUM">Medium</option>
-                          <option value="HARD">Hard</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Side: Questions List */}
-                  <div className="flex-1 bg-white flex flex-col overflow-hidden">
-                    <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-                      {bankLoading ? (
-                        <div className="flex items-center justify-center h-full text-slate-400">Loading questions...</div>
-                      ) : bankQuestions.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center h-full text-slate-400">
-                          <Database className="w-12 h-12 mb-3 text-slate-200" />
-                          <p>No questions found.</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {bankQuestions.map(q => {
-                            const isSelected = bankSelectedIds.has(q.id);
-                            return (
-                              <div
-                                key={q.id}
-                                onClick={() => toggleBankSelection(q.id)}
-                                className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex gap-4 ${isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
-                              >
-                                <div className="mt-1">
-                                  {isSelected ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
-                                </div>
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1.5">
-                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.subject?.name}</span>
-                                    <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.chapterName}</span>
-                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${q.difficulty === 'HARD' ? 'bg-rose-50 text-rose-600' : q.difficulty === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>{q.difficulty}</span>
-                                  </div>
-                                  <p className="text-sm font-semibold text-slate-800 line-clamp-2">{q.questionText}</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer Action */}
-                    <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
-                      <div className="text-sm font-medium text-slate-600">
-                        <span className="font-bold text-indigo-600">{bankSelectedIds.size}</span> questions selected
-                      </div>
-                      <div className="flex gap-3">
-                        <button onClick={() => setIsBankModalOpen(false)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
-                          Cancel
-                        </button>
-                        <button onClick={handleImportSelected} disabled={bankSelectedIds.size === 0} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer">
-                          Add to Paper
-                        </button>
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-600 mb-1">Difficulty</label>
+                    <select className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" value={bankFilters.difficulty} onChange={e => setBankFilters({ ...bankFilters, difficulty: e.target.value })}>
+                      <option value="">All Difficulties</option>
+                      <option value="EASY">Easy</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="HARD">Hard</option>
+                    </select>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Answer Key Modal */}
-          {isAnswerKeyModalOpen && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:block print:inset-auto print:relative print:p-0">
-              <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print:hidden" onClick={() => setIsAnswerKeyModalOpen(false)}></div>
-              <div className="relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 print:shadow-none print:border-none print:h-auto print:max-h-none print:max-w-none">
-                <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white print:hidden">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
-                      <CheckSquare className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-slate-800">Answer Key</h2>
-                      <p className="text-sm text-slate-500">Correct answers for imported questions</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setIsAnswerKeyModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
-                    <X className="w-5 h-5 text-slate-400" />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-6 bg-slate-50 custom-scrollbar print:bg-white print:p-0 print:overflow-visible">
-                  <div className="hidden print:block text-center mb-6">
-                    <div className="flex flex-col items-center border-b-2 border-black pb-4 mb-4">
-                      {logoBase64 && <img src={logoBase64} alt="School Logo" className="w-16 h-16 object-contain mb-2" />}
-                      <h1 className="text-2xl font-black uppercase font-serif tracking-wide">SRI VENKATESWARA JY SCHOOL</h1>
-                      <h2 className="text-sm font-bold">(IIT-JEE/NEET Foundation - Olympiads)</h2>
-                      <h3 className="text-xs font-semibold mt-1">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</h3>
-                      <h2 className="text-lg font-bold mt-2 uppercase">{examName}</h2>
-                      <h3 className="text-md font-bold mt-1 underline">ANSWER KEY</h3>
-                    </div>
-                  </div>
-                  {Object.keys(answerKeys).length === 0 || Object.values(answerKeys).every(obj => Object.keys(obj).length === 0) ? (
-                    <div className="flex flex-col items-center justify-center py-12 text-slate-400 print:hidden">
-                      <BookOpen className="w-12 h-12 mb-3 text-slate-200" />
-                      <p>No answers available. Click "AI Auto-Solve" or import questions from the bank.</p>
+              {/* Right Side: Questions List */}
+              <div className="flex-1 bg-white flex flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                  {bankLoading ? (
+                    <div className="flex items-center justify-center h-full text-slate-400">Loading questions...</div>
+                  ) : bankQuestions.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                      <Database className="w-12 h-12 mb-3 text-slate-200" />
+                      <p>No questions found.</p>
                     </div>
                   ) : (
-                    <div className="space-y-6 print:space-y-0 print:grid print:grid-cols-3 print:gap-8">
-                      {Object.entries(answerKeys).map(([subject, keys]) => {
-                        if (Object.keys(keys).length === 0) return null;
+                    <div className="space-y-3">
+                      {bankQuestions.map(q => {
+                        const isSelected = bankSelectedIds.has(q.id);
                         return (
-                          <div key={subject} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:border-none print:break-inside-avoid">
-                            <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 print:bg-white print:border-b-2 print:border-black print:px-0 text-center print:text-lg">
-                              {subject}
+                          <div
+                            key={q.id}
+                            onClick={() => toggleBankSelection(q.id)}
+                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all flex gap-4 ${isSelected ? 'border-indigo-500 bg-indigo-50/30' : 'border-slate-100 hover:border-slate-300 bg-white'}`}
+                          >
+                            <div className="mt-1">
+                              {isSelected ? <CheckSquare className="w-5 h-5 text-indigo-600" /> : <Square className="w-5 h-5 text-slate-300" />}
                             </div>
-                            <div className="p-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 print:p-0 print:mt-3 print:flex print:flex-col print:gap-1.5">
-                              {Object.entries(keys).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([qNum, ans]) => (
-                                <div key={qNum} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 print:border-none print:bg-white print:p-0 print:w-3/4 print:mx-auto">
-                                  <span className="text-xs font-semibold text-slate-500 print:text-black print:font-bold print:text-sm">{qNum}.</span>
-                                  <span className="text-sm font-bold text-teal-600 print:text-black print:text-sm">{ans}</span>
-                                </div>
-                              ))}
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.subject?.name}</span>
+                                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded-md">{q.chapterName}</span>
+                                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${q.difficulty === 'HARD' ? 'bg-rose-50 text-rose-600' : q.difficulty === 'MEDIUM' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>{q.difficulty}</span>
+                              </div>
+                              <p className="text-sm font-semibold text-slate-800 line-clamp-2">{q.questionText}</p>
                             </div>
                           </div>
                         );
@@ -3046,26 +3005,106 @@ export const MCQPaperGeneratorPage = () => {
                   )}
                 </div>
 
-                <div className="p-4 border-t border-slate-100 bg-white flex justify-end print:hidden gap-3">
-                  <button
-                    onClick={handleAiSolve}
-                    disabled={isAiSolving}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
-                  >
-                    <Wand2 className="w-4 h-4" /> {isAiSolving ? 'Solving...' : 'AI Auto-Solve'}
-                  </button>
-                  <button
-                    onClick={() => window.print()}
-                    className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
-                  >
-                    <Printer className="w-4 h-4" /> Print Key
-                  </button>
+                {/* Footer Action */}
+                <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+                  <div className="text-sm font-medium text-slate-600">
+                    <span className="font-bold text-indigo-600">{bankSelectedIds.size}</span> questions selected
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setIsBankModalOpen(false)} className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 cursor-pointer">
+                      Cancel
+                    </button>
+                    <button onClick={handleImportSelected} disabled={bankSelectedIds.size === 0} className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-colors cursor-pointer">
+                      Add to Paper
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          <style>{`
+      {/* Answer Key Modal */}
+      {isAnswerKeyModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 print:block print:inset-auto print:relative print:p-0">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm print:hidden" onClick={() => setIsAnswerKeyModalOpen(false)}></div>
+          <div className="relative bg-white w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col border border-slate-200 overflow-hidden animate-in zoom-in-95 duration-200 print:shadow-none print:border-none print:h-auto print:max-h-none print:max-w-none">
+            <div className="flex items-center justify-between p-5 border-b border-slate-100 bg-white print:hidden">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
+                  <CheckSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">Answer Key</h2>
+                  <p className="text-sm text-slate-500">Correct answers for imported questions</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAnswerKeyModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors cursor-pointer">
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-slate-50 custom-scrollbar print:bg-white print:p-0 print:overflow-visible">
+              <div className="hidden print:block text-center mb-6">
+                <div className="flex flex-col items-center border-b-2 border-black pb-4 mb-4">
+                  {logoBase64 && <img src={logoBase64} alt="School Logo" className="w-16 h-16 object-contain mb-2" />}
+                  <h1 className="text-2xl font-black uppercase font-serif tracking-wide">SRI VENKATESWARA JY SCHOOL</h1>
+                  <h2 className="text-sm font-bold">(IIT-JEE/NEET Foundation - Olympiads)</h2>
+                  <h3 className="text-xs font-semibold mt-1">Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta</h3>
+                  <h2 className="text-lg font-bold mt-2 uppercase">{examName}</h2>
+                  <h3 className="text-md font-bold mt-1 underline">ANSWER KEY</h3>
+                </div>
+              </div>
+              {Object.keys(answerKeys).length === 0 || Object.values(answerKeys).every(obj => Object.keys(obj).length === 0) ? (
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 print:hidden">
+                  <BookOpen className="w-12 h-12 mb-3 text-slate-200" />
+                  <p>No answers available. Click "AI Auto-Solve" or import questions from the bank.</p>
+                </div>
+              ) : (
+                <div className="space-y-6 print:space-y-0 print:grid print:grid-cols-3 print:gap-8">
+                  {Object.entries(answerKeys).map(([subject, keys]) => {
+                    if (Object.keys(keys).length === 0) return null;
+                    return (
+                      <div key={subject} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm print:shadow-none print:border-none print:break-inside-avoid">
+                        <div className="bg-slate-100 px-4 py-2 border-b border-slate-200 font-bold text-slate-700 print:bg-white print:border-b-2 print:border-black print:px-0 text-center print:text-lg">
+                          {subject}
+                        </div>
+                        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 print:p-0 print:mt-3 print:flex print:flex-col print:gap-1.5">
+                          {Object.entries(keys).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).map(([qNum, ans]) => (
+                            <div key={qNum} className="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 print:border-none print:bg-white print:p-0 print:w-3/4 print:mx-auto">
+                              <span className="text-xs font-semibold text-slate-500 print:text-black print:font-bold print:text-sm">{qNum}.</span>
+                              <span className="text-sm font-bold text-teal-600 print:text-black print:text-sm">{ans}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-100 bg-white flex justify-end print:hidden gap-3">
+              <button
+                onClick={handleAiSolve}
+                disabled={isAiSolving}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-purple-500/30 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              >
+                <Wand2 className="w-4 h-4" /> {isAiSolving ? 'Solving...' : 'AI Auto-Solve'}
+              </button>
+              <button
+                onClick={() => window.print()}
+                className="px-4 py-2 bg-slate-800 text-white font-medium rounded-xl hover:bg-slate-900 transition-colors shadow-sm flex items-center gap-2 cursor-pointer"
+              >
+                <Printer className="w-4 h-4" /> Print Key
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
     .dynamic-paper-scale {
       zoom: var(--paper-zoom, 0.85);
       transform-origin: top center;
@@ -3095,8 +3134,8 @@ export const MCQPaperGeneratorPage = () => {
       #root { display: block !important; background: white !important; height: auto !important; min-height: 100% !important; }
     }
   `}</style>
-        </div>
-      );
-    };
+    </div>
+  );
+};
 
-    export default MCQPaperGeneratorPage;
+export default MCQPaperGeneratorPage;

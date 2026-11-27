@@ -1,5 +1,10 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Paper Settings Database Persistence Fix (`MCQPaperGeneratorPage.tsx`) (November 27, 2026)
+- **సమస్య:** సేవ్ చేసిన పేపర్ (`?id=...&view=settings`) లో Paper Settings మార్చి `Save Settings` / `Save & Open Paper` నొక్కినా, రీఫ్రెష్ లేదా మళ్ళీ ఓపెన్ చేస్తే పాత విలువలకే (`modati stage`) వెళ్లిపోతున్నాయి — ఎందుకంటే `handleSaveSettingsPage` కేవలం `localStorage` లో మాత్రమే సేవ్ చేసి `/api/generated-papers/${paperId}` DB లో `PUT` చేయడం లేదు.
+- **పరిష్కారం ([MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx)):**
+  - `handleSaveSettingsPage` ను `async` గా మార్చి `paperId` ఉన్నప్పుడు వెంటనే `await api.put(\`/api/generated-papers/${paperId}\`, ...)` ద్వారా అన్ని సెట్టింగ్స్ (`examName`, `examClass`, `headerSubject`, `selectedSubjects`, `examDate`, `maxMarks`, `time`, `instructions`, `fontSize`, `questionSpacing`, `showPaperHeader`) మరియు సబ్జెక్ట్ కంటెంట్లను నేరుగా డేటాబేస్‌లో శాశ్వతంగా సేవ్ అయ్యేలా చేశాము (`printPaper` & `LiveLatexPreview` ను తాకకుండా).
+
 ## చివరి సంభాషణ - Remove Duplicate Colorful Heading Box in Exam Results (`ResultsTab.tsx`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** `/exams` -> Exam Results పేజీలో పైన `Examination Result` హెడ్డింగ్ ఉండగా, మళ్ళీ కింద కలర్ గ్రేడియంట్ బాక్స్ లో `Examination Results` అనే డబుల్ హెడ్డింగ్ తొలగించాలి.
 - **పరిష్కారం ([ResultsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ResultsTab.tsx)):**
