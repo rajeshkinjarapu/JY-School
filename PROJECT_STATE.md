@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Birthday Card Big Portrait & Clean Info Redesign (`/students/birthdays`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** బర్త్‌డే కార్డులలో స్టూడెంట్ ఫోటో పెద్దగా రావాలి, దాని కింద పూర్తి పేరు (`Full Name`), `Class`, మరియు `Date of Birth` మాత్రమే కనిపించాలి; `Father Name` మరియు `Mobile Number` అవసరం లేదు.
+- **చేసిన మార్పులు ([StudentBirthdayPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/students/StudentBirthdayPage.tsx)):**
+  - `Today's Celebrations` కార్డులో చిన్న సైడ్ అవతార్ బదులు పెద్ద సెంటర్డ్ పోర్ట్రెయిట్ (`w-32 h-36 sm:w-36 sm:h-40 rounded-[22px]`) అమర్చాము.
+  - ఫోటో కింద పూర్తి పేరు (truncate లేకుండా పూర్తిగా కనిపించేలా), `Class` పిల్, మరియు `DOB: DD MMM YYYY` పిల్ మాత్రమే ఉంచి `Father / Mother` మరియు `Mobile` బాక్స్‌ను తొలగించాము.
+  - `Upcoming Birthdays` కార్డులను కూడా పెద్ద ఫోటో (`w-28 h-32 rounded-[20px]`), పూర్తి పేరు, `Class`, మరియు `DOB` చూపించేలా అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Student Profile Page Unified PageHeader & Light Pastel Bento Redesign (`/students/:id`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Student Profile (`/students/:id`) పేజీలో అన్ని పేజీల మాదిరిగా పైన Unified Top Bar (`<PageHeader />`) ఉండాలి, పెద్ద డార్క్ హీరో బ్యానర్‌ను పూర్తిగా తొలగించి కొత్తగా అందమైన Light Pastel UI క్రియేట్ చేయాలి.
 - **చేసిన మార్పులు ([StudentProfilePage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/students/StudentProfilePage.tsx)):**
