@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../hooks/useAuth';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
@@ -44,6 +45,18 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; border: string; 
   HALF_DAY: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', icon: CalendarCheck },
 };
 
+const formatLocalYMD = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Match record date reliably across UTC midnight (T00:00:00Z) and legacy local-timezone shifted entries
+const matchesSelectedDate = (rawDate: string, targetYmd: string): boolean => {
+  if (!rawDate) return false;
+  const utcYmd = String(rawDate).split('T')[0];
+  if (utcYmd === targetYmd) return true;
+  const localYmd = formatLocalYMD(new Date(rawDate));
+  return localYmd === targetYmd;
+};
+
 export const TeacherAttendancePage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
@@ -52,7 +65,7 @@ export const TeacherAttendancePage: React.FC = () => {
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState(today.toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(() => formatLocalYMD(new Date()));
 
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [records, setRecords] = useState<AttRecord[]>([]);
@@ -88,9 +101,7 @@ export const TeacherAttendancePage: React.FC = () => {
         setRecords(recList);
 
         // Build attendance map for selectedDate
-        const dateRecords = recList.filter((r: AttRecord) =>
-          new Date(r.date).toISOString().split('T')[0] === selectedDate
-        );
+        const dateRecords = recList.filter((r: AttRecord) => matchesSelectedDate(r.date, selectedDate));
 
         const map: Record<string, string> = {};
         const notes: Record<string, string> = {};
@@ -125,8 +136,9 @@ export const TeacherAttendancePage: React.FC = () => {
           rate: arr.length > 0 ? Math.round((present / arr.length) * 100) : 0
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err?.response?.data?.message || 'Failed to load staff attendance records');
     } finally {
       setLoading(false);
     }
@@ -200,6 +212,10 @@ export const TeacherAttendancePage: React.FC = () => {
 
   // Bulk Save Attendance to Backend
   const handleBulkSave = async () => {
+    if (teachers.length === 0) {
+      toast.error('No staff records loaded to save');
+      return;
+    }
     setSaving(true);
     try {
       const recs = teachers.map(t => ({
@@ -214,7 +230,7 @@ export const TeacherAttendancePage: React.FC = () => {
       });
 
       toast.success('Staff attendance saved successfully!');
-      fetchRecords();
+      await fetchRecords();
     } catch (e: any) {
       toast.error(e.response?.data?.message || 'Failed to save attendance');
     } finally {
@@ -373,8 +389,18 @@ export const TeacherAttendancePage: React.FC = () => {
                     <input
                       type="date"
                       value={selectedDate}
-                      max={today.toISOString().split('T')[0]}
-                      onChange={(e) => setSelectedDate(e.target.value)}
+                      max={formatLocalYMD(today)}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedDate(val);
+                        if (val) {
+                          const [y, m] = val.split('-').map(Number);
+                          if (y && m) {
+                            setSelectedYear(y);
+                            setSelectedMonth(m - 1);
+                          }
+                        }
+                      }}
                       className="bg-transparent border-none text-slate-800 text-xs font-bold focus:outline-none cursor-pointer"
                     />
                   </div>
@@ -557,51 +583,56 @@ export const TeacherAttendancePage: React.FC = () => {
 
               </div>
 
-              {/* ── STICKY BOTTOM SAVE ACTION BAR ──────────────────────────── */}
-              <div className="fixed bottom-0 left-0 right-0 md:left-64 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200 px-6 py-4 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-                <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
-                      <UserCheck className="w-5 h-5" />
+              {/* ── STICKY BOTTOM SAVE ACTION BAR (Portal to document.body) ── */}
+              {typeof document !== 'undefined' && createPortal(
+                <div className="fixed bottom-0 left-0 right-0 lg:left-[280px] z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200 px-4 sm:px-6 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+                  <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                        <UserCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-black text-slate-900 uppercase tracking-wider">
+                          {adminStats.total} Staff Attendance Register
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-medium">
+                          {adminStats.present} Present &bull; {adminStats.absent} Absent &bull; {adminStats.leave + adminStats.halfDay} Leave/Half Day ({adminStats.rate}% Present)
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                        {adminStats.total} Staff Attendance Register
-                      </p>
-                      <p className="text-[11px] text-slate-500 font-medium">
-                        {adminStats.present} Present &bull; {adminStats.absent} Absent &bull; {adminStats.leave + adminStats.halfDay} Leave/Half Day ({adminStats.rate}% Present)
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleMarkAllPresent}
-                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5"
-                    >
-                      <CheckCheck className="w-4 h-4 text-emerald-400" />
-                      Mark All Present
-                    </button>
-                    <button
-                      onClick={handleBulkSave}
-                      disabled={saving}
-                      className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {saving ? (
-                        <>
-                          <LoadingSpinner size="sm" />
-                          <span>Saving...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          <span>Save Staff Attendance</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleMarkAllPresent}
+                        className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <CheckCheck className="w-4 h-4 text-emerald-500" />
+                        Mark All Present
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleBulkSave}
+                        disabled={saving}
+                        className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider shadow-lg shadow-emerald-500/30 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                      >
+                        {saving ? (
+                          <>
+                            <LoadingSpinner size="sm" />
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-4 h-4" />
+                            <span>Save Staff Attendance</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </div>,
+                document.body
+              )}
 
             </div>
           )}

@@ -10,15 +10,19 @@ const getGeminiClient = (customApiKey?: string) => {
   return key === envApiKey ? ai : new GoogleGenAI({ apiKey: key });
 };
 
-// Candidate Gemini models in priority order (env override first, then gemini-3.0-flash & fallbacks)
+// Candidate Gemini models in priority order (gemini-3.8-flash recommended by Google API, plus safe fallbacks)
+const envModel = process.env.GEMINI_MODEL?.trim();
+const isRetiredModel = envModel && /gemini-(1\.5|2\.0)-flash/i.test(envModel);
+
 export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
   new Set(
     [
-      process.env.GEMINI_MODEL,
+      !isRetiredModel ? envModel : undefined,
+      'gemini-3.8-flash',
+      'gemini-3.8-flash-lite',
+      'gemini-2.5-flash',
       'gemini-3.0-flash',
       'gemini-3-flash-preview',
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
     ].filter((m): m is string => Boolean(m && m.trim()))
   )
 );

@@ -119,7 +119,7 @@ ${text || ''}`;
         }
       });
       if (response.text) {
-        parsed = JSON.parse(response.text.replace(/```json\n?|```/g, ''));
+        parsed = JSON.parse(response.text.replace(/```json\n?|```/gi, '').trim());
       }
     } else if (provider === 'chatgpt') {
       if (!apiKey) throw new Error("ChatGPT API key is required");

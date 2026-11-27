@@ -1,5 +1,22 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Gemini AI Model Update to `gemini-3.8-flash` (404 Model Retired Fix) (November 27, 2026)
+- **సమస్య:** MCQ Paper Generator `AI Gen` లో Google Gemini API `models/gemini-2.0-flash is no longer available (404 NOT_FOUND) — Please update your code to use models/gemini-3.8-flash` అని ఎర్రర్ చూపిస్తోంది.
+- **పరిష్కారం:**
+  - [gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts): `GEMINI_CANDIDATE_MODELS` జాబితాలో **`gemini-3.8-flash`** (మరియు `gemini-3.8-flash-lite`, `gemini-2.5-flash`) ను మొదటి ప్రాధాన్యతగా జత చేసి, రిటైర్ అయిన `gemini-2.0-flash` ను తొలగించాము (`env` లో పాత `1.5`/`2.0` ఉన్నా ఆటోమేటిక్‌గా ఫిల్టర్ అయ్యేలా). దీనివల్ల `MCQ Paper Generator AI Gen`, `.docx AI Import`, `AI Solve Key`, `Master AI Studio`, మరియు `OMR Scanner` అన్నీ `gemini-3.8-flash` తో పనిచేస్తాయి.
+  - [import.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/question-bank/import.controller.ts): JSON response పార్సింగ్ లో `.trim()` రక్షణ జత చేశాము.
+
+## చివరి సంభాషణ - Staff Attendance Save Failure & Timezone / Pool Exhaustion Fix (November 27, 2026)
+- **సమస్య:** `/teacher-attendance` (Staff Attendance Manager) లో టీచర్ల అటెండెన్స్ మార్క్ చేసి `Save Staff Attendance` నొక్కినా సేవ్ కావడం లేదు (`attendance vesina sare save avvatam ledu`).
+- **గుర్తించిన కారణాలు & పరిష్కారాలు:**
+  1. **34-way Parallel `Promise.all(upsert)` Pool Exhaustion ([teacherAttendance.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/teacherAttendance.controller.ts)):** ఒకేసారి 34 మంది స్టాఫ్‌కు `Promise.all` ద్వారా సమాంతర `upsert` క్వెరీలు పంపడం వల్ల Supabase PgBouncer కనెక్షన్ పూల్ లిమిట్ దాటి విఫలమవుతుంది; దీన్ని 2-స్టెప్ **`prisma.$transaction` (`deleteMany` + `createMany`)** గా మార్చాము.
+  2. **Timezone Date Shift బగ్ (`setHours(0,0,0,0)` vs UTC):** `parseCanonicalUtcDate()` ద్వారా `"YYYY-MM-DD"` ను కచ్చితంగా UTC అర్ధరాత్రికి మార్చి సేవ్ చేస్తున్నాము, అలాగే [TeacherAttendancePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx) లో `.toISOString().split('T')[0]` బదులు లోకల్ `formatLocalYMD` & `matchesSelectedDate` జత చేశాము.
+  3. **Sticky Save Bar (`createPortal`) & Date Sync:** బాటమ్ `Save Staff Attendance` బార్‌ను `createPortal(..., document.body)` ద్వారా పిన్ చేశాము మరియు డేట్ పికర్ మార్చినప్పుడు నెల/సంవత్సరం ఆటో-సింక్ అయ్యేలా అప్‌డేట్ చేశాము.
+
+## చివరి సంభాషణ - Public Website & CMS Architecture Consultation (November 27, 2026)
+- **యూజర్ ప్రశ్న:** పబ్లిక్ లో ఉన్న స్కూల్ వెబ్‌సైట్‌ను అడ్మిన్ ERP నుండి పూర్తిగా కంట్రోల్ చేయడానికి మరియు కొత్త విభాగాలు సులభంగా యాడ్ చేయడానికి ప్రొఫెషనల్ డెవలపర్ స్థాయిలో సరైన ఆర్కిటెక్చర్ ఏమిటో వివరించమని అడిగారు ([WebsiteManagerPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/settings/WebsiteManagerPage.tsx), [website.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/website.controller.ts)).
+- **సూచించిన డిజైన్:** 3-లేయర్ డైనమిక్ స్కూల్ CMS (బూట్‌స్ట్రాప్ ఆడిట్, Image/Media Upload, Flash Notice Ticker, Hero Slider, Admission Popup, Gallery, Toppers, Section ON/OFF Toggle, మరియు Auth JWT Token ఫిక్స్).
+
 ## చివరి సంభాషణ - Q.No 29 `2x2` Option Layout Threshold Fix & Git Conflict Resolution (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** MCQ Paper Generator ప్రివ్యూలో Q.No 29 (`(A) Different types of plants and animals` — 37 అక్షరాలు) కు పక్కనే తగినంత ఖాళీ ఉన్నా `2x2` బదులు `1x1` (నిలువు వరుస) లోకి మారిపోతోంది; అలాగే `git stash pop` లో వచ్చిన `PROJECT_STATE.md` merge conflict పరిష్కరించాలి.
 - **చేసిన మార్పులు:**

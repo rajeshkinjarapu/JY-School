@@ -4,6 +4,19 @@ import { prisma } from '../utils/prisma';
 import { successResponse } from '../utils/response';
 import { createError } from '../middlewares/errorHandler';
 
+const parseCanonicalUtcDate = (dateInput: string | Date): Date => {
+  const ymd =
+    typeof dateInput === 'string'
+      ? dateInput.split('T')[0].trim()
+      : dateInput.toISOString().split('T')[0];
+  const m = ymd.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0));
+  }
+  const d = new Date(dateInput);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 0, 0, 0, 0));
+};
+
 /* ── GET all teacher attendance ── */
 export const getTeacherAttendance = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -22,10 +35,11 @@ export const getTeacherAttendance = async (req: AuthRequest, res: Response, next
     }
 
     if (month) {
-      const m = parseInt(month as string);
-      const y = year ? parseInt(year as string) : new Date().getFullYear();
-      const start = new Date(y, m - 1, 1);
-      const end = new Date(y, m, 1);
+      const m = parseInt(month as string, 10);
+      const y = year ? parseInt(year as string, 10) : new Date().getUTCFullYear();
+      // Include a 12-hour buffer before month start so legacy IST-shifted records on day 1 are still returned
+      const start = new Date(Date.UTC(y, m - 1, 1) - 12 * 60 * 60 * 1000);
+      const end = new Date(Date.UTC(y, m, 1) + 12 * 60 * 60 * 1000);
       where.date = { gte: start, lt: end };
     }
 
@@ -51,8 +65,7 @@ export const markTeacherAttendance = async (req: AuthRequest, res: Response, nex
       return next(createError('teacherId, date, status are required', 400));
     }
 
-    const dateObj = new Date(date);
-    dateObj.setHours(0, 0, 0, 0);
+    const dateObj = parseCanonicalUtcDate(date);
 
     const record = await prisma.teacherAttendance.upsert({
       where: { teacherId_date: { teacherId, date: dateObj } },
@@ -76,19 +89,42 @@ export const bulkMarkTeacherAttendance = async (req: AuthRequest, res: Response,
       return next(createError('date and records[] are required', 400));
     }
 
-    const dateObj = new Date(date);
-    dateObj.setHours(0, 0, 0, 0);
+    const dateObj = parseCanonicalUtcDate(date);
+    const validRecords = records.filter((r: any) => r && r.teacherId && r.status);
+    if (validRecords.length === 0) {
+      return next(createError('No valid attendance records provided', 400));
+    }
 
-    const ops = records.map((r: any) =>
-      prisma.teacherAttendance.upsert({
-        where: { teacherId_date: { teacherId: r.teacherId, date: dateObj } },
-        update: { status: r.status, note: r.note || null, markedById: req.user!.id },
-        create: { teacherId: r.teacherId, date: dateObj, status: r.status, note: r.note || null, markedById: req.user!.id },
-      })
-    );
+    const teacherIds = Array.from(new Set(validRecords.map((r: any) => String(r.teacherId))));
+    // Also clean up any legacy IST-shifted entries on the same calendar window so duplicates don't linger
+    const dayStart = new Date(dateObj.getTime() - 6 * 60 * 60 * 1000);
+    const dayEnd = new Date(dateObj.getTime() + 18 * 60 * 60 * 1000);
 
-    const results = await Promise.all(ops);
-    successResponse(res, results, `Attendance marked for ${results.length} teachers`);
+    await prisma.$transaction(async (tx) => {
+      await tx.teacherAttendance.deleteMany({
+        where: {
+          teacherId: { in: teacherIds },
+          date: { gte: dayStart, lt: dayEnd },
+        },
+      });
+
+      await tx.teacherAttendance.createMany({
+        data: validRecords.map((r: any) => ({
+          teacherId: String(r.teacherId),
+          date: dateObj,
+          status: String(r.status),
+          note: r.note ? String(r.note).trim() || null : null,
+          markedById: req.user!.id,
+        })),
+        skipDuplicates: true,
+      });
+    });
+
+    const saved = await prisma.teacherAttendance.findMany({
+      where: { date: dateObj, teacherId: { in: teacherIds } },
+    });
+
+    successResponse(res, saved, `Attendance marked for ${saved.length} staff members`);
   } catch (e) { next(e); }
 };
 
