@@ -1,5 +1,28 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Desktop Dashboard Single-Screen Layout (November 27, 2026)
+- **మార్పులు (`frontend/src/pages/dashboard/DashboardPage.tsx`, `frontend/src/index.css`):** Admin dashboard ను desktopలో available viewport-height లో hero, quick actions, payments, attendance panelsగా మూడు వరుసల grid లో అమర్చాము.
+- **ప్రవర్తన:** Page-level vertical scroll రాదు. తక్కువ ఎత్తు ఉన్న laptop screensలో spacing/padding తగ్గుతుంది; అవసరమైతే Recent Payments card లోపల మాత్రమే scroll అవుతుంది. Mobile మరియు ఇతర role dashboards మారలేదు.
+- **ధృవీకరణ:** `frontend` లో `npm run build` విజయవంతంగా పూర్తయింది. Vite PWA plugin ఒక తెలిసిన non-blocking warning ఇచ్చింది.
+- **డిప్లాయ్ స్థితి:** మార్పు local workspaceలో ఉంది; GitHub push మరియు VPS frontend build తర్వాత liveలో కనిపిస్తుంది.
+
+## చివరి సంభాషణ - Website Navbar Mega Dropdown Redesign (November 27, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/index.html`)**:
+  - **Top Orange Utility Bar పూర్తిగా Remove**: Phone/email/social top bar తీసివేశాం.
+  - **Live Notice Ticker పూర్తిగా Remove**: Scrolling NOTICES strip తీసివేశాం.
+  - **"Apply Now" Orange Button Remove**: Navbar నుండి apply now button తీసివేశాం.
+  - **Mega Dropdown Navbar జోడించాం**:
+    - `Admission` dropdown → Existing Student, Admission Procedure, School Campus, Admission Registration, Fee Structure, Scholarships, FAQ's
+    - `Student Life` dropdown → Holiday List, Academics, Sports, Cultural, In-School Services, School Uniform, Co-curricular, Houses
+    - `Facilities` dropdown → Laboratory, Library, Medical, Transport, Scholarship/Award, Counselling Session
+    - `Staffs` → direct link to #contact-section
+    - `Download` → direct link to #downloads-hub
+    - `Contact` → direct link to #contact-section
+  - **ERP Login + Pay Fees Online** CTA buttons navbar లో రైట్ సైడ్ లో ఉన్నాయి (amber gold highlight).
+  - **Mobile Accordion Menu**: Admission/Student Life/Facilities → `toggleMobSub()` accordion.
+  - **screen-fit max-width**: 1600px కి increase చేశాం.
+- **స్టేటస్**: Local లో save అయింది. `git push` → Vercel auto-deploy చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Dashboard & Attendance Percentage Consistency Fix (November 27, 2026)
 - **గుర్తించిన సమస్య:** లైవ్ Dashboard లో Today's Attendance 95%గా, Attendance Dashboard లో 80%గా కనిపించింది. 533 total studentsలో 428 present, 24 absent ఉండగా 81 మంది ఇంకా mark కాలేదు.
 - **పరిష్కారం (`backend/src/controllers/dashboard.controller.ts`):** Dashboard percentage denominator ను mark అయిన విద్యార్థుల సంఖ్య నుండి మొత్తం active studentsకి మార్చాము. రెండు pages ఇప్పుడు `present / totalStudents` rule ను ఉపయోగిస్తాయి.

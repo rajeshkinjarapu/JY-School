@@ -89,7 +89,7 @@ export const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-5 p-3 sm:p-5 lg:p-6 bg-[#EEF2F8] min-h-screen animate-fade-in-up pb-10">
+    <div className={`space-y-4 sm:space-y-5 p-3 sm:p-5 lg:p-6 bg-[#EEF2F8] min-h-screen animate-fade-in-up pb-10 ${(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') ? 'dashboard-page-shell' : ''}`}>
       {(user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') ? (
         <AdminView data={data} user={user} />
       ) : (
@@ -433,7 +433,7 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
     : fallbackPayments;
 
   return (
-    <div className="space-y-4 sm:space-y-5">
+    <div className="dashboard-admin-view space-y-4 sm:space-y-5">
       {/* ── 1. Top Light Colourful Hero Banner ── */}
       <div className="relative w-full rounded-[20px] sm:rounded-[22px] overflow-hidden bg-gradient-to-r from-[#EBF3FF] via-[#F4EBFF] to-[#FFF0F6] px-4 py-3.5 sm:px-6 sm:py-4 shadow-[0_8px_24px_-6px_rgba(79,70,229,0.14)] border border-indigo-200/75 text-slate-800">
         {/* Soft Colourful Pastel Glows */}
@@ -538,9 +538,9 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
       </div>
 
       {/* ── 3. Bottom Two Master Cards (Recent Payments & Today's Attendance) ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
+      <div className="dashboard-bottom-grid grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch">
         {/* Left Card: Recent Payments (~58% / col-span-7) with Signature Purple Header */}
-        <div className="lg:col-span-7 bg-white rounded-[22px] overflow-hidden shadow-[0_8px_24px_-6px_rgba(91,33,182,0.12)] border border-indigo-100/90 flex flex-col">
+        <div className="dashboard-payment-card lg:col-span-7 bg-white rounded-[22px] overflow-hidden shadow-[0_8px_24px_-6px_rgba(91,33,182,0.12)] border border-indigo-100/90 flex flex-col">
           {/* Purple Gradient Header Banner */}
           <div className="bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] px-5 py-3.5 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -608,7 +608,7 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
         </div>
 
         {/* Right Card: Today's Attendance (~42% / col-span-5) */}
-        <div className="lg:col-span-5 relative overflow-hidden bg-white rounded-[22px] p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.08)] border border-slate-200/80 flex flex-col justify-between">
+        <div className="dashboard-attendance-card lg:col-span-5 relative overflow-hidden bg-white rounded-[22px] p-5 sm:p-6 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.08)] border border-slate-200/80 flex flex-col justify-between">
           {/* Card Header */}
           <div className="relative z-10 flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">

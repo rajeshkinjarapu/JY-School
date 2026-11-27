@@ -238,6 +238,72 @@
   }
 }
 
+/* The admin dashboard is an at-a-glance workspace: on desktop it must fit
+   within the area below the app header rather than extending the page. */
+@media (min-width: 1024px) {
+  .dashboard-page-shell {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: 1rem 1.25rem;
+  }
+
+  .dashboard-admin-view {
+    height: 100%;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .dashboard-admin-view > * {
+    min-height: 0;
+  }
+
+  .dashboard-admin-view > .dashboard-bottom-grid {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .dashboard-payment-card,
+  .dashboard-attendance-card {
+    min-height: 0;
+  }
+
+  .dashboard-payment-card > :last-child {
+    min-height: 0;
+    overflow: auto;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .dashboard-page-shell {
+    padding: 0.75rem;
+  }
+
+  .dashboard-admin-view {
+    gap: 0.625rem;
+  }
+
+  .dashboard-admin-view > :first-child {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .dashboard-admin-view > :nth-child(2) {
+    gap: 0.625rem;
+  }
+
+  .dashboard-admin-view > :nth-child(2) > a {
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .dashboard-attendance-card {
+    padding: 0.875rem;
+  }
+}
+
 /* ── Cards ─────────────────────────────────── */
 @utility card {
   @apply bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800;

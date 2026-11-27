@@ -2,6 +2,15 @@
 
 ## తేదీ: 27 నవంబర్ 2026
 
+### Desktop Dashboard పూర్తి స్క్రీన్ స్థిర లేఅవుట్
+
+1. యూజర్ ఇచ్చిన రిఫరెన్స్ ప్రకారం dashboard పేజీకి browser-level vertical scroll రాకుండా అమర్చాము.
+2. Desktop (`1024px+`) లో hero, 10 quick-action cards, recent payments మరియు attendance panel ను available viewport height లో మూడు వరుసల grid గా పెట్టాము.
+3. చిన్న height ఉన్న laptop screens లో spacing/padding ఆటోమేటిక్‌గా తగ్గుతుంది; Recent Payments లో అవసరమైనప్పుడే ఆ card లోపల మాత్రమే scroll అవుతుంది.
+4. Mobile మరియు మిగతా dashboard roles లేఅవుట్‌లో ఎటువంటి మార్పు చేయలేదు.
+
+## తేదీ: 27 నవంబర్ 2026
+
 ### అటెండెన్స్ శాతం అసమానత పరిష్కారం
 
 1. లైవ్ వెబ్‌సైట్‌లో Dashboard లో 95% మరియు Attendance Dashboard లో 80% కనిపించాయి.
