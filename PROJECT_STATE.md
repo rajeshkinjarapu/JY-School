@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Simple Institutional Transport Dashboard Redesign (`/transport`) (November 27, 2026)
+- **పూర్తి చేసిన మార్పులు (`frontend/src/pages/transport/TransportDashboard.tsx`)**:
+  - 6 KPIలు + 7 టైల్స్ + చార్ట్ + 4 విడ్జెట్‌ల గజిబిజిని పూర్తిగా తొలగించి, అడ్మిన్ మరియు `TRANSPORT_MANAGER` ఇద్దరికీ సులభంగా అర్థమయ్యే Light Pastel లేఅవుట్‌గా మార్చాము:
+    - **4 ముఖ్య KPI కార్డులు**: `School Buses`, `Bus Routes`, `Bus Students`, `Monthly Bus Fee`.
+    - **4 ప్రధాన మాడ్యూల్ కార్డులు**: `Buses & Vehicles`, `Routes & Bus Stops`, `Drivers & Helpers`, `Student Bus Allocation`.
+    - **ఒక సింపుల్ `Daily Transport Registers` స్ట్రిప్**: `Daily Trips`, `Diesel / Fuel`, `Repairs & Service` లింకులతో.
+    - **ఒకే ఫుల్-విడ్త్ `Buses & Routes Summary` టేబుల్**: బస్సు, రూట్, స్టాప్‌లు, డ్రైవర్ ఫోన్, సీట్లు, నెలవారీ ఫీజు సెర్చ్ సౌకర్యంతో.
+    - ఎక్స్‌పైరీ డాక్యుమెంట్లు ఉన్నప్పుడు మాత్రమే పైన అలర్ట్ బ్యానర్ చూపిస్తుంది.
+- **స్టేటస్**: కోడ్ సేవ్ చేయబడింది. యూజర్ లోకల్ `npx tsc --noEmit`, `npm run build`, `git push` మరియు VPS డిప్లాయ్‌మెంట్ చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Transfer Certificate (Legal) & Record Sheet (A4) Studio (`/office-tools/transfer-certificate`) (November 27, 2026)
 - **పూర్తి చేసిన ఫైల్స్ & ఫీచర్లు**:
   - `frontend/src/pages/office-tools/tcTemplates.ts`:
