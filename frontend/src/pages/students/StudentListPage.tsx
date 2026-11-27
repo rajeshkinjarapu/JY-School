@@ -377,12 +377,12 @@ export const StudentListPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Search + Filter Row */}
-        <div className="flex gap-2.5 items-center">
+        {/* Search + Filter Row inside Frosted Pastel Bar */}
+        <div className="bg-white/60 backdrop-blur-md border border-[#E2DDF5] rounded-[18px] p-1.5 sm:p-2 shadow-[0_6px_22px_rgba(91,33,182,0.06)] flex gap-2 items-center">
           {/* Hamburger Menu - Mobile Only */}
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-            className="p-2.5 md:hidden bg-white hover:bg-indigo-50 text-[#1E1B4B] rounded-2xl transition-colors cursor-pointer border border-indigo-100 shadow-xs"
+            className="p-2.5 md:hidden bg-white hover:bg-indigo-50 text-[#1E1B4B] rounded-xl transition-colors cursor-pointer border border-[#E6E2F5] shadow-xs"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
@@ -395,15 +395,16 @@ export const StudentListPage: React.FC = () => {
               placeholder="Search students..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-white border border-indigo-100/90 rounded-2xl text-slate-800 placeholder:text-slate-400 font-medium shadow-[0_3px_12px_rgba(79,70,229,0.05)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-white border border-[#E7E4F6] rounded-xl text-slate-800 placeholder:text-slate-400 font-medium shadow-[0_2px_8px_rgba(79,70,229,0.04)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
             />
           </div>
+          <div className="hidden sm:block w-px h-7 bg-[#E0DCF2] shrink-0" />
           <div className="relative shrink-0">
-            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#1E1B4B] pointer-events-none" />
             <select
               value={classId}
               onChange={(e) => { setClassId(e.target.value); setPage(1); }}
-              className="pl-9 pr-8 py-2.5 text-xs sm:text-sm bg-white border border-indigo-100/90 rounded-2xl text-[#1E1B4B] font-bold shadow-[0_3px_12px_rgba(79,70,229,0.05)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
+              className="pl-9 pr-8 py-2 text-xs sm:text-sm bg-white border border-[#E7E4F6] rounded-xl text-[#1E1B4B] font-bold shadow-[0_2px_8px_rgba(79,70,229,0.04)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
             >
               <option value="">All Classes</option>
               {classes.map((cls) => (
@@ -412,12 +413,12 @@ export const StudentListPage: React.FC = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
           </div>
           {/* Mobile Print Studio Shortcut */}
           <Link
             to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
-            className="md:hidden p-2.5 bg-gradient-to-r from-[#7352F6] to-[#5636E8] text-white rounded-2xl transition-all shadow-sm flex items-center justify-center shrink-0"
+            className="md:hidden p-2.5 bg-gradient-to-r from-[#7352F6] to-[#5636E8] text-white rounded-xl transition-all shadow-sm flex items-center justify-center shrink-0"
             title="Print Studio"
           >
             <Printer className="w-4 h-4" />
@@ -425,21 +426,21 @@ export const StudentListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Student List (Tabular with Signature Purple Header) ── */}
+      {/* ── Student List (Full Grid Table Form with Signature Purple Header) ── */}
       <div className="relative z-10 flex-1 overflow-auto px-4 sm:px-6 pb-3 hidden md:block">
-        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_8px_28px_-6px_rgba(79,70,229,0.10)] border border-indigo-100/90 overflow-hidden">
-          <table className="w-full text-sm text-left">
+        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DFDAF4] overflow-hidden">
+          <table className="w-full text-sm text-left border-collapse">
             <thead>
               <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] text-white font-extrabold uppercase tracking-wider text-[11px]">
-                <th className="px-4 py-3.5 text-center w-12">#</th>
-                <th className="px-4 py-3.5">Student</th>
-                <th className="px-4 py-3.5 text-center">Roll No / ID</th>
-                <th className="px-4 py-3.5 text-center">Class</th>
-                <th className="px-4 py-3.5">Father Name</th>
-                <th className="px-4 py-3.5">Mobile No</th>
+                <th className="px-3 py-3.5 text-center w-14 border-r border-white/15">#</th>
+                <th className="px-4 py-3.5 text-left border-r border-white/15">Student</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/15">Roll No / ID</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/15">Class</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/15">Father Name</th>
+                <th className="px-5 py-3.5 text-left">Mobile No</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100/90">
+            <tbody>
               {loading ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center">
@@ -461,11 +462,11 @@ export const StudentListPage: React.FC = () => {
                 </tr>
               ) : (
                 students.map((student, idx) => (
-                  <tr key={student.id} className="even:bg-[#FAF9FF]/75 hover:bg-indigo-50/45 transition-colors bg-white">
-                    <td className="px-4 py-3 text-center text-xs font-bold text-slate-600">
+                  <tr key={student.id} className="border-b border-[#EAE7F6] last:border-b-0 even:bg-[#FAF9FF] hover:bg-[#F3EFFE]/60 transition-colors bg-white">
+                    <td className="px-3 py-2.5 text-center text-xs font-bold text-[#1E1B4B] border-r border-[#EAE7F6]">
                       {(page - 1) * LIMIT + idx + 1}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5 border-r border-[#EAE7F6]">
                       <div className="flex items-center gap-3.5">
                         <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
                         <Link to={`/students/${student.id}`} className="font-extrabold text-[#1E1B4B] text-xs uppercase tracking-tight hover:text-[#6D28D9] transition-colors cursor-pointer">
@@ -473,20 +474,20 @@ export const StudentListPage: React.FC = () => {
                         </Link>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE]/80 font-mono">
                         {student.rollNo || "–"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#059669] bg-[#E6F9EE] border border-[#C1F0D6] uppercase">
                         {student.class?.name || "–"} {student.class?.section || ""}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
                       <p className="font-extrabold text-slate-800 text-xs uppercase">{student.fatherName || "–"}</p>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-2.5 text-left">
                       {student.user?.phone ? (
                         <a href={`tel:${student.user.phone}`} className="text-[#5B21B6] hover:text-[#4C1D95] text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
                           <Phone className="w-3.5 h-3.5" />
