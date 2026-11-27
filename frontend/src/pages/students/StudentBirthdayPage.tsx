@@ -820,46 +820,33 @@ export const StudentBirthdayPage: React.FC = () => {
                           </span>
                         </div>
 
-                        <div className="p-4 flex-1 flex flex-col justify-between">
-                          {/* Student Details */}
-                          <div className="flex items-center gap-3.5 mb-3.5">
+                        <div className="p-5 flex-1 flex flex-col justify-between">
+                          {/* Large Centered Student Photo & Core Info (Name, Class, DOB) */}
+                          <div className="flex flex-col items-center text-center mb-4">
                             <StudentBirthdayAvatar
                               photoUrl={student.photoUrl}
                               name={student.name}
-                              sizeClass="w-14 h-14 rounded-2xl border-2 border-indigo-200 shadow-xs"
+                              sizeClass="w-32 h-36 sm:w-36 sm:h-40 rounded-[22px] border-[3px] border-indigo-200/90 shadow-md ring-4 ring-[#EEF2FF]"
                               badge="JY"
-                              textSize="text-lg"
+                              textSize="text-4xl"
                             />
 
-                            <div className="min-w-0 flex-1">
-                              <h4 className="text-sm sm:text-base font-black text-[#1E1B4B] leading-tight truncate">
-                                {student.name}
-                              </h4>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="px-2 py-0.5 rounded-md bg-[#EEF2FF] text-indigo-700 text-[11px] font-extrabold border border-indigo-200/70">
-                                  {student.className}
-                                </span>
-                                <span className="text-[11px] text-slate-500 font-bold font-mono">
-                                  ID: {student.rollNo}
-                                </span>
-                              </div>
-                              {student.bloodGroup && (
-                                <span className="inline-block mt-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
-                                  Blood: {student.bloodGroup}
-                                </span>
-                              )}
-                            </div>
-                          </div>
+                            {/* Full Student Name */}
+                            <h4 className="mt-3.5 text-base sm:text-[17px] font-black text-[#1E1B4B] leading-snug tracking-tight uppercase break-words px-1">
+                              {student.name}
+                            </h4>
 
-                          {/* Parent Info */}
-                          <div className="bg-[#F8FAFF] rounded-xl p-2.5 border border-indigo-100/80 text-xs mb-3 space-y-1">
-                            <div className="flex items-center justify-between text-slate-600">
-                              <span className="text-[11px] font-medium">Father / Mother:</span>
-                              <span className="font-bold text-slate-800">{student.fatherName || student.motherName || 'Parent'}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-slate-600">
-                              <span className="text-[11px] font-medium">Mobile:</span>
-                              <span className="font-bold text-indigo-700">{student.phone || student.fatherPhone || student.motherPhone || 'Not Available'}</span>
+                            {/* Class & Date of Birth Pills */}
+                            <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                              <span className="px-3 py-1 rounded-xl bg-[#EEF2FF] text-indigo-700 text-xs font-extrabold border border-indigo-200/80 shadow-2xs">
+                                Class: {student.className}
+                              </span>
+                              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#FFF0F6] text-[#BE185D] text-xs font-extrabold border border-pink-200/80 shadow-2xs">
+                                <Calendar className="w-3.5 h-3.5 text-pink-600" />
+                                <span>
+                                  DOB: {String(student.birthDay).padStart(2, '0')} {MONTH_NAMES[student.birthMonth - 1]?.slice(0, 3)} {student.birthYear}
+                                </span>
+                              </span>
                             </div>
                           </div>
 
@@ -1548,7 +1535,7 @@ export const StudentBirthdayPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <PartyPopper className="w-4 h-4 text-emerald-600 shrink-0" />
                         <span className="font-bold">
-                          ఈ విద్యార్థికి కస్టమ్ పోస్టర్ యాక్టివ్‌గా ఉంది! పుట్టినరోజున యాప్ ఓపెన్ చేసిన వెంటనే ఆటోమేటిక్‌గా పాప్-అప్ అవుతుంది.
+                          A custom birthday poster is active for this student and will automatically pop up when they open the mobile app on their birthday.
                         </span>
                       </div>
                       <div className="flex items-center gap-2 pt-1">

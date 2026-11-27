@@ -808,7 +808,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Sub-Caste (కులం) <span className="text-rose-500">*</span></label>
+                    <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-2">Sub-Caste <span className="text-rose-500">*</span></label>
                     <select value={subCaste} onChange={e => setSubCaste(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all">
                       {availableSubCastes.map(sub => <option key={sub} value={sub}>{sub}</option>)}
                     </select>
@@ -909,7 +909,7 @@ export const AdmissionRegistrationPage: React.FC = () => {
                       {hasSiblings ? <CheckSquare className="w-6 h-6" /> : <Square className="w-6 h-6" />}
                     </div>
                     <div>
-                      <p className="font-black text-slate-800">Does the applicant have siblings? (తోబుట్టువులు ఉన్నారా?)</p>
+                      <p className="font-black text-slate-800">Does the applicant have siblings?</p>
                       <p className="text-xs font-semibold text-slate-500 mt-1">Check this if the student has a brother or sister studying elsewhere or here.</p>
                     </div>
                   </div>

@@ -344,7 +344,7 @@ export const StudentListPage: React.FC = () => {
                 <Link
                   to={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
                   className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-gradient-to-r from-[#7352F6] to-[#5636E8] hover:brightness-105 rounded-2xl shadow-[0_4px_14px_rgba(109,77,245,0.30)] transition-all cursor-pointer"
-                  title="Custom Student Report & Print Studio (కస్టమ్ రిపోర్ట్ & ప్రింట్ స్టూడియో)"
+                  title="Custom Student Report & Print Studio"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print Studio
                 </Link>
@@ -643,7 +643,7 @@ export const StudentListPage: React.FC = () => {
                     <div className="flex-1">
                       <h4 className="font-bold text-indigo-950 text-base">Step 1: Download Template or Current Records</h4>
                       <p className="text-xs text-indigo-700/80 mt-1 leading-relaxed">
-                        మాస్టర్ ఎక్సెల్ ఫార్మాట్ ద్వారా <strong>Student ID, Child ID, APAAR ID, PEN, Aadhaar, Parents Data</strong> అన్నీ ఒకేసారి మేనేజ్ చేయవచ్చు.
+                        Manage <strong>Student ID, Child ID, APAAR ID, PEN, Aadhaar, and Parent Details</strong> together using the Master Excel format.
                       </p>
 
                       <div className="mt-3.5 flex flex-wrap gap-2.5">
@@ -668,11 +668,11 @@ export const StudentListPage: React.FC = () => {
                       <div className="mt-3 p-3 bg-white/90 rounded-xl border border-indigo-100/80 text-[11px] text-slate-600 space-y-1.5">
                         <div className="flex items-center gap-1.5 font-bold text-indigo-900">
                           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                          <span>స్మార్ట్ పార్షియల్ అప్‌డేట్ (Any Custom Excel Supported):</span>
+                          <span>Smart Partial Update (Custom Excel Supported):</span>
                         </div>
                         <p className="pl-3.5 text-slate-500 leading-relaxed">
-                          • <strong>అన్ని కాలమ్స్ ఉండాల్సిన పనిలేదు:</strong> మీ ఎక్సెల్‌లో కేవలం <strong>Student ID</strong> (లేదా Roll No) మరియు మీరు అప్‌డేట్ చేయాలనుకుంటున్న కాలమ్స్ (ఉదా: కేవలం Child ID, లేదా APAAR ID, లేదా Aadhaar, లేదా Name) ఏవి ఉన్నా సిస్టమ్ వాటిని మాత్రమే అప్‌డేట్ చేస్తుంది.<br />
-                          • ఎక్సెల్ ఫైల్‌లో ఉన్న ఫీల్డ్‌లు మాత్రమే అప్‌డేట్ అవుతాయి, మిగిలిన ఏ పాత డేటా చెక్కుచెదరదు.
+                          • <strong>Only Required Columns Needed:</strong> Include <strong>Student ID</strong> (or Roll No) along with only the columns you want to update (e.g., Child ID, APAAR ID, Aadhaar, or Name).<br />
+                          • <strong>Existing Data Preserved:</strong> Only the columns included in your Excel sheet are updated; all other existing student details remain untouched.
                         </p>
                       </div>
                     </div>
@@ -683,7 +683,7 @@ export const StudentListPage: React.FC = () => {
                     <div className="p-3 bg-white rounded-xl shadow-xs text-purple-600 shrink-0"><Upload className="w-6 h-6" /></div>
                     <div className="flex-1">
                       <h4 className="font-bold text-purple-950 text-base">Step 2: Upload Filled Excel Sheet</h4>
-                      <p className="text-xs text-purple-700/80 mt-1">డేటా నింపిన ఎక్సెల్ ఫైల్‌ను ఇక్కడ అప్‌లోడ్ చేయండి.</p>
+                      <p className="text-xs text-purple-700/80 mt-1">Upload your completed Excel or CSV file below to import and sync records.</p>
                       
                       <div 
                         className={`mt-3.5 border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer
@@ -744,7 +744,7 @@ export const StudentListPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-slate-800">Processing Complete!</h3>
-                    <p className="text-slate-500 text-xs font-medium mt-1">ఎక్సెల్ డేటా విజయవంతంగా సిస్టమ్‌లో అప్‌డేట్ చేయబడింది.</p>
+                    <p className="text-slate-500 text-xs font-medium mt-1">Excel data has been successfully imported and synced to the system.</p>
                   </div>
                   
                   {/* Detailed 3-Card Result Metrics */}
@@ -824,9 +824,9 @@ export const StudentListPage: React.FC = () => {
               {!photoUploadResult ? (
                 <div className="space-y-5">
                   <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-600 space-y-1.5">
-                    <p className="font-bold text-slate-800">ఫోటోలు అప్‌లోడ్ చేసే విధానం:</p>
-                    <p>1. ప్రతి విద్యార్థి ఫోటో పేరులో వారి <strong>Student ID</strong> ఉండేలా పెట్టుకోండి (ఉదా: <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511.jpg</code> లేదా <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511 Name.png</code>).</p>
-                    <p>2. ఆ ఫోటోలన్నింటినీ ఒక <strong>.zip</strong> ఫైల్‌గా కంప్రెస్ చేసి ఇక్కడ అప్‌లోడ్ చేయండి.</p>
+                    <p className="font-bold text-slate-800">Photo Upload Instructions:</p>
+                    <p>1. Name each student photo with their <strong>Student ID</strong> (e.g., <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511.jpg</code> or <code className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-bold text-indigo-700">JY26-0511 Name.png</code>).</p>
+                    <p>2. Compress all photos into a single <strong>.zip</strong> file and upload it below.</p>
                   </div>
 
                   <div
@@ -895,7 +895,7 @@ export const StudentListPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-slate-800">Photo Upload Complete!</h3>
-                    <p className="text-slate-500 text-xs font-medium mt-1">విద్యార్థుల ఫోటోలు విజయవంతంగా అప్‌డేట్ అయ్యాయి.</p>
+                    <p className="text-slate-500 text-xs font-medium mt-1">Student photos have been uploaded and matched successfully.</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 max-w-xs mx-auto">

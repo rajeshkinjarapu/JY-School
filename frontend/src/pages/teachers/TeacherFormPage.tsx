@@ -170,9 +170,9 @@ export const TeacherFormPage: React.FC = () => {
                 className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
                 {...register('canViewAllStudents')} 
               />
-              <label htmlFor="canViewAllStudents" className="text-sm font-semibold text-gray-900 dark:text-white cursor-pointer">
-                Allow to View All Students Details (అన్ని తరగతుల విద్యార్థుల వివరాలు & ఫోన్ నంబర్లు)
-                <span className="block text-xs font-normal text-gray-500 dark:text-gray-400">ఈ టీచర్‌కు అన్ని తరగతుల విద్యార్థుల పూర్తి సమాచారం, తల్లిదండ్రుల ఫోన్ నంబర్లు చూసే పర్మిషన్ లభిస్తుంది.</span>
+              <label htmlFor="canViewAllStudents" className="text-sm font-semibold text-gray-900 cursor-pointer">
+                Allow Viewing All Students Details
+                <span className="block text-xs font-normal text-gray-500">Grants this teacher permission to view student profiles and parent contact numbers across all classes.</span>
               </label>
             </div>
           </div>

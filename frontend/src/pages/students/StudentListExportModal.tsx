@@ -572,7 +572,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                   Full-Screen Custom Report & Print Studio
                 </p>
                 <p className="text-xs font-bold text-white mt-0.5">
-                  ప్రత్యేక ఫుల్ పేజీలో విద్యార్థుల పూర్తి వివరాలు (ఆధార్, PEN, అడ్రస్) టిక్ చేసి ప్రింట్ చేయండి
+                  Select any student columns (Aadhaar, PEN, Address, etc.) and print a full-page custom report.
                 </p>
               </div>
             </div>
@@ -580,18 +580,18 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
               href={`/students/custom-report${classId ? `?classId=${classId}` : ''}`}
               className="px-4 py-2 bg-white text-indigo-700 rounded-xl text-xs font-black hover:bg-blue-50 transition-all shadow-md shrink-0 flex items-center gap-1.5"
             >
-              <span>స్టూడియో ఓపెన్ చేయండి</span>
+              <span>Open Print Studio</span>
               <span>→</span>
             </a>
           </div>
 
-          {/* SECTION 1: SAVED TEMPLATES / PRESETS (టెంప్లేట్లు) */}
+          {/* SECTION 1: SAVED TEMPLATES / PRESETS */}
           <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
                 <Bookmark className="w-4 h-4 text-indigo-600" />
                 <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                  Saved Print Templates (సేవ్ చేసిన టెంప్లేట్లు)
+                  Saved Print Templates
                 </h3>
                 <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.5 rounded-md">
                   1-Click Setup
@@ -680,7 +680,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                 {/* Page Orientation */}
                 <div>
                   <label className="text-xs font-black text-indigo-950 uppercase tracking-wider block mb-2">
-                    Page Orientation (పేజీ అమరిక)
+                    Page Orientation
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -693,7 +693,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                       }`}
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="12" height="18" x="6" y="3" rx="2"/></svg>
-                      Portrait (నిలువు)
+                      Portrait
                     </button>
                     <button
                       type="button"
@@ -705,7 +705,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                       }`}
                     >
                       <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><rect width="18" height="12" x="3" y="6" rx="2"/></svg>
-                      Landscape (అడ్డంగా)
+                      Landscape
                     </button>
                   </div>
                 </div>
@@ -713,7 +713,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                 {/* Custom Heading Input */}
                 <div>
                   <label className="text-xs font-black text-indigo-950 uppercase tracking-wider block mb-2">
-                    Report Heading (రిపోర్ట్ శీర్షిక)
+                    Report Heading
                   </label>
                   <input
                     type="text"
@@ -725,23 +725,23 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                 </div>
               </div>
 
-              {/* Row 2: ROW HEIGHT ADJUSTER (వరుస ఎత్తు) */}
+              {/* Row 2: ROW HEIGHT ADJUSTER */}
               <div className="pt-3 border-t border-indigo-100">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-1.5">
                     <ArrowUpDown className="w-4 h-4 text-indigo-600" />
                     <label className="text-xs font-black text-indigo-950 uppercase tracking-wider">
-                      Row Height (వరుస ఎత్తు - mm లో)
+                      Row Height (in mm)
                     </label>
                   </div>
                   
                   {/* Row Height Quick Presets */}
                   <div className="flex items-center gap-1.5">
                     {[
-                      { label: 'Compact', val: 6, desc: 'చిన్నది' },
-                      { label: 'Normal', val: 9, desc: 'సాధారణం' },
-                      { label: 'Spacious', val: 14, desc: 'పెద్దది' },
-                      { label: 'Signature', val: 18, desc: 'సంతకాల కోసం' },
+                      { label: 'Compact', val: 6, desc: 'Compact spacing' },
+                      { label: 'Normal', val: 9, desc: 'Standard spacing' },
+                      { label: 'Spacious', val: 14, desc: 'Wide spacing' },
+                      { label: 'Signature', val: 18, desc: 'Extra space for signatures' },
                     ].map((h) => (
                       <button
                         key={h.val}
@@ -917,7 +917,7 @@ export const StudentListExportModal: React.FC<ExportDialogProps> = ({
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
                   <h3 className="text-xs font-black text-gray-900 uppercase tracking-wider">
-                    Adjust Column Sizes (కాలమ్ వెడల్పులు mm లో)
+                    Adjust Column Sizes (in mm)
                   </h3>
                 </div>
                 <button

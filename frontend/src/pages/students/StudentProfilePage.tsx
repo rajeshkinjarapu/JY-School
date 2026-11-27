@@ -6,6 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getPhotoUrl } from '../../utils/photo';
 import { compressImage } from '../../utils/imageCompressor';
 import { Badge } from '../../components/UI/Badge';
+import { PageHeader } from '../../components/UI/PageHeader';
 import toast from 'react-hot-toast';
 import { 
   ArrowLeft, Phone, Printer, User2, Calendar, 
@@ -468,13 +469,21 @@ export const StudentProfilePage: React.FC = () => {
   // Instant Skeleton Loader
   if (loading && !student) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 space-y-5 animate-pulse min-h-screen bg-slate-50/80">
-        <div className="h-6 w-48 bg-slate-200 rounded-xl"></div>
-        <div className="h-56 w-full rounded-3xl bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200"></div>
-        <div className="h-14 w-full rounded-2xl bg-white border border-slate-200"></div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="h-72 rounded-2xl bg-white border border-slate-200"></div>
-          <div className="h-72 rounded-2xl bg-white border border-slate-200"></div>
+      <div className="min-h-screen bg-[#F5F7FB] flex flex-col">
+        <div className="h-16 w-full bg-gradient-to-r from-indigo-900 via-blue-800 to-indigo-900 opacity-90 animate-pulse" />
+        <div className="p-4 sm:p-6 max-w-7xl mx-auto w-full space-y-5 animate-pulse">
+          <div className="h-5 w-52 bg-indigo-100 rounded-lg" />
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <div className="lg:col-span-4 space-y-4">
+              <div className="h-80 rounded-[26px] bg-white border border-indigo-100/80 shadow-sm" />
+              <div className="h-44 rounded-[24px] bg-white border border-slate-200/80 shadow-sm" />
+            </div>
+            <div className="lg:col-span-8 space-y-4">
+              <div className="h-14 rounded-2xl bg-white border border-slate-200/80 shadow-sm" />
+              <div className="h-72 rounded-2xl bg-white border border-slate-200/80 shadow-sm" />
+              <div className="h-56 rounded-2xl bg-white border border-slate-200/80 shadow-sm" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -550,96 +559,153 @@ export const StudentProfilePage: React.FC = () => {
   const studentCompletedCount = studentChecklist.filter(item => item.done).length;
   const studentPercentage = Math.round((studentCompletedCount / studentChecklist.length) * 100);
 
+  const primaryParentPhone = student.fatherPhone || student.motherPhone || student.guardianPhone || '';
+  const whatsappPhone = primaryParentPhone.replace(/\D/g, '');
+
   return (
-    <div className="flex flex-col min-h-full bg-[#F4F7FC] text-slate-800 print:hidden font-sans">
+    <div className="flex flex-col min-h-full bg-[#F5F7FB] text-slate-800 print:hidden font-sans">
       
-      <div className="p-3 sm:p-6 lg:p-7 space-y-4 max-w-7xl mx-auto w-full">
+      {/* Unified Top Bar matching all ERP Pages */}
+      <PageHeader
+        title="Student Profile"
+        icon={<GraduationCap className="w-5 h-5 text-white" />}
+        action={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link
+              to="/students"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Back to Students</span>
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setPrintPayment(null);
+                setTimeout(() => window.print(), 100);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/20 text-xs font-bold transition-all cursor-pointer"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Print Profile</span>
+            </button>
+            {(isAdmin || canEdit) && (
+              <Link
+                to={`/students/${student.id}/edit`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white text-indigo-700 hover:bg-indigo-50 text-xs font-extrabold shadow-sm transition-all"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+                <span>Edit Profile</span>
+              </Link>
+            )}
+            {(isAdmin || user?.role === 'ACCOUNTANT') && (
+              <Link
+                to={`/students/${student.id}/pay-fee`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-emerald-950 text-xs font-extrabold shadow-sm transition-all"
+              >
+                <CreditCard className="w-3.5 h-3.5" />
+                <span>Pay Fee</span>
+              </Link>
+            )}
+          </div>
+        }
+      />
+
+      <div className="p-3 sm:p-5 lg:p-6 max-w-7xl mx-auto w-full space-y-4">
         
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
-          <Link to="/" className="flex items-center gap-1 hover:text-blue-600 transition-colors">
-            <Home className="w-3.5 h-3.5 text-slate-400" />
-          </Link>
-          <ChevronRight className="w-3 h-3 text-slate-300" />
-          <Link to="/students" className="hover:text-blue-600 transition-colors">Students</Link>
-          <ChevronRight className="w-3 h-3 text-slate-300" />
-          <span className="text-slate-800 font-extrabold">{student.user?.name || 'Student Profile'}</span>
+        {/* Clean Light Breadcrumb & Session Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-400">
+            <Link to="/" className="flex items-center gap-1 hover:text-indigo-600 transition-colors">
+              <Home className="w-3.5 h-3.5 text-slate-400" />
+            </Link>
+            <ChevronRight className="w-3 h-3 text-slate-300" />
+            <Link to="/students" className="hover:text-indigo-600 transition-colors">Students</Link>
+            <ChevronRight className="w-3 h-3 text-slate-300" />
+            <span className="text-slate-800 font-extrabold truncate max-w-[200px] sm:max-w-none">{student.user?.name || 'Student Profile'}</span>
+          </div>
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-indigo-100 text-[11px] font-bold text-indigo-700 shadow-2xs">
+            <Building className="w-3.5 h-3.5 text-indigo-500" />
+            <span>JY High School • {student.class?.academicYear || '2026 – 27'}</span>
+          </span>
         </div>
 
         {/* ============================================================ */}
-        {/* EXECUTIVE STUDENT HERO BANNER - ULTRA MODERN SAPPHIRE DESIGN */}
+        {/* MODERN LIGHT PASTEL 2-COLUMN BENTO WORKSPACE                 */}
         {/* ============================================================ */}
-        <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#1E3A8A] p-5 sm:p-7 shadow-2xl shadow-blue-950/20 text-white border border-slate-700/50">
-          
-          {/* Ambient Lighting Orbs */}
-          <div className="absolute top-0 right-1/4 -mt-16 w-80 h-80 rounded-full bg-blue-500/15 blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 right-0 -mb-16 w-96 h-96 rounded-full bg-cyan-400/15 blur-3xl pointer-events-none" />
-          <div className="absolute -left-12 -top-12 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          
-          <div className="absolute right-28 top-6 opacity-[0.06] pointer-events-none hidden md:block">
-            <GraduationCap className="w-40 h-40 text-white" />
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-6">
-            
-            {/* Left Section: Student Portrait, Name, Verification & Meta Badges */}
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left w-full lg:w-auto">
+          {/* LEFT STICKY IDENTITY & SNAPSHOT RAIL */}
+          <div className="lg:col-span-4 lg:sticky lg:top-5 space-y-4">
+
+            {/* Card A: Clean Light Pastel Student Identity Card */}
+            <div className="bg-white rounded-[26px] border border-indigo-100/90 shadow-sm overflow-hidden">
               
-              {/* Premium Photo Frame */}
-              <div className="relative shrink-0">
-                <div className="w-28 h-32 sm:w-32 sm:h-36 rounded-2xl bg-gradient-to-b from-white/90 to-slate-200 p-1 shadow-2xl ring-4 ring-white/20 backdrop-blur-md">
-                  <div className="w-full h-full rounded-xl overflow-hidden bg-slate-900 flex items-center justify-center relative">
-                    {getPhotoUrl(student.user?.photoUrl) ? (
-                      <img 
-                        src={getPhotoUrl(student.user.photoUrl)} 
-                        alt={student.user?.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-slate-400 p-2">
-                        <User2 className="w-12 h-12 mb-1 text-slate-400" />
-                        <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">No Photo</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Floating Camera Button */}
-                {(isAdmin || user?.role === 'TEACHER') && (
-                  <label 
-                    className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white flex items-center justify-center shadow-lg ring-2 ring-white cursor-pointer transition-transform hover:scale-110 active:scale-95"
-                    title="Change Student Photo"
-                  >
-                    <Camera className="w-4 h-4" />
-                    <input 
-                      id="student-photo-file-input" 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
-                      onChange={handlePhotoUpload} 
-                      disabled={uploading} 
-                    />
-                  </label>
-                )}
+              {/* Soft Pastel Header Strip (No Dark Hero Banner) */}
+              <div className="h-20 bg-gradient-to-r from-[#EBF3FF] via-[#F4EEFF] to-[#FFF0F6] border-b border-indigo-100/60 px-4 pt-3.5 flex items-start justify-between relative">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/85 text-indigo-700 border border-indigo-100 text-[10px] font-extrabold shadow-2xs">
+                  <ShieldCheck className="w-3 h-3 text-indigo-500" />
+                  <span>Verified Profile</span>
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 text-[10px] font-extrabold shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Active Student</span>
+                </span>
               </div>
 
-              {/* Student Identity Information */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-center sm:justify-start gap-2.5 flex-wrap">
-                  <h1 className="text-2xl sm:text-3xl font-black text-white tracking-wide uppercase drop-shadow-sm">
+              {/* Portrait + Identity Content */}
+              <div className="-mt-11 px-5 pb-5 flex flex-col items-center text-center">
+                
+                {/* Student Portrait Frame */}
+                <div className="relative shrink-0">
+                  <div className="w-28 h-28 rounded-[22px] bg-white p-1.5 shadow-md ring-4 ring-white border border-indigo-100">
+                    <div className="w-full h-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#EEF4FF] to-[#F5EEFF] flex items-center justify-center relative">
+                      {getPhotoUrl(student.user?.photoUrl) ? (
+                        <img 
+                          src={getPhotoUrl(student.user.photoUrl)} 
+                          alt={student.user?.name} 
+                          className="w-full h-full object-cover transition-transform duration-500 hover:scale-105" 
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-indigo-300 p-2">
+                          <User2 className="w-11 h-11 mb-0.5 text-indigo-400" />
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-indigo-400">No Photo</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Floating Camera Upload Button */}
+                  {(isAdmin || user?.role === 'TEACHER') && (
+                    <label 
+                      className="absolute -bottom-1.5 -right-1.5 w-8 h-8 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md ring-2 ring-white cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                      title="Change Student Photo"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <input 
+                        id="student-photo-file-input" 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={handlePhotoUpload} 
+                        disabled={uploading} 
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Student Name & Edit Action */}
+                <div className="mt-3 flex items-center justify-center gap-1.5 flex-wrap">
+                  <h1 className="text-xl font-black text-slate-900 tracking-tight uppercase">
                     {student.user?.name}
                   </h1>
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-400/20 text-cyan-300 border border-cyan-400/40 text-[11px] font-bold" title="Verified Active Student">
-                    <CheckCircle className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Verified</span>
-                  </span>
                   {canEdit && (
                     <button
                       onClick={() => {
                         setNewStudentName(student.user?.name || '');
                         setShowNameModal(true);
                       }}
-                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-600 transition-colors cursor-pointer"
                       title="Edit Student Name"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
@@ -647,19 +713,26 @@ export const StudentProfilePage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Meta Badges Row */}
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-0.5">
-                  
-                  {/* Roll No / ID Badge */}
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-blue-500/20 text-blue-200 border border-blue-400/30 backdrop-blur-md">
-                    <User2 className="w-3.5 h-3.5 text-blue-400" />
-                    <span>ID: {student.rollNo}</span>
-                  </div>
+                <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                  Admission No: <span className="font-mono font-bold text-indigo-700">{student.admissionNo || student.rollNo}</span>
+                  {student.gender && <span className="capitalize"> • {student.gender.toLowerCase()}</span>}
+                </p>
 
-                  {/* Class & Section Badge */}
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-indigo-500/20 text-indigo-200 border border-indigo-400/30 backdrop-blur-md">
-                    <GraduationCap className="w-3.5 h-3.5 text-indigo-300" />
-                    <span>{student.class ? `${student.class.name} - ${student.class.section}` : 'N/A'}</span>
+                {/* Soft Pastel Meta Chips */}
+                <div className="flex flex-wrap items-center justify-center gap-1.5 mt-3">
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(student.rollNo, 'Student ID')}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-[#EEF4FF] text-[#3730A3] border border-[#DCE6FF] hover:bg-[#E2ECFF] transition-colors cursor-pointer"
+                    title="Click to Copy Student ID"
+                  >
+                    <Hash className="w-3 h-3 text-indigo-500" />
+                    <span>{student.rollNo}</span>
+                  </button>
+
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-[#F4EEFF] text-[#6D28D9] border border-[#E6DBFF]">
+                    <GraduationCap className="w-3.5 h-3.5 text-violet-500" />
+                    <span>{student.class ? `${student.class.name} - ${student.class.section}` : 'Not Enrolled'}</span>
                     {isAdmin && (
                       <button
                         onClick={() => {
@@ -669,7 +742,7 @@ export const StudentProfilePage: React.FC = () => {
                           }
                           setShowSectionModal(true);
                         }}
-                        className="ml-1 text-indigo-300 hover:text-white"
+                        className="ml-0.5 text-violet-500 hover:text-violet-800 cursor-pointer"
                         title="Change Section"
                       >
                         <Edit2 className="w-3 h-3" />
@@ -677,159 +750,233 @@ export const StudentProfilePage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Active Status Badge */}
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 backdrop-blur-md">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Active Student</span>
-                  </div>
-
-                  {/* Age Tag */}
                   {studentAge !== null && (
-                    <div className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold bg-white/10 text-white/90 border border-white/15 backdrop-blur-md">
-                      <Clock className="w-3 h-3 text-cyan-300" />
-                      <span>{studentAge} Years</span>
-                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-[#FFF5E8] text-[#B45309] border border-[#FDE2BE]">
+                      <Clock className="w-3 h-3 text-amber-500" />
+                      <span>{studentAge} Yrs</span>
+                    </span>
+                  )}
+
+                  {student.bloodGroup && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-extrabold bg-[#FFF0F2] text-[#BE123C] border border-[#FFD6DC]">
+                      <Droplet className="w-3 h-3 text-rose-500 fill-rose-500" />
+                      <span>{student.bloodGroup}</span>
+                    </span>
                   )}
                 </div>
 
-                {/* Subtitle / Admission Number note */}
-                <p className="text-xs text-slate-300/80 font-medium hidden sm:block">
-                  Admission No: <span className="font-mono text-cyan-200 font-bold">{student.admissionNo || student.rollNo}</span>
-                  {student.gender && <span> • Gender: <strong className="text-white capitalize">{student.gender.toLowerCase()}</strong></span>}
-                  {student.bloodGroup && <span> • Blood: <strong className="text-rose-300">{student.bloodGroup}</strong></span>}
-                </p>
-              </div>
-
-            </div>
-
-            {/* Right Section: Radial Profile Completeness & Date Cards */}
-            <div className="flex items-center gap-5 sm:gap-6 justify-center lg:justify-end w-full lg:w-auto">
-              
-              {/* Radial Profile Completeness Gauge */}
-              <div className="flex flex-col items-center justify-center shrink-0">
-                <div className="relative w-22 h-22 flex items-center justify-center">
-                  <svg className="w-full h-full -rotate-90">
-                    <circle
-                      cx="44"
-                      cy="44"
-                      r={circleRadius}
-                      stroke="rgba(255, 255, 255, 0.12)"
-                      strokeWidth="6"
-                      fill="transparent"
-                    />
-                    <circle
-                      cx="44"
-                      cy="44"
-                      r={circleRadius}
-                      stroke="url(#progress-gradient)"
-                      strokeWidth="6"
-                      fill="transparent"
-                      strokeDasharray={circumference}
-                      strokeDashoffset={strokeDashoffset}
-                      strokeLinecap="round"
-                      className="transition-all duration-1000 ease-out"
-                    />
-                    <defs>
-                      <linearGradient id="progress-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#38BDF8" />
-                        <stop offset="100%" stopColor="#22C55E" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="absolute flex flex-col items-center justify-center">
-                    <span className="font-black text-white text-xl tracking-tight">
-                      {percentage}%
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-cyan-300/90 mt-1">
-                  Profile Complete
-                </span>
-              </div>
-
-              {/* Stacked Glassmorphic Info Cards */}
-              <div className="flex flex-col gap-2.5 min-w-[160px]">
-                
-                {/* Joined On Card */}
-                <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/15 shadow-sm flex items-center gap-3 transition-colors">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-300 shrink-0 border border-cyan-400/20">
-                    <Calendar className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Joined On</p>
-                    <p className="text-xs font-black text-white">
+                {/* 2-Column Mini Pastel Summary Strip */}
+                <div className="grid grid-cols-2 gap-2.5 w-full mt-4 pt-4 border-t border-slate-100 text-left">
+                  <div className="bg-[#F3F8FF] border border-[#E1ECFF] rounded-2xl p-3">
+                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-blue-600">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Joined On</span>
+                    </div>
+                    <p className="text-xs font-black text-slate-800 mt-1">
                       {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '18 Jul 2026'}
                     </p>
                   </div>
-                </div>
 
-                {/* Academic Year Card */}
-                <div className="bg-white/10 hover:bg-white/15 backdrop-blur-md rounded-2xl px-4 py-2.5 border border-white/15 shadow-sm flex items-center gap-3 transition-colors">
-                  <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-300 shrink-0 border border-indigo-400/20">
-                    <GraduationCap className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-white/70 uppercase tracking-wider">Academic Year</p>
-                    <p className="text-xs font-black text-white">
+                  <div className="bg-[#F6F3FF] border border-[#E8E0FF] rounded-2xl p-3">
+                    <div className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wider text-violet-600">
+                      <BookOpen className="w-3.5 h-3.5" />
+                      <span>Session</span>
+                    </div>
+                    <p className="text-xs font-black text-slate-800 mt-1">
                       {student.class?.academicYear || '2026 – 27'}
                     </p>
                   </div>
                 </div>
 
+                {/* Quick Parent Contact Strip */}
+                {primaryParentPhone && (
+                  <div className="grid grid-cols-2 gap-2 w-full mt-3">
+                    <a
+                      href={`tel:${primaryParentPhone}`}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#ECFDF5] hover:bg-[#D1FAE5] text-emerald-700 border border-emerald-200/70 text-xs font-extrabold transition-colors"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Call Parent</span>
+                    </a>
+                    <a
+                      href={`https://wa.me/${whatsappPhone.length === 10 ? '91' + whatsappPhone : whatsappPhone}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-[#EEF4FF] hover:bg-[#E0EAFF] text-indigo-700 border border-indigo-200/70 text-xs font-extrabold transition-colors"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span>WhatsApp</span>
+                    </a>
+                  </div>
+                )}
+
+              </div>
+            </div>
+
+            {/* Card B: Fee Snapshot & Quick Actions */}
+            <div className="bg-white rounded-[24px] border border-slate-200/80 shadow-sm p-4 space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <Coins className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-extrabold text-slate-900">Fee & Account Snapshot</h3>
+                    <p className="text-[10px] text-slate-400 font-semibold">Live financial clearance</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  {feeProgress}% Paid
+                </span>
               </div>
 
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="p-3 rounded-2xl bg-[#ECFDF5] border border-[#D1FAE5]">
+                  <p className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Total Paid</p>
+                  <p className="text-sm font-black text-emerald-900 mt-0.5">₹{totalFeePaid.toLocaleString('en-IN')}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-[#FFF6EB] border border-[#FFE1BA]">
+                  <p className="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Pending Due</p>
+                  <p className="text-sm font-black text-amber-900 mt-0.5">₹{totalFeePending.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+
+              <div className="w-full h-2 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 transition-all duration-700"
+                  style={{ width: `${feeProgress}%` }}
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 pt-1">
+                {(isAdmin || canEdit) && (
+                  <Link
+                    to={`/students/${student.id}/edit`}
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 rounded-2xl bg-[#F3F0FF] hover:bg-[#E7E0FF] text-indigo-700 border border-indigo-100 text-[11px] font-extrabold transition-all"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    <span>Edit</span>
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPrintPayment(null);
+                    setTimeout(() => window.print(), 100);
+                  }}
+                  className="flex flex-col items-center justify-center gap-1 p-2.5 rounded-2xl bg-[#ECFDF5] hover:bg-[#D1FAE5] text-emerald-700 border border-emerald-100 text-[11px] font-extrabold transition-all cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print</span>
+                </button>
+                {(isAdmin || user?.role === 'ACCOUNTANT') && (
+                  <Link
+                    to={`/students/${student.id}/pay-fee`}
+                    className="flex flex-col items-center justify-center gap-1 p-2.5 rounded-2xl bg-[#FFF4E8] hover:bg-[#FFE6CC] text-amber-800 border border-amber-200/70 text-[11px] font-extrabold transition-all"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Pay Fee</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            {/* Card C: Profile Completeness Card */}
+            <div className="bg-white rounded-[24px] border border-slate-200/80 shadow-sm p-4 flex items-center gap-3.5">
+              <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+                <svg className="w-14 h-14 -rotate-90" viewBox="0 0 88 88">
+                  <circle
+                    cx="44"
+                    cy="44"
+                    r={circleRadius}
+                    stroke="rgba(99, 102, 241, 0.14)"
+                    strokeWidth="7"
+                    fill="transparent"
+                  />
+                  <circle
+                    cx="44"
+                    cy="44"
+                    r={circleRadius}
+                    stroke="url(#pastel-progress-grad)"
+                    strokeWidth="7"
+                    fill="transparent"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={strokeDashoffset}
+                    strokeLinecap="round"
+                    className="transition-all duration-1000 ease-out"
+                  />
+                  <defs>
+                    <linearGradient id="pastel-progress-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#4F46E5" />
+                      <stop offset="100%" stopColor="#10B981" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute text-xs font-black text-slate-800">{percentage}%</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-extrabold text-slate-900">Profile Completeness</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{completed} of {total} key details saved</p>
+                {percentage < 100 && canEdit && (
+                  <button
+                    type="button"
+                    onClick={openDemographicsModal}
+                    className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" /> Complete Missing ({missing})
+                  </button>
+                )}
+              </div>
             </div>
 
           </div>
 
-        </div>
+          {/* RIGHT WORKSPACE: NAVIGATION TABS + CONTENT */}
+          <div className="lg:col-span-8 space-y-4 min-w-0">
 
-        {/* ============================================================ */}
-        {/* PREMIUM NAVIGATION TABS                                      */}
-        {/* ============================================================ */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-          {[
-            { id: 'personal', label: 'Personal Details', icon: User2, count: null },
-            { id: 'family', label: 'Family Details', icon: Users, count: '2' },
-            { id: 'academic', label: 'Academic & Fees', icon: BookOpen, count: null },
-            { id: 'address', label: 'Address Details', icon: MapPin, count: null },
-            { id: 'other', label: 'Other Details', icon: ClipboardCheck, count: null },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-md shadow-blue-500/25'
-                    : 'text-slate-600 hover:text-blue-600 hover:bg-slate-100/70'
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                <span>{tab.label}</span>
-                {tab.count && (
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
-                    isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+            {/* ============================================================ */}
+            {/* PREMIUM PASTEL NAVIGATION TABS                               */}
+            {/* ============================================================ */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-1.5 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              {[
+                { id: 'personal', label: 'Personal Details', icon: User2, count: null },
+                { id: 'family', label: 'Family Details', icon: Users, count: '2' },
+                { id: 'academic', label: 'Academic & Fees', icon: BookOpen, count: null },
+                { id: 'address', label: 'Address Details', icon: MapPin, count: null },
+                { id: 'other', label: 'Other Details', icon: ClipboardCheck, count: null },
+              ].map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      isActive
+                        ? 'bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 text-white shadow-sm shadow-indigo-500/20'
+                        : 'text-slate-600 hover:text-indigo-700 hover:bg-indigo-50/70'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                    {tab.count && (
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${
+                        isActive ? 'bg-white/25 text-white' : 'bg-indigo-50 text-indigo-600'
+                      }`}>
+                        {tab.count}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
         {/* ============================================================ */}
         {/* TAB 1: PERSONAL DETAILS                                      */}
         {/* ============================================================ */}
         {activeTab === 'personal' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start animate-fade-in">
+          <div className="space-y-4 animate-fade-in">
             
-            {/* Left Column (Personal Info & Quick Actions) */}
-            <div className="lg:col-span-6 space-y-4">
-              
               {/* Card 1: Personal Information */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4">
                 <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
@@ -1104,67 +1251,7 @@ export const StudentProfilePage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 2: Quick Actions */}
-              <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-3.5">
-                <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-amber-50 text-amber-500">
-                    <Sparkles className="w-4 h-4 fill-amber-500" />
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm">Quick Actions</h3>
-                    <p className="text-[11px] text-slate-400">Manage profile, generate documents, and collect fees</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  
-                  {/* Edit Profile Button */}
-                  {(isAdmin || canEdit) && (
-                    <Link
-                      to={`/students/${student.id}/edit`}
-                      className="bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-700 hover:to-indigo-800 text-white rounded-2xl shadow-md shadow-indigo-500/20 px-4 py-3.5 font-bold flex flex-col items-center justify-center text-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all text-xs"
-                    >
-                      <Edit2 className="w-5 h-5 mb-0.5" />
-                      <span className="font-extrabold">Edit Profile</span>
-                      <span className="text-[10px] text-purple-200 font-medium">Update details</span>
-                    </Link>
-                  )}
-
-                  {/* Print Profile Button */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPrintPayment(null);
-                      setTimeout(() => window.print(), 100);
-                    }}
-                    className="bg-gradient-to-r from-emerald-500 via-teal-600 to-teal-700 hover:from-emerald-600 hover:to-teal-800 text-white rounded-2xl shadow-md shadow-emerald-500/20 px-4 py-3.5 font-bold flex flex-col items-center justify-center text-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all text-xs cursor-pointer"
-                  >
-                    <Printer className="w-5 h-5 mb-0.5" />
-                    <span className="font-extrabold">Print Profile</span>
-                    <span className="text-[10px] text-emerald-200 font-medium">Official Dossier</span>
-                  </button>
-
-                  {/* Pay Fee Button */}
-                  {(isAdmin || user?.role === 'ACCOUNTANT') && (
-                    <Link
-                      to={`/students/${student.id}/pay-fee`}
-                      className="bg-gradient-to-r from-amber-500 via-orange-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white rounded-2xl shadow-md shadow-orange-500/20 px-4 py-3.5 font-bold flex flex-col items-center justify-center text-center gap-1.5 hover:scale-[1.02] active:scale-95 transition-all text-xs"
-                    >
-                      <CreditCard className="w-5 h-5 mb-0.5" />
-                      <span className="font-extrabold">Pay Fee</span>
-                      <span className="text-[10px] text-amber-100 font-medium">Collect payments</span>
-                    </Link>
-                  )}
-
-                </div>
-              </div>
-
-            </div>
-
-            {/* Right Column: Institutional Enrollment, Health & Medical, Student-Only Verification */}
-            <div className="lg:col-span-6 space-y-4">
-              
-              {/* Card 3: Institutional & Academic Enrollment Profile */}
+              {/* Card 2: Institutional & Academic Enrollment Profile */}
               <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-5 space-y-4 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between pb-3.5 border-b border-slate-100">
                   <div className="flex items-center gap-2.5">
@@ -1399,8 +1486,6 @@ export const StudentProfilePage: React.FC = () => {
                   ))}
                 </div>
               </div>
-
-            </div>
 
           </div>
         )}
@@ -2281,6 +2366,10 @@ export const StudentProfilePage: React.FC = () => {
           </div>
         )}
 
+          </div>
+
+        </div>
+
       </div>
 
       {/* ============================================================ */}
@@ -2390,8 +2479,8 @@ export const StudentProfilePage: React.FC = () => {
                     className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="">Select Gender</option>
-                    <option value="MALE">Male (బాలుడు)</option>
-                    <option value="FEMALE">Female (బాలిక)</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
                     <option value="OTHER">Other</option>
                   </select>
                 </div>
@@ -2972,7 +3061,7 @@ export const StudentProfilePage: React.FC = () => {
                   onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })}
                   className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
                 >
-                  <option value="CASH">CASH (నగదు)</option>
+                  <option value="CASH">Cash</option>
                   <option value="UPI">UPI / QR (PhonePe / GPay)</option>
                   <option value="BANK_TRANSFER">Bank Transfer (NEFT / IMPS)</option>
                   <option value="CHEQUE">Cheque / Demand Draft</option>
