@@ -364,29 +364,29 @@
 /* ── Unified Professional Tables ────────────────────────── */
 @layer components {
 
-  .card table:not(.custom-report-table):not(.holiday-table),
-  .table-wrapper table:not(.custom-report-table):not(.holiday-table),
-  table.w-full:not(.custom-report-table):not(.holiday-table) {
+  .card table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table),
+  .table-wrapper table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table),
+  table.w-full:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) {
     width: 100% !important;
     border-collapse: collapse !important;
     border-spacing: 0 !important;
   }
 
-  .card table:not(.custom-report-table):not(.holiday-table) thead,
-  .table-wrapper table:not(.custom-report-table):not(.holiday-table) thead,
-  table.w-full:not(.custom-report-table):not(.holiday-table) thead {
+  .card table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead,
+  .table-wrapper table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead,
+  table.w-full:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead {
     background-color: rgba(238, 242, 255, 0.6) !important;
   }
 
-  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table) thead,
-  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table) thead,
-  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table) thead {
+  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead,
+  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead,
+  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) thead {
     background-color: rgba(30, 27, 75, 0.2) !important;
   }
 
-  .card table:not(.custom-report-table):not(.holiday-table) th,
-  .table-wrapper table:not(.custom-report-table):not(.holiday-table) th,
-  table.w-full:not(.custom-report-table):not(.holiday-table) th {
+  .card table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th,
+  .table-wrapper table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th,
+  table.w-full:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th {
     padding: 0.625rem 0.75rem !important;
     font-size: 10px !important;
     font-weight: 900 !important;
@@ -397,16 +397,16 @@
     text-align: left !important;
   }
 
-  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table) th,
-  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table) th,
-  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table) th {
+  :is(.dark *) .card table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th,
+  :is(.dark *) .table-wrapper table:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th,
+  :is(.dark *) table.w-full:not(.custom-report-table):not(.holiday-table):not(.student-grid-table) th {
     color: #a5b4fc !important;
     border-bottom-color: #1f2937 !important;
   }
 
-  .card table td,
-  .table-wrapper table td,
-  table.w-full td {
+  .card table:not(.student-grid-table) td,
+  .table-wrapper table:not(.student-grid-table) td,
+  table.w-full:not(.student-grid-table) td {
     padding: 0.5rem 0.75rem !important;
     font-size: 0.875rem !important;
     font-weight: 600 !important;
@@ -415,53 +415,53 @@
     vertical-align: middle !important;
   }
 
-  :is(.dark *) .card table td,
-  :is(.dark *) .table-wrapper table td,
-  :is(.dark *) table.w-full td {
+  :is(.dark *) .card table:not(.student-grid-table) td,
+  :is(.dark *) .table-wrapper table:not(.student-grid-table) td,
+  :is(.dark *) table.w-full:not(.student-grid-table) td {
     color: #d1d5db !important;
     border-bottom-color: rgba(31, 41, 55, 0.5) !important;
   }
 
-  .card table tbody tr,
-  .table-wrapper table tbody tr,
-  table.w-full tbody tr {
+  .card table:not(.student-grid-table) tbody tr,
+  .table-wrapper table:not(.student-grid-table) tbody tr,
+  table.w-full:not(.student-grid-table) tbody tr {
     background-color: #ffffff !important;
     transition: background-color 0.15s ease !important;
   }
 
-  :is(.dark *) .card table tbody tr,
-  :is(.dark *) .table-wrapper table tbody tr,
-  :is(.dark *) table.w-full tbody tr {
+  :is(.dark *) .card table:not(.student-grid-table) tbody tr,
+  :is(.dark *) .table-wrapper table:not(.student-grid-table) tbody tr,
+  :is(.dark *) table.w-full:not(.student-grid-table) tbody tr {
     background-color: #111827 !important;
   }
 
-  .card table tbody tr:hover,
-  .table-wrapper table tbody tr:hover,
-  table.w-full tbody tr:hover {
+  .card table:not(.student-grid-table) tbody tr:hover,
+  .table-wrapper table:not(.student-grid-table) tbody tr:hover,
+  table.w-full:not(.student-grid-table) tbody tr:hover {
     background-color: rgba(238, 242, 255, 0.3) !important;
   }
 
-  :is(.dark *) .card table tbody tr:hover,
-  :is(.dark *) .table-wrapper table tbody tr:hover,
-  :is(.dark *) table.w-full tbody tr:hover {
+  :is(.dark *) .card table:not(.student-grid-table) tbody tr:hover,
+  :is(.dark *) .table-wrapper table:not(.student-grid-table) tbody tr:hover,
+  :is(.dark *) table.w-full:not(.student-grid-table) tbody tr:hover {
     background-color: rgba(49, 46, 129, 0.1) !important;
   }
 
-  .card table tbody tr:nth-child(even),
-  .table-wrapper table tbody tr:nth-child(even),
-  table.w-full tbody tr:nth-child(even) {
+  .card table:not(.student-grid-table) tbody tr:nth-child(even),
+  .table-wrapper table:not(.student-grid-table) tbody tr:nth-child(even),
+  table.w-full:not(.student-grid-table) tbody tr:nth-child(even) {
     background-color: rgba(248, 250, 252, 0.5) !important;
   }
 
-  :is(.dark *) .card table tbody tr:nth-child(even),
-  :is(.dark *) .table-wrapper table tbody tr:nth-child(even),
-  :is(.dark *) table.w-full tbody tr:nth-child(even) {
+  :is(.dark *) .card table:not(.student-grid-table) tbody tr:nth-child(even),
+  :is(.dark *) .table-wrapper table:not(.student-grid-table) tbody tr:nth-child(even),
+  :is(.dark *) table.w-full:not(.student-grid-table) tbody tr:nth-child(even) {
     background-color: rgba(31, 41, 55, 0.2) !important;
   }
 
-  .card table tbody tr:last-child td,
-  .table-wrapper table tbody tr:last-child td,
-  table.w-full tbody tr:last-child td {
+  .card table:not(.student-grid-table) tbody tr:last-child td,
+  .table-wrapper table:not(.student-grid-table) tbody tr:last-child td,
+  table.w-full:not(.student-grid-table) tbody tr:last-child td {
     border-bottom: none !important;
   }
 }

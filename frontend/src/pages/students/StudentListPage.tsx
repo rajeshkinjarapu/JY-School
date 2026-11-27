@@ -428,16 +428,16 @@ export const StudentListPage: React.FC = () => {
 
       {/* ── Student List (Full Grid Table Form with Signature Purple Header) ── */}
       <div className="relative z-10 flex-1 overflow-auto px-4 sm:px-6 pb-3 hidden md:block">
-        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DFDAF4] overflow-hidden">
-          <table className="w-full text-sm text-left border-collapse">
+        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DDD7F3] overflow-hidden">
+          <table className="w-full text-sm text-left border-collapse student-grid-table">
             <thead>
-              <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] text-white font-extrabold uppercase tracking-wider text-[11px]">
-                <th className="px-3 py-3.5 text-center w-14 border-r border-white/15">#</th>
-                <th className="px-4 py-3.5 text-left border-r border-white/15">Student</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/15">Roll No / ID</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/15">Class</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/15">Father Name</th>
-                <th className="px-5 py-3.5 text-left">Mobile No</th>
+              <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] !text-white font-extrabold uppercase tracking-wider text-[11px]">
+                <th className="px-3 py-3.5 text-center w-14 border-r border-white/20 !text-white">#</th>
+                <th className="px-4 py-3.5 text-left border-r border-white/20 !text-white">Student</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Roll No / ID</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Class</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Father Name</th>
+                <th className="px-5 py-3.5 text-left !text-white">Mobile No</th>
               </tr>
             </thead>
             <tbody>
