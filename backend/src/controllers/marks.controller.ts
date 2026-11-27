@@ -744,10 +744,10 @@ export const getCceCumulativeCard = async (req: AuthRequest, res: Response, next
     // Map each student's evaluations
     const studentEvaluations = students.map(student => {
       const stMarks = allMarks.filter(m => m.studentId === student.id);
-      const stAtt = allAttendance.filter(a => a.studentId === student.id);
-      const totalDays = stAtt.length;
-      const presentDays = stAtt.filter(a => a.status === 'PRESENT').length;
-      const attPct = totalDays > 0 ? parseFloat(((presentDays / totalDays) * 100).toFixed(1)) : 100;
+      const allAtt = allAttendance.filter(a => a.studentId === student.id);
+      const totalDays = allAtt.length;
+      const presentDays = allAtt.filter(a => a.status === 'PRESENT').length;
+      const attPct = totalDays > 0 ? parseFloat(((presentDays / totalDays) * 100).toFixed(1)) : null;
 
       let studentTotalObtained = 0;
       let studentTotalMax = 0;
@@ -782,20 +782,20 @@ export const getCceCumulativeCard = async (req: AuthRequest, res: Response, next
 
         const faList = [fa1, fa2, fa3, fa4].filter(Boolean) as { obtained: number; max: number }[];
         const faObtained = faList.reduce((acc, x) => acc + x.obtained, 0);
-        const faMax = faList.length > 0 ? faList.reduce((acc, x) => acc + x.max, 0) : 200;
+        const faMax = faList.reduce((acc, x) => acc + x.max, 0);
 
         const saList = [sa1, sa2].filter(Boolean) as { obtained: number; max: number }[];
         const saObtained = saList.reduce((acc, x) => acc + x.obtained, 0);
-        const saMax = saList.length > 0 ? saList.reduce((acc, x) => acc + x.max, 0) : 200;
+        const saMax = saList.reduce((acc, x) => acc + x.max, 0);
 
         const totalObtained = faObtained + saObtained;
-        const totalMax = (faList.length > 0 ? faMax : 200) + (saList.length > 0 ? saMax : 200);
+        const totalMax = faMax + saMax;
         const hasAnyMark = faList.length > 0 || saList.length > 0;
 
         const subPct = totalMax > 0 && hasAnyMark ? (totalObtained / totalMax) * 100 : 0;
         const { grade, point } = getCceGrade(subPct);
 
-        if (hasAnyMark) {
+        if (hasAnyMark && totalMax > 0) {
           studentTotalObtained += totalObtained;
           studentTotalMax += totalMax;
         }
@@ -805,21 +805,21 @@ export const getCceCumulativeCard = async (req: AuthRequest, res: Response, next
           subjectName: displayName,
           canonicalName: canonName,
           fa1: fa1 ? fa1.obtained : null,
-          fa1Max: fa1 ? fa1.max : 50,
+          fa1Max: fa1 ? fa1.max : (detectedExams.fa1?.maxMarks || 20),
           fa2: fa2 ? fa2.obtained : null,
-          fa2Max: fa2 ? fa2.max : 50,
+          fa2Max: fa2 ? fa2.max : (detectedExams.fa2?.maxMarks || 20),
           fa3: fa3 ? fa3.obtained : null,
-          fa3Max: fa3 ? fa3.max : 50,
+          fa3Max: fa3 ? fa3.max : (detectedExams.fa3?.maxMarks || 20),
           fa4: fa4 ? fa4.obtained : null,
-          fa4Max: fa4 ? fa4.max : 50,
+          fa4Max: fa4 ? fa4.max : (detectedExams.fa4?.maxMarks || 20),
           faTotal: faList.length > 0 ? faObtained : null,
-          faMax: faMax,
+          faMax,
           sa1: sa1 ? sa1.obtained : null,
-          sa1Max: sa1 ? sa1.max : 100,
+          sa1Max: sa1 ? sa1.max : (detectedExams.sa1?.maxMarks || 80),
           sa2: sa2 ? sa2.obtained : null,
-          sa2Max: sa2 ? sa2.max : 100,
+          sa2Max: sa2 ? sa2.max : (detectedExams.sa2?.maxMarks || 80),
           saTotal: saList.length > 0 ? saObtained : null,
-          saMax: saMax,
+          saMax,
           grandTotal: hasAnyMark ? totalObtained : null,
           grandMax: totalMax,
           percentage: hasAnyMark ? parseFloat(subPct.toFixed(1)) : null,
@@ -836,27 +836,27 @@ export const getCceCumulativeCard = async (req: AuthRequest, res: Response, next
         rollNo: student.rollNo,
         name: student.user?.name || student.rollNo,
         photoUrl: student.user?.photoUrl || null,
-        fatherName: student.fatherName || '-',
-        motherName: student.motherName || '-',
-        dob: student.dob ? new Date(student.dob).toLocaleDateString('en-GB') : '-',
+        fatherName: student.fatherName || '',
+        motherName: student.motherName || '',
+        dob: student.dob ? new Date(student.dob).toLocaleDateString('en-GB').replace(/\//g, '-') : '',
         gender: student.gender || 'MALE',
-        bloodGroup: student.bloodGroup || 'O+',
+        bloodGroup: student.bloodGroup || '',
         admissionNo: student.rollNo,
-        className: `${cls.name} - ${cls.section}`,
+        className: `${cls.name}${cls.section ? ` - ${cls.section}` : ''}`,
         academicYear: cls.academicYear || '2026-2027',
         attendance: {
-          totalDays: totalDays || 220,
-          presentDays: presentDays || 205,
+          totalDays,
+          presentDays,
           percentage: attPct
         },
         subjectRows,
         summary: {
           totalObtained: studentTotalObtained,
-          totalMax: studentTotalMax || 600,
+          totalMax: studentTotalMax,
           percentage: overallPercentage,
-          grade: studentTotalObtained > 0 ? overallCce.grade : '-',
-          gpa: studentTotalObtained > 0 ? (overallCce.point).toFixed(1) : '-',
-          result: overallPercentage >= 35 ? 'PROMOTED TO NEXT CLASS' : (studentTotalObtained > 0 ? 'NEEDS IMPROVEMENT' : 'PENDING EVALUATION'),
+          grade: studentTotalMax > 0 ? overallCce.grade : '-',
+          gpa: studentTotalMax > 0 ? (overallCce.point).toFixed(1) : '-',
+          result: studentTotalMax > 0 ? (overallPercentage >= 35 ? 'QUALIFIED / PROMOTED' : 'NEEDS IMPROVEMENT') : 'EVALUATION IN PROGRESS',
           rank: 1
         }
       };
