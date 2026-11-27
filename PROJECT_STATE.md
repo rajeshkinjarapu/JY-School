@@ -1,5 +1,19 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Dark Blue Sidebar & Top Bar + Light Colourful Hero Banner (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** సైడ్‌బార్ మరియు టాప్ బార్ రెండూ డార్క్ బ్లూ (`Dark Blue`) లో ఉండాలి (టాప్ బార్ వైట్ వద్దు), మరియు ఫోటో ఉన్న హీరో బ్యానర్ డార్క్ కాకుండా లైట్ కలర్‌ఫుల్‌గా (`Light Colourful`) ఉండాలి.
+- **చేసిన మార్పులు:**
+  - [Sidebar.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx): లోతైన రీచ్ **Dark Blue గ్రేడియంట్ (`from-[#0E2666] via-[#0B1F54] to-[#081742]`)**, క్రిస్ప్ వైట్ యాక్టివ్ పిల్ (`bg-white text-[#0B1F54]`), ఫ్రాస్టెడ్ గ్లాస్ ఐకాన్లు.
+  - [Header.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Header.tsx): వైట్ టాప్ బార్ బదులు సైడ్‌బార్‌తో మ్యాచ్ అయ్యే **Dark Blue గ్రేడియంట్ (`from-[#0E2666] via-[#13338A] to-[#0E2666]`)**, `NotificationBell` & `AcademicYearSelector` `variant="dark"`.
+  - [DashboardPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx): ఫోటో ఉన్న హీరో బ్యానర్‌ను డార్క్ బ్లూ నుండి **Light Colourful పేస్టల్ గ్రేడియంట్ (`from-[#EBF3FF] via-[#F4EBFF] to-[#FFF0F6]`)**, కలర్‌ఫుల్ అవతార్ రింగ్ (`Blue → Violet → Pink`), డార్క్ రీడబుల్ టైటిల్ (`text-slate-900`), మరియు గ్రీడియంట్ రోల్ పిల్‌గా రీడిజైన్ చేశాము.
+
+## చివరి సంభాషణ - Page Headers Standardization & Dashboard-Only Academic Year Selector (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Dashboard లో మాదిరిగా అన్ని పేజీల హెడర్లు శుభ్రంగా ఉండాలి (`PageHeader`), హెడ్డింగ్ కింద ఎక్స్‌ట్రా సబ్‌టైటిల్ టెక్స్ట్ ఉండకూడదు, మరియు Academic Year సెలెక్టర్ కేవలం Dashboard హెడర్‌లో మాత్రమే ఉండాలి (`Classes`, `Students` హెడర్లలో అవసరం లేదు).
+- **చేసిన మార్పులు:**
+  - [ClassManagementPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/classes/ClassManagementPage.tsx): పెద్ద కస్టమ్ హీరో బ్యానర్ (`Dashboard > Classes & Sections` బ్రెడ్‌క్రమ్బ్, `Year: 2026-2027` డ్రాప్‌డౌన్ మరియు సబ్‌టైటిల్ టెక్స్ట్) తొలగించి, అన్ని పేజీల మాదిరిగానే శుభ్రమైన `<PageHeader title="Classes Directory" />` (Refresh & `+ New Class` బటన్లతో) అమర్చాము (`selectedYear` ఫిల్టరింగ్ అలాగే పనిచేస్తుంది).
+  - [StudentListPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentListPage.tsx): డెస్క్‌టాప్ మరియు మొబైల్ హెడర్లలోని `Year: 2026-2027` డ్రాప్‌డౌన్ పిల్స్ తొలగించాము (`selectedYear` ఫిల్టరింగ్ Dashboard హెడర్ నుండి కొనసాగుతుంది).
+  - [StudentBirthdayPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentBirthdayPage.tsx) & [StudentPromotionPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentPromotionPage.tsx): మెయిన్ హెడ్డింగ్ కింద ఉన్న అదనపు సబ్‌టైటిల్ టెక్స్ట్‌ను తొలగించాము.
+
 ## చివరి సంభాషణ - Royal Blue Sidebar Redesign & KPI Label Fit Fix (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** సైడ్‌బార్ బ్లూ కలర్‌లో డీప్ రాయల్ బ్లూ థీమ్‌లో ఉండాలి (`sidebar konchem better ga dark lo kavali blue color lo kavali`).
 - **చేసిన మార్పులు:**

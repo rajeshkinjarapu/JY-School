@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { DataCache } from '../../services/dataCache';
 import { useAcademicYear } from '../../contexts/AcademicYearContext';
+import { PageHeader } from '../../components/UI/PageHeader';
 
 // Dynamic Color Theme Generator per Class/Grade
 const getClassTheme = (name: string) => {
@@ -80,7 +81,7 @@ const getClassTheme = (name: string) => {
 export const ClassManagementPage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-  const { selectedYear, setSelectedYear, academicYears } = useAcademicYear();
+  const { selectedYear } = useAcademicYear();
 
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -216,88 +217,34 @@ export const ClassManagementPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/20 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
-      
-      {/* ============================================================ */}
-      {/* HERO BANNER SECTION (SUPER COLORFUL & PROFESSIONAL)          */}
-      {/* ============================================================ */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white shadow-xl">
-        {/* Glow Spheres & Watermarks */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-        <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
-          <School className="w-64 h-64 text-white" />
-        </div>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/20 to-purple-50/20">
+      <PageHeader
+        title="Classes Directory"
+        icon={<School className="w-5 h-5" />}
+        action={
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fetchInitialData(true)}
+              className="p-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white transition-all cursor-pointer"
+              title="Refresh Directory"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            </button>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-200/90 mb-3">
-            <Link to="/dashboard" className="hover:text-white transition-colors flex items-center gap-1">
-              <span>Dashboard</span>
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5" />
-            <span className="text-white">Classes & Sections</span>
-          </div>
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-md border border-white/20 flex items-center justify-center text-white shadow-inner">
-                  <School className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2.5">
-                    <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                      Classes Directory
-                    </h1>
-                    <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-400/20 border border-emerald-400/30 backdrop-blur-md">
-                      <span className="text-xs text-emerald-200 font-bold">Year:</span>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="bg-transparent text-xs font-black text-white focus:outline-none cursor-pointer"
-                        style={{ colorScheme: 'dark' }}
-                        title="Select Academic Year"
-                      >
-                        {academicYears.map((yr) => (
-                          <option key={yr} value={yr} className="text-gray-900 bg-white">
-                            {yr}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <p className="text-xs sm:text-sm text-blue-100/80 font-medium mt-1">
-                    Manage grades, sections, student capacity, and assigned class teachers
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Top Action Buttons */}
-            <div className="flex items-center gap-2.5">
+            {isAdmin && (
               <button
-                onClick={() => fetchInitialData(true)}
-                className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white transition-all backdrop-blur-md cursor-pointer"
-                title="Refresh Directory"
+                type="button"
+                onClick={openCreateModal}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all active:scale-95 cursor-pointer"
               >
-                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <Plus className="w-4 h-4" />
+                <span>New Class</span>
               </button>
-
-              {isAdmin && (
-                <button
-                  type="button"
-                  onClick={openCreateModal}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>New Class</span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {/* ============================================================ */}
       {/* MAIN CONTAINER                                               */}

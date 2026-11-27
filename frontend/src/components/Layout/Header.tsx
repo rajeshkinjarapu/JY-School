@@ -255,7 +255,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
   };
 
   return (
-    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-gray-800 shadow-xs">
+    <header className="print:hidden sticky top-0 z-30 flex items-center justify-between gap-3 px-4 py-2.5 bg-gradient-to-r from-[#0E2666] via-[#13338A] to-[#0E2666] border-b border-blue-900/60 shadow-md text-white">
       {/* Left: Hamburger Menu + Back Button + Page Title */}
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {!hideMenuButton && (
@@ -265,7 +265,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
               onMenuClick?.();
               window.dispatchEvent(new CustomEvent('toggleSidebar'));
             }}
-            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-gray-800 transition-colors cursor-pointer shrink-0"
+            className="p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/15 transition-colors cursor-pointer shrink-0"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
@@ -275,7 +275,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
         {showBackButton && (
           <button
             onClick={handleBack}
-            className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-gray-800 border border-slate-200/80 dark:border-gray-800 transition-colors cursor-pointer shrink-0 flex items-center justify-center shadow-xs"
+            className="p-1.5 sm:p-2 rounded-xl text-white/90 hover:text-white hover:bg-white/15 border border-white/20 bg-white/10 transition-colors cursor-pointer shrink-0 flex items-center justify-center shadow-xs"
             title="Go Back"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -283,7 +283,7 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
         )}
 
         {title && (
-          <h1 className="text-sm sm:text-base font-black text-slate-800 dark:text-white truncate">
+          <h1 className="text-sm sm:text-base font-black text-white tracking-tight truncate">
             {title}
           </h1>
         )}
@@ -291,26 +291,26 @@ export const Header: React.FC<HeaderProps> = ({ onMenuClick, title, forceShow, h
 
       {/* Right Side: Notification Bell + Calendar + Academic Year + Teacher Profile */}
       <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 relative">
-        <NotificationBell variant="light" />
+        <NotificationBell variant="dark" />
 
         {/* Calendar Icon Button */}
         <button
           type="button"
           onClick={() => navigate('/attendance/holidays')}
-          className="p-2 rounded-xl text-slate-600 hover:text-indigo-600 bg-slate-100/90 hover:bg-slate-200/80 border border-slate-200/80 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
+          className="p-2 rounded-xl text-white/90 hover:text-white bg-white/12 hover:bg-white/20 border border-white/20 shadow-xs transition-colors cursor-pointer flex items-center justify-center"
           title="Academic Calendar & Holidays"
         >
           <Calendar className="w-5 h-5" />
         </button>
 
         {/* Academic Year Dropdown */}
-        <AcademicYearSelector variant="light" />
+        <AcademicYearSelector variant="dark" />
 
         {user?.role === 'TEACHER' && (
           <>
             <button
               onClick={() => setProfileOpen(!profileOpen)}
-              className="w-8 h-8 rounded-full border-2 border-indigo-200 overflow-hidden shadow-xs hover:border-indigo-400 transition-colors cursor-pointer ml-1"
+              className="w-8 h-8 rounded-full border-2 border-white/60 overflow-hidden shadow-xs hover:border-white transition-colors cursor-pointer ml-1"
             >
               {getPhotoUrl(user?.photoUrl) ? (
                 <img src={getPhotoUrl(user?.photoUrl)} alt="Profile" className="w-full h-full object-cover" />

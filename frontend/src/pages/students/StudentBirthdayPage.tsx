@@ -542,9 +542,6 @@ export const StudentBirthdayPage: React.FC = () => {
                   Live Hub
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-pink-100 font-medium mt-1">
-                Honor students in morning assembly, create 9:16 WhatsApp posters & send instant blessings
-              </p>
             </div>
           </div>
 

@@ -418,20 +418,21 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
 
   return (
     <div className="space-y-4 sm:space-y-5">
-      {/* ── 1. Top Executive Blue Sky Hero Banner (Compact & Sleek) ── */}
-      <div className="relative w-full rounded-[18px] sm:rounded-[20px] overflow-hidden bg-gradient-to-r from-[#1254EB] via-[#1665D8] to-[#0A3FA8] px-4 py-3 sm:px-6 sm:py-3.5 lg:py-4 shadow-md border border-blue-400/20 text-white">
-        {/* Soft Ambient Glows */}
-        <div className="absolute -right-20 -top-20 w-72 h-72 bg-blue-300/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -left-20 -bottom-20 w-72 h-72 bg-indigo-400/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none" />
+      {/* ── 1. Top Light Colourful Hero Banner ── */}
+      <div className="relative w-full rounded-[20px] sm:rounded-[22px] overflow-hidden bg-gradient-to-r from-[#EBF3FF] via-[#F4EBFF] to-[#FFF0F6] px-4 py-3.5 sm:px-6 sm:py-4 shadow-[0_8px_24px_-6px_rgba(79,70,229,0.14)] border border-indigo-200/75 text-slate-800">
+        {/* Soft Colourful Pastel Glows */}
+        <div className="absolute -right-16 -top-16 w-72 h-72 bg-gradient-to-br from-rose-300/35 to-amber-200/35 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -left-16 -bottom-16 w-72 h-72 bg-gradient-to-tr from-sky-300/35 to-indigo-300/35 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-1/3 top-0 w-56 h-40 bg-emerald-200/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/65 to-transparent pointer-events-none" />
 
         <div className="relative z-10 flex items-center justify-between gap-4">
           {/* Left: Logged-in Person Photo + Name + JY School - Role Subtitle */}
           <div className="flex items-center gap-3.5 sm:gap-4.5 min-w-0">
-            {/* User Profile Photo with Premium Glow & Ring */}
+            {/* User Profile Photo with Vibrant Colourful Ring */}
             <div className="relative shrink-0">
-              <div className="w-13 h-13 sm:w-14 sm:h-14 lg:w-15 lg:h-15 rounded-xl sm:rounded-2xl p-[2px] sm:p-[2.5px] bg-gradient-to-tr from-white/40 via-white/20 to-white/60 shadow-lg backdrop-blur-md">
-                <div className="w-full h-full rounded-[10px] sm:rounded-[13px] overflow-hidden bg-white/10 flex items-center justify-center border-2 border-white/80 shadow-inner">
+              <div className="w-13 h-13 sm:w-14 sm:h-14 lg:w-15 lg:h-15 rounded-xl sm:rounded-2xl p-[2.5px] bg-gradient-to-tr from-[#3B82F6] via-[#8B5CF6] to-[#EC4899] shadow-md">
+                <div className="w-full h-full rounded-[10px] sm:rounded-[13px] overflow-hidden bg-white flex items-center justify-center border-2 border-white shadow-inner">
                   {user?.photoUrl ? (
                     <img
                       src={getPhotoUrl(user.photoUrl)}
@@ -448,26 +449,27 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
                   </div>
                 </div>
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full shadow-md" title="Active" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm" title="Active" />
             </div>
 
             {/* User Name & JY School - Role */}
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl lg:text-[25px] font-black tracking-tight text-white drop-shadow-sm leading-tight truncate">
+              <h1 className="text-xl sm:text-2xl lg:text-[25px] font-black tracking-tight text-slate-900 leading-tight truncate">
                 {user?.name || 'Administrator'}
               </h1>
               <div className="mt-1 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-[11px] sm:text-xs font-bold text-white shadow-xs">
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-[#4F46E5] via-[#7C3AED] to-[#DB2777] text-[11px] sm:text-xs font-bold text-white shadow-xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white/90" />
                   <span>JY School - {roleDisplay}</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Right: Sleek Floating Glass Date Badge (No school image, compact) */}
-          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 text-white shadow-xs transition-colors">
-            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white/90" />
-            <span className="text-xs sm:text-[13px] font-bold tracking-wide text-white drop-shadow-xs">{todayFormatted}</span>
+          {/* Right: Sleek Light Colourful Date Badge */}
+          <div className="shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-white/90 hover:bg-white border border-indigo-200/80 text-slate-800 shadow-xs transition-colors">
+            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600" />
+            <span className="text-xs sm:text-[13px] font-extrabold tracking-wide text-slate-800">{todayFormatted}</span>
           </div>
         </div>
       </div>

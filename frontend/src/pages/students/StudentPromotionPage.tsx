@@ -408,7 +408,7 @@ export const StudentPromotionPage: React.FC = () => {
       <div className="max-w-7xl mx-auto mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
           <div>
-            <div className="flex items-center gap-2.5 mb-1.5">
+            <div className="flex items-center gap-2.5">
               <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
                 <GraduationCap className="w-6 h-6" />
               </span>
@@ -416,9 +416,6 @@ export const StudentPromotionPage: React.FC = () => {
                 Student Promotion & Year Transition
               </h1>
             </div>
-            <p className="text-sm font-medium text-slate-500">
-              Bulk promote whole classes from current academic year to the next academic session with zero data loss.
-            </p>
           </div>
 
           <div className="flex items-center gap-2.5 flex-wrap">

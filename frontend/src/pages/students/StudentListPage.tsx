@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import api from "../../api/axios";
-import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer, Calendar } from "lucide-react";
+import { Search, UserPlus, GraduationCap, Trash2, Edit, FileDown, Eye, Filter, ChevronLeft, ChevronRight, Upload, Image as ImageIcon, X, CheckCircle2, AlertCircle, FileText, FileSpreadsheet, Phone, IdCard, Menu, Printer } from "lucide-react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
@@ -87,7 +87,7 @@ export const StudentListPage: React.FC = () => {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "SUPER_ADMIN";
   const navigate = useNavigate();
-  const { selectedYear, setSelectedYear, academicYears } = useAcademicYear();
+  const { selectedYear } = useAcademicYear();
 
   const [students, setStudents] = useState<any[]>(() => {
     try { 
@@ -312,24 +312,6 @@ export const StudentListPage: React.FC = () => {
               <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
               <p className="text-2xl font-black text-white">{total} Students</p>
             </div>
-            {/* Academic Year Selector Pill */}
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-white text-xs font-bold shadow-xs">
-              <Calendar className="w-4 h-4 text-white/80" />
-              <span>Year:</span>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="bg-transparent text-white font-black focus:outline-none cursor-pointer pr-1"
-                style={{ colorScheme: 'dark' }}
-                title="Select Academic Year"
-              >
-                {academicYears.map((yr) => (
-                  <option key={yr} value={yr} className="text-gray-900 bg-white">
-                    {yr}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
           <div className="hidden md:flex gap-2">
             {isSuperAdmin && (
@@ -421,22 +403,6 @@ export const StudentListPage: React.FC = () => {
               {classes.map((cls) => (
                 <option key={cls.id} value={cls.id} className="text-gray-900 bg-white">
                   {cls.name} {cls.section}
-                </option>
-              ))}
-            </select>
-          </div>
-          {/* Mobile Academic Year Selector */}
-          <div className="relative md:hidden shrink-0">
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="px-2 py-2.5 text-xs bg-white/15 border border-white/25 rounded-xl text-white font-bold focus:outline-none appearance-none cursor-pointer"
-              style={{ colorScheme: 'dark' }}
-              title="Academic Year (విద్యా సంవత్సరం)"
-            >
-              {academicYears.map((yr) => (
-                <option key={yr} value={yr} className="text-gray-900 bg-white">
-                  {yr}
                 </option>
               ))}
             </select>
