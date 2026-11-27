@@ -1,5 +1,10 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Remove Student Birthdays Widget from Admin Dashboard (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Dashboard (`/dashboard`) నుండి `Student Birthdays` కార్డును తొలగించాలి (`student birthday dashboard nunchi remove cheyu`).
+- **పరిష్కారం ([DashboardPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx)):**
+  - `AdminView` నుండి `Student Birthdays` సెక్షన్ మరియు దానికి సంబంధించిన స్టేట్స్/ఐకాన్లు (`Cake`, `RefreshCw`, `handleWhatsAppWish`, `birthdayTab`, `bdayImgErrors`, `isRefreshing`, `useState`) శుభ్రంగా తొలగించాము (`Birthdays` సైడ్‌బార్ మెనూ `/students/birthdays` యథాతథంగా అందుబాటులో ఉంటుంది).
+
 ## చివరి సంభాషణ - Gemini 429 Free Tier Quota Fallback (`gemini-2.5-flash-lite`) & Clean Diagnostics (November 27, 2026)
 - **సమస్య:** MCQ Paper Generator `AI Gen` లో Google Gemini API `429 RESOURCE_EXHAUSTED` (Free Tier daily limit exceeded — retry in 2h 50m) ఎర్రర్ వస్తోంది.
 - **పరిష్కారం ([gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts)):**

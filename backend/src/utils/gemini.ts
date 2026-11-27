@@ -6,8 +6,8 @@ const envApiKey = process.env.GEMINI_API_KEY || '';
 const ai = new GoogleGenAI({ apiKey: envApiKey });
 
 const getGeminiClient = (customApiKey?: string) => {
-  const key = (customApiKey && customApiKey.trim()) || process.env.GEMINI_API_KEY || '';
-  return key === envApiKey ? ai : new GoogleGenAI({ apiKey: key });
+    const key = (customApiKey && customApiKey.trim()) || process.env.GEMINI_API_KEY || '';
+    return key === envApiKey ? ai : new GoogleGenAI({ apiKey: key });
 };
 
 // Candidate Gemini models in priority order (gemini-3.8-flash recommended by Google API, plus safe fallbacks)
@@ -15,72 +15,72 @@ const envModel = process.env.GEMINI_MODEL?.trim();
 const isRetiredModel = envModel && /gemini-(1\.5|2\.0)-flash/i.test(envModel);
 
 export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
-  new Set(
-    [
-      !isRetiredModel ? envModel : undefined,
-      'gemini-2.5-flash-lite',
-      'gemini-3.8-flash',
-      'gemini-3.8-flash-lite',
-      'gemini-2.5-flash',
-      'gemini-3-flash-preview',
-      'gemini-2.5-pro',
-    ].filter((m): m is string => Boolean(m && m.trim()))
-  )
+    new Set(
+        [
+            !isRetiredModel ? envModel : undefined,
+            'gemini-2.5-flash-lite',
+            'gemini-3.8-flash',
+            'gemini-3.8-flash-lite',
+            'gemini-2.5-flash',
+            'gemini-3-flash-preview',
+            'gemini-2.5-pro',
+        ].filter((m): m is string => Boolean(m && m.trim()))
+    )
 );
 
 const extractCompactGeminiError = (err: any): { code: string; shortMsg: string } => {
-  const raw = err?.message || String(err || 'Unknown error');
-  const codeMatch = raw.match(/"code"\s*:\s*(\d+)/) || raw.match(/\b(400|401|403|404|429|500|503)\b/);
-  const code = codeMatch ? codeMatch[1] : String(err?.status || 'ERR');
-  if (code === '429' || /RESOURCE_EXHAUSTED|quota|rate/i.test(raw)) {
-    const retryMatch = raw.match(/retry in ([0-9hms.]+)/i);
-    return {
-      code: '429',
-      shortMsg: `Free Tier quota exceeded${retryMatch ? ` (retry in ${retryMatch[1]})` : ''}`,
-    };
-  }
-  if (code === '404' || /NOT_FOUND/i.test(raw)) {
-    return { code: '404', shortMsg: 'Model not available' };
-  }
-  return { code, shortMsg: raw.slice(0, 120) };
+    const raw = err?.message || String(err || 'Unknown error');
+    const codeMatch = raw.match(/"code"\s*:\s*(\d+)/) || raw.match(/\b(400|401|403|404|429|500|503)\b/);
+    const code = codeMatch ? codeMatch[1] : String(err?.status || 'ERR');
+    if (code === '429' || /RESOURCE_EXHAUSTED|quota|rate/i.test(raw)) {
+        const retryMatch = raw.match(/retry in ([0-9hms.]+)/i);
+        return {
+            code: '429',
+            shortMsg: `Free Tier quota exceeded${retryMatch ? ` (retry in ${retryMatch[1]})` : ''}`,
+        };
+    }
+    if (code === '404' || /NOT_FOUND/i.test(raw)) {
+        return { code: '404', shortMsg: 'Model not available' };
+    }
+    return { code, shortMsg: raw.slice(0, 120) };
 };
 
 // Shared helper to try candidate Gemini models until one succeeds
 export const generateGeminiContentWithFallback = async (
-  client: GoogleGenAI,
-  params: { contents: any; config?: any }
+    client: GoogleGenAI,
+    params: { contents: any; config?: any }
 ) => {
-  let lastError: any = null;
-  let quotaHitMsg: string | null = null;
-  const compactLog: string[] = [];
+    let lastError: any = null;
+    let quotaHitMsg: string | null = null;
+    const compactLog: string[] = [];
 
-  for (const modelName of GEMINI_CANDIDATE_MODELS) {
-    try {
-      const response = await client.models.generateContent({
-        model: modelName,
-        contents: params.contents,
-        config: params.config,
-      });
-      if (response?.text) {
-        return response;
-      }
-    } catch (err: any) {
-      lastError = err;
-      const info = extractCompactGeminiError(err);
-      compactLog.push(`${modelName}:${info.code}`);
-      if (info.code === '429') quotaHitMsg = info.shortMsg;
-      console.warn(`Gemini model ${modelName} failed [${info.code}]:`, info.shortMsg);
+    for (const modelName of GEMINI_CANDIDATE_MODELS) {
+        try {
+            const response = await client.models.generateContent({
+                model: modelName,
+                contents: params.contents,
+                config: params.config,
+            });
+            if (response?.text) {
+                return response;
+            }
+        } catch (err: any) {
+            lastError = err;
+            const info = extractCompactGeminiError(err);
+            compactLog.push(`${modelName}:${info.code}`);
+            if (info.code === '429') quotaHitMsg = info.shortMsg;
+            console.warn(`Gemini model ${modelName} failed [${info.code}]:`, info.shortMsg);
+        }
     }
-  }
 
-  if (quotaHitMsg) {
+    if (quotaHitMsg) {
+        throw new Error(
+            `Gemini ${quotaHitMsg}. Try a new Gemini API key in Paper Settings or switch AI model. [${compactLog.join(', ')}]`
+        );
+    }
     throw new Error(
-      `Gemini ${quotaHitMsg}. Try a new Gemini API key in Paper Settings or switch AI model. [${compactLog.join(', ')}]`
+        `All Gemini models failed [${compactLog.join(', ')}]: ${lastError?.message || 'No response'}`
     );
-  }
-  throw new Error(
-    `All Gemini models failed [${compactLog.join(', ')}]: ${lastError?.message || 'No response'}`
-  );
 };
 
 const CANDIDATE_MODELS = GEMINI_CANDIDATE_MODELS;
@@ -92,7 +92,7 @@ export const generateQuizQuestions = async (
 ) => {
     const client = getGeminiClient(customApiKey);
     let contents: any[] = [];
-    
+
     const systemInstruction = `You are an expert exam question creator and OCR digitizer. 
 Generate or extract multiple-choice questions based on the provided text, instructions, or uploaded document/image.
 If math or scientific formulas appear, wrap them nicely in LaTeX with single dollar signs (e.g. $x^2$, $\\frac{a}{b}$). Preserve Telugu/Hindi/English Unicode accurately.
@@ -215,8 +215,8 @@ Each object must follow this schema:
             const response = await client.models.generateContent({
                 model: modelName,
                 contents: [
-                    { 
-                        text: `Default marks per question: ${defaultMarks}. Default chapter/section hint: "${chapterHint}".\n\nRaw text to parse into MCQs:\n${rawText}` 
+                    {
+                        text: `Default marks per question: ${defaultMarks}. Default chapter/section hint: "${chapterHint}".\n\nRaw text to parse into MCQs:\n${rawText}`
                     }
                 ],
                 config: {
@@ -246,7 +246,7 @@ Each object must follow this schema:
 function parseRawExamTextLocally(rawText: string, defaultMarks = 4, chapterHint = 'General'): any[] {
     const questions: any[] = [];
     const lines = rawText.split('\n');
-    
+
     // Split into question blocks using numbers like "1.", "2.", "Q1", "Question 1"
     const rawBlocks: string[] = [];
     let currentBlock = '';
@@ -338,7 +338,7 @@ function parseRawExamTextLocally(rawText: string, defaultMarks = 4, chapterHint 
 function generateCurriculumQuestionsFallback(prompt: string): any[] {
     const isMath = /math|integral|matrix|calculus|trig/i.test(prompt);
     const isBio = /bio|cell|organ|plant|animal|gene/i.test(prompt);
-    
+
     if (isMath) {
         return [
             {
