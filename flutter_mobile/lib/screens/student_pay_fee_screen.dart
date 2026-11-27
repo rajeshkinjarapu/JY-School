@@ -112,7 +112,7 @@ class _StudentPayFeeScreenState extends State<StudentPayFeeScreen> {
                 children: [
                   Text('Payment Submitted!', style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                   const SizedBox(height: 12),
-                  Text('మీ పేమెంట్‌ను అడ్మిన్ వెరిఫై చేస్తారు. ప్రాసెస్ కంప్లీట్ అవ్వగానే రసీదు జనరేట్ అవుతుంది.', 
+                  Text('Your payment will be verified by the admin. Once verification is complete, your official receipt will be generated automatically.', 
                     style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]), textAlign: TextAlign.center),
                 ],
               ),

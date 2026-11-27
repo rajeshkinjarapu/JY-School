@@ -1077,17 +1077,22 @@ model PushSubscription {
 // ==========================================
 
 model WebsiteSettings {
-  id              String   @id @default("1")
-  heroTitle       String   @default("Shaping Brilliant Minds, Building Futures")
-  heroSubtitle    String   @default("IIT / NEET / OLYMPIAD FOUNDATION")
-  heroDescription String   @default("At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and skills to become responsible global citizens.")
-  contactPhone    String   @default("+91 98765 43210")
-  contactEmail    String   @default("info@svjyschool.edu.in")
-  contactAddress  String   @default("123 Education Street, Knowledge City, KL 560001")
-  facebookUrl     String?
-  instagramUrl    String?
-  youtubeUrl      String?
-  updatedAt       DateTime @updatedAt
+  id                    String   @id @default("1")
+  heroTitle             String   @default("Shaping Brilliant Minds, Building Futures")
+  heroSubtitle          String   @default("IIT / NEET / OLYMPIAD FOUNDATION")
+  heroDescription       String   @default("At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and skills to become responsible global citizens.")
+  heroImageUrl          String?
+  admissionsBannerTitle String   @default("ADMISSIONS OPEN FOR")
+  admissionsYear        String   @default("2027 – 2028")
+  missionText           String   @default("To provide a nurturing and inclusive environment that encourages academic excellence, creativity, and character development — preparing students for a successful, meaningful future.")
+  visionText            String   @default("To be a leading school recognized for delivering quality education and inspiring students to achieve their full potential and make a positive impact on the world.")
+  contactPhone          String   @default("+91 98765 43210")
+  contactEmail          String   @default("info@svjyschool.edu.in")
+  contactAddress        String   @default("123 Education Street, Knowledge City, KL 560001")
+  facebookUrl           String?
+  instagramUrl          String?
+  youtubeUrl            String?
+  updatedAt             DateTime @updatedAt
 }
 
 model WebsiteStat {

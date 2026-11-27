@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api/axios';
-import { Save, UploadCloud, CreditCard } from 'lucide-react';
+import { Save, UploadCloud, CreditCard, Landmark, QrCode } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const PaymentSettingsTab: React.FC = () => {
@@ -70,77 +70,107 @@ export const PaymentSettingsTab: React.FC = () => {
   };
 
   return (
-    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border border-white/40 dark:border-gray-800 rounded-3xl p-8 shadow-xl max-w-3xl mx-auto transform transition-all duration-500">
-      <div className="mb-8">
-        <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400">Payment & Bank Setup</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configure school bank details and UPI QR Code for mobile app payments.</p>
+    <div className="bg-white border border-emerald-100/90 rounded-[24px] shadow-sm overflow-hidden">
+      {/* Soft Pastel Header Strip */}
+      <div className="bg-gradient-to-r from-[#ECFDF5] via-[#F0FDF4] to-[#E6FFFA] px-6 py-5 border-b border-emerald-100/80 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-sm shrink-0">
+            <Landmark className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="text-lg font-black text-slate-900">Payment &amp; Bank Setup</h2>
+            <p className="text-xs text-slate-500 font-medium mt-0.5">
+              Configure school bank account and UPI QR Code for online &amp; mobile app fee payments
+            </p>
+          </div>
+        </div>
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white text-emerald-700 border border-emerald-200 text-[11px] font-extrabold">
+          <QrCode className="w-3.5 h-3.5" />
+          <span>{upiId ? 'UPI Active' : 'Pending UPI'}</span>
+        </span>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit} className="p-6 space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Bank Name</label>
+            <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
+              Bank Name
+            </label>
             <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
-                <CreditCard className="w-5 h-5" />
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-emerald-600 transition-colors">
+                <CreditCard className="w-4 h-4" />
               </div>
               <input
                 type="text"
                 placeholder="e.g. State Bank of India"
                 value={bankName}
                 onChange={(e) => setBankName(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFF] border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Account Number</label>
+            <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
+              Account Number
+            </label>
             <input
               type="text"
               placeholder="e.g. 3xxxxxx5678"
               value={bankAccountNumber}
               onChange={(e) => setBankAccountNumber(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+              className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">IFSC Code</label>
+            <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
+              IFSC Code
+            </label>
             <input
               type="text"
               placeholder="e.g. SBIN0001234"
               value={bankIfsc}
               onChange={(e) => setBankIfsc(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+              className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-slate-200 rounded-xl text-sm font-mono font-bold uppercase text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">UPI ID (PhonePe / GPay)</label>
+            <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-1.5">
+              UPI ID (PhonePe / GPay / Paytm)
+            </label>
             <input
               type="text"
               placeholder="e.g. schoolname@ybl"
               value={upiId}
               onChange={(e) => setUpiId(e.target.value)}
-              className="w-full px-4 py-3 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none"
+              className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all outline-none"
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider mb-2">Upload UPI QR Code</label>
-            <div className="flex items-center gap-6">
+            <label className="block text-[11px] font-extrabold text-slate-600 uppercase tracking-wider mb-2">
+              Official Fee Payment QR Code
+            </label>
+            <div className="flex flex-col sm:flex-row items-center gap-5 p-4 rounded-2xl bg-[#F8FAFF] border border-emerald-100">
               {qrCodePreview && (
-                <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-emerald-500 shadow-md flex-shrink-0">
-                  <img src={qrCodePreview.startsWith('blob:') ? qrCodePreview : `http://66.116.252.191:19998${qrCodePreview}`} alt="QR Code" className="w-full h-full object-cover" />
+                <div className="w-32 h-32 rounded-2xl overflow-hidden border-2 border-emerald-400 bg-white p-1 shadow-sm shrink-0">
+                  <img
+                    src={qrCodePreview.startsWith('blob:') ? qrCodePreview : `http://66.116.252.191:19998${qrCodePreview}`}
+                    alt="QR Code"
+                    className="w-full h-full object-contain rounded-xl"
+                  />
                 </div>
               )}
-              <div className="flex-1">
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-2xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400"><span className="font-semibold text-emerald-500">Click to upload</span> or drag and drop</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">PNG, JPG up to 5MB</p>
+              <div className="flex-1 w-full">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-emerald-300 bg-white rounded-2xl cursor-pointer hover:bg-emerald-50/40 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-4 pb-4 px-4 text-center">
+                    <UploadCloud className="w-7 h-7 text-emerald-500 mb-1.5" />
+                    <p className="text-xs font-bold text-slate-700">
+                      <span className="text-emerald-600 font-extrabold">Click to upload QR image</span> or drag and drop
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">PNG, JPG up to 5MB</p>
                   </div>
                   <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
                 </label>
@@ -149,14 +179,14 @@ export const PaymentSettingsTab: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-6 border-t border-gray-100 dark:border-gray-800 flex justify-end">
+        <div className="pt-4 border-t border-slate-100 flex justify-end">
           <button
             type="submit"
             disabled={isSaving}
-            className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/30 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-7 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md shadow-emerald-500/20 transition-all disabled:opacity-50 cursor-pointer"
           >
-            {isSaving ? <span className="animate-spin text-xl">⏳</span> : <Save className="w-5 h-5" />}
-            {isSaving ? 'Saving...' : 'Save Payment Setup'}
+            <Save className="w-4 h-4" />
+            <span>{isSaving ? 'Saving...' : 'Save Payment Setup'}</span>
           </button>
         </div>
       </form>

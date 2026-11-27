@@ -564,7 +564,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'విద్యార్థి భద్రత మరియు గోప్యత దృష్ట్యా:',
+                                'For Student Safety & Privacy:',
                                 style: GoogleFonts.poppins(fontSize: 13, fontWeight: FontWeight.bold, color: const Color(0xFF1E293B)),
                               ),
                             ),
@@ -576,15 +576,15 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('• పుట్టిన తేదీ, ఆధార్, పూర్తి చిరునామా', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                              Text('• Date of Birth, Aadhaar & Full Address', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
                               const SizedBox(height: 4),
-                              Text('• తల్లిదండ్రుల పేర్లు మరియు ఫోన్ నంబర్లు', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
+                              Text('• Parent Names & Contact Numbers', style: GoogleFonts.poppins(fontSize: 12, color: const Color(0xFF475569))),
                             ],
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
-                          'ఈ సున్నితమైన వివరాలు కేవలం ఈ తరగతికి కేటాయించబడిన అధికారిక క్లాస్ టీచర్‌కు మరియు అడ్మిన్‌లకు మాత్రమే అందుబాటులో ఉంటాయి.',
+                          'These sensitive details are restricted strictly to the assigned Class Teacher and School Administrators.',
                           style: GoogleFonts.poppins(fontSize: 11.5, color: const Color(0xFF64748B), height: 1.4),
                         ),
                       ],
@@ -603,7 +603,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            'సబ్జెక్ట్ టీచర్ల కొరకు ఎగ్జామ్స్ మరియు మార్కుల వివరాలు EXAMS ట్యాబ్‌లో అందుబాటులో ఉన్నాయి.',
+                            'For Subject Teachers, exam schedules and marks details are available in the EXAMS tab.',
                             style: GoogleFonts.poppins(fontSize: 11, color: const Color(0xFF4F46E5), fontWeight: FontWeight.w500),
                           ),
                         ),
@@ -1522,7 +1522,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Student Photo (విద్యార్థి ఫోటో)',
+                          'Student Photo',
                           style: GoogleFonts.outfit(
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -1552,7 +1552,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 icon: Icons.camera_alt_rounded,
                 iconColor: const Color(0xFF4F46E5),
                 title: 'Take Photo with Camera',
-                subtitle: 'కెమెరాతో కొత్త ఫోటో తీయండి (Auto Compressed)',
+                subtitle: 'Capture a fresh photo with camera (Auto Compressed)',
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickAndUploadPhoto(ImageSource.camera, studentId, studentName);
@@ -1563,7 +1563,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                 icon: Icons.photo_library_rounded,
                 iconColor: const Color(0xFF10B981),
                 title: 'Choose from Gallery',
-                subtitle: 'మొబైల్ గ్యాలరీ నుండి ఫోటో ఎంచుకోండి',
+                subtitle: 'Select an existing photo from mobile gallery',
                 onTap: () {
                   Navigator.pop(ctx);
                   _pickAndUploadPhoto(ImageSource.gallery, studentId, studentName);
@@ -1575,7 +1575,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen> with Single
                   icon: Icons.delete_outline_rounded,
                   iconColor: const Color(0xFFF43F5E),
                   title: 'Remove Photo',
-                  subtitle: 'ప్రస్తుత ఫోటోను తొలగించండి',
+                  subtitle: 'Remove the current student profile photo',
                   isDestructive: true,
                   onTap: () {
                     Navigator.pop(ctx);
