@@ -10,7 +10,13 @@ import {
 } from 'lucide-react';
 import { usePWA } from '../../hooks/usePWA';
 import { getPhotoUrl } from '../../utils/photo';
-import { getCachedRbacMatrix, syncRbacMatrixFromServer, RbacMatrixMap, RbacRole, RbacModuleKey } from '../../utils/rbac';
+import {
+  getCachedRbacMatrix,
+  syncRbacMatrixFromServer,
+  type RbacMatrixMap,
+  type RbacRole,
+  type RbacModuleKey,
+} from '../../utils/rbac';
 
 interface SidebarProps { isOpen: boolean; setIsOpen: (v: boolean) => void; }
 

@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Academic Progress Card Studio Light Redesign & 1:1 PDF Fix (`/office-tools/academic-progress-card`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Academic Progress Card పేజీని ప్రొఫెషనల్‌గా, అందంగా రీడిజైన్ చేసి, A4 ప్రోగ్రెస్ కార్డు కట్ అవ్వకుండా Live Preview కు 1:1 తగ్గట్టుగా PDF డౌన్‌లోడ్ & ప్రింట్ అయ్యేలా చేయాలి.
+- **పరిష్కారం ([AcademicProgressCardPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/office-tools/AcademicProgressCardPage.tsx)):**
+  - పాత డార్క్ థీమ్ (`bg-slate-900`/`950`) తొలగించి `<PageHeader />`, 4 పాస్టెల్ KPI కార్డులు (`Class Strength`, `CCE Exams Synced`, `Pass Rate`, `Class Topper`), Transcript Theme Switcher (3 థీమ్‌లు), Section Toggles (`Photo`, `Rank`, `Co-Scholastic`, `Signatures`), మరియు Editable Class Teacher Remarks తో Light Pastel Studio నిర్మించాము.
+  - స్కాలస్టిక్ టేబుల్ కుడివైపున కట్ అయ్యే సమస్యను `tableLayout: 'fixed'` + శాతం ఆధారిత కాలమ్ వెడల్పులతో పూర్తిగా తొలగించాము.
+  - జూమ్ స్కేల్ వల్ల PDF దెబ్బతినకుండా అన్-స్కేల్డ్ `210mm × 297mm` ఆఫ్‌స్క్రీన్ `pdfCaptureRef` ద్వారా `html2canvas` + `jsPDF` (Single PDF & Bulk ZIP) Live Preview తో **100% 1:1 సరిగ్గా** డౌన్‌లోడ్ అయ్యేలా చేశాము.
+  - **Vite 8 Rolldown Build Fix:** [ProtectedRoute.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/router/ProtectedRoute.tsx), [Sidebar.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/components/Layout/Sidebar.tsx), మరియు [StaffManagement.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/settings/StaffManagement.tsx) లలో RBAC TypeScript టైప్‌లకు `type` కీవర్డ్ జోడించి 8 `MISSING_EXPORT` ఎర్రర్లను ఫిక్స్ చేశాము.
+
 ## చివరి సంభాషణ - Enterprise ID Card Studio & Identity Center Redesign (`/id-cards` & `/id-cards/generate`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** ID Cards పేజీలో అన్ని పేజీల లాగే `<PageHeader />`, మెరుగైన KPI కార్డులు, మరియు ఒక సంపూర్ణ ERP సాఫ్ట్‌వేర్ స్థాయి ID Card డ్యాష్‌బోర్డ్ డిజైన్ చేయాలి (అంతేకాక Website CMS & Transport ERP లకు వివరమైన ప్రొఫెషనల్ ప్లాన్లు రూపొందించాము).
 - **చేసిన మార్పులు:**

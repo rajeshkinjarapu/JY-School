@@ -36,10 +36,10 @@ import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import {
   RBAC_MODULES,
-  RbacMatrixMap,
-  RbacModuleKey,
-  RbacRole,
-  AccessLevel,
+  type RbacMatrixMap,
+  type RbacModuleKey,
+  type RbacRole,
+  type AccessLevel,
   getCachedRbacMatrix,
   saveRbacMatrixCache
 } from '../../utils/rbac';
