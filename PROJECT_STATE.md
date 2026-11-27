@@ -1,5 +1,24 @@
 # JY School Project State
 
+## చివరి సంభాషణ - 3-Option MCQ Perfect Alignment in LaTeX Preview (`LiveLatexPreview.tsx`) (November 27, 2026)
+- **సమస్య:** MCQ Paper Generator లో కేవలం **3 ఆప్షన్స్ (`(A)`, `(B)`, `(C)`)** మాత్రమే ఉన్న ప్రశ్నలు (ఉదా: Q29 `Go / wait / stop`) గతంలో `4 options` ఉన్నప్పుడే గ్రిడ్‌లోకి వచ్చేవి కాబట్టి, 3 ఆప్షన్స్ ఉన్నవి 3 లైన్లలో విడివిడిగా నిలువుగా పడిపోయాయి.
+- **పరిష్కారం ([LiveLatexPreview.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx)):**
+  - `hasUpperOptions` & `hasLowerOptions` (`(A)(B)(C)`) లకు 3-ఆప్షన్ మరియు 4-ఆప్షన్ రెండూ సపోర్ట్ అయ్యేలా అప్‌డేట్ చేశాము.
+  - `hasOptionD` చెక్ ద్వారా 3 ఆప్షన్స్ ఉన్నప్పుడు చిన్న ఆప్షన్స్ అయితే **`grid-cols-3`** (`1x3` ఒకే వరుసలో సరిసమానంగా), మధ్యస్థం అయితే **`grid-cols-2`**, పెద్దవి అయితే `1x1` అలైన్‌మెంట్ వచ్చేలా మరియు ఖాళీ `(D)` రాకుండా సరిదిద్దాము (`printPaper` & KaTeX మఠ్ రెండరింగ్‌కు ఎటువంటి మార్పు లేకుండా).
+
+## చివరి సంభాషణ - Dashboard Speed Optimization (Backend + Webapp + Flutter) (November 27, 2026)
+- **సమస్య:** Webapp & Flutter App రెండింటిలోనూ Dashboard లోడ్ అవ్వడానికి చాలా సమయం పడుతోంది.
+- **చేసిన ఆప్టిమైజేషన్లు:**
+  - **Backend ([dashboard.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/dashboard.controller.ts)):**
+    - `getAdminDashboard` లో 533 మంది విద్యార్థుల బరువైన `studentsWithDob` (+ `photoUrl`) క్వెరీ & JSON పేలోడ్ తొలగించాము.
+    - `todayAttendance`, `todayTeacherAttendance` లను `groupBy` గా, అలాగే 12 నెలల ఫీజులు & 7 రోజుల అటెండెన్స్ ట్రెండ్‌లను SQL `DATE_TRUNC` + `GROUP BY` అగ్రిగేషన్లుగా మార్చాము (`recentPayments` లో base64 ఫోటోలను `/api/users/:id/photo` గా మార్చి క్యాష్ TTL ను `180000ms` (3 నిమిషాలు) కు పెంచాము).
+    - `getStudentDashboard` లోని 9 సీక్వెన్షియల్ `await` క్వెరీలను ఒకే `Promise.all` గా మార్చాము.
+  - **Webapp ([AuthContext.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/contexts/AuthContext.tsx), [DashboardPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/dashboard/DashboardPage.tsx)):**
+    - `localStorage` లో `user` + `accessToken` ఉన్నప్పుడు `getMe()` కోసం స్పిన్నర్‌పై బ్లాక్ చేయకుండా వెంటనే డాష్‌బోర్డ్ అన్‌బ్లాక్ చేశాము (బ్యాక్‌గ్రౌండ్‌లో ప్రొఫైల్ రిఫ్రెష్ అవుతుంది).
+    - `DashboardPage` లో `localStorage` `initialData` క్యాష్ జత చేసి 0ms లోనే తక్షణ UI లోడ్ అయ్యేలా చేశాము.
+  - **Flutter ([dashboard_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/dashboard_screen.dart), [api_service.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/services/api_service.dart)):**
+    - `ApiService.getCachedResponse()` + `15s` HTTP టైమ్‌అవుట్ జత చేశాము; యాప్ ఓపెన్ అయిన వెంటనే క్యాష్ నుండి డాష్‌బోర్డ్ కార్డులు చూపిస్తూనే `Future.wait` తో `getMe()`, stats, notifications ను సమాంతరంగా లోడ్ చేసేలా, మరియు Student రోల్‌లో డూప్లికేట్ API కాల్స్ తొలగించేలా మార్చాము (**Shorebird Patch** ద్వారా అప్‌డేట్ చేయవచ్చు).
+
 ## చివరి సంభాషణ - Compact Sidebar Width Fit (`280px` -> `224px`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** సైడ్‌బార్ వెడల్పు టెక్స్ట్ కంటే ఎక్కువగా ఖాళీగా ఉంది (`side bar width ekkava unnattu undi text kante ekkuva undi`).
 - **చేసిన మార్పు ([Sidebar.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx)):** సైడ్‌బార్ వెడల్పును `280px` నుండి స్లిమ్ **`224px`** (`w-[224px]`) కు తగ్గించి, ఐకాన్ బాక్స్‌లు & ప్యాడింగ్‌లను కాంపాక్ట్‌గా సర్దుబాటు చేశాము — టెక్స్ట్‌కు సరిపడా ఫిట్ ఉండి పేజీ కంటెంట్‌కు ఎక్కువ స్పేస్ వస్తుంది.

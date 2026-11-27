@@ -102,32 +102,86 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<void> _loadDashboardData() async {
     final prefs = await SharedPreferences.getInstance();
     final userString = prefs.getString('user');
-    
+
     if (userString != null) {
+      final cachedUser = jsonDecode(userString) as Map<String, dynamic>;
       if (mounted) {
         setState(() {
-          _user = jsonDecode(userString);
-          _isLoading = false; // <-- Instantly load UI using cached data
+          _user = cachedUser;
+          _isLoading = false; // Instantly load UI using cached user
         });
       }
-    }
-    
-    // Always fetch fresh user data to get updated photoUrl, name, etc.
-    final res = await ApiService.getMe();
-    if (res['success'] && mounted) {
-      setState(() {
-        _user = res['data'];
-      });
-      // Update cache
-      await prefs.setString('user', jsonEncode(res['data']));
-    } else if (userString == null && mounted) {
-      _handleLogout();
-      return;
+      // Instantly hydrate cached dashboard metrics & notifications (0ms wait)
+      final cachedRole = (cachedUser['role'] ?? 'STUDENT').toString();
+      await _hydrateCachedStats(cachedRole);
+
+      // Run profile refresh, dashboard stats, and notifications in parallel (no waterfall)
+      await Future.wait([
+        _refreshUserProfile(prefs),
+        _fetchLiveStats(),
+        _fetchUnreadNotifications(),
+      ]);
+    } else {
+      final res = await ApiService.getMe();
+      if (res['success'] && mounted) {
+        setState(() {
+          _user = res['data'];
+        });
+        await prefs.setString('user', jsonEncode(res['data']));
+      } else if (mounted) {
+        _handleLogout();
+        return;
+      }
+      await Future.wait([
+        _fetchLiveStats(),
+        _fetchUnreadNotifications(),
+      ]);
     }
 
-    await _fetchLiveStats();
     NotificationService().syncDeviceToken();
     _checkAndShowBirthdayPoster();
+  }
+
+  Future<void> _refreshUserProfile(SharedPreferences prefs) async {
+    try {
+      final res = await ApiService.getMe();
+      if (res['success'] && mounted) {
+        setState(() {
+          _user = res['data'];
+        });
+        await prefs.setString('user', jsonEncode(res['data']));
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _hydrateCachedStats(String userRole) async {
+    final String endpoint = userRole == 'STUDENT'
+        ? '/api/dashboard/student'
+        : userRole == 'TEACHER'
+            ? '/api/dashboard/teacher'
+            : '/api/dashboard/admin';
+
+    final cachedResults = await Future.wait([
+      ApiService.getCachedResponse(endpoint),
+      ApiService.getCachedResponse('/api/notifications'),
+    ]);
+
+    if (!mounted) return;
+    final dashCache = cachedResults[0];
+    final notifCache = cachedResults[1];
+
+    if (dashCache != null && dashCache['success'] == true) {
+      if (userRole == 'STUDENT') {
+        _applyStudentStats(dashCache);
+      } else if (userRole == 'TEACHER') {
+        _applyTeacherStats(dashCache);
+      } else {
+        _applyAdminStats(dashCache);
+      }
+    }
+    if (notifCache != null && notifCache['success'] == true) {
+      _applyNotifications(notifCache);
+    }
   }
 
   Future<void> _checkAndShowBirthdayPoster() async {
@@ -156,131 +210,110 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  void _applyStudentStats(Map<String, dynamic> dashboardRes) {
+    if (!mounted || dashboardRes['success'] != true) return;
+    final sData = dashboardRes['data'] ?? {};
+    final double rate = double.tryParse(sData['attendancePercentage']?.toString() ?? '100') ?? 100.0;
+    final Map<String, dynamic> feeMap = Map<String, dynamic>.from(sData['feeStatus'] ?? {});
+    final double totalDue = double.tryParse(feeMap['totalDue']?.toString() ?? '0') ?? 0.0;
+    final double totalPaid = double.tryParse(feeMap['totalPaid']?.toString() ?? '0') ?? 0.0;
+    final double dues = (totalDue - totalPaid) > 0 ? (totalDue - totalPaid) : 0.0;
+
+    setState(() {
+      _attendanceRate = rate;
+      _feeDues = dues;
+      _timetableToday = sData['timetableToday'] ?? [];
+      _recentMarks = sData['recentMarks'] ?? [];
+      _feeStatusData = feeMap;
+      _recentAnnouncements = sData['announcements'] ?? [];
+      _isLoading = false;
+    });
+  }
+
+  void _applyTeacherStats(Map<String, dynamic> result) {
+    if (!mounted) return;
+    if (result['success'] == true) {
+      final data = result['data'] ?? {};
+      final attendanceSummary = data['todayAttendanceSummary'] ?? {};
+      setState(() {
+        _teacherTotalStudents = int.tryParse(data['totalStudents']?.toString() ?? '0') ?? 0;
+        _teacherTodayPresent = int.tryParse(attendanceSummary['present']?.toString() ?? '0') ?? 0;
+        _teacherTodayAbsent = int.tryParse(attendanceSummary['absent']?.toString() ?? '0') ?? 0;
+        _teacherAttendancePercent = double.tryParse(attendanceSummary['rate']?.toString() ?? '0.0') ?? 0.0;
+        _adminAttendanceTrend = data['attendanceTrend'] ?? [];
+        _timetableToday = data['timetableToday'] ?? [];
+        _recentHomework = data['recentHomework'] ?? [];
+        _recentAnnouncements = data['announcements'] ?? [];
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _applyAdminStats(Map<String, dynamic> result) {
+    if (!mounted) return;
+    if (result['success'] == true) {
+      final stats = result['data'] ?? {};
+      setState(() {
+        _adminTotalStudents = int.tryParse(stats['totalStudents']?.toString() ?? '0') ?? 0;
+        _adminTotalTeachers = int.tryParse(stats['totalTeachers']?.toString() ?? '0') ?? 0;
+        _adminTotalClasses = int.tryParse(stats['totalClasses']?.toString() ?? '24') ?? 24;
+        _adminFeeCollected = double.tryParse(stats['totalRevenue']?.toString() ?? '0') ?? 0.0;
+        _adminFeePending = 0.0;
+        _adminAttendanceTrend = stats['attendanceTrend'] ?? [];
+        _adminMonthlyFeeCollection = stats['monthlyFeeCollection'] ?? [];
+        _recentAnnouncements = stats['recentAnnouncements'] ?? [];
+        _adminGenderDistribution = stats['genderDistribution'] ?? {};
+        _adminEnrollmentByClass = stats['enrollmentByClass'] ?? [];
+        _adminRecentPayments = stats['recentPayments'] ?? [];
+        _isLoading = false;
+      });
+    } else {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _applyNotifications(Map<String, dynamic> notifRes) {
+    if (!mounted || notifRes['success'] != true) return;
+    final data = notifRes['data'];
+    if (data is Map<String, dynamic>) {
+      setState(() {
+        _unreadNotifications = data['unreadCount'] ?? 0;
+      });
+    } else if (data is List) {
+      final int unread = data.where((n) => n['isRead'] != true).length;
+      setState(() {
+        _unreadNotifications = unread;
+      });
+    }
+  }
+
   Future<void> _fetchLiveStats() async {
     final userRole = _user?['role'] ?? 'STUDENT';
-    
+
     if (userRole == 'STUDENT') {
-      final studentId = _user?['student']?['id'];
-      if (studentId == null) {
-        if (mounted) setState(() => _isLoading = false);
-        return;
-      }
-
-      final results = await Future.wait([
-        ApiService.getAttendance(studentId),
-        ApiService.getFeeStatus(studentId),
-      ]);
-
-      double rate = 100.0;
-      double dues = 0.0;
-
-      if (results[0]['success']) {
-        final List<dynamic> records = results[0]['data'] ?? [];
-        if (records.isNotEmpty) {
-          int present = 0;
-          int late = 0;
-          for (var r in records) {
-            final status = r['status']?.toString().toUpperCase();
-            if (status == 'PRESENT') present++;
-            if (status == 'LATE') late++;
-          }
-          rate = ((present + late) / records.length) * 100;
-        }
-      }
-
-      if (results[1]['success']) {
-        final List<dynamic> feeList = results[1]['data'] ?? [];
-        for (var item in feeList) {
-          dues += double.tryParse(item['amountDue']?.toString() ?? '0') ?? 0.0;
-        }
-      }
-
-      // Also fetch dashboard specific student stats (today classes, recent marks)
+      // Single consolidated endpoint already computes attendancePercentage & feeStatus
       final dashboardRes = await ApiService.getStudentDashboardStats();
-      if (dashboardRes['success']) {
-          final sData = dashboardRes['data'] ?? {};
-          if(mounted) {
-             _timetableToday = sData['timetableToday'] ?? [];
-             _recentMarks = sData['recentMarks'] ?? [];
-             _feeStatusData = sData['feeStatus'] ?? {};
-             _recentAnnouncements = sData['announcements'] ?? [];
-          }
-      }
-
-      if (mounted) {
-        setState(() {
-          _attendanceRate = rate;
-          _feeDues = dues;
-          _isLoading = false;
-        });
+      if (dashboardRes['success'] == true) {
+        _applyStudentStats(dashboardRes);
+      } else if (mounted) {
+        setState(() => _isLoading = false);
       }
     } else if (userRole == 'TEACHER') {
-      // Fetch teacher statistics
       final result = await ApiService.getAttendanceStats();
-      if (mounted) {
-        if (result['success']) {
-          final data = result['data'] ?? {};
-          final attendanceSummary = data['todayAttendanceSummary'] ?? {};
-          setState(() {
-            _teacherTotalStudents = int.tryParse(data['totalStudents']?.toString() ?? '0') ?? 0;
-            _teacherTodayPresent = int.tryParse(attendanceSummary['present']?.toString() ?? '0') ?? 0;
-            _teacherTodayAbsent = int.tryParse(attendanceSummary['absent']?.toString() ?? '0') ?? 0;
-            _teacherAttendancePercent = double.tryParse(attendanceSummary['rate']?.toString() ?? '0.0') ?? 0.0;
-            _adminAttendanceTrend = data['attendanceTrend'] ?? [];
-            _timetableToday = data['timetableToday'] ?? [];
-            _recentHomework = data['recentHomework'] ?? [];
-            _recentAnnouncements = data['announcements'] ?? [];
-            _isLoading = false;
-          });
-        } else {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
+      _applyTeacherStats(result);
     } else {
-      // Admin statistics
       final result = await ApiService.getAdminDashboardStats();
-      if (mounted) {
-        if (result['success']) {
-          final stats = result['data'] ?? {};
-          setState(() {
-            _adminTotalStudents = int.tryParse(stats['totalStudents']?.toString() ?? '0') ?? 0;
-            _adminTotalTeachers = int.tryParse(stats['totalTeachers']?.toString() ?? '0') ?? 0;
-            _adminTotalClasses = int.tryParse(stats['totalClasses']?.toString() ?? '24') ?? 24; 
-            _adminFeeCollected = double.tryParse(stats['totalRevenue']?.toString() ?? '0') ?? 0.0;
-            _adminFeePending = 0.0; // API doesn't return pending directly in admin dashboard
-            _adminAttendanceTrend = stats['attendanceTrend'] ?? [];
-            _adminMonthlyFeeCollection = stats['monthlyFeeCollection'] ?? [];
-            _recentAnnouncements = stats['recentAnnouncements'] ?? [];
-            _adminGenderDistribution = stats['genderDistribution'] ?? {};
-            _adminEnrollmentByClass = stats['enrollmentByClass'] ?? [];
-            _adminRecentPayments = stats['recentPayments'] ?? [];
-            _isLoading = false;
-          });
-        } else {
-          setState(() => _isLoading = false);
-        }
-      }
+      _applyAdminStats(result);
     }
+  }
 
-    // Fetch live unread notifications count
+  Future<void> _fetchUnreadNotifications() async {
     try {
       final notifRes = await ApiService.getNotifications();
-      if (mounted && notifRes['success']) {
-        final data = notifRes['data'];
-        if (data is Map<String, dynamic>) {
-          setState(() {
-            _unreadNotifications = data['unreadCount'] ?? 0;
-          });
-        } else if (data is List) {
-          int unread = data.where((n) => n['isRead'] != true).length;
-          setState(() {
-            _unreadNotifications = unread;
-          });
-        }
-      }
-    } catch (e) {
+      _applyNotifications(notifRes);
+    } catch (_) {
       // Ignore network errors for notifications
     }
   }

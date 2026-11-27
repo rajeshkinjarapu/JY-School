@@ -50,22 +50,21 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
     const classCountWhere = academicYear ? { academicYear } : {};
     const studentFilterWhere = academicYear ? { student: { class: { academicYear } } } : {};
 
-    // Run independent database queries in parallel
+    // Run independent database queries & SQL aggregates in parallel
     const [
       totalStudents,
       totalTeachers,
       totalClasses,
       revenueResult,
       classes,
-      todayAttendance,
-      todayTeacherAttendance,
-      payments,
+      todayAttendanceGroups,
+      todayTeacherAttendanceGroups,
+      monthlyFeeRows,
       genderGroups,
-      recentPayments,
+      recentPaymentsRaw,
       recentAnnouncements,
-      weekAttendance,
-      totalAppInstalls,
-      studentsWithDob
+      weekAttendanceRows,
+      totalAppInstalls
     ] = await Promise.all([
       prisma.student.count({ where: studentCountWhere }),
       prisma.teacher.count(),
@@ -78,21 +77,34 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         where: classCountWhere,
         select: { id: true, name: true, section: true, academicYear: true, _count: { select: { students: true } } } 
       }).then(sortClasses),
-      prisma.attendance.findMany({
+      prisma.attendance.groupBy({
+        by: ['status'],
         where: {
           date: { gte: today, lt: tomorrow },
           ...(academicYear ? { class: { academicYear } } : {})
         },
-        select: { status: true }
+        _count: { _all: true }
       }),
-      prisma.teacherAttendance.findMany({ where: { date: { gte: today, lt: tomorrow } }, select: { status: true } }),
-      prisma.feePayment.findMany({
-        where: {
-          paymentDate: { gte: twelveMonthsAgo },
-          ...studentFilterWhere
-        },
-        select: { paymentDate: true, amountPaid: true }
+      prisma.teacherAttendance.groupBy({
+        by: ['status'],
+        where: { date: { gte: today, lt: tomorrow } },
+        _count: { _all: true }
       }),
+      academicYear
+        ? prisma.$queryRaw<any[]>`
+            SELECT DATE_TRUNC('month', fp."paymentDate") AS month_start, COALESCE(SUM(fp."amountPaid"), 0)::float8 AS total
+            FROM "FeePayment" fp
+            INNER JOIN "Student" s ON s.id = fp."studentId"
+            INNER JOIN "Class" c ON c.id = s."classId"
+            WHERE fp."paymentDate" >= ${twelveMonthsAgo} AND c."academicYear" = ${academicYear}
+            GROUP BY 1
+          `.catch((): any[] => [])
+        : prisma.$queryRaw<any[]>`
+            SELECT DATE_TRUNC('month', "paymentDate") AS month_start, COALESCE(SUM("amountPaid"), 0)::float8 AS total
+            FROM "FeePayment"
+            WHERE "paymentDate" >= ${twelveMonthsAgo}
+            GROUP BY 1
+          `.catch((): any[] => []),
       prisma.student.groupBy({
         by: ['gender'],
         _count: { _all: true },
@@ -103,7 +115,7 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         orderBy: { createdAt: 'desc' },
         where: studentFilterWhere,
         include: {
-          student: { include: { user: { select: { name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
+          student: { include: { user: { select: { id: true, name: true, photoUrl: true } }, class: { select: { name: true, section: true } } } },
           feeStructure: { select: { name: true } }
         }
       }),
@@ -112,77 +124,103 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         orderBy: { createdAt: 'desc' },
         where: { isActive: true }
       }),
-      prisma.attendance.findMany({
-        where: {
-          date: { gte: sevenDaysAgo },
-          ...(academicYear ? { class: { academicYear } } : {})
-        },
-        select: { date: true, status: true }
-      }),
+      academicYear
+        ? prisma.$queryRaw<any[]>`
+            SELECT DATE_TRUNC('day', a."date") AS att_day, a."status", COUNT(*)::int AS cnt
+            FROM "Attendance" a
+            INNER JOIN "Class" c ON c.id = a."classId"
+            WHERE a."date" >= ${sevenDaysAgo} AND c."academicYear" = ${academicYear}
+            GROUP BY 1, 2
+          `.catch((): any[] => [])
+        : prisma.$queryRaw<any[]>`
+            SELECT DATE_TRUNC('day', "date") AS att_day, "status", COUNT(*)::int AS cnt
+            FROM "Attendance"
+            WHERE "date" >= ${sevenDaysAgo}
+            GROUP BY 1, 2
+          `.catch((): any[] => []),
       prisma.user.count({
         where: {
           role: Role.STUDENT,
           isAppInstalled: true,
           ...(academicYear ? { student: { class: { academicYear } } } : {})
         }
-      }),
-      prisma.student.findMany({
-        where: {
-          dob: { not: null },
-          ...studentCountWhere
-        },
-        select: {
-          id: true,
-          userId: true,
-          rollNo: true,
-          dob: true,
-          gender: true,
-          fatherPhone: true,
-          motherPhone: true,
-          user: { select: { id: true, name: true, phone: true, photoUrl: true } },
-          class: { select: { name: true, section: true } }
-        }
       })
     ]);
 
     const totalRevenue = revenueResult._sum.amountPaid || 0;
+
+    // Convert any inline base64 photoUrl in recentPayments to lightweight /photo route
+    const recentPayments = recentPaymentsRaw.map((p: any) => {
+      const u = p.student?.user;
+      if (u && typeof u.photoUrl === 'string' && u.photoUrl.startsWith('data:image')) {
+        return {
+          ...p,
+          student: {
+            ...p.student,
+            user: { ...u, photoUrl: `/api/users/${u.id}/photo` }
+          }
+        };
+      }
+      return p;
+    });
 
     const enrollmentByClass = classes.map(c => ({
       name: `${c.name}-${c.section}`,
       count: c._count.students
     }));
 
-    // Live Student Attendance calculation
-    const studentTotalMarked = todayAttendance.length;
-    const studentPresentCount = todayAttendance.filter(a => a.status === AttendanceStatus.PRESENT || a.status === AttendanceStatus.LATE).length;
-    const studentAbsentCount = todayAttendance.filter(a => a.status === AttendanceStatus.ABSENT).length;
-    const studentLeaveCount = todayAttendance.filter(a => a.status === AttendanceStatus.EXCUSED).length;
+    // Live Student Attendance calculation from grouped counts
+    let studentTotalMarked = 0;
+    let studentPresentCount = 0;
+    let studentAbsentCount = 0;
+    let studentLeaveCount = 0;
+    todayAttendanceGroups.forEach((g: any) => {
+      const count = Number(g._count?._all || 0);
+      studentTotalMarked += count;
+      if (g.status === AttendanceStatus.PRESENT || g.status === AttendanceStatus.LATE) {
+        studentPresentCount += count;
+      } else if (g.status === AttendanceStatus.ABSENT) {
+        studentAbsentCount += count;
+      } else if (g.status === AttendanceStatus.EXCUSED) {
+        studentLeaveCount += count;
+      }
+    });
     const attendanceToday = studentTotalMarked > 0 ? Math.round((studentPresentCount / studentTotalMarked) * 100) : 0;
 
-    // Live Teacher Attendance calculation
-    const teacherTotalMarked = todayTeacherAttendance.length;
-    const teacherPresentCount = todayTeacherAttendance.filter(t => t.status === 'PRESENT' || t.status === 'LATE').length;
-    const teacherAbsentCount = todayTeacherAttendance.filter(t => t.status === 'ABSENT').length;
-    const teacherLeaveCount = todayTeacherAttendance.filter(t => t.status === 'HALF_DAY').length;
+    // Live Teacher Attendance calculation from grouped counts
+    let teacherTotalMarked = 0;
+    let teacherPresentCount = 0;
+    let teacherAbsentCount = 0;
+    let teacherLeaveCount = 0;
+    todayTeacherAttendanceGroups.forEach((g: any) => {
+      const count = Number(g._count?._all || 0);
+      teacherTotalMarked += count;
+      if (g.status === 'PRESENT' || g.status === 'LATE') {
+        teacherPresentCount += count;
+      } else if (g.status === 'ABSENT') {
+        teacherAbsentCount += count;
+      } else if (g.status === 'HALF_DAY') {
+        teacherLeaveCount += count;
+      }
+    });
     const isTeacherAttendanceMarked = teacherTotalMarked > 0;
     const teacherAttendancePercentage = isTeacherAttendanceMarked ? Math.round((teacherPresentCount / teacherTotalMarked) * 100) : 0;
-
-
 
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const monthlyCollectionMap: { [key: string]: number } = {};
     for (let i = 0; i < 12; i++) {
       const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+      d.setUTCMonth(d.getUTCMonth() - i);
+      const key = `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
       monthlyCollectionMap[key] = 0;
     }
 
-    payments.forEach(p => {
-      const d = new Date(p.paymentDate);
-      const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+    (monthlyFeeRows || []).forEach((row: any) => {
+      if (!row.month_start) return;
+      const d = new Date(row.month_start);
+      const key = `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
       if (monthlyCollectionMap[key] !== undefined) {
-        monthlyCollectionMap[key] += p.amountPaid;
+        monthlyCollectionMap[key] += Number(row.total || 0);
       }
     });
 
@@ -197,95 +235,32 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       else if (g.gender === Gender.OTHER) genderDistribution.other = g._count._all;
     });
 
-    const attendanceTrend = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      d.setHours(0, 0, 0, 0);
-      const nextDate = new Date(d);
-      nextDate.setDate(nextDate.getDate() + 1);
-
-      const records = weekAttendance.filter(a => a.date >= d && a.date < nextDate);
-      const present = records.filter(r => r.status === AttendanceStatus.PRESENT || r.status === AttendanceStatus.LATE).length;
-      const absent = records.filter(r => r.status === AttendanceStatus.ABSENT).length;
-      
-      attendanceTrend.push({
-        date: `${d.getDate()} ${months[d.getMonth()]}`,
-        present,
-        absent
-      });
-    }
-
-    // Indian Standard Time (Asia/Kolkata, UTC+05:30) date evaluation
-    const istNow = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-    const currentMonthIST = istNow.getMonth();
-    const currentDayIST = istNow.getDate();
-
-    const todayBirthdays: any[] = [];
-    const upcomingBirthdays: any[] = [];
-    const thisMonthBirthdays: any[] = [];
-
-    (studentsWithDob || []).forEach((s: any) => {
-      if (!s.dob) return;
-      const bDate = new Date(s.dob);
-      if (isNaN(bDate.getTime())) return;
-
-      // Extract day and month in Indian Standard Time (Asia/Kolkata)
-      const bDateIST = new Date(bDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
-      const bMonthIST = bDateIST.getMonth();
-      const bDayIST = bDateIST.getDate();
-
-      // Also extract day and month in UTC as fallback
-      const bMonthUTC = bDate.getUTCMonth();
-      const bDayUTC = bDate.getUTCDate();
-
-      const targetUserId = s.user?.id || s.userId || s.id;
-      let avatarUrl = s.user?.photoUrl;
-      if (avatarUrl && avatarUrl.startsWith('data:image')) {
-        avatarUrl = `/api/users/${targetUserId}/photo`;
-      }
-
-      const item = {
-        id: s.id,
-        rollNo: s.rollNo,
-        name: s.user?.name || 'Student',
-        phone: s.user?.phone || s.fatherPhone || s.motherPhone || null,
-        photoUrl: avatarUrl,
-        gender: s.gender,
-        dob: s.dob,
-        className: s.class ? `${s.class.name}${s.class.section ? ' - ' + s.class.section : ''}` : 'N/A'
-      };
-
-      // Match today's birthday in IST or UTC
-      const isToday = 
-        (bMonthIST === currentMonthIST && bDayIST === currentDayIST) ||
-        (bMonthUTC === currentMonthIST && bDayUTC === currentDayIST);
-
-      if (isToday) {
-        todayBirthdays.push(item);
-      } else {
-        const birthMonth = bMonthIST;
-        const birthDay = bDayIST;
-
-        const thisYearBirthday = new Date(istNow.getFullYear(), birthMonth, birthDay);
-        let diffMs = thisYearBirthday.getTime() - istNow.getTime();
-        if (diffMs < 0) {
-          const nextYearBirthday = new Date(istNow.getFullYear() + 1, birthMonth, birthDay);
-          diffMs = nextYearBirthday.getTime() - istNow.getTime();
-        }
-        const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        if (daysLeft > 0 && daysLeft <= 14) {
-          upcomingBirthdays.push({ ...item, daysLeft });
-        }
-
-        if (birthMonth === currentMonthIST) {
-          thisMonthBirthdays.push({ ...item, day: birthDay });
-        }
+    const dayTrendMap: { [dayKey: string]: { present: number; absent: number } } = {};
+    (weekAttendanceRows || []).forEach((row: any) => {
+      if (!row.att_day) return;
+      const d = new Date(row.att_day);
+      const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      if (!dayTrendMap[dayKey]) dayTrendMap[dayKey] = { present: 0, absent: 0 };
+      const cnt = Number(row.cnt || 0);
+      if (row.status === AttendanceStatus.PRESENT || row.status === AttendanceStatus.LATE) {
+        dayTrendMap[dayKey].present += cnt;
+      } else if (row.status === AttendanceStatus.ABSENT) {
+        dayTrendMap[dayKey].absent += cnt;
       }
     });
 
-    upcomingBirthdays.sort((a, b) => a.daysLeft - b.daysLeft);
-    thisMonthBirthdays.sort((a, b) => a.day - b.day);
+    const attendanceTrend = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      const dayKey = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+      const bucket = dayTrendMap[dayKey] || { present: 0, absent: 0 };
+      attendanceTrend.push({
+        date: `${d.getUTCDate()} ${months[d.getUTCMonth()]}`,
+        present: bucket.present,
+        absent: bucket.absent
+      });
+    }
 
     const responseData = {
       totalStudents,
@@ -316,17 +291,16 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
       recentPayments,
       recentAnnouncements,
       attendanceTrend,
-      todayBirthdays,
-      upcomingBirthdays,
-      thisMonthBirthdays,
-      totalAppInstalls,
-      studentsWithDob
+      todayBirthdays: [],
+      upcomingBirthdays: [],
+      thisMonthBirthdays: [],
+      totalAppInstalls
     };
 
     // Cache for 3 minutes (180000 ms) to make dashboard lightning fast
     cache[cacheKey] = {
       data: responseData,
-      expiry: Date.now() + 45000
+      expiry: Date.now() + 180000
     };
 
     successResponse(res, responseData, 'Admin dashboard data fetched successfully');
@@ -525,48 +499,101 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     thirtyDaysAgo.setHours(0, 0, 0, 0);
 
-    const attendanceRecords = await prisma.attendance.findMany({
-      where: {
-        studentId: student.id,
-        date: { gte: thirtyDaysAgo }
-      }
-    });
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = days[new Date().getDay()];
+
+    // Run all student dashboard queries in parallel
+    const [
+      attendanceRecords,
+      recentMarks,
+      upcomingExams,
+      structures,
+      payments,
+      timetableToday,
+      announcements,
+      admitCards,
+      recentHomework
+    ] = await Promise.all([
+      prisma.attendance.findMany({
+        where: {
+          studentId: student.id,
+          date: { gte: thirtyDaysAgo }
+        },
+        select: { status: true }
+      }),
+      prisma.mark.findMany({
+        where: { studentId: student.id },
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          subject: true,
+          exam: true
+        }
+      }),
+      student.classId ? prisma.exam.findMany({
+        where: {
+          classes: { some: { id: student.classId } },
+          examDate: { gte: new Date() }
+        },
+        take: 5,
+        orderBy: { examDate: 'asc' }
+      }) : Promise.resolve([]),
+      student.classId ? prisma.feeStructure.findMany({
+        where: { classId: student.classId },
+        select: { amount: true }
+      }) : Promise.resolve([]),
+      student.classId ? prisma.feePayment.findMany({
+        where: { studentId: student.id },
+        select: { amountPaid: true }
+      }) : Promise.resolve([]),
+      student.classId ? prisma.timetable.findMany({
+        where: {
+          classId: student.classId,
+          day: currentDay
+        },
+        include: {
+          subject: true,
+          teacher: { include: { user: { select: { name: true } } } }
+        },
+        orderBy: { startTime: 'asc' }
+      }) : Promise.resolve([]),
+      prisma.announcement.findMany({
+        take: 5,
+        where: {
+          isActive: true,
+          OR: [
+            { targetRoles: '' },
+            { targetRoles: { contains: Role.STUDENT } }
+          ]
+        },
+        include: {
+          reads: { where: { userId: req.user!.id } }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      student.classId ? prisma.exam.findMany({
+        where: {
+          classes: { some: { id: student.classId } },
+          admitCardPublished: true
+        },
+        include: {
+          examPlans: { include: { subject: true }, orderBy: { examDate: 'asc' } }
+        }
+      }) : Promise.resolve([]),
+      student.classId ? prisma.homework.findMany({
+        where: { classId: student.classId },
+        include: { subject: { select: { name: true } }, teacher: { include: { user: { select: { name: true } } } } },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      }) : Promise.resolve([])
+    ]);
 
     const totalDays = attendanceRecords.length;
     const presentDays = attendanceRecords.filter(r => r.status === AttendanceStatus.PRESENT || r.status === AttendanceStatus.LATE).length;
     const attendancePercentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 100;
 
-    // Recent Marks
-    const recentMarks = await prisma.mark.findMany({
-      where: { studentId: student.id },
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        subject: true,
-        exam: true
-      }
-    });
-
-    // Upcoming Exams
-    const upcomingExams = await prisma.exam.findMany({
-      where: {
-        classes: { some: { id: student.classId || '' } },
-        examDate: { gte: new Date() }
-      },
-      take: 5,
-      orderBy: { examDate: 'asc' }
-    });
-
-    // Fee Status
     let feeStatus = { totalDue: 0, totalPaid: 0, status: 'NO_FEES' };
     if (student.classId) {
-      const structures = await prisma.feeStructure.findMany({
-        where: { classId: student.classId }
-      });
-      const payments = await prisma.feePayment.findMany({
-        where: { studentId: student.id }
-      });
-
       const totalDue = structures.reduce((sum, s) => sum + s.amount, 0);
       const totalPaid = payments.reduce((sum, p) => sum + p.amountPaid, 0);
 
@@ -576,56 +603,6 @@ export const getStudentDashboard = async (req: AuthRequest, res: Response, next:
         status: totalPaid === 0 && totalDue > 0 ? 'UNPAID' : totalPaid >= totalDue ? 'PAID' : 'PARTIAL'
       };
     }
-
-    // Today's classes
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const currentDay = days[new Date().getDay()];
-
-    const timetableToday = student.classId ? await prisma.timetable.findMany({
-      where: {
-        classId: student.classId,
-        day: currentDay
-      },
-      include: {
-        subject: true,
-        teacher: { include: { user: { select: { name: true } } } }
-      },
-      orderBy: { startTime: 'asc' }
-    }) : [];
-
-    // Announcements
-    const announcements = await prisma.announcement.findMany({
-      take: 5,
-      where: {
-        isActive: true,
-        OR: [
-          { targetRoles: '' },
-          { targetRoles: { contains: Role.STUDENT } }
-        ]
-      },
-      include: {
-        reads: { where: { userId: req.user!.id } }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
-
-    // Published Admit Cards
-    const admitCards = student.classId ? await prisma.exam.findMany({
-      where: {
-        classes: { some: { id: student.classId } },
-        admitCardPublished: true
-      },
-      include: {
-        examPlans: { include: { subject: true }, orderBy: { examDate: 'asc' } }
-      }
-    }) : [];
-
-    const recentHomework = student.classId ? await prisma.homework.findMany({
-      where: { classId: student.classId },
-      include: { subject: { select: { name: true } }, teacher: { include: { user: { select: { name: true } } } } },
-      orderBy: { createdAt: 'desc' },
-      take: 5
-    }) : [];
 
     const { medicalInfo, ...studentWithoutMedical } = student;
 

@@ -309,8 +309,8 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
 
   const parseTextToBlocks = (text: string, subject: string, elements: JSX.Element[]) => {
     if (!text || text.trim() === '') return;
-    // Regex to match option layout tags e.g. [2x2], [1x1], [1x4], [vertical], [horizontal]
-    const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
+    // Regex to match option layout tags e.g. [2x2], [1x1], [1x4], [1x3], [vertical], [horizontal]
+    const layoutTagRegex = /\[(?:LAYOUT:)?(1x4|1\*4|4cols?|1x3|1\*3|3cols?|horizontal|2x2|2\*2|2cols?|1x1|1\*1|4x1|4\*1|vertical|1col)\]/gi;
 
     // Normalize text blocks so that questions are ALWAYS separated cleanly and options never detach
     let normalizedText = text.replace(/\r\n/g, '\n');
@@ -340,16 +340,15 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
         return `${charBefore}\n${opt} `;
       });
 
-      // Support both uppercase (A) (B) (C) (D) and lowercase (a) (b) (c) (d) options (must be preceded by newline, whitespace or start of line)
+      // Support both 3-option (A)(B)(C) and 4-option (A)(B)(C)(D) in uppercase or lowercase
       const optMatchA = /(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block);
       const optMatchB = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block);
       const optMatchC = /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block);
       const optMatchD = /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block);
-      const hasUpperOptions = optMatchA && optMatchB && optMatchC && optMatchD;
+      const hasUpperOptions = optMatchA && optMatchB && optMatchC;
       const hasLowerOptions = (/(?:^|\n|\s{2,}|\t)\s*\(a\)\.?\s*/.test(block)) &&
         (/(?:^|\n|\s{2,}|\t)\s*\(b\)\.?\s*/.test(block)) &&
-        (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block)) &&
-        (/(?:^|\n|\s{2,}|\t)\s*\(d\)\.?\s*/.test(block));
+        (/(?:^|\n|\s{2,}|\t)\s*\(c\)\.?\s*/.test(block));
 
       if (!hasUpperOptions && hasLowerOptions) {
         block = block
@@ -359,7 +358,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
           .replace(/(?:^|\n|\s{2,}|\t)\(d\)\.?\s*/g, '\n(D) ');
       }
 
-      const hasOptions = hasUpperOptions || (/(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block));
+      const hasOptions = hasUpperOptions || (/(?:^|\n|\s{2,}|\t)\s*\(A\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(block) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(block));
 
       const blockContent = (
         <React.Fragment key={`${subject}-${i}`}>
@@ -388,11 +387,13 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
             (() => {
               // Check for explicit option layout tag in this question block
               const tagMatches = Array.from(block.matchAll(layoutTagRegex));
-              let forcedLayout: '1x4' | '2x2' | '1x1' | null = null;
+              let forcedLayout: '1x4' | '1x3' | '2x2' | '1x1' | null = null;
               if (tagMatches.length > 0) {
                 const lastVal = tagMatches[tagMatches.length - 1][1].toLowerCase().replace('*', 'x');
                 if (lastVal === '1x4' || lastVal.startsWith('4col') || lastVal === 'horizontal') {
                   forcedLayout = '1x4';
+                } else if (lastVal === '1x3' || lastVal.startsWith('3col')) {
+                  forcedLayout = '1x3';
                 } else if (lastVal === '2x2' || lastVal.startsWith('2col')) {
                   forcedLayout = '2x2';
                 } else if (lastVal === '1x1' || lastVal === '4x1' || lastVal.startsWith('1col') || lastVal === 'vertical') {
@@ -406,13 +407,16 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const optCRegex = /(?:^|\n|\s+)\(C\)\s*(.*?)(?=\n\s*\(D\)|\s+\(D\)|\t\(D\)|$)/s;
               const optDRegex = /(?:^|\n|\s+)\(D\)\s*(.*)/s;
 
+              const hasOptionD = optMatchD || /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(block);
+
               // Find the TRUE option (A) split point (not inside math functions like trace(A) or f(A))
               let splitIndexA = -1;
               const aCandidates = Array.from(block.matchAll(/(?:^|\n|\s{2,}|\t)\s*\(A\)/g));
               for (const c of aCandidates) {
                 const idx = c.index! + c[0].indexOf('(A)');
                 const after = block.substring(idx);
-                if (/(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(after)) {
+                const hasBC = /(?:^|\n|\s{2,}|\t)\s*\(B\)/.test(after) && /(?:^|\n|\s{2,}|\t)\s*\(C\)/.test(after);
+                if (hasBC && (!hasOptionD || /(?:^|\n|\s{2,}|\t)\s*\(D\)/.test(after))) {
                   splitIndexA = idx;
                   break;
                 }
@@ -427,7 +431,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const matchA = optionsText.match(optARegex);
               const matchB = optionsText.match(optBRegex);
               const matchC = optionsText.match(optCRegex);
-              const matchD = optionsText.match(optDRegex);
+              const matchD = hasOptionD ? optionsText.match(optDRegex) : null;
 
               const balanceOptionDollars = (s: string) => {
                 if (!s) return s;
@@ -447,7 +451,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const optA = balanceOptionDollars(matchA ? matchA[1].replace(layoutTagRegex, '').trim() : '');
               const optB = balanceOptionDollars(matchB ? matchB[1].replace(layoutTagRegex, '').trim() : '');
               const optC = balanceOptionDollars(matchC ? matchC[1].replace(layoutTagRegex, '').trim() : '');
-              const optD = balanceOptionDollars(matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '');
+              const optD = hasOptionD ? balanceOptionDollars(matchD ? matchD[1].replace(layoutTagRegex, '').trim() : '') : '';
               const estimateVisualLength = (text: string): number => {
                 if (!text) return 0;
                 let s = text.trim();
@@ -479,7 +483,7 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 estimateVisualLength(optA),
                 estimateVisualLength(optB),
                 estimateVisualLength(optC),
-                estimateVisualLength(optD)
+                hasOptionD ? estimateVisualLength(optD) : 0
               );
 
               // Check if options contain tall/bulky math notation that requires extra vertical space (fractions, roots, matrices)
@@ -498,6 +502,17 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 : fontSize === 'xlarge'
                 ? 6
                 : 8;
+              const singleLine3Limit = isDoubleColumn
+                ? 5
+                : hasTallMath
+                ? 6
+                : fontSize === 'small'
+                ? 16
+                : fontSize === 'large'
+                ? 11
+                : fontSize === 'xlarge'
+                ? 9
+                : 14;
               const twoByTwoLimit = isDoubleColumn
                 ? fontSize === 'small'
                   ? 18
@@ -515,15 +530,20 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                 : 44;
 
               let optionsLayout = '';
-              if (forcedLayout === '1x4') {
-                optionsLayout = 'grid grid-cols-4 w-auto gap-x-4 gap-y-1';
+              if (forcedLayout === '1x4' || forcedLayout === '1x3') {
+                optionsLayout = hasOptionD && forcedLayout === '1x4'
+                  ? 'grid grid-cols-4 w-auto gap-x-4 gap-y-1'
+                  : 'grid grid-cols-3 w-auto gap-x-4 gap-y-1';
               } else if (forcedLayout === '2x2') {
                 optionsLayout = 'grid grid-cols-2 w-auto gap-x-6 gap-y-1';
               } else if (forcedLayout === '1x1') {
                 optionsLayout = 'flex flex-col w-auto gap-1';
               } else {
-                if (maxLen <= singleLineLimit) {
-                  optionsLayout = 'grid grid-cols-4 w-auto gap-x-4 gap-y-1';
+                const lineThreshold = hasOptionD ? singleLineLimit : singleLine3Limit;
+                if (maxLen <= lineThreshold) {
+                  optionsLayout = hasOptionD
+                    ? 'grid grid-cols-4 w-auto gap-x-4 gap-y-1'
+                    : 'grid grid-cols-3 w-auto gap-x-4 gap-y-1';
                 } else if (maxLen <= twoByTwoLimit) {
                   optionsLayout = 'grid grid-cols-2 w-auto gap-x-6 gap-y-1';
                 } else {
@@ -549,7 +569,9 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
                     <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(A)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optA) }} /></div>
                     <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(B)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optB) }} /></div>
                     <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(C)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optC) }} /></div>
-                    <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                    {hasOptionD && (
+                      <div className="question-option-item flex items-start min-w-0 whitespace-pre-wrap"><span className="mr-1.5 font-medium flex-shrink-0">(D)</span> <span className="flex-1 min-w-0 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderLatex(optD) }} /></div>
+                    )}
                   </div>
                 </div>
               );

@@ -46,6 +46,7 @@ export const DashboardPage: React.FC = () => {
 
   const endpoint = roleMap[user?.role?.toLowerCase() || ''] || 'admin';
   const { selectedYear } = useAcademicYear();
+  const dashboardCacheKey = `jy_dashboard_cache_${endpoint}_${selectedYear || 'all'}`;
 
   const { data, isLoading: loading } = useQuery({
     queryKey: ['dashboard', endpoint, selectedYear],
@@ -53,10 +54,23 @@ export const DashboardPage: React.FC = () => {
       const res = await api.get(`/api/dashboard/${endpoint}`, {
         params: { academicYear: selectedYear }
       });
-      return res.data || res;
+      const payload = res.data || res;
+      try {
+        localStorage.setItem(dashboardCacheKey, JSON.stringify(payload));
+      } catch {}
+      return payload;
     },
+    initialData: () => {
+      try {
+        const cached = localStorage.getItem(dashboardCacheKey);
+        return cached ? JSON.parse(cached) : undefined;
+      } catch {
+        return undefined;
+      }
+    },
+    initialDataUpdatedAt: 0, // Immediately render cached dashboard while background refresh updates seamlessly
     enabled: !!user && user.role !== 'ACCOUNTANT',
-    staleTime: 1000 * 30, // 30 seconds cache
+    staleTime: 1000 * 60 * 2, // 2 minutes fresh cache
     refetchOnWindowFocus: true,
   });
 

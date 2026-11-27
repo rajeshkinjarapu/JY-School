@@ -36,7 +36,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return null;
     }
   });
-  const [isLoading, setIsLoading] = useState(true);
+  // Unblock UI immediately when cached user + token exist; refresh profile silently in background
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    try {
+      return !(localStorage.getItem('accessToken') && localStorage.getItem('user'));
+    } catch {
+      return true;
+    }
+  });
 
   const fetchUser = async () => {
     try {

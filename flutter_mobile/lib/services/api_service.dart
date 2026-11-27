@@ -836,6 +836,20 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>?> getCachedResponse(String endpoint) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedStr = prefs.getString('cache_$endpoint');
+      if (cachedStr == null || cachedStr.isEmpty) return null;
+      final dynamic decoded = jsonDecode(cachedStr);
+      if (decoded is Map || decoded is List) {
+        final data = decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded;
+        return {'success': true, 'data': data, 'isCached': true};
+      }
+    } catch (_) {}
+    return null;
+  }
+
   static Future<Map<String, dynamic>> _performGet(String endpoint, String errorMsg) async {
     try {
       final token = await getToken();
@@ -845,7 +859,7 @@ class ApiService {
         final response = await http.get(
           Uri.parse('$baseUrl$endpoint'),
           headers: _getHeaders(token: token),
-        );
+        ).timeout(const Duration(seconds: 15));
 
         final dynamic decoded = jsonDecode(response.body);
         if (response.statusCode == 200 || response.statusCode == 201) {
