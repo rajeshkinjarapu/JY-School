@@ -15,6 +15,7 @@ import {
   Upload, Trash2, Edit3, ImagePlus, CheckCircle
 } from 'lucide-react';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
+import { PageHeader } from '../../components/UI/PageHeader';
 import { getPhotoUrl } from '../../utils/photo';
 
 interface StudentBirthday {
@@ -515,159 +516,196 @@ export const StudentBirthdayPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F0F4FA] p-3 sm:p-5 lg:p-7 space-y-5 animate-fade-in pb-16">
-      {/* ── 1. Top Header Banner ── */}
-      <div className="relative overflow-hidden rounded-[26px] bg-gradient-to-r from-pink-600 via-rose-600 to-indigo-700 p-5 sm:p-7 text-white shadow-lg shadow-pink-600/20">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 right-40 w-60 h-60 bg-pink-400/20 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <Link
-              to="/dashboard"
-              className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md flex items-center justify-center text-white transition-all shadow-inner shrink-0"
-              title="Back to Dashboard"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div className="p-2.5 rounded-2xl bg-white/20 backdrop-blur-md border border-white/30 shadow-inner">
-              <Cake className="w-7 h-7 text-white animate-bounce" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-black tracking-tight leading-tight">
-                  Student Birthdays & Celebrations
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/25 text-white text-[11px] font-black uppercase tracking-wider backdrop-blur-sm border border-white/30">
-                  Live Hub
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-
-
+    <div className="flex flex-col h-full bg-[#F4F7FC] overflow-hidden">
+      {/* ── 1. Standard Unified Top Page Header (Matches All Other Pages) ── */}
+      <PageHeader
+        title="Student Birthdays"
+        icon={<Cake className="w-5 h-5 text-white" />}
+        action={
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handlePrintAssemblySheet}
-              className="px-4 py-2 rounded-xl bg-white text-pink-700 hover:bg-pink-50 font-black text-xs shadow-md transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-xl bg-white text-[#1E1B4B] hover:bg-indigo-50 font-extrabold text-xs shadow-xs transition-all flex items-center gap-1.5 active:scale-95 cursor-pointer"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-3.5 h-3.5 text-indigo-600" />
               <span>Assembly List</span>
             </button>
 
             <button
               onClick={() => setIsTemplateModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white font-bold text-xs border border-white/30 transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white font-bold text-xs border border-white/25 transition-all flex items-center gap-1.5 cursor-pointer"
               title="Customize WhatsApp Wish Message"
             >
-              <Settings2 className="w-4 h-4" />
+              <Settings2 className="w-3.5 h-3.5" />
               <span>Wish Template</span>
             </button>
 
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className="p-2 rounded-xl bg-white/20 hover:bg-white/30 backdrop-blur-md text-white transition-all border border-white/30 cursor-pointer"
+              className="p-1.5 rounded-xl bg-white/15 hover:bg-white/25 backdrop-blur-md text-white transition-all border border-white/25 cursor-pointer"
               title="Refresh Birthdays"
             >
               <RefreshCw className={`w-4 h-4 ${isFetching ? 'animate-spin' : ''}`} />
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      {/* ── 2. Top KPI Metric Cards ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* ── Scrollable Body Content (Dashboard Soft Pastel Theme) ── */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 space-y-5">
+
+      {/* ── 2. Top KPI Metric Cards (Dashboard Soft Pastel Gradient Style) ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-3.5">
         {/* Card 1: Today */}
-        <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-sm border border-pink-100/80 hover:shadow-md transition-all group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-pink-600">Today's Birthdays</span>
-            <div className="w-8 h-8 rounded-lg bg-pink-100 text-pink-600 flex items-center justify-center">
-              <PartyPopper className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => setActiveTab('today')}
+          className="text-left relative overflow-hidden rounded-[20px] px-3.5 py-3.5 sm:py-4 border bg-gradient-to-br from-[#FFEBF3] to-[#FFD0E4] border-[#FFBDDA] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group cursor-pointer"
+        >
+          <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
+          <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-[#EC4899] to-[#DB2777] flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <PartyPopper className="w-4 h-4 xl:w-5 xl:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
+                Today&apos;s Birthdays
+              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="text-lg sm:text-xl lg:text-[22px] font-black text-[#9D174D] tracking-tight leading-tight">
+                  {stats.todayCount}
+                </p>
+                {stats.todayCount > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-[#DB2777] text-white text-[9px] font-black">
+                    Live
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex items-baseline gap-2">
-            <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{stats.todayCount}</p>
-            {stats.todayCount > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-pink-500 text-white text-[10px] font-black animate-pulse">
-                Celebrate 🎉
-              </span>
-            )}
+          <div className="relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center text-[#DB2777] group-hover:translate-x-0.5 transition-all shrink-0">
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
           </div>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">Celebrating today</p>
-        </div>
+        </button>
 
         {/* Card 2: Tomorrow */}
-        <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-sm border border-rose-100/80 hover:shadow-md transition-all group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-rose-600">Tomorrow</span>
-            <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center">
-              <Clock className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => setActiveTab('upcoming')}
+          className="text-left relative overflow-hidden rounded-[20px] px-3.5 py-3.5 sm:py-4 border bg-gradient-to-br from-[#FFEFEF] to-[#FFD2D7] border-[#FFC0C7] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group cursor-pointer"
+        >
+          <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
+          <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-[#F43F5E] to-[#E11D48] flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <Clock className="w-4 h-4 xl:w-5 xl:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
+                Tomorrow
+              </p>
+              <p className="text-lg sm:text-xl lg:text-[22px] font-black text-[#991B1B] tracking-tight leading-tight mt-0.5">
+                {stats.tomorrowCount}
+              </p>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{stats.tomorrowCount}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">Ready for tomorrow</p>
-        </div>
+          <div className="relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center text-[#E11D48] group-hover:translate-x-0.5 transition-all shrink-0">
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
+          </div>
+        </button>
 
-        {/* Card 3: Next 7 Days */}
-        <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-sm border border-amber-100/80 hover:shadow-md transition-all group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-600">This Week</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-              <Calendar className="w-4 h-4" />
+        {/* Card 3: This Week */}
+        <button
+          type="button"
+          onClick={() => setActiveTab('upcoming')}
+          className="text-left relative overflow-hidden rounded-[20px] px-3.5 py-3.5 sm:py-4 border bg-gradient-to-br from-[#FFF6E5] to-[#FFE4B8] border-[#FAD79B] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group cursor-pointer"
+        >
+          <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
+          <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#D97706] flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <Calendar className="w-4 h-4 xl:w-5 xl:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
+                This Week
+              </p>
+              <p className="text-lg sm:text-xl lg:text-[22px] font-black text-[#9A3412] tracking-tight leading-tight mt-0.5">
+                {stats.upcomingWeekCount}
+              </p>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{stats.upcomingWeekCount}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">Next 7 days forecast</p>
-        </div>
+          <div className="relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center text-[#D97706] group-hover:translate-x-0.5 transition-all shrink-0">
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
+          </div>
+        </button>
 
         {/* Card 4: This Month */}
-        <div className="relative overflow-hidden rounded-[22px] bg-white p-4 shadow-sm border border-indigo-100/80 hover:shadow-md transition-all group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-indigo-600">This Month</span>
-            <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-              <Gift className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => setActiveTab('calendar')}
+          className="text-left relative overflow-hidden rounded-[20px] px-3.5 py-3.5 sm:py-4 border bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF] border-[#CEC0FF] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group cursor-pointer"
+        >
+          <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
+          <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <Gift className="w-4 h-4 xl:w-5 xl:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
+                {MONTH_NAMES[new Date().getMonth()]}
+              </p>
+              <p className="text-lg sm:text-xl lg:text-[22px] font-black text-slate-900 tracking-tight leading-tight mt-0.5">
+                {stats.monthCount}
+              </p>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{stats.monthCount}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">{MONTH_NAMES[new Date().getMonth()]}</p>
-        </div>
+          <div className="relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center text-[#6D28D9] group-hover:translate-x-0.5 transition-all shrink-0">
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
+          </div>
+        </button>
 
         {/* Card 5: Total Registered */}
-        <div className="col-span-2 sm:col-span-2 lg:col-span-1 relative overflow-hidden rounded-[22px] bg-white p-4 shadow-sm border border-emerald-100/80 hover:shadow-md transition-all group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl group-hover:scale-125 transition-transform" />
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-emerald-600">DOB Registered</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <User className="w-4 h-4" />
+        <button
+          type="button"
+          onClick={() => setActiveTab('directory')}
+          className="col-span-2 sm:col-span-1 text-left relative overflow-hidden rounded-[20px] px-3.5 py-3.5 sm:py-4 border bg-gradient-to-br from-[#E5FAEF] to-[#C2F2D9] border-[#ACEAD0] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group cursor-pointer"
+        >
+          <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
+          <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+              <User className="w-4 h-4 xl:w-5 xl:h-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
+                DOB Registered
+              </p>
+              <p className="text-lg sm:text-xl lg:text-[22px] font-black text-slate-900 tracking-tight leading-tight mt-0.5">
+                {stats.totalRegistered}
+              </p>
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">{stats.totalRegistered}</p>
-          <p className="text-[10px] sm:text-xs text-slate-400 font-medium mt-1">Active students with DOB</p>
-        </div>
+          <div className="relative z-10 w-6 h-6 rounded-full bg-white/95 shadow-xs flex items-center justify-center text-[#059669] group-hover:translate-x-0.5 transition-all shrink-0">
+            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
+          </div>
+        </button>
       </div>
 
-      {/* ── 3. Class Filter & Tab Switcher Bar ── */}
-      <div className="bg-white rounded-[22px] p-4 sm:p-5 shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* ── 3. Class Filter & Tab Switcher Bar (Dashboard Card Style) ── */}
+      <div className="bg-white rounded-[20px] p-3 sm:p-3.5 shadow-[0_8px_24px_-6px_rgba(79,70,229,0.08)] border border-indigo-100/90 flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Navigation Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl">
+        <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F3F5FC] rounded-2xl">
           <button
             onClick={() => setActiveTab('today')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'today'
-                ? 'bg-white text-pink-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#4F46E5] to-[#6D28D9] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             <PartyPopper className="w-3.5 h-3.5" />
-            <span>Today's Celebrations</span>
-            <span className={`px-2 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'today' ? 'bg-pink-100 text-pink-700' : 'bg-slate-200 text-slate-700'
+            <span>Today&apos;s Celebrations</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+              activeTab === 'today' ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-700'
             }`}>
               {stats.todayCount}
             </span>
@@ -675,16 +713,16 @@ export const StudentBirthdayPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('upcoming')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'upcoming'
-                ? 'bg-white text-indigo-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#4F46E5] to-[#6D28D9] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
             <span>Upcoming Birthdays</span>
-            <span className={`px-2 py-0.2 rounded-full text-[10px] font-black ${
-              activeTab === 'upcoming' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-200 text-slate-700'
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+              activeTab === 'upcoming' ? 'bg-white/25 text-white' : 'bg-indigo-100 text-indigo-700'
             }`}>
               {upcomingList.length}
             </span>
@@ -692,10 +730,10 @@ export const StudentBirthdayPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('calendar')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'calendar'
-                ? 'bg-white text-purple-700 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#4F46E5] to-[#6D28D9] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             <Calendar className="w-3.5 h-3.5" />
@@ -704,10 +742,10 @@ export const StudentBirthdayPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('directory')}
-            className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer flex items-center gap-2 ${
+            className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'directory'
-                ? 'bg-white text-slate-900 shadow-sm'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-r from-[#4F46E5] to-[#6D28D9] text-white shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
             }`}
           >
             <Filter className="w-3.5 h-3.5" />
@@ -721,7 +759,7 @@ export const StudentBirthdayPage: React.FC = () => {
           <select
             value={selectedClassId}
             onChange={(e) => setSelectedClassId(e.target.value)}
-            className="px-3.5 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-pink-500 cursor-pointer min-w-[150px]"
+            className="px-3.5 py-2 rounded-xl bg-[#F8FAFF] hover:bg-indigo-50/70 border border-indigo-100 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer min-w-[150px]"
           >
             <option value="">All Classes</option>
             {(classesData || []).map((c: any) => (
@@ -769,125 +807,124 @@ export const StudentBirthdayPage: React.FC = () => {
                     return (
                       <div
                         key={student.id}
-                        className="relative overflow-hidden bg-gradient-to-br from-white via-pink-50/20 to-rose-50/30 rounded-[26px] p-5 shadow-sm border-2 border-pink-200/80 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between"
+                        className="relative overflow-hidden bg-white rounded-[22px] shadow-[0_8px_24px_-6px_rgba(79,70,229,0.10)] border border-indigo-100/90 hover:shadow-[0_14px_30px_-6px_rgba(79,70,229,0.16)] hover:-translate-y-0.5 transition-all duration-300 group flex flex-col justify-between"
                       >
-                        {/* Ambient Glow */}
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-pink-400/10 rounded-full blur-2xl group-hover:scale-150 transition-transform pointer-events-none" />
-
-                        {/* Top Banner Tag */}
-                        <div className="flex items-center justify-between mb-4">
-                          <span className="px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-sm flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>Today's Birthday! 🎂</span>
+                        {/* Dashboard Light Pastel Header Strip */}
+                        <div className="bg-gradient-to-r from-[#EEF2FF] via-[#F5F3FF] to-[#FCE7F3] px-4 py-2.5 border-b border-indigo-100/80 flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-[#EC4899] via-[#8B5CF6] to-[#4F46E5] text-white shadow-xs flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3" />
+                            <span>Today&apos;s Birthday</span>
                           </span>
-                          <span className="text-xs font-extrabold text-pink-700 bg-pink-100/80 px-2.5 py-0.5 rounded-lg border border-pink-200">
-                            Turning {student.ageTurning} Years
+                          <span className="text-[11px] font-extrabold text-indigo-700 bg-white px-2.5 py-0.5 rounded-full border border-indigo-200/80 shadow-2xs">
+                            Turning {student.ageTurning} Yrs
                           </span>
                         </div>
 
-                        {/* Student Details */}
-                        <div className="flex items-center gap-4 mb-4">
-                          <StudentBirthdayAvatar
-                            photoUrl={student.photoUrl}
-                            name={student.name}
-                            sizeClass="w-16 h-16 rounded-2xl border-2 border-pink-300 shadow-sm"
-                            badge="JY"
-                            textSize="text-xl"
-                          />
+                        <div className="p-4 flex-1 flex flex-col justify-between">
+                          {/* Student Details */}
+                          <div className="flex items-center gap-3.5 mb-3.5">
+                            <StudentBirthdayAvatar
+                              photoUrl={student.photoUrl}
+                              name={student.name}
+                              sizeClass="w-14 h-14 rounded-2xl border-2 border-indigo-200 shadow-xs"
+                              badge="JY"
+                              textSize="text-lg"
+                            />
 
-                          <div className="min-w-0 flex-1">
-                            <h4 className="text-base font-black text-slate-900 leading-tight truncate">
-                              {student.name}
-                            </h4>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-200/60">
-                                {student.className}
-                              </span>
-                              <span className="text-[11px] text-slate-400 font-bold">
-                                ID: {student.rollNo}
-                              </span>
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-sm sm:text-base font-black text-[#1E1B4B] leading-tight truncate">
+                                {student.name}
+                              </h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="px-2 py-0.5 rounded-md bg-[#EEF2FF] text-indigo-700 text-[11px] font-extrabold border border-indigo-200/70">
+                                  {student.className}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-bold font-mono">
+                                  ID: {student.rollNo}
+                                </span>
+                              </div>
+                              {student.bloodGroup && (
+                                <span className="inline-block mt-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">
+                                  Blood: {student.bloodGroup}
+                                </span>
+                              )}
                             </div>
-                            {student.bloodGroup && (
-                              <span className="inline-block mt-1 text-[10px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.2 rounded border border-rose-200">
-                                Blood: {student.bloodGroup}
-                              </span>
-                            )}
                           </div>
-                        </div>
 
-                        {/* Parent Info */}
-                        <div className="bg-white/80 rounded-xl p-2.5 border border-pink-100/60 text-xs mb-3 space-y-1">
-                          <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] font-medium">Father / Mother:</span>
-                            <span className="font-bold text-slate-800">{student.fatherName || student.motherName || 'Parent'}</span>
-                          </div>
-                          <div className="flex items-center justify-between text-slate-600">
-                            <span className="text-[11px] font-medium">Mobile:</span>
-                            <span className="font-bold text-slate-800">{student.phone || student.fatherPhone || student.motherPhone || 'Not Available'}</span>
-                          </div>
-                        </div>
-
-                        {/* Mobile App Poster Status Indicator */}
-                        {student.birthdayPosterUrl ? (
-                          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 mb-3">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                              <span className="truncate">Mobile App Poster Active 🎉</span>
+                          {/* Parent Info */}
+                          <div className="bg-[#F8FAFF] rounded-xl p-2.5 border border-indigo-100/80 text-xs mb-3 space-y-1">
+                            <div className="flex items-center justify-between text-slate-600">
+                              <span className="text-[11px] font-medium">Father / Mother:</span>
+                              <span className="font-bold text-slate-800">{student.fatherName || student.motherName || 'Parent'}</span>
                             </div>
-                            <span className="text-[9px] uppercase tracking-wider font-black px-1.5 py-0.2 rounded bg-emerald-200/60 text-emerald-900">
-                              LIVE
-                            </span>
+                            <div className="flex items-center justify-between text-slate-600">
+                              <span className="text-[11px] font-medium">Mobile:</span>
+                              <span className="font-bold text-indigo-700">{student.phone || student.fatherPhone || student.motherPhone || 'Not Available'}</span>
+                            </div>
                           </div>
-                        ) : (
-                          <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-amber-50/80 border border-amber-200/80 text-[11px] font-medium text-amber-800 mb-3">
-                            <span className="truncate">No Custom Poster Uploaded</span>
-                            <span className="text-[9px] font-bold text-amber-600">Optional</span>
-                          </div>
-                        )}
 
-                        {/* Action Buttons: Wish WhatsApp & Download/Upload Poster */}
-                        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-pink-100">
-                          {/* 1-Click WhatsApp Wish */}
-                          <button
-                            onClick={() => handleSendWish(student)}
-                            className={`px-3 py-2.5 rounded-xl font-black text-xs shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                              isWishSent
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                                : 'bg-[#25D366] hover:bg-[#20ba59] text-white'
-                            }`}
-                          >
-                            <MessageCircle className="w-4 h-4" />
-                            <span>{isWishSent ? 'Wish Sent ✓' : 'Wish WhatsApp'}</span>
-                          </button>
-
-                          {/* Poster Action: Download/Manage or Upload */}
+                          {/* Mobile App Poster Status Indicator */}
                           {student.birthdayPosterUrl ? (
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => handleDownloadDirectPoster(student)}
-                                className="flex-1 px-2.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black text-xs shadow-md shadow-purple-600/20 transition-all flex items-center justify-center gap-1 cursor-pointer truncate"
-                                title="Download Active Poster"
-                              >
-                                <Download className="w-3.5 h-3.5" />
-                                <span className="truncate">Download</span>
-                              </button>
-                              <button
-                                onClick={() => handleOpenPosterModal(student)}
-                                className="px-2.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0"
-                                title="Manage / Change Poster"
-                              >
-                                <Edit3 className="w-3.5 h-3.5" />
-                              </button>
+                            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#ECFDF5] border border-[#BBF7D0] text-[11px] font-bold text-[#15803D] mb-3">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span className="truncate">Mobile App Poster Active</span>
+                              </div>
+                              <span className="text-[9px] uppercase tracking-wider font-black px-1.5 py-0.5 rounded bg-emerald-200/70 text-emerald-900">
+                                LIVE
+                              </span>
                             </div>
                           ) : (
-                            <button
-                              onClick={() => handleOpenPosterModal(student)}
-                              className="px-3 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white font-black text-xs shadow-md shadow-pink-600/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.02] active:scale-95"
-                            >
-                              <ImagePlus className="w-4 h-4" />
-                              <span>Upload Poster</span>
-                            </button>
+                            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#FFF6E5] border border-[#FAD79B] text-[11px] font-semibold text-[#9A3412] mb-3">
+                              <span className="truncate">No Custom Poster Uploaded</span>
+                              <span className="text-[9px] font-bold text-amber-700">Optional</span>
+                            </div>
                           )}
+
+                          {/* Action Buttons: Wish WhatsApp & Download/Upload Poster */}
+                          <div className="grid grid-cols-2 gap-2 pt-2.5 border-t border-indigo-100/80">
+                            {/* 1-Click WhatsApp Wish */}
+                            <button
+                              onClick={() => handleSendWish(student)}
+                              className={`px-3 py-2 rounded-xl font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                                isWishSent
+                                  ? 'bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0] hover:bg-emerald-100'
+                                  : 'bg-[#22C55E] hover:bg-[#16A34A] text-white'
+                              }`}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5" />
+                              <span>{isWishSent ? 'Wish Sent' : 'Wish WhatsApp'}</span>
+                            </button>
+
+                            {/* Poster Action: Download/Manage or Upload */}
+                            {student.birthdayPosterUrl ? (
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => handleDownloadDirectPoster(student)}
+                                  className="flex-1 px-2.5 py-2 rounded-xl bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer truncate"
+                                  title="Download Active Poster"
+                                >
+                                  <Download className="w-3.5 h-3.5" />
+                                  <span className="truncate">Download</span>
+                                </button>
+                                <button
+                                  onClick={() => handleOpenPosterModal(student)}
+                                  className="px-2.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 font-black text-xs transition-all flex items-center justify-center cursor-pointer shrink-0"
+                                  title="Manage / Change Poster"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleOpenPosterModal(student)}
+                                className="px-3 py-2 rounded-xl bg-gradient-to-r from-[#4F46E5] via-[#6D28D9] to-[#7C3AED] hover:opacity-95 text-white font-extrabold text-xs shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                              >
+                                <ImagePlus className="w-3.5 h-3.5" />
+                                <span>Upload Poster</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -1152,18 +1189,18 @@ export const StudentBirthdayPage: React.FC = () => {
               </div>
 
               {/* Table */}
-              <div className="overflow-x-auto rounded-xl border border-slate-200/80">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-[#F8FAFC] text-[11px] font-black uppercase tracking-wider text-slate-500 border-b border-slate-200">
-                    <tr>
-                      <th className="py-3 px-4">Student</th>
-                      <th className="py-3 px-3">Class</th>
-                      <th className="py-3 px-3">Roll No</th>
-                      <th className="py-3 px-3">Date of Birth</th>
-                      <th className="py-3 px-3">Turning Age</th>
-                      <th className="py-3 px-3">Gender</th>
-                      <th className="py-3 px-3">Parent Contact</th>
-                      <th className="py-3 px-4 text-center">Action</th>
+              <div className="overflow-x-auto rounded-[18px] border border-[#DDD7F3] shadow-[0_8px_24px_-6px_rgba(91,33,182,0.08)]">
+                <table className="w-full text-left text-xs border-collapse student-grid-table">
+                  <thead>
+                    <tr className="bg-gradient-to-r from-[#5B21B6] via-[#6D28D9] to-[#7C3AED] !text-white text-[11px] font-extrabold uppercase tracking-wider">
+                      <th className="py-3 px-4 border-r border-white/20 !text-white">Student</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Class</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Roll No</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Date of Birth</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Turning Age</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Gender</th>
+                      <th className="py-3 px-3 border-r border-white/20 !text-white">Parent Contact</th>
+                      <th className="py-3 px-4 text-center !text-white">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -1807,6 +1844,7 @@ export const StudentBirthdayPage: React.FC = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

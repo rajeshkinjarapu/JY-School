@@ -44,6 +44,7 @@ export const StudentReportPrintPage: React.FC = () => {
   const initialClassId = searchParams.get('classId') || '';
   const printContainerRef = useRef<HTMLDivElement>(null);
   const previewWrapRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
   const { selectedYear } = useAcademicYear();
 
   // Data states
@@ -58,6 +59,8 @@ export const StudentReportPrintPage: React.FC = () => {
   const [previewZoom, setPreviewZoom] = useState<number>(0.78);
   const [autoFitZoom, setAutoFitZoom] = useState<boolean>(true);
   const [activePresetId, setActivePresetId] = useState<string>('preset_general');
+  const [customColWeights, setCustomColWeights] = useState<Record<string, number>>({});
+  const [activeResizeColId, setActiveResizeColId] = useState<string | null>(null);
 
   // Filters
   const [selectedClassId, setSelectedClassId] = useState<string>(initialClassId);
@@ -101,11 +104,11 @@ export const StudentReportPrintPage: React.FC = () => {
   // Master column definitions list
   const MASTER_COLUMNS: ColumnDef[] = useMemo(() => [
     // Basic & Identity
-    { id: 'sno', label: 'S.No', teluguLabel: 'Serial Number', category: 'basic', defaultSelected: true, widthPt: 14, align: 'center', getValue: (_, idx) => String(idx + 1) },
+    { id: 'sno', label: 'S.No', teluguLabel: 'Serial Number', category: 'basic', defaultSelected: true, widthPt: 13, align: 'center', getValue: (_, idx) => String(idx + 1) },
     { id: 'photo', label: 'Photo', teluguLabel: 'Passport Photo', category: 'basic', defaultSelected: false, widthPt: 22, align: 'center', getValue: (s) => s.user?.photoUrl || '' },
-    { id: 'rollNo', label: 'Student ID', teluguLabel: 'Roll No / ID', category: 'basic', defaultSelected: true, widthPt: 26, align: 'center', getValue: (s) => s.rollNo || s.studentId || '-' },
+    { id: 'rollNo', label: 'Student ID', teluguLabel: 'Roll No / ID', category: 'basic', defaultSelected: true, widthPt: 27, align: 'center', getValue: (s) => s.rollNo || s.studentId || '-' },
     { id: 'admissionNo', label: 'Admission No', teluguLabel: 'Admission Number', category: 'basic', defaultSelected: false, widthPt: 26, align: 'center', getValue: (s) => s.admissionNo || s.rollNo || '-' },
-    { id: 'name', label: 'Student Name', teluguLabel: 'Full Student Name', category: 'basic', defaultSelected: true, widthPt: 45, align: 'left', getValue: (s) => s.user?.name || s.name || '-' },
+    { id: 'name', label: 'Student Name', teluguLabel: 'Full Student Name', category: 'basic', defaultSelected: true, widthPt: 48, align: 'left', getValue: (s) => s.user?.name || s.name || '-' },
     { id: 'gender', label: 'Gender', teluguLabel: 'Boy / Girl', category: 'basic', defaultSelected: true, widthPt: 18, align: 'center', getValue: (s) => s.gender ? (s.gender.toLowerCase() === 'female' ? 'Girl' : 'Boy') : '-' },
     { id: 'dob', label: 'Date of Birth', teluguLabel: 'Birth Date (DD/MM/YYYY)', category: 'basic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.dob ? new Date(s.dob).toLocaleDateString('en-GB') : '-' },
     { id: 'age', label: 'Age', teluguLabel: 'Calculated Age', category: 'basic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => calculateAge(s.dob) },
@@ -118,15 +121,15 @@ export const StudentReportPrintPage: React.FC = () => {
     { id: 'apaarId', label: 'APAAR ID (One Nation)', teluguLabel: 'One Nation One ID', category: 'govt', defaultSelected: false, widthPt: 32, align: 'center', getValue: (s) => s.apaarId || '-' },
 
     // Academic & Institutional
-    { id: 'className', label: 'Class & Section', teluguLabel: 'Grade & Section', category: 'academic', defaultSelected: true, widthPt: 24, align: 'center', getValue: (s) => s.class ? `${s.class.name}${s.class.section ? ` - ${s.class.section}` : ''}` : '-' },
+    { id: 'className', label: 'Class & Section', teluguLabel: 'Grade & Section', category: 'academic', defaultSelected: true, widthPt: 30, align: 'center', getValue: (s) => s.class ? `${s.class.name}${s.class.section ? ` - ${s.class.section}` : ''}` : '-' },
     { id: 'academicYear', label: 'Academic Year', teluguLabel: 'Session Year', category: 'academic', defaultSelected: false, widthPt: 24, align: 'center', getValue: (s) => s.class?.academicYear || selectedYear || '2026-2027' },
     { id: 'admissionDate', label: 'Admission Date', teluguLabel: 'Date of Joining', category: 'academic', defaultSelected: false, widthPt: 25, align: 'center', getValue: (s) => s.admissionDate ? new Date(s.admissionDate).toLocaleDateString('en-GB') : '-' },
     { id: 'medium', label: 'Medium', teluguLabel: 'Medium of Instruction', category: 'academic', defaultSelected: false, widthPt: 20, align: 'center', getValue: () => 'English' },
     { id: 'status', label: 'Status', teluguLabel: 'Active / Inactive', category: 'academic', defaultSelected: false, widthPt: 18, align: 'center', getValue: (s) => s.user?.isActive !== false ? 'Active' : 'Inactive' },
 
     // Parents & Family
-    { id: 'fatherName', label: 'Father Name', teluguLabel: "Father's Full Name", category: 'family', defaultSelected: true, widthPt: 40, align: 'left', getValue: (s) => s.fatherName || '-' },
-    { id: 'fatherPhone', label: "Father's Phone", teluguLabel: "Father's Mobile No", category: 'family', defaultSelected: true, widthPt: 28, align: 'center', getValue: (s) => s.fatherPhone || s.user?.phone || '-' },
+    { id: 'fatherName', label: 'Father Name', teluguLabel: "Father's Full Name", category: 'family', defaultSelected: true, widthPt: 44, align: 'left', getValue: (s) => s.fatherName || '-' },
+    { id: 'fatherPhone', label: "Father's Phone", teluguLabel: "Father's Mobile No", category: 'family', defaultSelected: true, widthPt: 30, align: 'center', getValue: (s) => s.fatherPhone || s.user?.phone || '-' },
     { id: 'fatherAadhar', label: "Father's Aadhaar", teluguLabel: "Father's Aadhaar No", category: 'family', defaultSelected: false, widthPt: 35, align: 'center', getValue: (s) => formatAadhaar(s.fatherAadhar) },
     { id: 'motherName', label: 'Mother Name', teluguLabel: "Mother's Full Name", category: 'family', defaultSelected: false, widthPt: 38, align: 'left', getValue: (s) => s.motherName || '-' },
     { id: 'motherPhone', label: "Mother's Phone", teluguLabel: "Mother's Mobile No", category: 'family', defaultSelected: false, widthPt: 28, align: 'center', getValue: (s) => s.motherPhone || '-' },
@@ -403,6 +406,73 @@ export const StudentReportPrintPage: React.FC = () => {
     return [...standardCols, ...customCols];
   }, [MASTER_COLUMNS, selectedColIds, customBlankCols]);
 
+  // Resolved normalized percentage widths per active column (always sums to 100%)
+  const resolvedWidthsPct = useMemo(() => {
+    const raw = activeColumns.map(c => ({
+      id: c.id,
+      w: customColWeights[c.id] ?? c.widthPt,
+    }));
+    const totalW = raw.reduce((sum, item) => sum + item.w, 0) || 1;
+    const map: Record<string, number> = {};
+    raw.forEach(item => {
+      map[item.id] = (item.w / totalW) * 100;
+    });
+    return map;
+  }, [activeColumns, customColWeights]);
+
+  // Interactive column boundary drag-to-resize (Print Preview Margin Splitter UX)
+  const startColumnResize = (
+    e: React.MouseEvent | React.TouchEvent,
+    colIdx: number
+  ) => {
+    if (colIdx < 0 || colIdx >= activeColumns.length - 1) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const startClientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const tableWidthScreenPx = tableRef.current?.getBoundingClientRect().width || (pagePixelWidth - 48);
+    const snapshotPcts: Record<string, number> = { ...resolvedWidthsPct };
+    const leftId = activeColumns[colIdx].id;
+    const rightId = activeColumns[colIdx + 1].id;
+    const leftStartPct = snapshotPcts[leftId] ?? 10;
+    const rightStartPct = snapshotPcts[rightId] ?? 10;
+    const pairTotal = leftStartPct + rightStartPct;
+    const minPct = Math.min(4.2, pairTotal * 0.25);
+
+    setActiveResizeColId(leftId);
+
+    const onMove = (moveEvent: MouseEvent | TouchEvent) => {
+      const currX = 'touches' in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const deltaPct = ((currX - startClientX) / tableWidthScreenPx) * 100;
+      const newLeft = Math.max(minPct, Math.min(pairTotal - minPct, leftStartPct + deltaPct));
+      const newRight = pairTotal - newLeft;
+
+      setCustomColWeights({
+        ...snapshotPcts,
+        [leftId]: newLeft,
+        [rightId]: newRight,
+      });
+    };
+
+    const onEnd = () => {
+      setActiveResizeColId(null);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  };
+
+  const resetColumnWidths = () => {
+    setCustomColWeights({});
+    toast.success('Column widths reset to default');
+  };
+
   // Toggle Column Selection
   const toggleColumn = (colId: string) => {
     if (selectedColIds.includes(colId)) {
@@ -612,8 +682,12 @@ export const StudentReportPrintPage: React.FC = () => {
             }
             table {
               width: 100% !important;
+              table-layout: fixed !important;
               border-collapse: collapse !important;
               margin-top: 4px !important;
+            }
+            .no-print-handle {
+              display: none !important;
             }
             thead {
               display: table-header-group !important;
@@ -735,10 +809,12 @@ export const StudentReportPrintPage: React.FC = () => {
 
       const headers = activeColumns.map(c => c.label);
       const colStyles: any = {};
+      const usablePdfWidthMm = pageWidth - 20;
       activeColumns.forEach((c, idx) => {
+        const pct = resolvedWidthsPct[c.id] ?? 10;
         colStyles[idx] = {
           halign: c.align || 'left',
-          cellWidth: c.widthPt || 'auto',
+          cellWidth: Number(((pct / 100) * usablePdfWidthMm).toFixed(2)),
           fontSize: fontSize === 'sm' ? 7.5 : fontSize === 'lg' ? 9.5 : 8.5
         };
       });
@@ -1548,9 +1624,23 @@ export const StudentReportPrintPage: React.FC = () => {
               <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-200 text-[11px] font-bold text-indigo-700">
                 {orientation === 'landscape' ? 'A4 Landscape' : 'A4 Portrait'} • {rowHeightMm}mm • {selectedClassLabel}
               </span>
+              <span className="hidden xl:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700">
+                ↔ Drag column borders to resize
+              </span>
             </div>
 
             <div className="flex items-center gap-1.5 shrink-0">
+              {Object.keys(customColWeights).length > 0 && (
+                <button
+                  type="button"
+                  onClick={resetColumnWidths}
+                  className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Reset Column Widths"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset Cols</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -1651,32 +1741,66 @@ export const StudentReportPrintPage: React.FC = () => {
                     <p className="text-xs text-slate-400 mt-1">Try clearing filters or selecting another class.</p>
                   </div>
                 ) : (
-                  <table className="custom-report-table w-full border-collapse text-left border border-slate-300">
+                  <table
+                    ref={tableRef}
+                    className={`custom-report-table w-full table-fixed border-collapse text-left border border-slate-300 ${activeResizeColId ? 'select-none' : ''}`}
+                  >
+                    <colgroup>
+                      {activeColumns.map((col) => (
+                        <col
+                          key={col.id}
+                          style={{ width: `${(resolvedWidthsPct[col.id] ?? 10).toFixed(2)}%` }}
+                        />
+                      ))}
+                    </colgroup>
                     <thead>
                       <tr
                         className={`${currentTheme.headerBg} border border-slate-400/50 print:text-white`}
                         style={{ backgroundColor: currentTheme.headerHex }}
                       >
-                        {activeColumns.map((col, idx) => (
-                          <th
-                            key={idx}
-                            className={`${paddingXClass} py-2.5 font-black border border-slate-400/40 text-white whitespace-nowrap ${
-                              col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
-                            } ${fontSizeClass}`}
-                            style={{
-                              minWidth: col.id === 'name' ? '125px' : undefined,
-                              color: '#ffffff',
-                              WebkitTextFillColor: '#ffffff'
-                            }}
-                          >
-                            <span
-                              className="font-black tracking-wider uppercase text-white whitespace-nowrap"
-                              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                        {activeColumns.map((col, idx) => {
+                          const isDraggingThis = activeResizeColId === col.id;
+                          return (
+                            <th
+                              key={col.id || idx}
+                              className={`relative ${paddingXClass} py-2.5 font-black border border-slate-400/40 text-white whitespace-nowrap overflow-hidden ${
+                                isDraggingThis ? 'border-r-2 border-r-amber-300' : ''
+                              } ${
+                                col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
+                              } ${fontSizeClass}`}
+                              style={{
+                                color: '#ffffff',
+                                WebkitTextFillColor: '#ffffff'
+                              }}
                             >
-                              {col.label}
-                            </span>
-                          </th>
-                        ))}
+                              <span
+                                className="block truncate font-black tracking-wider uppercase text-white whitespace-nowrap"
+                                style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
+                              >
+                                {col.label}
+                              </span>
+                              {idx < activeColumns.length - 1 && (
+                                <div
+                                  role="separator"
+                                  aria-orientation="vertical"
+                                  title="Drag left/right to resize column width (Double-click to reset)"
+                                  onMouseDown={(e) => startColumnResize(e, idx)}
+                                  onTouchStart={(e) => startColumnResize(e, idx)}
+                                  onDoubleClick={resetColumnWidths}
+                                  className="no-print-handle print:hidden group/resizer absolute top-0 right-0 bottom-0 w-2.5 cursor-col-resize z-30 flex items-center justify-end select-none"
+                                >
+                                  <span
+                                    className={`w-[3px] rounded-full transition-all duration-150 ${
+                                      isDraggingThis
+                                        ? 'h-full bg-amber-300 shadow-[0_0_8px_rgba(252,211,77,0.9)]'
+                                        : 'h-4 bg-white/40 group-hover/resizer:h-full group-hover/resizer:bg-amber-300'
+                                    }`}
+                                  />
+                                </div>
+                              )}
+                            </th>
+                          );
+                        })}
                       </tr>
                     </thead>
                     <tbody>
@@ -1692,12 +1816,13 @@ export const StudentReportPrintPage: React.FC = () => {
                             {activeColumns.map((col, colIdx) => {
                               const val = col.getValue(student, rowIdx);
                               const allowWrap = col.id === 'name' || col.id === 'address' || col.id === 'remarks';
-                              const wrapClass = allowWrap ? 'whitespace-normal' : 'whitespace-nowrap nowrap-cell';
+                              const wrapClass = allowWrap ? 'whitespace-normal break-words' : 'whitespace-nowrap nowrap-cell overflow-hidden text-ellipsis';
+                              const guideClass = activeResizeColId === col.id ? 'border-r-2 border-r-indigo-500' : '';
 
                               if (col.id === 'photo') {
                                 const photoUrl = getPhotoUrl(student.user?.photoUrl);
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${guideClass} ${paddingXClass} text-center whitespace-nowrap nowrap-cell overflow-hidden`}>
                                     <div className="w-8 h-9 rounded bg-slate-200 mx-auto overflow-hidden flex items-center justify-center border border-slate-300">
                                       {photoUrl ? (
                                         <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
@@ -1711,7 +1836,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'gender') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell ${fontSizeClass}`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${guideClass} ${paddingXClass} text-center whitespace-nowrap nowrap-cell overflow-hidden ${fontSizeClass}`}>
                                     {val === 'Boy' ? (
                                       <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100/90 text-blue-800 print:bg-transparent print:text-slate-900">
                                         Boy
@@ -1729,7 +1854,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'bloodGroup') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell ${fontSizeClass}`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${guideClass} ${paddingXClass} text-center whitespace-nowrap nowrap-cell overflow-hidden ${fontSizeClass}`}>
                                     {val !== '-' ? (
                                       <span className="inline-block px-1.5 py-0.5 rounded font-black text-rose-700 bg-rose-50 border border-rose-200/80 print:border-none print:bg-transparent print:text-slate-900">
                                         {val}
@@ -1741,7 +1866,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'attendanceBox') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${guideClass} ${paddingXClass} text-center whitespace-nowrap nowrap-cell overflow-hidden`}>
                                     <div className="w-5 h-5 mx-auto border-2 border-slate-400 rounded-md bg-white print:border-slate-800" />
                                   </td>
                                 );
@@ -1749,7 +1874,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'parentSignature' || col.id === 'studentSignature') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${guideClass} ${paddingXClass} text-center whitespace-nowrap nowrap-cell overflow-hidden`}>
                                     <div className="h-full flex items-center justify-center">
                                       <span className="text-[10px] text-slate-300 font-mono tracking-widest hidden print:inline">
                                         . . . . . . . . . .
@@ -1762,7 +1887,7 @@ export const StudentReportPrintPage: React.FC = () => {
                               return (
                                 <td
                                   key={colIdx}
-                                  className={`border border-slate-300 font-medium ${paddingXClass} ${fontSizeClass} ${wrapClass} ${
+                                  className={`border border-slate-300 ${guideClass} font-medium ${paddingXClass} ${fontSizeClass} ${wrapClass} ${
                                     col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
                                   } ${col.id === 'rollNo' || col.id === 'sno' ? 'font-mono font-bold text-slate-900' : 'text-slate-800'}`}
                                 >
