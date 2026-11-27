@@ -954,7 +954,7 @@ export const MCQPaperGeneratorPage = () => {
             payload.imageMimeType = aiImageMimeType;
           }
 
-          const response = await api.post('/api/questions/import-ai', payload);
+          const response = await api.post('/api/questions/import-ai', payload, { timeout: 90000 });
 
           const questions = response.data.questions || [];
 

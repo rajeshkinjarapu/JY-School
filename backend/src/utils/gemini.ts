@@ -21,6 +21,7 @@ export const GEMINI_CANDIDATE_MODELS: string[] = Array.from(
       'gemini-3.8-flash',
       'gemini-3.8-flash-lite',
       'gemini-2.5-flash',
+      'gemini-2.5-pro',
       'gemini-3.0-flash',
       'gemini-3-flash-preview',
     ].filter((m): m is string => Boolean(m && m.trim()))
@@ -33,6 +34,7 @@ export const generateGeminiContentWithFallback = async (
   params: { contents: any; config?: any }
 ) => {
   let lastError: any = null;
+  const failures: string[] = [];
   for (const modelName of GEMINI_CANDIDATE_MODELS) {
     try {
       const response = await client.models.generateContent({
@@ -45,10 +47,15 @@ export const generateGeminiContentWithFallback = async (
       }
     } catch (err: any) {
       lastError = err;
-      console.warn(`Gemini model ${modelName} failed, trying next candidate:`, err?.message || err);
+      const msg = err?.message || String(err);
+      failures.push(`${modelName}: ${msg}`);
+      console.warn(`Gemini model ${modelName} failed, trying next candidate:`, msg);
     }
   }
-  throw lastError || new Error('All Gemini API models failed to respond');
+  const summaryError: any = new Error(
+    `All Gemini models failed (${GEMINI_CANDIDATE_MODELS.join(', ')}). Last error: ${lastError?.message || failures.join(' | ')}`
+  );
+  throw summaryError;
 };
 
 const CANDIDATE_MODELS = GEMINI_CANDIDATE_MODELS;

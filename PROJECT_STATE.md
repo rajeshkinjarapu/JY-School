@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - VPS `git pull` Dirty Prisma Client & Gemini Diagnostics Fix (November 27, 2026)
+- **సమస్య:** [gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts) అప్‌డేట్ చేసిన తర్వాత కూడా MCQ Paper Generator లో `models/gemini-2.0-flash` ఎర్రర్ మళ్ళీ రావడానికి కారణం — VPS లో `prisma generate` వల్ల Git లో ట్రాక్ అవుతున్న `backend/prisma/generated/local-client/` ఫైల్స్ మారిపోయి `git pull` ఆగిపోవడం (పాత `dist/utils/gemini.js` నే మళ్ళీ రన్ అవ్వడం).
+- **చేసిన మార్పులు:**
+  - [gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts): `gemini-3.8-flash`, `gemini-3.8-flash-lite`, `gemini-2.5-flash`, `gemini-2.5-pro` లతో పాటు ప్రయత్నించిన అన్ని మోడళ్ల వివరాలను స్పష్టమైన ఎర్రర్‌లో చూపించేలా అప్‌డేట్ చేశాము.
+  - [MCQPaperGeneratorPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): `/api/questions/import-ai` కాల్‌కు `timeout: 90000` (90 సెకన్లు) జత చేశాము (`printPaper` & `LiveLatexPreview` ను తాకకుండా).
+  - VPS లో `git checkout -- backend/prisma/generated && git pull` + `rm -rf dist` తో క్లీన్ బిల్డ్ కమాండ్ అందించాము.
+
 ## చివరి సంభాషణ - Gemini AI Model Update to `gemini-3.8-flash` (404 Model Retired Fix) (November 27, 2026)
 - **సమస్య:** MCQ Paper Generator `AI Gen` లో Google Gemini API `models/gemini-2.0-flash is no longer available (404 NOT_FOUND) — Please update your code to use models/gemini-3.8-flash` అని ఎర్రర్ చూపిస్తోంది.
 - **పరిష్కారం:**
