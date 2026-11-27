@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Dashboard Content-Fit Correction (November 27, 2026)
+- **గుర్తించిన సమస్య:** మొదటి no-scroll layoutలో దిగువ Recent Payments మరియు Teachers attendance strip కొంత clip అయ్యాయి.
+- **పరిష్కారం (`frontend/src/index.css`):** 920px లోపు desktop viewport heightలో admin dashboardను 92% proportional scaleతో full canvasలో fit అయ్యేలా మార్చాము. Recent Payments inner scroll కూడా తీసివేశాము, కాబట్టి అన్ని ఐదు rows మరియు attendance bottom strip ఒకే పేజీలో కనిపిస్తాయి.
+- **ధృవీకరణ:** `frontend` లో `npm run build` విజయవంతంగా పూర్తయింది.
+- **డిప్లాయ్ స్థితి:** Local workspaceలో ఉంది; GitHub push ఇంకా చేయలేదు.
+
 ## చివరి సంభాషణ - Desktop Dashboard Single-Screen Layout (November 27, 2026)
 - **మార్పులు (`frontend/src/pages/dashboard/DashboardPage.tsx`, `frontend/src/index.css`):** Admin dashboard ను desktopలో available viewport-height లో hero, quick actions, payments, attendance panelsగా మూడు వరుసల grid లో అమర్చాము.
 - **ప్రవర్తన:** Page-level vertical scroll రాదు. తక్కువ ఎత్తు ఉన్న laptop screensలో spacing/padding తగ్గుతుంది; అవసరమైతే Recent Payments card లోపల మాత్రమే scroll అవుతుంది. Mobile మరియు ఇతర role dashboards మారలేదు.

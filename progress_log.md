@@ -8,6 +8,7 @@
 2. Desktop (`1024px+`) లో hero, 10 quick-action cards, recent payments మరియు attendance panel ను available viewport height లో మూడు వరుసల grid గా పెట్టాము.
 3. చిన్న height ఉన్న laptop screens లో spacing/padding ఆటోమేటిక్‌గా తగ్గుతుంది; Recent Payments లో అవసరమైనప్పుడే ఆ card లోపల మాత్రమే scroll అవుతుంది.
 4. Mobile మరియు మిగతా dashboard roles లేఅవుట్‌లో ఎటువంటి మార్పు చేయలేదు.
+5. **సవరణ:** మొదటి లేఅవుట్‌లో తక్కువ browser viewport height వద్ద దిగువ panelలు clip అవుతున్నాయని గుర్తించాము. ఇప్పుడు desktop dashboard ను 920px లోపు viewport ఎత్తుల్లో proportional 92% scale తో పూర్తి content కనపడేలా మార్చాము; Recent Payments లోపలి scroll కూడా తీసివేశాము.
 
 ## తేదీ: 27 నవంబర్ 2026
 

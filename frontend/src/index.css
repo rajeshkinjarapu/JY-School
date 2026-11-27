@@ -272,7 +272,18 @@
 
   .dashboard-payment-card > :last-child {
     min-height: 0;
-    overflow: auto;
+    overflow: hidden;
+  }
+}
+
+/* Browser chrome leaves a shorter canvas than a typical 1080p monitor. Scale
+   only the desktop admin workspace so every dashboard card remains visible. */
+@media (min-width: 1024px) and (max-height: 920px) {
+  .dashboard-admin-view {
+    width: 108.696%;
+    height: 108.696%;
+    transform: scale(0.92);
+    transform-origin: top left;
   }
 }
 
