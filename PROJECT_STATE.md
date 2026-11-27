@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Enterprise Homework & Assignment Center (`/homework` & `/homework/create`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Homework మాడ్యూల్ ను పూర్తిస్థాయి School ERP లతో డీప్‌గా అనలైజ్ చేసి అందంగా డిజైన్ చేయాలి మరియు ఇంకా ఏమేం ఫీచర్లు అవసరం/చేయాల్సినవి ఉన్నాయో తెలియజేయాలి.
+- **చేసిన మార్పులు:**
+  1. **Backend Submission Engine ([homework.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/homework.controller.ts), [homework.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/routes/homework.ts)):** ఆటో-హీల్ `"HomeworkSubmission"` టేబుల్, ప్రతీ హోంవర్క్ పై లైవ్ క్లాస్ కంప్లీషన్ స్టాట్స్ (`doneCount`, `completionPct`), రోస్టర్ Evaluation API (`GET/POST /api/homework/:id/submissions` — Teacher సింగిల్/బల్క్ `COMPLETED`/`REWORK`/`PENDING` & Student `SUBMITTED` నోట్/లింక్), `notifyStudents` రెస్పెక్ట్, మరియు `attachmentList` పార్సింగ్ నిర్మించాము.
+  2. **Homework Dashboard ([HomeworkPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/homework/HomeworkPage.tsx)):** 5 లైట్ పాస్టెల్ KPI కార్డులు (`Total Tasks`, `Active Open`, `Due Soon`, `Overdue`, `Completion %`), Search + Status Filter పిల్స్ + Class-Subject డ్రాప్‌డౌన్ ఫిక్స్, **Cards vs Class Daily Diary View (1-క్లిక్ Copy WhatsApp Diary)**, Student Submission Evaluation Modal (`Mark All Completed`), Close/Reopen టోగుల్, మరియు `getPhotoUrl` తో టీచర్/స్టూడెంట్ ఫోటోలు సరిదిద్దాము.
+  3. **Assign Homework Page ([AssignHomeworkPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/homework/AssignHomeworkPage.tsx)):** `<PageHeader />` జోడించి, పాత `attachments` గ్యాప్ ను పూర్తి చేస్తూ వర్క్‌షీట్ PDFs / Drive / YouTube లింకుల కోసం **Reference Attachments Builder** నిర్మించాము.
+
 ## చివరి సంభాషణ - Academic Progress Card Studio Light Redesign & 1:1 PDF Fix (`/office-tools/academic-progress-card`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Academic Progress Card పేజీని ప్రొఫెషనల్‌గా, అందంగా రీడిజైన్ చేసి, A4 ప్రోగ్రెస్ కార్డు కట్ అవ్వకుండా Live Preview కు 1:1 తగ్గట్టుగా PDF డౌన్‌లోడ్ & ప్రింట్ అయ్యేలా చేయాలి.
 - **పరిష్కారం ([AcademicProgressCardPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/office-tools/AcademicProgressCardPage.tsx)):**
