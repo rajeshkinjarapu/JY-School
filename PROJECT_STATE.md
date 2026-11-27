@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Promotion Dedicated Dashboard, KPI Cards & Complete UI Redesign (`/students/promotion`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Promotion పేజీ డిజైన్ పూర్తిగా మార్చి కొత్త ప్రొఫెషనల్ లుక్ లోకి తేవాలి, పాత డిజైన్ అస్సలు కనిపించకూడదు, మరియు Promotion పేజీకి KPI కార్డులతో కూడిన ప్రత్యేక Dashboard ఉండాలి.
+- **చేసిన మార్పులు ([StudentPromotionPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/students/StudentPromotionPage.tsx)):**
+  - **Unified Top Bar (`<PageHeader />`):** అన్ని మాడ్యూల్స్ లాగే `Student Promotion & Year Transition` టైటిల్, సెషన్ బ్రిడ్జ్ బ్యాడ్జ్, `Audit History`, మరియు `Manage Classes` లింక్‌లతో `<PageHeader />` జోడించాము.
+  - **Dedicated Promotion Dashboard (`Promotion Dashboard` ట్యాబ్):**
+    - 5 గ్లాసీ పాస్టెల్ KPI కార్డులు (`Session Students`, `Target Classes Readiness`, `Selected Class Queue`, `Promoted Logs`, `Alumni & TC Exit`) అమర్చాము.
+    - `Academic Rollover Pipeline` బ్యానర్, క్లాస్-వారీ **Class Rollover Matrix** (క్లాస్ టీచర్, స్టూడెంట్ కౌంట్, ఆటో-టార్గెట్ ప్రివ్యూ, `Promote →` బటన్), **Rollover Readiness Checklist**, మరియు **Recent Transitions** లైవ్ ఆడిట్ ఫీడ్ జోడించాము.
+  - **Modern Rollover Workspace & Segmented Action Pills:** Source-to-Target మ్యాపింగ్ బార్, క్లిక్ చేయగల Action ఫిల్టర్ పిల్స్ (`All` / `Promote` / `Detain` / `Alumni` / `Left / TC`), Performance ప్రోగ్రెస్ బార్, మరియు డ్రాప్‌డౌన్ బదులు ప్రతీ వరుసలో **4-Pill Decision Toggle (`Promote` | `Detain` | `Alumni` | `TC`)**, ఇన్‌లైన్ Sticky Bottom Execution Bar నిర్మించాము.
+  - **Dedicated Audit Logs ట్యాబ్:** పూర్తి ప్రమోషన్ హిస్టరీని సెర్చ్, రిఫ్రెష్‌తో ప్రత్యేక ట్యాబ్‌గా అప్‌గ్రేడ్ చేశాము.
+
 ## చివరి సంభాషణ - Student Birthday Card Big Portrait & Clean Info Redesign (`/students/birthdays`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** బర్త్‌డే కార్డులలో స్టూడెంట్ ఫోటో పెద్దగా రావాలి, దాని కింద పూర్తి పేరు (`Full Name`), `Class`, మరియు `Date of Birth` మాత్రమే కనిపించాలి; `Father Name` మరియు `Mobile Number` అవసరం లేదు.
 - **చేసిన మార్పులు ([StudentBirthdayPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/students/StudentBirthdayPage.tsx)):**
