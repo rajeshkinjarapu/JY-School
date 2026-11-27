@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Exam Settings (Step 2) & Bulk Import Studio Ultra-Premium Pastel Redesign (November 26, 2026)
+- **యూజర్ అభ్యర్థన:**
+  - `exam setting kuda perfect ga ledu ee page kuda ui andam ga undali ultra deep ga kavali perfect vview lo ui super look lo` (Step 2 `Exam Settings` మరియు `Bulk Question Import Studio` పేజీలను అత్యంత అందంగా, క్లీన్‌గా, ప్రొఫెషనల్ Unified Pastel లుక్‌లోకి మార్చాలని కోరారు).
+- **పూర్తయిన మార్పులు:**
+  1. **[CompetitiveExamsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx) (Step 2 `SETTINGS`):**
+     - పేస్టల్ పాటర్న్ ఐడెంటిటీ రిబ్బన్, ఫుల్-విడ్త్ `Exam Title`, విశాలమైన `Target Class` & `Primary Subject` బాక్సులు, వ్రాప్ అవ్వని సింగిల్-లైన్ క్విక్ డ్యూరేషన్ పిల్స్, పేస్టల్ ఐకాన్ హెడర్లు (`#EAF3FF`, `#EAFAEE`, `#FFF4E5`, `#F3EEFF`), నంబర్ బ్యాడ్జ్ సెక్షన్లు, మరియు కుడివైపు **`#5B3DF5 → #7B3DF5` Live Exam Summary** హీరో కార్డు + 4 పేస్టల్ KPI టైల్స్ + Exam Rules.
+  2. **[BulkImportQuestionsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/BulkImportQuestionsPage.tsx):**
+     - పైభాగంలో 4-టైల్ పేస్టల్ ఫీచర్ స్ట్రిప్ (`Excel & CSV Studio`, `KaTeX Math`, `Live Review`, `PostgreSQL Sync`) + సమాన ఎత్తు (`items-stretch`) Step 1 & Step 2 కార్డులు, స్ప్రెడ్‌షీట్ కాలమ్ పిల్స్ & విశాలమైన అప్‌లోడ్ డ్రాప్‌జోన్.
+
 ## చివరి సంభాషణ - Online Exam Module Phase 1 – 4 Complete End-to-End Architecture & Security Upgrade (November 26, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `Online Exam Module Phase 1 – 4 start cheyu` (మొత్తం Online Examination Module లోని బగ్స్, డార్క్ స్క్రీన్, సెక్యూరిటీ లీక్, ఫేక్ డేటా & కనెక్షన్ లోపాలన్నీ 4 దశల్లో పూర్తిగా పరిష్కరించమని కోరారు).

@@ -297,36 +297,80 @@ export const BulkImportQuestionsPage: React.FC = () => {
       />
 
       {/* ══ MAIN BODY ══ */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-        {/* Step 1 & Step 2 Dual Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-5">
+        {/* Pastel Feature Summary Strip */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="rounded-xl px-4 py-3 bg-gradient-to-r from-[#5B3DF5] to-[#7B3DF5] text-white shadow-sm flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-black leading-tight">Excel &amp; CSV Studio</div>
+              <div className="text-[11px] font-semibold text-indigo-100">100–1000+ MCQs Ready</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAF3FF] border border-[#D4E6FF] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D7E8FF] text-[#2563EB] flex items-center justify-center shrink-0 font-serif font-black text-base">
+              ∑
+            </div>
+            <div>
+              <div className="text-sm font-black text-slate-900 leading-tight">KaTeX Math</div>
+              <div className="text-[11px] font-bold text-[#2563EB]">Auto $...$ Equations</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#EAFAEE] border border-[#CBEFD6] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#D1F4DC] text-[#16A34A] flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-black text-slate-900 leading-tight">Live Review</div>
+              <div className="text-[11px] font-bold text-[#16A34A]">Verify Before Saving</div>
+            </div>
+          </div>
+
+          <div className="rounded-xl px-4 py-3 bg-[#FFF4E5] border border-[#FDE2BA] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-[#FFE7C4] text-[#D97706] flex items-center justify-center shrink-0">
+              <Database className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-sm font-black text-slate-900 leading-tight">PostgreSQL Sync</div>
+              <div className="text-[11px] font-bold text-[#D97706]">Permanent Master Bank</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 1 & Step 2 Equal-Height Studio Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
           {/* Card 1: Sample Template & Format Guide */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
+          <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
             <div>
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FFF4E5] text-[#D97706] border border-[#FDE2BA] text-[11px] font-black uppercase">
                 Step 1 • Instructions
               </div>
-              <h3 className="text-base font-black text-slate-900 mt-2">
+              <h3 className="text-base font-black text-slate-900 mt-2.5">
                 Download Official Excel Template
               </h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Fill your questions in our standard Excel format. The parser automatically detects LaTeX math equations ($...$), correct option letters, marks, and explanations.
+                Fill your questions in our standard Excel format. The parser automatically detects LaTeX math ($...$), option letters, and explanations.
               </p>
 
-              <div className="mt-4 p-3.5 bg-[#F8FAFD] rounded-2xl border border-slate-200/80 text-[11px] space-y-1.5 font-semibold text-slate-600">
+              <div className="mt-4 p-3.5 bg-[#F8FAFD] rounded-2xl border border-slate-200/80 text-[11px] space-y-2 font-semibold text-slate-600">
                 <div className="flex items-center gap-2 text-slate-800 font-bold">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#16A34A]" />
-                  <span>Required Columns:</span>
+                  <span>Required Spreadsheet Columns:</span>
                 </div>
-                <div className="pl-5 text-slate-500 leading-snug">
-                  • <strong>Category:</strong> JEE, NEET, NAVODAYA, SCHOOL, etc.<br />
-                  • <strong>Subject:</strong> Mathematics, Physics, Chemistry, Biology<br />
-                  • <strong>Topic:</strong> Trigonometry, Kinematics, etc.<br />
-                  • <strong>Question:</strong> LaTeX math supported ($E = mc^2$)<br />
-                  • <strong>Option A - D:</strong> 4 multiple choice options<br />
-                  • <strong>Correct Answer:</strong> A, B, C, D or exact text<br />
-                  • <strong>Marks & Negative:</strong> Not needed in Excel (Set when creating the Exam)
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {['Category', 'Subject', 'Topic', 'Question', 'Option A - D', 'Correct Answer', 'Difficulty', 'Explanation'].map((col) => (
+                    <span key={col} className="px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700 font-bold text-[10.5px]">
+                      {col}
+                    </span>
+                  ))}
                 </div>
+                <p className="text-[10.5px] text-slate-500 leading-snug pt-0.5">
+                  Marks &amp; Negative Marking are configured directly when creating the Online Exam.
+                </p>
               </div>
             </div>
 
@@ -341,21 +385,28 @@ export const BulkImportQuestionsPage: React.FC = () => {
           </div>
 
           {/* Card 2: Upload Zone */}
-          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F3EEFF] text-[#5B3DF5] border border-[#DDD4FE] text-[11px] font-black uppercase">
-                Step 2 • File Upload
+          <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-[0_2px_10px_rgba(15,23,42,0.03)] flex flex-col justify-between space-y-4">
+            <div className="flex-1 flex flex-col">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F3EEFF] text-[#5B3DF5] border border-[#DDD4FE] text-[11px] font-black uppercase">
+                  Step 2 • File Upload
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded-md bg-[#EAFAEE] text-[#16A34A] text-[10px] font-extrabold">.XLSX</span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#EAF3FF] text-[#2563EB] text-[10px] font-extrabold">.XLS</span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#FFF4E5] text-[#D97706] text-[10px] font-extrabold">.CSV</span>
+                </div>
               </div>
-              <h3 className="text-base font-black text-slate-900 mt-2">
+              <h3 className="text-base font-black text-slate-900 mt-2.5">
                 Upload Your Filled Excel / CSV File
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Select your completed spreadsheet (.xlsx, .xls, .csv). You can review and verify all questions below before saving.
+                Select your completed spreadsheet. Preview, search, verify math formulas, and edit before importing permanently.
               </p>
 
-              <label className="mt-4 flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-[#C7BDFC] hover:border-[#5B3DF5] bg-[#F8F6FF]/60 hover:bg-[#F3EEFF]/70 transition cursor-pointer group">
-                <div className="w-12 h-12 rounded-2xl bg-[#EDE9FE] text-[#5B3DF5] flex items-center justify-center mb-2 group-hover:scale-110 transition">
-                  <Upload className="w-6 h-6" />
+              <label className="mt-4 flex-1 min-h-[210px] flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed border-[#C7BDFC] hover:border-[#5B3DF5] bg-[#F8F6FF]/60 hover:bg-[#F3EEFF]/70 transition cursor-pointer group">
+                <div className="w-14 h-14 rounded-2xl bg-[#EDE9FE] text-[#5B3DF5] flex items-center justify-center mb-3 group-hover:scale-110 transition shadow-xs">
+                  <Upload className="w-7 h-7" />
                 </div>
                 <span className="text-xs font-black text-slate-800">
                   {fileName ? fileName : 'Click to select or drag and drop your file here'}
