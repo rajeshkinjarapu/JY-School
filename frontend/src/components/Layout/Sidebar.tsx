@@ -27,7 +27,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const [forceDesktopCollapse, setForceDesktopCollapse] = useState(false);
 
   useEffect(() => {
-    setForceDesktopCollapse(location.pathname.includes('/question-bank/mcq-generator') || location.pathname.includes('/question-bank/exam-generator'));
+    setForceDesktopCollapse(
+      location.pathname.includes('/question-bank/mcq-generator') ||
+      location.pathname.includes('/question-bank/exam-generator') ||
+      location.pathname.includes('/students/custom-report') ||
+      location.pathname.includes('/students/report')
+    );
   }, [location.pathname]);
 
   useEffect(() => {

@@ -637,30 +637,28 @@ export const StudentReportPrintPage: React.FC = () => {
               font-weight: 900 !important;
               font-size: ${fontSize === 'sm' ? '8pt' : fontSize === 'lg' ? '10pt' : '9pt'} !important;
               text-transform: uppercase !important;
-              letter-spacing: 0.4px !important;
-              padding: 6px 8px !important;
+              letter-spacing: 0.3px !important;
+              padding: 6px 6px !important;
+              white-space: nowrap !important;
             }
             th * {
               color: #ffffff !important;
               -webkit-text-fill-color: #ffffff !important;
               font-weight: 900 !important;
+              white-space: nowrap !important;
             }
             td {
               border: 1px solid #cbd5e1 !important;
               color: #0f172a !important;
               font-size: ${fontSize === 'sm' ? '7.5pt' : fontSize === 'lg' ? '9.5pt' : '8.5pt'} !important;
-              padding: ${cellPadding === 'compact' ? '2px 4px' : cellPadding === 'relaxed' ? '6px 8px' : '4px 6px'} !important;
+              padding: ${cellPadding === 'compact' ? '2px 4px' : cellPadding === 'relaxed' ? '6px 8px' : '4px 5px'} !important;
               vertical-align: middle !important;
+            }
+            td.nowrap-cell {
+              white-space: nowrap !important;
             }
             tr:nth-child(even) td {
               background-color: #f8fafc !important;
-            }
-            .footer-signature {
-              page-break-inside: avoid !important;
-              break-inside: avoid !important;
-              margin-top: 24px !important;
-              padding-top: 14px !important;
-              border-top: 1px solid #94a3b8 !important;
             }
           </style>
         </head>
@@ -830,8 +828,8 @@ export const StudentReportPrintPage: React.FC = () => {
   ];
 
   const paddingXClass =
-    cellPadding === 'compact' ? 'px-2' :
-      cellPadding === 'relaxed' ? 'px-4' : 'px-3';
+    cellPadding === 'compact' ? 'px-1.5' :
+      cellPadding === 'relaxed' ? 'px-3.5' : 'px-2';
 
   const fontSizeClass =
     fontSize === 'sm' ? 'text-[10px]' :
@@ -904,9 +902,16 @@ export const StudentReportPrintPage: React.FC = () => {
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-            className="p-2 lg:hidden rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
-            aria-label="Open menu"
+            onClick={() => {
+              if (window.innerWidth >= 1024) {
+                window.dispatchEvent(new CustomEvent('toggleDesktopSidebar'));
+              } else {
+                window.dispatchEvent(new CustomEvent('toggleSidebar'));
+              }
+            }}
+            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer shrink-0"
+            aria-label="Toggle menu"
+            title="Toggle Sidebar Menu"
           >
             <Menu className="w-4 h-4" />
           </button>
@@ -1597,7 +1602,7 @@ export const StudentReportPrintPage: React.FC = () => {
               <div
                 id="custom-report-printable-area"
                 ref={printContainerRef}
-                className="bg-white rounded-xl border border-slate-300/80 shadow-[0_12px_36px_rgba(15,23,42,0.12)] p-7 sm:p-9 print:w-full print:max-w-none print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none"
+                className="bg-white rounded-xl border border-slate-300/80 shadow-[0_12px_36px_rgba(15,23,42,0.12)] p-5 sm:p-6 print:w-full print:max-w-none print:shadow-none print:border-none print:p-0 print:m-0 print:rounded-none"
                 style={{ minHeight: orientation === 'landscape' ? '794px' : '1123px' }}
               >
                 {/* School Official Print Header */}
@@ -1655,17 +1660,17 @@ export const StudentReportPrintPage: React.FC = () => {
                         {activeColumns.map((col, idx) => (
                           <th
                             key={idx}
-                            className={`${paddingXClass} py-2.5 font-black border border-slate-400/40 text-white ${
+                            className={`${paddingXClass} py-2.5 font-black border border-slate-400/40 text-white whitespace-nowrap ${
                               col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
                             } ${fontSizeClass}`}
                             style={{
-                              width: `${col.widthPt * 3}px`,
+                              minWidth: col.id === 'name' ? '125px' : undefined,
                               color: '#ffffff',
                               WebkitTextFillColor: '#ffffff'
                             }}
                           >
                             <span
-                              className="font-black tracking-wider uppercase text-white"
+                              className="font-black tracking-wider uppercase text-white whitespace-nowrap"
                               style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff' }}
                             >
                               {col.label}
@@ -1686,11 +1691,13 @@ export const StudentReportPrintPage: React.FC = () => {
                           >
                             {activeColumns.map((col, colIdx) => {
                               const val = col.getValue(student, rowIdx);
+                              const allowWrap = col.id === 'name' || col.id === 'address' || col.id === 'remarks';
+                              const wrapClass = allowWrap ? 'whitespace-normal' : 'whitespace-nowrap nowrap-cell';
 
                               if (col.id === 'photo') {
                                 const photoUrl = getPhotoUrl(student.user?.photoUrl);
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
                                     <div className="w-8 h-9 rounded bg-slate-200 mx-auto overflow-hidden flex items-center justify-center border border-slate-300">
                                       {photoUrl ? (
                                         <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
@@ -1704,7 +1711,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'gender') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center ${fontSizeClass}`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell ${fontSizeClass}`}>
                                     {val === 'Boy' ? (
                                       <span className="inline-block px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-100/90 text-blue-800 print:bg-transparent print:text-slate-900">
                                         Boy
@@ -1722,7 +1729,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'bloodGroup') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center ${fontSizeClass}`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell ${fontSizeClass}`}>
                                     {val !== '-' ? (
                                       <span className="inline-block px-1.5 py-0.5 rounded font-black text-rose-700 bg-rose-50 border border-rose-200/80 print:border-none print:bg-transparent print:text-slate-900">
                                         {val}
@@ -1734,7 +1741,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'attendanceBox') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
                                     <div className="w-5 h-5 mx-auto border-2 border-slate-400 rounded-md bg-white print:border-slate-800" />
                                   </td>
                                 );
@@ -1742,7 +1749,7 @@ export const StudentReportPrintPage: React.FC = () => {
 
                               if (col.id === 'parentSignature' || col.id === 'studentSignature') {
                                 return (
-                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center`}>
+                                  <td key={colIdx} className={`border border-slate-300 ${paddingXClass} text-center whitespace-nowrap nowrap-cell`}>
                                     <div className="h-full flex items-center justify-center">
                                       <span className="text-[10px] text-slate-300 font-mono tracking-widest hidden print:inline">
                                         . . . . . . . . . .
@@ -1755,7 +1762,7 @@ export const StudentReportPrintPage: React.FC = () => {
                               return (
                                 <td
                                   key={colIdx}
-                                  className={`border border-slate-300 font-medium ${paddingXClass} ${fontSizeClass} ${
+                                  className={`border border-slate-300 font-medium ${paddingXClass} ${fontSizeClass} ${wrapClass} ${
                                     col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
                                   } ${col.id === 'rollNo' || col.id === 'sno' ? 'font-mono font-bold text-slate-900' : 'text-slate-800'}`}
                                 >
@@ -1769,27 +1776,6 @@ export const StudentReportPrintPage: React.FC = () => {
                     </tbody>
                   </table>
                 )}
-
-                {/* Print Official Footer */}
-                <div className="footer-signature pt-12 mt-8 flex items-center justify-between text-xs font-bold text-slate-800 border-t border-slate-300 print:break-inside-avoid">
-                  <div className="text-center">
-                    <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
-                    <p>Class Teacher Signature</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Authorized Class Teacher</p>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="w-24 h-24 border border-dashed border-slate-300 rounded-full mx-auto flex items-center justify-center text-[10px] text-slate-400 font-medium mb-1">
-                      School Seal
-                    </div>
-                  </div>
-
-                  <div className="text-center">
-                    <div className="w-36 border-b border-slate-800 mb-1 mx-auto" />
-                    <p>Headmaster / Principal</p>
-                    <p className="text-[10px] text-slate-400 font-normal">Sri Venkateswara JY High School</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>

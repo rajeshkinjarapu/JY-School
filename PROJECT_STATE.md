@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Student Print Studio Full-Width (Hidden Sidebar), No-Wrap Preview & Footer Signature Removal (November 27, 2026)
+- **యూజర్ అభ్యర్థన:**
+  1. Print Studio ఓపెన్ చేసినప్పుడు సైడ్‌బార్ ఆటోమేటిక్‌గా హైడ్ అవ్వాలి.
+  2. Live Preview లో టెక్స్ట్ వ్రాప్ అవ్వకూడదు (`student name` తప్ప).
+  3. దిగువన ఉన్న `Class Teacher Signature`, `School Seal`, మరియు `Headmaster / Principal` ఫుటర్‌ను తొలగించాలి.
+- **చేసిన మార్పులు:**
+  - [Sidebar.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/Layout/Sidebar.tsx): `/students/custom-report` & `/students/report` రూట్‌లలో `forceDesktopCollapse` ని `true` చేసి సైడ్‌బార్ ఆటోమేటిక్‌గా హైడ్ అయ్యేలా చేశాము.
+  - [StudentReportPrintPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentReportPrintPage.tsx): టేబుల్ హెడర్‌లపై `whitespace-nowrap`, `widthPt * 3` ఫిక్స్‌డ్ విడ్త్ తొలగింపు & `name`/`address`/`remarks` మినహా అన్ని సెల్స్‌కు `whitespace-nowrap nowrap-cell` అమలు చేశాము; దిగువ సిగ్నేచర్ & సీల్ ఫుటర్ బ్లాక్‌ను పూర్తిగా తొలగించాము; టాప్-లెఫ్ట్ మెనూ బటన్‌తో అవసరమైతే సైడ్‌బార్ టోగుల్ చేసుకునే సౌకర్యం ఇచ్చాము.
+
 ## చివరి సంభాషణ - Student List Page 100% Exact Pastel Reference UI Redesign (`/students`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** యూజర్ ఇచ్చిన రిఫరెన్స్ ఇమేజ్ ప్రకారం `Students` (`/students`) పేజీ 100% అదే పేస్టల్-పర్పుల్ UI లో ఉండాలి (`naku 100% exact ide ui kavali`).
 - **చేసిన మార్పులు ([StudentListPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentListPage.tsx)):**
