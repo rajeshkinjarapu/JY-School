@@ -134,7 +134,7 @@ export const WebsiteManagerPage: React.FC = () => {
       if (saved) setSettings(prev => ({ ...prev, ...saved }));
       toast.success('Website settings saved & synced!');
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update website settings');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to update website settings');
     } finally {
       setSavingSettings(false);
     }

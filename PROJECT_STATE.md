@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Website CMS Save Fix (Auto-Heal Schema + Fallback Upsert) (November 27, 2026)
+- **యూజర్ సమస్య:** `/settings/website` లో `Save Contact & Social Links` నొక్కినప్పుడు `Failed to update website settings` ఎర్రర్ వచ్చింది.
+- **మూల కారణం & పరిష్కారం ([website.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/website.controller.ts)):**
+  - `WebsiteSettings` టేబుల్‌లో కొత్త కాలమ్స్ (`heroImageUrl`, `admissionsBannerTitle`, `admissionsYear`, `missionText`, `visionText`) లేకపోవడం లేదా VPS లో `prisma db push` / `prisma generate` ఇంకా రన్ కాకపోవడం వల్ల Prisma 500 ఎర్రర్ వచ్చింది.
+  - `ensureWebsiteTablesExist()` ఆటో-హీల్ SQL ఫంక్షన్, ఖచ్చితమైన field whitelist, మరియు Prisma Client అవుట్‌డేట్ అయినా పనిచేసేలా SQL `ON CONFLICT` ఫాల్‌బ్యాక్ జోడించాము.
+  - [WebsiteManagerPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/settings/WebsiteManagerPage.tsx) లో అసలు ఎర్రర్ మెసేజ్ స్పష్టంగా కనిపించేలా అప్‌డేట్ చేశాము.
+
 ## చివరి సంభాషణ - Flutter Telugu Cleanup (Shorebird Patch Ready) & Full Website Admin CMS + Live Public Website Sync (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** పెండింగ్‌లో ఉన్న Flutter తెలుగు టెక్స్ట్ క్లీనప్ మరియు పూర్తిస్థాయి Website Admin CMS + Public Website Sync లను కన్ఫర్మ్ చేసి అమలు చేయాలి.
 - **Flutter యాప్ మార్పులు (Shorebird Patch OTA రెడీ — అన్ని Flavors కు సింక్):**
