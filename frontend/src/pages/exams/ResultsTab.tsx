@@ -220,8 +220,8 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
               th:nth-child(2), td:nth-child(2) { text-align: left; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
               /* Override overflow for printing so it spans multiple pages */
               .overflow-x-auto, .overflow-hidden, #results-print-area { overflow: visible !important; height: auto !important; border: none !important; border-radius: 0 !important; box-shadow: none !important; display: block !important; }
-              /* Shrink the big header box */
-              .print-header-box { padding: 18px 24px !important; background: linear-gradient(to right, #7c3aed, #ea580c) !important; border-radius: 12px !important; margin-bottom: 15px !important; }
+              /* Show compact header only during printing; hidden on screen to avoid duplicate heading */
+              .print-header-box { display: block !important; padding: 18px 24px !important; background: linear-gradient(to right, #7c3aed, #ea580c) !important; border-radius: 12px !important; margin-bottom: 15px !important; }
               .print-title { font-size: 26px !important; margin-bottom: 8px !important; color: white !important; font-weight: 900 !important; }
               .print-subtitle span { padding: 4px 12px !important; font-size: 15px !important; border: 1px solid rgba(255,255,255,0.3) !important; border-radius: 6px !important; color: white !important; background: rgba(255,255,255,0.15) !important; font-weight: bold !important; }
               .print-roll-no { font-size: 13px !important; font-weight: 800 !important; color: #111827 !important; }
@@ -509,15 +509,15 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
       {loading && <div className="p-12 flex justify-center"><LoadingSpinner size="lg" /></div>}
 
       {!loading && selectedExamId && selectedClassId && results.length === 0 && (
-        <div className="p-12 text-center text-gray-400 bg-white dark:bg-gray-900 rounded-xl border border-gray-100">
+        <div className="p-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-200">
           No results found. Please ensure marks are entered and frozen.
         </div>
       )}
 
       {!loading && results.length > 0 && (
-        <div id="results-print-area" className="bg-white dark:bg-gray-900 rounded-3xl shadow-xl overflow-hidden border border-indigo-50">
-          {/* Colorful Header */}
-          <div className="bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 p-8 text-white relative overflow-hidden print-header-box">
+        <div id="results-print-area" className="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-200">
+          {/* Print-only Header (Hidden on screen to avoid duplicate heading with top filter card) */}
+          <div className="hidden print:block bg-gradient-to-r from-violet-600 via-fuchsia-600 to-orange-500 p-8 text-white relative overflow-hidden print-header-box">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 no-print" />
             <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 no-print" />
             

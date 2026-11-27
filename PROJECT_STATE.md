@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Remove Duplicate Colorful Heading Box in Exam Results (`ResultsTab.tsx`) (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** `/exams` -> Exam Results పేజీలో పైన `Examination Result` హెడ్డింగ్ ఉండగా, మళ్ళీ కింద కలర్ గ్రేడియంట్ బాక్స్ లో `Examination Results` అనే డబుల్ హెడ్డింగ్ తొలగించాలి.
+- **పరిష్కారం ([ResultsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ResultsTab.tsx)):**
+  - ఆ కలర్ హెడ్డింగ్ బాక్స్ ను స్క్రీన్ పై పూర్తిగా దాచి (`hidden print:block`), కేవలం `Print` తీసినప్పుడు మాత్రమే ప్రింట్ షీట్ హెడర్ లా కనిపించేలా `.print-header-box { display: block !important }` తో అప్‌డేట్ చేశాము; అలాగే `dark:bg-gray-900` తొలగించి క్లీన్ Light Theme (`bg-white border-slate-200`) అమర్చాము.
+
+## చివరి సంభాషణ - Fix 4 TypeScript Errors in `competitiveExams.controller.ts` (`$queryRawUnsafe<any[]>`) (November 27, 2026)
+- **సమస్య:** VPS `npm run build` లో [competitiveExams.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/competitiveExams.controller.ts) లోని 4 చోట్ల (`lines 944, 1055, 1130, 1200`) `prisma.$queryRawUnsafe(...).catch(() => [])` వల్ల `error TS2740: Type '{}' is missing properties from type 'any[]'` వస్తోంది.
+- **పరిష్కారం:** ఆ 4 క్వెరీలకు `prisma.$queryRawUnsafe<any[]>(...).catch((): any[] => [])` అని టైప్ చేసి, బిల్డ్ `0 Errors` తో పాస్ అయ్యి `dist/config/firebase-service-account.json` సరిగ్గా కాపీ అయ్యేలా సరిదిద్దాము.
+
 ## చివరి సంభాషణ - Results Summary A4 PDF Full-Page Top-to-Bottom Auto-Fit (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** క్లాస్ లో ఎంతమంది విద్యార్థులు ఉంటే అందుకు తగ్గట్టుగా Result Summary PDF అడుగున ఖాళీ స్థలం లేకుండా A4 పేజీకి పైనుండి కింద వరకు (`top to bottom`) కచ్చితంగా ఫిట్ అవ్వాలి (`17` మంది విద్యార్థులు ఉన్నప్పుడు అడుగున 35% ఖాళీ మిగిలిపోతోంది).
 - **పరిష్కారం ([ResultsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ResultsTab.tsx)):**
