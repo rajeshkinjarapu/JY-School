@@ -33,11 +33,11 @@ import { api } from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import {
-  AcademicHistoryRow,
-  DocumentKind,
-  SchoolCertSettings,
+  type AcademicHistoryRow,
+  type DocumentKind,
+  type SchoolCertSettings,
   TC_THEMES,
-  TcPayload,
+  type TcPayload,
   buildAcademicRowsForClass,
   buildDocumentCss,
   dobToWords,

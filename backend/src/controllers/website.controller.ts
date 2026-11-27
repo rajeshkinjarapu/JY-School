@@ -672,7 +672,7 @@ export const toggleWebsiteExamPublish = async (req: Request, res: Response) => {
     }
 
     if (typeof publicResultPublished === 'boolean') {
-      const rows: any[] = await prisma.$queryRaw`SELECT "publicResultExamIds" FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`.catch(() => []);
+      const rows = await prisma.$queryRaw<any[]>`SELECT "publicResultExamIds" FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`.catch(() => [] as any[]);
       const current = new Set(parseIdArray(rows?.[0]?.publicResultExamIds));
       if (publicResultPublished) current.add(id);
       else current.delete(id);

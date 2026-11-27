@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Build Fixes (`website.controller.ts` TS2740 & `TransferCertificatePage.tsx` Rolldown type imports) (November 27, 2026)
+- **పూర్తి చేసిన ఫిక్స్‌లు**:
+  - `backend/src/controllers/website.controller.ts` line 675: `prisma.$queryRaw<any[]>` జెనరిక్‌తో `TS2740` ఎర్రర్ పరిష్కారం.
+  - `frontend/src/pages/office-tools/TransferCertificatePage.tsx` lines 35-40: `AcademicHistoryRow`, `DocumentKind`, `SchoolCertSettings`, `TcPayload` లను Vite 8 Rolldown కు అనుగుణంగా `type` ఇంపోర్ట్స్‌గా మార్చాము.
+- **స్టేటస్**: కోడ్ సేవ్ చేయబడింది. యూజర్ లోకల్ `npx tsc --noEmit`, `npm run build`, `git push` మరియు VPS డిప్లాయ్‌మెంట్ చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Academic Progress Card Clean Redesign & Marks % Bug Fix (`/office-tools/academic-progress-card`) (November 27, 2026)
 - **పూర్తి చేసిన మార్పులు**:
   - `backend/src/controllers/marks.controller.ts`: `getCceCumulativeCard` లో జరిగని `SA`/`FA` పరీక్షల `200` మార్కులు `totalMax` లో కలిసే బగ్ (`35/240 = 14.6% Grade E`) ను సరిచేసి, జరిగిన పరీక్షల మార్కుల ఆధారంగానే (`faMax + saMax`) కచ్చితమైన శాతం మరియు గ్రేడ్ లెక్కించేలా మార్చాము. అటెండెన్స్ రికార్డులు లేకపోతే ఫేక్ `205/220` రాకుండా సరిచేశాము.
