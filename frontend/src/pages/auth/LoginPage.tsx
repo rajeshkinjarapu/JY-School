@@ -1,46 +1,77 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth } from '../../hooks/useAuth';
 import { login as loginApi } from '../../api/auth';
 import api from '../../api/axios';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   Eye, EyeOff, Lock, User, ArrowRight,
-  GraduationCap, Shield, Users, BookOpen, Award, ChevronRight, CheckCircle2
+  GraduationCap, Shield, Users, BookOpen, Award,
+  CheckCircle2, MessageCircle, Sparkles,
 } from 'lucide-react';
 
+/* ─── Validation Schema ─── */
 const loginSchema = z.object({
   email: z.string().min(1, 'Username or Email is required'),
   password: z.string().min(1, 'Password is required'),
 });
-
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+/* ─── WhatsApp contact config ─── */
+const ADMIN_WHATSAPP = '919502924437';
+const WHATSAPP_MSG   = encodeURIComponent(
+  'Hello! I am contacting from JY School website. I need help with ERP login access.'
+);
+const WHATSAPP_URL   = `https://wa.me/${ADMIN_WHATSAPP}?text=${WHATSAPP_MSG}`;
+
+/* ─── Feature list ─── */
+const FEATURES = [
+  { icon: Users,    label: 'Student & Staff Management',    color: '#60A5FA' },
+  { icon: BookOpen, label: 'Academic Performance Tracking', color: '#A78BFA' },
+  { icon: Award,    label: 'Exams, Results & Progress Cards', color: '#F472B6' },
+  { icon: Shield,   label: 'Secure & Role-Based Access',    color: '#34D399' },
+];
+
+/* ─── Floating particle positions (deterministic, no random on render) ─── */
+const PARTICLES = [
+  { w: 6,  h: 6,  top: '12%',  left: '8%',  dur: 4,  del: 0 },
+  { w: 4,  h: 4,  top: '28%',  left: '18%', dur: 6,  del: 1 },
+  { w: 8,  h: 8,  top: '55%',  left: '5%',  dur: 5,  del: 2 },
+  { w: 5,  h: 5,  top: '72%',  left: '22%', dur: 7,  del: 0.5 },
+  { w: 10, h: 10, top: '88%',  left: '12%', dur: 4.5,del: 1.5 },
+  { w: 4,  h: 4,  top: '40%',  left: '45%', dur: 6,  del: 2.5 },
+  { w: 6,  h: 6,  top: '20%',  left: '55%', dur: 5,  del: 3 },
+  { w: 7,  h: 7,  top: '65%',  left: '48%', dur: 4,  del: 1 },
+];
+
+/* ══════════════════════════════════════════════════════════════
+   LOGIN PAGE COMPONENT
+══════════════════════════════════════════════════════════════ */
 export const LoginPage: React.FC = () => {
   const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword]   = useState(false);
+  const [isSubmitting, setIsSubmitting]   = useState(false);
+  const [mounted, setMounted]             = useState(false);
+  const [focusedField, setFocusedField]   = useState<string | null>(null);
 
-  React.useEffect(() => {
+  /* mount animation trigger */
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  /* redirect if already logged in */
+  useEffect(() => {
     if (isAuthenticated) {
-      if (user?.role === 'GROUP_CHAIRMAN') {
-        navigate('/chairman', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      navigate(user?.role === 'GROUP_CHAIRMAN' ? '/chairman' : '/dashboard', { replace: true });
     }
   }, [isAuthenticated, user, navigate]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -49,20 +80,13 @@ export const LoginPage: React.FC = () => {
     try {
       const response: any = await loginApi(values);
       const accessToken =
-        response?.accessToken ||
-        response?.data?.accessToken ||
-        response?.data?.data?.accessToken ||
-        response?.token;
-
+        response?.accessToken || response?.data?.accessToken ||
+        response?.data?.data?.accessToken || response?.token;
       const refreshToken =
-        response?.refreshToken ||
-        response?.data?.refreshToken ||
+        response?.refreshToken || response?.data?.refreshToken ||
         response?.data?.data?.refreshToken;
-
       let authUser =
-        response?.user ||
-        response?.data?.user ||
-        response?.data?.data?.user;
+        response?.user || response?.data?.user || response?.data?.data?.user;
 
       if (accessToken) {
         if (!authUser) {
@@ -73,21 +97,15 @@ export const LoginPage: React.FC = () => {
             console.warn('Failed to fetch user profile after login:', e);
           }
         }
-
         login(accessToken, refreshToken, authUser || { role: 'STUDENT', name: 'User' });
         toast.success(`Welcome back, ${authUser?.name || 'User'}!`);
-        if (authUser?.role === 'GROUP_CHAIRMAN') {
-          navigate('/chairman', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+        navigate(authUser?.role === 'GROUP_CHAIRMAN' ? '/chairman' : '/dashboard', { replace: true });
       } else {
         toast.error(response?.message || 'Login response format error. Please try again.');
       }
     } catch (error: any) {
       const message =
-        error?.response?.data?.message ||
-        error?.message ||
+        error?.response?.data?.message || error?.message ||
         'Login failed. Please check your credentials.';
       toast.error(message);
     } finally {
@@ -95,347 +113,532 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  /* ─── keyframe styles injected once ─── */
+  const inlineStyles = `
+    @keyframes float-up {
+      0%,100% { transform: translateY(0px) scale(1);   opacity: 0.4; }
+      50%      { transform: translateY(-18px) scale(1.1); opacity: 0.7; }
+    }
+    @keyframes orbit {
+      from { transform: rotate(0deg) translateX(60px) rotate(0deg); }
+      to   { transform: rotate(360deg) translateX(60px) rotate(-360deg); }
+    }
+    @keyframes slide-up {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slide-in-left {
+      from { opacity: 0; transform: translateX(-40px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes glow-pulse {
+      0%,100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+      50%      { box-shadow: 0 0 40px rgba(99,102,241,0.6), 0 0 80px rgba(99,102,241,0.2); }
+    }
+    @keyframes shimmer {
+      from { background-position: -200% center; }
+      to   { background-position: 200% center; }
+    }
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes bounce-in {
+      0%   { transform: scale(0.3); opacity: 0; }
+      60%  { transform: scale(1.05); }
+      80%  { transform: scale(0.95); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .anim-slide-up  { animation: slide-up 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .anim-slide-left{ animation: slide-in-left 0.7s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .anim-fade      { animation: fade-in 0.5s ease forwards; }
+    .anim-bounce    { animation: bounce-in 0.5s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .btn-hover-lift { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .btn-hover-lift:hover { transform: translateY(-2px); }
+    .btn-hover-lift:active { transform: translateY(0) scale(0.98); }
+    .input-field {
+      width: 100%; padding: 13px 16px 13px 44px;
+      border-radius: 14px; font-size: 14px; font-weight: 500;
+      color: #1e293b; background: #f8faff;
+      border: 1.5px solid #e2e8f0;
+      outline: none; transition: all 0.25s ease;
+    }
+    .input-field:focus {
+      background: #fff; border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .input-field.error {
+      background: #fff5f5; border-color: #fc8181;
+      box-shadow: 0 0 0 3px rgba(252,129,129,0.12);
+    }
+    .feature-row {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 14px; border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04); backdrop-filter: blur(4px);
+      transition: all 0.25s ease; cursor: default;
+    }
+    .feature-row:hover {
+      background: rgba(255,255,255,0.09);
+      border-color: rgba(255,255,255,0.14);
+      transform: translateX(4px);
+    }
+    .orb { position: absolute; border-radius: 50%; pointer-events: none; }
+    .wa-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 700; font-size: 12px; color: #25D366;
+      text-decoration: none; padding: 4px 10px 4px 6px;
+      border-radius: 20px; border: 1px solid #25D36630;
+      background: #25D36610; transition: all 0.2s ease;
+    }
+    .wa-btn:hover { background: #25D36620; border-color: #25D36660; transform: scale(1.03); }
+  `;
+
   return (
-    <div className="min-h-screen w-full flex font-sans overflow-hidden">
+    <>
+      <style>{inlineStyles}</style>
 
-      {/* ══════════════════════════════════════════════
-          LEFT PANEL — Brand Showcase (60% width)
-      ══════════════════════════════════════════════ */}
-      <div
-        className="hidden lg:flex lg:w-[58%] xl:w-[60%] relative flex-col overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 35%, #312E81 60%, #1D4ED8 100%)',
-        }}
-      >
-        {/* Animated Background Orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div
-            className="absolute -top-32 -left-32 w-96 h-96 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, #6366F1, transparent 70%)' }}
-          />
-          <div
-            className="absolute top-1/3 -right-20 w-80 h-80 rounded-full opacity-15"
-            style={{ background: 'radial-gradient(circle, #3B82F6, transparent 70%)' }}
-          />
-          <div
-            className="absolute -bottom-24 left-1/4 w-72 h-72 rounded-full opacity-20"
-            style={{ background: 'radial-gradient(circle, #818CF8, transparent 70%)' }}
-          />
+      <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'Inter','Poppins',sans-serif", overflow: 'hidden' }}>
 
-          {/* Grid Pattern */}
+        {/* ════════════════════════════════════════
+            LEFT PANEL — Brand Showcase
+        ════════════════════════════════════════ */}
+        <div
+          className="hidden lg:flex"
+          style={{
+            width: '58%', flexDirection: 'column', position: 'relative',
+            overflow: 'hidden',
+            background: 'linear-gradient(145deg, #0A0F2E 0%, #0F1B4D 25%, #1A1060 50%, #0D2F7A 75%, #1142A6 100%)',
+          }}
+        >
+          {/* Background Orbs */}
+          <div className="orb" style={{ width: 480, height: 480, top: -120, left: -120, background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)' }} />
+          <div className="orb" style={{ width: 350, height: 350, top: '40%', right: -80, background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 70%)' }} />
+          <div className="orb" style={{ width: 300, height: 300, bottom: -60, left: '30%', background: 'radial-gradient(circle, rgba(167,139,250,0.2) 0%, transparent 70%)' }} />
+          <div className="orb" style={{ width: 200, height: 200, top: '60%', left: '10%', background: 'radial-gradient(circle, rgba(244,114,182,0.15) 0%, transparent 70%)' }} />
+
+          {/* Subtle Grid */}
+          <div style={{
+            position: 'absolute', inset: 0, opacity: 0.03,
+            backgroundImage: 'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px)',
+            backgroundSize: '52px 52px',
+          }} />
+
+          {/* Floating Particles */}
+          {PARTICLES.map((p, i) => (
+            <div key={i} style={{
+              position: 'absolute', width: p.w, height: p.h,
+              top: p.top, left: p.left, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.35)',
+              animation: `float-up ${p.dur}s ${p.del}s ease-in-out infinite`,
+            }} />
+          ))}
+
+          {/* Rotating Ring */}
+          <div style={{
+            position: 'absolute', top: '15%', right: '12%',
+            width: 140, height: 140, opacity: 0.12,
+            border: '1px dashed rgba(255,255,255,0.6)',
+            borderRadius: '50%', animation: 'spin-slow 20s linear infinite',
+          }} />
+          <div style={{
+            position: 'absolute', top: '15%', right: '12%',
+            width: 100, height: 100, margin: 20, opacity: 0.1,
+            border: '1px dashed rgba(255,255,255,0.4)',
+            borderRadius: '50%', animation: 'spin-slow 14s linear infinite reverse',
+          }} />
+
+          {/* Top Logo */}
           <div
-            className="absolute inset-0 opacity-[0.04]"
+            className="anim-slide-left"
             style={{
-              backgroundImage: 'linear-gradient(rgba(255,255,255,0.8) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.8) 1px, transparent 1px)',
-              backgroundSize: '48px 48px',
+              position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center',
+              gap: 14, padding: '32px 44px 0',
+              opacity: mounted ? undefined : 0,
+              animationDelay: '0.1s',
             }}
-          />
-        </div>
-
-        {/* Top Logo Bar */}
-        <div className="relative z-10 flex items-center gap-3 p-8 pb-0">
-          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur border border-white/20 p-2 flex items-center justify-center shadow-lg">
-            <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h2 className="text-white font-black text-xl tracking-tight leading-none">JY SCHOOL</h2>
-            <p className="text-indigo-300 text-xs font-semibold tracking-widest mt-0.5">MANAGEMENT SYSTEM</p>
-          </div>
-        </div>
-
-        {/* Center Brand Content */}
-        <div className="relative z-10 flex-1 flex flex-col justify-center px-10 xl:px-14 py-8">
-
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 rounded-full px-4 py-1.5 w-fit mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-white/80 text-xs font-semibold tracking-wide">School Management Platform</span>
-          </div>
-
-          {/* Main Headline */}
-          <h1 className="text-4xl xl:text-5xl font-black text-white leading-tight mb-4" style={{ letterSpacing: '-0.02em' }}>
-            Empowering
-            <br />
-            <span
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: 'linear-gradient(90deg, #60A5FA, #A78BFA, #F472B6)' }}
-            >
-              Education
-            </span>
-            <br />
-            Excellence
-          </h1>
-
-          <p className="text-indigo-200/80 text-base leading-relaxed max-w-sm mb-10 font-medium">
-            A unified platform for students, teachers, and administrators to collaborate, learn, and grow together.
-          </p>
-
-          {/* Feature Highlights */}
-          <div className="grid grid-cols-1 gap-3 max-w-sm mb-10">
-            {[
-              { icon: Users, label: 'Student & Staff Management', color: '#60A5FA' },
-              { icon: BookOpen, label: 'Academic Performance Tracking', color: '#A78BFA' },
-              { icon: Award, label: 'Exams, Results & Progress Cards', color: '#F472B6' },
-              { icon: Shield, label: 'Secure & Role-Based Access', color: '#34D399' },
-            ].map(({ icon: Icon, label, color }) => (
-              <div key={label} className="flex items-center gap-3 group">
-                <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ backgroundColor: `${color}18`, border: `1px solid ${color}30` }}
-                >
-                  <Icon className="w-4 h-4" style={{ color }} />
-                </div>
-                <span className="text-white/70 text-sm font-medium group-hover:text-white/90 transition-colors">{label}</span>
-                <ChevronRight className="w-3.5 h-3.5 text-white/20 ml-auto group-hover:text-white/40 transition-colors" />
-              </div>
-            ))}
-          </div>
-
-          {/* Stats Row */}
-          <div className="flex items-center gap-6">
-            {[
-              { value: '500+', label: 'Students' },
-              { value: '34', label: 'Teachers' },
-              { value: '24', label: 'Classes' },
-            ].map(({ value, label }) => (
-              <div key={label}>
-                <div className="text-white font-black text-2xl">{value}</div>
-                <div className="text-indigo-300/70 text-xs font-semibold mt-0.5">{label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bottom Quote Bar */}
-        <div className="relative z-10 p-8 pt-0">
-          <div className="border-t border-white/10 pt-6">
-            <p className="text-indigo-300/60 text-sm font-medium italic">
-              "Education is the most powerful weapon which you can use to change the world."
-            </p>
-            <p className="text-indigo-400/50 text-xs font-semibold mt-1">— Nelson Mandela</p>
-          </div>
-        </div>
-      </div>
-
-
-      {/* ══════════════════════════════════════════════
-          RIGHT PANEL — Login Form
-      ══════════════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-[#F8FAFF] px-6 sm:px-10">
-
-        {/* Subtle Background */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div
-            className="absolute -top-40 -right-40 w-96 h-96 rounded-full opacity-40"
-            style={{ background: 'radial-gradient(circle, #EEF2FF, transparent 70%)' }}
-          />
-          <div
-            className="absolute -bottom-40 -left-20 w-96 h-96 rounded-full opacity-40"
-            style={{ background: 'radial-gradient(circle, #F0F9FF, transparent 70%)' }}
-          />
-        </div>
-
-        {/* Mobile Logo — shown only on small screens */}
-        <div className="lg:hidden flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-2xl shadow-md border border-slate-100 p-1.5 flex items-center justify-center bg-white">
-            <img src="/logo.png" alt="JY School" className="w-full h-full object-contain" />
-          </div>
-          <div>
-            <h2 className="text-slate-900 font-black text-xl">JY SCHOOL</h2>
-            <p className="text-slate-400 text-xs font-semibold">Management System</p>
-          </div>
-        </div>
-
-        {/* Login Card */}
-        <div className="relative w-full max-w-[420px] z-10">
-
-          {/* Card */}
-          <div
-            className="bg-white rounded-3xl shadow-2xl border border-slate-100/80 overflow-hidden"
-            style={{ boxShadow: '0 25px 60px -10px rgba(79,70,229,0.12), 0 10px 20px -8px rgba(0,0,0,0.08)' }}
           >
+            <div style={{
+              width: 52, height: 52, borderRadius: 16, overflow: 'hidden',
+              background: 'rgba(255,255,255,0.12)', backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.22)',
+              padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            }}>
+              <img src="/logo.png" alt="JY School" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div>
+              <div style={{ color: '#fff', fontWeight: 900, fontSize: 20, letterSpacing: '-0.02em' }}>JY SCHOOL</div>
+              <div style={{ color: '#93C5FD', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', marginTop: 2 }}>MANAGEMENT SYSTEM</div>
+            </div>
+          </div>
 
-            {/* Card Header Gradient Bar */}
+          {/* Center Content */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: '32px 44px', position: 'relative', zIndex: 10 }}>
+
+            {/* Live Badge */}
             <div
-              className="h-1.5 w-full"
-              style={{ background: 'linear-gradient(90deg, #2563EB, #6366F1, #A855F7)' }}
-            />
+              className="anim-slide-left"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255,255,255,0.15)', borderRadius: 999,
+                padding: '7px 16px', width: 'fit-content', marginBottom: 28,
+                opacity: mounted ? undefined : 0, animationDelay: '0.15s',
+              }}
+            >
+              <div style={{ width: 7, height: 7, borderRadius: '50%', background: '#34D399', animation: 'float-up 2s ease-in-out infinite' }} />
+              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em' }}>School Management Platform</span>
+            </div>
 
-            <div className="p-8">
+            {/* Headline */}
+            <div
+              className="anim-slide-left"
+              style={{ opacity: mounted ? undefined : 0, animationDelay: '0.2s', marginBottom: 20 }}
+            >
+              <h1 style={{ fontSize: 46, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
+                Empowering
+              </h1>
+              <h1 style={{ fontSize: 46, fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
+                <span style={{
+                  background: 'linear-gradient(90deg, #60A5FA 0%, #A78BFA 40%, #F472B6 100%)',
+                  backgroundSize: '200% auto',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                  animation: 'shimmer 4s linear infinite',
+                }}>
+                  Education
+                </span>
+              </h1>
+              <h1 style={{ fontSize: 46, fontWeight: 900, color: '#fff', lineHeight: 1.1, letterSpacing: '-0.03em', margin: 0 }}>
+                Excellence
+              </h1>
+            </div>
 
-              {/* Icon + Title */}
-              <div className="flex flex-col items-center mb-8">
+            <p
+              className="anim-slide-left"
+              style={{
+                color: 'rgba(165,180,252,0.8)', fontSize: 15, lineHeight: 1.75,
+                maxWidth: 360, marginBottom: 36,
+                opacity: mounted ? undefined : 0, animationDelay: '0.25s',
+              }}
+            >
+              A unified platform for students, teachers, and administrators to collaborate, learn, and grow together.
+            </p>
+
+            {/* Features */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 380, marginBottom: 40 }}>
+              {FEATURES.map(({ icon: Icon, label, color }, i) => (
                 <div
-                  className="w-16 h-16 rounded-2xl mb-4 flex items-center justify-center shadow-lg"
-                  style={{ background: 'linear-gradient(135deg, #2563EB, #7C3AED)' }}
+                  key={label}
+                  className="feature-row anim-slide-left"
+                  style={{ opacity: mounted ? undefined : 0, animationDelay: `${0.3 + i * 0.08}s` }}
                 >
-                  <GraduationCap className="w-8 h-8 text-white drop-shadow" />
-                </div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Welcome Back</h2>
-                <p className="text-slate-400 text-sm font-medium mt-1">Sign in to your JY School account</p>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
-                {/* Username */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5 tracking-wide uppercase">
-                    Username or Email
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <User className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Enter your username or email"
-                      className={`w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all border ${
-                        errors.email
-                          ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-2 focus:ring-red-100'
-                          : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100'
-                      }`}
-                      {...register('email')}
-                    />
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: `${color}1A`, border: `1px solid ${color}35`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <Icon style={{ width: 16, height: 16, color }} />
                   </div>
-                  {errors.email && (
-                    <p className="text-red-500 text-[11px] font-semibold mt-1.5 ml-1 flex items-center gap-1">
-                      <span>⚠</span> {errors.email.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-600 mb-1.5 tracking-wide uppercase">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                      <Lock className="h-4 w-4 text-slate-400" />
-                    </div>
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter your password"
-                      className={`w-full pl-10 pr-11 py-3 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all border ${
-                        errors.password
-                          ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-2 focus:ring-red-100'
-                          : 'border-slate-200 bg-slate-50 focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100'
-                      }`}
-                      {...register('password')}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
-                    >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
+                  <span style={{ color: 'rgba(255,255,255,0.72)', fontSize: 13, fontWeight: 500, flex: 1 }}>{label}</span>
+                  <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>›</span>
                   </div>
-                  {errors.password && (
-                    <p className="text-red-500 text-[11px] font-semibold mt-1.5 ml-1 flex items-center gap-1">
-                      <span>⚠</span> {errors.password.message}
-                    </p>
-                  )}
                 </div>
+              ))}
+            </div>
 
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      className="w-4 h-4 rounded-md text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer accent-indigo-600"
-                    />
-                    <span className="text-sm font-medium text-slate-600">Remember me</span>
-                  </label>
-                  <Link
-                    to="/forgot-password"
-                    className="text-sm font-bold text-indigo-600 hover:text-indigo-800 hover:underline transition-colors"
+            {/* Stats */}
+            <div
+              className="anim-slide-left"
+              style={{
+                display: 'flex', gap: 36,
+                opacity: mounted ? undefined : 0, animationDelay: '0.65s',
+              }}
+            >
+              {[{ v: '500+', l: 'Students' }, { v: '34', l: 'Teachers' }, { v: '24', l: 'Classes' }].map(({ v, l }) => (
+                <div key={l}>
+                  <div style={{ color: '#fff', fontWeight: 900, fontSize: 26, letterSpacing: '-0.02em' }}>{v}</div>
+                  <div style={{ color: 'rgba(147,197,253,0.65)', fontSize: 11, fontWeight: 600, marginTop: 2 }}>{l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom Quote */}
+          <div style={{ position: 'relative', zIndex: 10, padding: '0 44px 32px' }}>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: 20 }}>
+              <p style={{ color: 'rgba(165,180,252,0.5)', fontSize: 13, fontStyle: 'italic', margin: 0 }}>
+                "Education is the most powerful weapon which you can use to change the world."
+              </p>
+              <p style={{ color: 'rgba(147,197,253,0.4)', fontSize: 11, fontWeight: 700, marginTop: 6 }}>— Nelson Mandela</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ════════════════════════════════════════
+            RIGHT PANEL — Login Form
+        ════════════════════════════════════════ */}
+        <div style={{
+          flex: 1, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          background: 'linear-gradient(160deg, #F0F4FF 0%, #F8FAFF 40%, #EEF2FF 100%)',
+          padding: '24px 24px',
+          position: 'relative', overflow: 'hidden',
+        }}>
+
+          {/* Subtle BG Orbs */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: -120, right: -100, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, #EEF2FF, transparent 70%)', opacity: 0.7 }} />
+            <div style={{ position: 'absolute', bottom: -80, left: -60, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle, #EDE9FE, transparent 70%)', opacity: 0.6 }} />
+          </div>
+
+          {/* Mobile Logo */}
+          <div className="lg:hidden" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 28 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 16, background: '#fff', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <img src="/logo.png" alt="JY School" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+            <div>
+              <div style={{ color: '#0f172a', fontWeight: 900, fontSize: 20 }}>JY SCHOOL</div>
+              <div style={{ color: '#94a3b8', fontSize: 11, fontWeight: 600 }}>Management System</div>
+            </div>
+          </div>
+
+          {/* Login Card */}
+          <div
+            className="anim-slide-up"
+            style={{
+              width: '100%', maxWidth: 420, position: 'relative', zIndex: 10,
+              opacity: mounted ? undefined : 0, animationDelay: '0.15s',
+            }}
+          >
+            {/* Card */}
+            <div style={{
+              background: '#fff', borderRadius: 28,
+              boxShadow: '0 32px 72px -12px rgba(79,70,229,0.14), 0 12px 28px -8px rgba(0,0,0,0.07)',
+              border: '1px solid rgba(226,232,240,0.7)',
+              overflow: 'hidden',
+            }}>
+
+              {/* Top gradient bar */}
+              <div style={{ height: 4, background: 'linear-gradient(90deg, #2563EB 0%, #6366F1 40%, #A855F7 70%, #EC4899 100%)' }} />
+
+              <div style={{ padding: '36px 36px 32px' }}>
+
+                {/* Icon + Title */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 32 }}>
+                  <div
+                    className="anim-bounce"
+                    style={{
+                      width: 72, height: 72, borderRadius: 22,
+                      background: 'linear-gradient(145deg, #2563EB, #7C3AED)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 12px 32px rgba(99,102,241,0.4)',
+                      marginBottom: 18, animation: `glow-pulse 3s ease-in-out infinite`,
+                      opacity: mounted ? undefined : 0, animationDelay: '0.3s',
+                    }}
                   >
-                    Forgot Password?
-                  </Link>
+                    <GraduationCap style={{ width: 34, height: 34, color: '#fff', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }} />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <Sparkles style={{ width: 14, height: 14, color: '#6366F1' }} />
+                    <h2 style={{ fontSize: 24, fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>Welcome Back</h2>
+                    <Sparkles style={{ width: 14, height: 14, color: '#6366F1' }} />
+                  </div>
+                  <p style={{ color: '#94a3b8', fontSize: 13, fontWeight: 500, margin: 0 }}>Sign in to your JY School account</p>
                 </div>
 
-                {/* Sign In Button */}
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3.5 px-6 rounded-xl text-white font-black text-sm relative overflow-hidden group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed transition-all active:scale-[0.98]"
-                  style={{
-                    background: 'linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #9333EA 100%)',
-                    boxShadow: '0 8px 20px -4px rgba(99,102,241,0.5)',
-                  }}
-                >
-                  {/* Hover shimmer */}
-                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{ background: 'linear-gradient(135deg, #1D4ED8 0%, #4F46E5 50%, #7E22CE 100%)' }}
-                  />
-                  <span className="relative flex items-center justify-center gap-2">
+                {/* Form */}
+                <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+                  {/* Username Field */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 7, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      Username or Email
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{
+                        position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                        transition: 'color 0.2s',
+                        color: focusedField === 'email' ? '#6366F1' : '#94a3b8',
+                      }}>
+                        <User style={{ width: 16, height: 16 }} />
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Enter your username or email"
+                        className={`input-field${errors.email ? ' error' : ''}`}
+                        onFocus={() => setFocusedField('email')}
+                        onBlur={() => setFocusedField(null)}
+                        {...register('email')}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p style={{ color: '#ef4444', fontSize: 11, fontWeight: 600, marginTop: 6, marginLeft: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>⚠</span> {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Password Field */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 7, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      Password
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <div style={{
+                        position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)',
+                        transition: 'color 0.2s',
+                        color: focusedField === 'password' ? '#6366F1' : '#94a3b8',
+                      }}>
+                        <Lock style={{ width: 16, height: 16 }} />
+                      </div>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Enter your password"
+                        className={`input-field${errors.password ? ' error' : ''}`}
+                        style={{ paddingRight: 44 }}
+                        onFocus={() => setFocusedField('password')}
+                        onBlur={() => setFocusedField(null)}
+                        {...register('password')}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        style={{
+                          position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                          color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer',
+                          padding: 4, borderRadius: 6, transition: 'color 0.2s',
+                        }}
+                        onMouseEnter={e => (e.currentTarget.style.color = '#6366F1')}
+                        onMouseLeave={e => (e.currentTarget.style.color = '#94a3b8')}
+                      >
+                        {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p style={{ color: '#ef4444', fontSize: 11, fontWeight: 600, marginTop: 6, marginLeft: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span>⚠</span> {errors.password.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Remember + Forgot */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: 15, height: 15, accentColor: '#6366F1', cursor: 'pointer', borderRadius: 4 }}
+                      />
+                      <span style={{ fontSize: 13, fontWeight: 500, color: '#64748b' }}>Remember me</span>
+                    </label>
+                    <Link
+                      to="/forgot-password"
+                      style={{ fontSize: 13, fontWeight: 700, color: '#6366F1', textDecoration: 'none', transition: 'color 0.2s' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = '#4338CA')}
+                      onMouseLeave={e => (e.currentTarget.style.color = '#6366F1')}
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
+
+                  {/* Sign In Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-hover-lift"
+                    style={{
+                      width: '100%', padding: '14px 24px', borderRadius: 14,
+                      border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                      opacity: isSubmitting ? 0.7 : 1,
+                      background: 'linear-gradient(135deg, #2563EB 0%, #6366F1 50%, #9333EA 100%)',
+                      boxShadow: '0 10px 24px -4px rgba(99,102,241,0.5)',
+                      color: '#fff', fontWeight: 800, fontSize: 14, letterSpacing: '0.01em',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      position: 'relative', overflow: 'hidden',
+                    }}
+                  >
+                    {/* shimmer overlay */}
+                    <div style={{
+                      position: 'absolute', inset: 0, pointerEvents: 'none',
+                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%)',
+                      backgroundSize: '200% auto',
+                      animation: isSubmitting ? 'none' : 'shimmer 2.5s linear infinite',
+                    }} />
                     {isSubmitting ? (
                       <>
-                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        <svg style={{ width: 18, height: 18, animation: 'spin-slow 0.8s linear infinite' }} fill="none" viewBox="0 0 24 24">
+                          <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                         </svg>
                         Signing In...
                       </>
                     ) : (
                       <>
-                        <ArrowRight className="w-4 h-4" />
+                        <ArrowRight style={{ width: 17, height: 17 }} />
                         Sign In to Dashboard
                       </>
                     )}
-                  </span>
-                </button>
-              </form>
+                  </button>
+                </form>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-100" />
+                {/* Divider */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#cbd5e1', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Secure Login</span>
+                  <div style={{ flex: 1, height: 1, background: '#f1f5f9' }} />
                 </div>
-                <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Secure Login
-                  </span>
+
+                {/* Trust Badges */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, marginBottom: 20 }}>
+                  {[
+                    { icon: Shield, label: 'SSL Secured' },
+                    { icon: CheckCircle2, label: 'Verified System' },
+                  ].map(({ icon: Icon, label }) => (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#94a3b8' }}>
+                      <Icon style={{ width: 14, height: 14, color: '#10b981' }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>{label}</span>
+                    </div>
+                  ))}
                 </div>
-              </div>
 
-              {/* Trust Badges */}
-              <div className="flex items-center justify-center gap-4 mb-5">
-                {[
-                  { icon: Shield, label: 'SSL Secured' },
-                  { icon: CheckCircle2, label: 'Verified System' },
-                ].map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex items-center gap-1.5 text-slate-400">
-                    <Icon className="w-3.5 h-3.5 text-emerald-500" />
-                    <span className="text-xs font-semibold">{label}</span>
-                  </div>
-                ))}
-              </div>
+                {/* Contact Admin → WhatsApp */}
+                <div style={{ textAlign: 'center', marginBottom: 8 }}>
+                  <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 500, marginBottom: 8 }}>
+                    Having trouble with login?
+                  </p>
+                  <a
+                    href={WHATSAPP_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="wa-btn"
+                  >
+                    <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <MessageCircle style={{ width: 13, height: 13, color: '#fff' }} />
+                    </div>
+                    Contact Administrator on WhatsApp
+                  </a>
+                </div>
 
-              {/* Footer Links */}
-              <div className="text-center space-y-1.5">
-                <p className="text-slate-400 text-xs font-medium">
-                  Having trouble?{' '}
-                  <Link to="/register" className="font-bold text-indigo-600 hover:underline">
-                    Contact Administrator
-                  </Link>
-                </p>
-                <p className="text-[11px] text-slate-300 font-medium">
+                {/* Copyright */}
+                <p style={{ textAlign: 'center', fontSize: 11, color: '#cbd5e1', fontWeight: 500, marginTop: 12 }}>
                   © {new Date().getFullYear()} JY Education. All rights reserved.
                 </p>
               </div>
             </div>
-          </div>
 
-          {/* Below-card hint */}
-          <p className="text-center text-xs text-slate-400 font-medium mt-3">
-            Protected by JY School Security System
-          </p>
+            {/* Below-card */}
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8', fontWeight: 500, marginTop: 14 }}>
+              🔒 Protected by JY School Security System
+            </p>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

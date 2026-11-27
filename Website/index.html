@@ -2,7 +2,7 @@
 <html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>Sri Venkateswara JY School — Official Academic &amp; ERP Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -18,204 +18,402 @@
         }
     </script>
     <style>
+        /* ===== BASE RESETS ===== */
+        *, *::before, *::after { box-sizing: border-box; }
+        html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
+
+        /* ===== FONTS & GLOBAL ===== */
+        body { font-family: 'Poppins', sans-serif; color: #1e293b; background: #F8FAFC; }
+
+        /* ===== HOVER LIFT ===== */
         .hover-lift { transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
-        .hover-lift:hover { transform: translateY(-5px); box-shadow: 0 20px 40px -12px rgba(30, 58, 138, 0.14); }
+        .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(30, 58, 138, 0.14); }
+
+        /* ===== STAT CARD GRADIENTS ===== */
         .stat-card-1 { background: linear-gradient(135deg, #1e3a8a, #3b5bd9); }
         .stat-card-2 { background: linear-gradient(135deg, #f97316, #fb923c); }
         .stat-card-3 { background: linear-gradient(135deg, #059669, #10b981); }
         .stat-card-4 { background: linear-gradient(135deg, #7c3aed, #a855f7); }
         .stat-card-5 { background: linear-gradient(135deg, #dc2626, #f87171); }
+
+        /* ===== NOTICE TICKER ===== */
         @keyframes tickerScroll {
-            0% { transform: translateX(0); }
+            0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-        .ticker-animate { display: flex; width: max-content; animation: tickerScroll 28s linear infinite; }
+        .ticker-animate {
+            display: flex;
+            width: max-content;
+            animation: tickerScroll 32s linear infinite;
+            white-space: nowrap;
+        }
         .ticker-animate:hover { animation-play-state: paused; }
+
+        /* ===== MOBILE MENU TRANSITION ===== */
+        #mobile-menu {
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        #mobile-menu.open {
+            max-height: 600px;
+            opacity: 1;
+        }
+
+        /* ===== NAVBAR ===== */
+        nav { width: 100%; }
+        .nav-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 64px;
+            padding: 0 16px;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        @media (min-width: 640px) {
+            .nav-inner { height: 72px; padding: 0 24px; }
+        }
+        @media (min-width: 1024px) {
+            .nav-inner { padding: 0 32px; }
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero-section {
+            padding: 32px 16px 48px;
+            background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 50%, #f0fdf4 100%);
+        }
+        @media (min-width: 640px) {
+            .hero-section { padding: 40px 24px 56px; }
+        }
+        @media (min-width: 1024px) {
+            .hero-section { padding: 56px 32px 72px; }
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 32px;
+            align-items: center;
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+        @media (min-width: 1024px) {
+            .hero-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .hero-title {
+            font-size: clamp(1.75rem, 5vw, 3.25rem);
+            font-weight: 900;
+            line-height: 1.15;
+            color: #0f172a;
+            margin-bottom: 16px;
+        }
+        .hero-desc {
+            font-size: clamp(0.825rem, 2vw, 1rem);
+            color: #475569;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+        .hero-image {
+            width: 100%;
+            max-width: 520px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.18);
+            border: 4px solid #fff;
+            object-fit: cover;
+            margin: 0 auto;
+            display: block;
+        }
+
+        /* ===== QUICK ACCESS STRIP ===== */
+        .quick-strip {
+            max-width: 1280px;
+            margin: -28px auto 0;
+            padding: 0 16px;
+            position: relative;
+            z-index: 20;
+        }
+        @media (min-width: 640px) { .quick-strip { padding: 0 24px; } }
+        @media (min-width: 1024px) { .quick-strip { padding: 0 32px; } }
+        .quick-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        @media (min-width: 768px) {
+            .quick-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+        .quick-card {
+            background: #fff;
+            border: 1px solid #e0e7ff;
+            border-radius: 16px;
+            padding: 14px 8px;
+            box-shadow: 0 4px 12px rgba(30,58,138,0.07);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+            text-decoration: none;
+            transition: all 0.25s ease;
+        }
+        .quick-card:hover { transform: translateY(-4px); box-shadow: 0 16px 32px rgba(30,58,138,0.12); }
+        .quick-icon {
+            width: 44px; height: 44px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+        }
+        .quick-label {
+            font-size: 10px;
+            font-weight: 800;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+
+        /* ===== SECTION HEADINGS ===== */
+        .section-title {
+            font-size: clamp(1.5rem, 4vw, 2.25rem);
+            font-weight: 900;
+            color: #0f172a;
+        }
+
+        /* ===== PORTAL TABS ===== */
+        .portal-tab-btn { white-space: nowrap; }
+
+        /* ===== PRINT ===== */
         @media print {
             body * { visibility: hidden; }
             #printable-portal-area, #printable-portal-area * { visibility: visible; }
             #printable-portal-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 16px; }
         }
+
+        /* ===== TOP BAR RESPONSIVE ===== */
+        .top-bar-inner {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: center;
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        @media (min-width: 768px) {
+            .top-bar-inner {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 24px;
+            }
+        }
+
+        /* ===== UTILITY ===== */
+        img { max-width: 100%; height: auto; }
+        .container-pad { padding-left: 16px; padding-right: 16px; }
+        @media (min-width: 640px) { .container-pad { padding-left: 24px; padding-right: 24px; } }
+        @media (min-width: 1024px) { .container-pad { padding-left: 32px; padding-right: 32px; } }
     </style>
 </head>
 <body class="font-sans text-slate-800 bg-[#F8FAFC] overflow-x-hidden">
 
     <!-- Top Utility Bar -->
-    <div class="bg-brandOrange text-white text-xs font-semibold py-2 px-6 hidden md:flex justify-between items-center">
-        <div class="flex gap-6">
-            <a id="top-phone" href="tel:+919876543210" class="flex items-center gap-2 hover:text-orange-100"><i class="fa-solid fa-phone"></i> +91 98765 43210</a>
-            <a id="top-email" href="mailto:info@svjyschool.edu.in" class="flex items-center gap-2 hover:text-orange-100"><i class="fa-solid fa-envelope"></i> info@svjyschool.edu.in</a>
-        </div>
-        <div class="flex items-center gap-4">
-            <a href="#student-portals" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[11px] font-bold">Results &amp; Hall Tickets</a>
-            <a href="#downloads-hub" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[11px] font-bold">Circulars</a>
-            <div class="flex items-center gap-2">
-                <a id="social-facebook-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-facebook-f text-[10px]"></i></a>
-                <a id="social-instagram-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-instagram text-[10px]"></i></a>
-                <a id="social-youtube-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-youtube text-[10px]"></i></a>
+    <div class="bg-brandOrange text-white">
+        <div class="top-bar-inner">
+            <div class="flex flex-wrap gap-4 justify-center md:justify-start">
+                <a id="top-phone" href="tel:+919876543210" class="flex items-center gap-2 hover:text-orange-100 text-[11px] font-semibold">
+                    <i class="fa-solid fa-phone"></i> +91 98765 43210
+                </a>
+                <a id="top-email" href="mailto:info@svjyschool.edu.in" class="flex items-center gap-2 hover:text-orange-100 text-[11px] font-semibold">
+                    <i class="fa-solid fa-envelope"></i> info@svjyschool.edu.in
+                </a>
+            </div>
+            <div class="flex items-center gap-3 flex-wrap justify-center">
+                <a href="#student-portals" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black">Results &amp; Hall Tickets</a>
+                <a href="#downloads-hub" class="bg-white/20 hover:bg-white/30 px-3 py-0.5 rounded-full text-[10px] font-black">Circulars</a>
+                <div class="flex items-center gap-1.5">
+                    <a id="social-facebook-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-facebook-f text-[10px]"></i></a>
+                    <a id="social-instagram-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-instagram text-[10px]"></i></a>
+                    <a id="social-youtube-top" href="#" target="_blank" rel="noopener" class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center hover:bg-white hover:text-brandOrange"><i class="fa-brands fa-youtube text-[10px]"></i></a>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Live University Notice Ticker -->
-    <div class="bg-[#EEF2FF] border-b border-indigo-200 py-2 overflow-hidden flex items-center">
-        <div class="bg-brandBlue text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 ml-3 rounded-full shrink-0 z-10 shadow-xs flex items-center gap-1.5">
+    <div class="bg-[#EEF2FF] border-b border-indigo-200 py-2 overflow-hidden flex items-center gap-3">
+        <div class="bg-brandBlue text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 ml-3 rounded-full shrink-0 z-10 shadow-sm flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Notices
         </div>
-        <div class="flex-1 overflow-hidden ml-3">
+        <div class="flex-1 overflow-hidden">
             <div id="notice-ticker-track" class="ticker-animate text-xs font-bold text-slate-700 gap-10">
-                <span>Admissions Open for 2027-2028 • Apply Online Now!</span>
-                <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.</span>
+                <span>Admissions Open for 2027-2028 • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span>Admissions Open for 2027-2028 • Apply Online Now!&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                <span>Check Live Exam Results &amp; Download Official Hall Tickets in Student Self-Service Portal below.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
             </div>
         </div>
     </div>
 
-    <!-- Sticky University Navbar -->
-    <nav class="sticky top-0 z-50 bg-brandBlue shadow-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <a href="#" class="flex items-center gap-3">
-                    <img src="./logo_.png" alt="JY School Logo" class="w-14 h-14 object-contain bg-white rounded-xl p-1">
-                    <div class="flex flex-col">
-                        <span class="text-xs font-bold text-blue-200 tracking-wider">SRI VENKATESWARA</span>
-                        <span class="text-xl text-brandOrange font-black tracking-widest uppercase leading-tight">JY School</span>
-                    </div>
-                </a>
-
-                <div class="hidden lg:flex items-center space-x-6 text-xs font-bold text-blue-100">
-                    <a href="#" class="hover:text-white">Home</a>
-                    <div class="relative group">
-                        <button class="hover:text-white flex items-center gap-1 py-2">Academics &amp; Policies <i class="fa-solid fa-chevron-down text-[10px]"></i></button>
-                        <div id="academics-dropdown" class="absolute left-0 mt-1 w-60 bg-white rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all border border-indigo-100 py-2 z-50 text-slate-700">
-                            <!-- Populated dynamically by cms.js -->
-                        </div>
-                    </div>
-                    <a href="#student-portals" class="hover:text-white">Results &amp; Hall Tickets</a>
-                    <a href="#media-showcase" class="hover:text-white">Videos &amp; Gallery</a>
-                    <a href="#downloads-hub" class="hover:text-white">Circulars</a>
-                    <span id="dynamic-header-links" class="flex items-center space-x-6"></span>
-                    <a href="#contact-section" class="hover:text-white">Contact</a>
+    <!-- Sticky Navbar -->
+    <nav class="sticky top-0 z-50 bg-brandBlue shadow-md w-full">
+        <div class="nav-inner">
+            <!-- Logo -->
+            <a href="#" class="flex items-center gap-2.5 shrink-0">
+                <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-13 sm:h-13 object-contain bg-white rounded-xl p-1">
+                <div class="flex flex-col leading-tight">
+                    <span class="text-[9px] sm:text-[10px] font-bold text-blue-200 tracking-wider uppercase">SRI VENKATESWARA</span>
+                    <span class="text-base sm:text-lg text-brandOrange font-black tracking-widest uppercase">JY School</span>
                 </div>
+            </a>
 
-                <div class="hidden md:flex items-center gap-2.5">
-                    <a href="http://66.116.252.191:19999/login" class="px-4 py-2 text-xs font-bold text-white border border-white/40 rounded-full hover:bg-white hover:text-brandBlue transition-all">
-                        <i class="fa-solid fa-right-to-bracket mr-1"></i> ERP Login
-                    </a>
-                    <a href="http://66.116.252.191:19999/apply" class="px-5 py-2 text-xs font-black text-white bg-brandOrange rounded-full shadow-md hover:bg-orange-600 transition-all">
-                        Apply Now <i class="fa-solid fa-arrow-right ml-1"></i>
-                    </a>
+            <!-- Desktop Nav Links -->
+            <div class="hidden lg:flex items-center space-x-5 text-[11px] font-bold text-blue-100">
+                <a href="#" class="hover:text-white transition-colors">Home</a>
+                <div class="relative group">
+                    <button class="hover:text-white flex items-center gap-1 py-2 transition-colors">
+                        Academics &amp; Policies <i class="fa-solid fa-chevron-down text-[9px] ml-0.5"></i>
+                    </button>
+                    <div id="academics-dropdown" class="absolute left-0 mt-1 w-56 bg-white rounded-2xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-indigo-100 py-2 z-50 text-slate-700">
+                        <!-- Populated by cms.js -->
+                    </div>
                 </div>
-
-                <button id="mobile-menu-btn" class="lg:hidden text-white text-xl"><i class="fa-solid fa-bars"></i></button>
+                <a href="#student-portals" class="hover:text-white transition-colors">Results &amp; Hall Tickets</a>
+                <a href="#media-showcase" class="hover:text-white transition-colors">Videos &amp; Gallery</a>
+                <a href="#downloads-hub" class="hover:text-white transition-colors">Circulars</a>
+                <span id="dynamic-header-links" class="flex items-center space-x-5"></span>
+                <a href="#contact-section" class="hover:text-white transition-colors">Contact</a>
             </div>
+
+            <!-- Desktop CTA Buttons -->
+            <div class="hidden md:flex items-center gap-2">
+                <a href="http://66.116.252.191:19999/login" class="px-4 py-2 text-[11px] font-bold text-white border border-white/40 rounded-full hover:bg-white hover:text-brandBlue transition-all">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> ERP Login
+                </a>
+                <a href="http://66.116.252.191:19999/apply" class="px-4 py-2 text-[11px] font-black text-white bg-brandOrange rounded-full shadow-md hover:bg-orange-600 transition-all">
+                    Apply Now <i class="fa-solid fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+
+            <!-- Hamburger (mobile) -->
+            <button id="mobile-menu-btn" class="lg:hidden text-white text-xl p-2 rounded-lg hover:bg-white/10 transition-colors" aria-label="Menu">
+                <i class="fa-solid fa-bars" id="hamburger-icon"></i>
+            </button>
         </div>
-        <div id="mobile-menu" class="hidden lg:hidden bg-white border-t border-indigo-100 px-5 py-4 space-y-2 text-xs font-bold text-slate-700">
-            <a href="#" class="block py-2">Home</a>
-            <a href="#student-portals" class="block py-2">Exam Results &amp; Hall Tickets</a>
-            <a href="#programs" class="block py-2">Academic Programs</a>
-            <a href="#media-showcase" class="block py-2">Campus Videos &amp; Gallery</a>
-            <a href="#downloads-hub" class="block py-2">Circulars &amp; Syllabus</a>
-            <a href="http://66.116.252.191:19999/apply" class="block py-2 text-brandOrange">Online Admissions</a>
-            <a href="http://66.116.252.191:19999/login" class="block py-2 text-brandBlue">Student / Staff ERP Login</a>
+
+        <!-- Mobile Dropdown Menu -->
+        <div id="mobile-menu" class="lg:hidden bg-white border-t border-indigo-100">
+            <div class="px-5 py-4 space-y-1 text-[12px] font-bold text-slate-700">
+                <a href="#" class="block py-2.5 border-b border-slate-100">Home</a>
+                <a href="#student-portals" class="block py-2.5 border-b border-slate-100">Exam Results &amp; Hall Tickets</a>
+                <a href="#programs" class="block py-2.5 border-b border-slate-100">Academic Programs</a>
+                <a href="#media-showcase" class="block py-2.5 border-b border-slate-100">Campus Videos &amp; Gallery</a>
+                <a href="#downloads-hub" class="block py-2.5 border-b border-slate-100">Circulars &amp; Syllabus</a>
+                <a href="#contact-section" class="block py-2.5 border-b border-slate-100">Contact</a>
+                <div class="flex gap-3 pt-3">
+                    <a href="http://66.116.252.191:19999/apply" class="flex-1 text-center py-2.5 bg-brandOrange text-white rounded-xl font-black text-[11px]">Online Admissions</a>
+                    <a href="http://66.116.252.191:19999/login" class="flex-1 text-center py-2.5 bg-brandBlue text-white rounded-xl font-black text-[11px]">ERP Login</a>
+                </div>
+            </div>
         </div>
     </nav>
 
     <!-- HERO SECTION -->
-    <section class="bg-gradient-to-br from-[#eff6ff] via-[#fff7ed] to-[#f0fdf4] py-12 lg:py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            <div>
-                <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider mb-4">
+    <section class="hero-section">
+        <div class="hero-grid">
+            <!-- Text Side -->
+            <div class="order-2 lg:order-1">
+                <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-4 py-1.5 rounded-full text-[10px] sm:text-[11px] font-black uppercase tracking-wider mb-4">
                     Excellence in Education Since 2005
                 </span>
-                <h1 id="hero-title" class="text-4xl lg:text-5xl font-black text-slate-900 leading-tight mb-4">
+                <h1 id="hero-title" class="hero-title">
                     Shaping Brilliant Minds, Building Futures
                 </h1>
-                <p id="hero-description" class="text-slate-600 text-base leading-relaxed mb-6">
+                <p id="hero-description" class="hero-desc">
                     At Sri Venkateswara JY School, we empower students with knowledge, values, and analytical skills for IIT-JEE, NEET, Olympiads &amp; holistic leadership.
                 </p>
                 <div class="flex flex-wrap gap-3">
-                    <a href="http://66.116.252.191:19999/apply" class="px-7 py-3.5 bg-brandBlue text-white text-xs font-black rounded-full shadow-lg hover:bg-blue-900 transition-all">
+                    <a href="http://66.116.252.191:19999/apply" class="px-6 py-3 bg-brandBlue text-white text-[11px] font-black rounded-full shadow-lg hover:bg-blue-900 transition-all">
                         Online Admission <i class="fa-solid fa-arrow-right ml-1"></i>
                     </a>
-                    <a href="#student-portals" class="px-7 py-3.5 bg-white text-brandBlue border-2 border-brandBlue text-xs font-black rounded-full hover:bg-brandBlue hover:text-white transition-all">
+                    <a href="#student-portals" class="px-6 py-3 bg-white text-brandBlue border-2 border-brandBlue text-[11px] font-black rounded-full hover:bg-brandBlue hover:text-white transition-all">
                         <i class="fa-solid fa-award text-brandOrange mr-1"></i> Check Results / Hall Ticket
                     </a>
-                    <button id="hero-video-btn" onclick="openHeroVideo()" class="hidden px-6 py-3.5 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black rounded-full hover:bg-rose-600 hover:text-white transition-all">
+                    <button id="hero-video-btn" onclick="openHeroVideo()" class="hidden px-6 py-3 bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-black rounded-full hover:bg-rose-600 hover:text-white transition-all">
                         <i class="fa-solid fa-play mr-1"></i> Watch Campus Video
                     </button>
                 </div>
             </div>
-            <div class="flex justify-center">
-                <img id="hero-image" src="./image.png" alt="JY School Campus" class="rounded-3xl shadow-2xl border-4 border-white w-full max-w-lg object-cover">
+            <!-- Image Side -->
+            <div class="order-1 lg:order-2 flex justify-center">
+                <img id="hero-image" src="./image.png" alt="JY School Campus" class="hero-image">
             </div>
         </div>
     </section>
 
-    <!-- UNIVERSITY QUICK-ACCESS UTILITY STRIP -->
-    <section class="-mt-7 relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <a href="#student-portals" onclick="switchPortalTab('results')" class="bg-white border border-indigo-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg"><i class="fa-solid fa-square-poll-vertical"></i></div>
-                <span class="text-xs font-black text-slate-800">Exam Results</span>
+    <!-- QUICK-ACCESS UTILITY STRIP -->
+    <div class="quick-strip">
+        <div class="quick-grid">
+            <a href="#student-portals" onclick="switchPortalTab('results')" class="quick-card">
+                <div class="quick-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                <span class="quick-label">Exam Results</span>
             </a>
-            <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="bg-white border border-emerald-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"><i class="fa-solid fa-id-card"></i></div>
-                <span class="text-xs font-black text-slate-800">Hall Tickets</span>
+            <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="quick-card" style="border-color:#d1fae5">
+                <div class="quick-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-id-card"></i></div>
+                <span class="quick-label">Hall Tickets</span>
             </a>
-            <a href="#student-portals" onclick="switchPortalTab('admission')" class="bg-white border border-amber-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg"><i class="fa-solid fa-magnifying-glass"></i></div>
-                <span class="text-xs font-black text-slate-800">Track Admission</span>
+            <a href="#student-portals" onclick="switchPortalTab('admission')" class="quick-card" style="border-color:#fef3c7">
+                <div class="quick-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <span class="quick-label">Track Admission</span>
             </a>
-            <a href="#downloads-hub" class="bg-white border border-sky-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg"><i class="fa-solid fa-file-pdf"></i></div>
-                <span class="text-xs font-black text-slate-800">Syllabus &amp; Circulars</span>
+            <a href="#downloads-hub" class="quick-card" style="border-color:#e0f2fe">
+                <div class="quick-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-file-pdf"></i></div>
+                <span class="quick-label">Syllabus &amp; Circulars</span>
             </a>
-            <a href="#media-showcase" class="bg-white border border-rose-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg"><i class="fa-solid fa-circle-play"></i></div>
-                <span class="text-xs font-black text-slate-800">Campus Videos</span>
+            <a href="#media-showcase" class="quick-card" style="border-color:#ffe4e6">
+                <div class="quick-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-circle-play"></i></div>
+                <span class="quick-label">Campus Videos</span>
             </a>
-            <a href="http://66.116.252.191:19999/login" class="bg-white border border-violet-100 rounded-2xl p-4 shadow-md hover-lift flex flex-col items-center text-center gap-2">
-                <div class="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center text-lg"><i class="fa-solid fa-mobile-screen"></i></div>
-                <span class="text-xs font-black text-slate-800">ERP / Parent Login</span>
+            <a href="http://66.116.252.191:19999/login" class="quick-card" style="border-color:#ede9fe">
+                <div class="quick-icon bg-violet-50 text-violet-600"><i class="fa-solid fa-mobile-screen"></i></div>
+                <span class="quick-label">ERP / Parent Login</span>
             </a>
         </div>
-    </section>
+    </div>
 
     <!-- STATS SECTION -->
-    <section class="py-12 bg-white mt-4">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-5 gap-4"></div>
+    <section class="pt-16 pb-10 bg-white mt-4">
+        <div class="max-w-7xl mx-auto container-pad">
+            <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4"></div>
         </div>
     </section>
 
-    <!-- UNIVERSITY SELF-SERVICE PORTALS: RESULTS, HALL TICKETS & ADMISSION TRACKER -->
-    <section id="student-portals" class="py-16 bg-gradient-to-br from-[#F4F7FC] to-[#EEF2FF] border-y border-indigo-100">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- STUDENT SELF-SERVICE PORTALS -->
+    <section id="student-portals" class="py-14 sm:py-16 bg-gradient-to-br from-[#F4F7FC] to-[#EEF2FF] border-y border-indigo-100">
+        <div class="max-w-6xl mx-auto container-pad">
             <div class="text-center mb-10">
-                <span class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase tracking-wider mb-3">
-                    Live ERP Connected Services
-                </span>
-                <h2 class="text-3xl font-black text-slate-900">Student &amp; Parent Self-Service Portal</h2>
-                <p class="text-sm text-slate-600 mt-1">Verify Exam Results, Download Official Hall Tickets, or Track Admission Status instantly</p>
+                <span class="inline-block px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase tracking-wider mb-3">Live ERP Connected Services</span>
+                <h2 class="section-title">Student &amp; Parent Self-Service Portal</h2>
+                <p class="text-sm text-slate-600 mt-2">Verify Exam Results, Download Official Hall Tickets, or Track Admission Status instantly</p>
             </div>
 
             <div class="bg-white rounded-3xl shadow-lg border border-indigo-100 overflow-hidden">
+                <!-- Tabs -->
                 <div class="flex flex-wrap border-b border-indigo-100 bg-[#F8FAFF] p-2 gap-2">
-                    <button id="ptab-results" onclick="switchPortalTab('results')" class="portal-tab-btn px-5 py-2.5 rounded-xl text-xs font-black bg-brandBlue text-white cursor-pointer">
+                    <button id="ptab-results" onclick="switchPortalTab('results')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black bg-brandBlue text-white cursor-pointer">
                         <i class="fa-solid fa-award mr-1.5"></i> Check Exam Results
                     </button>
-                    <button id="ptab-hallticket" onclick="switchPortalTab('hallticket')" class="portal-tab-btn px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
+                    <button id="ptab-hallticket" onclick="switchPortalTab('hallticket')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
                         <i class="fa-solid fa-ticket mr-1.5"></i> Download Hall Ticket
                     </button>
-                    <button id="ptab-admission" onclick="switchPortalTab('admission')" class="portal-tab-btn px-5 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
+                    <button id="ptab-admission" onclick="switchPortalTab('admission')" class="portal-tab-btn flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-black text-slate-600 hover:bg-indigo-50 cursor-pointer">
                         <i class="fa-solid fa-user-check mr-1.5"></i> Track Admission Status
                     </button>
                 </div>
 
-                <div class="p-6 md:p-8">
+                <div class="p-4 sm:p-6 md:p-8">
                     <!-- Panel 1: Results -->
                     <div id="portal-panel-results" class="portal-panel space-y-6">
-                        <form id="results-lookup-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <form id="results-lookup-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label class="block text-[11px] font-black text-slate-500 uppercase mb-1">Published Exam</label>
                                 <select id="res-exam-id" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
@@ -230,7 +428,7 @@
                                 <label class="block text-[11px] font-black text-slate-500 uppercase mb-1">Date of Birth *</label>
                                 <input id="res-dob" required type="date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
                             </div>
-                            <button type="submit" class="py-2.5 px-5 rounded-xl bg-brandBlue hover:bg-blue-900 text-white text-xs font-black shadow-sm cursor-pointer">
+                            <button type="submit" class="py-2.5 px-5 rounded-xl bg-brandBlue hover:bg-blue-900 text-white text-xs font-black shadow-sm cursor-pointer w-full">
                                 Get Marks Memo
                             </button>
                         </form>
@@ -239,7 +437,7 @@
 
                     <!-- Panel 2: Hall Ticket -->
                     <div id="portal-panel-hallticket" class="portal-panel hidden space-y-6">
-                        <form id="hallticket-lookup-form" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <form id="hallticket-lookup-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                             <div>
                                 <label class="block text-[11px] font-black text-slate-500 uppercase mb-1">Exam (Admit Card Open) *</label>
                                 <select id="ht-exam-id" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
@@ -254,7 +452,7 @@
                                 <label class="block text-[11px] font-black text-slate-500 uppercase mb-1">Date of Birth *</label>
                                 <input id="ht-dob" required type="date" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none">
                             </div>
-                            <button type="submit" class="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm cursor-pointer">
+                            <button type="submit" class="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-sm cursor-pointer w-full">
                                 Generate Hall Ticket
                             </button>
                         </form>
@@ -277,23 +475,23 @@
     </section>
 
     <!-- MISSION, VISION & PRINCIPAL MESSAGE -->
-    <section id="mission" class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section id="mission" class="py-14 sm:py-16 bg-white">
+        <div class="max-w-7xl mx-auto container-pad space-y-10">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="p-7 rounded-3xl bg-[#F8FAFF] border border-indigo-100 hover-lift">
+                <div class="p-6 sm:p-7 rounded-3xl bg-[#F8FAFF] border border-indigo-100 hover-lift">
                     <span class="text-xs font-black text-brandOrange uppercase">What We Do</span>
                     <h3 class="text-xl font-black text-slate-900 mt-1 mb-3">Our Mission</h3>
                     <p id="mission-text" class="text-sm text-slate-600 leading-relaxed"></p>
                 </div>
-                <div class="p-7 rounded-3xl bg-[#FFFBEB] border border-amber-200/80 hover-lift">
+                <div class="p-6 sm:p-7 rounded-3xl bg-[#FFFBEB] border border-amber-200/80 hover-lift">
                     <span class="text-xs font-black text-brandBlue uppercase">Where We're Headed</span>
                     <h3 class="text-xl font-black text-slate-900 mt-1 mb-3">Our Vision</h3>
                     <p id="vision-text" class="text-sm text-slate-600 leading-relaxed"></p>
                 </div>
             </div>
 
-            <div id="principal-section" class="hidden rounded-3xl bg-gradient-to-r from-[#EEF2FF] via-white to-[#FFF7ED] border border-indigo-100 p-7 flex flex-col md:flex-row items-center gap-6 shadow-xs">
-                <img id="principal-photo" src="./logo_.png" alt="Principal" class="w-24 h-24 rounded-2xl object-cover border-2 border-white shadow-md shrink-0">
+            <div id="principal-section" class="hidden rounded-3xl bg-gradient-to-r from-[#EEF2FF] via-white to-[#FFF7ED] border border-indigo-100 p-6 sm:p-7 flex flex-col md:flex-row items-center gap-6 shadow-sm">
+                <img id="principal-photo" src="./logo_.png" alt="Principal" class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-white shadow-md shrink-0">
                 <div>
                     <span class="text-[11px] font-black text-brandOrange uppercase tracking-widest">From the Principal's Desk</span>
                     <h3 id="principal-name" class="text-lg font-black text-slate-900 mt-0.5 mb-2">Principal</h3>
@@ -304,23 +502,23 @@
     </section>
 
     <!-- PROGRAMS SECTION -->
-    <section id="programs" class="py-16 bg-[#F8FAFC]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="programs" class="py-14 sm:py-16 bg-[#F8FAFC]">
+        <div class="max-w-7xl mx-auto container-pad">
             <div class="text-center mb-10">
                 <span class="px-4 py-1 rounded-full bg-orange-100 text-brandOrange text-[11px] font-black uppercase">Academic Excellence</span>
-                <h2 class="text-3xl font-black text-slate-900 mt-3">Programs We Offer</h2>
+                <h2 class="section-title mt-3">Programs We Offer</h2>
             </div>
             <div id="programs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
         </div>
     </section>
 
     <!-- TOPPERS HALL OF FAME + FACULTY DIRECTORY -->
-    <section id="toppers-section" class="py-16 bg-white hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+    <section id="toppers-section" class="py-14 sm:py-16 bg-white hidden">
+        <div class="max-w-7xl mx-auto container-pad space-y-12">
             <div id="toppers-block" class="hidden">
                 <div class="text-center mb-8">
                     <span class="px-4 py-1 rounded-full bg-amber-100 text-amber-800 text-[11px] font-black uppercase">Merit &amp; Pride</span>
-                    <h2 class="text-3xl font-black text-slate-900 mt-2">Our Academic Toppers</h2>
+                    <h2 class="section-title mt-2">Our Academic Toppers</h2>
                 </div>
                 <div id="toppers-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"></div>
             </div>
@@ -328,7 +526,7 @@
             <div id="faculty-block" class="hidden">
                 <div class="text-center mb-8">
                     <span class="px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase">Academic Mentors</span>
-                    <h2 class="text-3xl font-black text-slate-900 mt-2">Distinguished Faculty</h2>
+                    <h2 class="section-title mt-2">Distinguished Faculty</h2>
                 </div>
                 <div id="faculty-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
             </div>
@@ -336,34 +534,34 @@
     </section>
 
     <!-- CAMPUS VIDEOS & PHOTO GALLERY -->
-    <section id="media-showcase" class="py-16 bg-[#F4F7FC]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="media-showcase" class="py-14 sm:py-16 bg-[#F4F7FC]">
+        <div class="max-w-7xl mx-auto container-pad">
             <div class="text-center mb-10">
                 <span class="px-4 py-1 rounded-full bg-violet-100 text-violet-700 text-[11px] font-black uppercase">Campus Life &amp; Tour</span>
-                <h2 class="text-3xl font-black text-slate-900 mt-2">Videos &amp; Campus Gallery</h2>
+                <h2 class="section-title mt-2">Videos &amp; Campus Gallery</h2>
             </div>
-            <div id="media-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+            <div id="media-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
         </div>
     </section>
 
     <!-- CIRCULARS, SYLLABUS & DOWNLOADS HUB -->
-    <section id="downloads-hub" class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-3">
+    <section id="downloads-hub" class="py-14 sm:py-16 bg-white">
+        <div class="max-w-7xl mx-auto container-pad">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3">
                 <div>
                     <span class="px-4 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-black uppercase">Official Repository</span>
-                    <h2 class="text-3xl font-black text-slate-900 mt-2">Circulars, Syllabus &amp; Downloads</h2>
+                    <h2 class="section-title mt-2">Circulars, Syllabus &amp; Downloads</h2>
                 </div>
             </div>
-            <div id="downloads-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="downloads-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
     </section>
 
-    <!-- ADMISSIONS CTA -->
-    <section class="py-14 bg-gradient-to-r from-brandOrange to-amber-500 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+    <!-- ADMISSIONS CTA BANNER -->
+    <section class="py-12 sm:py-14 bg-gradient-to-r from-brandOrange to-amber-500 text-white">
+        <div class="max-w-7xl mx-auto container-pad flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
             <div>
-                <h2 id="admissions-heading" class="text-3xl font-black">ADMISSIONS OPEN FOR 2027 – 2028</h2>
+                <h2 id="admissions-heading" class="text-2xl sm:text-3xl font-black">ADMISSIONS OPEN FOR 2027 – 2028</h2>
                 <p class="text-white/90 text-sm mt-1">Limited seats available! Register online for academic counseling &amp; admission assessment.</p>
             </div>
             <a href="http://66.116.252.191:19999/apply" class="px-8 py-3.5 bg-white text-brandOrange font-black rounded-full shadow-xl hover:scale-105 transition-all text-sm shrink-0">
@@ -373,41 +571,41 @@
     </section>
 
     <!-- NEWS & TESTIMONIALS -->
-    <section class="py-16 bg-[#F8FAFC]">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+    <section class="py-14 sm:py-16 bg-[#F8FAFC]">
+        <div class="max-w-7xl mx-auto container-pad space-y-14">
             <div>
-                <h2 class="text-2xl font-black text-slate-900 mb-6">Latest Campus News &amp; Events</h2>
-                <div id="news-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 mb-6">Latest Campus News &amp; Events</h2>
+                <div id="news-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
             </div>
             <div>
-                <h2 class="text-2xl font-black text-slate-900 mb-6">Parent &amp; Alumni Testimonials</h2>
-                <div id="testimonials-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 mb-6">Parent &amp; Alumni Testimonials</h2>
+                <div id="testimonials-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
             </div>
         </div>
     </section>
 
     <!-- CONTACT & GOOGLE MAP -->
-    <section id="contact-section" class="py-16 bg-white border-t border-indigo-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <section id="contact-section" class="py-14 sm:py-16 bg-white border-t border-indigo-100">
+        <div class="max-w-7xl mx-auto container-pad grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
             <div class="space-y-4">
                 <span class="px-4 py-1 rounded-full bg-indigo-100 text-brandBlue text-[11px] font-black uppercase">Visit Campus</span>
-                <h2 class="text-3xl font-black text-slate-900">Get in Touch With Admissions Office</h2>
+                <h2 class="section-title">Get in Touch With Admissions Office</h2>
                 <div class="space-y-3 text-sm text-slate-700 pt-2">
-                    <p class="flex items-start gap-3"><i class="fa-solid fa-location-dot text-brandOrange mt-1"></i> <span id="contact-address-val"></span></p>
-                    <p class="flex items-center gap-3"><i class="fa-solid fa-phone text-brandBlue"></i> <a id="contact-phone-val" href="#" class="font-bold"></a></p>
-                    <p class="flex items-center gap-3"><i class="fa-solid fa-envelope text-emerald-600"></i> <a id="contact-email-val" href="#" class="font-bold"></a></p>
+                    <p class="flex items-start gap-3"><i class="fa-solid fa-location-dot text-brandOrange mt-1 shrink-0"></i> <span id="contact-address-val"></span></p>
+                    <p class="flex items-center gap-3"><i class="fa-solid fa-phone text-brandBlue shrink-0"></i> <a id="contact-phone-val" href="#" class="font-bold"></a></p>
+                    <p class="flex items-center gap-3"><i class="fa-solid fa-envelope text-emerald-600 shrink-0"></i> <a id="contact-email-val" href="#" class="font-bold break-all"></a></p>
                 </div>
             </div>
-            <div id="map-container" class="rounded-3xl overflow-hidden border border-indigo-100 shadow-sm h-72 bg-[#EEF2FF] flex items-center justify-center text-xs font-bold text-slate-500">
+            <div id="map-container" class="rounded-3xl overflow-hidden border border-indigo-100 shadow-sm h-64 sm:h-72 bg-[#EEF2FF] flex items-center justify-center text-xs font-bold text-slate-500">
                 Campus Map (Configure Embed URL in Website CMS)
             </div>
         </div>
     </section>
 
-    <!-- ROYAL BLUE LIGHT-FRIENDLY FOOTER (NO BLACK THEME) -->
-    <footer class="bg-brandNavy text-blue-100 pt-14 pb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
+    <!-- FOOTER -->
+    <footer class="bg-brandNavy text-blue-100 pt-12 sm:pt-14 pb-8">
+        <div class="max-w-7xl mx-auto container-pad">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 sm:gap-10 mb-10">
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <img src="./logo_.png" alt="Logo" class="w-11 h-11 object-contain bg-white rounded-xl p-1">
@@ -421,19 +619,19 @@
                 <div>
                     <h4 class="text-sm font-black text-white mb-4">Academics &amp; Portals</h4>
                     <ul id="footer-links-list" class="space-y-2 text-xs">
-                        <li><a href="#student-portals" class="hover:text-brandOrange">Exam Results &amp; Hall Tickets</a></li>
-                        <li><a href="http://66.116.252.191:19999/apply" class="hover:text-brandOrange">Online Admissions</a></li>
-                        <li><a href="#downloads-hub" class="hover:text-brandOrange">Circulars &amp; Syllabus PDFs</a></li>
-                        <li><a href="http://66.116.252.191:19999/login" class="hover:text-brandOrange">ERP Login</a></li>
+                        <li><a href="#student-portals" class="hover:text-brandOrange transition-colors">Exam Results &amp; Hall Tickets</a></li>
+                        <li><a href="http://66.116.252.191:19999/apply" class="hover:text-brandOrange transition-colors">Online Admissions</a></li>
+                        <li><a href="#downloads-hub" class="hover:text-brandOrange transition-colors">Circulars &amp; Syllabus PDFs</a></li>
+                        <li><a href="http://66.116.252.191:19999/login" class="hover:text-brandOrange transition-colors">ERP Login</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-sm font-black text-white mb-4">Connect</h4>
-                    <p id="footer-address" class="text-xs text-blue-200/90 mb-3"></p>
+                    <p id="footer-address" class="text-xs text-blue-200/90 mb-3 leading-relaxed"></p>
                     <div class="flex gap-2.5">
-                        <a id="social-facebook-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange"><i class="fa-brands fa-facebook-f text-xs"></i></a>
-                        <a id="social-instagram-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange"><i class="fa-brands fa-instagram text-xs"></i></a>
-                        <a id="social-youtube-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange"><i class="fa-brands fa-youtube text-xs"></i></a>
+                        <a id="social-facebook-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-facebook-f text-xs"></i></a>
+                        <a id="social-instagram-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-instagram text-xs"></i></a>
+                        <a id="social-youtube-footer" href="#" target="_blank" rel="noopener" class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center hover:bg-brandOrange transition-colors"><i class="fa-brands fa-youtube text-xs"></i></a>
                     </div>
                 </div>
             </div>
@@ -443,21 +641,22 @@
         </div>
     </footer>
 
-    <!-- Floating WhatsApp Helpline -->
-    <a id="whatsapp-float" href="#" target="_blank" rel="noopener" class="hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl flex items-center justify-center text-2xl transition-transform hover:scale-110">
+    <!-- Floating WhatsApp -->
+    <a id="whatsapp-float" href="#" target="_blank" rel="noopener"
+       class="hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-2xl flex items-center justify-center text-2xl transition-transform hover:scale-110">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
     <!-- Dynamic Custom Page Modal -->
-    <div id="custom-page-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/45 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeCustomPage()">
-        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl border border-indigo-100 p-7" onclick="event.stopPropagation()">
+    <div id="custom-page-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeCustomPage()">
+        <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-indigo-100 p-6 sm:p-7" onclick="event.stopPropagation()">
             <div class="flex justify-between items-start gap-4 border-b border-slate-100 pb-4 mb-4">
                 <div>
                     <span id="cp-category" class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[10px] font-black uppercase"></span>
-                    <h2 id="cp-title" class="text-2xl font-black text-slate-900 mt-2"></h2>
+                    <h2 id="cp-title" class="text-xl sm:text-2xl font-black text-slate-900 mt-2"></h2>
                     <p id="cp-subtitle" class="text-xs text-slate-500 font-semibold mt-0.5"></p>
                 </div>
-                <button onclick="closeCustomPage()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="closeCustomPage()" class="p-2 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 shrink-0"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="cp-content" class="text-sm text-slate-700 leading-relaxed whitespace-pre-line mb-5"></div>
             <a id="cp-pdf-btn" href="#" target="_blank" rel="noopener" class="hidden inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brandBlue text-white text-xs font-black">
@@ -467,7 +666,7 @@
     </div>
 
     <!-- Video Player Modal -->
-    <div id="video-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4" onclick="closeVideoModal()">
+    <div id="video-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeVideoModal()">
         <div class="bg-white rounded-3xl max-w-3xl w-full overflow-hidden shadow-2xl p-4" onclick="event.stopPropagation()">
             <div class="flex justify-between items-center mb-3 px-2">
                 <h3 id="video-modal-title" class="text-base font-black text-slate-900">Campus Video</h3>
@@ -478,10 +677,24 @@
     </div>
 
     <script>
+        // ===== MOBILE HAMBURGER MENU =====
         document.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('mobile-menu-btn');
+            const btn  = document.getElementById('mobile-menu-btn');
             const menu = document.getElementById('mobile-menu');
-            if (btn && menu) btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+            const icon = document.getElementById('hamburger-icon');
+            if (btn && menu) {
+                btn.addEventListener('click', () => {
+                    const isOpen = menu.classList.toggle('open');
+                    icon.className = isOpen ? 'fa-solid fa-xmark' : 'fa-solid fa-bars';
+                });
+                // Close mobile menu when any menu link is clicked
+                menu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        menu.classList.remove('open');
+                        icon.className = 'fa-solid fa-bars';
+                    });
+                });
+            }
         });
     </script>
     <script src="./cms.js"></script>
