@@ -426,18 +426,18 @@ export const StudentListPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ── Student List (Full Grid Table Form with Signature Purple Header) ── */}
-      <div className="relative z-10 flex-1 overflow-auto px-4 sm:px-6 pb-3 hidden md:block">
-        <div className="min-w-[800px] w-full bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DDD7F3] overflow-hidden">
-          <table className="w-full text-sm text-left border-collapse student-grid-table">
-            <thead>
+      {/* ── Student List (Full Grid Table Form with Locked Sticky Purple Header) ── */}
+      <div className="relative z-10 flex-1 min-h-0 px-4 sm:px-6 pb-3 hidden md:flex flex-col">
+        <div className="flex-1 min-h-0 overflow-auto bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DDD7F3]">
+          <table className="min-w-[800px] w-full text-sm text-left border-separate border-spacing-0 student-grid-table">
+            <thead className="sticky top-0 z-20 bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6]">
               <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] !text-white font-extrabold uppercase tracking-wider text-[11px]">
-                <th className="px-3 py-3.5 text-center w-14 border-r border-white/20 !text-white">#</th>
-                <th className="px-4 py-3.5 text-left border-r border-white/20 !text-white">Student</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Roll No / ID</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Class</th>
-                <th className="px-5 py-3.5 text-left border-r border-white/20 !text-white">Father Name</th>
-                <th className="px-5 py-3.5 text-left !text-white">Mobile No</th>
+                <th className="px-3 py-3.5 text-center w-14 border-r border-white/20 border-b border-[#5B21B6] !text-white first:rounded-tl-[19px]">#</th>
+                <th className="px-4 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Student</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Roll No / ID</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Class</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Father Name</th>
+                <th className="px-5 py-3.5 text-left border-b border-[#5B21B6] !text-white last:rounded-tr-[19px]">Mobile No</th>
               </tr>
             </thead>
             <tbody>
@@ -461,44 +461,47 @@ export const StudentListPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                students.map((student, idx) => (
-                  <tr key={student.id} className="border-b border-[#EAE7F6] last:border-b-0 even:bg-[#FAF9FF] hover:bg-[#F3EFFE]/60 transition-colors bg-white">
-                    <td className="px-3 py-2.5 text-center text-xs font-bold text-[#1E1B4B] border-r border-[#EAE7F6]">
-                      {(page - 1) * LIMIT + idx + 1}
-                    </td>
-                    <td className="px-4 py-2.5 border-r border-[#EAE7F6]">
-                      <div className="flex items-center gap-3.5">
-                        <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
-                        <Link to={`/students/${student.id}`} className="font-extrabold text-[#1E1B4B] text-xs uppercase tracking-tight hover:text-[#6D28D9] transition-colors cursor-pointer">
-                          {student.user?.name || "Unknown"}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE]/80 font-mono">
-                        {student.rollNo || "–"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#059669] bg-[#E6F9EE] border border-[#C1F0D6] uppercase">
-                        {student.class?.name || "–"} {student.class?.section || ""}
-                      </span>
-                    </td>
-                    <td className="px-5 py-2.5 text-left border-r border-[#EAE7F6]">
-                      <p className="font-extrabold text-slate-800 text-xs uppercase">{student.fatherName || "–"}</p>
-                    </td>
-                    <td className="px-5 py-2.5 text-left">
-                      {student.user?.phone ? (
-                        <a href={`tel:${student.user.phone}`} className="text-[#5B21B6] hover:text-[#4C1D95] text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
-                          <Phone className="w-3.5 h-3.5" />
-                          {student.user.phone}
-                        </a>
-                      ) : (
-                        <span className="text-slate-400 text-xs font-medium">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                students.map((student, idx) => {
+                  const rowBorderBottom = idx === students.length - 1 ? '' : 'border-b border-[#EAE7F6]';
+                  return (
+                    <tr key={student.id} className="even:bg-[#FAF9FF] hover:bg-[#F3EFFE]/60 transition-colors bg-white">
+                      <td className={`px-3 py-2.5 text-center text-xs font-bold text-[#1E1B4B] border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        {(page - 1) * LIMIT + idx + 1}
+                      </td>
+                      <td className={`px-4 py-2.5 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <div className="flex items-center gap-3.5">
+                          <StudentAvatar name={student.user?.name} photoUrl={student.user?.photoUrl} isActive={student.user?.isActive} />
+                          <Link to={`/students/${student.id}`} className="font-extrabold text-[#1E1B4B] text-xs uppercase tracking-tight hover:text-[#6D28D9] transition-colors cursor-pointer">
+                            {student.user?.name || "Unknown"}
+                          </Link>
+                        </div>
+                      </td>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE]/80 font-mono">
+                          {student.rollNo || "–"}
+                        </span>
+                      </td>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#059669] bg-[#E6F9EE] border border-[#C1F0D6] uppercase">
+                          {student.class?.name || "–"} {student.class?.section || ""}
+                        </span>
+                      </td>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <p className="font-extrabold text-slate-800 text-xs uppercase">{student.fatherName || "–"}</p>
+                      </td>
+                      <td className={`px-5 py-2.5 text-left ${rowBorderBottom}`}>
+                        {student.user?.phone ? (
+                          <a href={`tel:${student.user.phone}`} className="text-[#5B21B6] hover:text-[#4C1D95] text-xs font-bold inline-flex items-center gap-1.5 transition-colors">
+                            <Phone className="w-3.5 h-3.5" />
+                            {student.user.phone}
+                          </a>
+                        ) : (
+                          <span className="text-slate-400 text-xs font-medium">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
