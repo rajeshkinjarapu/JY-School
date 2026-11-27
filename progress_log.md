@@ -1,5 +1,14 @@
 # లైవ్ ప్రోగ్రెస్ లాగ్ (Progress Log)
 
+## తేదీ: 27 నవంబర్ 2026
+
+### అటెండెన్స్ శాతం అసమానత పరిష్కారం
+
+1. లైవ్ వెబ్‌సైట్‌లో Dashboard లో 95% మరియు Attendance Dashboard లో 80% కనిపించాయి.
+2. కారణం: Dashboard API శాతాన్ని attendance mark చేసిన విద్యార్థుల సంఖ్యతో లెక్కిస్తోంది; Attendance Dashboard మొత్తం 533 మంది విద్యార్థులతో లెక్కిస్తోంది.
+3. `backend/src/controllers/dashboard.controller.ts` లో Dashboard లెక్కింపును మొత్తం active students ఆధారంగా మార్చాము.
+4. ఇక రెండు పేజీలలో 428 present / 533 total = 80% ఒకే శాతం కనిపిస్తుంది. Attendance mark కాని విద్యార్థులు మొత్తం సంఖ్యలో భాగంగానే ఉంటారు.
+
 ## తేదీ: 24 నవంబర్ 2026
 
 ### అటెండెన్స్ డాష్‌బోర్డ్‌లో Double Heading సమస్య పరిష్కారం

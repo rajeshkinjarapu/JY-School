@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Dashboard & Attendance Percentage Consistency Fix (November 27, 2026)
+- **గుర్తించిన సమస్య:** లైవ్ Dashboard లో Today's Attendance 95%గా, Attendance Dashboard లో 80%గా కనిపించింది. 533 total studentsలో 428 present, 24 absent ఉండగా 81 మంది ఇంకా mark కాలేదు.
+- **పరిష్కారం (`backend/src/controllers/dashboard.controller.ts`):** Dashboard percentage denominator ను mark అయిన విద్యార్థుల సంఖ్య నుండి మొత్తం active studentsకి మార్చాము. రెండు pages ఇప్పుడు `present / totalStudents` rule ను ఉపయోగిస్తాయి.
+- **ధృవీకరణ:** `backend` లో `npx tsc --noEmit` విజయవంతంగా పూర్తయింది.
+- **డిప్లాయ్ స్థితి:** మార్పు local workspaceలో ఉంది; backend build మరియు PM2 restart తరువాత liveలో ప్రతిబింబిస్తుంది.
+
 ## చివరి సంభాషణ - Website Full Screen-Fit, Content-Rich Redesign & HTTPS Proxy Fix (November 27, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/cms.js`, `Website/vercel.json`)**:
   - **Screen-Fit Layout (`.screen-fit`)**: `max-width: 1560px` తో డెస్క్‌టాప్/ల్యాప్‌టాప్‌లో పక్కల అనవసర ఖాళీ స్థలం లేకుండా మరియు మొబైల్/ట్యాబ్లెట్ లో పూర్తిగా స్క్రీన్‌కి ఫిట్ అయ్యేలా అప్‌గ్రేడ్ చేశాము.

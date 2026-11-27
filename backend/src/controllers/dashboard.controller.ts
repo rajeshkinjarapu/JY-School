@@ -185,7 +185,9 @@ export const getAdminDashboard = async (req: AuthRequest, res: Response, next: N
         studentLeaveCount += count;
       }
     });
-    const attendanceToday = studentTotalMarked > 0 ? Math.round((studentPresentCount / studentTotalMarked) * 100) : 0;
+    // Keep the dashboard aligned with the Attendance Dashboard: unmarked students
+    // remain part of the school's total until their attendance is recorded.
+    const attendanceToday = totalStudents > 0 ? Math.round((studentPresentCount / totalStudents) * 100) : 0;
 
     // Live Teacher Attendance calculation from grouped counts
     let teacherTotalMarked = 0;
