@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Q.No 29 `2x2` Option Layout Threshold Fix & Git Conflict Resolution (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** MCQ Paper Generator ప్రివ్యూలో Q.No 29 (`(A) Different types of plants and animals` — 37 అక్షరాలు) కు పక్కనే తగినంత ఖాళీ ఉన్నా `2x2` బదులు `1x1` (నిలువు వరుస) లోకి మారిపోతోంది; అలాగే `git stash pop` లో వచ్చిన `PROJECT_STATE.md` merge conflict పరిష్కరించాలి.
+- **చేసిన మార్పులు:**
+  - [LiveLatexPreview.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/components/QuestionBank/LiveLatexPreview.tsx): `twoByTwoLimit` ను `fontSize` ఆధారంగా సర్దుబాటు చేశాము (`medium` `11pt` కు `32 → 44`, `small` కు `48`, `large` కు `38`, `xlarge` కు `32`, `hasTallMath` కు `24`, double-column కు `15/18`) మరియు `singleLineLimit` ను కూడా అప్‌డేట్ చేశాము — దీనివల్ల `37` అక్షరాల ఆప్షన్లు స్పష్టంగా **`2x2` గ్రిడ్** లోనే కూర్చుంటాయి (`printPaper` లేదా KaTeX రెండరింగ్‌ను తాకకుండా).
+  - [PROJECT_STATE.md](file:///d:/JY%20School/JY-School-main/PROJECT_STATE.md): `origin/main` అప్‌డేట్‌లతో కలిపి మెర్జ్ కాన్ఫ్లిక్ట్‌ను శుభ్రంగా పరిష్కరించాము.
+
 ## చివరి సంభాషణ - Exam Creator Form Logic Fix (Clean Classes, Unique Subjects & Optional Sections) (November 27, 2026)
 - **`EduracleCreateExamWizard` (Step 2 - Exam Settings) Complete Cleanup (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
   1. **Clean Classes (`uniqueClassGroups`):** `NUR`, `LKG`, `UKG`, `PP1`, `PP2` లాంటి Pre-Primary తరగతులు Online CBT Exam డ్రాప్‌డౌన్‌లో రాకుండా ఫిల్టర్ చేయబడ్డాయి. Senior తరగతులు (`Class 10th`, `9th`, `8th`...) పైకి వచ్చేలా descending ఆర్డర్‌లో అమర్చబడి, డిఫాల్ట్‌గా `Class 10th` సెలెక్ట్ అయ్యేలా చేయబడింది. డూప్లికేట్ సెక్షన్ల బదులు గ్రూప్ వారీగా (`Class 10th (All Sections: A, B, C)`) చూపబడి `targetClassNames` తో అన్ని సెక్షన్ల విద్యార్థులకూ పరీక్ష కనిపిస్తుంది.
@@ -128,6 +134,10 @@
 ## చివరి సంభాషణ - Git Updates Download (`6941213d..42b70095`) & 0-Error Verification (November 26, 2026)
 - **యూజర్ చర్య:** `git pull origin main` ద్వారా GitHub నుండి తాజా అప్‌డేట్స్ (`27` ఫైల్స్, `MasterQuestionBankWorkspace.tsx`, `MasterAiStudioPage.tsx`, 2-Step Exam Creator, Full-Width Paper Settings, Attendance & Photo Fixes) లోకల్ సిస్టమ్‌లోకి ఫాస్ట్-ఫార్వర్డ్ డౌన్‌లోడ్ అయ్యాయి.
 - **వెరిఫికేషన్:** అప్‌డేట్స్ డౌన్‌లోడ్ అయిన తర్వాత ఫ్రంటెండ్ (`npx tsc --noEmit`) మరియు బ్యాకెండ్ (`npx tsc --noEmit`) రెండూ **0 Errors** తో పాస్ అయినట్లు ధృవీకరించాము.
+
+## చివరి సంభాషణ - Git Updates Pull Request (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** Git నుండి తాజా అప్‌డేట్స్ అన్నీ డౌన్‌లోడ్ (`git pull`) చేయడం.
+- **చర్య:** డైరెక్ట్ టెర్మినల్ ఎగ్జిక్యూషన్ నియమం ప్రకారం కమాండ్స్ రన్ చేయకుండా, లోకల్ Windows (`d:\JY School\JY-School-main`) మరియు VPS (`ssh root@66.116.252.191`) రెండింటిలోనూ సురక్షితంగా అప్‌డేట్స్ డౌన్‌లోడ్ చేసుకునే పూర్తి కమాండ్ బ్లాక్‌లను అందించాము.
 
 ## చివరి సంభాషణ - Master Question Bank Premium Clean Light UI Upgrade (November 26, 2026)
 - **యూజర్ అభ్యర్థన:** Master Question Bank UI ని ఇంకా మెరుగ్గా (`ee ui inka better ga cheyagalava`) తీర్చిదిద్దడం.

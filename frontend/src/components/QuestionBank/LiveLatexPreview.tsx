@@ -486,9 +486,33 @@ export const LiveLatexPreview: React.FC<LiveLatexPreviewProps> = ({
               const allOptsCombined = optA + optB + optC + optD;
               const hasTallMath = /(\\frac|\\dfrac|\\sqrt|\\int|\\sum|\\prod|\\begin\{|\\matrix)/.test(allOptsCombined);
 
-              // Single Column A4 width gives ~350px per option in 2x2, holding up to 32 characters cleanly
-              const singleLineLimit = isDoubleColumn ? 3 : (hasTallMath ? 4 : 6);
-              const twoByTwoLimit = isDoubleColumn ? 14 : (hasTallMath ? 20 : 32);
+              // Single Column A4 (~325px per option in 2x2) cleanly holds ~44 chars at medium (11pt) without wrapping
+              const singleLineLimit = isDoubleColumn
+                ? 3
+                : hasTallMath
+                ? 4
+                : fontSize === 'small'
+                ? 10
+                : fontSize === 'large'
+                ? 7
+                : fontSize === 'xlarge'
+                ? 6
+                : 8;
+              const twoByTwoLimit = isDoubleColumn
+                ? fontSize === 'small'
+                  ? 18
+                  : 15
+                : hasTallMath
+                ? fontSize === 'large' || fontSize === 'xlarge'
+                  ? 20
+                  : 24
+                : fontSize === 'small'
+                ? 48
+                : fontSize === 'large'
+                ? 38
+                : fontSize === 'xlarge'
+                ? 32
+                : 44;
 
               let optionsLayout = '';
               if (forcedLayout === '1x4') {
