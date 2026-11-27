@@ -2399,7 +2399,7 @@ export const MCQPaperGeneratorPage = () => {
                 </div>
                 <div>
                   <h2 className="font-bold text-base md:text-lg text-white">
-                    చిత్రాల సైజు & స్థానం మార్చుకోండి (Image Sizes & Position Controls)
+                    Image Sizes &amp; Position Controls
                   </h2>
                   <p className="text-xs text-purple-100">
                     Subject: <span className="font-bold underline">{activeSubjectTab}</span> • {activeImages.length} inline images {floatingImagesList.length > 0 && `• ${floatingImagesList.length} free drag`}
@@ -2418,7 +2418,7 @@ export const MCQPaperGeneratorPage = () => {
             {activeImages.length > 1 && (
               <div className="px-6 py-3 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between flex-wrap gap-2 flex-shrink-0">
                 <span className="text-xs font-bold text-indigo-900">
-                  అన్ని చిత్రాలకు ఒకేసారి (Apply to All Images):
+                  Apply to All Images:
                 </span>
                 <div className="flex items-center gap-2">
                   <button
@@ -2476,10 +2476,10 @@ export const MCQPaperGeneratorPage = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
                       <Move className="w-4 h-4 text-purple-600" />
-                      పేపర్‌పై ఫ్రీగా డ్రాగ్ చేయబడుతున్న చిత్రాలు (Free Drag on Paper):
+                      Free-Floating Images on Paper:
                     </span>
                     <span className="text-[11px] text-purple-700">
-                      (ప్రివ్యూ పేపర్‌పై మౌస్‌తో ఎక్కడికైనా డ్రాగ్ చేయవచ్చు)
+                      (Drag anywhere on the preview paper using your mouse)
                     </span>
                   </div>
                   {floatingImagesList.map(([id, imgObj]) => {
@@ -2502,7 +2502,7 @@ export const MCQPaperGeneratorPage = () => {
                           onClick={() => convertToInline(id)}
                           className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold rounded-lg border border-indigo-200 transition-colors cursor-pointer"
                         >
-                          📌 Convert back to Inline (టెక్స్ట్‌లోకి మార్చు)
+                          📌 Convert Back to Inline Text
                         </button>
                       </div>
                     );
@@ -2513,9 +2513,9 @@ export const MCQPaperGeneratorPage = () => {
               {activeImages.length === 0 && floatingImagesList.length === 0 ? (
                 <div className="text-center py-12 text-slate-400">
                   <ImagePlus className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p className="font-semibold text-slate-700">ఈ సబ్జెక్ట్‌లో ఇంకా చిత్రాలు లేవు (No images found)</p>
+                  <p className="font-semibold text-slate-700">No images found in this subject</p>
                   <p className="text-xs text-slate-400 mt-1">
-                    ఎడిటర్‌లో పైనున్న "Insert Image" నొక్కి లేదా చిత్రం కాపీ చేసి పేస్ట్ (Ctrl+V) చేయండి.
+                    Click &quot;Insert Image&quot; in the toolbar above or paste an image directly (Ctrl+V).
                   </p>
                 </div>
               ) : (
@@ -2548,13 +2548,13 @@ export const MCQPaperGeneratorPage = () => {
                                 [IMAGE:{img.id}]
                               </span>
                               <span className="text-xs font-bold text-slate-700">
-                                చిత్రం {idx + 1}
+                                Image {idx + 1}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 mt-1 text-[11px] text-slate-500">
-                              <span>సైజు: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong></span>
+                              <span>Size: <strong className="text-indigo-600 uppercase font-black">{img.size || 'medium'}</strong></span>
                               <span>•</span>
-                              <span>స్థానం: <strong className="text-purple-700 uppercase font-black">{currentAlign || 'center'}</strong></span>
+                              <span>Align: <strong className="text-purple-700 uppercase font-black">{currentAlign || 'center'}</strong></span>
                             </div>
                           </div>
                         </div>
@@ -2567,14 +2567,14 @@ export const MCQPaperGeneratorPage = () => {
                           title="Convert to mouse draggable anywhere on preview paper"
                         >
                           <Move className="w-3.5 h-3.5" />
-                          <span>మౌస్‌తో ఫ్రీగా డ్రాగ్ చేయండి (Free Drag 🖱️)</span>
+                          <span>Enable Free Drag</span>
                         </button>
                       </div>
 
-                      {/* Control Section 1: సైజు ఎంపిక (Size Options) */}
+                      {/* Control Section 1: Size Options */}
                       <div>
                         <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                          1. చిత్రం సైజు మార్చుకోండి (Size):
+                          1. Image Size:
                         </span>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {[
@@ -2605,7 +2605,7 @@ export const MCQPaperGeneratorPage = () => {
                           <button
                             type="button"
                             onClick={() => {
-                              const customWidth = window.prompt('కస్టమ్ పిక్సెల్ వెడల్పు నమోదు చేయండి (Enter width e.g. 300px, 400px):', '350px');
+                              const customWidth = window.prompt('Enter custom pixel width (e.g. 300px, 400px):', '350px');
                               if (customWidth) {
                                 const cleanWidth = customWidth.trim().toLowerCase().endsWith('px') ? customWidth.trim() : `${customWidth.trim()}px`;
                                 updateImageTag(img.fullMatch, img.id, { size: cleanWidth });
@@ -2619,17 +2619,17 @@ export const MCQPaperGeneratorPage = () => {
                         </div>
                       </div>
 
-                      {/* Control Section 2: స్థానం & అలైన్‌మెంట్ (Horizontal Alignment) */}
+                      {/* Control Section 2: Horizontal Alignment */}
                       <div>
                         <span className="text-[11px] font-black uppercase text-slate-400 tracking-wider block mb-1.5">
-                          2. స్థానం / అలైన్‌మెంట్ (Alignment):
+                          2. Alignment / Position:
                         </span>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           {[
-                            { label: 'Left (ఎడమ)', val: 'left', icon: <AlignLeft className="w-3.5 h-3.5" /> },
-                            { label: 'Center (మధ్య)', val: 'center', icon: <AlignCenter className="w-3.5 h-3.5" /> },
-                            { label: 'Right (కుడి)', val: 'right', icon: <AlignRight className="w-3.5 h-3.5" /> },
-                            { label: 'Float Right (టెక్స్ట్ పక్కన)', val: 'float-right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                            { label: 'Left', val: 'left', icon: <AlignLeft className="w-3.5 h-3.5" /> },
+                            { label: 'Center', val: 'center', icon: <AlignCenter className="w-3.5 h-3.5" /> },
+                            { label: 'Right', val: 'right', icon: <AlignRight className="w-3.5 h-3.5" /> },
+                            { label: 'Float Right (Beside Text)', val: 'float-right', icon: <AlignRight className="w-3.5 h-3.5" /> },
                           ].map((alignOpt) => {
                             const isAlignActive = (currentAlign === alignOpt.val) || (alignOpt.val === 'center' && (!img.align || currentAlign === 'center'));
                             return (
@@ -2653,10 +2653,10 @@ export const MCQPaperGeneratorPage = () => {
                         </div>
                       </div>
 
-                      {/* Control Section 3: కావలసిన ప్రశ్న వద్దకు తరలించండి (Move to Any Question) */}
+                      {/* Control Section 3: Move to Any Question */}
                       <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
                         <span className="text-[11px] font-black uppercase text-slate-500 tracking-wider block mb-2">
-                          3. ఏ ప్రశ్న వద్దకు కావాలో అక్కడికి తరలించండి (Move to Any Question):
+                          3. Move Image to Any Question:
                         </span>
                         <div className="flex items-center gap-2 flex-wrap">
                           <select
@@ -2664,14 +2664,14 @@ export const MCQPaperGeneratorPage = () => {
                             className="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs"
                             defaultValue=""
                           >
-                            <option value="" disabled>ప్రశ్నను ఎంచుకోండి (Select Question)...</option>
-                            <option value="top">⬆️ పేపర్ ప్రారంభంలో (Top of Paper)</option>
+                            <option value="" disabled>Select Question...</option>
+                            <option value="top">⬆️ Top of Paper</option>
                             {availableQuestions.map((qNum) => (
                               <option key={qNum} value={qNum}>
-                                📌 Question {qNum} క్రిందకు (Under Q.{qNum})
+                                📌 Under Question {qNum}
                               </option>
                             ))}
-                            <option value="bottom">⬇️ పేపర్ చివరలో (End of Paper)</option>
+                            <option value="bottom">⬇️ End of Paper</option>
                           </select>
 
                           <button
@@ -2679,7 +2679,7 @@ export const MCQPaperGeneratorPage = () => {
                             onClick={() => {
                               const sel = document.getElementById(`move-select-${img.id}`) as HTMLSelectElement;
                               if (!sel || !sel.value) {
-                                toast.error('దయచేసి ఒక ప్రశ్నను ఎంచుకోండి (Please select a question)');
+                                toast.error('Please select a target question');
                                 return;
                               }
                               const val = sel.value === 'top' || sel.value === 'bottom' ? sel.value : parseInt(sel.value, 10);
@@ -2689,7 +2689,7 @@ export const MCQPaperGeneratorPage = () => {
                             className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
                           >
                             <Pin className="w-3.5 h-3.5" />
-                            <span>ఇక్కడికి తరలించు (Move Here)</span>
+                            <span>Move Here</span>
                           </button>
 
                           <div className="flex items-center gap-1 ml-auto">
@@ -2697,19 +2697,19 @@ export const MCQPaperGeneratorPage = () => {
                               type="button"
                               onClick={() => shiftImagePosition(img.fullMatch, 'up')}
                               className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                              title="పై ప్రశ్న వద్దకు జరుపు (Move Up)"
+                              title="Move Up"
                             >
                               <ArrowUp className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>పైకి (Up)</span>
+                              <span>Up</span>
                             </button>
                             <button
                               type="button"
                               onClick={() => shiftImagePosition(img.fullMatch, 'down')}
                               className="px-2.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 flex items-center gap-1 transition-all cursor-pointer shadow-xs"
-                              title="క్రింది ప్రశ్న వద్దకు జరుపు (Move Down)"
+                              title="Move Down"
                             >
                               <ArrowDown className="w-3.5 h-3.5 text-indigo-600" />
-                              <span>క్రిందికి (Down)</span>
+                              <span>Down</span>
                             </button>
                           </div>
                         </div>
@@ -2723,13 +2723,13 @@ export const MCQPaperGeneratorPage = () => {
             {/* Modal Footer */}
             <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-between items-center flex-shrink-0">
               <span className="text-xs text-slate-500">
-                మార్చిన వెంటనే లైవ్ ప్రివ్యూలో కనిపిస్తుంది (Instant Live Preview update)
+                Changes reflect immediately in the live preview
               </span>
               <button
                 onClick={() => setIsImageSizeModalOpen(false)}
                 className="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
               >
-                పూర్తయింది (Done)
+                Done
               </button>
             </div>
           </div>
@@ -2889,12 +2889,12 @@ export const MCQPaperGeneratorPage = () => {
               </div>
 
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">చిత్రాలు & సైజు మార్పు (Images & Resizing)</h3>
+                <h3 className="font-bold text-slate-800 mb-2 border-b pb-1">Images &amp; Resizing</h3>
                 <p className="mb-2">Click <strong>Insert Image</strong> button or paste an image (Ctrl+V). An image code like <code className="bg-white px-1.5 py-0.5 rounded text-purple-700 font-bold border border-purple-200">[IMAGE:code]</code> is inserted.</p>
-                <p className="font-semibold text-slate-800 text-xs mb-1">చిత్రం సైజు & స్థానం మార్చుకోవడానికి (How to Resize & Move):</p>
+                <p className="font-semibold text-slate-800 text-xs mb-1">How to Resize &amp; Move Images:</p>
                 <ul className="text-xs space-y-1 list-disc pl-4 text-slate-600 mb-2">
-                  <li>ఎడిటర్ పైనున్న <strong>[Image Sizes & Move]</strong> బటన్ క్లిక్ చేసి నచ్చిన సైజు, అలైన్‌మెంట్ మరియు ఏ ప్రశ్న క్రింద కావాలో ఎంచుకోవచ్చు.</li>
-                  <li>లేదా కోడ్‌లోనే ఇలా మార్చవచ్చు: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large|center]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code> లేదా <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px|right]</code></li>
+                  <li>Click the <strong>[Image Sizes &amp; Move]</strong> button above the editor to adjust size, horizontal alignment, or move under any question.</li>
+                  <li>Or edit the inline tag directly: <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|large|center]</code>, <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|full]</code>, or <code className="bg-white px-1 py-0.5 text-blue-600 font-bold border rounded">[IMAGE:id|380px|right]</code></li>
                 </ul>
               </div>
 

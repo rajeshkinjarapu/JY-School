@@ -1,5 +1,15 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Full Codebase Web & Backend Telugu UI Cleanup (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** పవర్‌షెల్ స్కాన్‌లో `frontend/src`, `backend/src`, మరియు `flutter_mobile/lib` లో కనబడిన మిగిలిన తెలుగు UI టెక్స్ట్ మొత్తాన్ని శుభ్రంగా మార్చాలి.
+- **వెబ్ ఫ్రంటెండ్ & బ్యాకెండ్ లో పూర్తి చేసిన ఫైల్స్:**
+  1. [SendCustomNotificationModal.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/announcements/SendCustomNotificationModal.tsx): `Target Audience` లేబుల్ మరియు Notification Title placeholder లోని తెలుగు టెక్స్ట్‌ను ఇంగ్లీష్‌లోకి మార్చాము.
+  2. [ClassWiseFeeReportTab.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/fees/ClassWiseFeeReportTab.tsx): `All Classes` టైటిల్స్, మొబైల్ కార్డ్ & డెస్క్‌టాప్ ఫిల్టర్ డ్రాప్‌డౌన్లలోని తెలుగు పదాలు తొలగించాము.
+  3. [MCQPaperGeneratorPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/question-bank/MCQPaperGeneratorPage.tsx): `Image Sizes & Position Controls` మోడల్ మరియు `Images & Resizing` హెల్ప్ గైడ్‌లోని తెలుగు టెక్స్ట్‌ను ఇంగ్లీష్‌లోకి మార్చాము (`printPaper`, `LiveLatexPreview`, మరియు Paper Save/Load API లను ఎక్కడా తాకలేదు).
+  4. [UniversityDemoPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/university-demo/UniversityDemoPage.tsx): `Client Presentation Guide` టెక్స్ట్‌ను ఇంగ్లీష్‌లోకి మార్చాము.
+  5. [students.controller.ts](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/backend/src/controllers/students.controller.ts): Excel Bulk Import లో Row Shift / Missing Name ఎర్రర్ సందేశాలను ఇంగ్లీష్‌లోకి మార్చాము.
+- **Flutter యాప్ (`flutter_mobile/lib`):** [student_pay_fee_screen.dart](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/flutter_mobile/lib/screens/student_pay_fee_screen.dart) మరియు [student_profile_screen.dart](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/flutter_mobile/lib/screens/student_profile_screen.dart) లోని తెలుగు టెక్స్ట్ కోసం యూజర్ Shorebird Patch ప్రీ-అప్రూవల్ అడిగాము.
+
 ## చివరి సంభాషణ - Student Promotion Dedicated Dashboard, KPI Cards & Complete UI Redesign (`/students/promotion`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** Promotion పేజీ డిజైన్ పూర్తిగా మార్చి కొత్త ప్రొఫెషనల్ లుక్ లోకి తేవాలి, పాత డిజైన్ అస్సలు కనిపించకూడదు, మరియు Promotion పేజీకి KPI కార్డులతో కూడిన ప్రత్యేక Dashboard ఉండాలి.
 - **చేసిన మార్పులు ([StudentPromotionPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/students/StudentPromotionPage.tsx)):**

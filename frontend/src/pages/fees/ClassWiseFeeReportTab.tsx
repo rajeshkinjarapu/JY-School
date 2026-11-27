@@ -77,7 +77,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
     const { paymentsMap, classStructuresMap, studentStructuresMap } = allClassData;
 
     if (isAll) {
-      title = 'All Classes (అన్ని తరగతులు - Consolidated)';
+      title = 'All Classes (Consolidated)';
       teacherName = 'All Faculty / Institutional Level';
       targetStudents = students.filter(s => !(s.user && s.user.isActive === false));
     } else {
@@ -363,7 +363,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-black text-indigo-950 text-base flex items-center gap-1.5">
-                    All Classes (అన్ని తరగతులు)
+                    All Classes
                     <span className="text-[10px] bg-indigo-600 text-white font-bold px-1.5 py-0.5 rounded-full">ALL</span>
                   </div>
                   <div className="text-xs text-indigo-700 font-semibold truncate mt-0.5">
@@ -516,7 +516,7 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
               >
                 <option value="" disabled>Select a Class</option>
                 <option value="ALL" className="font-black text-indigo-700 bg-indigo-50">
-                  🌟 All Classes (అన్ని తరగతులు - Consolidated)
+                  🌟 All Classes (Consolidated)
                 </option>
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name} - {c.section}</option>
@@ -536,14 +536,14 @@ export const ClassWiseFeeReportTab: React.FC<ClassWiseFeeReportTabProps> = ({ st
                   onChange={e => setPercentFilter(e.target.value as PercentFilterType)}
                   className="w-full px-3.5 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 text-sm font-bold text-gray-700 cursor-pointer shadow-sm"
                 >
-                  <option value="ALL">All Percentages (అందరూ)</option>
-                  <option value="BELOW_25">&lt; 25% Paid (25% కంటే తక్కువ)</option>
-                  <option value="BELOW_50">&lt; 50% Paid (50% కంటే తక్కువ - Defaulters)</option>
+                  <option value="ALL">All Percentages</option>
+                  <option value="BELOW_25">&lt; 25% Paid</option>
+                  <option value="BELOW_50">&lt; 50% Paid (Defaulters)</option>
                   <option value="BETWEEN_50_75">50% to 75% Paid</option>
-                  <option value="ABOVE_75">&gt; 75% Paid (75% కంటే ఎక్కువ)</option>
-                  <option value="FULL_100">100% Fully Paid (పూర్తిగా కట్టినవారు)</option>
-                  <option value="ZERO_UNPAID">0% Unpaid (ఒక్క రూపాయి కట్టనివారు)</option>
-                  <option value="CUSTOM">Custom Range % (కస్టమ్ పర్సెంట్)</option>
+                  <option value="ABOVE_75">&gt; 75% Paid</option>
+                  <option value="FULL_100">100% Fully Paid</option>
+                  <option value="ZERO_UNPAID">0% Unpaid</option>
+                  <option value="CUSTOM">Custom Range %</option>
                 </select>
               </div>
             )}

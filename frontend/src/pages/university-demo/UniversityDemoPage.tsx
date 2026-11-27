@@ -156,7 +156,7 @@ export const UniversityDemoPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Laptop className="w-5 h-5 text-indigo-400" />
                 <span className="text-xs font-bold uppercase tracking-wider text-indigo-300">
-                  Client Presentation Guide (ప్రెజెంటేషన్ ఇచ్చేటప్పుడు ఇలా చెప్పండి)
+                  Client Presentation Guide
                 </span>
               </div>
               <button
@@ -168,20 +168,20 @@ export const UniversityDemoPage: React.FC = () => {
             </div>
             <div className="mt-2.5 text-xs text-slate-300 grid grid-cols-1 md:grid-cols-4 gap-3 border-t border-indigo-800/60 pt-3">
               <div>
-                <span className="font-bold text-white block">1. Chairman View లో:</span>
-                "సార్! మీ 5 కాలేజీల మొత్తం స్టూడెంట్స్ (6,850), మొత్తం కలెక్ట్ అయిన ఫీజు (₹15.8 Cr) ఇక్కడ చూడవచ్చు."
+                <span className="font-bold text-white block">1. Chairman View:</span>
+                &quot;Sir, view total enrolled students (6,850) and overall fee collection (₹15.8 Cr) across all 5 campuses right here.&quot;
               </div>
               <div>
-                <span className="font-bold text-white block">2. Wing Tabs లో:</span>
-                "ఒక్క క్లిక్‌తో డిగ్రీ నుండి ఇంటర్, స్కూల్ లేదా పీజీ ఇన్‌స్టిట్యూషన్‌కు సులభంగా స్విచ్ అవ్వండి."
+                <span className="font-bold text-white block">2. Wing Tabs:</span>
+                &quot;Switch seamlessly between Degree, Intermediate, School, and PG institutions in a single click.&quot;
               </div>
               <div>
-                <span className="font-bold text-white block">3. Faculty View లో:</span>
-                "లెక్చరర్లు పీరియడ్ అటెండెన్స్ వేయగానే 75% కన్నా తక్కువ ఉన్నవాళ్లు రెడ్ కలర్‌లో ఆటోమేటిక్‌గా అలర్ట్ అవుతారు."
+                <span className="font-bold text-white block">3. Faculty View:</span>
+                &quot;As faculty mark period-wise attendance, students below 75% are automatically highlighted with red alerts.&quot;
               </div>
               <div>
-                <span className="font-bold text-white block">4. Student View లో:</span>
-                "విద్యార్థులకు క్రెడిట్స్, SGPA (9.16), CGPA తో కూడిన ఒరిజినల్ CBCS మెమో మరియు JVD ఫీజు స్టేటస్ కనిపిస్తుంది."
+                <span className="font-bold text-white block">4. Student View:</span>
+                &quot;Students see their credits, SGPA (9.16), CGPA CBCS memo breakdown, and scholarship fee status.&quot;
               </div>
             </div>
           </div>

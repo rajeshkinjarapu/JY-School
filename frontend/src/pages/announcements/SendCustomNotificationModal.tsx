@@ -157,7 +157,7 @@ export const SendCustomNotificationModal: React.FC<SendCustomNotificationModalPr
               {/* Target Audience Selector */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-2">
-                  Target Audience (ఎవరికి వెళ్ళాలి)
+                  Target Audience
                 </label>
                 <div className="grid grid-cols-3 gap-2.5">
                   <button
@@ -255,7 +255,7 @@ export const SendCustomNotificationModal: React.FC<SendCustomNotificationModalPr
                   <input
                     type="text"
                     required
-                    placeholder="e.g. స్కూల్ సంక్రాంతి సెలవులు / Exam Alert"
+                    placeholder="e.g. Holiday Notice / Exam Schedule Alert"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none"

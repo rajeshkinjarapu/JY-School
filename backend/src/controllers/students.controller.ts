@@ -893,7 +893,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
               // High-confidence ROW SHIFT detected: Both Student Name and Father Name are completely different!
               failed.push({
                 row: rawRow,
-                reason: `భద్రతా తిరస్కరణ (Row Shift Detected): Student ID "${rawStudentId}" ఇప్పటికే "${existingName}" (తండ్రి: ${existingStudent.fatherName}) పేరుతో రిజిస్టర్ అయి ఉంది. కానీ ఎక్సెల్ వరుసలో పూర్తి భిన్నమైన పేరు "${name}" (తండ్రి: ${fatherName}) ఉంది. ఎక్సెల్ షీట్ లో వరుసలు పక్కకు జరగడం (Row Shift) వల్ల డేటా పాడవ్వకుండా ఈ అప్‌డేట్ ఆపబడింది.`
+                reason: `Safety Rejection (Row Shift Detected): Student ID "${rawStudentId}" is already registered as "${existingName}" (Father: ${existingStudent.fatherName}). However, this Excel row contains a completely different name "${name}" (Father: ${fatherName}). Update blocked to protect existing records from row-shift corruption.`
               });
               continue;
             }
@@ -956,7 +956,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
           if (!name) {
             failed.push({
               row: rawRow,
-              reason: `Student ID "${rawStudentId || 'N/A'}" డేటాబేస్‌లో కనుగొనబడలేదు మరియు కొత్త విద్యార్థిని సృష్టించడానికి "Student Name" లేదు.`
+              reason: `Student ID "${rawStudentId || 'N/A'}" was not found in the database, and "Student Name" is missing to create a new student record.`
             });
             continue;
           }
