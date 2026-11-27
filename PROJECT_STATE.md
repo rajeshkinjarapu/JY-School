@@ -2,6 +2,8 @@
 
   - `ensureWebsiteTablesExist()` ను ఒక్కో SQL స్టేట్‌మెంట్‌గా విడగొట్టి PgBouncer/PostgreSQL లో మల్టీ-స్టేట్‌మెంట్ ఎర్రర్ రాకుండా చేశాము; `getWebsiteData` లోని అన్ని క్వెరీలకు సురక్షిత ఫాల్‌బ్యాక్ మరియు `WebsiteManagerPage.tsx` లో స్పష్టమైన ఎర్రర్ మెసేజ్ జోడించాము.
 
+  - `website.controller.ts` లో `tsc` error `TS2740` (లైన్ 90 `$queryRaw.catch(() => [])`) ను `try/catch` + `prisma.$queryRaw<any[]>` తో ఫిక్స్ చేశాము (`frontend` `vite build` ఎలాంటి ఎర్రర్లు లేకుండా 8.08s లో సక్సెస్ అయింది).
+
 ## చివరి సంభాషణ - Enterprise Staff Roles & Management Command Center (`/staff-management`) (November 27, 2026)
 - **యూజర్ అభ్యర్థన:** పెద్ద ఎంటర్‌ప్రైజ్ ERP లతో అనలైజ్ చేసి Staff Roles & Management పేజీని KPI కార్డులు, డ్యాష్‌బోర్డ్, మరియు పూర్తి ఫీచర్లతో ప్రొఫెషనల్‌గా నిర్మించాలి.
 - **చేసిన మార్పులు:**

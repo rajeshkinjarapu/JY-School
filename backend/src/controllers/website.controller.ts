@@ -87,8 +87,12 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
       try {
         settings = await prisma.websiteSettings.create({ data: { id: '1' } });
       } catch {
-        const rows: any[] = await prisma.$queryRaw`SELECT * FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`.catch(() => []);
-        settings = rows?.[0] || null;
+        try {
+          const rows = await prisma.$queryRaw<any[]>`SELECT * FROM "WebsiteSettings" WHERE "id" = '1' LIMIT 1`;
+          settings = rows?.[0] || null;
+        } catch {
+          settings = null;
+        }
       }
     }
 
