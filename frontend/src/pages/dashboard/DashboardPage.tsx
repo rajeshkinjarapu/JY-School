@@ -483,18 +483,18 @@ const AdminView: React.FC<{ data: any; user?: any }> = ({ data, user }) => {
             <Link
               key={idx}
               to={card.link}
-              className={`relative overflow-hidden rounded-[20px] p-3.5 sm:p-4 border bg-gradient-to-br ${card.cardBg} shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-2 group`}
+              className={`relative overflow-hidden rounded-[20px] px-3 py-3.5 sm:px-3.5 sm:py-4 border bg-gradient-to-br ${card.cardBg} shadow-[0_6px_18px_-6px_rgba(15,23,42,0.12)] hover:shadow-[0_12px_24px_-6px_rgba(15,23,42,0.16)] hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-between gap-1.5 group`}
             >
               {/* Subtle top glossy highlight */}
               <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
 
               {/* Icon & Details */}
-              <div className="relative z-10 flex items-center gap-3 min-w-0 flex-1">
-                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br ${card.iconBg} flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
-                  <card.icon className="w-5 h-5" />
+              <div className="relative z-10 flex items-center gap-2.5 min-w-0 flex-1">
+                <div className={`w-9 h-9 xl:w-10 xl:h-10 rounded-full bg-gradient-to-br ${card.iconBg} flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
+                  <card.icon className="w-4 h-4 xl:w-5 xl:h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600 leading-tight truncate">
+                  <p className="text-[9.5px] font-extrabold uppercase tracking-tight text-slate-600 leading-tight whitespace-nowrap">
                     {card.label}
                   </p>
                   <p
