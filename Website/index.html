@@ -23,19 +23,15 @@
         html, body { width: 100%; max-width: 100vw; overflow-x: hidden; }
         body { font-family: 'Poppins', sans-serif; color: #1e293b; background: #F8FAFC; }
 
-        /* ===== FULL SCREEN-FIT CONTAINER ===== */
+        /* ===== FULL SCREEN-FIT — TRUE FULL WIDTH, MINIMAL PADDING ===== */
         .screen-fit {
             width: 100%;
-            max-width: 1600px;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 100%;
             padding-left: 16px;
             padding-right: 16px;
         }
-        @media (min-width: 640px)  { .screen-fit { padding-left: 24px; padding-right: 24px; } }
-        @media (min-width: 1024px) { .screen-fit { padding-left: 40px; padding-right: 40px; } }
-        @media (min-width: 1280px) { .screen-fit { padding-left: 56px; padding-right: 56px; } }
-        @media (min-width: 1600px) { .screen-fit { padding-left: 80px; padding-right: 80px; } }
+        @media (min-width: 768px)  { .screen-fit { padding-left: 24px; padding-right: 24px; } }
+        @media (min-width: 1400px) { .screen-fit { padding-left: 40px; padding-right: 40px; } }
 
         /* ===== HOVER LIFT ===== */
         .hover-lift { transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -109,66 +105,56 @@
         }
         .mob-sub.open { max-height: 500px; }
 
-        /* ===== HERO SECTION ===== */
+        /* ===== HERO SECTION — FULL VIEWPORT ONE PAGE ===== */
         .hero-section {
-            padding: 28px 0 48px;
-            background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 50%, #f0fdf4 100%);
+            height: calc(100vh - 64px);
+            min-height: 560px;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #eff6ff 0%, #fff7ed 55%, #f0fdf4 100%);
+            overflow: hidden;
         }
-        @media (min-width: 1024px) {
-            .hero-section { padding: 38px 0 64px; }
-        }
+        @media (min-width: 640px) { .hero-section { height: calc(100vh - 72px); } }
+        @media (min-width: 1024px) { .hero-section { height: calc(100vh - 76px); } }
+
         .hero-title {
-            font-size: clamp(1.85rem, 3.8vw, 3.35rem);
+            font-size: clamp(1.6rem, 3.2vw, 3rem);
             font-weight: 900;
-            line-height: 1.14;
+            line-height: 1.12;
             color: #0f172a;
         }
         .hero-desc {
-            font-size: clamp(0.875rem, 1.3vw, 1.05rem);
+            font-size: clamp(0.8rem, 1.1vw, 0.95rem);
             color: #475569;
-            line-height: 1.7;
+            line-height: 1.65;
         }
 
         /* ===== QUICK ACCESS STRIP ===== */
-        .quick-strip {
-            margin-top: -32px;
-            position: relative;
-            z-index: 20;
-        }
-        .quick-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        @media (min-width: 768px) {
-            .quick-grid { grid-template-columns: repeat(6, 1fr); gap: 14px; }
-        }
         .quick-card {
             background: #fff;
             border: 1px solid #e0e7ff;
-            border-radius: 18px;
-            padding: 16px 10px;
-            box-shadow: 0 8px 24px -6px rgba(30,58,138,0.09);
+            border-radius: 14px;
+            padding: 10px 8px;
+            box-shadow: 0 4px 16px -4px rgba(30,58,138,0.08);
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 8px;
+            gap: 5px;
             text-decoration: none;
-            transition: all 0.25s ease;
+            transition: all 0.22s ease;
         }
-        .quick-card:hover { transform: translateY(-4px); box-shadow: 0 18px 34px -8px rgba(30,58,138,0.16); }
+        .quick-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -6px rgba(30,58,138,0.14); }
         .quick-icon {
-            width: 44px; height: 44px;
-            border-radius: 12px;
+            border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px;
+            font-size: 15px;
         }
         .quick-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
             color: #1e293b;
-            line-height: 1.3;
+            line-height: 1.25;
         }
 
         /* ===== SECTION HEADINGS ===== */
@@ -195,19 +181,19 @@
 
     <!-- Sticky Navbar — Full Mega Menu -->
     <nav class="sticky top-0 z-50 bg-brandBlue shadow-lg w-full">
-        <div class="screen-fit flex justify-between items-center h-[68px] sm:h-[76px]">
+        <div class="screen-fit flex justify-between items-center h-16 sm:h-[72px]">
 
             <!-- Logo -->
             <a href="#" class="flex items-center gap-3 shrink-0">
-                <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-12 sm:h-12 object-contain bg-white rounded-xl p-1 shadow-sm">
+                <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-13 sm:h-13 object-contain bg-white rounded-xl p-1 shadow-sm">
                 <div class="flex flex-col leading-tight">
-                    <span class="text-[9px] sm:text-[10px] font-bold text-blue-200 tracking-wider uppercase">SRI VENKATESWARA</span>
-                    <span class="text-base sm:text-xl text-brandOrange font-black tracking-widest uppercase">JY School</span>
+                    <span class="text-[10px] font-bold text-blue-200 tracking-wider uppercase">SRI VENKATESWARA</span>
+                    <span class="text-lg sm:text-xl text-brandOrange font-black tracking-widest uppercase">JY School</span>
                 </div>
             </a>
 
             <!-- Desktop Nav -->
-            <div class="hidden lg:flex items-center gap-1 text-[11.5px] font-bold text-blue-100 h-full">
+            <div class="hidden lg:flex items-center gap-0.5 text-[13px] font-bold text-blue-100 h-full">
 
                 <!-- Home -->
                 <a href="#" class="px-3 py-2 hover:text-white transition-colors rounded-lg hover:bg-white/10">Home</a>
@@ -359,155 +345,128 @@
         </div>
     </nav>
 
-    <!-- HERO SECTION (Full Screen-Fit & Content-Rich) -->
+    <!-- ═══════════════════════════════════════════════════════════════
+         HERO — ONE FULL VIEWPORT PAGE (Navbar height excluded)
+         Contains: main content + quick links + stats  — no scroll needed
+    ════════════════════════════════════════════════════════════════ -->
     <section class="hero-section">
-        <div class="screen-fit">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center">
-                <!-- Text & Highlights Column (6 cols) -->
-                <div class="lg:col-span-6 order-2 lg:order-1 space-y-5">
-                    <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider">
-                        <i class="fa-solid fa-graduation-cap text-brandOrange"></i> Excellence in Education Since 2005
+        <div class="screen-fit flex flex-col h-full py-3 lg:py-4 gap-3 lg:gap-3.5">
+
+            <!-- ── ROW 1: Main 2-column content ── -->
+            <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-5 xl:gap-8 items-center min-h-0 overflow-hidden">
+
+                <!-- LEFT: Text + CTAs + 3 highlights -->
+                <div class="flex flex-col gap-2.5 lg:gap-3 justify-center">
+
+                    <span id="hero-subtitle" class="inline-flex items-center gap-2 bg-indigo-100 text-brandBlue px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider w-fit">
+                        <i class="fa-solid fa-graduation-cap text-brandOrange text-[10px]"></i> IIT / NEET / Olympiad Foundation
                     </span>
 
                     <h1 id="hero-title" class="hero-title">
-                        Shaping Brilliant Minds, Building Futures
+                        Shaping Brilliant<br class="hidden lg:block">Minds, Building Futures
                     </h1>
 
                     <p id="hero-description" class="hero-desc max-w-2xl">
-                        At Sri Venkateswara JY School, we empower students with strong foundational knowledge, values, and analytical skills for IIT-JEE, NEET, Navodaya, Olympiads &amp; holistic leadership.
+                        At Sri Venkateswara JY School, we nurture young minds with knowledge, values, and analytical skills for IIT-JEE, NEET, Navodaya, Olympiads &amp; holistic leadership.
                     </p>
 
-                    <div class="flex flex-wrap gap-3 pt-1">
-                        <a href="http://66.116.252.191:19999/apply" class="px-7 py-3.5 bg-brandBlue text-white text-xs font-black rounded-full shadow-lg shadow-blue-900/20 hover:bg-blue-900 transition-all hover:-translate-y-0.5">
+                    <div class="flex flex-wrap gap-2.5 pt-0.5">
+                        <a href="http://66.116.252.191:19999/apply" class="px-6 py-2.5 bg-brandBlue text-white text-xs font-black rounded-full shadow-lg hover:bg-blue-900 transition-all hover:-translate-y-0.5">
                             Online Admission <i class="fa-solid fa-arrow-right ml-1"></i>
                         </a>
-                        <a href="#student-portals" class="px-7 py-3.5 bg-white text-brandBlue border-2 border-brandBlue text-xs font-black rounded-full hover:bg-brandBlue hover:text-white transition-all hover:-translate-y-0.5">
+                        <a href="#student-portals" class="px-6 py-2.5 bg-white text-brandBlue border-2 border-brandBlue text-xs font-black rounded-full hover:bg-brandBlue hover:text-white transition-all hover:-translate-y-0.5">
                             <i class="fa-solid fa-award text-brandOrange mr-1"></i> Check Results / Hall Ticket
                         </a>
-                        <button id="hero-video-btn" onclick="openHeroVideo()" class="hidden px-6 py-3.5 bg-rose-50 text-rose-700 border border-rose-200 text-xs font-black rounded-full hover:bg-rose-600 hover:text-white transition-all">
-                            <i class="fa-solid fa-play mr-1"></i> Watch Campus Video
-                        </button>
                     </div>
 
-                    <!-- 3 Compact Hero Feature Highlights (Fills space cleanly with useful institutional highlights) -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3">
-                        <div class="bg-white/90 backdrop-blur-sm border border-indigo-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-brandBlue flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-atom text-base"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <div class="text-xs font-black text-slate-900 leading-tight">IIT-JEE &amp; NEET</div>
-                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Integrated Foundation</div>
-                            </div>
+                    <!-- 3 highlight mini-cards -->
+                    <div class="grid grid-cols-3 gap-2 pt-0.5">
+                        <div class="bg-white/90 border border-indigo-100 rounded-2xl p-2.5 flex items-center gap-2 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-brandBlue flex items-center justify-center shrink-0"><i class="fa-solid fa-atom text-sm"></i></div>
+                            <div><div class="text-[10px] font-black text-slate-900 leading-tight">IIT-JEE &amp; NEET</div><div class="text-[9px] text-slate-500">Integrated Foundation</div></div>
                         </div>
-
-                        <div class="bg-white/90 backdrop-blur-sm border border-emerald-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-trophy text-base"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <div class="text-xs font-black text-slate-900 leading-tight">100% Pass Record</div>
-                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Board &amp; State Toppers</div>
-                            </div>
+                        <div class="bg-white/90 border border-emerald-100 rounded-2xl p-2.5 flex items-center gap-2 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-trophy text-sm"></i></div>
+                            <div><div class="text-[10px] font-black text-slate-900 leading-tight">100% Pass Record</div><div class="text-[9px] text-slate-500">Board &amp; State Toppers</div></div>
                         </div>
-
-                        <div class="bg-white/90 backdrop-blur-sm border border-orange-100 rounded-2xl p-3.5 shadow-sm flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-orange-50 text-brandOrange flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-laptop-code text-base"></i>
-                            </div>
-                            <div class="min-w-0">
-                                <div class="text-xs font-black text-slate-900 leading-tight">Smart Digital ERP</div>
-                                <div class="text-[10px] font-semibold text-slate-500 mt-0.5">Live Parent Tracking</div>
-                            </div>
+                        <div class="bg-white/90 border border-orange-100 rounded-2xl p-2.5 flex items-center gap-2 shadow-sm">
+                            <div class="w-8 h-8 rounded-lg bg-orange-50 text-brandOrange flex items-center justify-center shrink-0"><i class="fa-solid fa-laptop-code text-sm"></i></div>
+                            <div><div class="text-[10px] font-black text-slate-900 leading-tight">Smart Digital ERP</div><div class="text-[9px] text-slate-500">Live Parent Tracking</div></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Campus Image Column (6 cols — balanced full-bleed framing) -->
-                <div class="lg:col-span-6 order-1 lg:order-2 flex justify-center lg:justify-end">
-                    <div class="relative w-full max-w-[680px]">
+                <!-- RIGHT: Campus Image (desktop only, full height) -->
+                <div class="hidden lg:flex justify-end items-center h-full">
+                    <div class="relative w-full" style="height: min(42vh, 340px)">
                         <img id="hero-image" src="./image.png" alt="JY School Campus"
-                             class="w-full rounded-3xl shadow-2xl border-4 border-white object-cover aspect-[16/10] sm:aspect-[16/10]">
-                        <div class="hidden sm:flex items-center justify-between gap-3 absolute bottom-4 left-4 right-4 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-3 shadow-lg border border-indigo-100">
-                            <div class="flex items-center gap-3 min-w-0">
-                                <img src="./logo_.png" alt="Logo" class="w-9 h-9 object-contain rounded-lg bg-indigo-50 p-1 shrink-0">
+                             class="w-full h-full rounded-3xl shadow-2xl border-4 border-white object-cover">
+                        <div class="flex items-center justify-between gap-3 absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur-md rounded-2xl px-3 py-2 shadow-lg border border-indigo-100">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <img src="./logo_.png" alt="Logo" class="w-8 h-8 object-contain rounded-lg bg-indigo-50 p-1 shrink-0">
                                 <div class="min-w-0">
-                                    <div class="text-xs font-black text-slate-900 truncate">Sri Venkateswara JY School</div>
-                                    <div class="text-[10px] font-semibold text-slate-500 truncate">SVL Paradise Campus, Narasannapeta • Recognized School</div>
+                                    <div class="text-[10px] font-black text-slate-900 truncate">Sri Venkateswara JY School</div>
+                                    <div class="text-[9px] text-slate-500 truncate">SVL Paradise Campus, Narasannapeta • Recognized School</div>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-black shrink-0">
-                                Admissions Open 2027–28
-                            </span>
+                            <span class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-black shrink-0">Admissions Open 2027–28</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
 
-    <!-- QUICK-ACCESS UTILITY STRIP (Full Screen-Fit) -->
-    <div class="quick-strip">
-        <div class="screen-fit">
-            <div class="quick-grid">
+            <!-- ── ROW 2: Quick Access — 6 icon cards ── -->
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2 lg:gap-2.5">
                 <a href="#student-portals" onclick="switchPortalTab('results')" class="quick-card">
-                    <div class="quick-icon bg-indigo-50 text-indigo-600"><i class="fa-solid fa-square-poll-vertical"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-indigo-50 text-indigo-600"><i class="fa-solid fa-square-poll-vertical text-sm"></i></div>
                     <span class="quick-label">Exam Results</span>
                 </a>
                 <a href="#student-portals" onclick="switchPortalTab('hallticket')" class="quick-card" style="border-color:#d1fae5">
-                    <div class="quick-icon bg-emerald-50 text-emerald-600"><i class="fa-solid fa-id-card"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-emerald-50 text-emerald-600"><i class="fa-solid fa-id-card text-sm"></i></div>
                     <span class="quick-label">Hall Tickets</span>
                 </a>
                 <a href="#student-portals" onclick="switchPortalTab('admission')" class="quick-card" style="border-color:#fef3c7">
-                    <div class="quick-icon bg-amber-50 text-amber-600"><i class="fa-solid fa-magnifying-glass"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-amber-50 text-amber-600"><i class="fa-solid fa-magnifying-glass text-sm"></i></div>
                     <span class="quick-label">Track Admission</span>
                 </a>
                 <a href="#downloads-hub" class="quick-card" style="border-color:#e0f2fe">
-                    <div class="quick-icon bg-sky-50 text-sky-600"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-sky-50 text-sky-600"><i class="fa-solid fa-file-pdf text-sm"></i></div>
                     <span class="quick-label">Syllabus &amp; Circulars</span>
                 </a>
                 <a href="#media-showcase" class="quick-card" style="border-color:#ffe4e6">
-                    <div class="quick-icon bg-rose-50 text-rose-600"><i class="fa-solid fa-circle-play"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-rose-50 text-rose-600"><i class="fa-solid fa-circle-play text-sm"></i></div>
                     <span class="quick-label">Campus Videos</span>
                 </a>
                 <a href="http://66.116.252.191:19999/login" class="quick-card" style="border-color:#ede9fe">
-                    <div class="quick-icon bg-violet-50 text-violet-600"><i class="fa-solid fa-mobile-screen"></i></div>
+                    <div class="quick-icon w-9 h-9 bg-violet-50 text-violet-600"><i class="fa-solid fa-mobile-screen text-sm"></i></div>
                     <span class="quick-label">ERP / Parent Login</span>
                 </a>
             </div>
-        </div>
-    </div>
 
-    <!-- STATS SECTION (Pre-filled Professional Defaults, Live Overridden by CMS) -->
-    <section class="pt-14 pb-10 bg-white mt-4">
-        <div class="screen-fit">
-            <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                <div class="stat-card-1 rounded-2xl p-6 text-center text-white hover-lift">
-                    <i class="fa-solid fa-award text-2xl mb-2 opacity-90"></i>
-                    <h3 class="text-2xl font-black">20+</h3>
-                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Years of Excellence</p>
+            <!-- ── ROW 3: Stats — 5 cards ── -->
+            <div id="stats-grid" class="grid grid-cols-5 gap-2 lg:gap-2.5 pb-1">
+                <div class="stat-card-1 rounded-2xl px-3 py-2.5 text-white hover-lift flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-award text-lg opacity-90 shrink-0"></i>
+                    <div class="text-center"><h3 class="text-lg font-black leading-none">20+</h3><p class="text-[9px] font-bold opacity-85 uppercase mt-0.5">Years of Excellence</p></div>
                 </div>
-                <div class="stat-card-2 rounded-2xl p-6 text-center text-white hover-lift">
-                    <i class="fa-solid fa-user-graduate text-2xl mb-2 opacity-90"></i>
-                    <h3 class="text-2xl font-black">1,200+</h3>
-                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Happy Students</p>
+                <div class="stat-card-2 rounded-2xl px-3 py-2.5 text-white hover-lift flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-user-graduate text-lg opacity-90 shrink-0"></i>
+                    <div class="text-center"><h3 class="text-lg font-black leading-none">1,200+</h3><p class="text-[9px] font-bold opacity-85 uppercase mt-0.5">Happy Students</p></div>
                 </div>
-                <div class="stat-card-3 rounded-2xl p-6 text-center text-white hover-lift">
-                    <i class="fa-solid fa-chalkboard-user text-2xl mb-2 opacity-90"></i>
-                    <h3 class="text-2xl font-black">45+</h3>
-                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Experienced Faculty</p>
+                <div class="stat-card-3 rounded-2xl px-3 py-2.5 text-white hover-lift flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-chalkboard-user text-lg opacity-90 shrink-0"></i>
+                    <div class="text-center"><h3 class="text-lg font-black leading-none">45+</h3><p class="text-[9px] font-bold opacity-85 uppercase mt-0.5">Experienced Faculty</p></div>
                 </div>
-                <div class="stat-card-4 rounded-2xl p-6 text-center text-white hover-lift">
-                    <i class="fa-solid fa-medal text-2xl mb-2 opacity-90"></i>
-                    <h3 class="text-2xl font-black">100%</h3>
-                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Board Pass Record</p>
+                <div class="stat-card-4 rounded-2xl px-3 py-2.5 text-white hover-lift flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-medal text-lg opacity-90 shrink-0"></i>
+                    <div class="text-center"><h3 class="text-lg font-black leading-none">100%</h3><p class="text-[9px] font-bold opacity-85 uppercase mt-0.5">Board Pass Record</p></div>
                 </div>
-                <div class="stat-card-5 rounded-2xl p-6 text-center text-white hover-lift col-span-2 sm:col-span-1">
-                    <i class="fa-solid fa-bus text-2xl mb-2 opacity-90"></i>
-                    <h3 class="text-2xl font-black">100%</h3>
-                    <p class="text-[11px] font-bold opacity-85 uppercase mt-1">Safe GPS Campus</p>
+                <div class="stat-card-5 rounded-2xl px-3 py-2.5 text-white hover-lift flex items-center gap-2 justify-center">
+                    <i class="fa-solid fa-bus text-lg opacity-90 shrink-0"></i>
+                    <div class="text-center"><h3 class="text-lg font-black leading-none">100%</h3><p class="text-[9px] font-bold opacity-85 uppercase mt-0.5">Safe GPS Campus</p></div>
                 </div>
             </div>
+
         </div>
     </section>
 
