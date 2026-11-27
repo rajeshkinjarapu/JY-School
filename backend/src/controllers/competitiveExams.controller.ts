@@ -941,10 +941,10 @@ export const getStudentCompetitiveExams = async (req: Request, res: Response) =>
     });
 
     const metaMap = await getExamMetaMap();
-    const activeSessions: any[] = await prisma.$queryRawUnsafe(
+    const activeSessions = await prisma.$queryRawUnsafe<any[]>(
       `SELECT "competitiveExamId", "remainingSeconds", "status" FROM "CompetitiveExamSession" WHERE "studentId" = $1 AND "status" = 'ACTIVE'`,
       student.id
-    ).catch(() => []);
+    ).catch((): any[] => []);
     const sessionSet = new Set((activeSessions || []).map((s: any) => s.competitiveExamId));
 
     const studentClassName = (student.class?.name || '').trim().toLowerCase();
@@ -1052,11 +1052,11 @@ export const getStudentExamPaper = async (req: Request, res: Response) => {
           });
         }
 
-        const sessRows: any[] = await prisma.$queryRawUnsafe(
+        const sessRows = await prisma.$queryRawUnsafe<any[]>(
           `SELECT * FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1 AND "studentId" = $2 LIMIT 1`,
           id,
           student.id
-        ).catch(() => []);
+        ).catch((): any[] => []);
         if (sessRows && sessRows.length > 0 && sessRows[0].status === 'ACTIVE') {
           let parsedAns = {};
           try {
@@ -1127,11 +1127,11 @@ export const saveExamHeartbeat = async (req: Request, res: Response) => {
     const student = await prisma.student.findUnique({ where: { userId: user?.id } });
     if (!student) return res.json({ success: true, status: 'OK' });
 
-    const existing: any[] = await prisma.$queryRawUnsafe(
+    const existing = await prisma.$queryRawUnsafe<any[]>(
       `SELECT "status" FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1 AND "studentId" = $2 LIMIT 1`,
       id,
       student.id
-    ).catch(() => []);
+    ).catch((): any[] => []);
 
     if (existing && existing.length > 0 && existing[0].status === 'FORCE_SUBMITTED') {
       return res.json({ success: true, status: 'FORCE_SUBMITTED' });
@@ -1197,10 +1197,10 @@ export const getExamLiveMonitor = async (req: Request, res: Response) => {
     });
     const subMap = new Map(submissions.map((s) => [s.studentId, s]));
 
-    const sessions: any[] = await prisma.$queryRawUnsafe(
+    const sessions = await prisma.$queryRawUnsafe<any[]>(
       `SELECT * FROM "CompetitiveExamSession" WHERE "competitiveExamId" = $1`,
       id
-    ).catch(() => []);
+    ).catch((): any[] => []);
     const sessMap = new Map((sessions || []).map((s: any) => [s.studentId, s]));
 
     const totalQuestions = exam._count?.questions || 0;

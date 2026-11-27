@@ -1,5 +1,10 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Results Summary A4 PDF Full-Page Top-to-Bottom Auto-Fit (November 27, 2026)
+- **యూజర్ అభ్యర్థన:** క్లాస్ లో ఎంతమంది విద్యార్థులు ఉంటే అందుకు తగ్గట్టుగా Result Summary PDF అడుగున ఖాళీ స్థలం లేకుండా A4 పేజీకి పైనుండి కింద వరకు (`top to bottom`) కచ్చితంగా ఫిట్ అవ్వాలి (`17` మంది విద్యార్థులు ఉన్నప్పుడు అడుగున 35% ఖాళీ మిగిలిపోతోంది).
+- **పరిష్కారం ([ResultsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ResultsTab.tsx)):**
+  - `dynamicRowHeight` పై ఉన్న పాత `9.5mm` గరిష్ట పరిమితిని `26mm` కు పెంచి, `241mm` పూర్తి A4 బాడీ ఎత్తుకు అనుగుణంగా ప్రతి రో ఎత్తు (`241 / effectiveRows`), ఫాంట్ సైజ్ (`6.5pt–10pt`), మరియు పెద్ద పేర్లు 1 లైన్‌లో పట్టేలా ఆటో-స్కేలింగ్ అమలు చేశాము.
+
 ## చివరి సంభాషణ - VPS `git pull` Dirty Prisma Client & Gemini Diagnostics Fix (November 27, 2026)
 - **సమస్య:** [gemini.ts](file:///d:/JY%20School/JY-School-main/backend/src/utils/gemini.ts) అప్‌డేట్ చేసిన తర్వాత కూడా MCQ Paper Generator లో `models/gemini-2.0-flash` ఎర్రర్ మళ్ళీ రావడానికి కారణం — VPS లో `prisma generate` వల్ల Git లో ట్రాక్ అవుతున్న `backend/prisma/generated/local-client/` ఫైల్స్ మారిపోయి `git pull` ఆగిపోవడం (పాత `dist/utils/gemini.js` నే మళ్ళీ రన్ అవ్వడం).
 - **చేసిన మార్పులు:**

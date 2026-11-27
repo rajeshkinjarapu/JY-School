@@ -314,25 +314,35 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         ];
       });
 
-      // Fit all students cleanly on 1 A4 page when <= 55 rows without spilling onto an empty Page 2
+      // Fit all students cleanly from top to bottom on 1 A4 page (<= 55 rows) without leaving empty bottom space
       const totalRows = results.length || 1;
-      // Page height is 297mm. StartY is 29mm. Bottom margin is 14mm. Head is ~8.5mm.
-      // Safe body height = 236mm (leaves ~9.5mm buffer so autoTable never overflows onto Page 2).
+      const estimatedExtraLines = results.reduce(
+        (acc, s) => acc + (String(s?.name || '').trim().length > 26 ? 1 : 0),
+        0
+      );
+      const effectiveRows = totalRows + estimatedExtraLines * 0.45;
+      // Page height 297mm: startY 29mm + table head ~8.5mm + bottom footer reserve 14mm => 245.5mm usable (~241mm safe target)
       const dynamicRowHeight = totalRows <= 55
-        ? Math.min(9.5, Math.max(4.0, Math.floor((236 / totalRows) * 10) / 10))
+        ? Math.min(26, Math.max(4.0, Math.floor((241 / effectiveRows) * 10) / 10))
         : 5.5;
 
-      let dynamicFontSize = 9.0;
-      let dynamicPadding: { top: number; bottom: number; left: number; right: number } = { top: 1.6, bottom: 1.6, left: 2.5, right: 2.5 };
-      if (totalRows >= 40) {
-        dynamicFontSize = 6.8;
-        dynamicPadding = { top: 0.65, bottom: 0.65, left: 1.5, right: 1.5 };
-      } else if (totalRows >= 30) {
+      let dynamicFontSize = 9.5;
+      let dynamicPadding: { top: number; bottom: number; left: number; right: number } = { top: 1.2, bottom: 1.2, left: 2.5, right: 2.5 };
+      if (totalRows >= 45) {
+        dynamicFontSize = 6.5;
+        dynamicPadding = { top: 0.5, bottom: 0.5, left: 1.4, right: 1.4 };
+      } else if (totalRows >= 35) {
         dynamicFontSize = 7.2;
-        dynamicPadding = { top: 0.9, bottom: 0.9, left: 1.8, right: 1.8 };
-      } else if (totalRows >= 20) {
+        dynamicPadding = { top: 0.7, bottom: 0.7, left: 1.6, right: 1.6 };
+      } else if (totalRows >= 25) {
         dynamicFontSize = 8.0;
-        dynamicPadding = { top: 1.2, bottom: 1.2, left: 2.0, right: 2.0 };
+        dynamicPadding = { top: 0.9, bottom: 0.9, left: 1.9, right: 1.9 };
+      } else if (totalRows >= 19) {
+        dynamicFontSize = 8.8;
+        dynamicPadding = { top: 1.1, bottom: 1.1, left: 2.2, right: 2.2 };
+      } else {
+        dynamicFontSize = 10.0;
+        dynamicPadding = { top: 1.2, bottom: 1.2, left: 2.5, right: 2.5 };
       }
 
       autoTable(doc, {
@@ -346,9 +356,9 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
           fontStyle: 'bold',
           halign: 'center',
           valign: 'middle',
-          minCellHeight: 7.5,
-          cellPadding: { top: 1.4, bottom: 1.4, left: 1.5, right: 1.5 },
-          fontSize: 8.5
+          minCellHeight: 8.5,
+          cellPadding: { top: 1.5, bottom: 1.5, left: 1.5, right: 1.5 },
+          fontSize: 8.8
         },
         bodyStyles: {
           halign: 'center',
@@ -363,10 +373,14 @@ export const ResultsTab: React.FC<{ exams: any[] }> = ({ exams }) => {
         },
         columnStyles: {
           0: { cellWidth: 14, halign: 'center', fontStyle: 'bold' }, // Rank
-          1: { halign: 'left', fontStyle: 'bold', cellWidth: 52 }, // Student Name
+          1: { halign: 'left', fontStyle: 'bold', cellWidth: 54 }, // Student Name
           2: { cellWidth: 22, halign: 'center' }, // Roll No
         },
         didParseCell: (data) => {
+          // Shrink font slightly for extra-long names so row stays 1 line tall and keeps top-to-bottom alignment exact
+          if (data.section === 'body' && data.column.index === 1 && String(data.cell.raw || '').length > 24) {
+            data.cell.styles.fontSize = Math.max(6.2, dynamicFontSize - 1.1);
+          }
           // Highlight Total & Percentage
           if (data.section === 'body' && data.column.index === head[0].length - 2) {
             data.cell.styles.fontStyle = 'bold';
