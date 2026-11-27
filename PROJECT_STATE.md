@@ -1,5 +1,20 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Exam Creator Form Logic Fix (Clean Classes, Unique Subjects & Optional Sections) (November 27, 2026)
+- **`EduracleCreateExamWizard` (Step 2 - Exam Settings) Complete Cleanup (`frontend/src/pages/exams/CompetitiveExamsPage.tsx`):**
+  1. **Clean Classes (`uniqueClassGroups`):** `NUR`, `LKG`, `UKG`, `PP1`, `PP2` లాంటి Pre-Primary తరగతులు Online CBT Exam డ్రాప్‌డౌన్‌లో రాకుండా ఫిల్టర్ చేయబడ్డాయి. Senior తరగతులు (`Class 10th`, `9th`, `8th`...) పైకి వచ్చేలా descending ఆర్డర్‌లో అమర్చబడి, డిఫాల్ట్‌గా `Class 10th` సెలెక్ట్ అయ్యేలా చేయబడింది. డూప్లికేట్ సెక్షన్ల బదులు గ్రూప్ వారీగా (`Class 10th (All Sections: A, B, C)`) చూపబడి `targetClassNames` తో అన్ని సెక్షన్ల విద్యార్థులకూ పరీక్ష కనిపిస్తుంది.
+  2. **Unique Scoped Subjects (`uniqueSubjects`):** ఒకే సబ్జెక్ట్ (`HINDI`) 15 సార్లు రిపీట్ అవ్వకుండా సెలెక్ట్ చేసిన తరగతి పరిధిలో clean display పేరుతో డూప్లికేషన్ లేకుండా చూపబడింది.
+  3. **Optional Sections (`enableSections`) & Live Summary:** `JEE_MAINS`, `NEET`, `EAMCET`, `NAVODAYA` ప్యాటర్న్‌లకు మాత్రమే Multi-Subject `Sections` ఆటోమేటిక్‌గా ఆన్ అవుతాయి. సాధారణ స్కూల్ టెస్టులకు Sections టోగుల్ ఆఫ్‌లో ఉండి, `Single Subject` + సులభమైన `Target Questions (10, 20, 25, 30, 50, 100 Qs)` బటన్లతో పరీక్ష క్రియేషన్ సులభతరం చేయబడింది. Live Summary లో కూడా Selected Class మరియు `Single Subject` / `Sections` కచ్చితంగా చూపబడుతుంది.
+
+## చివరి సంభాషణ - Exam Creator Form Logic Audit (Duplicate Subjects, Pre-Primary Classes & Unnecessary Sections) (November 27, 2026)
+- **యూజర్ ప్రశ్నలు & స్క్రీన్‌షాట్లు:**
+  - `assalu exam create chesinappudu undavalasinavi enti? sections enduku vastunnayii? subjects enduku vastunnayi (HINDI 15 సార్లు)? classes enduku vastunnayi (NUR/PP1/5th A)?`
+- **గుర్తించిన కోడ్ కారణాలు ([CompetitiveExamsPage.tsx](file:///c:/Users/Admin/Desktop/JY%20School/JY%20ERP/JY-School/frontend/src/pages/exams/CompetitiveExamsPage.tsx)):**
+  1. `DataCache.get('subjects')` లో స్కూల్‌లోని అన్ని క్లాసుల సబ్జెక్టు రోలు ఒకేసారి రావడం వల్ల, డి-డూప్లికేషన్ లేక `HINDI` లాంటివి 15 సార్లు వస్తున్నాయి.
+  2. `seniorClass` ఆటో-సెలెక్షన్ `.find()` లో `'5'` ఉండటం వల్ల `Class 10th` బదులు `Class 5th (A)` మొదట సెలెక్ట్ అవుతోంది మరియు `NUR / PP1 / PP2` లాంటి ప్రీ-ప్రైమరీ క్లాసులు కూడా కనిపిస్తున్నాయి.
+  3. సాధారణ స్కూల్ టెస్ట్‌లకైనా బలవంతంగా `Sections A & B` చూపిస్తూ గందరగోళం కలిగిస్తోంది — ఇవి కేవలం Multi-Subject Entrance Exams (JEE/NEET/EAPCET/Navodaya) లేదా Optional Toggle ద్వారా మాత్రమే ఉండాలి.
+  4. యూజర్ ఆమోదంతో ఈ Exam Settings ఫారం ను సింపుల్, డూప్లికేట్-ఫ్రీ, ప్రొఫెషనల్ 3-బాక్స్ ఫ్లోగా అప్‌గ్రేడ్ చేయాలి.
+
 ## చివరి సంభాషణ - Exam Settings (Step 2) & Bulk Import Studio Ultra-Premium Pastel Redesign (November 26, 2026)
 - **యూజర్ అభ్యర్థన:**
   - `exam setting kuda perfect ga ledu ee page kuda ui andam ga undali ultra deep ga kavali perfect vview lo ui super look lo` (Step 2 `Exam Settings` మరియు `Bulk Question Import Studio` పేజీలను అత్యంత అందంగా, క్లీన్‌గా, ప్రొఫెషనల్ Unified Pastel లుక్‌లోకి మార్చాలని కోరారు).

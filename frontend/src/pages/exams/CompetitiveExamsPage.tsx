@@ -1624,6 +1624,22 @@ const PATTERN_PRESETS: ExamPatternPreset[] = [
   },
 ];
 
+const MULTI_SUBJECT_PATTERNS = new Set(['JEE_MAINS', 'NEET', 'EAMCET', 'NAVODAYA']);
+const PRE_PRIMARY_RE = /^(nur|nursery|lkg|ukg|pp1|pp2|pp-1|pp-2|play|kg|pre)/i;
+
+const getClassNumericRank = (name: string = '') => {
+  const m = name.match(/\d+/);
+  return m ? parseInt(m[0], 10) : 0;
+};
+
+const formatSubjectDisplayName = (raw: string = '') => {
+  const trimmed = raw.trim();
+  if (!trimmed) return 'General';
+  return trimmed
+    .toLowerCase()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+};
+
 const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void; onCreated: (exam: any) => void }) => {
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -1631,7 +1647,10 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 
   const [selectedPattern, setSelectedPattern] = useState<string>('SCHOOL_GRAND_TEST');
   const [marksPerQuestion, setMarksPerQuestion] = useState<number>(2);
+  const [enableSections, setEnableSections] = useState<boolean>(false);
+  const [questionCountTarget, setQuestionCountTarget] = useState<number>(50);
   const [sections, setSections] = useState<ExamBlueprintSection[]>(PATTERN_PRESETS[0].sections);
+  const [selectedClassName, setSelectedClassName] = useState<string>('');
   const [wizardStep, setWizardStep] = useState<'PATTERNS' | 'SETTINGS'>('PATTERNS');
 
   const [formData, setFormData] = useState({
@@ -1651,6 +1670,54 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     showResultImmediately: true,
   });
 
+  // Clean eligible classes (exclude Nursery/LKG/UKG/PP1/PP2, sort 10th -> 9th -> 8th -> ... -> 1st)
+  const eligibleClasses = useMemo(() => {
+    const filtered = classes.filter((c: any) => !PRE_PRIMARY_RE.test((c.name || '').trim()));
+    const base = filtered.length > 0 ? filtered : classes;
+    return [...base].sort((a: any, b: any) => {
+      const diff = getClassNumericRank(b.name) - getClassNumericRank(a.name);
+      if (diff !== 0) return diff;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }, [classes]);
+
+  // Unique Class Names (e.g. "10th", "9th", "8th" instead of repeating A/B/C in main dropdown)
+  const uniqueClassGroups = useMemo(() => {
+    const map = new Map<string, { name: string; primaryId: string; sections: any[] }>();
+    eligibleClasses.forEach((c: any) => {
+      const cname = (c.name || '').trim();
+      if (!cname) return;
+      if (!map.has(cname)) {
+        map.set(cname, { name: cname, primaryId: c.id, sections: [c] });
+      } else {
+        map.get(cname)!.sections.push(c);
+      }
+    });
+    return Array.from(map.values());
+  }, [eligibleClasses]);
+
+  // Unique Deduplicated Subjects (scoped to selected class first, never repeating "HINDI" 15 times!)
+  const uniqueSubjects = useMemo(() => {
+    const selectedGroup = uniqueClassGroups.find((g) => g.name === selectedClassName);
+    const groupClassIds = new Set(selectedGroup ? selectedGroup.sections.map((s: any) => s.id) : []);
+
+    const classScoped = groupClassIds.size > 0
+      ? subjects.filter((s: any) => groupClassIds.has(s.classId))
+      : [];
+    const pool = classScoped.length > 0 ? classScoped : subjects;
+
+    const seen = new Set<string>();
+    const deduped: any[] = [];
+    pool.forEach((s: any) => {
+      const key = (s.name || '').trim().toLowerCase();
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      deduped.push({ ...s, displayName: formatSubjectDisplayName(s.name) });
+    });
+
+    return deduped.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [subjects, uniqueClassGroups, selectedClassName]);
+
   useEffect(() => {
     const loadClassesAndSubjects = async () => {
       try {
@@ -1663,11 +1730,13 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
         }
         if (Array.isArray(clsList) && clsList.length > 0) {
           setClasses(clsList);
-          const seniorClass = clsList.find((c: any) => 
-            (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8') || (c.name || '').includes('5')
-          ) || clsList[0];
-          if (seniorClass) {
-            setFormData(prev => ({ ...prev, classId: seniorClass.id }));
+          const eligible = clsList
+            .filter((c: any) => !PRE_PRIMARY_RE.test((c.name || '').trim()))
+            .sort((a: any, b: any) => getClassNumericRank(b.name) - getClassNumericRank(a.name));
+          const defaultCls = eligible.find((c: any) => (c.name || '').includes('10')) || eligible[0] || clsList[0];
+          if (defaultCls) {
+            setSelectedClassName((defaultCls.name || '').trim());
+            setFormData(prev => ({ ...prev, classId: defaultCls.id }));
           }
         }
       } catch (e) {
@@ -1684,9 +1753,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
         }
         if (Array.isArray(subList) && subList.length > 0) {
           setSubjects(subList);
-          const mathOrScience = subList.find((s: any) => 
-            (s.name || '').toLowerCase().includes('math') || 
-            (s.name || '').toLowerCase().includes('phys') || 
+          const mathOrScience = subList.find((s: any) =>
+            (s.name || '').toLowerCase().includes('math') ||
+            (s.name || '').toLowerCase().includes('phys') ||
             (s.name || '').toLowerCase().includes('scien')
           ) || subList[0];
           if (mathOrScience) {
@@ -1701,9 +1770,27 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     loadClassesAndSubjects();
   }, []);
 
+  // Keep valid subject selected when switching class
+  useEffect(() => {
+    if (uniqueSubjects.length === 0) return;
+    const stillValid = uniqueSubjects.some((s) => s.id === formData.subjectId);
+    if (!stillValid) {
+      const preferred = uniqueSubjects.find((s) =>
+        s.displayName.toLowerCase().includes('math') || s.displayName.toLowerCase().includes('scien')
+      ) || uniqueSubjects[0];
+      if (preferred) {
+        setFormData((prev) => ({ ...prev, subjectId: preferred.id }));
+      }
+    }
+  }, [uniqueSubjects, formData.subjectId]);
+
   const handleSelectPattern = (preset: ExamPatternPreset) => {
+    const isMulti = MULTI_SUBJECT_PATTERNS.has(preset.id);
+    const qSum = preset.sections.reduce((acc, s) => acc + (Number(s.count) || 0), 0);
     setSelectedPattern(preset.id);
     setMarksPerQuestion(preset.marksPerQuestion);
+    setEnableSections(isMulti);
+    setQuestionCountTarget(qSum || 50);
     setSections(preset.sections.map(s => ({ ...s })));
     setFormData(prev => ({
       ...prev,
@@ -1722,7 +1809,11 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
 
   const handleResetDefaults = () => {
     const preset = PATTERN_PRESETS.find(p => p.id === selectedPattern) || PATTERN_PRESETS[0];
+    const isMulti = MULTI_SUBJECT_PATTERNS.has(preset.id);
+    const qSum = preset.sections.reduce((acc, s) => acc + (Number(s.count) || 0), 0);
     setMarksPerQuestion(preset.marksPerQuestion);
+    setEnableSections(isMulti);
+    setQuestionCountTarget(qSum || 50);
     setSections(preset.sections.map(s => ({ ...s })));
     setFormData(prev => ({
       ...prev,
@@ -1736,13 +1827,24 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
   };
 
   const currentPreset = PATTERN_PRESETS.find(p => p.id === selectedPattern) || PATTERN_PRESETS[0];
-  const totalQuestionsCount = sections.reduce((acc, s) => acc + (Number(s.count) || 0), 0);
+  const isMultiSubjectPattern = MULTI_SUBJECT_PATTERNS.has(selectedPattern);
+  const totalQuestionsCount = enableSections
+    ? sections.reduce((acc, s) => acc + (Number(s.count) || 0), 0)
+    : questionCountTarget;
 
   const handleMarksPerQuestionChange = (val: number) => {
     const safeVal = Math.max(0.5, val);
     setMarksPerQuestion(safeVal);
-    setSections(prev => prev.map(s => ({ ...s, marks: Math.round(s.count * safeVal) })));
+    if (enableSections) {
+      setSections(prev => prev.map(s => ({ ...s, marks: Math.round(s.count * safeVal) })));
+    }
     setFormData(prev => ({ ...prev, totalMarks: Math.round(totalQuestionsCount * safeVal) }));
+  };
+
+  const handleTargetQuestionsChange = (cnt: number) => {
+    const safeCnt = Math.max(1, cnt);
+    setQuestionCountTarget(safeCnt);
+    setFormData(prev => ({ ...prev, totalMarks: Math.round(safeCnt * marksPerQuestion) }));
   };
 
   const handleAddSection = () => {
@@ -1796,9 +1898,9 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
       const payload = {
         title: formData.title,
         pattern: formData.pattern,
-        sections,
+        sections: enableSections ? sections : [],
         marksPerQuestion: Number(marksPerQuestion) || 4,
-        targetClassNames: selectedClsObj?.name ? [selectedClsObj.name] : [],
+        targetClassNames: selectedClassName ? [selectedClassName] : (selectedClsObj?.name ? [selectedClsObj.name] : []),
         allowRetake: Boolean(formData.allowRetake),
         shuffleQuestions: Boolean(formData.shuffleQuestions),
         showResultImmediately: Boolean(formData.showResultImmediately),
@@ -1826,11 +1928,10 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
     }
   };
 
-  // Group classes to display senior classes prominently
-  const seniorClasses = classes.filter((c: any) => 
-    (c.name || '').includes('10') || (c.name || '').includes('9') || (c.name || '').includes('8') || (c.name || '').includes('5')
-  );
-  const otherClasses = classes.filter((c: any) => !seniorClasses.includes(c));
+  const selectedClassSections = useMemo(() => {
+    const grp = uniqueClassGroups.find((g) => g.name === selectedClassName);
+    return grp ? grp.sections : [];
+  }, [uniqueClassGroups, selectedClassName]);
 
   return (
     <div className="space-y-5 pb-8">
@@ -2136,40 +2237,52 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                         Target Class * <span className="text-[#16A34A] normal-case font-bold">(All sections included)</span>
                       </label>
                       <select
-                        value={formData.classId}
-                        onChange={e => setFormData({ ...formData, classId: e.target.value })}
+                        value={selectedClassName}
+                        onChange={e => {
+                          const cname = e.target.value;
+                          setSelectedClassName(cname);
+                          const grp = uniqueClassGroups.find(g => g.name === cname);
+                          if (grp) {
+                            setFormData(prev => ({ ...prev, classId: grp.primaryId }));
+                          }
+                        }}
                         className="w-full px-3.5 py-2.5 bg-[#F8FAFD] focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-[#5B3DF5] outline-none text-sm cursor-pointer transition"
                       >
-                        {classes.length === 0 && <option value="">Loading classes...</option>}
-                        {seniorClasses.length > 0 && (
-                          <optgroup label="Senior Classes">
-                            {seniorClasses.map(c => (
-                              <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {otherClasses.length > 0 && (
-                          <optgroup label="Other Classes">
-                            {otherClasses.map(c => (
-                              <option key={c.id} value={c.id}>Class {c.name} {c.section ? `(${c.section})` : ''}</option>
-                            ))}
-                          </optgroup>
-                        )}
+                        {uniqueClassGroups.length === 0 && <option value="">Loading classes...</option>}
+                        {uniqueClassGroups.map(grp => (
+                          <option key={grp.name} value={grp.name}>
+                            Class {grp.name} {grp.sections.length > 1 ? `(${grp.sections.map((s: any) => s.section).filter(Boolean).join(', ')})` : ''}
+                          </option>
+                        ))}
                       </select>
+                      {selectedClassSections.length > 1 && (
+                        <p className="text-[11px] font-bold text-[#16A34A] mt-1">
+                          ✓ Covers all {selectedClassName} sections ({selectedClassSections.map((s: any) => s.section).filter(Boolean).join(', ')})
+                        </p>
+                      )}
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">Primary Subject *</label>
-                      <select
-                        value={formData.subjectId}
-                        onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
-                        className="w-full px-3.5 py-2.5 bg-[#F8FAFD] focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-[#5B3DF5] outline-none text-sm cursor-pointer transition"
-                      >
-                        {subjects.length === 0 && <option value="">Loading subjects...</option>}
-                        {subjects.map(s => (
-                          <option key={s.id} value={s.id}>{s.name}</option>
-                        ))}
-                      </select>
+                      <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-500 mb-1.5">
+                        {isMultiSubjectPattern ? 'Primary Category / Subject *' : 'Subject *'}
+                      </label>
+                      {isMultiSubjectPattern ? (
+                        <div className="w-full px-3.5 py-2.5 bg-[#F3EEFF] border border-[#DDD4FE] rounded-xl text-[#5B3DF5] font-extrabold text-sm flex items-center justify-between">
+                          <span>Multi-Subject ({sections.length} Sections)</span>
+                          <span className="text-[10px] font-black uppercase bg-white px-2 py-0.5 rounded-md">Combined</span>
+                        </div>
+                      ) : (
+                        <select
+                          value={formData.subjectId}
+                          onChange={e => setFormData({ ...formData, subjectId: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-[#F8FAFD] focus:bg-white border border-slate-200 rounded-xl text-slate-900 font-bold focus:border-[#5B3DF5] outline-none text-sm cursor-pointer transition"
+                        >
+                          {uniqueSubjects.length === 0 && <option value="">Loading subjects...</option>}
+                          {uniqueSubjects.map(s => (
+                            <option key={s.id} value={s.id}>{s.displayName}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2430,72 +2543,126 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                 </div>
               </div>
 
-              {/* Card 4: Subject Sections Blueprint */}
+              {/* Card 4: Optional Exam Sections (Hidden by default for single-subject School Exams unless enabled) */}
               <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_2px_10px_rgba(15,23,42,0.03)] space-y-4">
-                <div className="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                  <h5 className="text-sm font-black text-slate-900 flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
                     <span className="w-8 h-8 rounded-xl bg-[#F3EEFF] text-[#5B3DF5] flex items-center justify-center shrink-0">
                       <Sliders size={16} />
                     </span>
-                    <span>4. Exam Sections Blueprint ({totalQuestionsCount} Questions)</span>
-                  </h5>
+                    <div>
+                      <h5 className="text-sm font-black text-slate-900">
+                        4. Question Count {enableSections ? `& Multi-Subject Sections (${totalQuestionsCount} Qs)` : ''}
+                      </h5>
+                      <p className="text-[11px] font-semibold text-slate-500">
+                        {enableSections
+                          ? 'Divide exam into multiple subject tabs (e.g. Physics, Chemistry, Maths)'
+                          : 'Single-subject test — no complex section division needed'}
+                      </p>
+                    </div>
+                  </div>
+
                   <button
                     type="button"
-                    onClick={handleAddSection}
-                    className="px-3.5 py-1.5 rounded-xl bg-[#F3EEFF] hover:bg-[#EAE1FF] text-[#5B3DF5] border border-[#DDD4FE] text-xs font-extrabold flex items-center gap-1 cursor-pointer transition"
+                    onClick={() => setEnableSections(v => !v)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold border transition cursor-pointer ${
+                      enableSections
+                        ? 'bg-[#F3EEFF] text-[#5B3DF5] border-[#DDD4FE]'
+                        : 'bg-[#F8FAFD] text-slate-700 border-slate-200 hover:bg-[#F3EEFF] hover:text-[#5B3DF5]'
+                    }`}
                   >
-                    <Plus size={14} /> Add Section
+                    {enableSections ? '✓ Multi-Section Enabled' : '+ Enable Sections (Optional)'}
                   </button>
                 </div>
 
-                <div className="space-y-2.5">
-                  {sections.map((sec, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-[#F8FAFD] p-3 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
-                    >
-                      <div className="flex items-center gap-2.5 flex-1 w-full">
-                        <span className="w-7 h-7 rounded-lg bg-[#EFEAFE] text-[#5B3DF5] font-black text-xs flex items-center justify-center shrink-0">
-                          {idx + 1}
-                        </span>
-                        <input
-                          type="text"
-                          value={sec.name}
-                          onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
-                          className="flex-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-[#5B3DF5]"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-                        <input
-                          type="number"
-                          min={1}
-                          value={sec.count}
-                          onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
-                          title="Questions"
-                          className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-800 text-center outline-none focus:border-[#5B3DF5]"
-                        />
-                        <span className="text-[11px] font-bold text-slate-400">Qs</span>
-                        <input
-                          type="number"
-                          min={1}
-                          value={sec.marks}
-                          onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
-                          title="Marks"
-                          className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-[#5B3DF5] text-center outline-none focus:border-[#5B3DF5]"
-                        />
-                        <span className="text-[11px] font-bold text-slate-400">M</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveSection(idx)}
-                          disabled={sections.length <= 1}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
+                {!enableSections ? (
+                  <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-bold text-slate-600">Target Questions:</label>
+                      <input
+                        type="number"
+                        min={1}
+                        value={questionCountTarget}
+                        onChange={e => handleTargetQuestionsChange(Number(e.target.value) || 1)}
+                        className="w-24 px-3 py-2 bg-[#F8FAFD] focus:bg-white border border-slate-200 rounded-xl text-sm font-black text-slate-900 text-center outline-none focus:border-[#5B3DF5]"
+                      />
                     </div>
-                  ))}
-                </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {[10, 20, 25, 30, 50, 100].map(cnt => (
+                        <button
+                          key={cnt}
+                          type="button"
+                          onClick={() => handleTargetQuestionsChange(cnt)}
+                          className={`px-3 py-1 rounded-lg text-xs font-extrabold cursor-pointer transition ${
+                            questionCountTarget === cnt
+                              ? 'bg-[#5B3DF5] text-white'
+                              : 'bg-[#F4F7FC] text-slate-600 hover:bg-[#F3EEFF] hover:text-[#5B3DF5]'
+                          }`}
+                        >
+                          {cnt} Qs
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5 pt-3 border-t border-slate-100">
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleAddSection}
+                        className="px-3.5 py-1.5 rounded-xl bg-[#F3EEFF] hover:bg-[#EAE1FF] text-[#5B3DF5] border border-[#DDD4FE] text-xs font-extrabold flex items-center gap-1 cursor-pointer transition"
+                      >
+                        <Plus size={14} /> Add Section
+                      </button>
+                    </div>
+                    {sections.map((sec, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-[#F8FAFD] p-3 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5"
+                      >
+                        <div className="flex items-center gap-2.5 flex-1 w-full">
+                          <span className="w-7 h-7 rounded-lg bg-[#EFEAFE] text-[#5B3DF5] font-black text-xs flex items-center justify-center shrink-0">
+                            {idx + 1}
+                          </span>
+                          <input
+                            type="text"
+                            value={sec.name}
+                            onChange={e => handleUpdateSection(idx, 'name', e.target.value)}
+                            className="flex-1 w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs sm:text-sm font-bold text-slate-800 outline-none focus:border-[#5B3DF5]"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                          <input
+                            type="number"
+                            min={1}
+                            value={sec.count}
+                            onChange={e => handleUpdateSection(idx, 'count', Number(e.target.value) || 1)}
+                            title="Questions"
+                            className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-slate-800 text-center outline-none focus:border-[#5B3DF5]"
+                          />
+                          <span className="text-[11px] font-bold text-slate-400">Qs</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={sec.marks}
+                            onChange={e => handleUpdateSection(idx, 'marks', Number(e.target.value) || 1)}
+                            title="Marks"
+                            className="w-16 px-2 py-2 bg-white border border-slate-200 rounded-lg text-xs font-black text-[#5B3DF5] text-center outline-none focus:border-[#5B3DF5]"
+                          />
+                          <span className="text-[11px] font-bold text-slate-400">M</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSection(idx)}
+                            disabled={sections.length <= 1}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer disabled:opacity-30"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -2511,7 +2678,7 @@ const EduracleCreateExamWizard = ({ onClose, onCreated }: { onClose: () => void;
                     {formData.title || 'Untitled Exam'}
                   </h4>
                   <p className="text-[11px] font-semibold text-indigo-100 mt-1">
-                    {currentPreset.title} • {sections.length} {sections.length === 1 ? 'Section' : 'Sections'}
+                    {currentPreset.title} • {selectedClassName ? `Class ${selectedClassName} • ` : ''}{enableSections ? `${sections.length} ${sections.length === 1 ? 'Section' : 'Sections'}` : 'Single Subject'}
                   </p>
                 </div>
 
