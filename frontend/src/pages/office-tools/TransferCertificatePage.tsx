@@ -13,10 +13,7 @@ import {
   Plus,
   Trash2,
   AlertTriangle,
-  Users,
-  CheckCircle2,
   FileText,
-  Scale,
   UserCheck,
   BookOpen,
   SlidersHorizontal,
@@ -109,8 +106,8 @@ export const TransferCertificatePage: React.FC = () => {
     logoUrl: '/logo.png',
   });
 
-  // Visibility Toggles
-  const [showPhoto, setShowPhoto] = useState(true);
+  // Visibility Toggles (Photo defaults to false so letterhead/sheet stays purely official)
+  const [showPhoto, setShowPhoto] = useState(false);
   const [showSignature, setShowSignature] = useState(true);
   const [showQr, setShowQr] = useState(true);
   const [showAadhaar, setShowAadhaar] = useState(false);
@@ -183,9 +180,10 @@ export const TransferCertificatePage: React.FC = () => {
   const [bulkPreviewIndex, setBulkPreviewIndex] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
-  const [zoomScale, setZoomScale] = useState(0.64);
+  const [zoomScale, setZoomScale] = useState(0.52);
 
   const pdfCaptureRef = useRef<HTMLDivElement>(null);
+  const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const selectedClassObj = useMemo(
     () => classes.find(c => c.id === selectedClassId),
@@ -203,6 +201,27 @@ export const TransferCertificatePage: React.FC = () => {
   }, [docPref, autoDocKind]);
 
   const activePaper = useMemo(() => getPaperDimensions(activeDocKind), [activeDocKind]);
+
+  const fitPaperToContainer = () => {
+    const el = previewContainerRef.current;
+    if (!el) return;
+    const availW = Math.max(320, el.clientWidth - 40);
+    const availH = Math.max(320, el.clientHeight - 40);
+    const mmToPx = 3.7795;
+    const scaleW = availW / (activePaper.widthMm * mmToPx);
+    const scaleH = availH / (activePaper.heightMm * mmToPx);
+    const optimal = Math.min(0.95, Math.max(0.38, Math.min(scaleW, scaleH)));
+    setZoomScale(Number(optimal.toFixed(2)));
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(fitPaperToContainer, 80);
+    window.addEventListener('resize', fitPaperToContainer);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', fitPaperToContainer);
+    };
+  }, [activeDocKind, activePaper.widthMm, activePaper.heightMm]);
 
   const activeTheme = useMemo(
     () => TC_THEMES.find(t => t.id === themeId) || TC_THEMES[0],
@@ -347,14 +366,6 @@ export const TransferCertificatePage: React.FC = () => {
         (s.penNumber || '').toLowerCase().includes(q)
     );
   }, [classStudents, studentSearch]);
-
-  const classStats = useMemo(() => {
-    const total = classStudents.length;
-    const ready = classStudents.filter(s => Boolean(s.fatherName && s.dob)).length;
-    const missing = total - ready;
-    const govReady = classStudents.filter(s => Boolean(s.penNumber || s.childId || s.apaarId)).length;
-    return { total, ready, missing, govReady };
-  }, [classStudents]);
 
   const buildPayloadForStudent = (s?: StudentRecord, idx = 1): TcPayload => {
     const clsName = (mode === 'single' ? lastClassStudied : s?.class?.name || selectedClassObj?.name || 'VIII');
@@ -630,63 +641,10 @@ export const TransferCertificatePage: React.FC = () => {
         }
       />
 
-      {/* Light Pastel ERP KPI Analytics Strip */}
-      <div className="px-4 sm:px-6 lg:px-8 pt-5 pb-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 max-w-[1680px] w-full mx-auto">
-        <div className="bg-white border border-indigo-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Class Strength</p>
-            <p className="text-xl font-black text-slate-800">{classStats.total} Pupils</p>
-            <p className="text-[11px] font-bold text-indigo-600 truncate">
-              {selectedClassObj ? `${selectedClassObj.name} ${selectedClassObj.section || ''}` : 'Select Class'} · {classStats.govReady} PEN/APAAR
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-emerald-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Father / DOB Ready</p>
-            <p className="text-xl font-black text-emerald-700">{classStats.ready} / {classStats.total}</p>
-            <p className="text-[11px] font-bold text-emerald-600">Register verified profiles</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-amber-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Incomplete Profiles</p>
-            <p className="text-xl font-black text-amber-700">{classStats.missing}</p>
-            <p className="text-[11px] font-bold text-amber-600">Editable live on left panel</p>
-          </div>
-        </div>
-
-        <div className="bg-white border border-violet-100 rounded-2xl p-4 shadow-xs flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
-            <Scale className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Active Document &amp; Paper</p>
-            <p className="text-sm font-black text-violet-800 truncate">
-              {activeDocKind === 'RECORD_SHEET_A4' ? 'Record Sheet (A4)' : 'Transfer Certificate (Legal)'}
-            </p>
-            <p className="text-[11px] font-bold text-violet-600">
-              {activeDocKind === 'RECORD_SHEET_A4' ? 'Nur–V Rule · 210 × 297 mm' : 'VI–X Rule · 215.9 × 355.6 mm'}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Main Split Workspace */}
-      <div className="flex-1 px-4 sm:px-6 lg:px-8 pb-8 max-w-[1680px] w-full mx-auto flex flex-col xl:flex-row gap-5">
+      <div className="flex-1 p-4 sm:p-5 max-w-[1680px] w-full mx-auto flex flex-col xl:flex-row gap-5">
         {/* LEFT CONTROL PANEL */}
-        <div className="w-full xl:w-[445px] shrink-0 bg-white border border-indigo-100 rounded-[24px] shadow-sm flex flex-col overflow-hidden xl:max-h-[calc(100vh-195px)]">
+        <div className="w-full xl:w-[445px] shrink-0 bg-white border border-indigo-100 rounded-[24px] shadow-sm flex flex-col overflow-hidden xl:max-h-[calc(100vh-108px)]">
           {/* Top Mode & Tab Strip */}
           <div className="p-4 border-b border-slate-100 bg-[#F8FAFF] space-y-3">
             <div className="grid grid-cols-2 gap-2 p-1 bg-white rounded-xl border border-indigo-100">
@@ -790,7 +748,7 @@ export const TransferCertificatePage: React.FC = () => {
                     ))}
                   </div>
                   <p className="text-[10.5px] font-bold text-slate-500 leading-snug">
-                    Nursery–Class V విద్యార్థులకు ఆటోమేటిక్‌గా <strong>A4 Record Sheet</strong>, మరియు Class VI–X విద్యార్థులకు <strong>Legal Transfer Certificate</strong> సిద్ధమవుతుంది.
+                    Automatically selects <strong>A4 Record Sheet</strong> for Nursery–Class V, and <strong>Legal Transfer Certificate</strong> for Class VI–X.
                   </p>
                 </div>
 
@@ -1166,7 +1124,7 @@ export const TransferCertificatePage: React.FC = () => {
         </div>
 
         {/* RIGHT LIVE PREVIEW */}
-        <div className="flex-1 bg-[#EAEFF8] rounded-[24px] border border-indigo-100 flex flex-col overflow-hidden min-h-[680px] xl:max-h-[calc(100vh-195px)]">
+        <div className="flex-1 bg-[#EAEFF8] rounded-[24px] border border-indigo-100 flex flex-col overflow-hidden min-h-[680px] xl:max-h-[calc(100vh-108px)]">
           <div className="bg-white border-b border-indigo-100 px-5 py-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               <FileText className="w-4 h-4 text-indigo-600" />
@@ -1205,8 +1163,9 @@ export const TransferCertificatePage: React.FC = () => {
                 <button type="button" onClick={() => setZoomScale(s => Math.min(1.1, Number((s + 0.08).toFixed(2))))} className="p-1 text-slate-600 cursor-pointer">
                   <ZoomIn className="w-3.5 h-3.5" />
                 </button>
-                <button type="button" onClick={() => setZoomScale(0.64)} title="Reset zoom" className="p-1 text-slate-500 hover:text-indigo-600 cursor-pointer">
+                <button type="button" onClick={fitPaperToContainer} title="Fit page to screen" className="px-2 py-0.5 text-[10px] font-black text-indigo-700 bg-white border border-indigo-200 rounded-lg hover:bg-indigo-50 cursor-pointer flex items-center gap-1">
                   <RotateCcw className="w-3 h-3" />
+                  <span>Fit</span>
                 </button>
               </div>
 
@@ -1255,7 +1214,7 @@ export const TransferCertificatePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto p-6 flex justify-center items-start">
+          <div ref={previewContainerRef} className="flex-1 overflow-auto p-4 sm:p-5 flex justify-center items-start">
             <div
               style={{
                 width: `${activePaper.widthMm * zoomScale}mm`,

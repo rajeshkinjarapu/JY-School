@@ -1,5 +1,13 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Transfer Certificate & Record Sheet Studio Fixes (Remove Telugu UI Text, Remove Header Photo, Exact A4 1-Page Fit) (`/office-tools/transfer-certificate`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** TC & Record Sheet పేజీలో తెలుగు టెక్స్ట్ ఉండకూడదు, స్కూల్ హెడర్‌లో స్టూడెంట్ ఇమేజ్ ఉండకూడదు, మరియు A4 Record Sheet పూర్తిగా ఒక పేజీలో పర్ఫెక్ట్‌గా ఫిట్ అవ్వాలి.
+- **చేసిన మార్పులు ([TransferCertificatePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/office-tools/TransferCertificatePage.tsx), [tcTemplates.ts](file:///d:/JY%20School/JY-School-main/frontend/src/pages/office-tools/tcTemplates.ts)):**
+  - **KPI Cards Removal:** పైభాగంలోని 4 KPI కార్డుల స్ట్రిప్‌ను తొలగించి వర్క్‌స్పేస్ & ప్రివ్యూ ఎత్తును (`calc(100vh-108px)`) పెంచాము.
+  - **100% English UI:** ఎడమ ప్యానెల్ లోని తెలుగు నోట్ స్థానంలో స్పష్టమైన ఇంగ్లీష్ టెక్స్ట్ ఉంచాము (`Automatically selects A4 Record Sheet for Nursery–Class V, and Legal Transfer Certificate for Class VI–X.`).
+  - **Clean School Header (No Student Photo in Header):** `doc-header` నుండి స్టూడెంట్ ఫోటోను తొలగించి లోగో + స్కూల్ పేరు + రికగ్నిషన్ + అడ్రస్‌ను సెంటర్‌లో ప్రొఫెషనల్‌గా అమర్చాము (`showPhoto` డిఫాల్ట్ `false`; కావాలనుకుంటే ఆన్ చేసినా అది బ్యానర్ కింద ఐడీ స్ట్రిప్ పక్కనే వస్తుంది, హెడర్‌లో రాదు).
+  - **Perfect 1-Page A4 Record Sheet Fit & Auto-Fit Preview:** A4 ప్యాడింగ్, ఫాంట్ సైజులు, మరియు సంతకం/స్టడీ ప్రోగ్రెషన్ స్పేసింగ్‌ను సర్దుబాటు చేసి 15 వరుసలు + స్టడీ హిస్టరీ + డిక్లరేషన్ + ప్రిన్సిపాల్ సిగ్నేచర్ మొత్తం 297mm A4 పేజీలో కట్ అవ్వకుండా ఖచ్చితంగా ఫిట్ చేశాము. ప్రివ్యూలో ఆటో-ఫిట్ & `Fit` బటన్ జోడించాము.
+
 ## చివరి సంభాషణ - Daily Attendance Report Table Header White Text Contrast Fix (`/attendance/daily-report`) (November 28, 2026)
 - **సమస్య:** [AttendanceDailyReportPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/attendance/AttendanceDailyReportPage.tsx#L249-L259) లోని పర్పుల్ టేబుల్ హెడర్ టెక్స్ట్ (`#`, `CLASS`, `TOTAL`, `PRESENT`, `ABSENT`, `ATTD %`) గ్లోబల్ [index.css](file:///d:/JY%20School/JY-School-main/frontend/src/index.css#L466-L473) రూల్ (`color: #312e81 !important`) వల్ల డార్క్ బ్లూ కలర్‌లోకి మారి స్పష్టంగా కనిపించడం లేదు.
 - **చేసిన ఫిక్స్:** టేబుల్‌కి `student-grid-table` క్లాస్ మరియు ప్రతీ `<th>` కి `!text-white` జోడించి పర్పుల్ హెడర్‌పై టెక్స్ట్ స్వచ్ఛమైన తెలుపు రంగులో స్పష్టంగా కనిపించేలా సరిదిద్దాము.

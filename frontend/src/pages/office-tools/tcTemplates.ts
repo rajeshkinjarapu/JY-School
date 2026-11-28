@@ -254,143 +254,151 @@ export const buildDocumentCss = (theme: TcTheme, docKind: DocumentKind): string 
       position: relative;
       overflow: hidden;
       font-family: 'Times New Roman', Georgia, serif;
-      padding: ${isLegal ? '11.5mm 13.5mm' : '11mm 13mm'};
+      padding: ${isLegal ? '10.5mm 13mm' : '9.5mm 11.5mm'};
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
     }
-    .doc-outer-frame { position: absolute; inset: 5.5mm; border: 1.8px solid ${theme.gold}; pointer-events: none; z-index: 10; }
-    .doc-inner-frame { position: absolute; inset: 7.5mm; border: 3px solid ${theme.primary}; pointer-events: none; z-index: 10; }
-    .corner { position: absolute; width: 7.5mm; height: 7.5mm; border: 2px solid ${theme.gold}; z-index: 11; pointer-events: none; }
-    .corner.tl { top: 6.5mm; left: 6.5mm; border-right: none; border-bottom: none; }
-    .corner.tr { top: 6.5mm; right: 6.5mm; border-left: none; border-bottom: none; }
-    .corner.bl { bottom: 6.5mm; left: 6.5mm; border-right: none; border-top: none; }
-    .corner.br { bottom: 6.5mm; right: 6.5mm; border-left: none; border-top: none; }
+    .doc-outer-frame { position: absolute; inset: 4.5mm; border: 1.8px solid ${theme.gold}; pointer-events: none; z-index: 10; }
+    .doc-inner-frame { position: absolute; inset: 6.5mm; border: 2.8px solid ${theme.primary}; pointer-events: none; z-index: 10; }
+    .corner { position: absolute; width: 6.5mm; height: 6.5mm; border: 2px solid ${theme.gold}; z-index: 11; pointer-events: none; }
+    .corner.tl { top: 5.5mm; left: 5.5mm; border-right: none; border-bottom: none; }
+    .corner.tr { top: 5.5mm; right: 5.5mm; border-left: none; border-bottom: none; }
+    .corner.bl { bottom: 5.5mm; left: 5.5mm; border-right: none; border-top: none; }
+    .corner.br { bottom: 5.5mm; right: 5.5mm; border-left: none; border-top: none; }
 
     .doc-watermark {
       position: absolute; top: 53%; left: 50%; transform: translate(-50%, -50%);
-      width: 105mm; height: 105mm; opacity: 0.045; z-index: 1; pointer-events: none;
+      width: 98mm; height: 98mm; opacity: 0.045; z-index: 1; pointer-events: none;
       display: flex; align-items: center; justify-content: center;
     }
     .doc-watermark img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%); }
 
     .doc-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
 
+    /* Pure Institutional School Header (No student photo in header) */
     .doc-header {
       display: flex; align-items: center; justify-content: space-between; gap: 3mm;
-      border-bottom: 2px solid ${theme.primary}; padding-bottom: 2.5mm; margin-bottom: 2.5mm;
+      border-bottom: 1.8px solid ${theme.primary}; padding-bottom: 1.8mm; margin-bottom: 1.6mm;
     }
-    .doc-logo { width: 20mm; height: 20mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .doc-logo { width: 17.5mm; height: 17.5mm; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .doc-logo img { width: 100%; height: 100%; object-fit: contain; }
+    .doc-header-spacer { width: 17.5mm; flex-shrink: 0; }
     .doc-school-info { flex: 1; text-align: center; }
-    .school-title { font-size: ${isLegal ? '19.5pt' : '18.5pt'}; font-weight: 900; color: ${theme.primary}; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.12; }
-    .school-sub { font-family: Arial, sans-serif; font-size: 8pt; font-weight: 800; color: #b91c1c; margin-top: 0.7mm; }
-    .school-rc { font-family: Arial, sans-serif; font-size: 7.8pt; font-weight: 700; color: #334155; margin-top: 0.6mm; }
-    .school-addr { font-family: Arial, sans-serif; font-size: 8pt; font-weight: 700; color: ${theme.primary}; margin-top: 0.5mm; }
-    .photo-box {
-      width: 21mm; height: 24.5mm; border: 1.5px solid ${theme.gold}; background: #f8fafc;
-      display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;
-    }
-    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
-    .photo-placeholder { font-family: Arial, sans-serif; font-size: 6pt; font-weight: 800; color: #94a3b8; text-align: center; line-height: 1.25; }
+    .school-title { font-size: ${isLegal ? '19pt' : '17pt'}; font-weight: 900; color: ${theme.primary}; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.08; }
+    .school-sub { font-family: Arial, sans-serif; font-size: 7.6pt; font-weight: 800; color: #b91c1c; margin-top: 0.5mm; }
+    .school-rc { font-family: Arial, sans-serif; font-size: 7.3pt; font-weight: 700; color: #334155; margin-top: 0.4mm; }
+    .school-addr { font-family: Arial, sans-serif; font-size: 7.5pt; font-weight: 700; color: ${theme.primary}; margin-top: 0.4mm; }
 
-    .doc-banner { text-align: center; margin: 1.5mm 0 2.5mm 0; }
+    .doc-banner { text-align: center; margin: 0.8mm 0 1.8mm 0; }
     .doc-banner-pill {
       display: inline-block; background: ${theme.primary}; color: #fff;
       border: 1.5px solid ${theme.gold}; border-radius: 99px;
-      padding: 1.5mm 8mm; font-size: ${isLegal ? '13.5pt' : '12.5pt'}; font-weight: 900;
-      letter-spacing: 1.2px; text-transform: uppercase;
+      padding: 1.1mm 7mm; font-size: ${isLegal ? '13pt' : '11.5pt'}; font-weight: 900;
+      letter-spacing: 1px; text-transform: uppercase;
     }
     .doc-banner-sub {
-      font-family: Arial, sans-serif; font-size: 7.5pt; font-weight: 800;
-      color: ${theme.gold}; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1mm;
+      font-family: Arial, sans-serif; font-size: 7pt; font-weight: 800;
+      color: ${theme.gold}; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.7mm;
     }
 
+    /* Pupil Identity Strip Below Banner */
+    .pupil-top-row {
+      display: flex; align-items: stretch; gap: 2mm; margin-bottom: 1.8mm;
+    }
+    .pupil-meta-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.4mm; }
     .meta-strip {
-      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.8mm; margin-bottom: 2.5mm;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5mm;
     }
     .meta-cell {
-      border: 1px solid ${theme.primary}; background: rgba(255,255,255,0.88);
-      padding: 1.3mm 2mm; border-radius: 2.5px; font-family: Arial, sans-serif; font-size: 7.6pt;
+      border: 1px solid ${theme.primary}; background: rgba(255,255,255,0.9);
+      padding: 1mm 1.8mm; border-radius: 2.5px; font-family: Arial, sans-serif; font-size: 7.2pt;
     }
-    .meta-cell .ml { color: #64748b; font-weight: 700; display: block; font-size: 6.5pt; text-transform: uppercase; }
-    .meta-cell .mv { color: ${theme.primary}; font-weight: 900; font-size: 8.2pt; word-break: break-all; }
+    .meta-cell .ml { color: #64748b; font-weight: 700; display: block; font-size: 6pt; text-transform: uppercase; }
+    .meta-cell .mv { color: ${theme.primary}; font-weight: 900; font-size: 7.8pt; word-break: break-all; }
 
     .gov-ids-strip {
-      display: flex; justify-content: space-between; gap: 2mm; margin-bottom: 2.5mm;
+      display: flex; justify-content: space-between; gap: 2mm;
       background: ${theme.tint}; border: 1px solid #cbd5e1; border-radius: 2.5px;
-      padding: 1.2mm 2.5mm; font-family: Arial, sans-serif; font-size: 7.5pt; font-weight: 700; color: #334155;
+      padding: 0.9mm 2.2mm; font-family: Arial, sans-serif; font-size: 7.1pt; font-weight: 700; color: #334155;
     }
     .gov-ids-strip strong { color: ${theme.primary}; font-weight: 900; }
 
+    .photo-box {
+      width: 17mm; height: 20mm; border: 1.3px solid ${theme.gold}; background: #f8fafc;
+      display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; border-radius: 2px;
+    }
+    .photo-box img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-placeholder { font-family: Arial, sans-serif; font-size: 5.5pt; font-weight: 800; color: #94a3b8; text-align: center; line-height: 1.2; }
+
     .clause-table {
-      width: 100%; border-collapse: collapse; border: 1.3px solid ${theme.primary};
-      background: rgba(255,255,255,0.92);
+      width: 100%; border-collapse: collapse; border: 1.2px solid ${theme.primary};
+      background: rgba(255,255,255,0.94);
     }
     .clause-table td {
       border: 1px solid #cbd5e1;
-      padding: ${isLegal ? '1.65mm 2.5mm' : '1.4mm 2.2mm'};
+      padding: ${isLegal ? '1.5mm 2.3mm' : '1.15mm 2mm'};
       vertical-align: middle;
-      font-size: ${isLegal ? '9.3pt' : '8.7pt'};
-      line-height: 1.24;
+      font-size: ${isLegal ? '9pt' : '8.2pt'};
+      line-height: 1.2;
     }
     .col-sl {
-      width: 7%; text-align: center; font-family: Arial, sans-serif; font-weight: 900;
+      width: 6.5%; text-align: center; font-family: Arial, sans-serif; font-weight: 900;
       color: ${theme.primary}; background: ${theme.tint};
     }
     .col-lbl {
-      width: 41%; font-weight: 700; color: #334155;
+      width: 41.5%; font-weight: 700; color: #334155;
     }
     .col-val {
       width: 52%; font-weight: 900; color: #0f172a; font-family: 'Times New Roman', Georgia, serif;
     }
     .val-sub {
-      display: block; font-family: Arial, sans-serif; font-size: 7.4pt; font-weight: 700; color: #475569; margin-top: 0.4mm;
+      display: block; font-family: Arial, sans-serif; font-size: 6.9pt; font-weight: 700; color: #475569; margin-top: 0.3mm;
     }
 
-    .mini-history-wrap { margin-top: 2.2mm; border: 1.2px solid ${theme.primary}; }
+    .mini-history-wrap { margin-top: 1.6mm; border: 1.1px solid ${theme.primary}; }
     .mini-history-title {
       background: ${theme.primary}; color: #fff; font-family: Arial, sans-serif;
-      font-size: 7.4pt; font-weight: 900; padding: 1mm 2.5mm; text-transform: uppercase; letter-spacing: 0.5px;
+      font-size: 7pt; font-weight: 900; padding: 0.8mm 2.2mm; text-transform: uppercase; letter-spacing: 0.5px;
     }
-    .mini-history-table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 7.6pt; }
-    .mini-history-table th { background: ${theme.tint}; color: ${theme.primary}; font-weight: 800; padding: 1mm 2mm; border-bottom: 1px solid #cbd5e1; text-align: center; }
-    .mini-history-table td { padding: 0.95mm 2mm; text-align: center; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #1e293b; }
+    .mini-history-table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 7.2pt; }
+    .mini-history-table th { background: ${theme.tint}; color: ${theme.primary}; font-weight: 800; padding: 0.75mm 1.8mm; border-bottom: 1px solid #cbd5e1; text-align: center; }
+    .mini-history-table td { padding: 0.7mm 1.8mm; text-align: center; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #1e293b; }
     .mini-history-table tr:last-child td { border-bottom: none; }
 
     .cert-declaration {
-      margin-top: 2mm; font-size: 8.2pt; font-style: italic; color: #334155;
-      background: ${theme.tint}; border-left: 3px solid ${theme.primary}; padding: 1.3mm 2.5mm;
-      line-height: 1.3;
+      margin-top: 1.5mm; font-size: 7.6pt; font-style: italic; color: #334155;
+      background: ${theme.tint}; border-left: 3px solid ${theme.primary}; padding: 1mm 2.2mm;
+      line-height: 1.24;
     }
 
     .doc-footer-note {
-      font-family: Arial, sans-serif; font-size: 7pt; font-weight: 700; color: #b91c1c;
-      text-align: center; margin-top: 1.8mm;
+      font-family: Arial, sans-serif; font-size: 6.8pt; font-weight: 700; color: #b91c1c;
+      text-align: center; margin-top: 1.2mm;
     }
 
     .doc-signatures {
       display: flex; justify-content: space-between; align-items: flex-end; gap: 3mm;
-      margin-top: 2mm; padding-top: 2mm; border-top: 1px dashed #94a3b8;
+      margin-top: 1.5mm; padding-top: 1.5mm; border-top: 1px dashed #94a3b8;
     }
-    .sig-col { text-align: center; width: 42mm; font-family: Arial, sans-serif; }
-    .sig-space { height: 13mm; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 1mm; }
-    .sig-space img { max-height: 12.5mm; max-width: 38mm; object-fit: contain; }
-    .sig-rule { border-bottom: 1.3px solid ${theme.primary}; margin-bottom: 1mm; }
-    .sig-title { font-size: 7.6pt; font-weight: 900; color: ${theme.primary}; text-transform: uppercase; }
-    .sig-sub { font-size: 6.4pt; font-weight: 700; color: #64748b; }
+    .sig-col { text-align: center; width: 40mm; font-family: Arial, sans-serif; }
+    .sig-space { height: 10.5mm; display: flex; align-items: flex-end; justify-content: center; margin-bottom: 0.8mm; }
+    .sig-space img { max-height: 10mm; max-width: 36mm; object-fit: contain; }
+    .sig-rule { border-bottom: 1.2px solid ${theme.primary}; margin-bottom: 0.8mm; }
+    .sig-title { font-size: 7.3pt; font-weight: 900; color: ${theme.primary}; text-transform: uppercase; }
+    .sig-sub { font-size: 6pt; font-weight: 700; color: #64748b; }
 
     .seal-box {
-      width: 24mm; height: 16mm; border: 1px dashed #94a3b8; border-radius: 50%;
+      width: 21mm; height: 14mm; border: 1px dashed #94a3b8; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-family: Arial, sans-serif; font-size: 6pt; font-weight: 800; color: #94a3b8;
+      font-family: Arial, sans-serif; font-size: 5.6pt; font-weight: 800; color: #94a3b8;
       text-align: center; text-transform: uppercase;
     }
     .qr-box { display: flex; flex-direction: column; align-items: center; font-family: Arial, sans-serif; }
-    .qr-box img { width: 13.5mm; height: 13.5mm; border: 1px solid #cbd5e1; padding: 0.5mm; background: #fff; }
-    .qr-box span { font-size: 6pt; font-weight: 900; color: #475569; margin-top: 0.4mm; }
+    .qr-box img { width: 12mm; height: 12mm; border: 1px solid #cbd5e1; padding: 0.4mm; background: #fff; }
+    .qr-box span { font-size: 5.5pt; font-weight: 900; color: #475569; margin-top: 0.3mm; }
   `;
 };
 
@@ -410,6 +418,7 @@ export const generateDocumentInnerHtml = (
   );
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=110x110&data=${qrData}`;
 
+  // Clean centered School Header (NO student photo in header)
   const headerHtml = `
     <div class="doc-header">
       <div class="doc-logo"><img src="${esc(logoUrl)}" alt="Logo" onerror="this.src='/logo.png'" /></div>
@@ -419,6 +428,26 @@ export const generateDocumentInnerHtml = (
         <div class="school-rc">${esc(payload.rcNumber)}</div>
         <div class="school-addr">${esc(schoolSettings.address)}${payload.schoolCode ? ` | School Code: ${esc(payload.schoolCode)}` : ''}</div>
       </div>
+      <div class="doc-header-spacer"></div>
+    </div>
+  `;
+
+  const metaStripHtml = `
+    <div class="pupil-top-row">
+      <div class="pupil-meta-col">
+        <div class="meta-strip">
+          <div class="meta-cell"><span class="ml">${isLegal ? 'T.C. Serial No' : 'Record Sheet No'}</span><span class="mv">${valOrDash(payload.tcNo)}</span></div>
+          <div class="meta-cell"><span class="ml">Book / Register No</span><span class="mv">${valOrDash(payload.bookNo)}</span></div>
+          <div class="meta-cell"><span class="ml">Admission No</span><span class="mv">${valOrDash(payload.admissionNo)}</span></div>
+          <div class="meta-cell"><span class="ml">UDISE Code</span><span class="mv">${valOrDash(payload.udiseCode)}</span></div>
+        </div>
+        <div class="gov-ids-strip">
+          <span>Student PEN: <strong>${valOrDash(payload.penNumber)}</strong></span>
+          <span>Child ID: <strong>${valOrDash(payload.childId)}</strong></span>
+          <span>APAAR ID: <strong>${valOrDash(payload.apaarId)}</strong></span>
+          ${opts.showAadhaar ? `<span>Aadhaar: <strong>${valOrDash(payload.aadharNo)}</strong></span>` : ''}
+        </div>
+      </div>
       ${
         opts.showPhoto
           ? `<div class="photo-box">${
@@ -426,23 +455,8 @@ export const generateDocumentInnerHtml = (
                 ? `<img src="${esc(photoSrc)}" alt="Student" />`
                 : `<div class="photo-placeholder">AFFIX<br/>PASSPORT<br/>PHOTO</div>`
             }</div>`
-          : `<div style="width:21mm"></div>`
+          : ''
       }
-    </div>
-  `;
-
-  const metaStripHtml = `
-    <div class="meta-strip">
-      <div class="meta-cell"><span class="ml">${isLegal ? 'T.C. Serial No' : 'Record Sheet No'}</span><span class="mv">${valOrDash(payload.tcNo)}</span></div>
-      <div class="meta-cell"><span class="ml">Book / Register No</span><span class="mv">${valOrDash(payload.bookNo)}</span></div>
-      <div class="meta-cell"><span class="ml">Admission No</span><span class="mv">${valOrDash(payload.admissionNo)}</span></div>
-      <div class="meta-cell"><span class="ml">UDISE Code</span><span class="mv">${valOrDash(payload.udiseCode)}</span></div>
-    </div>
-    <div class="gov-ids-strip">
-      <span>Student PEN: <strong>${valOrDash(payload.penNumber)}</strong></span>
-      <span>Child ID: <strong>${valOrDash(payload.childId)}</strong></span>
-      <span>APAAR ID: <strong>${valOrDash(payload.apaarId)}</strong></span>
-      ${opts.showAadhaar ? `<span>Aadhaar: <strong>${valOrDash(payload.aadharNo)}</strong></span>` : ''}
     </div>
   `;
 
