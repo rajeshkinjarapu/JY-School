@@ -1054,16 +1054,18 @@ const PAGE_TEMPLATES = {
     // STAFFS, DOWNLOADS, CONTACT, PAY FEES ONLINE
     // ─────────────────────────────────────────────────────────────────────
     '/staffs': () => `
-        <section class="py-6 sm:py-8">
-            <div class="screen-fit space-y-5">
-                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
-                    <div>
-                        <h1 class="text-xl sm:text-2xl font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h1>
-                        <p class="text-xs text-slate-500 mt-0.5">Dedicated subject mentors across Pre-Primary, Primary, High School &amp; Foundation Wings</p>
+        <section class="py-2.5 sm:py-3.5">
+            <div class="screen-fit space-y-3">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-lg sm:text-xl font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h1>
+                        <span class="hidden md:inline text-xs font-medium text-slate-500">&bull; Dedicated Subject Mentors</span>
                     </div>
-                    <span class="px-3.5 py-1.5 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">Live Synced from School ERP</span>
+                    <div id="faculty-pager" class="flex items-center gap-2">
+                        <span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">12 Faculty Showcase</span>
+                    </div>
                 </div>
-                <div id="page-faculty-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
+                <div id="page-faculty-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3"></div>
             </div>
         </section>
     `,

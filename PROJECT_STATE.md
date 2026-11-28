@@ -1,5 +1,10 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Website Staffs Page: 6x2 (12 Cards) Single-Screen Fit & Pagination (November 28, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`)**:
+  - **6 × 2 Grid (`lg:grid-cols-6`)**: ఒక వరుసలో **6 మంది**, మొత్తం **2 వరుసలు = 12 కార్డులు** ఒక్క పేజీలో కట్ అవ్వకుండా (`clamp(145px, 25.5vh, 225px)` portrait height తో) కనిపించేలా అమర్చాము.
+  - **Photo Priority & Pagination**: ఫోటో ఉన్న టీచర్లను ముందుగా చూపించి, 12 మంది కంటే ఎక్కువ మంది ఉంటే పై హెడర్‌లో `Prev / Next` పేజినేషన్ ఉంచాము.
+
 ## చివరి సంభాషణ - Website Staffs Page Executive Redesign: 5-Column Tall Portrait Cards (November 28, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`)**:
   - **Floating Desktop Bottom Pill Removal (`Website/index.html`)**: డెస్క్‌టాప్‌లో కార్డుల అడుగున అడ్డుగా కనిపించిన `#desktop-bottom-nav` ఫ్లోటింగ్ బటన్ బార్ తొలగించాము (మొబైల్ యాప్ బాటమ్ బార్ మరియు డెస్క్‌టాప్ ఫుటర్ నేవిగేషన్ అలాగే ఉన్నాయి).
