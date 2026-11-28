@@ -187,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
 
       // Check if user role matches current AppConfig
       if (!AppConfig.isUniversal && !AppConfig.current.allowedRoles.contains(role)) {
-        await ApiService.logout();
+        await ApiService.clearSession();
         setState(() {
           _error = 'Role Mismatch: This is the "${AppConfig.current.appName}". Your account has the "$role" role. Please open the matching JY School App.';
         });

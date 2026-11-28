@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Flutter Admin Auto-Logout Fix (403 Prevention, Refresh Token & Role Fix) (November 28, 2026)
+- **సమస్య:** Flutter Admin యాప్‌లో లాగిన్ అయిన వెంటనే హోమ్/డ్యాష్‌బోర్డ్ ఓపెన్ అయి మళ్లీ లాగౌట్ అయి Login/Welcome పేజీకి వెళ్లిపోతోంది.
+- **చేసిన ఫిక్స్ ([api_service.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/services/api_service.dart), [login_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/login_screen.dart), [finance_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/finance_screen.dart), [app_config.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/config/app_config.dart)):**
+  - `ApiService` లో `403 Forbidden` వస్తే వెంటనే `logout()` అవ్వడాన్ని తొలగించాము (`401` లో మాత్రమే `/api/auth/refresh` ట్రై చేసి, అది కూడా ఫెయిల్ అయితే మాత్రమే డిబౌన్స్‌డ్ `_isLoggingOut` తో ఒక్కసారి లాగౌట్ అయ్యేలా చేశాము).
+  - [login_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/login_screen.dart#L189-L195) లో Role Mismatch అయినప్పుడు `clearSession()` మాత్రమే చేసి ఎర్రర్ చూపించేలా చేశాము; [app_config.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/config/app_config.dart) లో `GROUP_CHAIRMAN` అనుమతి జోడించాము; [finance_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/finance_screen.dart#L53-L63) లో `ACCOUNTANT` కి తగిన endpoint పిలిచేలా చేశాము.
+- **అప్‌డేట్ పద్ధతి:** ఇది కేవలం Dart కోడ్ మార్పు కాబట్టి **Shorebird Patch** ద్వారా అప్‌డేట్ చేయవచ్చు.
+
 ## చివరి సంభాషణ - Website Staffs Page: Show All Faculty in 6-Column Grid + Exact Viewport Fit (November 28, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`)**:
   - **All Members Visible (Pagination Removed)**: 12 మంది పరిమితిని తొలగించి మొత్తం active టీచర్లు (34+ మంది) ఒకేసారి `lg:grid-cols-6` గ్రిడ్‌లో కనిపించేలా మార్చాము.

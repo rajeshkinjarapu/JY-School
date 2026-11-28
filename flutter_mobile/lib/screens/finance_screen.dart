@@ -53,7 +53,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
       final results = await Future.wait([
         ApiService.getFeePayments(),
         ApiService.getFeeStructures(),
-        ApiService.getAdminDashboardStats(), // Try fetching admin stats as fallback for real total revenue
+        ApiService.getUserInfo().then((u) => (u?['role'] ?? '').toString().toUpperCase() == 'ACCOUNTANT' ? ApiService.getAccountantDashboardStats() : ApiService.getAdminDashboardStats()),
       ]);
 
       final paymentsRes = results[0];

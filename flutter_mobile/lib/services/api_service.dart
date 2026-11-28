@@ -6,6 +6,8 @@ import '../main.dart';
 
 class ApiService {
   static const String baseUrl = 'http://66.116.252.191:19998';
+  static Future<bool>? _refreshInFlight;
+  static bool _isLoggingOut = false;
 
   static String getImageUrl(String? photoUrl) {
     if (photoUrl == null || photoUrl.isEmpty) return '';
@@ -850,39 +852,112 @@ class ApiService {
     return null;
   }
 
+  /// Refresh expired access token once across concurrent requests.
+  static Future<bool> _refreshAccessToken() {
+    if (_refreshInFlight != null) return _refreshInFlight!;
+    _refreshInFlight = () async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final refreshToken = prefs.getString('refreshToken');
+        if (refreshToken == null || refreshToken.isEmpty) return false;
+
+        final res = await http.post(
+          Uri.parse('$baseUrl/api/auth/refresh'),
+          headers: _getHeaders(),
+          body: jsonEncode({'refreshToken': refreshToken}),
+        ).timeout(const Duration(seconds: 10));
+
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final decoded = jsonDecode(res.body);
+          final data = decoded is Map ? (decoded['data'] ?? decoded) : null;
+          final newToken = data is Map ? data['accessToken']?.toString() : null;
+          if (newToken != null && newToken.isNotEmpty) {
+            await prefs.setString('accessToken', newToken);
+            return true;
+          }
+        }
+        return false;
+      } catch (_) {
+        return false;
+      } finally {
+        _refreshInFlight = null;
+      }
+    }();
+    return _refreshInFlight!;
+  }
+
+  /// Sends an authenticated request, refreshing once on 401; never logs out on 403.
+  static Future<http.Response?> _sendWithAuthRetry(
+    Future<http.Response> Function(String token) requestFn,
+  ) async {
+    final token = await getToken();
+    if (token == null || token.isEmpty) return null;
+
+    var response = await requestFn(token);
+    if (response.statusCode == 401) {
+      final refreshed = await _refreshAccessToken();
+      if (refreshed) {
+        final newToken = await getToken();
+        if (newToken != null && newToken.isNotEmpty) {
+          response = await requestFn(newToken);
+        }
+      }
+      if (response.statusCode == 401) {
+        await logout();
+      }
+    }
+    return response;
+  }
+
+  static dynamic _safeDecodeBody(String body) {
+    if (body.isEmpty) return {};
+    try {
+      return jsonDecode(body);
+    } catch (_) {
+      return {};
+    }
+  }
+
   static Future<Map<String, dynamic>> _performGet(String endpoint, String errorMsg) async {
     try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
       try {
-        final response = await http.get(
-          Uri.parse('$baseUrl$endpoint'),
-          headers: _getHeaders(token: token),
-        ).timeout(const Duration(seconds: 15));
+        final response = await _sendWithAuthRetry((token) => http.get(
+              Uri.parse('$baseUrl$endpoint'),
+              headers: _getHeaders(token: token),
+            ).timeout(const Duration(seconds: 15)));
 
-        final dynamic decoded = jsonDecode(response.body);
+        if (response == null) {
+          return {'success': false, 'message': 'No session token'};
+        }
+
+        final dynamic decoded = _safeDecodeBody(response.body);
         if (response.statusCode == 200 || response.statusCode == 201) {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('cache_$endpoint', response.body);
           await prefs.setInt('cache_time_$endpoint', DateTime.now().millisecondsSinceEpoch);
-          
+
           return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
         }
-        if (response.statusCode == 401 || response.statusCode == 403) {
-          await logout();
+        if (response.statusCode == 401) {
           return {'success': false, 'message': 'Session expired. Please login again.'};
+        }
+        if (response.statusCode == 403) {
+          return {
+            'success': false,
+            'statusCode': 403,
+            'message': decoded is Map ? (decoded['message'] ?? 'Access denied for this module') : 'Access denied for this module',
+          };
         }
         return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
       } catch (e) {
         final prefs = await SharedPreferences.getInstance();
         final cachedStr = prefs.getString('cache_$endpoint');
-        
+
         if (cachedStr != null) {
           final dynamic decoded = jsonDecode(cachedStr);
           if (decoded is Map || decoded is List) {
-             final data = decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded;
-             return {'success': true, 'data': data, 'isCached': true};
+            final data = decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded;
+            return {'success': true, 'data': data, 'isCached': true};
           }
         }
         return {'success': false, 'message': 'Network error and no offline data. Please check your connection.'};
@@ -892,81 +967,57 @@ class ApiService {
     }
   }
 
-  static Future<Map<String, dynamic>> _performPost(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
+  /// Shared helper for POST, PUT, and DELETE mutations with auth retry & offline queueing.
+  static Future<Map<String, dynamic>> _performMutation(
+    String method,
+    String endpoint,
+    Map<String, dynamic>? payload,
+    String errorMsg,
+  ) async {
     try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
+      final response = await _sendWithAuthRetry((token) {
+        final uri = Uri.parse('$baseUrl$endpoint');
+        final headers = _getHeaders(token: token);
+        if (method == 'POST') {
+          return http.post(uri, headers: headers, body: jsonEncode(payload ?? {})).timeout(const Duration(seconds: 15));
+        }
+        if (method == 'PUT') {
+          return http.put(uri, headers: headers, body: jsonEncode(payload ?? {})).timeout(const Duration(seconds: 15));
+        }
+        return http.delete(uri, headers: headers).timeout(const Duration(seconds: 15));
+      });
 
-      final response = await http.post(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _getHeaders(token: token),
-        body: jsonEncode(payload),
-      );
+      if (response == null) return {'success': false, 'message': 'No session token'};
 
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
+      final dynamic decoded = _safeDecodeBody(response.body);
+      if (response.statusCode == 200 || response.statusCode == 201 || response.statusCode == 204) {
         return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
       }
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        await logout();
+      if (response.statusCode == 401) {
         return {'success': false, 'message': 'Session expired. Please login again.'};
+      }
+      if (response.statusCode == 403) {
+        return {
+          'success': false,
+          'statusCode': 403,
+          'message': decoded is Map ? (decoded['message'] ?? 'Access denied for this module') : 'Access denied for this module',
+        };
       }
       return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
     } catch (e) {
-      await OfflineSyncService.enqueueRequest(method: 'POST', endpoint: endpoint, body: payload);
-      return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
-    }
-  }
-  static Future<Map<String, dynamic>> _performPut(String endpoint, Map<String, dynamic> payload, String errorMsg) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
-
-      final response = await http.put(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _getHeaders(token: token),
-        body: jsonEncode(payload),
-      );
-
-      final dynamic decoded = jsonDecode(response.body);
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        await logout();
-        return {'success': false, 'message': 'Session expired. Please login again.'};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
-    } catch (e) {
-      await OfflineSyncService.enqueueRequest(method: 'PUT', endpoint: endpoint, body: payload);
+      await OfflineSyncService.enqueueRequest(method: method, endpoint: endpoint, body: payload);
       return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
     }
   }
 
-  static Future<Map<String, dynamic>> _performDelete(String endpoint, String errorMsg) async {
-    try {
-      final token = await getToken();
-      if (token == null) return {'success': false, 'message': 'No session token'};
+  static Future<Map<String, dynamic>> _performPost(String endpoint, Map<String, dynamic> payload, String errorMsg) =>
+      _performMutation('POST', endpoint, payload, errorMsg);
 
-      final response = await http.delete(
-        Uri.parse('$baseUrl$endpoint'),
-        headers: _getHeaders(token: token),
-      );
+  static Future<Map<String, dynamic>> _performPut(String endpoint, Map<String, dynamic> payload, String errorMsg) =>
+      _performMutation('PUT', endpoint, payload, errorMsg);
 
-      final dynamic decoded = response.body.isNotEmpty ? jsonDecode(response.body) : {};
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        return {'success': true, 'data': decoded is Map && decoded.containsKey('data') ? decoded['data'] : decoded};
-      }
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        await logout();
-        return {'success': false, 'message': 'Session expired. Please login again.'};
-      }
-      return {'success': false, 'message': decoded is Map ? (decoded['message'] ?? errorMsg) : errorMsg};
-    } catch (e) {
-      await OfflineSyncService.enqueueRequest(method: 'DELETE', endpoint: endpoint);
-      return {'success': true, 'isOfflineQueued': true, 'message': 'Network error. Request saved offline and will sync later.', 'data': {}};
-    }
-  }
+  static Future<Map<String, dynamic>> _performDelete(String endpoint, String errorMsg) =>
+      _performMutation('DELETE', endpoint, null, errorMsg);
 
   static Future<Map<String, dynamic>> getAdminDashboardStats() async {
     return _performGet('/api/dashboard/admin', 'Failed to get admin statistics');
@@ -1353,12 +1404,25 @@ class ApiService {
 
 
 
-  static Future<void> logout() async {
+  /// Clear saved auth session without navigating away from current screen.
+  static Future<void> clearSession() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
     await prefs.remove('user');
-    navigatorKey.currentState?.pushNamedAndRemoveUntil('/', (route) => false);
+  }
+
+  static Future<void> logout() async {
+    if (_isLoggingOut) return;
+    _isLoggingOut = true;
+    try {
+      await clearSession();
+      navigatorKey.currentState?.pushNamedAndRemoveUntil('/', (route) => false);
+    } finally {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        _isLoggingOut = false;
+      });
+    }
   }
 
   // ==========================================
