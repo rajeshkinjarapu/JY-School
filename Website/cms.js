@@ -1032,56 +1032,35 @@ window.hydrateAllViews = (route = window.CURRENT_ROUTE, subTab) => {
                     if (pa !== pb) return pa - pb;
                     return String(a.name || '').localeCompare(String(b.name || ''));
                 });
-                const PAGE_SIZE = 12;
-                const totalPages = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
-                window.FACULTY_PAGE = Math.min(window.FACULTY_PAGE || 1, totalPages);
 
-                const renderFacultyPage = (pageNum) => {
-                    window.FACULTY_PAGE = pageNum;
-                    const start = (pageNum - 1) * PAGE_SIZE;
-                    const slice = ordered.slice(start, start + PAGE_SIZE);
+                facultyGrid.innerHTML = ordered.map((f) => {
+                    const dept = f.specialization || f.qualification || 'Faculty Mentor';
+                    const subText = f.qualification && f.specialization && f.qualification !== f.specialization
+                        ? f.qualification
+                        : 'Sri Venkateswara JY School';
+                    return `
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover-lift flex flex-col justify-between">
+                        <div class="w-full bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100 overflow-hidden relative" style="height: clamp(166px, calc(50vh - 152px), 270px);">
+                            ${f.photoUrl
+                                ? `<img src="${esc(resolveMediaUrl(f.photoUrl))}" alt="${esc(f.name)}" class="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105">`
+                                : `<div class="w-full h-full flex flex-col items-center justify-center gap-1.5 text-brandBlue">
+                                        <div class="w-12 h-12 rounded-xl bg-brandBlue text-white font-black text-xl flex items-center justify-center shadow-sm">${esc(f.name.charAt(0).toUpperCase())}</div>
+                                        <span class="text-[9px] font-bold uppercase tracking-widest text-indigo-400">JY Faculty</span>
+                                   </div>`
+                            }
+                        </div>
+                        <div class="px-2.5 py-2 text-center flex flex-col justify-center gap-0.5 border-t border-slate-100 bg-white">
+                            <span class="inline-block mx-auto px-2 py-0.5 rounded bg-indigo-50 text-brandBlue text-[9px] font-black uppercase tracking-wider truncate max-w-full">${esc(dept)}</span>
+                            <h4 class="font-black text-slate-900 text-xs leading-tight line-clamp-1 mt-0.5">${esc(f.name)}</h4>
+                            <p class="text-[10px] font-semibold text-slate-500 line-clamp-1">${esc(subText)}</p>
+                        </div>
+                    </div>`;
+                }).join('');
 
-                    facultyGrid.innerHTML = slice.map((f) => {
-                        const dept = f.specialization || f.qualification || 'Faculty Mentor';
-                        const subText = f.qualification && f.specialization && f.qualification !== f.specialization
-                            ? f.qualification
-                            : 'Sri Venkateswara JY School';
-                        return `
-                        <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover-lift flex flex-col justify-between">
-                            <div class="w-full bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100 overflow-hidden relative" style="height: clamp(145px, 25.5vh, 225px);">
-                                ${f.photoUrl
-                                    ? `<img src="${esc(resolveMediaUrl(f.photoUrl))}" alt="${esc(f.name)}" class="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105">`
-                                    : `<div class="w-full h-full flex flex-col items-center justify-center gap-1.5 text-brandBlue">
-                                            <div class="w-12 h-12 rounded-xl bg-brandBlue text-white font-black text-xl flex items-center justify-center shadow-sm">${esc(f.name.charAt(0).toUpperCase())}</div>
-                                            <span class="text-[9px] font-bold uppercase tracking-widest text-indigo-400">JY Faculty</span>
-                                       </div>`
-                                }
-                            </div>
-                            <div class="px-2.5 py-2 text-center flex flex-col justify-center gap-0.5 border-t border-slate-100 bg-white">
-                                <span class="inline-block mx-auto px-2 py-0.5 rounded bg-indigo-50 text-brandBlue text-[9px] font-black uppercase tracking-wider truncate max-w-full">${esc(dept)}</span>
-                                <h4 class="font-black text-slate-900 text-xs leading-tight line-clamp-1 mt-0.5">${esc(f.name)}</h4>
-                                <p class="text-[10px] font-semibold text-slate-500 line-clamp-1">${esc(subText)}</p>
-                            </div>
-                        </div>`;
-                    }).join('');
-
-                    const pager = document.getElementById('faculty-pager');
-                    if (pager) {
-                        if (totalPages > 1) {
-                            pager.innerHTML = `
-                                <span class="text-[11px] font-bold text-slate-500 hidden sm:inline">Showing ${start + 1}–${start + slice.length} of ${ordered.length}</span>
-                                <button type="button" onclick="window.setFacultyPage(${Math.max(1, pageNum - 1)})" ${pageNum === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[11px] font-black text-slate-700 disabled:opacity-40 cursor-pointer hover:bg-indigo-50">&larr; Prev</button>
-                                <span class="px-2.5 py-1 rounded-lg bg-indigo-50 text-brandBlue text-[11px] font-black">${pageNum} / ${totalPages}</span>
-                                <button type="button" onclick="window.setFacultyPage(${Math.min(totalPages, pageNum + 1)})" ${pageNum === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded-lg border border-slate-200 bg-white text-[11px] font-black text-slate-700 disabled:opacity-40 cursor-pointer hover:bg-indigo-50">Next &rarr;</button>
-                            `;
-                        } else {
-                            pager.innerHTML = `<span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">${slice.length} Faculty Members</span>`;
-                        }
-                    }
-                };
-
-                window.setFacultyPage = renderFacultyPage;
-                renderFacultyPage(window.FACULTY_PAGE);
+                const pager = document.getElementById('faculty-pager');
+                if (pager) {
+                    pager.innerHTML = `<span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">Total ${ordered.length} Faculty Members</span>`;
+                }
             } else {
                 facultyGrid.innerHTML = `
                     <div class="col-span-full p-6 rounded-2xl bg-indigo-50 border border-indigo-100 text-center text-xs font-bold text-brandBlue">

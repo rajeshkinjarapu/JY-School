@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Website Staffs Page: Show All Faculty in 6-Column Grid + Exact Viewport Fit (November 28, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`)**:
+  - **All Members Visible (Pagination Removed)**: 12 మంది పరిమితిని తొలగించి మొత్తం active టీచర్లు (34+ మంది) ఒకేసారి `lg:grid-cols-6` గ్రిడ్‌లో కనిపించేలా మార్చాము.
+  - **Exact 2-Row First Screen Fit**: `clamp(166px, calc(50vh - 152px), 270px)` పోర్ట్రెయిట్ ఎత్తుతో మొదటి స్క్రీన్‌లో 2 వరుసలు (12 కార్డులు) ఖచ్చితంగా స్క్రీన్ నిండుగా ఫిట్ అయి, అడుగు ఫుటర్ పైకి కనిపించకుండా సర్దుబాటు చేశాము.
+  - **Custom Row 1 Order (`Website/cms.js`)**: 1. BORA VENKATA RAMANA (Director), 2. P. RAMANA MURTHY, 3. N. VENKATA RAMANA, 4. PRADEEP, 5. RAJESH, 6. GOVIND.
+
 ## చివరి సంభాషణ - Website Staffs Page: 6x2 (12 Cards) Single-Screen Fit & Custom Leadership Order (November 28, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`)**:
   - **Custom Row 1 Order (`Website/cms.js`)**: 1. BORA VENKATA RAMANA (Director), 2. P. RAMANA MURTHY, 3. N. VENKATA RAMANA, 4. PRADEEP, 5. RAJESH, 6. GOVIND — ఆ తర్వాత మిగిలిన ఫోటో ఉన్న టీచర్లు Row 2 లో వచ్చేలా ప్రయారిటీ సార్టింగ్ పెట్టాము.
