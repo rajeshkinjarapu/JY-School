@@ -246,15 +246,15 @@ export default function AttendanceDailyReportPage() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="daily-report-table w-full text-left border-collapse text-xs">
+        <table className="daily-report-table student-grid-table w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] text-white text-[10px] font-black uppercase tracking-wider">
-              <th className="py-2 px-2.5 w-8 text-center border-r border-white/15">#</th>
-              <th className="py-2 px-2.5 border-r border-white/15">Class</th>
-              <th className="py-2 px-2.5 text-center border-r border-white/15">Total</th>
-              <th className="py-2 px-2.5 text-center border-r border-white/15">Present</th>
-              <th className="py-2 px-2.5 text-center border-r border-white/15">Absent</th>
-              <th className="py-2 px-2.5 text-center">Attd %</th>
+            <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] !text-white text-[10px] font-black uppercase tracking-wider">
+              <th className="py-2 px-2.5 w-8 text-center border-r border-white/15 !text-white">#</th>
+              <th className="py-2 px-2.5 border-r border-white/15 !text-white">Class</th>
+              <th className="py-2 px-2.5 text-center border-r border-white/15 !text-white">Total</th>
+              <th className="py-2 px-2.5 text-center border-r border-white/15 !text-white">Present</th>
+              <th className="py-2 px-2.5 text-center border-r border-white/15 !text-white">Absent</th>
+              <th className="py-2 px-2.5 text-center !text-white">Attd %</th>
             </tr>
           </thead>
           <tbody>

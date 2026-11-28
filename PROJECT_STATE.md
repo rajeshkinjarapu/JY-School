@@ -1,5 +1,14 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Daily Attendance Report Table Header White Text Contrast Fix (`/attendance/daily-report`) (November 28, 2026)
+- **సమస్య:** [AttendanceDailyReportPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/attendance/AttendanceDailyReportPage.tsx#L249-L259) లోని పర్పుల్ టేబుల్ హెడర్ టెక్స్ట్ (`#`, `CLASS`, `TOTAL`, `PRESENT`, `ABSENT`, `ATTD %`) గ్లోబల్ [index.css](file:///d:/JY%20School/JY-School-main/frontend/src/index.css#L466-L473) రూల్ (`color: #312e81 !important`) వల్ల డార్క్ బ్లూ కలర్‌లోకి మారి స్పష్టంగా కనిపించడం లేదు.
+- **చేసిన ఫిక్స్:** టేబుల్‌కి `student-grid-table` క్లాస్ మరియు ప్రతీ `<th>` కి `!text-white` జోడించి పర్పుల్ హెడర్‌పై టెక్స్ట్ స్వచ్ఛమైన తెలుపు రంగులో స్పష్టంగా కనిపించేలా సరిదిద్దాము.
+
+## చివరి సంభాషణ - Attendance Analytics Field Mapping Fix (`studentName`, `totalDays`, `rate`) (`/attendance/report`) (November 28, 2026)
+- **సమస్య:** Attendance Analytics (`/attendance/report`) టేబుల్‌లో `Student Name`, `Total Days`, మరియు `Attendance Rate` (`0%`) ఖాళీగా/సున్నాగా కనిపిస్తున్నాయి.
+- **మూల కారణం:** [attendance.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/attendance.controller.ts#L189-L208) లో `getReport` ఎండ్‌పాయింట్ `name`, `total`, `percentage` ఫీల్డ్స్ పంపగా, ఫ్రంటెండ్ `studentName`, `totalDays`, `rate` లను చదవడం వల్ల మిస్‌మ్యాచ్ అయింది.
+- **చేసిన ఫిక్స్ ([AttendanceReportPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/attendance/AttendanceReportPage.tsx#L42-L75)):** `loadReport()` లో రెస్పాన్స్‌ను నార్మలైజ్ చేసి `name || studentName`, `total ?? totalDays`, `percentage ?? rate` అన్నీ సరిగ్గా KPI కార్డులు, టేబుల్, సెర్చ్ ఫిల్టర్, మరియు PDF ఎక్స్‌పోర్ట్‌లో చూపేలా ఫిక్స్ చేశాము.
+
 ## చివరి సంభాషణ - Address Data Module Dashboard KPI Cards & Purple Directory Redesign (`/address-collection/admin`, `/address-collection/teacher`) (November 28, 2026)
 - **యూజర్ అభ్యర్థన:** Address Data మాడ్యూల్‌ను Dashboard లైట్-థీమ్‌తో, KPI కార్డులతో, error లేకుండా ప్రొఫెషనల్‌గా డిజైన్ చేయాలి.
 - **చేసిన మార్పులు & బగ్ ఫిక్స్‌లు:**

@@ -46,7 +46,28 @@ export const AttendanceReportPage: React.FC = () => {
       const res: any = await api.get('/api/attendance/report', {
         params: { classId },
       });
-      setReport(extractArray(res));
+      const normalized = extractArray(res).map((item: any) => {
+        const present = Number(item.present ?? 0);
+        const absent = Number(item.absent ?? 0);
+        const totalDays = Number(item.total ?? item.totalDays ?? present + absent);
+        const rawRate = item.percentage ?? item.rate;
+        const rate =
+          rawRate !== undefined && rawRate !== null
+            ? Math.round(Number(rawRate))
+            : totalDays > 0
+              ? Math.round((present / totalDays) * 100)
+              : 0;
+        return {
+          ...item,
+          studentName: item.name || item.studentName || '-',
+          rollNo: item.rollNo || '-',
+          totalDays,
+          present,
+          absent,
+          rate,
+        };
+      });
+      setReport(normalized);
     } catch (e) {
       toast.error('Failed to load attendance analytics');
     } finally {
