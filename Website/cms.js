@@ -694,6 +694,16 @@ const bindPageForms = () => {
         btn.disabled = true;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Submitting Application...';
         try {
+            let studentImage = null;
+            const photoFile = document.getElementById('adm-photo-file')?.files?.[0];
+            if (photoFile) {
+                const fd = new FormData();
+                fd.append('file', photoFile);
+                const upRes = await fetch(`${API_BASE}/api/uploads/image`, { method: 'POST', body: fd });
+                const upJson = await upRes.json();
+                if (upJson.success && upJson.data?.url) studentImage = upJson.data.url;
+            }
+
             const fatherPhone = document.getElementById('adm-fatherPhone').value.trim();
             const res = await fetch(`${API_BASE}/api/admissions/apply`, {
                 method: 'POST',
@@ -706,6 +716,7 @@ const bindPageForms = () => {
                     dob: document.getElementById('adm-dob').value,
                     aadharNo: document.getElementById('adm-aadharNo').value,
                     previousSchool: document.getElementById('adm-previousSchool').value,
+                    studentImage,
                     fatherName: document.getElementById('adm-fatherName').value,
                     fatherPhone,
                     phone: fatherPhone,
@@ -868,13 +879,25 @@ window.hydrateAllViews = (route = window.CURRENT_ROUTE, subTab) => {
             });
         }
 
-        // Home Stats
+        // Home Executive Light Metric Cards
+        const METRIC_ICON_COLORS = [
+            'bg-indigo-50 text-brandBlue',
+            'bg-orange-50 text-brandOrange',
+            'bg-emerald-50 text-emerald-600',
+            'bg-purple-50 text-purple-600',
+            'bg-sky-50 text-sky-600',
+        ];
         const statsGrid = document.getElementById('stats-grid');
         if (statsGrid && Array.isArray(stats) && stats.length > 0) {
             statsGrid.innerHTML = stats.map((st, idx) => `
-                <div class="${STAT_COLOR_CLASSES[st.color] || `stat-card-${(idx % 5) + 1}`} rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3">
-                    <i class="fa-solid ${esc(st.icon || 'fa-star')} text-xl opacity-90 shrink-0"></i>
-                    <div><h3 class="text-lg font-black leading-none">${esc(st.value)}</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">${esc(st.label)}</p></div>
+                <div class="metric-card flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl ${METRIC_ICON_COLORS[idx % METRIC_ICON_COLORS.length]} flex items-center justify-center shrink-0">
+                        <i class="fa-solid ${esc(st.icon || 'fa-star')} text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-black text-slate-900 leading-none">${esc(st.value)}</h3>
+                        <p class="text-[10px] font-bold text-slate-500 uppercase mt-1">${esc(st.label)}</p>
+                    </div>
                 </div>`).join('');
         }
 
@@ -886,25 +909,38 @@ window.hydrateAllViews = (route = window.CURRENT_ROUTE, subTab) => {
             document.getElementById('page-programs-grid').innerHTML = document.getElementById('programs-grid').innerHTML;
         }
 
-        // Home News
+        // Home Page 3: News
         const newsGrid = document.getElementById('news-grid');
         if (newsGrid && Array.isArray(news) && news.length > 0) {
-            newsGrid.innerHTML = news.slice(0, 4).map((n) => `
-                <div class="bg-white rounded-xl p-4 border border-slate-200">
+            newsGrid.innerHTML = news.slice(0, 3).map((n) => `
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
                     <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-brandBlue text-[9px] font-black">${esc(n.tag)}</span>
-                    <h4 class="text-xs font-black text-slate-900 mt-2 mb-1">${esc(n.title)}</h4>
-                    <p class="text-[11px] text-slate-600 leading-relaxed">${esc(n.description)}</p>
+                    <h4 class="text-xs font-black text-slate-900 mt-1.5">${esc(n.title)}</h4>
+                    <p class="text-[11px] text-slate-600 mt-0.5 leading-relaxed">${esc(n.description)}</p>
                 </div>`).join('');
         }
 
-        // Home Testimonials
+        // Home Page 3: Toppers Snapshot
+        const homeToppersGrid = document.getElementById('home-toppers-grid');
+        if (homeToppersGrid && Array.isArray(toppers) && toppers.length > 0) {
+            homeToppersGrid.innerHTML = toppers.slice(0, 3).map((tp) => `
+                <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center gap-3">
+                    ${tp.photoUrl ? `<img src="${esc(resolveMediaUrl(tp.photoUrl))}" class="w-10 h-10 rounded-xl object-cover border border-white shadow-xs shrink-0">` : `<div class="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center shrink-0">${esc(tp.studentName.charAt(0))}</div>`}
+                    <div class="min-w-0">
+                        <div class="text-xs font-black text-slate-900 truncate">${esc(tp.studentName)} &bull; <span class="text-brandOrange">${esc(tp.scoreOrRank)}</span></div>
+                        <div class="text-[11px] text-slate-600 truncate">${esc(tp.className)} &bull; ${esc(tp.examTitle)}</div>
+                    </div>
+                </div>`).join('');
+        }
+
+        // Home Page 3: Testimonials
         const testGrid = document.getElementById('testimonials-grid');
         if (testGrid && Array.isArray(testimonials) && testimonials.length > 0) {
-            testGrid.innerHTML = testimonials.slice(0, 4).map((t) => `
-                <div class="bg-white rounded-xl p-4 border border-amber-100">
-                    <div class="text-amber-400 text-[10px] mb-1.5">${'<i class="fa-solid fa-star"></i>'.repeat(Math.min(5, t.rating || 5))}</div>
-                    <p class="text-[11px] text-slate-600 italic leading-relaxed mb-2">"${esc(t.text)}"</p>
-                    <div class="text-xs font-black text-slate-900">${esc(t.name)} <span class="font-medium text-slate-400">• ${esc(t.role)}</span></div>
+            testGrid.innerHTML = testimonials.slice(0, 3).map((t) => `
+                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                    <div class="text-amber-400 text-[10px] mb-1">${'<i class="fa-solid fa-star"></i>'.repeat(Math.min(5, t.rating || 5))}</div>
+                    <p class="text-[11px] text-slate-600 italic leading-relaxed">"${esc(t.text)}"</p>
+                    <div class="text-xs font-black text-slate-900 mt-1">${esc(t.name)} <span class="font-medium text-slate-400">&bull; ${esc(t.role)}</span></div>
                 </div>`).join('');
         }
 

@@ -1,5 +1,16 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Complete Website Fresh Rebuild: 3 Hero Pages, Benchmark School Modules & Bottom Nav (November 28, 2026)
+- **పూర్తి చేసిన అప్‌గ్రేడ్లు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`)**:
+  - **100% Full-Width Executive Light Theme**: `Plus Jakarta Sans` + `Poppins` టైపోగ్రఫీ, Zero Side Gaps, crisp white & soft pastel institutional UI (zero dark/black backgrounds).
+  - **3 Full-Width Hero Pages Architecture (`#home-view`)**:
+    - **Page 1**: Auto-rotating **3-Slide Showcase** (`01 Campus & Vision`, `02 JEE/NEET Foundation`, `03 Pay Fees & Portals`) + 6 Quick-Access Parent Dock Cards + 5 Refined Executive Light Metric Cards.
+    - **Page 2**: Structured Learning Pathways (`Programs`), Principal Desk + Public Disclosure Profile (AP Govt Recognized, School Hours, Medium), Mission/Vision & 6 Clickable Facilities Bento.
+    - **Page 3**: Live Campus News, Merit & Toppers Snapshot (`#home-toppers-grid`), Verified Parent Testimonials & Admissions/Pay Fees CTA Strip.
+  - **Dual Bottom Navigation**: Desktop Floating Capsule Bottom Dock + Mobile Fixed App-style Bottom Bar (`env(safe-area-inset-bottom)` తో).
+  - **Benchmarked Interactive School Modules**: Searchable FAQ's (`#faq-search` + category filters), Filterable Holiday Calendar, Searchable Srikakulam Bus Route Villages, Student Photo Upload (`/api/uploads/image`) తో Live Online Admission Form, Results/Hall Tickets/Status Portals, మరియు Real ERP-Connected Online Fee Payment (`#/pay-fees`).
+- **స్టేటస్**: కోడ్ లోకల్‌లో సిద్ధంగా ఉంది. `git push` (Vercel auto-deploy) + VPS backend build & PM2 restart చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Complete Website Redesign, Multi-Page Router & Integrated Online Fee Payment (November 27, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`, `backend/src/routes/website.routes.ts`)**:
   - **Strict 2-Page Home View + Light Theme (`Website/index.html`)**:

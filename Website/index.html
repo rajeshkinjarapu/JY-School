@@ -4,19 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Sri Venkateswara JY School — Official Academic, Admissions &amp; ERP Portal</title>
-    <meta name="description" content="Sri Venkateswara JY School, Narasannapeta — Nursery to Class X with IIT-JEE, NEET, Navodaya &amp; Olympiad Foundation, Online Fee Payment, Live Exam Results &amp; Digital ERP.">
+    <meta name="description" content="Sri Venkateswara JY School, Narasannapeta — Nursery to Class X with IIT-JEE, NEET, Navodaya &amp; Olympiad Foundation, Online Fee Payment, Exam Results, Hall Tickets &amp; Digital ERP.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Poppins', 'sans-serif'] },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Poppins', 'sans-serif'],
+                        display: ['Poppins', 'Plus Jakarta Sans', 'sans-serif']
+                    },
                     colors: {
                         brandBlue: '#1e3a8a',
                         brandIndigo: '#4338ca',
-                        brandOrange: '#f97316',
+                        brandOrange: '#ea580c',
                         brandGold: '#f59e0b'
                     }
                 }
@@ -24,57 +27,67 @@
         }
     </script>
     <style>
-        /* ===== BASE LIGHT THEME & ZERO-GAP FULL WIDTH ===== */
+        /* ===== LIGHT THEME BASE & TRUE 100% FULL WIDTH ===== */
         *, *::before, *::after { box-sizing: border-box; }
         html, body {
             width: 100%;
             max-width: 100vw;
             overflow-x: hidden;
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Poppins', sans-serif;
             background: #F8FAFC;
             color: #1E293B;
         }
+        h1, h2, h3, .font-display { font-family: 'Poppins', 'Plus Jakarta Sans', sans-serif; }
 
-        /* True 100% full-width container — zero dead side gutters */
+        /* Full screen width edge-to-edge with crisp minimal side padding */
         .screen-fit {
             width: 100%;
             max-width: 100%;
-            padding-left: clamp(14px, 2.2vw, 38px);
-            padding-right: clamp(14px, 2.2vw, 38px);
+            padding-left: clamp(14px, 2vw, 34px);
+            padding-right: clamp(14px, 2vw, 34px);
         }
 
-        /* ===== SMOOTH INTERACTIONS & ELEVATION ===== */
+        /* ===== PREMIUM INTERACTIONS ===== */
         .hover-lift {
             transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease, border-color 0.25s ease;
         }
         .hover-lift:hover {
             transform: translateY(-4px);
-            box-shadow: 0 18px 36px -12px rgba(30, 58, 138, 0.14);
+            box-shadow: 0 20px 38px -12px rgba(30, 58, 138, 0.13);
+            border-color: #C7D2FE;
         }
 
-        /* ===== STAT CARD VIBRANT LIGHT-FRIENDLY GRADIENTS ===== */
-        .stat-card-1 { background: linear-gradient(135deg, #1e3a8a, #3b82f6); }
-        .stat-card-2 { background: linear-gradient(135deg, #ea580c, #fb923c); }
-        .stat-card-3 { background: linear-gradient(135deg, #059669, #10b981); }
-        .stat-card-4 { background: linear-gradient(135deg, #6d28d9, #8b5cf6); }
-        .stat-card-5 { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+        /* ===== REFINED EXECUTIVE METRIC CARDS (LIGHT THEME) ===== */
+        .metric-card {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 18px;
+            padding: 13px 16px;
+            box-shadow: 0 4px 16px -6px rgba(15, 23, 42, 0.06);
+            transition: all 0.22s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-3px);
+            border-color: #C7D2FE;
+            box-shadow: 0 14px 28px -10px rgba(30, 58, 138, 0.12);
+        }
 
-        /* ===== HEADER MEGA DROPDOWN ===== */
+        /* ===== MEGA DROPDOWN MENU ===== */
         .nav-item { position: relative; height: 100%; display: flex; align-items: center; }
         .nav-dropdown {
             position: absolute;
             top: calc(100% + 2px);
             left: 0;
-            min-width: 235px;
+            min-width: 240px;
             background: #FFFFFF;
             border-radius: 16px;
-            box-shadow: 0 24px 50px -12px rgba(30, 58, 138, 0.2);
+            box-shadow: 0 24px 52px -12px rgba(30, 58, 138, 0.18);
             border: 1px solid #E2E8F0;
             padding: 8px;
             z-index: 999;
             opacity: 0;
             visibility: hidden;
-            transform: translateY(-8px);
+            transform: translateY(-6px);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             pointer-events: none;
         }
@@ -91,15 +104,14 @@
             gap: 10px;
             padding: 9px 13px;
             border-radius: 10px;
-            font-size: 12px;
+            font-size: 12.5px;
             font-weight: 600;
             color: #334155;
             text-decoration: none;
             transition: background 0.15s ease, color 0.15s ease;
             white-space: nowrap;
         }
-        .nav-dropdown a:hover,
-        .nav-dropdown a.active-sub {
+        .nav-dropdown a:hover {
             background: #EEF2FF;
             color: #1e3a8a;
         }
@@ -127,12 +139,12 @@
             overflow: hidden;
             transition: max-height 0.28s ease;
         }
-        .mob-sub.open { max-height: 520px; }
+        .mob-sub.open { max-height: 540px; }
 
-        /* ===== HERO PAGE 1 & PAGE 2 ===== */
+        /* ===== 3 HERO PAGES ARCHITECTURE ===== */
         .hero-page-1 {
             min-height: calc(100vh - 72px);
-            background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 48%, #FFF7ED 100%);
+            background: radial-gradient(circle at top right, #EEF2FF 0%, #FFFFFF 45%, #FFF7ED 100%);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -140,59 +152,66 @@
         .hero-page-2 {
             background: #FFFFFF;
             border-top: 1px solid #E2E8F0;
+            border-bottom: 1px solid #E2E8F0;
         }
+        .hero-page-3 {
+            background: linear-gradient(180deg, #F8FAFC 0%, #EEF2FF 100%);
+        }
+
         .hero-title {
-            font-size: clamp(1.85rem, 3.2vw, 3.25rem);
+            font-size: clamp(1.95rem, 3.3vw, 3.35rem);
             font-weight: 900;
             line-height: 1.12;
             color: #0F172A;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.025em;
         }
         .section-title {
-            font-size: clamp(1.45rem, 2.5vw, 2.15rem);
+            font-size: clamp(1.45rem, 2.4vw, 2.2rem);
             font-weight: 900;
             color: #0F172A;
             letter-spacing: -0.015em;
         }
 
-        /* Hero slide animation */
-        .hero-slide { transition: opacity 0.35s ease, transform 0.35s ease; }
+        /* Hero Slides */
+        .hero-slide { animation: slideFade 0.38s ease; }
         .hero-slide.hidden-slide { display: none; }
+        @keyframes slideFade {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
 
-        /* Quick card */
+        /* Quick Action Tiles */
         .quick-card {
             background: #FFFFFF;
             border: 1px solid #E2E8F0;
             border-radius: 16px;
-            padding: 12px 10px;
-            box-shadow: 0 4px 14px -4px rgba(15, 23, 42, 0.06);
+            padding: 11px 12px;
+            box-shadow: 0 3px 12px -4px rgba(15, 23, 42, 0.05);
             display: flex;
             align-items: center;
             gap: 10px;
             text-decoration: none;
-            transition: all 0.22s ease;
+            transition: all 0.2s ease;
         }
         .quick-card:hover {
             transform: translateY(-3px);
             border-color: #C7D2FE;
-            box-shadow: 0 12px 26px -8px rgba(30, 58, 138, 0.14);
+            box-shadow: 0 12px 24px -8px rgba(30, 58, 138, 0.12);
         }
 
-        /* Bottom navigation bar padding for mobile */
+        /* Bottom Navigation Safe Spacing */
         @media (max-width: 1023px) {
             body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
         }
         @media (min-width: 1024px) {
-            body { padding-bottom: 64px; }
+            body { padding-bottom: 66px; }
         }
-
-        /* Bottom Navigation Bar Active State */
         .bnav-item.active {
             color: #1e3a8a;
             background: #EEF2FF;
         }
 
-        /* Print styles for Results, Hall Ticket, Fee Receipt & Admission Slip */
+        /* Official Print Styles */
         @media print {
             body * { visibility: hidden; }
             #printable-portal-area, #printable-portal-area * { visibility: visible; }
@@ -212,17 +231,17 @@
 <body class="bg-[#F8FAFC] text-slate-800 antialiased selection:bg-indigo-100 selection:text-brandBlue">
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         STICKY INSTITUTIONAL HEADER + MEGA DROPDOWNS
+         STICKY TOP HEADER WITH MEGA DROPDOWNS
     ════════════════════════════════════════════════════════════════════════ -->
     <header class="sticky top-0 z-50 bg-brandBlue shadow-md w-full border-b border-blue-800/40">
         <div class="screen-fit flex justify-between items-center h-[72px]">
 
-            <!-- Brand Logo -->
+            <!-- Logo -->
             <a href="#/home" onclick="navigateTo('/home'); return false;" class="flex items-center gap-3 shrink-0 group">
                 <img src="./logo_.png" alt="JY School Logo" class="w-11 h-11 sm:w-12 sm:h-12 object-contain bg-white rounded-xl p-1 shadow-sm group-hover:scale-105 transition-transform">
                 <div class="flex flex-col leading-tight">
                     <span class="text-[10px] font-bold text-blue-200 tracking-wider uppercase">SRI VENKATESWARA</span>
-                    <span class="text-lg sm:text-xl text-brandOrange font-black tracking-wide uppercase">JY School</span>
+                    <span class="text-lg sm:text-xl text-amber-400 font-black tracking-wide uppercase font-display">JY School</span>
                 </div>
             </a>
 
@@ -235,8 +254,7 @@
 
                 <!-- Admission Dropdown -->
                 <div class="nav-item">
-                    <button type="button" data-nav-root="/admission"
-                            onclick="navigateTo('/admission/procedure')"
+                    <button type="button" data-nav-root="/admission" onclick="navigateTo('/admission/procedure')"
                             class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white flex items-center gap-1.5 transition-colors">
                         Admission <i class="fa-solid fa-chevron-down text-[9px] opacity-80"></i>
                     </button>
@@ -253,8 +271,7 @@
 
                 <!-- Student Life Dropdown -->
                 <div class="nav-item">
-                    <button type="button" data-nav-root="/student-life"
-                            onclick="navigateTo('/student-life/academics')"
+                    <button type="button" data-nav-root="/student-life" onclick="navigateTo('/student-life/academics')"
                             class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white flex items-center gap-1.5 transition-colors">
                         Student Life <i class="fa-solid fa-chevron-down text-[9px] opacity-80"></i>
                     </button>
@@ -272,8 +289,7 @@
 
                 <!-- Facilities Dropdown -->
                 <div class="nav-item">
-                    <button type="button" data-nav-root="/facilities"
-                            onclick="navigateTo('/facilities/laboratory')"
+                    <button type="button" data-nav-root="/facilities" onclick="navigateTo('/facilities/laboratory')"
                             class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white flex items-center gap-1.5 transition-colors">
                         Facilities <i class="fa-solid fa-chevron-down text-[9px] opacity-80"></i>
                     </button>
@@ -288,20 +304,14 @@
                 </div>
 
                 <a href="#/staffs" onclick="navigateTo('/staffs'); return false;" data-nav-root="/staffs"
-                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">
-                    Staffs
-                </a>
+                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">Staffs</a>
                 <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" data-nav-root="/downloads"
-                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">
-                    Download
-                </a>
+                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">Download</a>
                 <a href="#/contact" onclick="navigateTo('/contact'); return false;" data-nav-root="/contact"
-                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">
-                    Contact
-                </a>
+                   class="header-nav-link px-3.5 py-2 rounded-lg hover:bg-white/15 hover:text-white transition-colors">Contact</a>
             </nav>
 
-            <!-- Desktop Action Buttons -->
+            <!-- Desktop Action CTAs -->
             <div class="hidden lg:flex items-center gap-2.5 shrink-0">
                 <a href="http://66.116.252.191:19999/login"
                    class="px-4 py-2 text-xs font-bold text-white border border-white/40 rounded-full hover:bg-white hover:text-brandBlue transition-all">
@@ -309,11 +319,11 @@
                 </a>
                 <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;"
                    class="px-5 py-2.5 text-xs font-black text-slate-900 bg-amber-400 rounded-full shadow-md hover:bg-amber-300 transition-all hover:-translate-y-0.5">
-                    <i class="fa-solid fa-credit-card mr-1.5"></i> Pay Fees Online
+                    <i class="fa-solid fa-indian-rupee-sign mr-1"></i> Pay Fees Online
                 </a>
             </div>
 
-            <!-- Mobile / Tablet Right Controls -->
+            <!-- Mobile / Tablet Controls -->
             <div class="flex lg:hidden items-center gap-2">
                 <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;"
                    class="px-3.5 py-2 text-[11px] font-black text-slate-900 bg-amber-400 rounded-full shadow-sm">
@@ -326,12 +336,11 @@
             </div>
         </div>
 
-        <!-- Mobile Accordion Menu -->
+        <!-- Mobile Accordion Drawer -->
         <div id="mobile-menu" class="lg:hidden bg-white border-t border-slate-200 w-full shadow-xl">
             <div class="px-4 py-3 text-xs font-bold text-slate-700 space-y-0.5">
                 <a href="#/home" onclick="navigateTo('/home'); closeMobileMenu(); return false;" class="block py-2.5 px-2 border-b border-slate-100 text-brandBlue font-black">Home</a>
 
-                <!-- Admission Accordion -->
                 <div class="border-b border-slate-100">
                     <button type="button" onclick="toggleMobSub('mob-admission')" class="w-full flex justify-between items-center py-2.5 px-2 text-left font-black text-slate-800">
                         <span><i class="fa-solid fa-graduation-cap text-brandBlue mr-2"></i>Admission</span>
@@ -348,7 +357,6 @@
                     </div>
                 </div>
 
-                <!-- Student Life Accordion -->
                 <div class="border-b border-slate-100">
                     <button type="button" onclick="toggleMobSub('mob-studentlife')" class="w-full flex justify-between items-center py-2.5 px-2 text-left font-black text-slate-800">
                         <span><i class="fa-solid fa-children text-brandOrange mr-2"></i>Student Life</span>
@@ -366,7 +374,6 @@
                     </div>
                 </div>
 
-                <!-- Facilities Accordion -->
                 <div class="border-b border-slate-100">
                     <button type="button" onclick="toggleMobSub('mob-facilities')" class="w-full flex justify-between items-center py-2.5 px-2 text-left font-black text-slate-800">
                         <span><i class="fa-solid fa-building-columns text-emerald-600 mr-2"></i>Facilities</span>
@@ -387,31 +394,26 @@
                 <a href="#/contact" onclick="navigateTo('/contact'); closeMobileMenu(); return false;" class="block py-2.5 px-2 border-b border-slate-100">Contact Us</a>
 
                 <div class="grid grid-cols-2 gap-2.5 pt-3 pb-1">
-                    <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); closeMobileMenu(); return false;"
-                       class="text-center py-2.5 bg-amber-400 text-slate-900 rounded-xl font-black text-xs">
-                        <i class="fa-solid fa-credit-card mr-1"></i> Pay Fees Online
-                    </a>
-                    <a href="http://66.116.252.191:19999/login"
-                       class="text-center py-2.5 bg-brandBlue text-white rounded-xl font-black text-xs">
-                        <i class="fa-solid fa-right-to-bracket mr-1"></i> ERP Login
-                    </a>
+                    <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); closeMobileMenu(); return false;" class="text-center py-2.5 bg-amber-400 text-slate-900 rounded-xl font-black text-xs"><i class="fa-solid fa-indian-rupee-sign mr-1"></i> Pay Fees Online</a>
+                    <a href="http://66.116.252.191:19999/login" class="text-center py-2.5 bg-brandBlue text-white rounded-xl font-black text-xs"><i class="fa-solid fa-right-to-bracket mr-1"></i> ERP Login</a>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         HOME VIEW — STRICTLY 2 CRISP FULL-WIDTH PAGES ONLY
+         HOME VIEW — 3 EXECUTIVE HERO PAGES + FULL SCREEN WIDTH
     ════════════════════════════════════════════════════════════════════════ -->
     <main id="home-view">
 
-        <!-- ── HOME PAGE 1: Interactive 2-Slide Hero + Quick Dock + Live Stats ── -->
-        <section class="hero-page-1">
-            <div class="screen-fit flex-1 flex flex-col justify-between py-4 lg:py-5 gap-4">
+        <!-- ── HERO PAGE 1: 3-Slide Interactive Showcase + Quick Dock + Live Metrics ── -->
+        <section id="hero-page-1" class="hero-page-1">
+            <div class="screen-fit flex-1 flex flex-col justify-between py-4 lg:py-6 gap-4">
 
-                <!-- 2-Slide Hero Content Box -->
+                <!-- 3-Slide Hero Showcase -->
                 <div class="flex-1 flex items-center">
-                    <!-- SLIDE 1: Academic & Campus Excellence -->
+
+                    <!-- SLIDE 1: Campus & Academic Excellence -->
                     <div id="hero-slide-1" class="hero-slide w-full grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-10 items-center">
                         <div class="lg:col-span-6 space-y-4">
                             <div class="flex flex-wrap items-center gap-2">
@@ -427,11 +429,11 @@
                                 Shaping Brilliant Minds,<br class="hidden sm:block">Building Confident Futures
                             </h1>
 
-                            <p id="hero-description" class="hero-desc text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                                At Sri Venkateswara JY School, we blend strong conceptual academics (Nursery – Class X) with structured IIT-JEE, NEET, Navodaya &amp; Olympiad foundation, smart digital classrooms, and real-time parent ERP connectivity.
+                            <p id="hero-description" class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                                At Sri Venkateswara JY School (Nursery – Class X), we combine strong conceptual academics with structured IIT-JEE, NEET, Navodaya &amp; Olympiad foundation, smart classrooms, and real-time parent ERP tracking.
                             </p>
 
-                            <div class="flex flex-wrap gap-3 pt-1">
+                            <div class="flex flex-wrap gap-2.5 pt-1">
                                 <a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;"
                                    class="px-6 py-3 bg-brandBlue text-white text-xs sm:text-[13px] font-black rounded-full shadow-lg shadow-blue-900/20 hover:bg-blue-900 transition-all hover:-translate-y-0.5">
                                     Admission Registration <i class="fa-solid fa-arrow-right ml-1.5"></i>
@@ -450,34 +452,32 @@
                                 </button>
                             </div>
 
-                            <!-- 3 Core Institutional Highlights -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                                 <div class="bg-white border border-indigo-100 rounded-2xl p-3 flex items-center gap-3 shadow-xs">
                                     <div class="w-10 h-10 rounded-xl bg-indigo-50 text-brandBlue flex items-center justify-center shrink-0"><i class="fa-solid fa-atom text-base"></i></div>
                                     <div><div class="text-xs font-black text-slate-900">IIT-JEE &amp; NEET</div><div class="text-[11px] text-slate-500">Integrated Wing</div></div>
                                 </div>
                                 <div class="bg-white border border-emerald-100 rounded-2xl p-3 flex items-center gap-3 shadow-xs">
                                     <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-trophy text-base"></i></div>
-                                    <div><div class="text-xs font-black text-slate-900">100% SSC Pass</div><div class="text-[11px] text-slate-500">Top State Ranks</div></div>
+                                    <div><div class="text-xs font-black text-slate-900">100% SSC Pass</div><div class="text-[11px] text-slate-500">Board Excellence</div></div>
                                 </div>
                                 <div class="bg-white border border-orange-100 rounded-2xl p-3 flex items-center gap-3 shadow-xs">
                                     <div class="w-10 h-10 rounded-xl bg-orange-50 text-brandOrange flex items-center justify-center shrink-0"><i class="fa-solid fa-laptop-code text-base"></i></div>
-                                    <div><div class="text-xs font-black text-slate-900">Live Digital ERP</div><div class="text-[11px] text-slate-500">Web + Mobile App</div></div>
+                                    <div><div class="text-xs font-black text-slate-900">Smart ERP App</div><div class="text-[11px] text-slate-500">Live Parent Alerts</div></div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Campus Image Card -->
                         <div class="lg:col-span-6">
                             <div class="relative w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-white">
                                 <img id="hero-image" src="./image.png" alt="Sri Venkateswara JY School Campus"
-                                     class="w-full h-[240px] sm:h-[320px] lg:h-[390px] object-cover">
+                                     class="w-full h-[240px] sm:h-[320px] lg:h-[385px] object-cover">
                                 <div class="flex flex-wrap items-center justify-between gap-2 bg-white/95 backdrop-blur-md px-4 py-3 border-t border-slate-100">
                                     <div class="flex items-center gap-3 min-w-0">
                                         <img src="./logo_.png" alt="Logo" class="w-9 h-9 object-contain rounded-lg bg-indigo-50 p-1 shrink-0">
                                         <div class="min-w-0">
                                             <div class="text-xs sm:text-sm font-black text-slate-900 truncate">SVL Paradise Campus, Narasannapeta</div>
-                                            <div class="text-[11px] font-medium text-slate-500 truncate">Nursery to Class X • Co-Educational English Medium</div>
+                                            <div class="text-[11px] font-medium text-slate-500 truncate">Nursery to Class X &bull; Co-Ed English Medium</div>
                                         </div>
                                     </div>
                                     <a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;"
@@ -489,237 +489,377 @@
                         </div>
                     </div>
 
-                    <!-- SLIDE 2: Digital Services, Fee Payment & Live Parent Portal -->
+                    <!-- SLIDE 2: IIT-JEE, NEET, Navodaya & CBT Competitive Coaching -->
                     <div id="hero-slide-2" class="hero-slide hidden-slide w-full grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-10 items-center">
                         <div class="lg:col-span-6 space-y-4">
-                            <span class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider">
-                                <i class="fa-solid fa-bolt"></i> Digital Campus &amp; Instant Parent Services
+                            <span class="inline-flex items-center gap-2 bg-orange-100 text-brandOrange px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider">
+                                <i class="fa-solid fa-atom"></i> Integrated Foundation &amp; Competitive Wing
                             </span>
                             <h2 class="hero-title">
-                                Instant Fee Payment, Results &amp; Hall Tickets Online
+                                Early Advantage for IIT-JEE, NEET, Navodaya &amp; Olympiads
                             </h2>
                             <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
-                                Parents and students can verify pending fee balances, pay via UPI/QR directly from this portal, download official exam hall tickets, check CCE &amp; Grand Test marks memos, and track admission status anytime.
+                                From Class VI onwards, students practice weekly NTA-style CBT &amp; OMR objective mock tests alongside NCERT &amp; State Board mastery—building speed, conceptual depth, and rank-winning confidence without coaching stress.
+                            </p>
+                            <div class="flex flex-wrap gap-3 pt-1">
+                                <a href="#/student-life/academics" onclick="navigateTo('/student-life/academics'); return false;"
+                                   class="px-6 py-3 bg-brandOrange text-white text-xs sm:text-[13px] font-black rounded-full shadow-md hover:bg-orange-600 transition">
+                                    Explore Academic Curriculum <i class="fa-solid fa-arrow-right ml-1.5"></i>
+                                </a>
+                                <a href="#/facilities/awards" onclick="navigateTo('/facilities/awards'); return false;"
+                                   class="px-6 py-3 bg-white text-slate-800 border-2 border-slate-200 text-xs sm:text-[13px] font-black rounded-full hover:border-brandBlue transition">
+                                    Toppers Hall of Fame
+                                </a>
+                            </div>
+                        </div>
+                        <div class="lg:col-span-6 grid grid-cols-2 gap-3.5">
+                            <div class="bg-white border border-indigo-200 rounded-3xl p-5 shadow-sm">
+                                <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-brandBlue flex items-center justify-center mb-3"><i class="fa-solid fa-calculator text-lg"></i></div>
+                                <h3 class="text-sm font-black text-slate-900">IIT-JEE Foundation</h3>
+                                <p class="text-xs text-slate-500 mt-1">Deep Mathematics, Physics &amp; Chemistry problem-solving modules from Class VI.</p>
+                            </div>
+                            <div class="bg-white border border-emerald-200 rounded-3xl p-5 shadow-sm">
+                                <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3"><i class="fa-solid fa-dna text-lg"></i></div>
+                                <h3 class="text-sm font-black text-slate-900">NEET Medical Track</h3>
+                                <p class="text-xs text-slate-500 mt-1">Visual Biology labs, scientific reasoning &amp; NCERT concept reinforcement.</p>
+                            </div>
+                            <div class="bg-white border border-amber-200 rounded-3xl p-5 shadow-sm">
+                                <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center mb-3"><i class="fa-solid fa-bullseye text-lg"></i></div>
+                                <h3 class="text-sm font-black text-slate-900">Navodaya &amp; Sainik</h3>
+                                <p class="text-xs text-slate-500 mt-1">Focused Mental Ability, Arithmetic &amp; Language preparation for JNVST.</p>
+                            </div>
+                            <div class="bg-white border border-violet-200 rounded-3xl p-5 shadow-sm">
+                                <div class="w-11 h-11 rounded-2xl bg-violet-100 text-violet-700 flex items-center justify-center mb-3"><i class="fa-solid fa-laptop-file text-lg"></i></div>
+                                <h3 class="text-sm font-black text-slate-900">Weekly CBT &amp; OMR</h3>
+                                <p class="text-xs text-slate-500 mt-1">Instant question-wise analysis, rank cards &amp; parent progress tracking.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SLIDE 3: Digital ERP, Instant Fee Payment & Self-Service Portal -->
+                    <div id="hero-slide-3" class="hero-slide hidden-slide w-full grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-10 items-center">
+                        <div class="lg:col-span-6 space-y-4">
+                            <span class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider">
+                                <i class="fa-solid fa-bolt"></i> Paperless School ERP &amp; Direct Fee Portal
+                            </span>
+                            <h2 class="hero-title">
+                                Pay Fees, Download Hall Tickets &amp; Check Results Right Here
+                            </h2>
+                            <p class="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl">
+                                Zero queues at the school office. Parents can verify live pending fee dues using Roll No &amp; DOB, scan the School UPI QR code to pay instantly, download official exam hall tickets, and print score cards anytime.
                             </p>
                             <div class="flex flex-wrap gap-3 pt-1">
                                 <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;"
                                    class="px-6 py-3 bg-emerald-600 text-white text-xs sm:text-[13px] font-black rounded-full shadow-lg hover:bg-emerald-700 transition">
-                                    <i class="fa-solid fa-credit-card mr-1.5"></i> Open Fee Payment Portal
+                                    <i class="fa-solid fa-credit-card mr-1.5"></i> Pay Fees Online Now
                                 </a>
                                 <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student'); return false;"
                                    class="px-6 py-3 bg-white text-brandBlue border-2 border-brandBlue text-xs sm:text-[13px] font-black rounded-full hover:bg-brandBlue hover:text-white transition">
-                                    Check Results &amp; Admit Card
+                                    Check Marks &amp; Hall Ticket
                                 </a>
                             </div>
                         </div>
-
                         <div class="lg:col-span-6 grid grid-cols-2 gap-3.5">
                             <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" class="bg-white border border-emerald-200 rounded-3xl p-5 shadow-sm hover-lift">
                                 <div class="w-11 h-11 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3"><i class="fa-solid fa-qrcode text-lg"></i></div>
-                                <h3 class="text-sm font-black text-slate-900">UPI / Online Fee Payment</h3>
-                                <p class="text-xs text-slate-500 mt-1">Verify Roll No + DOB, scan QR &amp; submit UTR receipt instantly.</p>
+                                <h3 class="text-sm font-black text-slate-900">UPI QR Fee Payment</h3>
+                                <p class="text-xs text-slate-500 mt-1">Live fee head lookup, PhonePe/GPay/NEFT checkout &amp; printable receipt.</p>
                             </a>
-                            <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student'); return false;" class="bg-white border border-indigo-200 rounded-3xl p-5 shadow-sm hover-lift">
+                            <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student', 'results'); return false;" class="bg-white border border-indigo-200 rounded-3xl p-5 shadow-sm hover-lift">
                                 <div class="w-11 h-11 rounded-2xl bg-indigo-100 text-brandBlue flex items-center justify-center mb-3"><i class="fa-solid fa-square-poll-vertical text-lg"></i></div>
-                                <h3 class="text-sm font-black text-slate-900">Live Marks Memos</h3>
-                                <p class="text-xs text-slate-500 mt-1">View subject-wise marks, GPA, grades &amp; print score card.</p>
+                                <h3 class="text-sm font-black text-slate-900">Instant Marks Memos</h3>
+                                <p class="text-xs text-slate-500 mt-1">Verify Roll No + DOB for subject marks, percentage, GPA &amp; grades.</p>
                             </a>
                             <a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;" class="bg-white border border-orange-200 rounded-3xl p-5 shadow-sm hover-lift">
                                 <div class="w-11 h-11 rounded-2xl bg-orange-100 text-brandOrange flex items-center justify-center mb-3"><i class="fa-solid fa-file-signature text-lg"></i></div>
-                                <h3 class="text-sm font-black text-slate-900">Online Admission Form</h3>
-                                <p class="text-xs text-slate-500 mt-1">Submit new Nursery – Class X admission application online.</p>
+                                <h3 class="text-sm font-black text-slate-900">Digital Admission</h3>
+                                <p class="text-xs text-slate-500 mt-1">Submit new student form online with instant Application Reference ID.</p>
                             </a>
-                            <a href="#/facilities/transport" onclick="navigateTo('/facilities/transport'); return false;" class="bg-white border border-sky-200 rounded-3xl p-5 shadow-sm hover-lift">
-                                <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center mb-3"><i class="fa-solid fa-bus text-lg"></i></div>
-                                <h3 class="text-sm font-black text-slate-900">GPS Bus &amp; Campus Safety</h3>
-                                <p class="text-xs text-slate-500 mt-1">Verified routes, CCTV campus &amp; real-time parent notifications.</p>
+                            <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" class="bg-white border border-sky-200 rounded-3xl p-5 shadow-sm hover-lift">
+                                <div class="w-11 h-11 rounded-2xl bg-sky-100 text-sky-700 flex items-center justify-center mb-3"><i class="fa-solid fa-file-pdf text-lg"></i></div>
+                                <h3 class="text-sm font-black text-slate-900">Circulars &amp; Syllabus</h3>
+                                <p class="text-xs text-slate-500 mt-1">Searchable academic calendars, holiday lists &amp; term syllabi.</p>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <!-- Hero Slide Switcher + Quick Access Strip + Live Stats -->
+                <!-- Hero Slide Switcher + Quick Parent Dock + Executive Metric Cards -->
                 <div class="space-y-3">
-                    <!-- 2-Slide Switcher Pills -->
+                    <!-- 3 Hero Slide Controls & Hero Page Jumpers -->
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <div class="inline-flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-full shadow-xs">
+                        <div class="inline-flex flex-wrap items-center gap-1 bg-white border border-slate-200 p-1 rounded-full shadow-xs">
                             <button type="button" id="slide-btn-1" onclick="switchHeroSlide(1)"
-                                    class="px-3.5 py-1 rounded-full text-[11px] font-black bg-brandBlue text-white transition">
-                                01 • Campus &amp; Foundation
+                                    class="px-3.5 py-1 rounded-full text-[11px] font-black bg-brandBlue text-white transition cursor-pointer">
+                                01 &bull; Campus &amp; Vision
                             </button>
                             <button type="button" id="slide-btn-2" onclick="switchHeroSlide(2)"
-                                    class="px-3.5 py-1 rounded-full text-[11px] font-black text-slate-600 hover:text-brandBlue transition">
-                                02 • Digital Portals &amp; Fee Pay
+                                    class="px-3.5 py-1 rounded-full text-[11px] font-bold text-slate-600 hover:text-brandBlue transition cursor-pointer">
+                                02 &bull; JEE / NEET Foundation
+                            </button>
+                            <button type="button" id="slide-btn-3" onclick="switchHeroSlide(3)"
+                                    class="px-3.5 py-1 rounded-full text-[11px] font-bold text-slate-600 hover:text-brandBlue transition cursor-pointer">
+                                03 &bull; Pay Fees &amp; Portals
                             </button>
                         </div>
-                        <a href="#home-page-2" class="text-[11px] font-black text-brandBlue hover:underline hidden sm:inline-flex items-center gap-1.5">
-                            Explore Academics, News &amp; Principal Desk <i class="fa-solid fa-arrow-down animate-bounce"></i>
-                        </a>
+
+                        <div class="hidden sm:flex items-center gap-3 text-[11px] font-bold text-slate-500">
+                            <a href="#hero-page-2" class="hover:text-brandBlue transition">Page 2: Academics &amp; Facilities <i class="fa-solid fa-arrow-down ml-1"></i></a>
+                            <span class="text-slate-300">|</span>
+                            <a href="#hero-page-3" class="hover:text-brandBlue transition">Page 3: News, Toppers &amp; Reviews <i class="fa-solid fa-arrow-down ml-1"></i></a>
+                        </div>
                     </div>
 
-                    <!-- 6 Quick-Access Horizontal Cards -->
+                    <!-- 6 Quick-Access Parent Dock Cards -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                        <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" class="quick-card border-emerald-200 bg-emerald-50/40">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">Pay Fees Online</div><div class="text-[10px] text-emerald-700 font-semibold">UPI / QR Checkout</div></div>
+                        <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" class="quick-card border-emerald-200 bg-emerald-50/50">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-indian-rupee-sign text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">Pay Fees Online</div><div class="text-[10px] text-emerald-700 font-semibold truncate">UPI / QR Checkout</div></div>
                         </a>
                         <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student', 'results'); return false;" class="quick-card">
-                            <div class="w-10 h-10 rounded-xl bg-indigo-100 text-brandBlue flex items-center justify-center shrink-0"><i class="fa-solid fa-square-poll-vertical"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">Exam Results</div><div class="text-[10px] text-slate-500">Live Marks Memo</div></div>
+                            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-brandBlue flex items-center justify-center shrink-0"><i class="fa-solid fa-square-poll-vertical text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">Exam Results</div><div class="text-[10px] text-slate-500 truncate">Marks Memo</div></div>
                         </a>
                         <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student', 'hallticket'); return false;" class="quick-card">
-                            <div class="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-ticket"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">Hall Tickets</div><div class="text-[10px] text-slate-500">Print Admit Card</div></div>
+                            <div class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-ticket text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">Hall Tickets</div><div class="text-[10px] text-slate-500 truncate">Admit Cards</div></div>
                         </a>
                         <a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;" class="quick-card">
-                            <div class="w-10 h-10 rounded-xl bg-orange-100 text-brandOrange flex items-center justify-center shrink-0"><i class="fa-solid fa-user-plus"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">Apply Admission</div><div class="text-[10px] text-slate-500">2027–28 Form</div></div>
+                            <div class="w-9 h-9 rounded-xl bg-orange-100 text-brandOrange flex items-center justify-center shrink-0"><i class="fa-solid fa-user-plus text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">Apply Admission</div><div class="text-[10px] text-slate-500 truncate">2027–28 Form</div></div>
                         </a>
                         <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" class="quick-card">
-                            <div class="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">Circulars &amp; PDFs</div><div class="text-[10px] text-slate-500">Syllabus &amp; Notice</div></div>
+                            <div class="w-9 h-9 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-file-pdf text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">Circulars &amp; PDFs</div><div class="text-[10px] text-slate-500 truncate">Syllabus &amp; Notice</div></div>
                         </a>
                         <a href="http://66.116.252.191:19999/login" class="quick-card">
-                            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-mobile-screen-button"></i></div>
-                            <div><div class="text-xs font-black text-slate-900">ERP Login</div><div class="text-[10px] text-slate-500">Student / Staff</div></div>
+                            <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0"><i class="fa-solid fa-mobile-screen-button text-sm"></i></div>
+                            <div class="min-w-0"><div class="text-xs font-black text-slate-900 truncate">School ERP Login</div><div class="text-[10px] text-slate-500 truncate">Parent / Staff</div></div>
                         </a>
                     </div>
 
-                    <!-- 5 Live Institutional Stats (Synced by CMS) -->
+                    <!-- 5 Executive Light Metrics (Synced by CMS) -->
                     <div id="stats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                        <div class="stat-card-1 rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3">
-                            <i class="fa-solid fa-award text-xl opacity-90 shrink-0"></i>
-                            <div><h3 class="text-lg font-black leading-none">20+</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">Years of Excellence</p></div>
+                        <div class="metric-card flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-indigo-50 text-brandBlue flex items-center justify-center shrink-0"><i class="fa-solid fa-award text-lg"></i></div>
+                            <div><h3 class="text-lg font-black text-slate-900 leading-none">20+</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Years Excellence</p></div>
                         </div>
-                        <div class="stat-card-2 rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3">
-                            <i class="fa-solid fa-user-graduate text-xl opacity-90 shrink-0"></i>
-                            <div><h3 class="text-lg font-black leading-none">1,200+</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">Happy Students</p></div>
+                        <div class="metric-card flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-50 text-brandOrange flex items-center justify-center shrink-0"><i class="fa-solid fa-user-graduate text-lg"></i></div>
+                            <div><h3 class="text-lg font-black text-slate-900 leading-none">1,200+</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Happy Students</p></div>
                         </div>
-                        <div class="stat-card-3 rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3">
-                            <i class="fa-solid fa-chalkboard-user text-xl opacity-90 shrink-0"></i>
-                            <div><h3 class="text-lg font-black leading-none">45+</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">Experienced Faculty</p></div>
+                        <div class="metric-card flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-chalkboard-user text-lg"></i></div>
+                            <div><h3 class="text-lg font-black text-slate-900 leading-none">45+</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Qualified Faculty</p></div>
                         </div>
-                        <div class="stat-card-4 rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3">
-                            <i class="fa-solid fa-medal text-xl opacity-90 shrink-0"></i>
-                            <div><h3 class="text-lg font-black leading-none">100%</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">Board Pass Record</p></div>
+                        <div class="metric-card flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-medal text-lg"></i></div>
+                            <div><h3 class="text-lg font-black text-slate-900 leading-none">100%</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Board Pass Record</p></div>
                         </div>
-                        <div class="stat-card-5 rounded-2xl px-4 py-3 text-white hover-lift flex items-center gap-3 col-span-2 sm:col-span-1">
-                            <i class="fa-solid fa-bus text-xl opacity-90 shrink-0"></i>
-                            <div><h3 class="text-lg font-black leading-none">GPS</h3><p class="text-[10px] font-bold opacity-85 uppercase mt-0.5">Safe Smart Campus</p></div>
+                        <div class="metric-card flex items-center gap-3 col-span-2 sm:col-span-1">
+                            <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0"><i class="fa-solid fa-bus text-lg"></i></div>
+                            <div><h3 class="text-lg font-black text-slate-900 leading-none">GPS</h3><p class="text-[10px] font-bold text-slate-500 uppercase mt-1">Safe Smart Campus</p></div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ── HOME PAGE 2: Academic Wings, Principal/Mission, News & Testimonials ── -->
-        <section id="home-page-2" class="hero-page-2 py-10 lg:py-12">
-            <div class="screen-fit space-y-8">
+        <!-- ── HERO PAGE 2: Academic Wings, School Profile, Principal & Facilities Bento ── -->
+        <section id="hero-page-2" class="hero-page-2 py-10 lg:py-14">
+            <div class="screen-fit space-y-10">
 
-                <!-- Row A: Academic Programs (4 Columns) -->
+                <!-- Academic Programs Row -->
                 <div>
                     <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
                         <div>
-                            <span class="px-3 py-1 rounded-full bg-orange-100 text-brandOrange text-[10px] font-black uppercase tracking-wider">Academic Wings</span>
-                            <h2 class="section-title mt-1.5">Programs &amp; Competitive Foundation</h2>
+                            <span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[10px] font-black uppercase tracking-wider">Page 02 &bull; Academics &amp; Wings</span>
+                            <h2 class="section-title mt-1.5">Structured Learning Pathways</h2>
                         </div>
                         <a href="#/student-life/academics" onclick="navigateTo('/student-life/academics'); return false;"
-                           class="text-xs font-black text-brandBlue hover:underline flex items-center gap-1">
-                            Full Curriculum &amp; Details <i class="fa-solid fa-arrow-right"></i>
+                           class="text-xs font-black text-brandBlue hover:underline flex items-center gap-1.5">
+                            Explore Full Curriculum &amp; Policies <i class="fa-solid fa-arrow-right"></i>
                         </a>
                     </div>
                     <div id="programs-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-5 hover-lift">
-                            <div class="w-11 h-11 bg-brandBlue rounded-xl flex items-center justify-center text-white mb-3 shadow-sm"><i class="fa-solid fa-child-reaching"></i></div>
+                        <div class="bg-gradient-to-br from-blue-50 to-white border border-blue-100 rounded-2xl p-5 hover-lift">
+                            <div class="w-11 h-11 bg-brandBlue rounded-xl flex items-center justify-center text-white mb-3 shadow-xs"><i class="fa-solid fa-child-reaching"></i></div>
                             <h3 class="text-sm font-black text-slate-900 mb-1.5">Pre-Primary &amp; Primary (Nursery–V)</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">Joyful activity-based foundation focusing on phonics, reading, numeracy, and confident communication.</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">Joyful phonics, activity-based numeracy, reading fluency, and creative expression.</p>
                         </div>
-                        <div class="bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100 rounded-2xl p-5 hover-lift">
-                            <div class="w-11 h-11 bg-brandOrange rounded-xl flex items-center justify-center text-white mb-3 shadow-sm"><i class="fa-solid fa-book-open-reader"></i></div>
+                        <div class="bg-gradient-to-br from-orange-50 to-white border border-orange-100 rounded-2xl p-5 hover-lift">
+                            <div class="w-11 h-11 bg-brandOrange rounded-xl flex items-center justify-center text-white mb-3 shadow-xs"><i class="fa-solid fa-book-open-reader"></i></div>
                             <h3 class="text-sm font-black text-slate-900 mb-1.5">High School (Classes VI – X)</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">Concept-driven State Board / SSC curriculum with weekly slip tests, CCE reviews &amp; Board exam mastery.</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">State Board / SSC mastery with weekly slip tests, CCE reviews &amp; individualized mentorship.</p>
                         </div>
-                        <div class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-5 hover-lift">
-                            <div class="w-11 h-11 bg-emerald-600 rounded-xl flex items-center justify-center text-white mb-3 shadow-sm"><i class="fa-solid fa-atom"></i></div>
+                        <div class="bg-gradient-to-br from-emerald-50 to-white border border-emerald-100 rounded-2xl p-5 hover-lift">
+                            <div class="w-11 h-11 bg-emerald-600 rounded-xl flex items-center justify-center text-white mb-3 shadow-xs"><i class="fa-solid fa-atom"></i></div>
                             <h3 class="text-sm font-black text-slate-900 mb-1.5">IIT-JEE &amp; NEET Foundation</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">Structured Maths, Physics, Chemistry &amp; Biology foundation with weekly OMR &amp; CBT mock tests from Class VI.</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">Dedicated Maths, Physics, Chemistry &amp; Biology foundation with weekly OMR &amp; CBT exams.</p>
                         </div>
-                        <div class="bg-gradient-to-br from-purple-50 to-fuchsia-50 border border-purple-100 rounded-2xl p-5 hover-lift">
-                            <div class="w-11 h-11 bg-purple-600 rounded-xl flex items-center justify-center text-white mb-3 shadow-sm"><i class="fa-solid fa-trophy"></i></div>
+                        <div class="bg-gradient-to-br from-purple-50 to-white border border-purple-100 rounded-2xl p-5 hover-lift">
+                            <div class="w-11 h-11 bg-purple-600 rounded-xl flex items-center justify-center text-white mb-3 shadow-xs"><i class="fa-solid fa-trophy"></i></div>
                             <h3 class="text-sm font-black text-slate-900 mb-1.5">Navodaya &amp; Olympiads</h3>
-                            <p class="text-xs text-slate-600 leading-relaxed">Special coaching for JNVST, Sainik School entrance, Mental Ability, and National Science &amp; Maths Olympiads.</p>
+                            <p class="text-xs text-slate-600 leading-relaxed">Targeted preparation for JNVST, Sainik School entrance, Mental Ability &amp; National Olympiads.</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Row B: Mission, Vision & Principal Desk -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                    <div class="lg:col-span-4 p-5 rounded-2xl bg-[#F8FAFF] border border-indigo-100">
-                        <span class="text-[10px] font-black text-brandOrange uppercase tracking-wider">Our Purpose</span>
-                        <h3 class="text-base font-black text-slate-900 mt-0.5 mb-2">Mission</h3>
-                        <p id="mission-text" class="text-xs text-slate-600 leading-relaxed">
-                            To nurture curious learners into confident, disciplined, and compassionate achievers through conceptual clarity, IIT-JEE / NEET foundation coaching, moral values, and modern digital learning systems.
-                        </p>
+                <!-- Principal + Mission/Vision + Campus Facilities Bento -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+                    <!-- Principal + Public Disclosure Profile (5 cols) -->
+                    <div id="principal-section" class="lg:col-span-5 bg-gradient-to-br from-[#EEF2FF] via-white to-[#FFF7ED] border border-indigo-100 rounded-3xl p-6 flex flex-col justify-between gap-4">
+                        <div class="flex items-start gap-4">
+                            <img id="principal-photo" src="./logo_.png" alt="Principal" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0">
+                            <div class="min-w-0">
+                                <span class="text-[10px] font-black text-brandOrange uppercase tracking-wider">From the Principal's Desk</span>
+                                <h3 id="principal-name" class="text-base font-black text-slate-900 mt-0.5 mb-1">Principal, JY School</h3>
+                                <p id="principal-message" class="text-xs text-slate-600 leading-relaxed italic">
+                                    "Education is not merely memorizing facts, but training young minds to think critically, act ethically, and excel fearlessly."
+                                </p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 pt-3 border-t border-indigo-100/80 text-center text-[11px]">
+                            <div class="bg-white/90 rounded-xl p-2 border border-indigo-100"><strong class="block text-brandBlue">AP Govt.</strong><span class="text-slate-500 text-[10px]">Recognized</span></div>
+                            <div class="bg-white/90 rounded-xl p-2 border border-indigo-100"><strong class="block text-brandBlue">8:45–3:45</strong><span class="text-slate-500 text-[10px]">School Hours</span></div>
+                            <div class="bg-white/90 rounded-xl p-2 border border-indigo-100"><strong class="block text-brandBlue">Nursery–X</strong><span class="text-slate-500 text-[10px]">English Med.</span></div>
+                        </div>
                     </div>
-                    <div class="lg:col-span-4 p-5 rounded-2xl bg-[#FFFBEB] border border-amber-200/80">
-                        <span class="text-[10px] font-black text-brandBlue uppercase tracking-wider">Our Direction</span>
-                        <h3 class="text-base font-black text-slate-900 mt-0.5 mb-2">Vision</h3>
-                        <p id="vision-text" class="text-xs text-slate-600 leading-relaxed">
-                            To be a benchmark school in Andhra Pradesh delivering holistic academic excellence, competitive exam readiness, smart classroom innovation, and individual mentorship for every student.
-                        </p>
-                    </div>
-                    <div id="principal-section" class="lg:col-span-4 p-5 rounded-2xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 flex items-start gap-4">
-                        <img id="principal-photo" src="./logo_.png" alt="Principal" class="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0">
-                        <div class="min-w-0">
-                            <span class="text-[10px] font-black text-brandOrange uppercase tracking-wider">Principal's Desk</span>
-                            <h3 id="principal-name" class="text-sm font-black text-slate-900 mt-0.5 mb-1">Principal, JY School</h3>
-                            <p id="principal-message" class="text-xs text-slate-600 leading-relaxed italic line-clamp-4">
-                                "Education is not merely memorizing facts, but training young minds to think critically, act ethically, and excel fearlessly."
+
+                    <!-- Mission & Vision (3 cols) -->
+                    <div class="lg:col-span-3 flex flex-col gap-4">
+                        <div class="flex-1 p-5 rounded-2xl bg-[#F8FAFF] border border-indigo-100">
+                            <span class="text-[10px] font-black text-brandOrange uppercase tracking-wider">Our Purpose</span>
+                            <h3 class="text-sm font-black text-slate-900 mt-0.5 mb-1.5">Mission</h3>
+                            <p id="mission-text" class="text-xs text-slate-600 leading-relaxed">
+                                Nurturing curious learners into confident, disciplined achievers through conceptual clarity, foundation coaching, and moral values.
+                            </p>
+                        </div>
+                        <div class="flex-1 p-5 rounded-2xl bg-[#FFFBEB] border border-amber-200/70">
+                            <span class="text-[10px] font-black text-brandBlue uppercase tracking-wider">Our Direction</span>
+                            <h3 class="text-sm font-black text-slate-900 mt-0.5 mb-1.5">Vision</h3>
+                            <p id="vision-text" class="text-xs text-slate-600 leading-relaxed">
+                                Being a benchmark school in Andhra Pradesh for academic excellence, competitive readiness, and smart digital mentorship.
                             </p>
                         </div>
                     </div>
+
+                    <!-- Facilities Quick Explorer (4 cols) -->
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-5 flex flex-col justify-between">
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="text-sm font-black text-slate-900"><i class="fa-solid fa-building-columns text-brandBlue mr-2"></i>Campus Facilities</h3>
+                            <a href="#/admission/campus" onclick="navigateTo('/admission/campus'); return false;" class="text-[11px] font-black text-brandBlue hover:underline">Campus Tour &rarr;</a>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2.5 text-xs">
+                            <a href="#/facilities/laboratory" onclick="navigateTo('/facilities/laboratory'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-flask text-brandBlue"></i>Science &amp; CBT Labs</a>
+                            <a href="#/facilities/library" onclick="navigateTo('/facilities/library'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-book-bookmark text-brandOrange"></i>Digital Library</a>
+                            <a href="#/facilities/transport" onclick="navigateTo('/facilities/transport'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-bus text-sky-600"></i>GPS Bus Fleet</a>
+                            <a href="#/facilities/medical" onclick="navigateTo('/facilities/medical'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-kit-medical text-rose-600"></i>Medical Room</a>
+                            <a href="#/student-life/sports" onclick="navigateTo('/student-life/sports'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-futbol text-emerald-600"></i>Sports &amp; Yoga</a>
+                            <a href="#/facilities/counselling" onclick="navigateTo('/facilities/counselling'); return false;" class="p-3 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200/80 transition flex items-center gap-2.5 font-bold text-slate-800"><i class="fa-solid fa-comments text-violet-600"></i>Counselling</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── HERO PAGE 3: Live Ecosystem, Toppers, News, Parent Voices & Action Strip ── -->
+        <section id="hero-page-3" class="hero-page-3 py-10 lg:py-14">
+            <div class="screen-fit space-y-8">
+                <div class="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                        <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase tracking-wider">Page 03 &bull; Live School Highlights</span>
+                        <h2 class="section-title mt-1.5">News, Achievers &amp; Parent Voices</h2>
+                    </div>
+                    <div class="flex gap-3 text-xs font-black">
+                        <a href="#/facilities/awards" onclick="navigateTo('/facilities/awards'); return false;" class="text-brandOrange hover:underline">View All Toppers &rarr;</a>
+                        <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" class="text-brandBlue hover:underline">All Circulars &rarr;</a>
+                    </div>
                 </div>
 
-                <!-- Row C: News & Parent Voices + Quick Explore Bar -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-                    <!-- Latest News (6 cols) -->
-                    <div class="lg:col-span-6 bg-[#F8FAFC] border border-slate-200 rounded-2xl p-5">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <h3 class="text-base font-black text-slate-900"><i class="fa-solid fa-newspaper text-brandBlue mr-2"></i>Latest News &amp; Events</h3>
-                            <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" class="text-[11px] font-black text-brandBlue hover:underline">All Circulars &rarr;</a>
-                        </div>
-                        <div id="news-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="bg-white rounded-xl p-4 border border-slate-200">
-                                <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-brandBlue text-[9px] font-black">ADMISSIONS</span>
-                                <h4 class="text-xs font-black text-slate-900 mt-2 mb-1">Admissions Open 2027–28</h4>
-                                <p class="text-[11px] text-slate-600 leading-relaxed">Registrations open for Nursery to Class X + Foundation Batches.</p>
+                    <!-- Column 1: Latest News (4 cols) -->
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3.5">
+                                <h3 class="text-sm font-black text-slate-900"><i class="fa-solid fa-newspaper text-brandBlue mr-2"></i>Campus News &amp; Circulars</h3>
+                                <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" class="text-[11px] font-bold text-brandBlue hover:underline">More &rarr;</a>
                             </div>
-                            <div class="bg-white rounded-xl p-4 border border-slate-200">
-                                <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-black">DIGITAL ERP</span>
-                                <h4 class="text-xs font-black text-slate-900 mt-2 mb-1">Online Fee Payment Live</h4>
-                                <p class="text-[11px] text-slate-600 leading-relaxed">Pay tuition &amp; transport fees via UPI QR directly on this website.</p>
+                            <div id="news-grid" class="space-y-3">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <span class="px-2 py-0.5 rounded-full bg-indigo-50 text-brandBlue text-[9px] font-black">ADMISSIONS</span>
+                                    <h4 class="text-xs font-black text-slate-900 mt-1.5">Admissions Open for 2027–2028</h4>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">Nursery to Class X + Integrated Foundation Batch registrations open.</p>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-black">FEE PORTAL</span>
+                                    <h4 class="text-xs font-black text-slate-900 mt-1.5">UPI QR Online Fee Payment Live</h4>
+                                    <p class="text-[11px] text-slate-600 mt-0.5">Pay school fees directly from the website using Roll No &amp; DOB.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Testimonials (6 cols) -->
-                    <div class="lg:col-span-6 bg-[#FFFDF7] border border-amber-200/80 rounded-2xl p-5">
-                        <div class="flex items-center justify-between mb-3.5">
-                            <h3 class="text-base font-black text-slate-900"><i class="fa-solid fa-quote-left text-brandOrange mr-2"></i>Parent Voices</h3>
-                            <a href="#/facilities/awards" onclick="navigateTo('/facilities/awards'); return false;" class="text-[11px] font-black text-brandOrange hover:underline">Toppers Hall &rarr;</a>
-                        </div>
-                        <div id="testimonials-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div class="bg-white rounded-xl p-4 border border-amber-100">
-                                <div class="text-amber-400 text-[10px] mb-1.5"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                                <p class="text-[11px] text-slate-600 italic leading-relaxed mb-2">"Personal care for every child. Daily homework and marks updates on the ERP app are extremely helpful."</p>
-                                <div class="text-xs font-black text-slate-900">Srinivas Rao <span class="font-medium text-slate-400">• Parent, Class IX</span></div>
+                    <!-- Column 2: Toppers Snapshot (4 cols) -->
+                    <div class="lg:col-span-4 bg-white border border-amber-200/80 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3.5">
+                                <h3 class="text-sm font-black text-slate-900"><i class="fa-solid fa-crown text-amber-500 mr-2"></i>Merit &amp; Toppers Pride</h3>
+                                <a href="#/facilities/awards" onclick="navigateTo('/facilities/awards'); return false;" class="text-[11px] font-bold text-brandOrange hover:underline">Hall of Fame &rarr;</a>
                             </div>
-                            <div class="bg-white rounded-xl p-4 border border-amber-100">
-                                <div class="text-amber-400 text-[10px] mb-1.5"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
-                                <p class="text-[11px] text-slate-600 italic leading-relaxed mb-2">"IIT-JEE &amp; Navodaya foundation coaching helped my daughter master Maths &amp; Science early."</p>
-                                <div class="text-xs font-black text-slate-900">Lakshmi Narayana <span class="font-medium text-slate-400">• Parent, Class VII</span></div>
+                            <div id="home-toppers-grid" class="space-y-2.5">
+                                <div class="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-amber-500 text-white font-black flex items-center justify-center shrink-0"><i class="fa-solid fa-medal"></i></div>
+                                    <div><div class="text-xs font-black text-slate-900">100% SSC Board Pass Record</div><div class="text-[11px] text-slate-600">Consistent Distinction &amp; State Merit</div></div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-brandBlue text-white font-black flex items-center justify-center shrink-0"><i class="fa-solid fa-award"></i></div>
+                                    <div><div class="text-xs font-black text-slate-900">JNVST &amp; Olympiad Qualifiers</div><div class="text-[11px] text-slate-600">Annual District &amp; State Selections</div></div>
+                                </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Column 3: Parent Testimonials (4 cols) -->
+                    <div class="lg:col-span-4 bg-white border border-slate-200 rounded-3xl p-5 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-3.5">
+                                <h3 class="text-sm font-black text-slate-900"><i class="fa-solid fa-quote-left text-emerald-600 mr-2"></i>Parent Testimonials</h3>
+                                <a href="#/staffs" onclick="navigateTo('/staffs'); return false;" class="text-[11px] font-bold text-emerald-700 hover:underline">Meet Faculty &rarr;</a>
+                            </div>
+                            <div id="testimonials-grid" class="space-y-3">
+                                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <div class="text-amber-400 text-[10px] mb-1"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                                    <p class="text-[11px] text-slate-600 italic leading-relaxed">"Teachers give personal care to every child. Regular tests and the parent app keep us updated daily."</p>
+                                    <div class="text-xs font-black text-slate-900 mt-1">Srinivas Rao <span class="font-medium text-slate-400">&bull; Class IX Parent</span></div>
+                                </div>
+                                <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80">
+                                    <div class="text-amber-400 text-[10px] mb-1"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                                    <p class="text-[11px] text-slate-600 italic leading-relaxed">"IIT-JEE &amp; Navodaya foundation coaching helped my daughter build strong Maths &amp; Science basics."</p>
+                                    <div class="text-xs font-black text-slate-900 mt-1">Lakshmi Narayana <span class="font-medium text-slate-400">&bull; Class VII Parent</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clean Action Strip (Admissions + Fee Payment + Campus Visit) -->
+                <div class="bg-white border border-indigo-200 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col lg:flex-row items-center justify-between gap-5">
+                    <div class="space-y-1 text-center lg:text-left">
+                        <span class="px-3 py-0.5 rounded-full bg-orange-100 text-brandOrange text-[10px] font-black uppercase">Admissions 2027–2028 &bull; Digital Campus</span>
+                        <h3 class="text-xl sm:text-2xl font-black text-slate-900">Ready to Join Sri Venkateswara JY School?</h3>
+                        <p class="text-xs sm:text-sm text-slate-600">Submit your online admission form, schedule a counselling call, or pay existing student fees online in minutes.</p>
+                    </div>
+                    <div class="flex flex-wrap justify-center gap-3 shrink-0">
+                        <a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;" class="px-6 py-3 rounded-full bg-brandBlue hover:bg-blue-900 text-white text-xs font-black shadow-md transition">
+                            Online Admission Form <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </a>
+                        <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" class="px-6 py-3 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-md transition">
+                            <i class="fa-solid fa-indian-rupee-sign mr-1"></i> Pay Fees Online
+                        </a>
+                        <a href="#/contact" onclick="navigateTo('/contact'); return false;" class="px-5 py-3 rounded-full bg-slate-100 hover:bg-indigo-50 text-slate-800 text-xs font-black transition">
+                            Contact Office
+                        </a>
                     </div>
                 </div>
             </div>
@@ -728,12 +868,12 @@
     </main>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         DEDICATED PAGE VIEW (Renders specific full page for any header click)
+         DEDICATED SUB-PAGE VIEW (Mounted dynamically when Header/Nav is clicked)
     ════════════════════════════════════════════════════════════════════════ -->
     <main id="page-view" class="hidden min-h-[calc(100vh-180px)]"></main>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         LIGHT INSTITUTIONAL FOOTER (Site Map & Contact — Zero Dark Theme)
+         LIGHT INSTITUTIONAL FOOTER (Comprehensive Site Map)
     ════════════════════════════════════════════════════════════════════════ -->
     <footer class="bg-gradient-to-b from-[#EEF2FF] to-[#E0E7FF] text-slate-700 border-t border-indigo-200 pt-10 pb-8">
         <div class="screen-fit">
@@ -747,7 +887,7 @@
                         </div>
                     </div>
                     <p class="text-xs text-slate-600 leading-relaxed max-w-md">
-                        Empowering students from Nursery to Class X with conceptual clarity, IIT-JEE / NEET / Navodaya Foundation, disciplined campus culture, and Digital ERP transparency.
+                        Nursery to Class X &bull; Integrated IIT-JEE, NEET, Navodaya &amp; Olympiad Foundation &bull; Recognized by Govt. of Andhra Pradesh.
                     </p>
                     <p id="footer-address" class="text-xs font-semibold text-slate-700">
                         <i class="fa-solid fa-location-dot text-brandOrange mr-1.5"></i> Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta, AP
@@ -764,9 +904,9 @@
                     <ul class="space-y-1.5 text-xs font-semibold text-slate-600">
                         <li><a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student'); return false;" class="hover:text-brandBlue">Existing Student</a></li>
                         <li><a href="#/admission/procedure" onclick="navigateTo('/admission/procedure'); return false;" class="hover:text-brandBlue">Admission Procedure</a></li>
+                        <li><a href="#/admission/campus" onclick="navigateTo('/admission/campus'); return false;" class="hover:text-brandBlue">School Campus</a></li>
                         <li><a href="#/admission/register" onclick="navigateTo('/admission/register'); return false;" class="hover:text-brandBlue">Admission Registration</a></li>
-                        <li><a href="#/admission/fee-structure" onclick="navigateTo('/admission/fee-structure'); return false;" class="hover:text-brandBlue">Fee Structure</a></li>
-                        <li><a href="#/admission/scholarships" onclick="navigateTo('/admission/scholarships'); return false;" class="hover:text-brandBlue">Scholarships &amp; FAQ's</a></li>
+                        <li><a href="#/admission/fee-structure" onclick="navigateTo('/admission/fee-structure'); return false;" class="hover:text-brandBlue">Fee Structure &amp; FAQs</a></li>
                     </ul>
                 </div>
 
@@ -782,7 +922,7 @@
                 </div>
 
                 <div>
-                    <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider mb-3">Quick Links &amp; Portals</h4>
+                    <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider mb-3">Portals &amp; Contact</h4>
                     <ul id="footer-links-list" class="space-y-1.5 text-xs font-semibold text-slate-600">
                         <li><a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" class="text-emerald-700 font-black hover:underline">Pay Fees Online</a></li>
                         <li><a href="#/staffs" onclick="navigateTo('/staffs'); return false;" class="hover:text-brandBlue">Faculty &amp; Staffs</a></li>
@@ -801,9 +941,8 @@
     </footer>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         BOTTOM NAVIGATION BAR (Mobile App Dock + Desktop Quick Switch Dock)
+         BOTTOM NAVIGATION BAR (Desktop Capsule Dock + Mobile App Bottom Bar)
     ════════════════════════════════════════════════════════════════════════ -->
-    <!-- Desktop Fixed Bottom Navigation Bar -->
     <div id="desktop-bottom-nav" class="hidden lg:flex fixed bottom-3 left-1/2 -translate-x-1/2 z-40 items-center gap-1 bg-white/95 backdrop-blur-md border border-indigo-200 shadow-2xl rounded-full px-3 py-1.5">
         <a href="#/home" onclick="navigateTo('/home'); return false;" data-bnav="/home"
            class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
@@ -835,7 +974,6 @@
         </a>
     </div>
 
-    <!-- Mobile Fixed Bottom Navigation Bar (Safe Area Padded) -->
     <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-6px_24px_rgba(15,23,42,0.08)]"
          style="padding-bottom: env(safe-area-inset-bottom);">
         <div class="grid grid-cols-5 h-[62px] items-center px-1">
@@ -869,13 +1007,13 @@
         </div>
     </nav>
 
-    <!-- Floating WhatsApp Button -->
+    <!-- Floating WhatsApp Support -->
     <a id="whatsapp-float" href="https://wa.me/919502924437?text=Hello!%20I%20am%20contacting%20from%20the%20JY%20School%20website." target="_blank" rel="noopener"
        class="fixed bottom-20 lg:bottom-5 right-4 lg:right-5 z-40 w-12 h-12 lg:w-14 lg:h-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl flex items-center justify-center text-2xl transition-transform hover:scale-110">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
-    <!-- Dynamic Custom Page Modal -->
+    <!-- Custom Page Modal -->
     <div id="custom-page-modal" class="hidden fixed inset-0 z-[100] bg-slate-700/35 backdrop-blur-sm flex items-center justify-center p-4" onclick="closeCustomPage()">
         <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[88vh] overflow-y-auto shadow-2xl border border-indigo-100 p-6 sm:p-7" onclick="event.stopPropagation()">
             <div class="flex justify-between items-start gap-4 border-b border-slate-100 pb-4 mb-4">
@@ -904,7 +1042,6 @@
         </div>
     </div>
 
-    <!-- Scripts: Dedicated Page Templates/Router + Live CMS & Fee Payment Sync -->
     <script src="./pages.js"></script>
     <script src="./cms.js"></script>
 </body>
