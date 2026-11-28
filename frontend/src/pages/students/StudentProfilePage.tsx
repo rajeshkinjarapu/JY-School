@@ -916,14 +916,14 @@ export const StudentProfilePage: React.FC = () => {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-xs font-extrabold text-slate-900">Profile Completeness</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">{completed} of {total} key details saved</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{completed.length} of {total} key details saved</p>
                 {percentage < 100 && canEdit && (
                   <button
                     type="button"
                     onClick={openDemographicsModal}
                     className="mt-1.5 inline-flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded-md transition-colors cursor-pointer"
                   >
-                    <Plus className="w-3 h-3" /> Complete Missing ({missing})
+                    <Plus className="w-3 h-3" /> Complete Missing ({missing.length})
                   </button>
                 )}
               </div>

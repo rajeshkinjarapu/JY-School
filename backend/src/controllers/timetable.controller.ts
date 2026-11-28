@@ -88,13 +88,16 @@ export const getByTeacher = async (req: AuthRequest, res: Response, next: NextFu
 export const createSlot = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const { classId, subjectId, teacherId, day, periodNumber, startTime, endTime, room } = req.body;
 
-  if (!periodNumber) return next(createError('periodNumber is required', 400));
+  const parsedPeriod = parseInt(String(periodNumber), 10);
+  if (!classId || !subjectId || !teacherId || !day || isNaN(parsedPeriod) || parsedPeriod < 1) {
+    return next(createError('classId, subjectId, teacherId, day and valid periodNumber are required', 400));
+  }
 
-  const conflict = await checkConflict(teacherId, classId, day, periodNumber);
+  const conflict = await checkConflict(teacherId, classId, day, parsedPeriod);
   if (conflict) return next(createError(conflict, 409));
 
   const slot = await prisma.timetable.create({
-    data: { classId, subjectId, teacherId, day, periodNumber: parseInt(periodNumber), startTime: startTime || '', endTime: endTime || '', room },
+    data: { classId, subjectId, teacherId, day, periodNumber: parsedPeriod, startTime: startTime || '', endTime: endTime || '', room },
     include: {
       class: { select: { name: true, section: true } },
       subject: { select: { name: true } },
@@ -111,11 +114,19 @@ export const updateSlot = async (req: AuthRequest, res: Response, next: NextFunc
   const existing = await prisma.timetable.findUnique({ where: { id } });
   if (!existing) return next(createError('Slot not found', 404));
 
+  const parsedPeriod = periodNumber !== undefined && periodNumber !== ''
+    ? parseInt(String(periodNumber), 10)
+    : existing.periodNumber;
+
+  if (isNaN(parsedPeriod) || parsedPeriod < 1) {
+    return next(createError('Valid periodNumber is required', 400));
+  }
+
   const conflict = await checkConflict(
     teacherId || existing.teacherId,
     classId || existing.classId,
     day || existing.day,
-    periodNumber || existing.periodNumber,
+    parsedPeriod,
     id
   );
   if (conflict) return next(createError(conflict, 409));
@@ -124,7 +135,7 @@ export const updateSlot = async (req: AuthRequest, res: Response, next: NextFunc
     where: { id },
     data: {
       classId, subjectId, teacherId, day,
-      periodNumber: periodNumber ? parseInt(periodNumber) : undefined,
+      periodNumber: periodNumber !== undefined && periodNumber !== '' ? parsedPeriod : undefined,
       startTime, endTime, room,
     },
     include: {
@@ -175,8 +186,18 @@ export const generateAuto = async (req: AuthRequest, res: Response, next: NextFu
     }
 
     const getClassCategory = (name: string): string => {
-      const n = name.toLowerCase();
-      const num = parseInt(n.replace(/\D/g, ''));
+      const n = (name || '').toLowerCase().trim();
+      if (
+        n.includes('nur') ||
+        n.includes('lkg') ||
+        n.includes('ukg') ||
+        n.includes('pp') ||
+        n.includes('pre') ||
+        n.includes('kg')
+      ) {
+        return 'PRIMARY';
+      }
+      const num = parseInt(n.replace(/\D/g, ''), 10);
       if (!isNaN(num) && num <= 5) return 'PRIMARY';
       return 'HIGHER';
     };

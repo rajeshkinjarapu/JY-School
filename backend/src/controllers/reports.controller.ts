@@ -80,7 +80,10 @@ export const getMarksReport = async (req: Request, res: Response, next: NextFunc
     });
 
     const marks = await prisma.mark.findMany({
-      where: { examId: examId as string },
+      where: {
+        examId: examId as string,
+        student: { classId: classId as string }
+      },
       include: {
         student: {
           include: { user: { select: { name: true } } }
@@ -356,9 +359,13 @@ export const getMarksReportPdf = async (req: Request, res: Response, next: NextF
       return;
     }
 
+    const targetClass = await prisma.class.findUnique({ where: { id: classId as string } });
     const subjects = await prisma.subject.findMany({ where: { classId: classId as string } });
     const marks = await prisma.mark.findMany({
-      where: { examId: examId as string },
+      where: {
+        examId: examId as string,
+        student: { classId: classId as string },
+      },
       include: {
         student: { include: { user: { select: { name: true } } } },
         subject: true
@@ -375,12 +382,13 @@ export const getMarksReportPdf = async (req: Request, res: Response, next: NextF
           totalMax: 0,
         };
       }
+      const markMax = (m.maxMarks && m.maxMarks > 0) ? m.maxMarks : 50;
       studentMap[m.studentId].totalObtained += m.marksObtained;
-      studentMap[m.studentId].totalMax += m.maxMarks;
+      studentMap[m.studentId].totalMax += markMax;
     });
 
     const reportData = Object.values(studentMap).map(s => {
-      const percentage = s.totalMax > 0 ? Math.round((s.totalObtained / s.totalMax) * 100) : 0;
+      const percentage = s.totalMax > 0 ? Math.min(100, Math.round((s.totalObtained / s.totalMax) * 100)) : 0;
       let grade = 'F';
       if (percentage >= 90) grade = 'A+';
       else if (percentage >= 80) grade = 'A';
@@ -418,7 +426,7 @@ export const getMarksReportPdf = async (req: Request, res: Response, next: NextF
     doc.fontSize(12).font('Helvetica-Bold').fillColor('#ffffff').text('GRADES REGISTRY', 320, 48, { align: 'right', width: 220 });
 
     // Sub-info
-    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Exam: ${exam.name}  |  Class: ${exam.classes && exam.classes.length > 0 ? `${exam.classes[0].name}-${exam.classes[0].section}` : 'N/A'}`, 40, 110);
+    doc.fillColor('#334155').fontSize(9).font('Helvetica-Bold').text(`Exam: ${exam.name}  |  Class: ${targetClass ? `${targetClass.name}-${targetClass.section}` : 'Selected Class'}`, 40, 110);
     doc.font('Helvetica').text(`Print Date: ${new Date().toLocaleDateString()}`, 40, 125);
 
     // Table Headers
@@ -751,8 +759,8 @@ export const getStaffAttendanceReport = async (req: Request, res: Response, next
     const now = new Date();
     const m = month ? parseInt(month as string) - 1 : now.getMonth();
     const y = year ? parseInt(year as string) : now.getFullYear();
-    const start = new Date(y, m, 1);
-    const end = new Date(y, m + 1, 0, 23, 59, 59);
+    const start = new Date(Date.UTC(y, m, 1) - 6 * 60 * 60 * 1000);
+    const end = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
 
     const records = await prisma.teacherAttendance.findMany({
       where: { date: { gte: start, lte: end } },
@@ -795,8 +803,9 @@ export const getStaffAttendanceReportPdf = async (req: Request, res: Response, n
     const now = new Date();
     const m = month ? parseInt(month as string) - 1 : now.getMonth();
     const y = year ? parseInt(year as string) : now.getFullYear();
-    const start = new Date(y, m, 1); const end = new Date(y, m + 1, 0, 23, 59, 59);
-    const monthName = start.toLocaleString('default', { month: 'long' });
+    const start = new Date(Date.UTC(y, m, 1) - 6 * 60 * 60 * 1000);
+    const end = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
+    const monthName = new Date(Date.UTC(y, m, 1)).toLocaleString('default', { month: 'long', timeZone: 'UTC' });
 
     const records = await prisma.teacherAttendance.findMany({
       where: { date: { gte: start, lte: end } },

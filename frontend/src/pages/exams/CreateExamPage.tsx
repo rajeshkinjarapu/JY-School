@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash, Layers, RefreshCw, Copy, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X, Edit3, Calendar, FileText, CheckCircle, Hash, Layers, RefreshCw, Copy, Upload, Search, Sparkles, Award } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../api/axios';
 import { PageHeader } from '../../components/UI/PageHeader';
@@ -22,6 +22,7 @@ export const CreateExamPage: React.FC = () => {
   const [classes, setClasses] = useState<any[]>([]);
   const [allDbSubjects, setAllDbSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [classSearch, setClassSearch] = useState('');
 
   const [examName, setExamName] = useState(editExam ? (isDuplicate ? `${editExam.name} (Copy)` : editExam.name) : '');
   const [examCategory, setExamCategory] = useState<'JEE' | 'BOARD' | ''>('');
@@ -573,52 +574,81 @@ export const CreateExamPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-slate-50/50 animate-fade-in" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      <PageHeader 
-        title={editExam ? 'Edit Exam Configuration' : 'Create New Exam'}
+    <div className="flex flex-col h-full bg-[#F4F7FC] animate-fade-in" style={{ minHeight: 'calc(100vh - 64px)' }}>
+      <PageHeader
+        title={editExam ? (isDuplicate ? 'Duplicate Exam Configuration' : 'Edit Exam Configuration') : 'Create New Exam'}
         icon={
-          <button 
+          <button
             type="button"
-            onClick={() => navigate('/exams')}
+            onClick={() => navigate('/exams?tab=examination')}
             className="text-white hover:text-indigo-200 transition-colors cursor-pointer flex items-center justify-center"
-            title="Go Back"
+            title="Back to Examinations List"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         }
+        action={
+          <div className="flex items-center gap-2.5">
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-white text-xs font-extrabold">
+              <Layers className="w-3.5 h-3.5" />
+              {examClassIds.length} {examClassIds.length === 1 ? 'Class' : 'Classes'} Selected
+            </span>
+            <button
+              type="button"
+              onClick={() => navigate('/exams?tab=examination')}
+              className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/20 text-white text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Back to Exams
+            </button>
+          </div>
+        }
       />
 
-      <div className="flex-1 overflow-auto p-4 sm:p-6">
-        <form onSubmit={handleCreateExam} className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+      <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8">
+        <form onSubmit={handleCreateExam} className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+
           {/* Main Form Left Column */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* General Settings Card */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
-              <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5 mb-6">
-                <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg dark:bg-indigo-950/50 dark:text-indigo-400">
-                  <FileText className="w-5 h-5" />
-                </span>
-                General Details
-              </h2>
-              
-              <div className="space-y-6">
+          <div className="lg:col-span-8 space-y-6">
+
+            {/* 1. General Settings Card */}
+            <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-[0_6px_24px_-8px_rgba(79,70,229,0.1)] p-6 sm:p-7">
+              <div className="flex items-center justify-between gap-3 pb-4 mb-6 border-b border-indigo-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#EEF2FF] to-[#E0E7FF] border border-indigo-100 text-indigo-600 flex items-center justify-center shadow-xs">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-[#1E1B4B]">General Examination Details</h2>
+                    <p className="text-[11px] font-bold text-slate-500">Define exam category, official title, and commencement date</p>
+                  </div>
+                </div>
+                {editExam && !isDuplicate && (
+                  <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-black uppercase tracking-wider">
+                    Editing Existing
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-black text-slate-700 uppercase tracking-wider mb-3">Exam Category</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'JEE' ? 'border-amber-500 bg-amber-50/40 text-amber-900 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                      <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-5 h-5 text-amber-600 focus:ring-amber-500 cursor-pointer" />
-                      <div>
-                        <div className="text-sm font-black text-slate-800">JEE Mains Exams</div>
-                        <div className="text-xs font-bold text-slate-500 mt-0.5">Objective patterns</div>
+                  <label className="block text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2.5">Exam Category</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'JEE' ? 'border-amber-400 bg-gradient-to-br from-[#FFF9EB] to-[#FEF3C7]/60 text-amber-950 shadow-sm' : 'border-slate-200/80 hover:border-amber-200 bg-[#FAFBFF]'}`}>
+                      <input type="radio" name="examCategory" value="JEE" checked={examCategory === 'JEE'} onChange={() => { setExamCategory('JEE'); setBoardExamType(''); setExamName('JEE Mains Model Examination'); }} className="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-black text-[#1E1B4B] flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-500" /> JEE Mains Exams
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 mt-0.5">Objective competitive patterns</div>
                       </div>
                     </label>
-                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'BOARD' ? 'border-indigo-500 bg-indigo-50/40 text-indigo-900 shadow-sm' : 'border-slate-100 hover:border-slate-200 bg-white'}`}>
-                      <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-5 h-5 text-indigo-600 focus:ring-indigo-500 cursor-pointer" />
-                      <div>
-                        <div className="text-sm font-black text-slate-800">Board Exams</div>
-                        <div className="text-xs font-bold text-slate-500 mt-0.5">FA / SA / Finals</div>
+                    <label className={`flex items-center gap-3.5 p-4 rounded-2xl border-2 cursor-pointer transition-all ${examCategory === 'BOARD' ? 'border-[#6D28D9] bg-gradient-to-br from-[#F5F3FF] to-[#EDE9FE]/60 text-[#1E1B4B] shadow-sm' : 'border-slate-200/80 hover:border-indigo-200 bg-[#FAFBFF]'}`}>
+                      <input type="radio" name="examCategory" value="BOARD" checked={examCategory === 'BOARD'} onChange={() => { setExamCategory('BOARD'); setExamName(''); }} className="w-4 h-4 text-[#5B21B6] focus:ring-[#5B21B6] cursor-pointer" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-black text-[#1E1B4B] flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 text-[#5B21B6]" /> Board / Academic Exams
+                        </div>
+                        <div className="text-xs font-semibold text-slate-500 mt-0.5">FA / SA / Pre-Finals / Finals</div>
                       </div>
                     </label>
                   </div>
@@ -626,8 +656,8 @@ export const CreateExamPage: React.FC = () => {
 
                 {examCategory === 'BOARD' && (
                   <div className="animate-fade-in">
-                    <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Board Exam Type</label>
-                    <select value={boardExamType} onChange={(e) => { setBoardExamType(e.target.value); setExamName(e.target.value + ' Examination'); }} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white transition-all shadow-sm">
+                    <label className="block text-[11px] font-black text-slate-600 mb-2 uppercase tracking-wider">Board Exam Type</label>
+                    <select value={boardExamType} onChange={(e) => { setBoardExamType(e.target.value); setExamName(e.target.value + ' Examination'); }} className="w-full px-4 py-3 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-[#5B21B6] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all">
                       <option value="">Select Board Exam Type...</option>
                       {['FA-1', 'FA-2', 'FA-3', 'FA-4', 'SA-1', 'SA-2', 'Pre-Final'].map(t => (
                         <option key={t} value={t}>{t}</option>
@@ -637,114 +667,120 @@ export const CreateExamPage: React.FC = () => {
                 )}
 
                 <div>
-                  <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Exam Name / Title</label>
-                  <input type="text" required placeholder="e.g. Formative Assessment - 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white transition-all shadow-sm" />
+                  <label className="block text-[11px] font-black text-slate-600 mb-2 uppercase tracking-wider">Exam Name / Title</label>
+                  <input type="text" required placeholder="e.g. Formative Assessment - 1" value={examName} onChange={e => setExamName(e.target.value)} className="w-full px-4 py-3 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-[#5B21B6] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all" />
                 </div>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Exam Start Date</label>
+                    <label className="block text-[11px] font-black text-slate-600 mb-2 uppercase tracking-wider">Exam Start Date</label>
                     <div className="relative">
-                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input type="date" required value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white transition-all shadow-sm" />
+                      <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400" />
+                      <input type="date" required value={examDate} onChange={e => setExamDate(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-[#5B21B6] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 transition-all" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-2 uppercase tracking-wide">Mode Total Max Marks</label>
+                    <label className="block text-[11px] font-black text-slate-600 mb-2 uppercase tracking-wider">Active Class Max Marks</label>
                     <div className="relative">
-                      <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                      <input type="number" readOnly value={activeClassTotalMarks} className="w-full pl-12 pr-4 py-3 bg-slate-100 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-500 outline-none shadow-sm cursor-not-allowed" />
+                      <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-500" />
+                      <input type="number" readOnly value={activeClassTotalMarks} className="w-full pl-11 pr-4 py-3 bg-[#F2EDFF]/70 border border-[#DDD7F3] rounded-xl text-sm font-black text-[#5B21B6] outline-none cursor-not-allowed" />
                     </div>
-                    <p className="text-[10px] text-slate-500 font-semibold mt-2">Auto-calculated from class subjects.</p>
+                    <p className="text-[10px] text-slate-500 font-bold mt-1.5">Auto-calculated from selected class subjects.</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Progress Card Settings Card */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
-              <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5 mb-6">
-                <span className="p-1.5 bg-pink-50 text-pink-600 rounded-lg dark:bg-pink-950/50 dark:text-pink-400">
+            {/* 2. Progress Card Settings Card */}
+            <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-[0_6px_24px_-8px_rgba(79,70,229,0.1)] p-6 sm:p-7">
+              <div className="flex items-center gap-3 pb-4 mb-5 border-b border-indigo-50">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FDF2F8] to-[#FCE7F3] border border-pink-100 text-pink-600 flex items-center justify-center shadow-xs">
                   <FileText className="w-5 h-5" />
-                </span>
-                Progress Card Images (Logo & Signatures)
-              </h2>
-              <p className="text-xs font-bold text-slate-500 mb-6">These images will be displayed on the progress cards generated for this exam.</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">School Logo</label>
-                  <div className="flex flex-col items-start gap-3">
+                </div>
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-[#1E1B4B]">Progress Card Images & Branding</h2>
+                  <p className="text-[11px] font-bold text-slate-500">Displayed on printed Admit Cards & Student Progress Report Cards</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100/80 flex flex-col justify-between gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-600">School Logo</label>
+                    {logoUrl && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Uploaded</span>}
+                  </div>
+                  <div className="h-20 bg-white rounded-xl border border-dashed border-indigo-200 flex items-center justify-center p-2">
                     {logoUrl ? (
-                      <img src={resolveUrl(logoUrl)} alt="Logo" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
+                      <img src={resolveUrl(logoUrl)} alt="Logo" className="max-h-16 object-contain" />
                     ) : (
-                      <div className="h-14 w-14 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400">No Logo</div>
+                      <span className="text-[11px] font-bold text-slate-400">No Logo</span>
                     )}
-                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
-                      <Upload className="w-3.5 h-3.5" /> Upload Logo
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
-                    </label>
                   </div>
+                  <label className="w-full py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-black uppercase tracking-wider cursor-pointer transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+                    <Upload className="w-3.5 h-3.5" /> Upload Logo
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
+                  </label>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">Principal Signature</label>
-                  <div className="flex flex-col items-start gap-3">
+                <div className="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100/80 flex flex-col justify-between gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-600">Principal Sign</label>
+                    {signatureUrl && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Uploaded</span>}
+                  </div>
+                  <div className="h-20 bg-white rounded-xl border border-dashed border-indigo-200 flex items-center justify-center p-2">
                     {signatureUrl ? (
-                      <img src={resolveUrl(signatureUrl)} alt="Principal Sign" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
+                      <img src={resolveUrl(signatureUrl)} alt="Principal Sign" className="max-h-16 object-contain" />
                     ) : (
-                      <div className="h-14 w-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 text-center">No Sign</div>
+                      <span className="text-[11px] font-bold text-slate-400">No Signature</span>
                     )}
-                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
-                      <Upload className="w-3.5 h-3.5" /> Upload Sign
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'signature')} />
-                    </label>
                   </div>
+                  <label className="w-full py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-black uppercase tracking-wider cursor-pointer transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+                    <Upload className="w-3.5 h-3.5" /> Upload Sign
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'signature')} />
+                  </label>
                 </div>
 
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-slate-500">Teacher Signature</label>
-                  <div className="flex flex-col items-start gap-3">
-                    {teacherSignatureUrl ? (
-                      <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Sign" className="h-14 object-contain border border-slate-200 rounded-lg p-1 bg-white" />
-                    ) : (
-                      <div className="h-14 w-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center text-[10px] font-bold text-slate-400 text-center">No Sign</div>
-                    )}
-                    <label className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest cursor-pointer transition-colors flex items-center gap-2">
-                      <Upload className="w-3.5 h-3.5" /> Upload Sign
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'teacherSignature')} />
-                    </label>
+                <div className="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100/80 flex flex-col justify-between gap-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-600">Teacher Sign</label>
+                    {teacherSignatureUrl && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Uploaded</span>}
                   </div>
+                  <div className="h-20 bg-white rounded-xl border border-dashed border-indigo-200 flex items-center justify-center p-2">
+                    {teacherSignatureUrl ? (
+                      <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Sign" className="max-h-16 object-contain" />
+                    ) : (
+                      <span className="text-[11px] font-bold text-slate-400">No Signature</span>
+                    )}
+                  </div>
+                  <label className="w-full py-2 bg-white hover:bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl text-[11px] font-black uppercase tracking-wider cursor-pointer transition-colors flex items-center justify-center gap-1.5 shadow-xs">
+                    <Upload className="w-3.5 h-3.5" /> Upload Sign
+                    <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'teacherSignature')} />
+                  </label>
                 </div>
               </div>
             </div>
 
-            {/* Subjects Card */}
-            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8">
-              
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                <div>
-                  <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5">
-                    <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg dark:bg-emerald-950/50 dark:text-emerald-400">
-                      <Edit3 className="w-5 h-5" />
-                    </span>
-                    Subjects & Max Marks Configuration
-                  </h2>
-                  <p className="text-xs font-bold text-slate-500 mt-1">
-                    Select a class tab below to customize subjects, exam dates, and max marks for that class.
-                  </p>
+            {/* 3. Subjects & Max Marks Matrix Card */}
+            <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-[0_6px_24px_-8px_rgba(79,70,229,0.1)] p-6 sm:p-7">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 mb-5 border-b border-indigo-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] border border-emerald-100 text-emerald-600 flex items-center justify-center shadow-xs">
+                    <Edit3 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-[#1E1B4B]">Subjects & Max Marks Matrix</h2>
+                    <p className="text-[11px] font-bold text-slate-500">Pick a class tab to configure timetable dates & subject max marks</p>
+                  </div>
                 </div>
               </div>
 
-              {/* CLASS-WISE SUBJECTS MODE */}
-              <div className="space-y-6">
+              <div className="space-y-5">
                 {examClassIds.length === 0 ? (
-                  <div className="py-12 text-center bg-slate-50/60 border-2 border-dashed border-slate-200 rounded-[2rem]">
-                    <Layers className="w-8 h-8 text-slate-400 mx-auto mb-3" />
-                    <h3 className="text-sm font-black text-slate-700">No Classes Selected</h3>
-                    <p className="text-xs font-bold text-slate-500 mt-1">
-                      Select classes from the right sidebar to view and customize their subjects.
+                  <div className="py-12 text-center bg-[#F8FAFF] border-2 border-dashed border-[#DDD7F3] rounded-2xl">
+                    <Layers className="w-9 h-9 text-indigo-300 mx-auto mb-2.5" />
+                    <h3 className="text-sm font-black text-[#1E1B4B]">No Classes Selected Yet</h3>
+                    <p className="text-xs font-semibold text-slate-500 mt-1 max-w-sm mx-auto">
+                      Choose one or more classes from the Assign Classes panel on the right to configure subjects and max marks.
                     </p>
                   </div>
                 ) : (
@@ -766,15 +802,15 @@ export const CreateExamPage: React.FC = () => {
                             key={cId}
                             type="button"
                             onClick={() => setActiveClassTab(cId)}
-                            className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shrink-0 ${
+                            className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 border shrink-0 cursor-pointer ${
                               isActive
-                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-[1.02]'
-                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                                ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white border-[#5B21B6] shadow-md shadow-indigo-500/20'
+                                : 'bg-[#F8FAFF] text-slate-700 border-indigo-100 hover:bg-indigo-50/70'
                             }`}
                           >
                             <span>{clsCfg?.className || cId}</span>
-                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                              isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-600'
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-black ${
+                              isActive ? 'bg-white/20 text-white' : 'bg-white text-indigo-700 border border-indigo-100'
                             }`}>
                               {clsCfg?.subjects?.length || 0} subs
                             </span>
@@ -785,88 +821,89 @@ export const CreateExamPage: React.FC = () => {
 
                     {/* Active Class Subjects Editor */}
                     {activeClassConfig && (
-                      <div className="bg-slate-50/80 rounded-2xl border border-slate-200/80 p-5 space-y-4">
-                        <div className="flex justify-between items-center pb-3 border-b border-slate-200/60">
+                      <div className="bg-[#F8FAFF] rounded-2xl border border-[#DDD7F3] p-4 sm:p-5 space-y-4">
+                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 pb-3.5 border-b border-indigo-100">
                           <div>
-                            <h3 className="text-sm font-black text-slate-800">
-                              {activeClassConfig.className} Subjects
+                            <h3 className="text-sm font-black text-[#1E1B4B] flex items-center gap-2">
+                              <span>{activeClassConfig.className} Timetable & Marks</span>
+                              <span className="px-2.5 py-0.5 rounded-full bg-[#F2EDFF] text-[#5B21B6] border border-[#DDD7F3] text-[11px] font-black">
+                                Total: {activeClassTotalMarks}M
+                              </span>
                             </h3>
-                            <p className="text-[11px] font-bold text-slate-500 mt-0.5">
-                              Total Class Max Marks: <span className="text-indigo-600 font-black">{activeClassTotalMarks} Marks</span>
-                            </p>
                           </div>
+
                           <div className="flex flex-wrap items-center gap-2">
                             <button
                               type="button"
                               onClick={() => handleCopyClassConfigToAll(activeClassTab)}
-                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-lg text-[11px] font-black shadow-sm flex items-center gap-1"
+                              className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-[11px] font-black flex items-center gap-1 cursor-pointer transition-colors"
                               title="Copy these exact subjects and marks to all other selected classes"
                             >
                               <Copy className="w-3.5 h-3.5" /> Copy to All Classes
                             </button>
-                            <div className="flex items-center gap-2 border-l border-slate-300 pl-2 ml-1">
+                            <div className="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl border border-indigo-100">
                               <input
                                 type="number"
                                 min={1}
                                 value={bulkMarksInput}
                                 onChange={(e) => setBulkMarksInput(Number(e.target.value))}
                                 placeholder="Marks"
-                                className="w-16 px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-slate-700 text-center outline-none focus:border-indigo-400"
+                                className="w-12 px-1 py-0.5 bg-transparent text-[11px] font-black text-slate-800 text-center outline-none"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleApplyBulkMarksToClass(activeClassTab, bulkMarksInput)}
-                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                                className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-2 py-1 rounded-lg text-[10px] font-black cursor-pointer"
                               >
-                                Apply to Class
+                                Apply
                               </button>
                             </div>
                             <button
                               type="button"
                               onClick={() => handleApplyBulkMarksToClass(activeClassTab, 50)}
-                              className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              className="bg-white hover:bg-indigo-50 border border-indigo-100 text-slate-700 px-2.5 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer"
                             >
-                              Set All 50M
+                              50M
                             </button>
                             <button
                               type="button"
                               onClick={() => handleApplyBulkMarksToClass(activeClassTab, 100)}
-                              className="bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              className="bg-white hover:bg-indigo-50 border border-indigo-100 text-slate-700 px-2.5 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer"
                             >
-                              Set All 100M
+                              100M
                             </button>
                             <button
                               type="button"
                               onClick={() => addSubjectToClass(activeClassTab)}
-                              className="bg-indigo-600 text-white hover:bg-indigo-700 px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 shadow-sm"
+                              className="bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 shadow-sm cursor-pointer"
                             >
                               <Plus className="w-3.5 h-3.5" /> Add Subject
                             </button>
                             <button
                               type="button"
                               onClick={() => handleClearClassSubjects(activeClassTab)}
-                              className="bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm"
+                              className="bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 px-2.5 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer"
                             >
-                              Clear All
+                              Clear
                             </button>
                           </div>
                         </div>
 
-                        <div className="space-y-3">
+                        <div className="space-y-2.5">
                           {activeClassConfig.subjects.map((sub, i) => {
-                            const hasMarks = fullExamMarks && fullExamMarks.some((m: any) => 
-                              m.student?.classId === activeClassTab && 
+                            const hasMarks = fullExamMarks && fullExamMarks.some((m: any) =>
+                              m.student?.classId === activeClassTab &&
                               (m.subject?.name?.toUpperCase().trim() === sub.name?.toUpperCase().trim() ||
                                m.subjectId === sub.id || m.subject?.id === sub.id)
                             );
                             return (
-                              <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-xl border border-slate-200/70 shadow-sm relative group items-center">
+                              <div key={sub.id || i} className="flex flex-col sm:flex-row gap-3 bg-white p-3.5 rounded-2xl border border-indigo-100/80 shadow-xs relative group items-center">
                                 <div className="flex-1 w-full">
                                   <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject Name</label>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider">Subject Name</label>
                                     {hasMarks && (
-                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
-                                        🔒 Marks Entered (Protected)
+                                      <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1">
+                                        Marks Entered (Protected)
                                       </span>
                                     )}
                                   </div>
@@ -875,37 +912,37 @@ export const CreateExamPage: React.FC = () => {
                                     required
                                     value={sub.name}
                                     onChange={(e) => updateSubjectInClass(activeClassTab, i, 'name', e.target.value.toUpperCase())}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white uppercase"
+                                    className="w-full px-3 py-2 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-xs font-black text-slate-800 outline-none focus:border-[#5B21B6] focus:bg-white uppercase"
                                   />
                                 </div>
                                 <div className="w-full sm:w-36">
-                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
+                                  <label className="block text-[10px] font-black text-slate-400 mb-1 uppercase tracking-wider">Exam Date</label>
                                   <input
                                     type="date"
                                     value={sub.date || ''}
                                     onChange={(e) => updateSubjectInClass(activeClassTab, i, 'date', e.target.value)}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 outline-none focus:border-indigo-400 focus:bg-white"
+                                    className="w-full px-3 py-2 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-xs font-bold text-slate-800 outline-none focus:border-[#5B21B6] focus:bg-white"
                                   />
                                 </div>
                                 <div className="w-full sm:w-28">
-                                  <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
+                                  <label className="block text-[10px] font-black text-slate-400 mb-1 uppercase tracking-wider">Max Marks</label>
                                   <input
                                     type="number"
                                     required
                                     min={1}
                                     value={sub.maxMarks}
                                     onChange={(e) => updateSubjectInClass(activeClassTab, i, 'maxMarks', Number(e.target.value))}
-                                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-indigo-700 text-center outline-none focus:border-indigo-400 focus:bg-white"
+                                    className="w-full px-3 py-2 bg-[#F2EDFF]/50 border border-[#DDD7F3] rounded-xl text-xs font-black text-[#5B21B6] text-center outline-none focus:border-[#5B21B6] focus:bg-white"
                                   />
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => removeSubjectFromClass(activeClassTab, i)}
                                   disabled={hasMarks}
-                                  className={`p-1.5 rounded-lg transition-colors ${
-                                    hasMarks 
-                                      ? 'text-slate-300 cursor-not-allowed opacity-40' 
-                                      : 'text-red-400 hover:text-red-600 hover:bg-red-50'
+                                  className={`p-2 rounded-xl transition-colors sm:mt-4 cursor-pointer ${
+                                    hasMarks
+                                      ? 'text-slate-300 cursor-not-allowed opacity-40'
+                                      : 'text-rose-400 hover:text-rose-600 hover:bg-rose-50'
                                   }`}
                                   title={hasMarks ? 'Cannot remove this subject as marks are entered' : 'Remove Subject'}
                                 >
@@ -916,8 +953,8 @@ export const CreateExamPage: React.FC = () => {
                           })}
 
                           {activeClassConfig.subjects.length === 0 && (
-                            <div className="py-8 text-center text-xs font-bold text-slate-400">
-                              No subjects for this class. Click "Add Subject" to add one.
+                            <div className="py-8 text-center text-xs font-bold text-slate-400 bg-white rounded-2xl border border-dashed border-indigo-100">
+                              No subjects configured for this class. Click "Add Subject" above.
                             </div>
                           )}
                         </div>
@@ -930,81 +967,97 @@ export const CreateExamPage: React.FC = () => {
           </div>
 
           {/* Sidebar / Classes Column */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-[2rem] border border-slate-200/80 shadow-sm p-6 sm:p-8 sticky top-6">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2.5">
-                  <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg dark:bg-amber-950/50 dark:text-amber-400">
+          <div className="lg:col-span-4 space-y-6">
+            <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-[0_6px_24px_-8px_rgba(79,70,229,0.1)] p-6 sticky top-6">
+              <div className="flex items-center justify-between gap-2 pb-3 border-b border-indigo-50">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#FFF6E5] to-[#FFE4B8] border border-amber-200 text-amber-600 flex items-center justify-center">
                     <CheckCircle className="w-5 h-5" />
-                  </span>
-                  Assign Classes
-                </h2>
+                  </div>
+                  <div>
+                    <h2 className="text-base font-black text-[#1E1B4B]">Assign Classes</h2>
+                    <p className="text-[11px] font-bold text-slate-500">
+                      {examClassIds.length} of {classes.length} selected
+                    </p>
+                  </div>
+                </div>
                 <button
                   type="button"
                   onClick={handleSelectAllClasses}
-                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 underline cursor-pointer"
+                  className="px-3 py-1.5 rounded-xl bg-[#F2EDFF] hover:bg-indigo-100 text-[#5B21B6] text-[11px] font-black transition-colors cursor-pointer"
                 >
-                  {examClassIds.length === classes.length ? 'Deselect All' : 'Select All'}
+                  {examClassIds.length === classes.length ? 'Clear All' : 'Select All'}
                 </button>
               </div>
-              <p className="text-xs font-bold text-slate-500 mb-6 pl-9">
-                Select which classes will take this exam.
-              </p>
-              
-              <div className="space-y-2 max-h-[450px] overflow-y-auto pr-2 custom-scrollbar">
-                {classes.map(c => {
-                  const isSelected = examClassIds.includes(c.id);
-                  return (
-                    <div 
-                      key={c.id} 
-                      onClick={() => handleClassToggle(c.id)}
-                      className={`flex items-center justify-between p-4 cursor-pointer rounded-2xl border-2 transition-all ${
-                        isSelected 
-                          ? 'border-indigo-500 bg-indigo-50 shadow-sm' 
-                          : 'border-slate-100 bg-white hover:border-indigo-200 hover:bg-slate-50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 bg-white'}`}>
-                          {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
-                        </div>
-                        <div>
-                          <div className={`text-sm font-black ${isSelected ? 'text-indigo-900' : 'text-slate-700'}`}>
-                            {c.name} - {c.section}
+
+              {/* Search Classes */}
+              <div className="relative my-3.5">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={classSearch}
+                  onChange={(e) => setClassSearch(e.target.value)}
+                  placeholder="Filter classes..."
+                  className="w-full pl-9 pr-3 py-2 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-[#5B21B6]"
+                />
+              </div>
+
+              <div className="space-y-2 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
+                {classes
+                  .filter(c => !classSearch.trim() || `${c.name} ${c.section}`.toLowerCase().includes(classSearch.trim().toLowerCase()))
+                  .map(c => {
+                    const isSelected = examClassIds.includes(c.id);
+                    return (
+                      <div
+                        key={c.id}
+                        onClick={() => handleClassToggle(c.id)}
+                        className={`flex items-center justify-between p-3.5 cursor-pointer rounded-2xl border transition-all ${
+                          isSelected
+                            ? 'border-[#7C3AED] bg-gradient-to-r from-[#F5F3FF] to-[#EEF2FF] shadow-xs'
+                            : 'border-slate-100 bg-[#FAFBFF] hover:border-indigo-200 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${isSelected ? 'bg-[#5B21B6] border-[#5B21B6]' : 'border-slate-300 bg-white'}`}>
+                            {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                           </div>
+                          <span className={`text-sm font-black ${isSelected ? 'text-[#1E1B4B]' : 'text-slate-700'}`}>
+                            {c.name} - {c.section}
+                          </span>
                         </div>
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg border ${
+                          isSelected ? 'bg-white text-[#5B21B6] border-[#DDD7F3]' : 'bg-white text-slate-500 border-slate-200/70'
+                        }`}>
+                          {c._count?.students || 0} pupils
+                        </span>
                       </div>
-                      <div className="text-[10px] font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100">
-                        {c._count?.students || 0} students
-                      </div>
-                    </div>
-                  );
-                })}
-                
+                    );
+                  })}
+
                 {classes.length === 0 && (
-                  <div className="py-8 text-center text-xs font-semibold text-slate-500">
+                  <div className="py-8 text-center text-xs font-bold text-slate-400">
                     Loading classes or none available...
                   </div>
                 )}
               </div>
 
-              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col gap-3">
-                <button 
-                  type="submit" 
+              <div className="mt-6 pt-5 border-t border-indigo-50 flex flex-col gap-2.5">
+                <button
+                  type="submit"
                   disabled={loading}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-indigo-200 flex items-center justify-center gap-2 disabled:opacity-70"
+                  className="w-full py-3.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white rounded-xl font-black text-sm transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 disabled:opacity-70 cursor-pointer"
                 >
-                  {loading ? 'Saving...' : (
+                  {loading ? 'Saving Configuration...' : (
                     <>
-                      <Save className="w-5 h-5" /> 
-                      {editExam ? 'Save Changes' : 'Create Exam'}
+                      <Save className="w-4 h-4" />
+                      {editExam && !isDuplicate ? 'Save Exam Changes' : 'Create Examination'}
                     </>
                   )}
                 </button>
-                <button 
-                  type="button" 
-                  onClick={() => navigate('/exams')}
-                  className="w-full py-3 bg-white border-2 border-slate-200 hover:bg-slate-50 hover:border-slate-300 text-slate-600 rounded-xl font-bold text-sm transition-all flex items-center justify-center"
+                <button
+                  type="button"
+                  onClick={() => navigate('/exams?tab=examination')}
+                  className="w-full py-3 bg-[#F8FAFF] border border-indigo-100 hover:bg-indigo-50/70 text-slate-600 rounded-xl font-black text-xs uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer"
                 >
                   Cancel
                 </button>

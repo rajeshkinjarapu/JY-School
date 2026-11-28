@@ -175,16 +175,16 @@ export const ExamSettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 pb-20 animate-fade-in-up">
       {/* Top Banner */}
-      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white p-5 sm:p-6 rounded-[24px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-3.5 rounded-2xl shadow-lg shadow-indigo-600/30 text-white shrink-0">
+          <div className="bg-gradient-to-br from-[#5B21B6] to-[#7C3AED] p-3.5 rounded-2xl shadow-md shadow-indigo-500/20 text-white shrink-0">
             <Settings className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white">
+            <h3 className="text-lg sm:text-xl font-black text-[#1E1B4B]">
               Global Examination Master Settings
             </h3>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
+            <p className="text-xs font-semibold text-slate-500 mt-0.5">
               Configure institutional branding, evaluation standards, admit card rules, and result publishing policies.
             </p>
           </div>
@@ -193,7 +193,7 @@ export const ExamSettingsTab: React.FC = () => {
         <button
           onClick={handleSaveSettings}
           disabled={saving}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-600/25 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2 cursor-pointer hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 shrink-0"
+          className="bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white shadow-md shadow-indigo-500/25 px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 cursor-pointer disabled:opacity-50 shrink-0"
         >
           {saving ? <LoadingSpinner size="sm" /> : <Save className="w-4 h-4" />}
           <span>Save Master Settings</span>
@@ -201,19 +201,19 @@ export const ExamSettingsTab: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
+
         {/* SECTION 1: Institutional & Certificate Branding */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-5 lg:col-span-2">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
-            <h4 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <Building className="w-4 h-4 text-indigo-500" /> Institutional & Certificate Branding
+        <div className="bg-white p-6 rounded-[24px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.08)] border border-[#DDD7F3] space-y-5 lg:col-span-2">
+          <div className="border-b border-indigo-50 pb-3.5 flex flex-wrap items-center justify-between gap-2">
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
+              <Building className="w-4 h-4 text-[#5B21B6]" /> Institutional & Certificate Branding
             </h4>
             <span className="text-[11px] font-bold text-slate-400">Appears on all Hall Tickets & Progress Cards</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                 School Legal Name
               </label>
               <input
@@ -221,12 +221,12 @@ export const ExamSettingsTab: React.FC = () => {
                 value={schoolName}
                 onChange={(e) => setSchoolName(e.target.value)}
                 placeholder="e.g. SRI VENKATESWARA JY SCHOOL"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                 School Subtitle / Affiliation
               </label>
               <input
@@ -234,12 +234,12 @@ export const ExamSettingsTab: React.FC = () => {
                 value={schoolSubtitle}
                 onChange={(e) => setSchoolSubtitle(e.target.value)}
                 placeholder="e.g. (IIT-JEE / NEET Foundation – Olympiads)"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                 Exam Center / Campus Address
               </label>
               <input
@@ -247,23 +247,22 @@ export const ExamSettingsTab: React.FC = () => {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="e.g. Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
               />
             </div>
           </div>
 
-          {/* Media Uploads: Logo, Principal Signature, Teacher Signature */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-3 border-t border-slate-100 dark:border-slate-800">
-            {/* School Logo */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+          {/* Media Uploads */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4 border-t border-indigo-50">
+            <div className="bg-[#F8FAFF] p-4 rounded-2xl border border-indigo-100 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-indigo-500" /> School Official Logo
+                <span className="text-xs font-black text-[#1E1B4B] uppercase tracking-wider flex items-center gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5 text-[#5B21B6]" /> School Official Logo
                 </span>
-                {logoUrl && <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Loaded</span>}
+                {logoUrl && <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black">Loaded</span>}
               </div>
 
-              <div className="h-20 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
+              <div className="h-20 bg-white border border-dashed border-indigo-200 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
                 {resolveUrl(logoUrl) ? (
                   <img src={resolveUrl(logoUrl)} alt="Logo Preview" className="max-h-full max-w-full object-contain" />
                 ) : (
@@ -271,23 +270,22 @@ export const ExamSettingsTab: React.FC = () => {
                 )}
               </div>
 
-              <label className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
+              <label className="w-full bg-white hover:bg-[#F2EDFF] border border-indigo-200 text-[#5B21B6] py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
                 <Upload className="w-3.5 h-3.5" />
                 <span>{uploadingLogo ? 'Uploading...' : 'Upload New Logo'}</span>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'logo')} />
               </label>
             </div>
 
-            {/* Principal Signature */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+            <div className="bg-[#F8FAFF] p-4 rounded-2xl border border-indigo-100 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <PenTool className="w-3.5 h-3.5 text-orange-500" /> Principal Signature & Seal
+                <span className="text-xs font-black text-[#1E1B4B] uppercase tracking-wider flex items-center gap-1.5">
+                  <PenTool className="w-3.5 h-3.5 text-amber-500" /> Principal Signature & Seal
                 </span>
-                {principalSignatureUrl && <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Loaded</span>}
+                {principalSignatureUrl && <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black">Loaded</span>}
               </div>
 
-              <div className="h-20 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
+              <div className="h-20 bg-white border border-dashed border-indigo-200 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
                 {resolveUrl(principalSignatureUrl) ? (
                   <img src={resolveUrl(principalSignatureUrl)} alt="Principal Signature" className="max-h-full max-w-full object-contain mix-blend-multiply" />
                 ) : (
@@ -295,23 +293,22 @@ export const ExamSettingsTab: React.FC = () => {
                 )}
               </div>
 
-              <label className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
+              <label className="w-full bg-white hover:bg-[#F2EDFF] border border-indigo-200 text-[#5B21B6] py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
                 <Upload className="w-3.5 h-3.5" />
                 <span>{uploadingPrincipalSign ? 'Uploading...' : 'Upload Principal Sign'}</span>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'principal')} />
               </label>
             </div>
 
-            {/* Teacher Signature */}
-            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 flex flex-col justify-between">
+            <div className="bg-[#F8FAFF] p-4 rounded-2xl border border-indigo-100 flex flex-col justify-between">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-xs font-black text-[#1E1B4B] uppercase tracking-wider flex items-center gap-1.5">
                   <PenTool className="w-3.5 h-3.5 text-blue-500" /> Class Teacher Signature
                 </span>
-                {teacherSignatureUrl && <span className="text-[10px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Loaded</span>}
+                {teacherSignatureUrl && <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-black">Loaded</span>}
               </div>
 
-              <div className="h-20 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
+              <div className="h-20 bg-white border border-dashed border-indigo-200 rounded-xl flex items-center justify-center p-2 mb-3 overflow-hidden">
                 {resolveUrl(teacherSignatureUrl) ? (
                   <img src={resolveUrl(teacherSignatureUrl)} alt="Teacher Signature" className="max-h-full max-w-full object-contain" />
                 ) : (
@@ -319,7 +316,7 @@ export const ExamSettingsTab: React.FC = () => {
                 )}
               </div>
 
-              <label className="w-full bg-white dark:bg-slate-800 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
+              <label className="w-full bg-white hover:bg-[#F2EDFF] border border-indigo-200 text-[#5B21B6] py-2 rounded-xl text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-xs transition-colors">
                 <Upload className="w-3.5 h-3.5" />
                 <span>{uploadingTeacherSign ? 'Uploading...' : 'Upload Teacher Sign'}</span>
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, 'teacher')} />
@@ -329,22 +326,22 @@ export const ExamSettingsTab: React.FC = () => {
         </div>
 
         {/* SECTION 2: Evaluation & Grading Standards */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-5">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h4 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <Award className="w-4 h-4 text-purple-500" /> Evaluation & Grading Standards
+        <div className="bg-white p-6 rounded-[24px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.08)] border border-[#DDD7F3] space-y-5">
+          <div className="border-b border-indigo-50 pb-3">
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
+              <Award className="w-4 h-4 text-[#5B21B6]" /> Evaluation & Grading Standards
             </h4>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                 Primary Grading Scale Mode
               </label>
               <select
                 value={examGradingSystem}
                 onChange={(e) => setExamGradingSystem(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all cursor-pointer"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all cursor-pointer"
               >
                 <option value="CBSE Standard (A1-E2)">CBSE / CCE Standard (A1, A2, B1, B2, C1, C2, D, E)</option>
                 <option value="State Board Standard (A+, A, B+, B, C, D)">State Board Standard (A+, A, B+, B, C, D)</option>
@@ -355,7 +352,7 @@ export const ExamSettingsTab: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+                <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                   Default Pass Marks (%)
                 </label>
                 <div className="relative">
@@ -365,14 +362,14 @@ export const ExamSettingsTab: React.FC = () => {
                     max={100}
                     value={examPassMarks}
                     onChange={(e) => setExamPassMarks(Number(e.target.value))}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                    className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black text-slate-400">%</span>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+                <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                   Grace Marks Allowance
                 </label>
                 <input
@@ -381,30 +378,30 @@ export const ExamSettingsTab: React.FC = () => {
                   max={20}
                   value={examGraceMarks}
                   onChange={(e) => setExamGraceMarks(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all"
+                  className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
                 />
               </div>
             </div>
 
-            <div className="p-3 bg-purple-50 dark:bg-purple-950/20 rounded-xl border border-purple-100 dark:border-purple-900/30">
-              <p className="text-[11px] font-bold text-purple-800 dark:text-purple-300">
-                💡 Pass Threshold Notice: Students scoring below {examPassMarks}% will be marked as "Needs Focus / Failed" on printed Progress Cards and report cards automatically.
+            <div className="p-3.5 bg-[#F2EDFF]/70 rounded-xl border border-[#DDD7F3]">
+              <p className="text-[11px] font-bold text-[#5B21B6]">
+                Pass Threshold Notice: Students scoring below {examPassMarks}% will be marked as "Needs Focus / Failed" on printed Progress Cards and report cards automatically.
               </p>
             </div>
           </div>
         </div>
 
         {/* SECTION 3: Hall Ticket & Admit Card Rules */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-5">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h4 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <div className="bg-white p-6 rounded-[24px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.08)] border border-[#DDD7F3] space-y-5">
+          <div className="border-b border-indigo-50 pb-3">
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
               <FileText className="w-4 h-4 text-amber-500" /> Hall Ticket & Admit Card Rules
             </h4>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-1.5">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-slate-400" /> Default Examination Timings
               </label>
               <input
@@ -412,12 +409,12 @@ export const ExamSettingsTab: React.FC = () => {
                 value={examDefaultTiming}
                 onChange={(e) => setExamDefaultTiming(e.target.value)}
                 placeholder="09:30 AM - 12:30 PM"
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-xs font-bold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 block">
+              <label className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-2 block">
                 Default Important Instructions for Candidates
               </label>
               <textarea
@@ -425,82 +422,82 @@ export const ExamSettingsTab: React.FC = () => {
                 value={examAdmitCardInstructions}
                 onChange={(e) => setExamAdmitCardInstructions(e.target.value)}
                 placeholder="Enter line-by-line instructions..."
-                className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all resize-y leading-relaxed"
+                className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl p-3 text-xs font-semibold text-[#1E1B4B] focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] outline-none transition-all resize-y leading-relaxed"
               />
               <span className="text-[10px] text-slate-400 mt-1 block">These instructions automatically populate all newly created Admit Cards.</span>
             </div>
 
-            <label className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div>
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Show Grading Scale on Hall Tickets</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Show Grading Scale on Hall Tickets</span>
                 <span className="text-[11px] text-slate-500">Prints the grading breakdown (A1, A2...) on the reverse/footer</span>
               </div>
               <input
                 type="checkbox"
                 checked={examShowGradesOnAdmitCard}
                 onChange={(e) => setExamShowGradesOnAdmitCard(e.target.checked)}
-                className="w-4 h-4 text-amber-500 rounded focus:ring-amber-400"
+                className="w-4 h-4 text-[#5B21B6] rounded focus:ring-[#5B21B6]"
               />
             </label>
           </div>
         </div>
 
         {/* SECTION 4: Result Publication & Privacy Controls */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-5">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h4 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-emerald-500" /> Result Publication & Privacy Rules
+        <div className="bg-white p-6 rounded-[24px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.08)] border border-[#DDD7F3] space-y-5">
+          <div className="border-b border-indigo-50 pb-3">
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
+              <CheckSquare className="w-4 h-4 text-emerald-600" /> Result Publication & Privacy Rules
             </h4>
           </div>
 
           <div className="space-y-3">
-            <label className="flex items-center justify-between p-3.5 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div className="pr-4">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Show Class Rank to Students / Parents</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Show Class Rank to Students / Parents</span>
                 <span className="text-[11px] font-semibold text-slate-500">Display #1, #2 class rank in student app and printed progress cards</span>
               </div>
-              <div 
+              <div
                 onClick={(e) => { e.preventDefault(); setExamShowRank(!examShowRank); }}
-                className={`relative inline-block w-12 h-6 rounded-full transition-colors ${examShowRank ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`relative inline-block w-12 h-6 rounded-full transition-colors shrink-0 ${examShowRank ? 'bg-emerald-500' : 'bg-slate-300'}`}
               >
                 <span className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform ${examShowRank ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
             </label>
 
-            <label className="flex items-center justify-between p-3.5 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div className="pr-4">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Print Student Photos on Cards</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Print Student Photos on Cards</span>
                 <span className="text-[11px] font-semibold text-slate-500">Display student passport photo on Progress Cards and Hall Tickets</span>
               </div>
-              <div 
+              <div
                 onClick={(e) => { e.preventDefault(); setExamShowStudentPhoto(!examShowStudentPhoto); }}
-                className={`relative inline-block w-12 h-6 rounded-full transition-colors ${examShowStudentPhoto ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`relative inline-block w-12 h-6 rounded-full transition-colors shrink-0 ${examShowStudentPhoto ? 'bg-emerald-500' : 'bg-slate-300'}`}
               >
                 <span className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform ${examShowStudentPhoto ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
             </label>
 
-            <label className="flex items-center justify-between p-3.5 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div className="pr-4">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Auto-Publish Results on Marks Entry</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Auto-Publish Results on Marks Entry</span>
                 <span className="text-[11px] font-semibold text-slate-500">Make results visible to students immediately after marks entry</span>
               </div>
-              <div 
+              <div
                 onClick={(e) => { e.preventDefault(); setExamAutoPublish(!examAutoPublish); }}
-                className={`relative inline-block w-12 h-6 rounded-full transition-colors ${examAutoPublish ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`relative inline-block w-12 h-6 rounded-full transition-colors shrink-0 ${examAutoPublish ? 'bg-emerald-500' : 'bg-slate-300'}`}
               >
                 <span className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform ${examAutoPublish ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
             </label>
 
-            <label className="flex items-center justify-between p-3.5 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div className="pr-4">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Strict Moderation (Marks Freeze)</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Strict Moderation (Marks Freeze)</span>
                 <span className="text-[11px] font-semibold text-slate-500">Lock marks editing after publication to prevent unauthorized changes</span>
               </div>
-              <div 
+              <div
                 onClick={(e) => { e.preventDefault(); setExamStrictModeration(!examStrictModeration); }}
-                className={`relative inline-block w-12 h-6 rounded-full transition-colors ${examStrictModeration ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`relative inline-block w-12 h-6 rounded-full transition-colors shrink-0 ${examStrictModeration ? 'bg-emerald-500' : 'bg-slate-300'}`}
               >
                 <span className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform ${examStrictModeration ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
@@ -509,33 +506,33 @@ export const ExamSettingsTab: React.FC = () => {
         </div>
 
         {/* SECTION 5: Parent Communication & SMS Automation */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-5">
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3">
-            <h4 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <div className="bg-white p-6 rounded-[24px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.08)] border border-[#DDD7F3] space-y-5">
+          <div className="border-b border-indigo-50 pb-3">
+            <h4 className="text-sm font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-rose-500" /> Parent Communication & SMS Alerts
             </h4>
           </div>
 
           <div className="space-y-4">
-            <label className="flex items-center justify-between p-3.5 border border-slate-100 dark:border-slate-800 rounded-xl cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+            <label className="flex items-center justify-between p-3.5 border border-indigo-100 bg-[#F8FAFF] rounded-xl cursor-pointer hover:bg-white transition-colors">
               <div className="pr-4">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Auto-Send Marks SMS to Parents</span>
+                <span className="text-xs font-black text-[#1E1B4B] block">Auto-Send Marks SMS to Parents</span>
                 <span className="text-[11px] font-semibold text-slate-500">Automatically trigger marks summary SMS to parents on result publish</span>
               </div>
-              <div 
+              <div
                 onClick={(e) => { e.preventDefault(); setExamSendSms(!examSendSms); }}
-                className={`relative inline-block w-12 h-6 rounded-full transition-colors ${examSendSms ? 'bg-rose-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                className={`relative inline-block w-12 h-6 rounded-full transition-colors shrink-0 ${examSendSms ? 'bg-rose-500' : 'bg-slate-300'}`}
               >
                 <span className={`absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform transform ${examSendSms ? 'translate-x-6' : 'translate-x-0'}`} />
               </div>
             </label>
 
             {/* Live SMS Template Preview */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+            <div className="p-4 bg-[#F8FAFF] rounded-2xl border border-indigo-100 space-y-2">
+              <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#1E1B4B]">
                 <Smartphone className="w-4 h-4 text-rose-500" /> Live SMS Message Format
               </div>
-              <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 font-mono text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed shadow-xs">
+              <div className="p-3 bg-white rounded-xl border border-indigo-100 font-mono text-[11px] text-slate-700 leading-relaxed shadow-xs">
                 "Dear Parent, marks for <strong>BORA GEHENAJNA</strong> in <strong>JEE MAINS MODEL EXAMINATION</strong>: Maths: 100, Physics: 96, Chemistry: 100. Total: 296/300 (98.7%). Rank: #1. - {schoolName}"
               </div>
               <p className="text-[10px] text-slate-400">This format matches the approved DLT SMS gateway template configured on the server.</p>
@@ -550,7 +547,7 @@ export const ExamSettingsTab: React.FC = () => {
         <button
           onClick={handleSaveSettings}
           disabled={saving}
-          className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-xl shadow-indigo-600/30 px-8 py-3.5 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 flex items-center gap-2.5 cursor-pointer hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+          className="bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white shadow-xl shadow-indigo-500/30 px-7 py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2.5 cursor-pointer hover:-translate-y-0.5 disabled:opacity-50"
         >
           {saving ? <LoadingSpinner size="sm" /> : <Save className="w-5 h-5" />}
           <span>Save Master Settings</span>

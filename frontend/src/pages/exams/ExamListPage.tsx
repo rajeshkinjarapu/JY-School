@@ -7,7 +7,8 @@ import { useAuth } from '../../hooks/useAuth';
 import {
   Plus, Edit3, Trash2, ClipboardList, BookOpen, Layers, CheckSquare,
   Clock, Award, FileText, Settings, Play, ShieldAlert, HelpCircle, Save, X, Calendar, ExternalLink,
-  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key, Upload, Link as LinkIcon, RefreshCw, Copy
+  MapPin, FileSpreadsheet, Download, Printer, CheckCircle, MessageSquare, ChevronDown, Key, Upload, Link as LinkIcon, RefreshCw, Copy,
+  Search, ArrowLeft, LayoutGrid, List, Check, Sparkles, ArrowRight
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Link, useSearchParams, useOutletContext, useNavigate } from 'react-router-dom';
@@ -25,41 +26,61 @@ import { ExamSettingsTab } from './ExamSettingsTab';
 const ExamCard: React.FC<{
   label: string;
   icon: React.ElementType;
-  gradient: string;
-  glow: string;
+  bgGradient: string;
+  iconGradient: string;
+  borderClass: string;
+  titleColor?: string;
+  badgeText?: string;
+  badgeClass?: string;
   onClick: () => void;
   sub?: string;
-}> = ({ label, icon: Icon, gradient, glow, onClick, sub }) => {
-  const match = gradient.match(/#([0-9a-fA-F]{6})/);
-  const primaryColor = match ? match[0] : '#6366f1';
-  
+}> = ({
+  label,
+  icon: Icon,
+  bgGradient,
+  iconGradient,
+  borderClass,
+  titleColor = 'text-[#1E1B4B]',
+  badgeText,
+  badgeClass = 'bg-white/80 text-indigo-700 border-indigo-100',
+  onClick,
+  sub,
+}) => {
   return (
-    <div onClick={onClick} className="group relative overflow-hidden rounded-2xl p-4 sm:p-5 min-h-[105px] sm:min-h-[135px] flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 cursor-pointer shadow-md hover:shadow-xl border border-white/10"
-         style={{ background: gradient, boxShadow: `0 6px 18px -3px ${primaryColor}60` }}>
-      
-      {/* Background Watermark Icon */}
-      <div className="absolute -right-2 -bottom-2 opacity-15 group-hover:opacity-25 transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-white">
-        <Icon className="w-14 h-14 sm:w-20 sm:h-20" />
+    <div
+      onClick={onClick}
+      className={`group relative overflow-hidden rounded-[22px] p-4 sm:p-5 min-h-[132px] sm:min-h-[148px] flex flex-col justify-between transition-all duration-300 hover:-translate-y-1 cursor-pointer border shadow-[0_6px_22px_-8px_rgba(79,70,229,0.14)] hover:shadow-[0_14px_30px_-8px_rgba(79,70,229,0.22)] ${bgGradient} ${borderClass}`}
+    >
+      {/* Subtle Light Gloss & Watermark */}
+      <div className="absolute -right-3 -bottom-3 opacity-[0.07] group-hover:opacity-[0.13] transition-all duration-500 transform group-hover:scale-110 pointer-events-none text-indigo-950">
+        <Icon className="w-20 h-20 sm:w-24 sm:h-24" />
       </div>
-        
-      {/* Top right gradient orb */}
-      <div className="absolute -top-8 -right-8 w-16 h-16 bg-white/20 blur-xl rounded-full group-hover:bg-white/30 transition-all" />
+      <div className="absolute -top-10 -right-10 w-24 h-24 bg-white/55 blur-xl rounded-full pointer-events-none" />
 
-      <div className="relative z-10 flex flex-col justify-between h-full gap-3">
-        <div className="flex items-start justify-between">
-          <div className="p-2 sm:p-2.5 rounded-xl bg-white/20 backdrop-blur-md shadow-sm border border-white/20">
-            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-          </div>
-          <div className="p-1.5 sm:p-1.5 rounded-full bg-white/10 group-hover:bg-white/20 backdrop-blur-sm transition-all border border-white/10">
-            <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </div>
+      <div className="relative z-10 flex items-start justify-between gap-2">
+        <div className={`w-11 h-11 rounded-2xl ${iconGradient} text-white flex items-center justify-center shadow-md transition-transform duration-300 group-hover:scale-105`}>
+          <Icon className="w-5 h-5" />
         </div>
-        <div>
-          <h3 className="text-xs sm:text-base font-black text-white tracking-wide leading-snug truncate">{label}</h3>
-          {sub && <p className="text-[10px] sm:text-xs text-white/90 font-extrabold flex items-center gap-1 truncate mt-1"><span className="w-1 h-1 rounded-full bg-white/70 shrink-0"/>{sub}</p>}
+        <div className="flex items-center gap-1.5">
+          {badgeText && (
+            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-xs ${badgeClass}`}>
+              {badgeText}
+            </span>
+          )}
+          <span className="w-7 h-7 rounded-full bg-white/85 group-hover:bg-white text-slate-600 group-hover:text-indigo-700 flex items-center justify-center shadow-xs border border-white transition-all">
+            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+          </span>
         </div>
+      </div>
+
+      <div className="relative z-10 mt-3">
+        <h3 className={`text-sm sm:text-[15px] font-black tracking-tight leading-snug truncate ${titleColor}`}>{label}</h3>
+        {sub && (
+          <p className="text-[11px] sm:text-xs text-slate-600 font-bold flex items-center gap-1.5 truncate mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-current opacity-50 shrink-0" />
+            {sub}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -84,9 +105,7 @@ export const ExamListPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'examination' | 'exam-plan' | 'question-group' | 'question-bank' | 'question-papers' | 'add-online-exam' | 'online-exams' | 'written-exam' | 'admit-card' | 'results' | 'progress-card' | 'jee-progress-card' | 'settings' | 'slip-tests' | 'status-overview' | ''>('');
 
   useEffect(() => {
-    if (tabParam) {
-      setActiveTab(tabParam as any);
-    }
+    setActiveTab((tabParam as any) || '');
   }, [tabParam]);
 
   useEffect(() => {
@@ -149,6 +168,19 @@ export const ExamListPage: React.FC = () => {
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [excelExamId, setExcelExamId] = useState('');
   const [expandedExam, setExpandedExam] = useState<string | null>(null);
+
+  // Directory & Question Papers UI Filters
+  const [examSearch, setExamSearch] = useState('');
+  const [examCategoryFilter, setExamCategoryFilter] = useState<'ALL' | 'BOARD' | 'NAVODAYA' | 'JEE' | 'OTHER'>('ALL');
+  const [examViewMode, setExamViewMode] = useState<'grid' | 'list'>('grid');
+  const [qpSearch, setQpSearch] = useState('');
+  const [qpStatusFilter, setQpStatusFilter] = useState<'ALL' | 'PUBLISHED' | 'APPROVED' | 'PENDING_APPROVAL' | 'REJECTED'>('ALL');
+  const [qpClassFilter, setQpClassFilter] = useState('');
+
+  const selectTab = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    setSearchParams(tab ? { tab } : {});
+  };
 
   const fetchExams = async (silent = false) => {
     try {
@@ -1328,102 +1360,411 @@ export const ExamListPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50 w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      
-      {/* BEAUTIFUL PAGE HEADING BANNER */}
-      <PageHeader 
+    <div className="flex flex-col h-full bg-[#F4F7FC] w-full" style={{ minHeight: 'calc(100vh - 64px)' }}>
+
+      {/* UNIFIED ERP EXAMINATION HEADER */}
+      <PageHeader
         title={
-          activeTab === 'status' || activeTab === 'status-overview' ? 'Status Overview' :
-          activeTab === 'written-exam' ? 'Marks Entry' :
-          activeTab === 'progress-card' ? 'Progress Cards' :
-          activeTab === 'jee-progress-card' ? 'Progress Cards' :
-          activeTab === 'results' ? 'Exam Results' :
-          activeTab === 'admit-card' ? 'Admit Cards' :
-          activeTab === 'examination' ? 'Examinations List' :
-          'Examination Dashboard'
+          activeTab === 'status-overview' ? 'Status Overview' :
+          activeTab === 'written-exam' ? 'Marks Upload & Entry' :
+          activeTab === 'progress-card' || activeTab === 'jee-progress-card' ? 'Progress Report Cards' :
+          activeTab === 'results' ? 'Exam Results & Ranks' :
+          activeTab === 'admit-card' ? 'Admit Cards & Hall Tickets' :
+          activeTab === 'examination' ? 'Examinations Directory' :
+          activeTab === 'question-papers' ? 'Question Papers & Answer Keys' :
+          activeTab === 'settings' ? 'Examination Master Settings' :
+          'Examination Hub'
         }
         icon={<ClipboardList className="w-5 h-5" />}
+        action={
+          <div className="flex items-center gap-2">
+            {activeTab && (
+              <button
+                type="button"
+                onClick={() => selectTab('')}
+                className="px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>All Modules</span>
+              </button>
+            )}
+            {isAdmin && (activeTab === '' || activeTab === 'examination') && (
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="px-4 py-2 rounded-xl bg-white text-[#5B21B6] hover:bg-indigo-50 text-xs font-black flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Create Exam
+              </button>
+            )}
+          </div>
+        }
       />
+
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Persistent Quick Module Switcher Bar when inside any tab */}
+        {activeTab !== '' && (
+          <div className="bg-white rounded-[20px] border border-[#DDD7F3] shadow-[0_4px_18px_-6px_rgba(79,70,229,0.1)] p-2 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+            <button
+              type="button"
+              onClick={() => selectTab('')}
+              className="px-3.5 py-2 rounded-xl text-xs font-black text-slate-600 hover:bg-[#F2EDFF] hover:text-[#5B21B6] transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+            >
+              <LayoutGrid className="w-3.5 h-3.5" /> Hub
+            </button>
+            <div className="w-px h-5 bg-indigo-100 shrink-0" />
+            {[
+              ...(isAdmin ? [{ id: 'examination', label: 'Exams List', icon: ClipboardList }] : []),
+              { id: 'admit-card', label: 'Admit Card', icon: FileText },
+              { id: 'question-papers', label: 'Question Papers', icon: Layers },
+              ...(isAdminOrTeacher ? [{ id: 'written-exam', label: 'Marks Upload', icon: Edit3 }] : []),
+              { id: 'results', label: 'Results', icon: Award },
+              { id: 'jee-progress-card', label: 'Progress Card', icon: FileSpreadsheet },
+              ...(isAdmin ? [
+                { id: 'status-overview', label: 'Status Overview', icon: ShieldAlert },
+                { id: 'settings', label: 'Settings', icon: Settings },
+              ] : []),
+            ].map((item) => {
+              const Icon = item.icon;
+              const isSelected = activeTab === item.id || (item.id === 'jee-progress-card' && activeTab === 'progress-card');
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => selectTab(item.id as any)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-sm shadow-indigo-500/25'
+                      : 'text-slate-600 hover:bg-[#F8FAFF] hover:text-[#5B21B6]'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowSmsModal(true)}
+                className="ml-auto px-3.5 py-2 rounded-xl text-xs font-black bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> Send SMS
+              </button>
+            )}
+          </div>
+        )}
+
         {!activeTab && (
-          <div>
-            {/* Unified Tools Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-5">
-              {isAdmin && <ExamCard label="Examinations List" sub="Manage exams" icon={ClipboardList} gradient="linear-gradient(135deg, #6366f1, #4f46e5)" glow="rgba(99,102,241,0.4)" onClick={() => setActiveTab('examination')} />}
+          <div className="space-y-6 animate-fade-in">
+            {/* ERP Lifecycle Workflow Strip (Non-KPI interactive pipeline) */}
+            {isAdminOrTeacher && (
+              <div className="bg-white rounded-[22px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.12)] p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#5B21B6] to-[#7C3AED] text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-black text-[#1E1B4B]">Examination Management Workflow</h2>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                      End-to-end ERP exam pipeline — from scheduling & hall tickets to marks entry & parent SMS alerts
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 text-[11px] font-black">
+                  {[
+                    { step: '1', text: 'Create Exam', tab: isAdmin ? 'examination' : '' },
+                    { step: '2', text: 'Papers', tab: 'question-papers' },
+                    { step: '3', text: 'Admit Cards', tab: 'admit-card' },
+                    { step: '4', text: 'Marks', tab: 'written-exam' },
+                    { step: '5', text: 'Results', tab: 'results' },
+                  ].map((s, idx) => (
+                    <React.Fragment key={s.step}>
+                      <button
+                        type="button"
+                        onClick={() => s.tab && selectTab(s.tab as any)}
+                        className="px-2.5 py-1.5 rounded-xl bg-[#F8FAFF] hover:bg-[#F2EDFF] text-[#1E1B4B] hover:text-[#5B21B6] border border-indigo-100 flex items-center gap-1.5 transition-colors cursor-pointer"
+                      >
+                        <span className="w-4 h-4 rounded-full bg-[#5B21B6] text-white text-[9px] flex items-center justify-center font-black">{s.step}</span>
+                        {s.text}
+                      </button>
+                      {idx < 4 && <span className="text-slate-300 font-bold hidden sm:inline">→</span>}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Unified Light Pastel ERP Modules Grid (Zero Black / Dark Cards) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+              {isAdmin && (
+                <ExamCard
+                  label="Examinations List"
+                  sub="Create, edit & schedule exams"
+                  icon={ClipboardList}
+                  bgGradient="bg-gradient-to-br from-[#F2EDFF] via-[#EDE9FE] to-[#DDD6FE]"
+                  iconGradient="bg-gradient-to-br from-[#6366F1] to-[#4F46E5]"
+                  borderClass="border-[#D8CEF6]"
+                  badgeText={`${exams.length} Exams`}
+                  badgeClass="bg-white/90 text-indigo-700 border-indigo-200"
+                  onClick={() => selectTab('examination')}
+                />
+              )}
+
               {isAdminOrTeacher && (
                 <>
-                  <ExamCard label="Admit Card" sub="Hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
-                  <ExamCard label="Question Papers" sub="Manage papers" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-papers')} />
-                  <ExamCard label="Marks Upload" sub="Upload marks" icon={Edit3} gradient="linear-gradient(135deg, #10b981, #059669)" glow="rgba(16,185,129,0.4)" onClick={() => setActiveTab('written-exam')} />
-                  <ExamCard label="Results" sub="Grade sheets" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
-                  <ExamCard label="Progress Card" sub="Detailed progress" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
+                  <ExamCard
+                    label="Admit Card"
+                    sub="Generate & print hall tickets"
+                    icon={FileText}
+                    bgGradient="bg-gradient-to-br from-[#FFF8EB] via-[#FFEDD5] to-[#FED7AA]/75"
+                    iconGradient="bg-gradient-to-br from-[#F59E0B] to-[#EA580C]"
+                    borderClass="border-amber-200/80"
+                    badgeText="Hall Tickets"
+                    badgeClass="bg-white/90 text-amber-700 border-amber-200"
+                    onClick={() => selectTab('admit-card')}
+                  />
+                  <ExamCard
+                    label="Question Papers"
+                    sub="Manage papers & answer keys"
+                    icon={Layers}
+                    bgGradient="bg-gradient-to-br from-[#ECFEFF] via-[#E0F7FA] to-[#CFFAFE]"
+                    iconGradient="bg-gradient-to-br from-[#0891B2] to-[#0284C7]"
+                    borderClass="border-cyan-200/80"
+                    badgeText="Repository"
+                    badgeClass="bg-white/90 text-cyan-700 border-cyan-200"
+                    onClick={() => selectTab('question-papers')}
+                  />
+                  <ExamCard
+                    label="Marks Upload"
+                    sub="Enter grid marks or upload Excel"
+                    icon={Edit3}
+                    bgGradient="bg-gradient-to-br from-[#ECFDF5] via-[#D1FAE5] to-[#A7F3D0]/70"
+                    iconGradient="bg-gradient-to-br from-[#10B981] to-[#059669]"
+                    borderClass="border-emerald-200/80"
+                    badgeText="Gradebook"
+                    badgeClass="bg-white/90 text-emerald-700 border-emerald-200"
+                    onClick={() => selectTab('written-exam')}
+                  />
+                  <ExamCard
+                    label="Results & Ranks"
+                    sub="Class merit lists & grade sheets"
+                    icon={Award}
+                    bgGradient="bg-gradient-to-br from-[#EFF6FF] via-[#DBEAFE] to-[#BFDBFE]/80"
+                    iconGradient="bg-gradient-to-br from-[#0EA5E9] to-[#2563EB]"
+                    borderClass="border-blue-200/80"
+                    badgeText="Merit List"
+                    badgeClass="bg-white/90 text-blue-700 border-blue-200"
+                    onClick={() => selectTab('results')}
+                  />
+                  <ExamCard
+                    label="Progress Card"
+                    sub="Detailed A4 & JEE report cards"
+                    icon={FileSpreadsheet}
+                    bgGradient="bg-gradient-to-br from-[#FFF1F2] via-[#FFE4E6] to-[#FECDD3]/80"
+                    iconGradient="bg-gradient-to-br from-[#F43F5E] to-[#E11D48]"
+                    borderClass="border-rose-200/80"
+                    badgeText="Reports"
+                    badgeClass="bg-white/90 text-rose-700 border-rose-200"
+                    onClick={() => selectTab('jee-progress-card')}
+                  />
                 </>
               )}
+
               {isAdmin && (
                 <>
-                  <ExamCard label="Send Marks SMS" sub="SMS parents" icon={MessageSquare} gradient="linear-gradient(135deg, #ec4899, #db2777)" glow="rgba(236,72,153,0.4)" onClick={() => setShowSmsModal(true)} />
-                  <ExamCard label="Status Overview" sub="Track progress" icon={ShieldAlert} gradient="linear-gradient(135deg, #8b5cf6, #7c3aed)" glow="rgba(139,92,246,0.4)" onClick={() => setActiveTab('status-overview')} />
-                  <ExamCard label="Settings" sub="Configurations" icon={Settings} gradient="linear-gradient(135deg, #3f3f46, #27272a)" glow="rgba(63,63,70,0.4)" onClick={() => setActiveTab('settings')} />
+                  <ExamCard
+                    label="Send Marks SMS"
+                    sub="Dispatch DLT marks alerts to parents"
+                    icon={MessageSquare}
+                    bgGradient="bg-gradient-to-br from-[#FDF2F8] via-[#FCE7F3] to-[#FBCFE8]/80"
+                    iconGradient="bg-gradient-to-br from-[#EC4899] to-[#DB2777]"
+                    borderClass="border-pink-200/80"
+                    badgeText="Parent SMS"
+                    badgeClass="bg-white/90 text-pink-700 border-pink-200"
+                    onClick={() => setShowSmsModal(true)}
+                  />
+                  <ExamCard
+                    label="Status Overview"
+                    sub="Track class-wise marks completion"
+                    icon={ShieldAlert}
+                    bgGradient="bg-gradient-to-br from-[#F5F3FF] via-[#EDE9FE] to-[#DDD6FE]"
+                    iconGradient="bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9]"
+                    borderClass="border-violet-200/80"
+                    badgeText="Live Tracker"
+                    badgeClass="bg-white/90 text-violet-700 border-violet-200"
+                    onClick={() => selectTab('status-overview')}
+                  />
+                  <ExamCard
+                    label="Exam Settings"
+                    sub="Branding, grading scales & rules"
+                    icon={Settings}
+                    bgGradient="bg-gradient-to-br from-[#F0FDFA] via-[#CCFBF1] to-[#99F6E4]/60"
+                    iconGradient="bg-gradient-to-br from-[#0D9488] to-[#0F766E]"
+                    borderClass="border-teal-200/80"
+                    badgeText="Config"
+                    badgeClass="bg-white/90 text-teal-700 border-teal-200"
+                    onClick={() => selectTab('settings')}
+                  />
                 </>
               )}
+
               {isStudent && (
                 <>
-                  <ExamCard label="Admit Card" sub="Hall tickets" icon={FileText} gradient="linear-gradient(135deg, #f59e0b, #ea580c)" glow="rgba(245,158,11,0.4)" onClick={() => setActiveTab('admit-card')} />
-                  <ExamCard label="Question Papers" sub="Study Material" icon={Layers} gradient="linear-gradient(135deg, #475569, #334155)" glow="rgba(71,85,105,0.4)" onClick={() => setActiveTab('question-papers')} />
-                  <ExamCard label="Results" sub="Notice Board" icon={Award} gradient="linear-gradient(135deg, #0ea5e9, #0284c7)" glow="rgba(14,165,233,0.4)" onClick={() => setActiveTab('results')} />
-                  <ExamCard label="Progress Card" sub="Report Cards" icon={FileSpreadsheet} gradient="linear-gradient(135deg, #f43f5e, #e11d48)" glow="rgba(244,63,94,0.4)" onClick={() => setActiveTab('jee-progress-card')} />
+                  <ExamCard
+                    label="Admit Card"
+                    sub="Download your hall ticket"
+                    icon={FileText}
+                    bgGradient="bg-gradient-to-br from-[#FFF8EB] via-[#FFEDD5] to-[#FED7AA]/75"
+                    iconGradient="bg-gradient-to-br from-[#F59E0B] to-[#EA580C]"
+                    borderClass="border-amber-200/80"
+                    onClick={() => selectTab('admit-card')}
+                  />
+                  <ExamCard
+                    label="Question Papers"
+                    sub="Study material & past papers"
+                    icon={Layers}
+                    bgGradient="bg-gradient-to-br from-[#ECFEFF] via-[#E0F7FA] to-[#CFFAFE]"
+                    iconGradient="bg-gradient-to-br from-[#0891B2] to-[#0284C7]"
+                    borderClass="border-cyan-200/80"
+                    onClick={() => selectTab('question-papers')}
+                  />
+                  <ExamCard
+                    label="Results"
+                    sub="View published exam results"
+                    icon={Award}
+                    bgGradient="bg-gradient-to-br from-[#EFF6FF] via-[#DBEAFE] to-[#BFDBFE]/80"
+                    iconGradient="bg-gradient-to-br from-[#0EA5E9] to-[#2563EB]"
+                    borderClass="border-blue-200/80"
+                    onClick={() => selectTab('results')}
+                  />
+                  <ExamCard
+                    label="Progress Card"
+                    sub="View detailed report card"
+                    icon={FileSpreadsheet}
+                    bgGradient="bg-gradient-to-br from-[#FFF1F2] via-[#FFE4E6] to-[#FECDD3]/80"
+                    iconGradient="bg-gradient-to-br from-[#F43F5E] to-[#E11D48]"
+                    borderClass="border-rose-200/80"
+                    onClick={() => selectTab('jee-progress-card')}
+                  />
                 </>
               )}
             </div>
 
+            {/* Recent Examinations Quick Launcher Strip */}
+            {isAdminOrTeacher && exams.length > 0 && (
+              <div className="bg-white rounded-[22px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] p-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                    <h3 className="text-sm font-black text-[#1E1B4B] uppercase tracking-wider">Recent Examinations Quick Access</h3>
+                  </div>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={() => selectTab('examination')}
+                      className="text-xs font-black text-[#5B21B6] hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      View All ({exams.length}) <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                  {exams.slice(0, 3).map((ex) => (
+                    <div key={ex.id} className="p-4 rounded-2xl bg-[#F8FAFF] border border-indigo-100/90 hover:border-[#7C3AED]/50 transition-all flex flex-col justify-between gap-3">
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <h4 className="text-sm font-black text-[#1E1B4B] line-clamp-1">{ex.name}</h4>
+                          <span className="px-2 py-0.5 rounded-lg bg-white border border-indigo-100 text-[10px] font-black text-[#5B21B6] shrink-0">
+                            {(ex.classes || []).length} Classes
+                          </span>
+                        </div>
+                        <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mt-1">
+                          <Calendar className="w-3 h-3 text-indigo-400" />
+                          {new Date(ex.examDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 pt-2 border-t border-indigo-100/60">
+                        <button
+                          type="button"
+                          onClick={() => { setSelectedWrittenExamId(ex.id); selectTab('written-exam'); }}
+                          className="flex-1 py-1.5 px-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3" /> Marks
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => selectTab('results')}
+                          className="flex-1 py-1.5 px-2.5 rounded-xl bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white border border-blue-200 text-[11px] font-black transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <Award className="w-3 h-3" /> Results
+                        </button>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => openEditModal(ex)}
+                            className="py-1.5 px-2.5 rounded-xl bg-white hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white border border-indigo-200 text-[11px] font-black transition-all cursor-pointer"
+                            title="Configure Exam"
+                          >
+                            <Settings className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
 
       {/* ══ TAB 2: EXAM PLAN ══ */}
       {activeTab === 'exam-plan' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-extrabold uppercase text-gray-400">Exam Batch:</span>
-              <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-sm font-bold">
+        <div className="space-y-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-4 rounded-[20px] border border-[#DDD7F3] shadow-sm">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <span className="text-xs font-black uppercase text-slate-500">Exam Batch:</span>
+              <select value={selectedExamId} onChange={e => setSelectedExamId(e.target.value)} className="bg-[#F8FAFF] border border-indigo-100 rounded-xl px-3.5 py-2 text-sm font-bold text-slate-800 outline-none focus:border-[#5B21B6]">
                 {exams.map(e => <option key={e.id} value={e.id}>{e.name} ({e.class?.name})</option>)}
               </select>
             </div>
             {isAdmin && selectedExamId && (
-              <button onClick={() => setShowPlanModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold">
+              <button onClick={() => setShowPlanModal(true)} className="px-4 py-2 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl flex items-center gap-2 text-xs font-black shadow-sm cursor-pointer">
                 <Plus className="w-4 h-4" /> Schedule Paper
               </button>
             )}
           </div>
 
-          <div className="card p-6 overflow-hidden">
+          <div className="bg-white rounded-[22px] border border-[#DDD7F3] shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-sm">
+              <table className="student-grid-table w-full text-left border-collapse text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-800">
-                    <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Subject</th>
-                    <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Exam Date</th>
-                    <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Timing</th>
-                    <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Room</th>
-                    <th className="pb-3.5 font-extrabold text-gray-400 text-xs uppercase tracking-wider">Marks Info</th>
-                    {isAdmin && <th className="pb-3.5 text-right font-extrabold text-gray-400 text-xs uppercase tracking-wider">Action</th>}
+                  <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6]">
+                    <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Subject</th>
+                    <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Exam Date</th>
+                    <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Timing</th>
+                    <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Room</th>
+                    <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Marks Info</th>
+                    {isAdmin && <th className="py-3.5 px-4 text-right font-black !text-white text-xs uppercase tracking-wider">Action</th>}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-150 dark:divide-gray-800">
+                <tbody className="divide-y divide-indigo-50">
                   {examPlans.map((plan) => (
-                    <tr key={plan.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/10">
-                      <td className="py-4">
-                        <div className="font-bold text-gray-900 dark:text-white">{plan.subject?.name}</div>
-                        <span className="text-[10px] text-gray-400 font-bold">{plan.subject?.code}</span>
+                    <tr key={plan.id} className="hover:bg-[#F8FAFF] transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-[#1E1B4B]">{plan.subject?.name}</div>
+                        <span className="text-[10px] text-slate-400 font-bold">{plan.subject?.code}</span>
                       </td>
-                      <td className="py-4 text-xs font-semibold text-gray-700 dark:text-gray-200">{new Date(plan.examDate).toLocaleDateString()}</td>
-                      <td className="py-4 text-xs text-gray-500 font-bold">{plan.startTime} – {plan.endTime}</td>
-                      <td className="py-4 text-xs text-gray-500 font-bold">{plan.room || 'N/A'}</td>
-                      <td className="py-4 text-xs font-semibold text-gray-500">Max: {plan.maxMarks} · Pass: {plan.passingMarks}</td>
+                      <td className="py-3.5 px-4 text-xs font-bold text-slate-700">{new Date(plan.examDate).toLocaleDateString()}</td>
+                      <td className="py-3.5 px-4 text-xs text-slate-600 font-bold">{plan.startTime} – {plan.endTime}</td>
+                      <td className="py-3.5 px-4 text-xs text-slate-600 font-bold">{plan.room || 'N/A'}</td>
+                      <td className="py-3.5 px-4 text-xs font-bold text-[#5B21B6]">Max: {plan.maxMarks} · Pass: {plan.passingMarks}</td>
                       {isAdmin && (
-                        <td className="py-4 text-right">
-                          <button onClick={() => handleDeletePlan(plan.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 cursor-pointer">
+                        <td className="py-3.5 px-4 text-right">
+                          <button onClick={() => handleDeletePlan(plan.id)} className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 cursor-pointer">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </td>
@@ -1432,7 +1773,7 @@ export const ExamListPage: React.FC = () => {
                   ))}
                   {examPlans.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-gray-400">
+                      <td colSpan={6} className="py-12 text-center text-slate-400 font-semibold">
                         No subject papers scheduled in plan yet for this exam batch.
                       </td>
                     </tr>
@@ -1443,11 +1784,11 @@ export const ExamListPage: React.FC = () => {
           </div>
 
           {showPlanModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-md p-6 space-y-5">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold">Schedule Exam Paper</h3>
-                  <button onClick={() => setShowPlanModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-2xl w-full max-w-md p-6 space-y-5">
+                <div className="flex justify-between items-center pb-3 border-b border-indigo-50">
+                  <h3 className="text-lg font-black text-[#1E1B4B]">Schedule Exam Paper</h3>
+                  <button onClick={() => setShowPlanModal(false)} className="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
                 <form onSubmit={handleCreatePlan} className="space-y-4">
                   <div>
@@ -1494,7 +1835,7 @@ export const ExamListPage: React.FC = () => {
                   </div>
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowPlanModal(false)} className="btn-secondary text-sm">Cancel</button>
-                    <button type="submit" className="btn-primary text-sm">Save Paper</button>
+                    <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl text-sm font-black shadow-sm cursor-pointer">Save Paper</button>
                   </div>
                 </form>
               </div>
@@ -1505,25 +1846,30 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 3: MARKS UPLOAD (written-exam) ══ */}
       {activeTab === 'written-exam' && (
-        <div className="space-y-4 animate-fade-in-up">
-          {/* Header & Exam Dropdown */}
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-4 sm:p-5 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm space-y-3">
-            <h2 className="text-lg sm:text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Marks Upload & Entry
-            </h2>
+        <div className="space-y-5 animate-fade-in-up">
+          <div className="bg-white p-5 rounded-[22px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] space-y-3.5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#D1FAE5] border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+                <Edit3 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base sm:text-lg font-black text-[#1E1B4B]">Marks Upload & Class Gradebook</h2>
+                <p className="text-xs font-semibold text-slate-500">Download sample templates, bulk import Excel sheets, or open live class mark entry</p>
+              </div>
+            </div>
 
             <div className="w-full relative">
-              <select 
-                className="w-full appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm cursor-pointer truncate pr-8"
+              <select
+                className="w-full appearance-none bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-3 text-xs sm:text-sm font-bold text-[#1E1B4B] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] transition-all cursor-pointer truncate pr-9"
                 value={selectedWrittenExamId}
                 onChange={(e) => setSelectedWrittenExamId(e.target.value)}
               >
-                <option value="" className="text-xs font-medium">-- Select Examination --</option>
+                <option value="" className="text-xs font-medium">-- Select Examination to Enter / Upload Marks --</option>
                 {exams.map(e => (
                   <option key={e.id} value={e.id} className="text-xs font-medium">{formatExamOptionLabel(e.name)}</option>
                 ))}
               </select>
-              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 right-3.5 flex items-center pointer-events-none">
                 <ChevronDown className="h-4 w-4 text-slate-400" />
               </div>
             </div>
@@ -1532,75 +1878,81 @@ export const ExamListPage: React.FC = () => {
           {selectedWrittenExamId && (
             <div className="grid grid-cols-1 gap-6">
               {exams.filter(e => e.id === selectedWrittenExamId).map(exam => (
-                <div key={exam.id} className="relative rounded-2xl p-5 overflow-hidden bg-white dark:bg-slate-900 shadow-sm border border-slate-200/60 dark:border-slate-800 flex flex-col group">
-                  <div className="relative z-10">
-                    <h4 className="font-extrabold text-slate-900 dark:text-white text-base sm:text-lg truncate" title={exam.name}>
-                      {formatExamOptionLabel(exam.name)}
-                    </h4>
-                    <p className="text-xs font-semibold text-slate-500 mt-1">Select class to enter marks:</p>
+                <div key={exam.id} className="rounded-[24px] p-5 sm:p-6 bg-white shadow-[0_6px_24px_-8px_rgba(79,70,229,0.1)] border border-[#DDD7F3] flex flex-col">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-indigo-50">
+                    <div>
+                      <h4 className="font-black text-[#1E1B4B] text-base sm:text-lg" title={exam.name}>
+                        {formatExamOptionLabel(exam.name)}
+                      </h4>
+                      <p className="text-xs font-bold text-slate-500 mt-0.5">
+                        Select a target class card below to enter or upload marks ({(exam.classes || []).length} classes assigned)
+                      </p>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }}
+                        className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-black rounded-xl text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer shrink-0"
+                      >
+                        <Upload className="w-3.5 h-3.5" /> Global Excel Bulk Upload
+                      </button>
+                    )}
                   </div>
-                  
-                  <div className="mt-5 relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+
+                  <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
                     {sortClasses(exam.classes || []).map((c: any) => (
-                      <div key={c.id} className="flex flex-col bg-slate-50 dark:bg-slate-800/50 p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-sm">
-                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-slate-200 dark:border-slate-700">
-                          <div className="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center shrink-0">
-                            <BookOpen className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                      <div key={c.id} className="flex flex-col bg-[#F8FAFF] p-4 rounded-2xl border border-indigo-100 hover:border-[#7C3AED]/50 hover:bg-white transition-all shadow-xs">
+                        <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-indigo-100/70">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-7 h-7 rounded-xl bg-[#F2EDFF] border border-[#DDD7F3] flex items-center justify-center shrink-0">
+                              <BookOpen className="w-3.5 h-3.5 text-[#5B21B6]" />
+                            </div>
+                            <span className="text-sm font-black text-[#1E1B4B] truncate">{c.name} - {c.section}</span>
                           </div>
-                          <span className="text-sm font-extrabold text-slate-800 dark:text-slate-200 truncate">{c.name} - {c.section}</span>
                         </div>
                         <div className="grid grid-cols-2 gap-2 mt-auto">
-                           <button onClick={() => downloadClassSampleExcel(exam, c)} className="w-full py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                           <button onClick={() => downloadClassSampleExcel(exam, c)} className="w-full py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                              <FileSpreadsheet className="w-3.5 h-3.5" /> Excel
                            </button>
-                           <button onClick={() => downloadClassSamplePDF(exam, c)} className="w-full py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                           <button onClick={() => downloadClassSamplePDF(exam, c)} className="w-full py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                              <FileText className="w-3.5 h-3.5" /> PDF
                            </button>
-                           <label className="w-full py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer mb-0">
+                           <label className="w-full py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-xl text-[11px] font-black transition-all flex items-center justify-center gap-1.5 cursor-pointer mb-0">
                              <Upload className="w-3.5 h-3.5" /> Upload
                              <input type="file" className="hidden" accept=".xlsx,.xls" onChange={(e) => handleClassExcelUpload(e, exam.id, c.id)} />
                            </label>
-                           <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="w-full py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-lg text-xs shadow-md shadow-indigo-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer inline-flex">
+                           <Link to={`/exams/${exam.id}/entry?classId=${c.id}`} className="w-full py-1.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white font-black rounded-xl text-[11px] shadow-sm transition-all flex items-center justify-center gap-1.5 cursor-pointer">
                              <Edit3 className="w-3.5 h-3.5" /> Marks
                            </Link>
                         </div>
                       </div>
                     ))}
                     {(!exam.classes || exam.classes.length === 0) && (
-                      <div className="col-span-full p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40 text-center">
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300">No classes assigned to this exam</span>
+                      <div className="col-span-full p-6 rounded-2xl bg-amber-50 border border-amber-200 text-center">
+                        <span className="text-xs font-black text-amber-800">No classes assigned to this exam yet.</span>
                       </div>
                     )}
                   </div>
-
-                  {isAdmin && (
-                    <div className="pt-3 mt-3 border-t border-slate-100 dark:border-slate-800 relative z-10">
-                      <button onClick={() => { setExcelExamId(exam.id); setShowExcelModal(true); }} className="w-full px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm transition-all">
-                        Global Excel Bulk Upload
-                      </button>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
           )}
 
           {showExcelModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-md p-6 space-y-5">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold">Upload Marks Excel</h3>
-                  <button onClick={() => setShowExcelModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-2xl w-full max-w-md p-6 space-y-5">
+                <div className="flex justify-between items-center pb-3 border-b border-indigo-50">
+                  <h3 className="text-lg font-black text-[#1E1B4B]">Upload Marks Excel</h3>
+                  <button onClick={() => setShowExcelModal(false)} className="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
-                
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2">Instructions:</p>
-                  <ul className="text-xs text-blue-600/80 dark:text-blue-400/80 list-disc pl-4 space-y-1">
+
+                <div className="bg-[#F8FAFF] border border-indigo-100 p-4 rounded-2xl">
+                  <p className="text-xs text-[#5B21B6] font-black mb-2">Instructions:</p>
+                  <ul className="text-xs text-slate-600 font-semibold list-disc pl-4 space-y-1">
                     <li>Download the sample Excel file.</li>
                     <li>Ensure columns are: 'Student ID', 'Maths', 'Physics', etc.</li>
                     <li>Upload the filled file back here.</li>
                   </ul>
-                  <button onClick={downloadSampleExcel} className="mt-3 text-xs font-bold bg-white dark:bg-gray-800 px-3 py-1.5 rounded-md shadow-sm border border-blue-100 dark:border-blue-800 text-blue-600 hover:bg-blue-50 w-full text-center">
+                  <button onClick={downloadSampleExcel} className="mt-3 text-xs font-black bg-white px-3 py-2 rounded-xl shadow-xs border border-indigo-200 text-indigo-700 hover:bg-indigo-50 w-full text-center cursor-pointer">
                     Download Sample Excel
                   </button>
                 </div>
@@ -1612,7 +1964,7 @@ export const ExamListPage: React.FC = () => {
                   </div>
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowExcelModal(false)} className="btn-secondary text-sm">Cancel</button>
-                    <button type="submit" className="btn-primary text-sm bg-green-500 hover:bg-green-600">Upload Data</button>
+                    <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-sm font-black shadow-sm cursor-pointer">Upload Data</button>
                   </div>
                 </form>
               </div>
@@ -1659,24 +2011,24 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 7: QUESTION GROUP ══ */}
       {activeTab === 'question-group' && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center bg-white dark:bg-gray-900 p-4 rounded-xl border border-gray-150 dark:border-gray-800">
-            <span className="text-xs font-extrabold uppercase text-gray-400">Manage Question Categories & Chapters</span>
-            <button onClick={() => setShowGroupModal(true)} className="btn-primary flex items-center gap-2 text-xs font-bold">
+        <div className="space-y-5">
+          <div className="flex justify-between items-center bg-white p-4 rounded-[20px] border border-[#DDD7F3] shadow-sm">
+            <span className="text-xs font-black uppercase text-[#5B21B6] tracking-wider">Manage Question Categories & Chapters</span>
+            <button onClick={() => setShowGroupModal(true)} className="px-4 py-2 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl flex items-center gap-2 text-xs font-black cursor-pointer">
               <Plus className="w-4 h-4" /> Add Question Group
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {questionGroups.map(group => (
-              <div key={group.id} className="card p-6 space-y-4 hover:shadow-md transition-shadow relative group border-l-4 border-indigo-500">
+              <div key={group.id} className="bg-white rounded-[20px] border border-[#DDD7F3] p-5 space-y-4 hover:shadow-md transition-all relative group border-l-4 border-l-[#5B21B6]">
                 <div>
-                  <h4 className="font-bold text-base text-gray-900 dark:text-white">{group.name}</h4>
-                  <p className="text-xs text-gray-400 mt-1">{group.description || 'No description provided'}</p>
+                  <h4 className="font-black text-base text-[#1E1B4B]">{group.name}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{group.description || 'No description provided'}</p>
                 </div>
-                <div className="flex items-center justify-between text-xs font-semibold text-gray-500 border-t border-gray-100 dark:border-gray-800 pt-3">
-                  <span>Questions in group: {group._count?.questions || 0}</span>
-                  <button onClick={() => handleDeleteGroup(group.id)} className="p-1 text-gray-400 hover:text-red-500 rounded cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-500 border-t border-indigo-50 pt-3">
+                  <span>Questions in group: <strong className="text-[#5B21B6]">{group._count?.questions || 0}</strong></span>
+                  <button onClick={() => handleDeleteGroup(group.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -1685,11 +2037,11 @@ export const ExamListPage: React.FC = () => {
           </div>
 
           {showGroupModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-md p-6 space-y-5">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold">New Question Group</h3>
-                  <button onClick={() => setShowGroupModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-2xl w-full max-w-md p-6 space-y-5">
+                <div className="flex justify-between items-center pb-3 border-b border-indigo-50">
+                  <h3 className="text-lg font-black text-[#1E1B4B]">New Question Group</h3>
+                  <button onClick={() => setShowGroupModal(false)} className="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
                 <form onSubmit={handleCreateGroup} className="space-y-4">
                   <div>
@@ -1702,7 +2054,7 @@ export const ExamListPage: React.FC = () => {
                   </div>
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowGroupModal(false)} className="btn-secondary text-sm">Cancel</button>
-                    <button type="submit" className="btn-primary text-sm">Create Group</button>
+                    <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl text-sm font-black shadow-sm cursor-pointer">Create Group</button>
                   </div>
                 </form>
               </div>
@@ -1714,28 +2066,28 @@ export const ExamListPage: React.FC = () => {
       {/* ══ TAB 4: QUESTION BANK ══ */}
       {activeTab === 'question-bank' && (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white/60 dark:bg-slate-900/50 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] animate-fade-in-up">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-5 rounded-[22px] border border-[#DDD7F3] shadow-sm">
             <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-3.5 rounded-2xl shadow-lg shadow-purple-500/30 text-white shrink-0 hidden sm:block">
-                <Layers className="w-6 h-6" />
+              <div className="bg-gradient-to-br from-[#5B21B6] to-[#7C3AED] p-3 rounded-2xl shadow-md text-white shrink-0 hidden sm:block">
+                <Layers className="w-5 h-5" />
               </div>
               <div className="flex flex-col sm:flex-row w-full gap-3 items-center">
-                <span className="text-xs font-black uppercase text-indigo-500 tracking-wider shrink-0 w-full sm:w-auto">Select Group:</span>
-                <select 
-                  value={selectedGroupId} 
-                  onChange={e => setSelectedGroupId(e.target.value)} 
-                  className="appearance-none bg-white dark:bg-slate-800 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-xl px-4 py-3 text-sm font-extrabold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all shadow-sm cursor-pointer w-full sm:min-w-[220px]"
+                <span className="text-xs font-black uppercase text-[#5B21B6] tracking-wider shrink-0 w-full sm:w-auto">Select Group:</span>
+                <select
+                  value={selectedGroupId}
+                  onChange={e => setSelectedGroupId(e.target.value)}
+                  className="appearance-none bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1E1B4B] focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] transition-all cursor-pointer w-full sm:min-w-[220px]"
                 >
                   <option value="">-- Select Question Group --</option>
                   {questionGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
             </div>
-            
+
             {selectedGroupId && (
-              <button 
-                onClick={() => setShowQuestionModal(true)} 
-                className="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-md shadow-indigo-500/20 hover:-translate-y-0.5 px-5 py-3 rounded-xl text-xs uppercase tracking-widest font-black transition-all duration-300 flex items-center justify-center gap-2"
+              <button
+                onClick={() => setShowQuestionModal(true)}
+                className="w-full sm:w-auto bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white shadow-md px-5 py-2.5 rounded-xl text-xs uppercase tracking-wider font-black transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 <Plus className="w-4 h-4" /> Create Question
               </button>
@@ -1746,42 +2098,42 @@ export const ExamListPage: React.FC = () => {
             {questions.map((q, index) => {
               const opts = q.options ? JSON.parse(q.options) : [];
               return (
-                <div key={q.id} className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-white/20 shadow-lg relative group transition-all duration-300 hover:shadow-xl hover:bg-white/80 dark:hover:bg-slate-900/60 flex flex-col gap-4 overflow-hidden">
-                  <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-indigo-500 to-purple-500 rounded-l-3xl"></div>
-                  <div className="flex justify-between items-start gap-4 pl-4">
+                <div key={q.id} className="bg-white p-6 rounded-[22px] border border-[#DDD7F3] shadow-sm relative group transition-all hover:shadow-md flex flex-col gap-4 overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#5B21B6] to-[#7C3AED]"></div>
+                  <div className="flex justify-between items-start gap-4 pl-3">
                     <div>
-                      <h4 className="font-extrabold text-base text-slate-900 dark:text-white leading-relaxed">
-                        <span className="text-indigo-500 mr-2">Q{index + 1}.</span> 
+                      <h4 className="font-black text-base text-[#1E1B4B] leading-relaxed">
+                        <span className="text-[#5B21B6] mr-2">Q{index + 1}.</span>
                         {q.questionText}
                       </h4>
-                      <div className="flex items-center gap-3 mt-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-3 py-1 rounded-lg border border-indigo-200 dark:border-indigo-800/50">
+                      <div className="flex items-center gap-2.5 mt-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-[#F2EDFF] text-[#5B21B6] px-2.5 py-1 rounded-lg border border-[#DDD7F3]">
                           {q.questionType}
                         </span>
-                        <span className="text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800/50">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-200">
                           {q.marks} Marks
                         </span>
                       </div>
                     </div>
-                    <button 
-                      onClick={() => handleDeleteQuestion(q.id)} 
-                      className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 dark:hover:bg-red-900/20 dark:hover:border-red-900/30 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer shadow-sm"
+                    <button
+                      onClick={() => handleDeleteQuestion(q.id)}
+                      className="p-2 rounded-xl bg-[#F8FAFF] border border-indigo-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 transition-all cursor-pointer"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
 
                   {q.questionType === 'MCQ' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-4 pt-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-3 pt-1">
                       {opts.map((opt: string, optIdx: number) => {
                         const correct = q.correctAnswer === String(optIdx);
                         return (
-                          <div key={optIdx} className={`p-4 rounded-xl border-2 font-bold text-sm transition-all flex items-center gap-3 ${correct ? 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/20 border-emerald-400 text-emerald-800 dark:text-emerald-300 shadow-sm' : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-700/50'}`}>
-                            <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs ${correct ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}>
+                          <div key={optIdx} className={`p-3.5 rounded-xl border font-bold text-sm transition-all flex items-center gap-3 ${correct ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-xs' : 'bg-[#F8FAFF] border-indigo-100 text-slate-700'}`}>
+                            <span className={`flex items-center justify-center w-6 h-6 rounded-full text-xs font-black ${correct ? 'bg-emerald-500 text-white' : 'bg-white border border-indigo-100 text-slate-500'}`}>
                               {String.fromCharCode(65 + optIdx)}
                             </span>
-                            {opt} 
-                            {correct && <CheckCircle className="w-4 h-4 ml-auto text-emerald-500" />}
+                            {opt}
+                            {correct && <CheckCircle className="w-4 h-4 ml-auto text-emerald-600" />}
                           </div>
                         );
                       })}
@@ -1789,31 +2141,31 @@ export const ExamListPage: React.FC = () => {
                   )}
 
                   {q.questionType === 'SUBJECTIVE' && (
-                    <div className="text-sm bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-xl border border-indigo-100 dark:border-indigo-900/30 pl-4 ml-4">
-                      <span className="text-xs font-black text-indigo-500 block uppercase tracking-widest mb-2 flex items-center gap-2">
+                    <div className="text-sm bg-[#F8FAFF] p-4 rounded-xl border border-indigo-100 ml-3">
+                      <span className="text-[11px] font-black text-[#5B21B6] uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
                         <CheckCircle className="w-4 h-4" /> Expected Key Phrases/Answers:
                       </span>
-                      <p className="font-bold text-slate-700 dark:text-slate-300 leading-relaxed">{q.correctAnswer}</p>
+                      <p className="font-bold text-slate-700 leading-relaxed">{q.correctAnswer}</p>
                     </div>
                   )}
                 </div>
               );
             })}
             {questions.length === 0 && (
-              <div className="bg-white/60 dark:bg-slate-900/40 backdrop-blur-md rounded-3xl p-16 flex flex-col items-center justify-center text-center shadow-sm border border-slate-200/60 dark:border-slate-800">
-                <Layers className="w-16 h-16 text-slate-300 mb-4" />
-                <h3 className="text-xl font-black text-slate-700 dark:text-slate-200">No Questions Found</h3>
-                <p className="text-sm font-semibold text-slate-500 mt-2 max-w-md">No questions defined inside this group. Add question elements to populate the exam staged database bank.</p>
+              <div className="bg-white rounded-[24px] p-14 flex flex-col items-center justify-center text-center border border-[#DDD7F3]">
+                <Layers className="w-12 h-12 text-indigo-200 mb-3" />
+                <h3 className="text-lg font-black text-[#1E1B4B]">No Questions Found</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-1 max-w-md">No questions defined inside this group. Add question elements to populate the exam bank.</p>
               </div>
             )}
           </div>
 
           {showQuestionModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-bold">Add Question to Bank</h3>
-                  <button onClick={() => setShowQuestionModal(false)} className="text-gray-400 hover:text-black dark:hover:text-white"><X className="w-5 h-5" /></button>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[24px] border border-[#DDD7F3] shadow-2xl w-full max-w-lg p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+                <div className="flex justify-between items-center pb-3 border-b border-indigo-50">
+                  <h3 className="text-lg font-black text-[#1E1B4B]">Add Question to Bank</h3>
+                  <button onClick={() => setShowQuestionModal(false)} className="p-1.5 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-800 cursor-pointer"><X className="w-5 h-5" /></button>
                 </div>
                 <form onSubmit={handleCreateQuestion} className="space-y-4">
                   <div>
@@ -1830,7 +2182,7 @@ export const ExamListPage: React.FC = () => {
 
                   {qType === 'MCQ' ? (
                     <div className="space-y-3">
-                      <span className="text-xs font-bold text-gray-500">Provide 4 Answer Options:</span>
+                      <span className="text-xs font-bold text-slate-500">Provide 4 Answer Options:</span>
                       <div className="grid grid-cols-2 gap-3">
                         {qOptions.map((opt, optIdx) => (
                           <input key={optIdx} type="text" required placeholder={`Option ${optIdx + 1}`} value={opt} onChange={e => {
@@ -1864,7 +2216,7 @@ export const ExamListPage: React.FC = () => {
 
                   <div className="flex gap-3 justify-end pt-2">
                     <button type="button" onClick={() => setShowQuestionModal(false)} className="btn-secondary text-sm">Cancel</button>
-                    <button type="submit" className="btn-primary text-sm">Save Question</button>
+                    <button type="submit" className="px-5 py-2.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl text-sm font-black shadow-sm cursor-pointer">Save Question</button>
                   </div>
                 </form>
               </div>
@@ -1875,10 +2227,10 @@ export const ExamListPage: React.FC = () => {
 
       {/* ══ TAB 5: ADD ONLINE EXAM ══ */}
       {activeTab === 'add-online-exam' && isAdminOrTeacher && (
-        <div className="bg-white dark:bg-gray-900 p-6 rounded-xl border border-gray-150 dark:border-gray-800 space-y-6">
-          <div>
-            <h3 className="text-lg font-bold">Configure Advanced Online Exam</h3>
-            <p className="text-xs text-gray-400 mt-1">Configure timed, automated grading online tests from the bank.</p>
+        <div className="bg-white p-6 rounded-[24px] border border-[#DDD7F3] shadow-sm space-y-6">
+          <div className="pb-3 border-b border-indigo-50">
+            <h3 className="text-lg font-black text-[#1E1B4B]">Configure Advanced Online Exam</h3>
+            <p className="text-xs font-semibold text-slate-500 mt-1">Configure timed, automated grading online tests from the question bank.</p>
           </div>
 
           <form onSubmit={handleCreateOnlineExam} className="space-y-4">
@@ -1925,21 +2277,20 @@ export const ExamListPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Select questions */}
-            <div className="space-y-3 pt-3 border-t border-gray-150 dark:border-gray-800">
-              <span className="text-xs font-bold text-gray-500">Pick Staged Questions to Include in Exam:</span>
+            <div className="space-y-3 pt-3 border-t border-indigo-50">
+              <span className="text-xs font-black text-slate-600 uppercase tracking-wider block">Pick Staged Questions to Include in Exam:</span>
               <div className="flex items-center gap-3">
-                <span className="text-xs text-gray-400">Filter Question Group:</span>
-                <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-1.5 text-xs font-bold">
+                <span className="text-xs font-bold text-slate-500">Filter Question Group:</span>
+                <select value={selectedGroupId} onChange={e => setSelectedGroupId(e.target.value)} className="bg-[#F8FAFF] border border-indigo-100 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800">
                   {questionGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
                 </select>
               </div>
 
-              <div className="max-h-60 overflow-y-auto border border-gray-200 dark:border-gray-700 rounded-xl divide-y divide-gray-100 dark:divide-gray-800">
+              <div className="max-h-60 overflow-y-auto border border-indigo-100 rounded-2xl divide-y divide-indigo-50 bg-[#F8FAFF]">
                 {questions.map(q => {
                   const checked = selectedQIds.includes(q.id);
                   return (
-                    <label key={q.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/40 cursor-pointer select-none">
+                    <label key={q.id} className="flex items-start gap-3 p-3.5 hover:bg-white cursor-pointer select-none transition-colors">
                       <input type="checkbox" checked={checked} onChange={() => {
                         if (checked) {
                           setSelectedQIds(selectedQIds.filter(id => id !== q.id));
@@ -1948,8 +2299,8 @@ export const ExamListPage: React.FC = () => {
                         }
                       }} className="mt-1" />
                       <div className="text-xs">
-                        <p className="font-bold text-gray-800 dark:text-gray-200">{q.questionText}</p>
-                        <span className="text-[10px] text-gray-400 font-semibold">{q.questionType} · Marks: {q.marks}</span>
+                        <p className="font-bold text-[#1E1B4B]">{q.questionText}</p>
+                        <span className="text-[10px] text-slate-500 font-semibold">{q.questionType} · Marks: {q.marks}</span>
                       </div>
                     </label>
                   );
@@ -1958,7 +2309,7 @@ export const ExamListPage: React.FC = () => {
             </div>
 
             <div className="flex justify-end gap-3 pt-3">
-              <button type="submit" className="btn-primary flex items-center gap-2">
+              <button type="submit" className="px-6 py-2.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl text-sm font-black flex items-center gap-2 shadow-sm cursor-pointer">
                 <Save className="w-4 h-4" /> Publish Online Exam
               </button>
             </div>
@@ -1967,403 +2318,530 @@ export const ExamListPage: React.FC = () => {
       )}
 
       {/* ══ TAB 8: QUESTION PAPERS (UPLOAD/DOWNLOAD) ══ */}
-      {activeTab === 'question-papers' && (
-        <div className="space-y-6">
-          {/* Admin/Super Admin Dashboard Stats */}
+      {activeTab === 'question-papers' && (() => {
+        const filteredQps = questionPapers.filter((qp) => {
+          const matchesSearch = !qpSearch.trim() ||
+            (qp.title || '').toLowerCase().includes(qpSearch.trim().toLowerCase()) ||
+            (qp.exam?.name || '').toLowerCase().includes(qpSearch.trim().toLowerCase()) ||
+            (qp.subject?.name || '').toLowerCase().includes(qpSearch.trim().toLowerCase());
+          const matchesStatus = qpStatusFilter === 'ALL' || (qp.status || 'PENDING_APPROVAL') === qpStatusFilter;
+          const matchesClass = !qpClassFilter || qp.classId === qpClassFilter || qp.class?.id === qpClassFilter;
+          return matchesSearch && matchesStatus && matchesClass;
+        });
+
+        return (
+        <div className="space-y-6 animate-fade-in">
+          {/* Light Pastel Stats Strip */}
           {isAdmin && qpStats && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="relative overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-5 rounded-3xl shadow-lg shadow-indigo-500/10 hover:shadow-indigo-500/25 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-indigo-100">Total Papers</span>
-                  <FileText className="w-4 h-4 text-indigo-200" />
-                </div>
-                <p className="text-3xl font-black mt-2">{qpStats.totalPapers}</p>
-              </div>
-              <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 to-orange-600 text-white p-5 rounded-3xl shadow-lg shadow-orange-500/10 hover:shadow-orange-500/25 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-orange-100">Answer Keys</span>
-                  <Key className="w-4 h-4 text-orange-200" />
-                </div>
-                <p className="text-3xl font-black mt-2">{qpStats.answerKeys}</p>
-              </div>
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-600 text-white p-5 rounded-3xl shadow-lg shadow-emerald-500/10 hover:shadow-emerald-500/25 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-100">Published</span>
-                  <CheckCircle className="w-4 h-4 text-emerald-200" />
-                </div>
-                <p className="text-3xl font-black mt-2">{qpStats.publishedPapers}</p>
-              </div>
-              <div className="relative overflow-hidden bg-gradient-to-br from-cyan-500 to-blue-600 text-white p-5 rounded-3xl shadow-lg shadow-blue-500/10 hover:shadow-blue-500/25 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-cyan-100">Scheduled</span>
-                  <Clock className="w-4 h-4 text-cyan-200" />
-                </div>
-                <p className="text-3xl font-black mt-2">{qpStats.scheduledPapers}</p>
-              </div>
-              <div className="relative overflow-hidden bg-gradient-to-br from-rose-500 to-pink-600 text-white p-5 rounded-3xl shadow-lg shadow-rose-500/10 hover:shadow-rose-500/25 transition-all duration-300 transform hover:-translate-y-1">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full translate-x-8 -translate-y-8 blur-md"></div>
-                <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-rose-100">Total Questions</span>
-                  <HelpCircle className="w-4 h-4 text-rose-200" />
-                </div>
-                <p className="text-3xl font-black mt-2">{qpStats.totalQuestions}</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-4">
+              {[
+                { label: 'Total Papers', val: qpStats.totalPapers ?? 0, icon: FileText, bg: 'bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF]', border: 'border-[#D8CEF6]', iconBg: 'bg-[#5B21B6]', valCol: 'text-[#3B0764]' },
+                { label: 'Answer Keys', val: qpStats.answerKeys ?? 0, icon: Key, bg: 'bg-gradient-to-br from-[#FFF6E5] to-[#FFE4B8]', border: 'border-amber-200', iconBg: 'bg-amber-500', valCol: 'text-amber-900' },
+                { label: 'Published', val: qpStats.publishedPapers ?? 0, icon: CheckCircle, bg: 'bg-gradient-to-br from-[#E5FAEF] to-[#C2F2D9]', border: 'border-emerald-200', iconBg: 'bg-emerald-600', valCol: 'text-emerald-900' },
+                { label: 'Scheduled', val: qpStats.scheduledPapers ?? 0, icon: Clock, bg: 'bg-gradient-to-br from-[#EAF2FF] to-[#CBE0FF]', border: 'border-blue-200', iconBg: 'bg-blue-600', valCol: 'text-blue-900' },
+                { label: 'Total Questions', val: qpStats.totalQuestions ?? 0, icon: HelpCircle, bg: 'bg-gradient-to-br from-[#FFEFEF] to-[#FFD2D7]', border: 'border-rose-200', iconBg: 'bg-rose-500', valCol: 'text-rose-900' },
+              ].map((st) => {
+                const Icon = st.icon;
+                return (
+                  <div key={st.label} className={`rounded-[20px] p-4 border shadow-xs ${st.bg} ${st.border} flex items-center justify-between gap-3`}>
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-600 block">{st.label}</span>
+                      <p className={`text-2xl font-black mt-1 ${st.valCol}`}>{st.val}</p>
+                    </div>
+                    <div className={`w-10 h-10 rounded-2xl ${st.iconBg} text-white flex items-center justify-center shadow-sm shrink-0`}>
+                      <Icon className="w-5 h-5" />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          <div className="flex justify-between items-center bg-gradient-to-r from-slate-50 to-white dark:from-gray-900 dark:to-gray-800 p-5 rounded-3xl border border-slate-100 dark:border-gray-800 shadow-sm">
-            <div>
-              <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Question Papers Directory</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">Manage, approve and publish question papers and answer keys</p>
+          {/* Toolbar & Filters */}
+          <div className="bg-white p-4 sm:p-5 rounded-[22px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-black text-[#1E1B4B]">Question Papers & Answer Keys Repository</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">Manage, approve, and publish exam papers with attached solution keys</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowPermissionsModal(true)}
+                    className="flex items-center gap-2 text-xs font-black px-4 py-2.5 rounded-xl bg-[#F8FAFF] border border-indigo-100 hover:bg-indigo-50 text-[#1E1B4B] transition-all cursor-pointer"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-[#5B21B6]" /> Teacher Permissions
+                  </button>
+                )}
+                {(isAdmin || isTeacher) && (
+                  <button
+                    onClick={() => setShowQpModal(true)}
+                    className="flex items-center gap-2 text-xs font-black px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white shadow-md shadow-indigo-500/20 transition-all cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Upload Question Paper
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2">
-              {isAdmin && (
-                <button onClick={() => setShowPermissionsModal(true)} className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-gray-700 hover:bg-slate-50 dark:hover:bg-gray-800 text-slate-700 dark:text-slate-200 transition-all cursor-pointer">
-                  Teacher Permissions
-                </button>
-              )}
-              {isAdmin && (
-                <button onClick={() => setShowQpModal(true)} className="flex items-center gap-2 text-xs font-bold px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-600/25 transition-all cursor-pointer">
-                  <Plus className="w-4 h-4" /> Upload Paper
-                </button>
-              )}
+
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 pt-3 border-t border-indigo-50">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={qpSearch}
+                  onChange={(e) => setQpSearch(e.target.value)}
+                  placeholder="Search paper title, exam or subject..."
+                  className="w-full pl-10 pr-4 py-2 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-xs font-bold text-[#1E1B4B] outline-none focus:border-[#5B21B6]"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  value={qpClassFilter}
+                  onChange={(e) => setQpClassFilter(e.target.value)}
+                  className="bg-[#F8FAFF] border border-indigo-100 rounded-xl px-3 py-2 text-xs font-bold text-[#1E1B4B] outline-none focus:border-[#5B21B6] cursor-pointer"
+                >
+                  <option value="">All Classes</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}-{c.section}</option>)}
+                </select>
+                <div className="flex flex-wrap gap-1 bg-[#F8FAFF] p-1 rounded-xl border border-indigo-100">
+                  {[
+                    { id: 'ALL', label: 'All' },
+                    { id: 'PUBLISHED', label: 'Published' },
+                    { id: 'APPROVED', label: 'Approved' },
+                    { id: 'PENDING_APPROVAL', label: 'Pending' },
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => setQpStatusFilter(st.id as any)}
+                      className={`px-3 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                        qpStatusFilter === st.id
+                          ? 'bg-[#5B21B6] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-[#5B21B6]'
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {questionPapers.map(qp => {
-              let borderCol = "bg-amber-500";
-              let statusText = qp.status || "PENDING_APPROVAL";
-              let badgeStyle = "bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20";
-              let statusLabel = "Pending Approval";
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filteredQps.map(qp => {
+              let borderCol = 'bg-amber-500';
+              const statusText = qp.status || 'PENDING_APPROVAL';
+              let badgeStyle = 'bg-amber-50 text-amber-700 border-amber-200';
+              let statusLabel = 'Pending Approval';
 
               if (statusText === 'PUBLISHED') {
-                borderCol = "bg-emerald-500";
-                badgeStyle = "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20";
-                statusLabel = "Published";
+                borderCol = 'bg-emerald-500';
+                badgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                statusLabel = 'Published';
               } else if (statusText === 'APPROVED') {
-                borderCol = "bg-blue-500";
-                badgeStyle = "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20";
-                statusLabel = "Approved";
+                borderCol = 'bg-blue-500';
+                badgeStyle = 'bg-blue-50 text-blue-700 border-blue-200';
+                statusLabel = 'Approved';
               } else if (statusText === 'REJECTED') {
-                borderCol = "bg-rose-500";
-                badgeStyle = "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20";
-                statusLabel = "Rejected";
+                borderCol = 'bg-rose-500';
+                badgeStyle = 'bg-rose-50 text-rose-700 border-rose-200';
+                statusLabel = 'Rejected';
               }
 
               return (
-                <div key={qp.id} className="relative overflow-hidden bg-white dark:bg-gray-900 border border-slate-100 dark:border-gray-800 rounded-3xl p-6 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group">
-                  {/* Left Status Bar */}
+                <div key={qp.id} className="relative overflow-hidden bg-white border border-[#DDD7F3] rounded-[22px] p-5 shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-between group">
                   <div className={`absolute top-0 left-0 w-1.5 h-full ${borderCol}`}></div>
-                  
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start pl-2">
+
+                  <div className="space-y-3.5 pl-2">
+                    <div className="flex justify-between items-start gap-2">
                       <div>
-                        <h4 className="font-extrabold text-base text-slate-800 dark:text-white leading-snug group-hover:text-indigo-600 transition-all">{qp.title}</h4>
-                        <span className="inline-block mt-2 text-[10px] font-bold bg-slate-50 dark:bg-gray-800 text-slate-500 dark:text-slate-400 px-2 py-1 rounded-md border border-slate-100 dark:border-gray-700">
+                        <h4 className="font-black text-base text-[#1E1B4B] leading-snug group-hover:text-[#5B21B6] transition-colors">{qp.title}</h4>
+                        <span className="inline-block mt-1.5 text-[10px] font-black bg-[#F2EDFF] text-[#5B21B6] px-2.5 py-0.5 rounded-lg border border-[#DDD7F3]">
                           {qp.exam?.name ? formatExamOptionLabel(qp.exam.name) : 'General Exam'}
                         </span>
                       </div>
-                      <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-full border ${badgeStyle}`}>
+                      <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border shrink-0 ${badgeStyle}`}>
                         {statusLabel}
                       </span>
                     </div>
 
-                    <div className="pl-2 space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <Layers className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Class: <strong className="text-slate-700 dark:text-slate-200">{qp.class?.name}-{qp.class?.section}</strong></span>
+                    <div className="space-y-1.5 bg-[#F8FAFF] p-3 rounded-xl border border-indigo-50">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Class: <strong className="text-[#1E1B4B]">{qp.class?.name}-{qp.class?.section}</strong></span>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                        <BookOpen className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Subject: <strong className="text-slate-700 dark:text-slate-200">{qp.subject?.name || 'All Subjects / Combined'}</strong></span>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Subject: <strong className="text-[#1E1B4B]">{qp.subject?.name || 'All Subjects / Combined'}</strong></span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-slate-50 dark:border-gray-800 pl-2">
+                  <div className="pt-4 mt-4 border-t border-indigo-50 pl-2">
                     <div className="flex gap-2">
-                      <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-slate-200 text-xs font-black transition-all">
-                        <FileText className="w-4 h-4 text-emerald-500" /> View Paper
+                      <a href={qp.fileUrl} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-200 text-xs font-black transition-all">
+                        <FileText className="w-3.5 h-3.5" /> View Paper
                       </a>
-                      
+
                       {qp.answerKeyUrl && (
-                        <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-slate-200 transition-all" title="View Key Link">
-                           <ExternalLink className="w-4 h-4 text-blue-500" />
+                        <a href={qp.answerKeyUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-all" title="View Key Link">
+                           <ExternalLink className="w-4 h-4" />
                         </a>
                       )}
 
                       {(isAdmin || isTeacher) && (
-                        <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-slate-100 hover:border-slate-200 dark:border-gray-800 dark:hover:border-gray-700 text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl cursor-pointer transition-all" title="Manage Answer Key">
+                        <button onClick={() => { setSelectedQpForAnswerKey(qp); setAnswerKeyText(qp.answerKey || ''); setAnswerKeyUrl(qp.answerKeyUrl || ''); setShowAnswerKeyModal(true); }} className="p-2 border border-indigo-100 hover:border-[#5B21B6] text-[#5B21B6] bg-[#F8FAFF] hover:bg-[#F2EDFF] rounded-xl cursor-pointer transition-all" title="Manage Answer Key">
                           <Key className="w-4 h-4" />
                         </button>
                       )}
 
                       {isAdmin && (
-                        <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-slate-100 hover:border-rose-100 hover:bg-rose-50 dark:border-gray-800 dark:hover:border-rose-950/40 text-rose-500 rounded-xl cursor-pointer transition-all" title="Delete Paper">
+                        <button onClick={() => handleDeleteQp(qp.id)} className="p-2 border border-rose-100 hover:bg-rose-50 text-rose-500 rounded-xl cursor-pointer transition-all" title="Delete Paper">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       )}
                     </div>
 
-                    {/* Admin Workflow Buttons */}
-                    {isAdmin && (
-                      <div className="flex gap-2 mt-3 pt-3 border-t border-slate-50 dark:border-gray-800/50">
+                    {isAdmin && (statusText === 'PENDING_APPROVAL' || statusText === 'APPROVED' || statusText === 'REJECTED') && (
+                      <div className="flex gap-2 mt-2.5 pt-2.5 border-t border-indigo-50">
                         {statusText === 'PENDING_APPROVAL' && (
                           <>
-                            <button onClick={() => handleApproveQp(qp.id)} className="flex-1 py-2 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-400 rounded-xl font-extrabold border border-emerald-100 dark:border-emerald-500/20 text-xs transition-all cursor-pointer">
+                            <button onClick={() => handleApproveQp(qp.id)} className="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-xl font-black border border-emerald-200 text-xs transition-all cursor-pointer">
                               Approve
                             </button>
-                            <button onClick={() => handleRejectQp(qp.id)} className="flex-1 py-2 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-400 rounded-xl font-extrabold border border-rose-100 dark:border-rose-500/20 text-xs transition-all cursor-pointer">
+                            <button onClick={() => handleRejectQp(qp.id)} className="flex-1 py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl font-black border border-rose-200 text-xs transition-all cursor-pointer">
                               Reject
                             </button>
                           </>
                         )}
                         {(statusText === 'APPROVED' || statusText === 'REJECTED') && (
-                          <button onClick={() => handlePublishQp(qp.id)} className="w-full py-2 px-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/20 dark:text-indigo-400 rounded-xl font-extrabold border border-indigo-100 dark:border-indigo-500/20 text-xs transition-all cursor-pointer">
+                          <button onClick={() => handlePublishQp(qp.id)} className="w-full py-1.5 px-2 bg-[#F2EDFF] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white rounded-xl font-black border border-[#DDD7F3] text-xs transition-all cursor-pointer">
                             Publish Paper
                           </button>
                         )}
                       </div>
                     )}
-                    
+
                     {qp.answerKey && (
-                      <div className="mt-3 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-2xl text-[11px] border border-slate-100 dark:border-gray-800/80">
-                        <p className="font-extrabold mb-1 flex items-center gap-1 text-slate-700 dark:text-slate-300"><Key className="w-3.5 h-3.5 text-indigo-500"/> Typed Answer Key:</p>
-                        <div className="whitespace-pre-wrap text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{qp.answerKey}</div>
+                      <div className="mt-3 p-3 bg-[#F8FAFF] rounded-xl text-[11px] border border-indigo-100">
+                        <p className="font-black mb-1 flex items-center gap-1 text-[#1E1B4B]"><Key className="w-3.5 h-3.5 text-[#5B21B6]"/> Typed Answer Key:</p>
+                        <div className="whitespace-pre-wrap text-slate-600 font-medium leading-relaxed">{qp.answerKey}</div>
                       </div>
                     )}
                   </div>
                 </div>
               );
             })}
-            {questionPapers.length === 0 && (
-              <div className="col-span-full py-12 text-center text-gray-400">
-                No question papers uploaded yet.
+            {filteredQps.length === 0 && (
+              <div className="col-span-full py-14 flex flex-col items-center justify-center text-center bg-white rounded-[24px] border border-dashed border-[#DDD7F3]">
+                <Layers className="w-12 h-12 text-indigo-200 mb-3" />
+                <h3 className="text-base font-black text-[#1E1B4B]">No Question Papers Found</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-1">Adjust filters or click "Upload Question Paper" to add a new paper.</p>
               </div>
             )}
           </div>
 
-          {showQpModal && (
-            <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto animate-fade-in flex flex-col">
-              <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm">
-                <div>
-                  <h3 className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wider">Upload Question Paper</h3>
-                  <p className="text-xs text-gray-500 font-semibold mt-1">Upload a new question paper document</p>
-                </div>
-                <button onClick={() => setShowQpModal(false)} className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl transition-all cursor-pointer">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
-                <form onSubmit={handleCreateQp} className="space-y-6">
-                  <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800">
-                    <label className="label text-sm">Title (Optional)</label>
-                    <input type="text" placeholder="e.g. Mid Term Physics Paper" value={qpTitle} onChange={e => setQpTitle(e.target.value)} className="input text-sm py-3" />
-                  </div>
+          {/* ── REDESIGNED UPLOAD QUESTION PAPER STUDIO MODAL ── */}
+          {showQpModal && (() => {
+            const availableClasses = sortClasses((() => {
+              if (!qpExamId) return classes;
+              const selectedExam = exams.find(ex => ex.id === qpExamId);
+              return selectedExam?.classes || [];
+            })());
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
-                      <label className="label text-sm">Exam (Optional)</label>
-                      <select value={qpExamId} onChange={e => {
-                        const newExamId = e.target.value;
-                        setQpExamId(newExamId);
-                        setQpClassIds([]);
-                        setQpSubjectId('');
-                      }} className="input text-sm py-3 mb-4">
-                        <option value="">Select Exam...</option>
-                        {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e.name)}</option>)}
-                      </select>
-                      
-                      <label className="label text-sm mt-4">Classes * (Select multiple if same paper)</label>
-                      <div className="flex-1 overflow-y-auto mt-2 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-xl border border-slate-200 dark:border-gray-700 max-h-48 grid grid-cols-2 gap-3">
-                        {(() => {
-                          if (!qpExamId) return classes;
-                          const selectedExam = exams.find(ex => ex.id === qpExamId);
-                          return selectedExam?.classes || [];
-                        })().map(c => {
-                          const checked = qpClassIds.includes(c.id);
-                          return (
-                            <label key={c.id} className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-indigo-300 transition-all shadow-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={checked} 
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setQpClassIds(prev => [...prev, c.id]);
-                                  } else {
-                                    setQpClassIds(prev => prev.filter(id => id !== c.id));
-                                  }
-                                }} 
-                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300" 
-                              />
-                              {c.name}-{c.section}
-                            </label>
-                          );
-                        })}
+            const availableSubjects = (() => {
+              if (!qpExamId) return subjects;
+              const selectedExam = exams.find(e => e.id === qpExamId);
+              if (!selectedExam || !selectedExam.subjects) return [];
+              let examSubs: any[] = [];
+              const subData = typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : selectedExam.subjects;
+              if (subData && typeof subData === 'object' && !Array.isArray(subData) && subData.globalSubjects) {
+                examSubs = subData.globalSubjects;
+              } else if (Array.isArray(subData)) {
+                examSubs = subData;
+              }
+              return examSubs.map((es: any) => {
+                const subId = es.id || es.subjectId || es.subject?.id;
+                const foundSub = subjects.find(s => s.id === subId);
+                return foundSub || { id: subId, name: es.name || es.subject?.name };
+              }).filter(Boolean);
+            })();
+
+            const allClassesPicked = availableClasses.length > 0 && availableClasses.every((c: any) => qpClassIds.includes(c.id));
+
+            return (
+              <div className="fixed inset-0 z-50 bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+                <div className="bg-white rounded-[26px] border border-[#DDD7F3] shadow-2xl w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+                  {/* Purple ERP Modal Header */}
+                  <div className="bg-gradient-to-r from-[#5B21B6] via-[#6D38EA] to-[#7C3AED] px-6 py-4 flex items-center justify-between text-white shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-black tracking-wide">Upload Question Paper</h3>
+                        <p className="text-[11px] font-semibold text-indigo-100">Assign target classes & subjects and attach PDF/Word or document link</p>
                       </div>
                     </div>
-                    
-                    <div className="card p-6 shadow-sm border border-gray-100 dark:border-gray-800 flex flex-col h-full">
-                      <label className="label text-sm">Subjects (Optional)</label>
-                      <div className="flex-1 overflow-y-auto mt-2 p-3 bg-slate-50 dark:bg-gray-800/50 rounded-xl border border-slate-200 dark:border-gray-700 max-h-64 grid grid-cols-1 gap-3">
-                        {(() => {
-                          if (!qpExamId) return subjects;
-                          const selectedExam = exams.find(e => e.id === qpExamId);
-                          if (!selectedExam || !selectedExam.subjects) return [];
-                          let examSubs: any[] = [];
-                          const subData = typeof selectedExam.subjects === 'string' ? JSON.parse(selectedExam.subjects) : selectedExam.subjects;
-                          if (subData && typeof subData === 'object' && !Array.isArray(subData) && subData.globalSubjects) {
-                            examSubs = subData.globalSubjects;
-                          } else if (Array.isArray(subData)) {
-                            examSubs = subData;
-                          }
-                          
-                          return examSubs.map((es: any) => {
-                            const subId = es.id || es.subjectId || es.subject?.id;
-                            const foundSub = subjects.find(s => s.id === subId);
-                            return foundSub || { id: subId, name: es.name || es.subject?.name };
-                          }).filter(Boolean);
-                        })().map(s => {
-                          const checked = qpSubjectIds.includes(s.id);
-                          return (
-                            <label key={s.id} className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 hover:border-indigo-300 transition-all shadow-sm">
-                              <input 
-                                type="checkbox" 
-                                checked={checked} 
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setQpSubjectIds(prev => [...prev, s.id]);
-                                  } else {
-                                    setQpSubjectIds(prev => prev.filter(id => id !== s.id));
-                                  }
-                                }} 
-                                className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 border-gray-300" 
-                              />
-                              {s.name}
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="card p-6 md:p-8 shadow-sm border border-slate-100 dark:border-gray-800 bg-slate-50/50 dark:bg-gray-800/10 space-y-6">
-                    <div>
-                      <label className="text-sm font-black uppercase tracking-wider text-slate-500 mb-3 block flex items-center gap-2"><Upload className="w-5 h-5 text-indigo-500" /> Upload Document (PDF/Word)</label>
-                      <div className="relative border-2 border-dashed border-slate-300 dark:border-gray-600 hover:border-indigo-500 dark:hover:border-indigo-500 transition-all rounded-3xl p-10 flex flex-col items-center justify-center bg-white dark:bg-gray-900 cursor-pointer group shadow-inner">
-                        <input 
-                          type="file" 
-                          accept=".pdf,.doc,.docx" 
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            const formData = new FormData();
-                            formData.append('file', file);
-                            const loadingToast = toast.loading('Uploading document...');
-                            try {
-                              const res: any = await api.post('/api/uploads/document', formData, {
-                                headers: { 'Content-Type': 'multipart/form-data' }
-                              });
-                              toast.dismiss(loadingToast);
-                              const urlVal = res.data?.url || res.url || res.data?.data?.url;
-                              if (urlVal) {
-                                setQpFileUrl(urlVal);
-                                toast.success('Document uploaded successfully');
-                              } else {
-                                toast.error('Upload failed: Invalid response');
-                              }
-                            } catch {
-                              toast.dismiss(loadingToast);
-                              toast.error('Error uploading document');
-                            }
-                          }} 
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
-                        <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
-                          <Download className="w-10 h-10 text-indigo-500" />
-                        </div>
-                        <span className="text-sm md:text-base text-slate-700 dark:text-slate-300 font-extrabold group-hover:text-indigo-600 transition-colors">Click or drag file here to upload</span>
-                        <span className="text-xs text-slate-400 mt-2 font-semibold">Supported formats: PDF, DOC, DOCX (Max 10MB)</span>
-                      </div>
-                    </div>
-                    
-                    <div className="relative flex py-4 items-center">
-                      <div className="flex-grow border-t border-slate-200 dark:border-gray-700"></div>
-                      <span className="flex-shrink mx-4 text-slate-400 text-xs font-black uppercase tracking-widest bg-white dark:bg-gray-900 px-3 py-1 rounded-full border border-slate-100 dark:border-gray-800">OR PASTE LINK MANUALLY</span>
-                      <div className="flex-grow border-t border-slate-200 dark:border-gray-700"></div>
-                    </div>
-
-                    <div>
-                      <label className="text-sm font-black uppercase tracking-wider text-slate-500 mb-3 block flex items-center gap-2"><LinkIcon className="w-5 h-5 text-indigo-500" /> File Link (PDF/Word/Drive)</label>
-                      <input 
-                        type="text" 
-                        placeholder="https://link-to-file.pdf or Google Drive link" 
-                        value={qpFileUrl} 
-                        onChange={e => setQpFileUrl(e.target.value)} 
-                        className="w-full bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 rounded-2xl px-5 py-4 text-base focus:outline-none focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 dark:text-slate-200 font-bold shadow-sm transition-all" 
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 justify-end pt-6 mb-12">
-                    <button type="button" onClick={() => setShowQpModal(false)} className="px-6 py-3 rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition-colors">Cancel</button>
-                    <button type="submit" className="px-8 py-3 rounded-2xl font-black bg-indigo-600 text-white hover:bg-indigo-700 shadow-xl shadow-indigo-600/30 transition-all flex items-center gap-2 text-lg">
-                      <Save className="w-5 h-5" /> Save Question Paper
+                    <button
+                      type="button"
+                      onClick={() => setShowQpModal(false)}
+                      className="p-2 rounded-xl bg-white/15 hover:bg-white/25 text-white transition-all cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
-                </form>
+
+                  <form onSubmit={handleCreateQp} className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex-1 overflow-y-auto p-5 sm:p-6 bg-[#F8FAFF] space-y-5 custom-scrollbar">
+                      {/* Row 1: Title & Exam */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white p-5 rounded-2xl border border-indigo-100 shadow-xs">
+                        <div>
+                          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-600 mb-2">Paper Title (Optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. SA-1 Mathematics Model Paper"
+                            value={qpTitle}
+                            onChange={e => setQpTitle(e.target.value)}
+                            className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-[#1E1B4B] outline-none focus:border-[#5B21B6] focus:bg-white transition-all"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-black uppercase tracking-wider text-slate-600 mb-2">Link to Examination (Optional)</label>
+                          <select
+                            value={qpExamId}
+                            onChange={e => {
+                              const newExamId = e.target.value;
+                              setQpExamId(newExamId);
+                              setQpClassIds([]);
+                              setQpSubjectId('');
+                            }}
+                            className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-[#1E1B4B] outline-none focus:border-[#5B21B6] focus:bg-white transition-all cursor-pointer"
+                          >
+                            <option value="">General / Standalone Paper</option>
+                            {exams.map(e => <option key={e.id} value={e.id}>{formatExamOptionLabel(e.name)}</option>)}
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Row 2: Target Classes & Subjects */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-5 rounded-2xl border border-indigo-100 shadow-xs flex flex-col">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <label className="block text-[11px] font-black uppercase tracking-wider text-[#1E1B4B]">Target Classes *</label>
+                              <span className="text-[10px] font-bold text-slate-400">{qpClassIds.length} classes selected</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (allClassesPicked) setQpClassIds([]);
+                                else setQpClassIds(availableClasses.map((c: any) => c.id));
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-[#F2EDFF] hover:bg-indigo-100 text-[#5B21B6] text-[10px] font-black cursor-pointer"
+                            >
+                              {allClassesPicked ? 'Clear All' : 'Select All'}
+                            </button>
+                          </div>
+                          <div className="flex-1 overflow-y-auto p-3 bg-[#F8FAFF] rounded-xl border border-indigo-50 max-h-52 grid grid-cols-2 gap-2 custom-scrollbar">
+                            {availableClasses.map((c: any) => {
+                              const checked = qpClassIds.includes(c.id);
+                              return (
+                                <label
+                                  key={c.id}
+                                  className={`flex items-center gap-2 cursor-pointer text-xs font-black p-2.5 rounded-xl border transition-all ${
+                                    checked
+                                      ? 'bg-[#F2EDFF] border-[#7C3AED] text-[#5B21B6] shadow-xs'
+                                      : 'bg-white border-indigo-100 text-slate-700 hover:border-indigo-300'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setQpClassIds(prev => [...prev, c.id]);
+                                      else setQpClassIds(prev => prev.filter(id => id !== c.id));
+                                    }}
+                                    className="w-4 h-4 text-[#5B21B6] rounded focus:ring-[#5B21B6] border-slate-300"
+                                  />
+                                  <span className="truncate">{c.name}-{c.section}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-indigo-100 shadow-xs flex flex-col">
+                          <div className="flex items-center justify-between mb-3">
+                            <div>
+                              <label className="block text-[11px] font-black uppercase tracking-wider text-[#1E1B4B]">Subjects (Optional)</label>
+                              <span className="text-[10px] font-bold text-slate-400">{qpSubjectIds.length || 'All'} selected</span>
+                            </div>
+                            {qpSubjectIds.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => setQpSubjectIds([])}
+                                className="px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-black cursor-pointer"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex-1 overflow-y-auto p-3 bg-[#F8FAFF] rounded-xl border border-indigo-50 max-h-52 grid grid-cols-1 sm:grid-cols-2 gap-2 custom-scrollbar">
+                            {availableSubjects.map((s: any) => {
+                              const checked = qpSubjectIds.includes(s.id);
+                              return (
+                                <label
+                                  key={s.id}
+                                  className={`flex items-center gap-2 cursor-pointer text-xs font-black p-2.5 rounded-xl border transition-all ${
+                                    checked
+                                      ? 'bg-emerald-50 border-emerald-400 text-emerald-800 shadow-xs'
+                                      : 'bg-white border-indigo-100 text-slate-700 hover:border-indigo-300'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={(e) => {
+                                      if (e.target.checked) setQpSubjectIds(prev => [...prev, s.id]);
+                                      else setQpSubjectIds(prev => prev.filter(id => id !== s.id));
+                                    }}
+                                    className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 border-slate-300"
+                                  />
+                                  <span className="truncate uppercase">{s.name}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Row 3: Upload Document Dropzone + Link */}
+                      <div className="bg-white p-5 rounded-2xl border border-indigo-100 shadow-xs space-y-4">
+                        <div className="flex items-center justify-between">
+                          <label className="text-[11px] font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-2">
+                            <Upload className="w-4 h-4 text-[#5B21B6]" /> Upload Question Paper Document (PDF / Word)
+                          </label>
+                          {qpFileUrl && (
+                            <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-black flex items-center gap-1">
+                              <CheckCircle className="w-3.5 h-3.5" /> File Attached
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="relative border-2 border-dashed border-indigo-200 hover:border-[#5B21B6] transition-all rounded-2xl p-7 flex flex-col items-center justify-center bg-[#F8FAFF] hover:bg-[#F2EDFF]/40 cursor-pointer group">
+                          <input
+                            type="file"
+                            accept=".pdf,.doc,.docx"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              const loadingToast = toast.loading('Uploading document...');
+                              try {
+                                const res: any = await api.post('/api/uploads/document', formData, {
+                                  headers: { 'Content-Type': 'multipart/form-data' }
+                                });
+                                toast.dismiss(loadingToast);
+                                const urlVal = res.data?.url || res.url || res.data?.data?.url;
+                                if (urlVal) {
+                                  setQpFileUrl(urlVal);
+                                  toast.success('Document uploaded successfully');
+                                } else {
+                                  toast.error('Upload failed: Invalid response');
+                                }
+                              } catch {
+                                toast.dismiss(loadingToast);
+                                toast.error('Error uploading document');
+                              }
+                            }}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          />
+                          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF] border border-indigo-200 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
+                            <Download className="w-6 h-6 text-[#5B21B6]" />
+                          </div>
+                          <span className="text-sm font-black text-[#1E1B4B] group-hover:text-[#5B21B6] transition-colors">Click or drag question paper here to upload</span>
+                          <span className="text-xs text-slate-500 mt-1 font-semibold">Supported formats: PDF, DOC, DOCX (Max 10MB)</span>
+                        </div>
+
+                        <div>
+                          <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 mb-1.5 flex items-center gap-1.5">
+                            <LinkIcon className="w-3.5 h-3.5 text-[#5B21B6]" /> Or Paste Document / Google Drive Link
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="https://link-to-file.pdf or Google Drive share link"
+                            value={qpFileUrl}
+                            onChange={e => setQpFileUrl(e.target.value)}
+                            className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-[#5B21B6] text-[#1E1B4B] font-bold transition-all"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="px-6 py-4 bg-white border-t border-indigo-50 flex items-center justify-end gap-3 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setShowQpModal(false)}
+                        className="px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white hover:opacity-95 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 cursor-pointer"
+                      >
+                        <Save className="w-4 h-4" /> Save Question Paper
+                      </button>
+                    </div>
+                  </form>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ANSWER KEY MODAL */}
           {showAnswerKeyModal && selectedQpForAnswerKey && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/50 backdrop-blur-sm p-4">
-              <div className="card w-full max-w-lg p-6 space-y-5 shadow-2xl border border-white/20">
-                <div className="flex justify-between items-center border-b pb-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 backdrop-blur-sm p-4">
+              <div className="bg-white rounded-[24px] w-full max-w-lg p-6 space-y-5 shadow-2xl border border-[#DDD7F3]">
+                <div className="flex justify-between items-center border-b border-indigo-50 pb-4">
                   <div>
-                    <h3 className="text-lg font-bold flex items-center gap-2"><Key className="w-5 h-5 text-indigo-500" /> Answer Key</h3>
-                    <p className="text-xs text-gray-500 mt-1">{selectedQpForAnswerKey.title}</p>
+                    <h3 className="text-lg font-black text-[#1E1B4B] flex items-center gap-2"><Key className="w-5 h-5 text-[#5B21B6]" /> Answer Key</h3>
+                    <p className="text-xs font-semibold text-slate-500 mt-0.5">{selectedQpForAnswerKey.title}</p>
                   </div>
-                  <button onClick={() => setShowAnswerKeyModal(false)} className="p-2 hover:bg-gray-100 rounded-xl cursor-pointer"><X className="w-5 h-5" /></button>
+                  <button onClick={() => setShowAnswerKeyModal(false)} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-xl cursor-pointer"><X className="w-5 h-5 text-slate-600" /></button>
                 </div>
-                
+
                 <form onSubmit={handleUpdateAnswerKey} className="space-y-4">
                   <div>
                     <label className="label font-bold">Answer Key Document URL (PDF/Image) - Optional</label>
-                    <input type="url" placeholder="https://link-to-answer-key.pdf" value={answerKeyUrl} onChange={e => setAnswerKeyUrl(e.target.value)} className="input border-indigo-100 focus:border-indigo-500" />
-                    <p className="text-[10px] text-gray-400 mt-1">If you have a PDF answer key, paste the link here.</p>
+                    <input type="url" placeholder="https://link-to-answer-key.pdf" value={answerKeyUrl} onChange={e => setAnswerKeyUrl(e.target.value)} className="input border-indigo-100 focus:border-[#5B21B6]" />
+                    <p className="text-[10px] text-slate-400 mt-1">If you have a PDF answer key, paste the link here.</p>
                   </div>
-                  
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <span className="bg-white px-2 text-sm text-gray-500 font-bold uppercase tracking-wider">OR</span>
-                    </div>
+
+                  <div className="relative flex items-center py-1">
+                    <div className="flex-grow border-t border-indigo-100"></div>
+                    <span className="mx-3 text-xs text-slate-400 font-black uppercase tracking-wider">OR</span>
+                    <div className="flex-grow border-t border-indigo-100"></div>
                   </div>
 
                   <div>
                     <label className="label font-bold">Type Answers Manually</label>
-                    <textarea 
-                      placeholder="1. A&#10;2. B&#10;3. C&#10;..." 
-                      value={answerKeyText} 
-                      onChange={e => setAnswerKeyText(e.target.value)} 
-                      className="input min-h-[150px] resize-y font-mono text-sm leading-relaxed" 
+                    <textarea
+                      placeholder="1. A&#10;2. B&#10;3. C&#10;..."
+                      value={answerKeyText}
+                      onChange={e => setAnswerKeyText(e.target.value)}
+                      className="input min-h-[150px] resize-y font-mono text-sm leading-relaxed"
                     />
-                    <p className="text-[10px] text-gray-400 mt-1">Type the answers line by line or paste them from a document.</p>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                  <div className="flex justify-end gap-3 pt-3 border-t border-indigo-50">
                     <button type="button" onClick={() => setShowAnswerKeyModal(false)} className="btn-secondary">Cancel</button>
-                    <button type="submit" className="btn-primary bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 flex items-center gap-2">
+                    <button type="submit" className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white font-black text-xs uppercase tracking-wider shadow-md flex items-center gap-2 cursor-pointer">
                       <Save className="w-4 h-4"/> Save Answer Key
                     </button>
                   </div>
@@ -2372,7 +2850,8 @@ export const ExamListPage: React.FC = () => {
             </div>
           )}
         </div>
-      )}
+        );
+      })()}
 
       {/* ══ TAB 10: SLIP TESTS ══ */}
       {activeTab === 'slip-tests' && (
@@ -2387,24 +2866,24 @@ export const ExamListPage: React.FC = () => {
       {/* ══ TAB 9: ONLINE EXAMS LIST ══ */}
       {activeTab === 'online-exams' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {onlineExams.map(exam => (
-              <div key={exam.id} className="card p-6 space-y-4 hover:shadow-md border-t-4 border-indigo-500">
+              <div key={exam.id} className="bg-white rounded-[22px] border border-[#DDD7F3] p-5 space-y-4 hover:shadow-md border-t-4 border-t-[#5B21B6]">
                 <div>
                   <Badge variant="success">{exam.subject?.name}</Badge>
-                  <h4 className="font-bold text-base text-gray-900 dark:text-white mt-1.5">{exam.title}</h4>
-                  <p className="text-[11px] text-gray-400 mt-1">Class: {exam.class?.name}-{exam.class?.section}</p>
+                  <h4 className="font-black text-base text-[#1E1B4B] mt-1.5">{exam.title}</h4>
+                  <p className="text-[11px] font-bold text-slate-400 mt-1">Class: {exam.class?.name}-{exam.class?.section}</p>
                 </div>
 
-                <div className="text-xs space-y-2 text-gray-500 font-semibold border-y border-gray-100 dark:border-gray-800 py-3">
-                  <p className="flex justify-between"><span>Duration:</span> <span>{exam.duration} mins</span></p>
-                  <p className="flex justify-between"><span>Total Marks:</span> <span>{exam.totalMarks}</span></p>
-                  <p className="flex justify-between"><span>Passing Marks:</span> <span>{exam.passMarks}</span></p>
-                  <p className="flex justify-between"><span>Questions:</span> <span>{exam.questions?.length || 0} items</span></p>
+                <div className="text-xs space-y-2 text-slate-600 font-semibold border-y border-indigo-50 py-3">
+                  <p className="flex justify-between"><span>Duration:</span> <strong>{exam.duration} mins</strong></p>
+                  <p className="flex justify-between"><span>Total Marks:</span> <strong>{exam.totalMarks}</strong></p>
+                  <p className="flex justify-between"><span>Passing Marks:</span> <strong>{exam.passMarks}</strong></p>
+                  <p className="flex justify-between"><span>Questions:</span> <strong>{exam.questions?.length || 0} items</strong></p>
                 </div>
 
                 {isStudent ? (
-                  <button onClick={() => handleStartTakeExam(exam.id)} className="btn-primary w-full flex items-center justify-center gap-2">
+                  <button onClick={() => handleStartTakeExam(exam.id)} className="w-full py-2.5 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white rounded-xl font-black text-xs flex items-center justify-center gap-2 cursor-pointer">
                     <Play className="w-4 h-4" /> Start Exam
                   </button>
                 ) : (
@@ -2412,7 +2891,7 @@ export const ExamListPage: React.FC = () => {
                     <button onClick={() => handleViewSubmissions(exam.id)} className="btn-secondary flex-1 text-xs font-bold">
                       Submissions ({exam.submissions?.length || 0})
                     </button>
-                    <button onClick={() => handleDeleteOnlineExam(exam.id)} className="p-2 border border-red-200 dark:border-red-900/40 text-red-500 hover:bg-red-50 rounded-xl cursor-pointer">
+                    <button onClick={() => handleDeleteOnlineExam(exam.id)} className="p-2 border border-rose-200 text-rose-500 hover:bg-rose-50 rounded-xl cursor-pointer">
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
@@ -2420,7 +2899,7 @@ export const ExamListPage: React.FC = () => {
               </div>
             ))}
             {onlineExams.length === 0 && (
-              <div className="col-span-full py-12 text-center text-gray-400">
+              <div className="col-span-full py-12 text-center text-slate-400 font-semibold">
                 No active online exams scheduled or published.
               </div>
             )}
@@ -2428,109 +2907,358 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ TAB 7: EXAMINATIONS LIST ══ */}
-      {activeTab === 'examination' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center bg-transparent p-2">
-            <h2 className="text-lg font-black text-slate-800 uppercase tracking-wider">Examinations List</h2>
-            {isAdmin && (
-              <div className="flex gap-2">
-                <button onClick={openCreateModal} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-md">
-                  <Plus className="w-4 h-4" /> Create Exam
-                </button>
-              </div>
-            )}
-          </div>
+      {/* ══ TAB 7: EXAMINATIONS DIRECTORY (Redesigned Professional ERP List) ══ */}
+      {activeTab === 'examination' && (() => {
+        const getExamMeta = (ex: any) => {
+          const upper = (ex.name || '').toUpperCase();
+          let catKey: 'BOARD' | 'NAVODAYA' | 'JEE' | 'OTHER' = 'OTHER';
+          let catLabel = 'Assessment';
+          let accentBar = 'from-emerald-500 to-teal-500';
+          let badgeCss = 'bg-emerald-50 text-emerald-700 border-emerald-200';
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mt-4">
-            {exams.map(e => {
-              const isExpanded = expandedExam === e.id;
-              return (
-                <div key={e.id} className="bg-white dark:bg-gray-900 rounded-3xl p-5 md:p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 dark:border-gray-800 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all flex flex-col gap-4 relative overflow-hidden group cursor-pointer" onClick={() => setExpandedExam(isExpanded ? null : e.id)}>
-                  
-                  {/* Decorative background accent */}
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150 duration-700 pointer-events-none" />
-                  
-                  <div className="flex justify-between items-start z-10 relative">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-black text-slate-800 dark:text-white leading-tight">{e.name}</h3>
-                        {e.term && <span className="bg-indigo-100 text-indigo-700 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">{e.term}</span>}
-                      </div>
-                      <p className="text-xs font-bold text-slate-400 flex items-center gap-1 mt-1">
-                        <Calendar className="w-3.5 h-3.5" />
-                        {new Date(e.examDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
-                      </p>
-                    </div>
-                  </div>
+          if (upper.includes('JEE') || upper.includes('NEET') || upper.includes('IIT')) {
+            catKey = 'JEE';
+            catLabel = 'JEE / Competitive';
+            accentBar = 'from-amber-500 to-orange-500';
+            badgeCss = 'bg-amber-50 text-amber-800 border-amber-200';
+          } else if (upper.includes('NAVODAYA')) {
+            catKey = 'NAVODAYA';
+            catLabel = 'Navodaya Model';
+            accentBar = 'from-cyan-500 to-blue-600';
+            badgeCss = 'bg-cyan-50 text-cyan-800 border-cyan-200';
+          } else if (
+            upper.includes('FA-') || upper.includes('FA ') ||
+            upper.includes('SA-') || upper.includes('SA ') ||
+            upper.includes('FORMATIVE') || upper.includes('SUMMATIVE') ||
+            upper.includes('PRE-FINAL') || upper.includes('BOARD') || upper.includes('FINAL')
+          ) {
+            catKey = 'BOARD';
+            catLabel = 'Board / Term';
+            accentBar = 'from-[#5B21B6] to-[#7C3AED]';
+            badgeCss = 'bg-[#F2EDFF] text-[#5B21B6] border-[#DDD7F3]';
+          }
 
-                  <div className="z-10 relative mt-2">
-                    <div className="text-[10px] font-extrabold uppercase text-slate-400 mb-2 tracking-wider">Target Classes</div>
-                    <div className="flex flex-wrap gap-2">
-                      {(e.classes || []).slice(0, isExpanded ? undefined : 3).map((c: any) => (
-                        <span key={c.id} className="bg-slate-50 dark:bg-gray-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-100 dark:border-gray-700 shadow-sm">
-                          {c.name}-{c.section}
-                        </span>
-                      ))}
-                      {!isExpanded && (e.classes || []).length > 3 && (
-                        <span className="bg-slate-50 dark:bg-gray-800 text-slate-400 dark:text-slate-500 px-2.5 py-1 rounded-lg text-xs font-bold border border-slate-100 dark:border-gray-700 shadow-sm">
-                          +{(e.classes.length - 3)} more
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          let subCount = 0;
+          try {
+            const parsed = typeof ex.subjects === 'string' ? JSON.parse(ex.subjects) : ex.subjects;
+            if (Array.isArray(parsed)) subCount = parsed.length;
+            else if (parsed?.classConfigs && Array.isArray(parsed.classConfigs)) {
+              const uniq = new Set<string>();
+              parsed.classConfigs.forEach((cfg: any) => (cfg.subjects || []).forEach((s: any) => s?.name && uniq.add(s.name.trim().toUpperCase())));
+              subCount = uniq.size;
+            } else if (parsed?.globalSubjects && Array.isArray(parsed.globalSubjects)) {
+              subCount = parsed.globalSubjects.length;
+            }
+          } catch {}
 
-                  {isExpanded && (
-                    <div className="z-10 relative pt-4 border-t border-gray-100 dark:border-gray-800 mt-2 flex flex-wrap gap-2 animate-fade-in" onClick={ev => ev.stopPropagation()}>
-                      {isAdmin && (
-                        <>
-                          <button onClick={() => openEditModal(e)} className="flex-1 bg-white hover:bg-slate-50 text-indigo-600 border-2 border-indigo-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
-                            <Edit3 className="w-4 h-4" /> Edit
-                          </button>
-                          <button onClick={() => handleDuplicateExam(e)} className="flex-1 bg-white hover:bg-slate-50 text-emerald-600 border-2 border-emerald-50 text-xs font-bold px-4 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
-                            <Copy className="w-4 h-4" /> Duplicate
-                          </button>
-                          <button 
-                            onClick={async () => {
-                              try {
-                                await api.post(`/api/exams/${e.id}/sync-from-marks`);
-                                toast.success('Subjects synced successfully based on marks!');
-                                fetchExams(true);
-                              } catch (err: any) {
-                                toast.error(err.response?.data?.message || 'Sync failed');
-                              }
-                            }} 
-                            className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all"
-                            title="Restore subjects permanently based on marks"
-                          >
-                            <RefreshCw className="w-3.5 h-3.5" /> Restore Subjects
-                          </button>
-                        </>
-                      )}
-                      {user?.role === 'SUPER_ADMIN' && (
-                        <button onClick={() => handleDeleteExam(e.id)} className="bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 text-xs font-bold px-3 py-2 flex justify-center items-center gap-1.5 rounded-xl transition-all">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button onClick={() => setActiveTab('written-exam')} className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 flex justify-center items-center rounded-xl shadow-md transition-all shadow-indigo-500/20">
-                        Enter Grades
-                      </button>
-                    </div>
-                  )}
+          const sortedCls = sortClasses(ex.classes || []);
+          return { catKey, catLabel, accentBar, badgeCss, subCount, sortedCls };
+        };
+
+        const filteredExams = exams.filter((ex) => {
+          const { catKey, sortedCls } = getExamMeta(ex);
+          const q = examSearch.trim().toLowerCase();
+          const matchesQ = !q ||
+            (ex.name || '').toLowerCase().includes(q) ||
+            (ex.term || '').toLowerCase().includes(q) ||
+            sortedCls.some((c: any) => `${c.name}-${c.section}`.toLowerCase().includes(q));
+          const matchesCat = examCategoryFilter === 'ALL' || catKey === examCategoryFilter;
+          return matchesQ && matchesCat;
+        });
+
+        return (
+          <div className="space-y-5 animate-fade-in">
+            {/* Command & Filter Toolbar */}
+            <div className="bg-white rounded-[22px] border border-[#DDD7F3] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] p-4 sm:p-5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={examSearch}
+                    onChange={(e) => setExamSearch(e.target.value)}
+                    placeholder="Search examination, term, or class (e.g. SA-1, 6th-A)..."
+                    className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-xs font-bold text-[#1E1B4B] outline-none focus:border-[#5B21B6]"
+                  />
                 </div>
-              );
-            })}
-            
-            {exams.length === 0 && (
-              <div className="col-span-full py-16 flex flex-col items-center justify-center bg-white/50 backdrop-blur-md rounded-3xl border-2 border-dashed border-gray-200">
-                <Layers className="w-12 h-12 text-gray-300 mb-3" />
-                <h3 className="text-lg font-bold text-gray-500">No Examinations Found</h3>
-                <p className="text-sm text-gray-400">Click "Create Exam" to schedule a new examination.</p>
+
+                {/* Category Chips */}
+                <div className="flex flex-wrap items-center gap-1.5 bg-[#F8FAFF] p-1 rounded-xl border border-indigo-100">
+                  {[
+                    { id: 'ALL', label: `All (${exams.length})` },
+                    { id: 'BOARD', label: 'Board / FA-SA' },
+                    { id: 'NAVODAYA', label: 'Navodaya' },
+                    { id: 'JEE', label: 'JEE Mains' },
+                  ].map((chip) => (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      onClick={() => setExamCategoryFilter(chip.id as any)}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
+                        examCategoryFilter === chip.id
+                          ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-xs'
+                          : 'text-slate-600 hover:text-[#5B21B6]'
+                      }`}
+                    >
+                      {chip.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between sm:justify-end gap-2.5">
+                <div className="flex items-center bg-[#F8FAFF] p-1 rounded-xl border border-indigo-100">
+                  <button
+                    type="button"
+                    onClick={() => setExamViewMode('grid')}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${examViewMode === 'grid' ? 'bg-white text-[#5B21B6] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                    title="Card View"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExamViewMode('list')}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${examViewMode === 'list' ? 'bg-white text-[#5B21B6] shadow-xs' : 'text-slate-400 hover:text-slate-600'}`}
+                    title="Table View"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {isAdmin && (
+                  <button
+                    onClick={openCreateModal}
+                    className="bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black transition-all shadow-md shadow-indigo-500/20 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" /> Create Exam
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {examViewMode === 'grid' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {filteredExams.map(e => {
+                  const isExpanded = expandedExam === e.id;
+                  const meta = getExamMeta(e);
+                  return (
+                    <div
+                      key={e.id}
+                      className="bg-white rounded-[22px] shadow-[0_6px_22px_-8px_rgba(79,70,229,0.1)] border border-[#DDD7F3] hover:shadow-md hover:border-[#7C3AED]/50 transition-all flex flex-col justify-between relative overflow-hidden group"
+                    >
+                      {/* Top Color Accent Strip */}
+                      <div className={`h-1.5 w-full bg-gradient-to-r ${meta.accentBar}`} />
+
+                      <div className="p-5 flex-1 flex flex-col gap-4">
+                        <div className="flex justify-between items-start gap-2">
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${meta.badgeCss}`}>
+                                {meta.catLabel}
+                              </span>
+                              {e.term && (
+                                <span className="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-black uppercase px-2 py-0.5 rounded-full">
+                                  {e.term}
+                                </span>
+                              )}
+                            </div>
+                            <h3 className="text-[15px] sm:text-base font-black text-[#1E1B4B] leading-snug">{e.name}</h3>
+                            <p className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                              {new Date(e.examDate).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+                            </p>
+                          </div>
+
+                          <div className="text-right shrink-0 bg-[#F8FAFF] border border-indigo-100 rounded-xl px-2.5 py-1.5">
+                            <span className="block text-[10px] font-black text-[#5B21B6]">{meta.sortedCls.length} Classes</span>
+                            <span className="block text-[10px] font-bold text-slate-400">{meta.subCount || '—'} Subj</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div className="text-[10px] font-black uppercase text-slate-400 mb-2 tracking-wider">Target Classes</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {meta.sortedCls.slice(0, isExpanded ? undefined : 4).map((c: any) => (
+                              <span key={c.id} className="bg-[#F8FAFF] text-[#1E1B4B] px-2.5 py-1 rounded-lg text-[11px] font-black border border-indigo-100/80">
+                                {c.name}-{c.section}
+                              </span>
+                            ))}
+                            {meta.sortedCls.length > 4 && (
+                              <button
+                                type="button"
+                                onClick={() => setExpandedExam(isExpanded ? null : e.id)}
+                                className="bg-[#F2EDFF] hover:bg-indigo-100 text-[#5B21B6] px-2.5 py-1 rounded-lg text-[11px] font-black border border-[#DDD7F3] cursor-pointer transition-colors"
+                              >
+                                {isExpanded ? 'Show less' : `+${meta.sortedCls.length - 4} more`}
+                              </button>
+                            )}
+                            {meta.sortedCls.length === 0 && (
+                              <span className="text-xs font-bold text-slate-400 italic">No classes assigned</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Always-Accessible Quick Actions Footer */}
+                      <div className="px-5 py-3.5 bg-[#F8FAFF]/90 border-t border-indigo-50 flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => { setSelectedWrittenExamId(e.id); selectTab('written-exam'); }}
+                            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 text-white text-[11px] font-black flex items-center gap-1 shadow-xs cursor-pointer"
+                          >
+                            <Edit3 className="w-3 h-3" /> Marks
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => selectTab('results')}
+                            className="px-2.5 py-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-black flex items-center gap-1 cursor-pointer transition-colors"
+                          >
+                            <Award className="w-3 h-3" /> Results
+                          </button>
+                        </div>
+
+                        {isAdmin && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => openEditModal(e)}
+                              className="p-1.5 rounded-xl bg-white hover:bg-[#F2EDFF] text-[#5B21B6] border border-indigo-100 transition-colors cursor-pointer"
+                              title="Edit Configuration"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDuplicateExam(e)}
+                              className="p-1.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-600 border border-emerald-200/70 transition-colors cursor-pointer"
+                              title="Duplicate Exam"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await api.post(`/api/exams/${e.id}/sync-from-marks`);
+                                  toast.success('Subjects synced successfully based on marks!');
+                                  fetchExams(true);
+                                } catch (err: any) {
+                                  toast.error(err.response?.data?.message || 'Sync failed');
+                                }
+                              }}
+                              className="p-1.5 rounded-xl bg-white hover:bg-amber-50 text-amber-600 border border-amber-200/70 transition-colors cursor-pointer"
+                              title="Restore Subjects from Marks"
+                            >
+                              <RefreshCw className="w-3.5 h-3.5" />
+                            </button>
+                            {user?.role === 'SUPER_ADMIN' && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteExam(e.id)}
+                                className="p-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-500 border border-rose-200/70 transition-colors cursor-pointer"
+                                title="Delete Exam"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="bg-white rounded-[22px] border border-[#DDD7F3] shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="student-grid-table w-full text-left border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6]">
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider w-12">#</th>
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Examination Name</th>
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Category</th>
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Date</th>
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider">Classes</th>
+                        <th className="py-3.5 px-4 font-black !text-white text-xs uppercase tracking-wider text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-indigo-50">
+                      {filteredExams.map((e, idx) => {
+                        const meta = getExamMeta(e);
+                        return (
+                          <tr key={e.id} className="hover:bg-[#F8FAFF] transition-colors">
+                            <td className="py-3.5 px-4 font-bold text-slate-400 text-xs">{idx + 1}</td>
+                            <td className="py-3.5 px-4">
+                              <div className="font-black text-[#1E1B4B]">{e.name}</div>
+                              {e.term && <span className="text-[10px] font-bold text-indigo-600">{e.term}</span>}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase border ${meta.badgeCss}`}>
+                                {meta.catLabel}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 text-xs font-bold text-slate-600 whitespace-nowrap">
+                              {new Date(e.examDate).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex flex-wrap gap-1">
+                                {meta.sortedCls.slice(0, 3).map((c: any) => (
+                                  <span key={c.id} className="px-2 py-0.5 bg-[#F8FAFF] border border-indigo-100 rounded text-[10px] font-black text-[#1E1B4B]">
+                                    {c.name}-{c.section}
+                                  </span>
+                                ))}
+                                {meta.sortedCls.length > 3 && (
+                                  <span className="px-2 py-0.5 bg-[#F2EDFF] text-[#5B21B6] rounded text-[10px] font-black">+{meta.sortedCls.length - 3}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => { setSelectedWrittenExamId(e.id); selectTab('written-exam'); }}
+                                  className="px-2.5 py-1 rounded-lg bg-[#5B21B6] text-white text-[11px] font-black cursor-pointer"
+                                >
+                                  Marks
+                                </button>
+                                {isAdmin && (
+                                  <>
+                                    <button type="button" onClick={() => openEditModal(e)} className="p-1.5 rounded-lg bg-indigo-50 text-[#5B21B6] hover:bg-indigo-100 cursor-pointer" title="Edit">
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button type="button" onClick={() => handleDuplicateExam(e)} className="p-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer" title="Duplicate">
+                                      <Copy className="w-3.5 h-3.5" />
+                                    </button>
+                                    {user?.role === 'SUPER_ADMIN' && (
+                                      <button type="button" onClick={() => handleDeleteExam(e.id)} className="p-1.5 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 cursor-pointer" title="Delete">
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {filteredExams.length === 0 && (
+              <div className="py-16 flex flex-col items-center justify-center bg-white rounded-[24px] border-2 border-dashed border-[#DDD7F3]">
+                <Layers className="w-12 h-12 text-indigo-200 mb-3" />
+                <h3 className="text-lg font-black text-[#1E1B4B]">No Examinations Found</h3>
+                <p className="text-xs font-semibold text-slate-500 mt-1">Adjust your search filters or click "Create Exam" to schedule a new examination.</p>
               </div>
             )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ══ TAB 8: SETTINGS ══ */}
       {activeTab === 'settings' && (
@@ -2539,22 +3267,22 @@ export const ExamListPage: React.FC = () => {
 
       {/* SMS Modal */}
       {showSmsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-gray-100 dark:border-gray-800 animate-scale-up">
-            <div className="p-6 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex justify-between items-center">
-              <h2 className="text-xl font-black flex items-center gap-2"><MessageSquare className="w-5 h-5" /> Send Marks via SMS</h2>
-              <button onClick={() => setShowSmsModal(false)} className="p-2 hover:bg-white/20 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-[26px] w-full max-w-2xl overflow-hidden shadow-2xl border border-[#DDD7F3]">
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-[#EC4899] via-[#DB2777] to-[#BE185D] text-white flex justify-between items-center">
+              <h2 className="text-lg sm:text-xl font-black flex items-center gap-2.5"><MessageSquare className="w-5 h-5" /> Send Marks via SMS</h2>
+              <button onClick={() => setShowSmsModal(false)} className="p-2 bg-white/15 hover:bg-white/25 rounded-xl transition-colors cursor-pointer"><X className="w-5 h-5" /></button>
             </div>
-            
-            <div className="p-6 space-y-5">
-              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-xl border border-orange-100 dark:border-orange-800/30">
-                <p className="text-sm font-bold text-orange-800 dark:text-orange-300">
-                  ⚠️ This will send SMS to all parents in the selected class using the approved DLT template. Ensure Marks for Maths, Physics, and Chemistry are updated.
+
+            <div className="p-6 space-y-5 bg-[#F8FAFF]">
+              <div className="bg-amber-50 p-4 rounded-2xl border border-amber-200">
+                <p className="text-xs sm:text-sm font-bold text-amber-900">
+                  This will send SMS to parents in the selected class using the approved DLT template. Ensure Marks are entered and verified.
                 </p>
               </div>
 
               <div>
-                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Exam</label>
+                <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Select Exam</label>
                 <select value={smsExamId} onChange={e => setSmsExamId(e.target.value)} className="input-field">
                   <option value="" className="text-xs font-medium">Select Exam...</option>
                   {exams.map(ex => <option key={ex.id} value={ex.id} className="text-xs font-medium">{formatExamOptionLabel(ex.name)}</option>)}
@@ -2563,13 +3291,13 @@ export const ExamListPage: React.FC = () => {
 
               {smsExamId && (
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Class</label>
+                  <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Select Class</label>
                   <select value={smsClassId} onChange={e => {
                     setSmsClassId(e.target.value);
                     setSmsStudentId('');
                   }} className="input-field">
                     <option value="">Select Class...</option>
-                    {exams.find(e => e.id === smsExamId)?.classes?.map((c: any) => (
+                    {sortClasses(exams.find(e => e.id === smsExamId)?.classes || []).map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}-{c.section}</option>
                     ))}
                   </select>
@@ -2578,15 +3306,15 @@ export const ExamListPage: React.FC = () => {
 
               {smsClassId && (
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Send To</label>
+                  <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Send To</label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="smsSendType" value="all" checked={smsSendType === 'all'} onChange={() => setSmsSendType('all')} className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm font-semibold text-gray-700">Entire Class</span>
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-indigo-100">
+                      <input type="radio" name="smsSendType" value="all" checked={smsSendType === 'all'} onChange={() => setSmsSendType('all')} className="w-4 h-4 text-pink-600" />
+                      <span className="text-xs font-black text-[#1E1B4B]">Entire Class</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" name="smsSendType" value="individual" checked={smsSendType === 'individual'} onChange={() => setSmsSendType('individual')} className="w-4 h-4 text-orange-500" />
-                      <span className="text-sm font-semibold text-gray-700">Individual Student</span>
+                    <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2.5 rounded-xl border border-indigo-100">
+                      <input type="radio" name="smsSendType" value="individual" checked={smsSendType === 'individual'} onChange={() => setSmsSendType('individual')} className="w-4 h-4 text-pink-600" />
+                      <span className="text-xs font-black text-[#1E1B4B]">Individual Student</span>
                     </label>
                   </div>
                 </div>
@@ -2594,7 +3322,7 @@ export const ExamListPage: React.FC = () => {
 
               {smsClassId && smsSendType === 'individual' && (
                 <div>
-                  <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Select Student</label>
+                  <label className="text-xs font-black text-slate-600 uppercase tracking-wider mb-2 block">Select Student</label>
                   <select value={smsStudentId} onChange={e => setSmsStudentId(e.target.value)} className="input-field">
                     <option value="">Select Student...</option>
                     {classStudents.map(s => (
@@ -2605,9 +3333,9 @@ export const ExamListPage: React.FC = () => {
               )}
             </div>
 
-            <div className="p-5 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 flex justify-end gap-3">
-              <button onClick={() => setShowSmsModal(false)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-200 transition-colors">Cancel</button>
-              <button onClick={handleSendMarksSMS} disabled={isSendingSms || !smsExamId || !smsClassId} className="px-5 py-2.5 rounded-xl text-sm font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 shadow-md shadow-orange-500/20 transition-all disabled:opacity-50 flex items-center gap-2">
+            <div className="p-5 border-t border-indigo-50 bg-white flex justify-end gap-3">
+              <button onClick={() => setShowSmsModal(false)} className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
+              <button onClick={handleSendMarksSMS} disabled={isSendingSms || !smsExamId || !smsClassId} className="px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-[#EC4899] to-[#DB2777] text-white hover:opacity-95 shadow-md shadow-pink-500/20 transition-all disabled:opacity-50 flex items-center gap-2 cursor-pointer">
                 {isSendingSms ? 'Sending...' : 'Send SMS'}
               </button>
             </div>
@@ -2615,62 +3343,62 @@ export const ExamListPage: React.FC = () => {
         </div>
       )}
 
-      {/* Teacher Permissions Full Page Overlay */}
+      {/* Teacher Permissions Modal */}
       {showPermissionsModal && (
-        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto animate-fade-in flex flex-col">
-          <div className="sticky top-0 z-10 flex justify-between items-center p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 shadow-sm">
-            <div>
-              <h3 className="text-xl font-black bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent uppercase tracking-wider">Teacher Permissions</h3>
-              <p className="text-xs text-gray-500 font-semibold mt-1">Allow teachers to upload draft question papers</p>
-            </div>
-            <button onClick={() => setShowPermissionsModal(false)} className="p-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl transition-all cursor-pointer">
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          
-          <div className="flex-1 p-6 md:p-8 max-w-4xl mx-auto w-full">
-            <div className="card shadow-sm border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
-              <div className="p-4 bg-slate-50 dark:bg-gray-800/50 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
-                <span className="text-sm font-black text-slate-500 uppercase tracking-wider">Staff Members</span>
-                <span className="text-xs font-bold text-slate-400 bg-white dark:bg-gray-800 px-3 py-1 rounded-full border border-gray-100 dark:border-gray-700">Total: {teachers.length}</span>
+        <div className="fixed inset-0 z-50 bg-slate-900/45 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-fade-in">
+          <div className="bg-white rounded-[26px] border border-[#DDD7F3] shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="bg-gradient-to-r from-[#5B21B6] via-[#6D38EA] to-[#7C3AED] px-6 py-4 flex justify-between items-center text-white shrink-0">
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-wider">Teacher Upload Permissions</h3>
+                <p className="text-xs text-indigo-100 font-semibold mt-0.5">Authorize faculty members to upload draft question papers</p>
               </div>
-              <div className="divide-y divide-gray-100 dark:divide-gray-800">
-                {teachers.map((teacher: any) => (
-                  <div key={teacher.id} className="p-5 flex justify-between items-center hover:bg-slate-50/50 dark:hover:bg-gray-800/30 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/40 dark:to-purple-900/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-black text-sm border border-indigo-200 dark:border-indigo-800/50">
-                        {(teacher.user?.name || 'U').charAt(0).toUpperCase()}
+              <button onClick={() => setShowPermissionsModal(false)} className="p-2 bg-white/15 hover:bg-white/25 text-white rounded-xl transition-all cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 bg-[#F8FAFF] custom-scrollbar">
+              <div className="bg-white rounded-2xl border border-[#DDD7F3] overflow-hidden shadow-xs">
+                <div className="p-4 bg-[#F2EDFF]/50 border-b border-indigo-100 flex items-center justify-between">
+                  <span className="text-xs font-black text-[#5B21B6] uppercase tracking-wider">Staff Members</span>
+                  <span className="text-xs font-black text-[#5B21B6] bg-white px-3 py-1 rounded-full border border-[#DDD7F3]">Total: {teachers.length}</span>
+                </div>
+                <div className="divide-y divide-indigo-50">
+                  {teachers.map((teacher: any) => (
+                    <div key={teacher.id} className="p-4 flex justify-between items-center hover:bg-[#F8FAFF] transition-colors">
+                      <div className="flex items-center gap-3.5">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF] flex items-center justify-center text-[#5B21B6] font-black text-sm border border-[#DDD7F3]">
+                          {(teacher.user?.name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-black text-[#1E1B4B]">{teacher.user?.name || 'Unknown'}</p>
+                          <p className="text-xs font-semibold text-slate-400 mt-0.5">{teacher.employeeId || 'No ID'} · {teacher.specialization || 'General'}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-gray-800 dark:text-gray-200">{teacher.user?.name || 'Unknown'}</p>
-                        <p className="text-xs font-semibold text-gray-400 mt-0.5">{teacher.employeeId || 'No ID'} · {teacher.specialization || 'General'}</p>
-                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={teacher.canUploadQuestionPapers || false}
+                          onChange={(e) => handleToggleTeacherPermission(teacher.id, e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-12 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5B21B6]"></div>
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={teacher.canUploadQuestionPapers || false} 
-                        onChange={(e) => handleToggleTeacherPermission(teacher.id, e.target.checked)}
-                        className="sr-only peer" 
-                      />
-                      <div className="w-12 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-600"></div>
-                    </label>
-                  </div>
-                ))}
-                {teachers.length === 0 && (
-                  <div className="p-10 text-center flex flex-col items-center">
-                    <div className="w-16 h-16 bg-slate-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                      <ShieldAlert className="w-8 h-8 text-slate-300 dark:text-gray-600" />
+                  ))}
+                  {teachers.length === 0 && (
+                    <div className="p-10 text-center flex flex-col items-center">
+                      <ShieldAlert className="w-10 h-10 text-indigo-200 mb-3" />
+                      <h4 className="text-base font-black text-[#1E1B4B]">No Teachers Found</h4>
+                      <p className="text-xs font-semibold text-slate-500 mt-1">There are no teachers registered in the system yet.</p>
                     </div>
-                    <h4 className="text-base font-bold text-slate-700 dark:text-slate-300">No Teachers Found</h4>
-                    <p className="text-sm text-slate-500 mt-1">There are no teachers registered in the system yet.</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button onClick={() => setShowPermissionsModal(false)} className="px-8 py-3 rounded-2xl font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">
+
+            <div className="px-6 py-4 bg-white border-t border-indigo-50 flex justify-end shrink-0">
+              <button onClick={() => setShowPermissionsModal(false)} className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-md cursor-pointer">
                 Done
               </button>
             </div>

@@ -1,30 +1,75 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import api from "../../api/axios";
-import { LoadingSpinner } from "../../components/UI/LoadingSpinner";
-import { Badge } from "../../components/UI/Badge";
-import { Avatar } from "../../components/UI/Avatar";
-import { Search, UserPlus, Trash2, Edit, Upload, FileDown, Eye, Image as ImageIcon, MessageCircle, Menu } from "lucide-react";
+import {
+  Search, UserPlus, Trash2, FileDown, Eye, Menu, Users, Phone,
+  Filter, ChevronDown, CalendarCheck, IdCard
+} from "lucide-react";
 import toast from "react-hot-toast";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getPhotoUrl } from "../../utils/photo";
 import { DataCache } from "../../services/dataCache";
 
+const avatarColors = [
+  "from-[#8B5CF6] to-[#6D28D9]",
+  "from-[#7C3AED] to-[#4F46E5]",
+  "from-[#6366F1] to-[#4338CA]",
+  "from-[#8B5CF6] to-[#7C3AED]",
+];
+
+const getInitials = (n: string) =>
+  n.trim().split(" ").map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "T";
+
+const TeacherAvatar = ({ name, photoUrl, isActive }: { name?: string; photoUrl?: string; isActive?: boolean }) => {
+  const safeName = name || "Teacher";
+  const colorClass = avatarColors[safeName.charCodeAt(0) % avatarColors.length];
+  const url = getPhotoUrl(photoUrl);
+
+  return (
+    <div className="relative shrink-0 inline-block">
+      {url ? (
+        <img
+          src={url}
+          alt={safeName}
+          loading="lazy"
+          className="w-10 h-11 rounded-xl object-cover border border-indigo-100 shadow-xs"
+        />
+      ) : (
+        <div
+          className={`w-10 h-11 rounded-xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-xs shadow-xs`}
+        >
+          {getInitials(safeName)}
+        </div>
+      )}
+      <span
+        className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${
+          isActive !== false ? "bg-emerald-500" : "bg-slate-400"
+        }`}
+      />
+    </div>
+  );
+};
+
 export const TeacherListPage: React.FC = () => {
   const { user } = useAuth();
-  const isSuperAdmin = user?.role === "SUPER_ADMIN";
+  const isAdmin = user?.role === "SUPER_ADMIN" || user?.role === "ADMIN";
 
-  const [teachers, setTeachers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [teachers, setTeachers] = useState<any[]>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("tl_teachers_cache") || "[]");
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  });
+  const [loading, setLoading] = useState(teachers.length === 0);
   const [search, setSearch] = useState("");
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [subjectFilter, setSubjectFilter] = useState("");
 
   const fetchTeachers = async () => {
-    // Instant cache load if no search
-    if (!search) {
+    if (!search && teachers.length === 0) {
       try {
-        const cached = await DataCache.get('teachers');
+        const cached = await DataCache.get("teachers");
         if (cached && cached.length > 0) {
           setTeachers(cached);
           setLoading(false);
@@ -33,12 +78,19 @@ export const TeacherListPage: React.FC = () => {
     }
 
     if (teachers.length === 0) setLoading(true);
-    
+
     try {
       const response: any = await api.get("/api/teachers", {
         params: { search, limit: 5000 },
       });
-      setTeachers(response.data.data || response.data || []);
+      const list = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setTeachers(list);
+      if (!search) {
+        try {
+          localStorage.setItem("tl_teachers_cache", JSON.stringify(list));
+          DataCache.set("teachers", list);
+        } catch (_) {}
+      }
     } catch (error) {
       console.error("Error fetching teachers:", error);
       toast.error("Failed to load teachers list");
@@ -50,343 +102,431 @@ export const TeacherListPage: React.FC = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchTeachers();
-    }, 300);
+    }, search ? 300 : 0);
     return () => clearTimeout(timer);
   }, [search]);
 
+  const uniqueSubjects = useMemo(() => {
+    const set = new Set<string>();
+    teachers.forEach((t) => {
+      const sp = (t.specialization || "").trim().toUpperCase();
+      if (sp && sp !== "N/A") set.add(sp);
+    });
+    return Array.from(set).sort();
+  }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return teachers.filter((t) => {
+      const name = (t.user?.name || "").toLowerCase();
+      const empId = (t.employeeId || "").toLowerCase();
+      const spec = (t.specialization || "").toLowerCase();
+      const qual = (t.qualification || "").toLowerCase();
+      const phone = (t.user?.phone || "").toLowerCase();
+
+      if (q && !name.includes(q) && !empId.includes(q) && !spec.includes(q) && !qual.includes(q) && !phone.includes(q)) {
+        return false;
+      }
+      if (subjectFilter && (t.specialization || "").trim().toUpperCase() !== subjectFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [teachers, search, subjectFilter]);
+
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this teacher?"))
-      return;
+    if (!window.confirm("Are you sure you want to delete this teacher?")) return;
     try {
       await api.delete(`/api/teachers/${id}`);
       toast.success("Teacher deleted successfully");
       fetchTeachers();
     } catch (error: any) {
-      toast.error(error.response?.data?.message || error.message || "Failed to delete teacher");
+      toast.error(error?.response?.data?.message || error.message || "Failed to delete teacher");
     }
   };
 
   const exportTeachers = async () => {
-    const { default: jsPDF } = await import("jspdf");
-    const { default: autoTable } = await import("jspdf-autotable");
+    const toastId = toast.loading("Generating Teachers Directory PDF...");
+    try {
+      const { default: jsPDF } = await import("jspdf");
+      const autoTableModule: any = await import("jspdf-autotable");
+      const autoTable = autoTableModule.default || autoTableModule;
 
-    const doc = new jsPDF();
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
 
-    doc.setFontSize(18);
-    doc.text("Teacher List", 14, 22);
+      doc.setFontSize(15);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(15, 23, 42);
+      doc.text("SRI VENKATESWARA JY HIGH SCHOOL", pageWidth / 2, 13, { align: "center" });
 
-    const tableColumn = [
-      "S.No",
-      "Teacher ID",
-      "Name",
-      "Mobile No",
-      "Subject(s)",
-    ];
-    const tableRows: any[] = [];
+      doc.setFontSize(11);
+      doc.setTextColor(91, 33, 182);
+      doc.text(`TEACHING FACULTY DIRECTORY (${filteredTeachers.length} STAFF)`, pageWidth / 2, 20, { align: "center" });
 
-    teachers.forEach((teacher: any, index: number) => {
-      const teacherData = [
-        index + 1,
+      const tableColumn = ["#", "Employee ID", "Teacher Name", "Subject", "Qualification", "Mobile No"];
+      const tableRows = filteredTeachers.map((teacher: any, index: number) => [
+        String(index + 1),
         teacher.employeeId || "-",
-        teacher.user?.name || "-",
-        teacher.user?.phone || "-",
+        (teacher.user?.name || "-").toUpperCase(),
         teacher.specialization || "-",
-      ];
-      tableRows.push(teacherData);
-    });
+        teacher.qualification || "-",
+        teacher.user?.phone || "-",
+      ]);
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 30,
-      theme: "grid",
-      styles: { fontSize: 10, cellPadding: 3 },
-      headStyles: {
-        fillColor: [79, 70, 229],
-        textColor: 255,
-        fontStyle: "bold",
-      },
-    });
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 25,
+        theme: "grid",
+        styles: { fontSize: 8.5, cellPadding: 2.3, textColor: [30, 41, 59] },
+        headStyles: {
+          fillColor: [91, 33, 182],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "center",
+        },
+        alternateRowStyles: { fillColor: [250, 249, 255] },
+        columnStyles: {
+          0: { cellWidth: 10, halign: "center", fontStyle: "bold" },
+          1: { cellWidth: 26, halign: "center", fontStyle: "bold", textColor: [91, 33, 182] },
+          2: { cellWidth: 58, fontStyle: "bold" },
+          3: { cellWidth: 32, halign: "center" },
+          4: { cellWidth: 30, halign: "center" },
+          5: { cellWidth: 30, halign: "center" },
+        },
+        margin: { left: 12, right: 12, bottom: 14 },
+      });
 
-    doc.save("Teacher_List.pdf");
-    toast.success("PDF generated successfully!");
+      doc.save("JY_School_Teachers_Directory.pdf");
+      toast.success("PDF generated successfully!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate PDF", { id: toastId });
+    }
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Colorful Hero Header */}
-      <div className="px-3 pt-3 pb-4 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 shadow-lg">
-        <div className="hidden md:flex items-center justify-between mb-3">
-          <div>
-            <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Total</p>
-            <p className="text-2xl font-black text-white">{teachers.length} Teachers</p>
+    <div className="relative flex flex-col h-full bg-gradient-to-br from-[#F3F4FC] via-[#F7F5FF] to-[#EEF2FC] overflow-hidden">
+      {/* Soft Pastel Ambient Highlights */}
+      <div className="absolute -top-24 -left-24 w-80 h-80 bg-indigo-200/25 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-24 right-1/4 w-80 h-80 bg-purple-200/20 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ── Soft Light Pastel Header & Toolbar (Matching StudentListPage) ── */}
+      <div className="relative z-10 px-4 sm:px-6 pt-4 pb-3 space-y-3">
+        <div className="hidden md:flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#8F7BF7] to-[#6D5CE7] text-white flex items-center justify-center shadow-md shadow-indigo-500/20 shrink-0">
+              <Users className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-500 leading-tight">TOTAL</p>
+              <p className="text-2xl font-black text-[#1E1B4B] tracking-tight leading-tight">
+                {filteredTeachers.length} {filteredTeachers.length === 1 ? "Teacher" : "Teachers"}
+              </p>
+            </div>
           </div>
-          <div className="hidden md:flex gap-2">
-            {isSuperAdmin && (
-              <>
-                <button
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
-                  title="Upload Teachers"
-                >
-                  <Upload className="w-4 h-4" /> Upload Teachers
-                </button>
-                <button
-                  className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-white bg-white/15 rounded-xl shadow hover:bg-white/25 transition-colors cursor-pointer"
-                  title="Upload Photos"
-                >
-                  <ImageIcon className="w-4 h-4" /> Upload Photos
-                </button>
-                <button
-                  onClick={exportTeachers}
-                  className="p-2.5 rounded-xl bg-white/15 text-white hover:bg-white/25 transition-colors cursor-pointer"
-                  title="Export PDF"
-                >
-                  <FileDown className="w-5 h-5" />
-                </button>
-              </>
-            )}
+
+          <div className="hidden md:flex items-center gap-2 flex-wrap">
             <Link
-              to="/teachers/new"
-              className="flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-extrabold text-emerald-700 bg-white rounded-xl shadow hover:bg-emerald-50 transition-colors"
+              to="/teacher-attendance"
+              className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-[#5B21B6] bg-[#EFEAFE] hover:bg-[#E4DCFD] border border-[#DDD6FE] rounded-2xl shadow-2xs transition-all"
             >
-              <UserPlus className="w-4 h-4" /> Add
+              <CalendarCheck className="w-3.5 h-3.5" /> Staff Attendance
             </Link>
+
+            <button
+              type="button"
+              onClick={exportTeachers}
+              disabled={filteredTeachers.length === 0}
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-white bg-gradient-to-r from-[#7352F6] to-[#5636E8] hover:brightness-105 rounded-2xl shadow-[0_4px_14px_rgba(109,77,245,0.30)] transition-all cursor-pointer disabled:opacity-50"
+              title="Export Teachers Directory PDF"
+            >
+              <FileDown className="w-3.5 h-3.5" /> Export PDF
+            </button>
+
+            {isAdmin && (
+              <Link
+                to="/teachers/new"
+                className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-extrabold text-[#4338CA] bg-white/95 hover:bg-white border border-indigo-200/80 rounded-2xl shadow-[0_2px_8px_rgba(79,70,229,0.06)] transition-all"
+              >
+                <UserPlus className="w-3.5 h-3.5" /> Add Teacher
+              </Link>
+            )}
           </div>
         </div>
-        {/* Search */}
-        <div className="flex gap-2 items-center">
-          {/* Hamburger Menu - Mobile Only */}
+
+        {/* Search + Filter Row inside Frosted Pastel Bar */}
+        <div className="bg-white/60 backdrop-blur-md border border-[#E2DDF5] rounded-[18px] p-1.5 sm:p-2 shadow-[0_6px_22px_rgba(91,33,182,0.06)] flex gap-2 items-center">
           <button
-            onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-            className="p-2.5 md:hidden bg-white/15 hover:bg-white/25 text-white rounded-xl transition-colors cursor-pointer border border-white/25 shadow-sm"
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("toggleSidebar"))}
+            className="p-2.5 md:hidden bg-white hover:bg-indigo-50 text-[#1E1B4B] rounded-xl transition-colors cursor-pointer border border-[#E6E2F5] shadow-xs"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>
-          
+
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search teachers..."
+              placeholder="Search teachers by name, Employee ID, subject or phone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 text-sm bg-white/15 border border-white/25 rounded-xl text-white placeholder:text-white/50 font-medium focus:outline-none focus:bg-white/25 transition-all"
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-white border border-[#E7E4F6] rounded-xl text-slate-800 placeholder:text-slate-400 font-medium shadow-[0_2px_8px_rgba(79,70,229,0.04)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
             />
           </div>
+
+          <div className="hidden sm:block w-px h-7 bg-[#E0DCF2] shrink-0" />
+
+          <div className="relative shrink-0">
+            <Filter className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#1E1B4B] pointer-events-none" />
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="pl-9 pr-8 py-2 text-xs sm:text-sm bg-white border border-[#E7E4F6] rounded-xl text-[#1E1B4B] font-bold shadow-[0_2px_8px_rgba(79,70,229,0.04)] focus:outline-none focus:ring-2 focus:ring-indigo-500/20 appearance-none cursor-pointer"
+            >
+              <option value="">All Subjects</option>
+              {uniqueSubjects.map((sub) => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600 pointer-events-none" />
+          </div>
+
+          {isAdmin && (
+            <Link
+              to="/teachers/new"
+              className="md:hidden p-2.5 bg-gradient-to-r from-[#7352F6] to-[#5636E8] text-white rounded-xl transition-all shadow-sm flex items-center justify-center shrink-0"
+              title="Add Teacher"
+            >
+              <UserPlus className="w-4 h-4" />
+            </Link>
+          )}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-gray-50/50 p-4">
-      {/* Main Content */}
-      {loading ? (
-        <LoadingSpinner size="lg" className="py-12" />
-      ) : (
-        <div className="w-full">
-          {/* Desktop View */}
-          <div className="overflow-x-auto hidden md:block bg-white rounded-xl shadow-sm border border-gray-200">
-            <table className="w-full text-sm text-left min-w-[800px]">
-              <thead>
-                <tr className="bg-gray-50 text-gray-600 border-b border-gray-200 font-bold uppercase tracking-wider text-xs">
-                  <th className="px-5 py-4 text-center w-12 border-r border-gray-100">
-                    #
-                  </th>
-                  <th className="px-5 py-4 border-r border-gray-100">
-                    Teacher
-                  </th>
-                  <th className="px-5 py-4 border-r border-gray-100">
-                    Employee ID
-                  </th>
-                  <th className="px-5 py-4 border-r border-gray-100">
-                    Subject
-                  </th>
-                  <th className="px-5 py-4 border-r border-gray-100">
-                    Qualification
-                  </th>
-                  <th className="px-5 py-4 border-r border-gray-100">
-                    Mobile No
-                  </th>
+      {/* ── Desktop Teacher Directory Table (Purple Sticky Header Matching StudentListPage) ── */}
+      <div className="relative z-10 flex-1 min-h-0 px-4 sm:px-6 pb-4 hidden md:flex flex-col">
+        <div className="flex-1 min-h-0 overflow-auto bg-white rounded-[20px] shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)] border border-[#DDD7F3]">
+          <table className="min-w-[850px] w-full text-sm text-left border-separate border-spacing-0 student-grid-table">
+            <thead className="sticky top-0 z-20 bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6]">
+              <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] !text-white font-extrabold uppercase tracking-wider text-[11px]">
+                <th className="px-3 py-3.5 text-center w-14 border-r border-white/20 border-b border-[#5B21B6] !text-white first:rounded-tl-[19px]">#</th>
+                <th className="px-4 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Teacher</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Employee ID</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Subject</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Qualification</th>
+                <th className="px-5 py-3.5 text-left border-r border-white/20 border-b border-[#5B21B6] !text-white">Mobile No</th>
+                <th className="px-4 py-3.5 text-center border-b border-[#5B21B6] !text-white last:rounded-tr-[19px]">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center">
+                    <div className="animate-pulse flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+                      <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Loading Teachers...</p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {teachers.map((teacher, idx) => {
-                  const avatarColors = [
-                    "from-indigo-500 to-purple-600",
-                    "from-teal-400 to-emerald-600",
-                    "from-rose-400 to-pink-600",
-                    "from-amber-400 to-orange-500",
-                    "from-blue-400 to-cyan-500",
-                    "from-violet-500 to-fuchsia-600",
-                  ];
+              ) : filteredTeachers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center text-slate-400">
+                    <div className="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-3">
+                      <Search className="w-7 h-7 text-indigo-300" />
+                    </div>
+                    <p className="font-bold text-slate-600">No teachers found</p>
+                    <p className="text-xs text-slate-400 mt-1">Try adjusting your search query or subject filter</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredTeachers.map((teacher, idx) => {
+                  const rowBorderBottom = idx === filteredTeachers.length - 1 ? "" : "border-b border-[#EAE7F6]";
                   const name = teacher.user?.name || "Teacher";
-                  const colorIdx = name.charCodeAt(0) % avatarColors.length;
-                  const colorClass = avatarColors[colorIdx];
-                  const getInitials = (n: string) => {
-                    const parts = n.trim().split(" ");
-                    return parts.length >= 2
-                      ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-                      : n[0].toUpperCase();
-                  };
+                  const phone = teacher.user?.phone || "";
+
                   return (
                     <tr
                       key={teacher.id}
-                      className="hover:bg-indigo-50/50 transition-colors bg-white group"
+                      className="even:bg-[#FAF9FF] hover:bg-[#F3EFFE]/60 transition-colors bg-white"
                     >
-                      <td className="px-5 py-4 text-center text-sm font-bold text-gray-500 border-r border-gray-100">
+                      <td className={`px-3 py-2.5 text-center text-xs font-bold text-[#1E1B4B] border-r border-[#EAE7F6] ${rowBorderBottom}`}>
                         {idx + 1}
                       </td>
-                      <td className="px-5 py-4 flex items-center gap-4 border-r border-gray-100">
-                        <div className="relative shrink-0 inline-block">
-                          {getPhotoUrl(teacher.user?.photoUrl) ? (
-                            <img
-                              src={getPhotoUrl(teacher.user?.photoUrl)}
-                              alt={name}
-                              loading="lazy"
-                              className="w-12 h-16 rounded object-cover border border-gray-300 shadow-sm"
-                            />
-                          ) : (
-                            <div
-                              className={`w-12 h-16 rounded bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-bold text-sm shadow-sm border border-gray-200`}
-                            >
-                              {getInitials(name)}
-                            </div>
-                          )}
-                          <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-white ${teacher.user?.isActive ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                        </div>
-                        <div>
-                          <Link to={`/teachers/${teacher.id}`} className="font-bold text-gray-900 text-sm hover:text-indigo-600 transition-colors cursor-pointer">
+                      <td className={`px-4 py-2.5 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <div className="flex items-center gap-3.5">
+                          <TeacherAvatar name={name} photoUrl={teacher.user?.photoUrl} isActive={teacher.user?.isActive} />
+                          <Link
+                            to={`/teachers/${teacher.id}`}
+                            className="font-extrabold text-[#1E1B4B] text-xs uppercase tracking-tight hover:text-[#6D28D9] transition-colors cursor-pointer"
+                          >
                             {name}
                           </Link>
                         </div>
                       </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <span className="text-sm font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded font-mono shadow-sm">
-                          {teacher.employeeId}
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] whitespace-nowrap ${rowBorderBottom}`}>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#5B21B6] bg-[#EFEAFE] border border-[#DDD6FE]/80 font-mono">
+                          {teacher.employeeId || "–"}
                         </span>
                       </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <span className="text-xs font-bold text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded uppercase shadow-sm">
-                          {teacher.specialization || "N/A"}
-                        </span>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        {teacher.specialization ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-extrabold text-[#059669] bg-[#E6F9EE] border border-[#C1F0D6] uppercase">
+                            {teacher.specialization}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 text-xs font-semibold">—</span>
+                        )}
                       </td>
-                      <td className="px-5 py-4 border-r border-gray-100">
-                        <span className="text-sm font-bold text-gray-800">
-                          {teacher.qualification || "N/A"}
-                        </span>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                        <p className="font-extrabold text-slate-700 text-xs">{teacher.qualification || "N/A"}</p>
                       </td>
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3 text-gray-700 text-sm font-medium whitespace-nowrap">
-                          {teacher.user?.phone || "–"}
-                          {teacher.user?.phone && (
-                            <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" 
-                               className="flex items-center gap-1.5 px-2.5 py-1 bg-[#25D366] hover:bg-[#128C7E] text-white text-xs font-bold rounded shadow-sm transition-colors cursor-pointer" title="Message on WhatsApp">
-                              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                              </svg>
+                      <td className={`px-5 py-2.5 text-left border-r border-[#EAE7F6] whitespace-nowrap ${rowBorderBottom}`}>
+                        {phone ? (
+                          <div className="flex items-center gap-2.5">
+                            <a
+                              href={`tel:${phone}`}
+                              className="text-[#5B21B6] hover:text-[#4C1D95] text-xs font-bold inline-flex items-center gap-1.5 transition-colors font-mono"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              {phone}
+                            </a>
+                            <a
+                              href={`https://wa.me/${phone.replace(/\D/g, "").length === 10 ? "91" + phone.replace(/\D/g, "") : phone.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#DCFCE7] hover:bg-[#BBF7D0] text-[#15803D] border border-[#BBF7D0] text-[10.5px] font-extrabold transition-colors cursor-pointer"
+                              title="Message on WhatsApp"
+                            >
                               WhatsApp
                             </a>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-xs font-medium">—</span>
+                        )}
+                      </td>
+                      <td className={`px-4 py-2.5 text-center whitespace-nowrap ${rowBorderBottom}`}>
+                        <div className="inline-flex items-center gap-1.5">
+                          <Link
+                            to={`/teachers/${teacher.id}`}
+                            className="p-1.5 rounded-lg bg-[#EFEAFE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white transition-colors"
+                            title="View Teacher Profile"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Link>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(teacher.id)}
+                              className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white transition-colors cursor-pointer"
+                              title="Delete Teacher"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
                   );
-                })}
-                {teachers.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="py-12 text-center text-gray-400 font-semibold"
-                    >
-                      No teacher records found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-          {/* Mobile View */}
-          <div className="md:hidden flex flex-col gap-4 p-4 bg-transparent">
-            {teachers.map((teacher, idx) => {
+      {/* ── Mobile Teacher Cards View (Clean Light Pastel Matching StudentListPage) ── */}
+      <div className="flex-1 overflow-auto p-3 md:hidden">
+        {loading ? (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <p className="text-slate-400 text-xs font-bold uppercase tracking-wider">Loading Teachers...</p>
+          </div>
+        ) : filteredTeachers.length === 0 ? (
+          <div className="py-16 text-center text-slate-400 bg-white rounded-3xl border border-indigo-100 p-8 shadow-sm">
+            <Search className="w-8 h-8 text-indigo-300 mx-auto mb-3" />
+            <p className="font-bold text-slate-600">No teachers found</p>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3 pb-20">
+            {filteredTeachers.map((teacher, idx) => {
               const name = teacher.user?.name || "Teacher";
-              const avatarColors = [
-                "from-indigo-500 to-purple-600",
-                "from-teal-400 to-emerald-600",
-                "from-rose-400 to-pink-600",
-                "from-amber-400 to-orange-500",
-                "from-blue-400 to-cyan-500",
-                "from-violet-500 to-fuchsia-600",
-              ];
-              const colorIdx = name.charCodeAt(0) % avatarColors.length;
-              const colorClass = avatarColors[colorIdx];
-              const getInitials = (n: string) => {
-                const parts = n.trim().split(" ");
-                return parts.length >= 2
-                  ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-                  : n[0].toUpperCase();
-              };
+              const phone = teacher.user?.phone || "";
               return (
                 <div
                   key={teacher.id}
-                  className="bg-gradient-to-br from-white to-indigo-50/30 p-4 rounded-3xl shadow-sm hover:shadow-glow-primary hover:-translate-y-1 transition-all duration-300 border border-indigo-50 flex items-center gap-4 relative overflow-visible mt-2 backdrop-blur-md animate-fade-in-up"
-                  style={{ animationDelay: `${idx * 40}ms` }}
+                  className="bg-white rounded-[18px] p-3.5 shadow-sm border border-[#DDD7F3] flex flex-col gap-3 relative"
                 >
-                  <div className="absolute -top-2.5 -left-2.5 w-7 h-7 bg-indigo-500 rounded-full flex items-center justify-center text-white font-black text-[10px] shadow-lg border-2 border-white dark:border-indigo-500 z-10">
-                    {idx + 1}
-                  </div>
-                  <div className="shrink-0 pl-2">
-                    {getPhotoUrl(teacher.user?.photoUrl) ? (
-                      <img
-                        src={getPhotoUrl(teacher.user?.photoUrl)}
-                        alt={name}
-                        className="w-14 h-14 rounded-2xl object-cover shadow-md border-2 border-white dark:border-white/10"
-                      />
-                    ) : (
-                      <div
-                        className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white dark:border-white/10`}
-                      >
-                        {getInitials(name)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                  <span className="absolute top-3 right-3 text-[10px] font-black text-slate-300">
+                    #{idx + 1}
+                  </span>
+
+                  <div className="flex items-center gap-3.5">
+                    <TeacherAvatar name={name} photoUrl={teacher.user?.photoUrl} isActive={teacher.user?.isActive} />
+                    <div className="min-w-0 flex-1 pr-6">
                       <Link
                         to={`/teachers/${teacher.id}`}
-                        className="font-extrabold text-[15px] text-indigo-950 truncate block hover:text-indigo-600 transition-colors"
+                        className="font-extrabold text-sm text-[#1E1B4B] hover:text-[#5B21B6] truncate block uppercase"
                       >
                         {name}
                       </Link>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <span className="font-mono text-[10px] font-bold text-indigo-700 dark:text-indigo-200 bg-indigo-50 dark:bg-indigo-500/20 px-2 py-0.5 rounded-md border border-indigo-100 dark:border-indigo-500/30">
-                        {teacher.employeeId}
-                      </span>
-                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-200 bg-teal-50 dark:bg-teal-500/20 px-2 py-0.5 rounded-md border border-teal-100 dark:border-teal-500/30">
-                        {teacher.specialization || "N/A"}
-                      </span>
+                      <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        {teacher.employeeId && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-extrabold bg-[#EFEAFE] text-[#5B21B6] border border-[#DDD6FE] font-mono">
+                            <IdCard className="w-3 h-3" />
+                            {teacher.employeeId}
+                          </span>
+                        )}
+                        {teacher.specialization && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-extrabold bg-[#E6F9EE] text-[#059669] border border-[#C1F0D6]">
+                            {teacher.specialization}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="shrink-0 flex items-center gap-2">
-                    {teacher.user?.phone && (
-                      <a href={`https://wa.me/91${teacher.user.phone}`} target="_blank" rel="noreferrer" className="flex items-center justify-center w-10 h-10 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all cursor-pointer" title="WhatsApp Message">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.888-.788-1.487-1.761-1.66-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
-                        </svg>
-                      </a>
+                  <div className="pt-2.5 border-t border-indigo-50 flex items-center justify-between gap-2">
+                    {phone ? (
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={`tel:${phone}`}
+                          className="flex items-center gap-1 text-xs font-bold text-[#5B21B6] bg-[#EFEAFE] px-3 py-1.5 rounded-xl"
+                        >
+                          <Phone className="w-3.5 h-3.5" />
+                          <span>{phone}</span>
+                        </a>
+                        <a
+                          href={`https://wa.me/${phone.replace(/\D/g, "").length === 10 ? "91" + phone.replace(/\D/g, "") : phone.replace(/\D/g, "")}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-2.5 py-1.5 rounded-xl bg-[#DCFCE7] text-[#15803D] text-xs font-extrabold"
+                        >
+                          WhatsApp
+                        </a>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-400 font-semibold">No Phone</span>
                     )}
+
+                    <Link
+                      to={`/teachers/${teacher.id}`}
+                      className="inline-flex items-center gap-1 px-3.5 py-1.5 text-xs font-extrabold text-white bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] rounded-xl shadow-xs"
+                    >
+                      <Eye className="w-3.5 h-3.5" /> View
+                    </Link>
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );
 };
-export default TeacherListPage;
 
+export default TeacherListPage;

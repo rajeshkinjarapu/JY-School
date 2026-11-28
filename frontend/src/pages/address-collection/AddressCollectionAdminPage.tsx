@@ -3,7 +3,7 @@ import api from '../../api/axios';
 import {
   Download, Search, FileText, Plus, X, User, MapPin, Phone,
   Navigation, CheckCircle2, Trash2, Users, Building2, Award,
-  Filter, RotateCcw, Sparkles
+  Filter, RotateCcw
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -37,7 +37,6 @@ const AddressCollectionAdminPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacher, setSelectedTeacher] = useState<string>('');
   const [selectedMandal, setSelectedMandal] = useState<string>('');
-  const [selectedVillage, setSelectedVillage] = useState<string>('');
   const [teachers, setTeachers] = useState<{ id: string; name: string }[]>([]);
 
   // Data Entry Modal States
@@ -109,13 +108,8 @@ const AddressCollectionAdminPage: React.FC = () => {
       }
     });
 
-    const topVillages = Object.entries(villageCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
-
     const topTeachers = Object.entries(teacherCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+      .sort((a, b) => b[1] - a[1]);
 
     const uniqueMandals = Object.keys(mandalCounts).sort();
     const uniqueTeacherNames = Array.from(
@@ -131,8 +125,6 @@ const AddressCollectionAdminPage: React.FC = () => {
       uniqueTeacherNames,
       activeTeachersCount: Object.keys(teacherCounts).length,
       topTeacher: topTeachers[0] || null,
-      topVillages,
-      topTeachers,
     };
   }, [data]);
 
@@ -151,20 +143,17 @@ const AddressCollectionAdminPage: React.FC = () => {
       const matchesTeacher = !selectedTeacher || item.referenceTeacherName === selectedTeacher;
       const matchesMandal =
         !selectedMandal || (item.mandal || '').trim().toUpperCase() === selectedMandal;
-      const matchesVillage =
-        !selectedVillage || (item.village || '').trim().toUpperCase() === selectedVillage;
 
-      return matchesSearch && matchesTeacher && matchesMandal && matchesVillage;
+      return matchesSearch && matchesTeacher && matchesMandal;
     });
-  }, [data, searchTerm, selectedTeacher, selectedMandal, selectedVillage]);
+  }, [data, searchTerm, selectedTeacher, selectedMandal]);
 
-  const hasActiveFilters = Boolean(searchTerm || selectedTeacher || selectedMandal || selectedVillage);
+  const hasActiveFilters = Boolean(searchTerm || selectedTeacher || selectedMandal);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedTeacher('');
     setSelectedMandal('');
-    setSelectedVillage('');
   };
 
   const exportToExcel = () => {
@@ -207,7 +196,6 @@ const AddressCollectionAdminPage: React.FC = () => {
       `Total Records: ${filteredData.length}`,
       selectedTeacher ? `Ref Teacher: ${selectedTeacher}` : null,
       selectedMandal ? `Mandal: ${selectedMandal}` : null,
-      selectedVillage ? `Village: ${selectedVillage}` : null,
     ]
       .filter(Boolean)
       .join('   |   ');
@@ -434,95 +422,6 @@ const AddressCollectionAdminPage: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Interactive Insights Strip: Top Villages + Top Reference Staff */}
-          {(analytics.topVillages.length > 0 || analytics.topTeachers.length > 0) && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {analytics.topVillages.length > 0 && (
-                <div className="bg-white border border-indigo-100/80 rounded-[18px] p-4 shadow-[0_6px_18px_-6px_rgba(91,33,182,0.06)]">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                      Top Villages (Click to Filter)
-                    </p>
-                    {selectedVillage && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedVillage('')}
-                        className="text-[10px] font-extrabold text-rose-600 hover:underline cursor-pointer"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {analytics.topVillages.map(([village, count]) => {
-                      const active = selectedVillage === village;
-                      return (
-                        <button
-                          key={village}
-                          type="button"
-                          onClick={() => setSelectedVillage(active ? '' : village)}
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                            active
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                              : 'bg-emerald-50/70 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
-                          }`}
-                        >
-                          <span>{village}</span>
-                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${active ? 'bg-white/25 text-white' : 'bg-white text-emerald-700'}`}>
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {analytics.topTeachers.length > 0 && (
-                <div className="bg-white border border-indigo-100/80 rounded-[18px] p-4 shadow-[0_6px_18px_-6px_rgba(91,33,182,0.06)]">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <p className="text-[11px] font-black uppercase tracking-wider text-[#1E1B4B] flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-[#5B21B6]" />
-                      Top Staff Contributors
-                    </p>
-                    {selectedTeacher && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTeacher('')}
-                        className="text-[10px] font-extrabold text-rose-600 hover:underline cursor-pointer"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {analytics.topTeachers.map(([teacherName, count]) => {
-                      const active = selectedTeacher === teacherName;
-                      return (
-                        <button
-                          key={teacherName}
-                          type="button"
-                          onClick={() => setSelectedTeacher(active ? '' : teacherName)}
-                          className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-all cursor-pointer flex items-center gap-1.5 ${
-                            active
-                              ? 'bg-[#5B21B6] text-white border-[#5B21B6] shadow-xs'
-                              : 'bg-[#F4F2FC] text-[#5B21B6] border-[#DDD6FE] hover:bg-[#EFEAFE]'
-                          }`}
-                        >
-                          <span className="truncate max-w-[150px]">{teacherName}</span>
-                          <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${active ? 'bg-white/25 text-white' : 'bg-white text-[#5B21B6]'}`}>
-                            {count}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Search & Multi-Filter Toolbar */}
           <div className="bg-white border border-indigo-100/80 rounded-[18px] p-3.5 shadow-[0_6px_22px_-6px_rgba(91,33,182,0.08)] flex flex-col lg:flex-row lg:items-center gap-3">

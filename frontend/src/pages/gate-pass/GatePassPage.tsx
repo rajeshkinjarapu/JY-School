@@ -1,747 +1,1216 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-hot-toast';
-import api from '../../api/axios';
-import { useAuth } from '../../hooks/useAuth';
-import { 
-  ShieldCheck, PlusCircle, Printer, Eye, Trash2, Clock, 
-  LogOut, LogIn, CheckCircle2, XCircle, Search, Filter, 
-  RefreshCw, User, Calendar, MapPin, Phone, AlertCircle, 
-  Check, Copy, ChevronDown, X, Sparkles, AlertTriangle,
-  Building, CheckSquare, Users, Activity
+import {
+  Activity,
+  AlertTriangle,
+  Calendar,
+  Check,
+  CheckCircle2,
+  Clock,
+  Download,
+  Eye,
+  GraduationCap,
+  LogIn,
+  LogOut,
+  MapPin,
+  Phone,
+  Plus,
+  Printer,
+  RefreshCw,
+  Search,
+  Shield,
+  ShieldCheck,
+  Trash2,
+  UserCheck,
+  Users,
+  X,
+  XCircle,
 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import api from '../../api/axios';
+import { useAuthStore } from '../../store/authStore';
 import { GatePassPrint, printGatePassSlip } from '../../components/gate-pass/GatePassPrint';
 import type { GatePassPrintData, SchoolSettingsData } from '../../components/gate-pass/GatePassPrint';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { getPhotoUrl } from '../../utils/photo';
+import { sortClasses } from '../../utils/sortClasses';
 
 interface StudentOption {
   id: string;
   rollNo?: string;
   fatherName?: string;
   mobileNumber?: string;
-  user?: { 
+  user?: {
     id?: string;
-    name: string; 
-    phone?: string; 
-    photoUrl?: string; 
+    name?: string;
+    phone?: string;
+    photoUrl?: string;
   };
-  class?: { 
+  class?: {
     id?: string;
-    name: string; 
-    section: string; 
+    name?: string;
+    section?: string;
   };
 }
 
-interface Stats {
+interface TeacherOption {
+  id: string;
+  userId?: string;
+  employeeId?: string;
+  designation?: string;
+  user?: {
+    id?: string;
+    name?: string;
+    phone?: string;
+    photoUrl?: string;
+  };
+}
+
+interface GatePassItem extends GatePassPrintData {
+  rejectionReason?: string | null;
+  approvedAt?: string | null;
+  requesterId?: string;
+}
+
+interface GatePassStats {
+  student: number;
+  staff: number;
   inside: number;
   out: number;
   pending: number;
-  todayTotal: number;
+  overdue: number;
 }
 
-const REASON_CATEGORIES = [
-  { label: '🏥 Medical / Health Issue', value: 'Medical Emergency / Health Issue' },
-  { label: '👨‍👩‍👧 Family Emergency', value: 'Family Emergency / Urgent Work' },
-  { label: '⏰ Early Permission', value: 'Early Permission from Principal' },
-  { label: '🏆 Sports / Competition', value: 'Official School Competition / Sports' },
-  { label: '📝 Personal / Other', value: 'Personal Matter' },
+type StatusFilter = 'ALL' | 'OUTSIDE' | 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED';
+type TypeFilter = 'ALL' | 'STUDENT' | 'TEACHER';
+
+const PRESET_REASONS = [
+  'Medical Checkup / Fever',
+  'Family Emergency',
+  'Parent Escort Early Leave',
+  'Official School Duty',
+  'Personal Urgent Work',
 ];
 
-export const GatePassPage: React.FC = () => {
-  const { user } = useAuth();
-  const isAdminOrSecurity = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN' || user?.role === 'SECURITY';
-  const isSuperAdminOrAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
-
-  // Base Data
-  const [items, setItems] = useState<GatePassPrintData[]>([]);
-  const [students, setStudents] = useState<StudentOption[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [schoolSettings, setSchoolSettings] = useState<SchoolSettingsData>({
-    schoolName: 'SRI VENKATESWARA JY SCHOOL',
-    schoolSubtitle: '(IIT-JEE / NEET Foundation – Olympiads)',
-    address: 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
-    logoUrl: '/logo.png',
+const formatDateTime = (value?: string | null): string => {
+  if (!value) return '—';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
   });
+};
 
-  // Stats
-  const [stats, setStats] = useState<Stats>({ inside: 0, out: 0, pending: 0, todayTotal: 0 });
+const isSameLocalDay = (value?: string | null, target = new Date()): boolean => {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  return (
+    d.getFullYear() === target.getFullYear() &&
+    d.getMonth() === target.getMonth() &&
+    d.getDate() === target.getDate()
+  );
+};
+
+const getStatusBadgeConfig = (status: string) => {
+  switch (status) {
+    case 'PENDING':
+      return {
+        label: 'Pending Approval',
+        className: 'bg-[#FEF3C7] text-[#B45309] border border-[#FDE68A]',
+        dot: 'bg-[#D97706]',
+      };
+    case 'APPROVED':
+      return {
+        label: 'Approved',
+        className: 'bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE]',
+        dot: 'bg-[#7C3AED]',
+      };
+    case 'ACTIVE':
+      return {
+        label: 'Outside Campus',
+        className: 'bg-[#FFEDD5] text-[#C2410C] border border-[#FED7AA]',
+        dot: 'bg-[#EA580C]',
+      };
+    case 'COMPLETED':
+      return {
+        label: 'Safely Returned',
+        className: 'bg-[#D1FAE5] text-[#047857] border border-[#A7F3D0]',
+        dot: 'bg-[#10B981]',
+      };
+    case 'REJECTED':
+      return {
+        label: 'Rejected',
+        className: 'bg-[#FFE4E6] text-[#BE123C] border border-[#FECDD3]',
+        dot: 'bg-[#E11D48]',
+      };
+    default:
+      return {
+        label: status || 'Unknown',
+        className: 'bg-slate-100 text-slate-700 border border-slate-200',
+        dot: 'bg-slate-500',
+      };
+  }
+};
+
+export const GatePassPage: React.FC = () => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
+  const isSecurity = user?.role === 'SECURITY';
+  const canManage = isAdmin || isSecurity;
+  const canApprove = isAdmin;
+
+  const [items, setItems] = useState<GatePassItem[]>([]);
+  const [stats, setStats] = useState<GatePassStats>({
+    student: 0,
+    staff: 0,
+    inside: 0,
+    out: 0,
+    pending: 0,
+    overdue: 0,
+  });
+  const [students, setStudents] = useState<StudentOption[]>([]);
+  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [schoolSettings, setSchoolSettings] = useState<SchoolSettingsData>({});
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Filters
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'PENDING' | 'APPROVED' | 'COMPLETED' | 'REJECTED'>('ALL');
-  const [classFilter, setClassFilter] = useState('');
-  const [dateFilter, setDateFilter] = useState<'TODAY' | 'ALL'>('TODAY');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('ALL');
+  const [classFilter, setClassFilter] = useState<string>('ALL');
+  const [dateFilter, setDateFilter] = useState<'TODAY' | 'ALL'>('ALL');
 
-  // Modals
+  // Modals & action states
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
-  const [previewItem, setPreviewItem] = useState<GatePassPrintData | null>(null);
-  const [deleteConfirmItem, setDeleteConfirmItem] = useState<GatePassPrintData | null>(null);
-  const [deleting, setDeleting] = useState(false);
+  const [previewItem, setPreviewItem] = useState<GatePassItem | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<GatePassItem | null>(null);
+  const [rejectConfirmItem, setRejectConfirmItem] = useState<GatePassItem | null>(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [actionBusyId, setActionBusyId] = useState<string | null>(null);
 
-  // Form State
+  // Issue Pass form state
   const [formType, setFormType] = useState<'STUDENT' | 'TEACHER'>('STUDENT');
-  const [selectedStudentClass, setSelectedStudentClass] = useState('');
-  const [selectedStudentSection, setSelectedStudentSection] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [modalClassFilter, setModalClassFilter] = useState<string>('ALL');
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  const [customReason, setCustomReason] = useState('');
+  const [teacherSearch, setTeacherSearch] = useState('');
+  const [selectedStaffUserId, setSelectedStaffUserId] = useState('');
+  const [reason, setReason] = useState('');
   const [destination, setDestination] = useState('');
   const [exitTime, setExitTime] = useState(() => {
     const now = new Date();
-    return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return now.toTimeString().slice(0, 5);
   });
   const [returnTime, setReturnTime] = useState('');
-  const [accompanyingPerson, setAccompanyingPerson] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [notes, setNotes] = useState('');
 
-  // Load School Settings & Stats
-  const loadInitialData = async () => {
-    try {
-      const setRes = await api.get('/api/settings').catch(() => null);
-      if (setRes?.data?.data || setRes?.data) {
-        const s = setRes.data?.data || setRes.data;
-        setSchoolSettings({
-          schoolName: s.schoolName || 'SRI VENKATESWARA JY SCHOOL',
-          schoolSubtitle: s.schoolSubtitle || '(IIT-JEE / NEET Foundation – Olympiads)',
-          address: s.address || 'Opp. Hero Showroom, SVL Paradise Campus, Narasannapeta',
-          logoUrl: s.logoUrl || '/logo.png',
-          principalSignatureUrl: s.principalSignatureUrl,
-        });
-      }
-    } catch (_) {}
-
-    if (isAdminOrSecurity) {
-      try {
-        const [clsRes, stuRes] = await Promise.all([
-          api.get('/api/classes?limit=1000').catch(() => ({ data: { data: [] } })),
-          api.get('/api/students?limit=5000').catch(() => ({ data: { data: [] } })),
-        ]);
-        setClasses(clsRes.data?.data || clsRes.data || []);
-        setStudents(stuRes.data?.data || stuRes.data || []);
-      } catch (_) {}
-    }
-  };
-
-  // Fetch Gate Passes & Stats
-  const loadGatePasses = async (showLoadingSpinner = true) => {
-    if (showLoadingSpinner) setLoading(true);
+  const loadGatePasses = async (silent = false) => {
+    if (!silent) setLoading(true);
     else setRefreshing(true);
 
     try {
-      const [statsRes, listRes] = await Promise.all([
-        api.get('/api/gate-pass/stats').catch(() => null),
-        api.get('/api/gate-pass?limit=200').catch(() => null),
+      const [passesRes, statsRes] = await Promise.all([
+        api.get('/gate-pass?limit=250'),
+        api.get('/gate-pass/stats').catch(() => null),
       ]);
 
-      if (statsRes?.data?.data) {
-        setStats(statsRes.data.data);
-      }
+      const rawPasses = passesRes?.data;
+      const passesData = Array.isArray(rawPasses)
+        ? rawPasses
+        : Array.isArray(rawPasses?.data)
+        ? rawPasses.data
+        : [];
+      setItems(passesData);
 
-      if (listRes?.data?.data || listRes?.data) {
-        const data = listRes.data?.data || listRes.data || [];
-        setItems(data);
+      if (statsRes?.data) {
+        const s = statsRes.data?.data ?? statsRes.data;
+        if (s && typeof s === 'object') {
+          setStats({
+            student: Number(s.student || 0),
+            staff: Number(s.staff || 0),
+            inside: Number(s.inside || 0),
+            out: Number(s.out || 0),
+            pending: Number(s.pending || 0),
+            overdue: Number(s.overdue || 0),
+          });
+        }
       }
-    } catch (err) {
-      console.error('Error fetching gate passes:', err);
-      toast.error('Unable to fetch latest gate passes');
+    } catch (error: any) {
+      console.error('Failed to load gate passes:', error);
+      toast.error(error?.response?.data?.message || 'Failed to load gate passes');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  useEffect(() => {
-    loadInitialData();
-    loadGatePasses(true);
+  const loadSupportingData = async () => {
+    try {
+      const requests: Promise<any>[] = [
+        api.get('/settings').catch(() => null),
+        api.get('/students?limit=500').catch(() => null),
+      ];
+      if (isAdmin) {
+        requests.push(api.get('/teachers?limit=500').catch(() => null));
+      }
 
-    // Auto-refresh every 45s for security desk
-    const interval = setInterval(() => {
-      loadGatePasses(false);
-    }, 45000);
-    return () => clearInterval(interval);
+      const [settingsRes, studentsRes, teachersRes] = await Promise.all(requests);
+
+      if (settingsRes?.data) {
+        const s = settingsRes.data?.data ?? settingsRes.data;
+        if (s && typeof s === 'object') {
+          setSchoolSettings(s);
+        }
+      }
+
+      if (studentsRes?.data) {
+        const rawStudents = studentsRes.data?.data ?? studentsRes.data;
+        if (Array.isArray(rawStudents)) {
+          setStudents(rawStudents);
+        }
+      }
+
+      if (teachersRes?.data) {
+        const rawTeachers = teachersRes.data?.data ?? teachersRes.data;
+        if (Array.isArray(rawTeachers)) {
+          setTeachers(rawTeachers);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load supporting gate pass metadata:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadGatePasses();
+    loadSupportingData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Filtered List
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      // 1. Status Filter
-      if (statusFilter !== 'ALL') {
-        if (statusFilter === 'ACTIVE' && item.status !== 'ACTIVE') return false;
-        if (statusFilter === 'PENDING' && item.status !== 'PENDING') return false;
-        if (statusFilter === 'APPROVED' && item.status !== 'APPROVED') return false;
-        if (statusFilter === 'COMPLETED' && item.status !== 'COMPLETED') return false;
-        if (statusFilter === 'REJECTED' && item.status !== 'REJECTED') return false;
+  const uniqueClassNames = useMemo(() => {
+    const map = new Map<string, { name: string }>();
+    students.forEach((s) => {
+      if (s.class?.name && !map.has(s.class.name)) {
+        map.set(s.class.name, { name: s.class.name });
       }
+    });
+    items.forEach((item) => {
+      if (item.student?.class?.name && !map.has(item.student.class.name)) {
+        map.set(item.student.class.name, { name: item.student.class.name });
+      }
+    });
+    return sortClasses(Array.from(map.values())).map((c) => c.name);
+  }, [students, items]);
 
-      // 2. Class Filter
-      if (classFilter) {
-        if (item.requestType !== 'STUDENT') return false;
+  const dateScopedItems = useMemo(() => {
+    return items.filter((item) => {
+      if (typeFilter !== 'ALL' && item.requestType !== typeFilter) return false;
+      if (classFilter !== 'ALL') {
+        if (item.requestType === 'TEACHER') return false;
         if (item.student?.class?.name !== classFilter) return false;
       }
-
-      // 3. Date Filter
-      if (dateFilter === 'TODAY' && item.createdAt) {
-        const itemDate = new Date(item.createdAt).toDateString();
-        const todayDate = new Date().toDateString();
-        if (itemDate !== todayDate) return false;
+      if (dateFilter === 'TODAY') {
+        return isSameLocalDay(item.createdAt || item.requestedDate);
       }
-
-      // 4. Search Query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const slip = (item.slipNumber || '').toLowerCase();
-        const studentName = (item.student?.user?.name || '').toLowerCase();
-        const rollNo = (item.student?.rollNo || '').toLowerCase();
-        const requesterName = (item.requester?.name || '').toLowerCase();
-        const reason = (item.reason || '').toLowerCase();
-        const destination = (item.destination || '').toLowerCase();
-
-        return (
-          slip.includes(q) ||
-          studentName.includes(q) ||
-          rollNo.includes(q) ||
-          requesterName.includes(q) ||
-          reason.includes(q) ||
-          destination.includes(q)
-        );
-      }
-
       return true;
     });
-  }, [items, statusFilter, classFilter, dateFilter, searchQuery]);
+  }, [items, typeFilter, classFilter, dateFilter]);
 
-  // Unique Classes list for dropdown
-  const uniqueClassNames = useMemo(() => {
-    return Array.from(new Set(classes.map((c) => c.name))).filter(Boolean);
-  }, [classes]);
+  const statusCounts = useMemo(() => {
+    const counts = {
+      ALL: dateScopedItems.length,
+      OUTSIDE: 0,
+      PENDING: 0,
+      APPROVED: 0,
+      COMPLETED: 0,
+      REJECTED: 0,
+    };
+    dateScopedItems.forEach((item) => {
+      if (item.status === 'ACTIVE') counts.OUTSIDE += 1;
+      else if (item.status === 'PENDING') counts.PENDING += 1;
+      else if (item.status === 'APPROVED') counts.APPROVED += 1;
+      else if (item.status === 'COMPLETED') counts.COMPLETED += 1;
+      else if (item.status === 'REJECTED') counts.REJECTED += 1;
+    });
+    return counts;
+  }, [dateScopedItems]);
 
-  // Filtered student list for issue modal
-  const modalAvailableStudents = useMemo(() => {
+  const filteredItems = useMemo(() => {
+    const q = searchTerm.trim().toLowerCase();
+    return dateScopedItems.filter((item) => {
+      if (statusFilter === 'OUTSIDE' && item.status !== 'ACTIVE') return false;
+      if (statusFilter !== 'ALL' && statusFilter !== 'OUTSIDE' && item.status !== statusFilter) {
+        return false;
+      }
+      if (!q) return true;
+
+      const haystack = [
+        item.slipNumber,
+        item.reason,
+        item.destination,
+        item.student?.user?.name,
+        item.student?.rollNo,
+        item.student?.fatherName,
+        item.student?.mobileNumber,
+        item.student?.class?.name,
+        item.student?.class?.section,
+        item.requester?.name,
+        item.requester?.phone,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(q);
+    });
+  }, [dateScopedItems, statusFilter, searchTerm]);
+
+  const kpiMetrics = useMemo(() => {
+    const todayItems = items.filter((item) => isSameLocalDay(item.createdAt || item.requestedDate));
+    const currentlyOutside = items.filter((item) => item.status === 'ACTIVE').length;
+    const pendingApproval = items.filter((item) => item.status === 'PENDING').length;
+    const safelyReturned = items.filter((item) => item.status === 'COMPLETED').length;
+    const approvedReady = items.filter((item) => item.status === 'APPROVED').length;
+
+    return {
+      passesToday: todayItems.length,
+      currentlyOutside: Math.max(currentlyOutside, stats.out),
+      pendingApproval: Math.max(pendingApproval, stats.pending),
+      safelyReturned: Math.max(safelyReturned, stats.inside),
+      approvedReady,
+      overdueCount: stats.overdue,
+    };
+  }, [items, stats]);
+
+  const filteredStudentsForModal = useMemo(() => {
+    const q = studentSearch.trim().toLowerCase();
     return students.filter((s) => {
-      if (selectedStudentClass && s.class?.name !== selectedStudentClass) return false;
-      if (selectedStudentSection && s.class?.section !== selectedStudentSection) return false;
-      return true;
+      if (modalClassFilter !== 'ALL' && s.class?.name !== modalClassFilter) return false;
+      if (!q) return true;
+      const haystack = [
+        s.user?.name,
+        s.rollNo,
+        s.fatherName,
+        s.mobileNumber,
+        s.class?.name,
+        s.class?.section,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
     });
-  }, [students, selectedStudentClass, selectedStudentSection]);
+  }, [students, studentSearch, modalClassFilter]);
 
-  const selectedStudentObj = useMemo(() => {
-    return students.find((s) => s.id === selectedStudentId);
-  }, [students, selectedStudentId]);
+  const filteredTeachersForModal = useMemo(() => {
+    const q = teacherSearch.trim().toLowerCase();
+    return teachers.filter((t) => {
+      if (!q) return true;
+      const haystack = [t.user?.name, t.employeeId, t.designation, t.user?.phone]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [teachers, teacherSearch]);
 
-  // Issue Gate Pass Submit
-  const handleIssuePass = async (autoPrint = false) => {
+  const selectedStudentObj = useMemo(
+    () => students.find((s) => s.id === selectedStudentId) || null,
+    [students, selectedStudentId]
+  );
+
+  const selectedTeacherObj = useMemo(
+    () =>
+      teachers.find((t) => (t.user?.id || t.userId || t.id) === selectedStaffUserId) || null,
+    [teachers, selectedStaffUserId]
+  );
+
+  const resetIssueForm = () => {
+    setFormType('STUDENT');
+    setStudentSearch('');
+    setModalClassFilter('ALL');
+    setSelectedStudentId('');
+    setTeacherSearch('');
+    setSelectedStaffUserId('');
+    setReason('');
+    setDestination('');
+    setExitTime(new Date().toTimeString().slice(0, 5));
+    setReturnTime('');
+    setNotes('');
+  };
+
+  const handleOpenIssueModal = () => {
+    resetIssueForm();
+    setIsIssueModalOpen(true);
+  };
+
+  const handleIssuePass = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reason.trim()) {
+      toast.error('Please enter a reason for the gate pass');
+      return;
+    }
     if (formType === 'STUDENT' && !selectedStudentId) {
       toast.error('Please select a student');
       return;
     }
-    if (!customReason.trim()) {
-      toast.error('Please enter a reason for departure');
+    if (formType === 'TEACHER' && isAdmin && !selectedStaffUserId) {
+      toast.error('Please select a teacher or staff member');
       return;
     }
 
     setSubmitting(true);
     try {
-      const payload: any = {
+      const payload: Record<string, any> = {
         requestType: formType,
-        reason: customReason.trim(),
+        reason: reason.trim(),
         destination: destination.trim() || undefined,
         exitTime: exitTime || undefined,
         returnTime: returnTime || undefined,
-        notes: accompanyingPerson.trim() ? `Escorted by: ${accompanyingPerson.trim()}` : undefined,
+        notes: notes.trim() || undefined,
       };
 
       if (formType === 'STUDENT') {
         payload.studentId = selectedStudentId;
+      } else if (isAdmin && selectedStaffUserId) {
+        payload.staffId = selectedStaffUserId;
       }
 
-      const res = await api.post('/api/gate-pass', payload);
-      const createdItem = res.data?.data || res.data;
-
-      toast.success(isAdminOrSecurity ? 'Gate Pass Issued Successfully!' : 'Pass Requested Successfully!');
+      await api.post('/gate-pass', payload);
+      toast.success(
+        isAdmin
+          ? 'Gate pass issued & auto-approved successfully!'
+          : 'Gate pass request submitted for approval!'
+      );
       setIsIssueModalOpen(false);
-
-      // Reset form
-      setSelectedStudentId('');
-      setCustomReason('');
-      setDestination('');
-      setReturnTime('');
-      setAccompanyingPerson('');
-
-      // Refresh data
-      await loadGatePasses(false);
-
-      // Auto Print if requested
-      if (autoPrint && createdItem) {
-        setTimeout(() => {
-          printGatePassSlip(createdItem, schoolSettings);
-        }, 300);
-      }
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to issue gate pass');
+      resetIssueForm();
+      await loadGatePasses(true);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to create gate pass');
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Status Actions: Mark Exit (OUT) / Mark Return (IN)
-  const handleMarkStatus = async (id: string, action: 'EXIT' | 'RETURN') => {
+  const handleUpdateStatus = async (
+    item: GatePassItem,
+    status: 'APPROVED' | 'REJECTED' | 'ACTIVE' | 'COMPLETED',
+    reasonText?: string
+  ) => {
+    setActionBusyId(item.id);
     try {
-      await api.patch(`/api/gate-pass/${id}`, {
-        status: action === 'EXIT' ? 'ACTIVE' : 'COMPLETED',
-      });
-      toast.success(action === 'EXIT' ? 'Marked OUT (Left Campus)' : 'Marked IN (Safely Returned)');
-      loadGatePasses(false);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update status');
-    }
-  };
-
-  // Approval / Rejection
-  const handleApproveReject = async (id: string, status: 'APPROVED' | 'REJECTED') => {
-    try {
-      await api.patch(`/api/gate-pass/${id}`, {
+      await api.patch(`/gate-pass/${item.id}`, {
         status,
-        rejectionReason: status === 'REJECTED' ? 'Rejected by Administration' : undefined,
+        ...(reasonText ? { rejectionReason: reasonText } : {}),
       });
-      toast.success(`Gate pass ${status.toLowerCase()} successfully`);
-      loadGatePasses(false);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to update status');
+      const labelMap: Record<string, string> = {
+        APPROVED: 'Gate pass approved',
+        REJECTED: 'Gate pass rejected',
+        ACTIVE: 'Marked as exited campus',
+        COMPLETED: 'Marked as safely returned',
+      };
+      toast.success(labelMap[status] || 'Gate pass updated');
+      setRejectConfirmItem(null);
+      setRejectionReason('');
+      await loadGatePasses(true);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to update gate pass status');
+    } finally {
+      setActionBusyId(null);
     }
   };
 
-
-
-
-
-
-  // Delete Gate Pass
   const handleDeletePass = async () => {
     if (!deleteConfirmItem) return;
-    setDeleting(true);
+    setActionBusyId(deleteConfirmItem.id);
     try {
-      await api.delete(`/api/gate-pass/${deleteConfirmItem.id}`);
-      toast.success('Gate pass deleted successfully');
+      await api.delete(`/gate-pass/${deleteConfirmItem.id}`);
+      toast.success('Gate pass deleted');
       setDeleteConfirmItem(null);
-      loadGatePasses(false);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Failed to delete gate pass');
+      await loadGatePasses(true);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Failed to delete gate pass');
     } finally {
-      setDeleting(false);
+      setActionBusyId(null);
     }
-
   };
 
+  const handleExportCsv = () => {
+    if (filteredItems.length === 0) {
+      toast.error('No gate passes available to export');
+      return;
+    }
+
+    const escapeCsv = (val: any) => {
+      const s = String(val ?? '').replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const headers = [
+      'Slip Number',
+      'Type',
+      'Name',
+      'Class / Role',
+      'Roll / Phone',
+      'Reason',
+      'Destination',
+      'Exit Time',
+      'Return Time',
+      'Status',
+      'Approved By',
+      'Created At',
+    ];
+
+    const rows = filteredItems.map((item) => {
+      const isTeacher = item.requestType === 'TEACHER';
+      const personName = isTeacher
+        ? item.requester?.name || 'Staff'
+        : item.student?.user?.name || 'Student';
+      const classOrRole = isTeacher
+        ? item.requester?.designation || item.requester?.role || 'Staff'
+        : item.student?.class
+        ? `${item.student.class.name} ${item.student.class.section || ''}`.trim()
+        : '—';
+      const identity = isTeacher
+        ? item.requester?.phone || '—'
+        : `${item.student?.rollNo || '—'} / ${item.student?.mobileNumber || item.student?.user?.phone || '—'}`;
+
+      return [
+        item.slipNumber || item.id.slice(0, 8),
+        item.requestType,
+        personName,
+        classOrRole,
+        identity,
+        item.reason,
+        item.destination || '—',
+        item.exitTime || '—',
+        item.returnTime || '—',
+        item.status,
+        item.approvedBy?.name || '—',
+        formatDateTime(item.createdAt || item.requestedDate),
+      ]
+        .map(escapeCsv)
+        .join(',');
+    });
+
+    const csv = [headers.map(escapeCsv).join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `gate-passes-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`Exported ${filteredItems.length} gate passes`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-[#F4F7FC]">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-full bg-slate-50/70" style={{ minHeight: 'calc(100vh - 64px)' }}>
-      {/* Top Banner */}
+    <div className="min-h-screen bg-[#F4F7FC] pb-12">
       <PageHeader
         title="Gate Pass Command Center"
-        icon={<ShieldCheck className="w-5 h-5 text-indigo-600" />}
+        subtitle="Real-time campus movement tracking, approvals, and dual-copy security slip printing"
+        icon={ShieldCheck}
+        action={
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => loadGatePasses(true)}
+              disabled={refreshing}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 text-xs sm:text-sm font-semibold backdrop-blur-sm transition-all cursor-pointer disabled:opacity-60"
+            >
+              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/15 hover:bg-white/25 text-white border border-white/25 text-xs sm:text-sm font-semibold backdrop-blur-sm transition-all cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>Export CSV</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleOpenIssueModal}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#5B21B6] hover:bg-[#F5F3FF] text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Issue Gate Pass</span>
+            </button>
+          </div>
+        }
       />
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        <div className="max-w-[1600px] mx-auto space-y-6">
-
-          {/* Top Hero Card */}
-          <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-blue-700 rounded-3xl p-6 md:p-8 text-white shadow-xl shadow-indigo-600/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-96 h-96 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-            
-            <div className="relative z-10 space-y-2">
-              <div className="inline-flex items-center gap-2 bg-white/20 text-white px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider border border-white/20">
-                <ShieldCheck className="w-4 h-4 text-white" /> Security & Movement Desk
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {/* 4 Glossy Light Pastel KPI Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* KPI 1: Passes Today */}
+          <button
+            type="button"
+            onClick={() => {
+              setDateFilter(dateFilter === 'TODAY' ? 'ALL' : 'TODAY');
+              setStatusFilter('ALL');
+            }}
+            className={`group text-left rounded-2xl p-5 bg-gradient-to-br from-[#EDE9FE] via-[#F5F3FF] to-white border transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+              dateFilter === 'TODAY' && statusFilter === 'ALL'
+                ? 'border-[#7C3AED] ring-2 ring-[#7C3AED]/25'
+                : 'border-[#DDD6FE]'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#6D28D9]">
+                  Passes Today
+                </p>
+                <p className="mt-1.5 text-3xl font-extrabold text-slate-800 tracking-tight">
+                  {kpiMetrics.passesToday}
+                </p>
+                <p className="mt-1 text-xs text-slate-600 font-medium">
+                  {dateFilter === 'TODAY'
+                    ? 'Showing today only (click for all)'
+                    : `${items.length} total passes in register`}
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white drop-shadow-sm">
-                Gate Pass Management
-              </h1>
-              <p className="text-xs sm:text-sm text-indigo-100 font-medium max-w-2xl leading-relaxed">
-                Issue, monitor, verify, and print official departure gate passes with student photo, authorized signatures, and dual-copy slips.
-              </p>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#7C3AED] to-[#5B21B6] text-white flex items-center justify-center shadow-md shadow-violet-500/20 group-hover:scale-105 transition-transform">
+                <Activity className="w-5 h-5" />
+              </div>
             </div>
+          </button>
 
-            <div className="relative z-10 flex flex-wrap items-center gap-3">
-              <button
-                onClick={() => loadGatePasses(false)}
-                disabled={refreshing}
-                className="bg-white/10 hover:bg-white/20 active:scale-95 text-white text-xs font-black px-4 py-3 rounded-2xl border border-white/15 transition-all flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
-              >
-                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
-              </button>
+          {/* KPI 2: Currently Outside */}
+          <button
+            type="button"
+            onClick={() => {
+              setDateFilter('ALL');
+              setStatusFilter(statusFilter === 'OUTSIDE' ? 'ALL' : 'OUTSIDE');
+            }}
+            className={`group text-left rounded-2xl p-5 bg-gradient-to-br from-[#FEF3C7] via-[#FFFBEB] to-white border transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+              statusFilter === 'OUTSIDE'
+                ? 'border-[#D97706] ring-2 ring-[#D97706]/25'
+                : 'border-[#FDE68A]'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#B45309]">
+                  Currently Outside
+                </p>
+                <p className="mt-1.5 text-3xl font-extrabold text-slate-800 tracking-tight">
+                  {kpiMetrics.currentlyOutside}
+                </p>
+                <p className="mt-1 text-xs text-slate-600 font-medium">
+                  {kpiMetrics.approvedReady > 0
+                    ? `${kpiMetrics.approvedReady} approved awaiting gate exit`
+                    : 'Out of campus right now'}
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#F59E0B] to-[#D97706] text-white flex items-center justify-center shadow-md shadow-amber-500/20 group-hover:scale-105 transition-transform">
+                <LogOut className="w-5 h-5" />
+              </div>
+            </div>
+          </button>
 
-              {isAdminOrSecurity && (
+          {/* KPI 3: Pending Approval */}
+          <button
+            type="button"
+            onClick={() => {
+              setDateFilter('ALL');
+              setStatusFilter(statusFilter === 'PENDING' ? 'ALL' : 'PENDING');
+            }}
+            className={`group text-left rounded-2xl p-5 bg-gradient-to-br from-[#FCE7F3] via-[#FDF2F8] to-white border transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+              statusFilter === 'PENDING'
+                ? 'border-[#DB2777] ring-2 ring-[#DB2777]/25'
+                : 'border-[#FBCFE8]'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#BE185D]">
+                  Pending Approval
+                </p>
+                <p className="mt-1.5 text-3xl font-extrabold text-slate-800 tracking-tight">
+                  {kpiMetrics.pendingApproval}
+                </p>
+                <p className="mt-1 text-xs text-slate-600 font-medium">
+                  Awaiting Principal / Admin review
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#EC4899] to-[#BE185D] text-white flex items-center justify-center shadow-md shadow-pink-500/20 group-hover:scale-105 transition-transform">
+                <Clock className="w-5 h-5" />
+              </div>
+            </div>
+          </button>
+
+          {/* KPI 4: Safely Returned */}
+          <button
+            type="button"
+            onClick={() => {
+              setDateFilter('ALL');
+              setStatusFilter(statusFilter === 'COMPLETED' ? 'ALL' : 'COMPLETED');
+            }}
+            className={`group text-left rounded-2xl p-5 bg-gradient-to-br from-[#D1FAE5] via-[#ECFDF5] to-white border transition-all cursor-pointer shadow-sm hover:shadow-md hover:-translate-y-0.5 ${
+              statusFilter === 'COMPLETED'
+                ? 'border-[#059669] ring-2 ring-[#059669]/25'
+                : 'border-[#A7F3D0]'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#047857]">
+                  Safely Returned
+                </p>
+                <p className="mt-1.5 text-3xl font-extrabold text-slate-800 tracking-tight">
+                  {kpiMetrics.safelyReturned}
+                </p>
+                <p className="mt-1 text-xs text-slate-600 font-medium">
+                  Completed passes checked back in
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#10B981] to-[#059669] text-white flex items-center justify-center shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+            </div>
+          </button>
+        </div>
+
+        {/* Search, Filter & Status Pill Toolbar */}
+        <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-sm p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search student, staff, roll no, slip #, reason, destination..."
+                className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-[#DDD7F3] bg-[#F8FAFC] focus:bg-white text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED] transition-all"
+              />
+              {searchTerm && (
                 <button
-                  onClick={() => setIsIssueModalOpen(true)}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 text-white text-xs font-black uppercase tracking-wider px-6 py-3.5 rounded-2xl shadow-lg shadow-indigo-500/30 transition-all flex items-center gap-2.5 cursor-pointer hover:-translate-y-0.5"
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Issue Gate Pass</span>
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
-          </div>
 
-          {/* 4 Live Metric Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Card 1: Today's Passes */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-wider">Passes Today</span>
-                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl">
-                  <Activity className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">
-                {stats.todayTotal || items.filter(i => new Date(i.createdAt || '').toDateString() === new Date().toDateString()).length}
-              </div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Total departures logged today</p>
-            </div>
+            {/* Type Filter */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <select
+                value={typeFilter}
+                onChange={(e) => {
+                  const val = e.target.value as TypeFilter;
+                  setTypeFilter(val);
+                  if (val === 'TEACHER') setClassFilter('ALL');
+                }}
+                className="px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-[#F8FAFC] text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+              >
+                <option value="ALL">All Types ({items.length})</option>
+                <option value="STUDENT">Students Only</option>
+                <option value="TEACHER">Teachers / Staff</option>
+              </select>
 
-            {/* Card 2: Currently Outside */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black text-amber-600 uppercase tracking-wider">Currently Outside</span>
-                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl">
-                  <LogOut className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-amber-600 tracking-tight flex items-center gap-2">
-                <span>{stats.out || items.filter(i => i.status === 'ACTIVE').length}</span>
-                {items.filter(i => i.status === 'ACTIVE').length > 0 && (
-                  <span className="inline-flex w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping" />
-                )}
-              </div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Out of campus right now</p>
-            </div>
+              {/* Class Filter */}
+              <select
+                value={classFilter}
+                onChange={(e) => {
+                  setClassFilter(e.target.value);
+                  if (e.target.value !== 'ALL') setTypeFilter('STUDENT');
+                }}
+                className="px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-[#F8FAFC] text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+              >
+                <option value="ALL">All Classes</option>
+                {uniqueClassNames.map((clsName) => (
+                  <option key={clsName} value={clsName}>
+                    {clsName}
+                  </option>
+                ))}
+              </select>
 
-            {/* Card 3: Pending Approval */}
-            <div 
-              onClick={() => setStatusFilter('PENDING')}
-              className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all cursor-pointer hover:border-purple-300"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black text-purple-600 uppercase tracking-wider">Pending Approval</span>
-                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-2xl">
-                  <Clock className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-purple-600 tracking-tight">
-                {stats.pending || items.filter(i => i.status === 'PENDING').length}
-              </div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Awaiting principal / admin review</p>
-            </div>
-
-            {/* Card 4: Safely Returned */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm relative overflow-hidden group hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black text-emerald-600 uppercase tracking-wider">Safely Returned</span>
-                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-              </div>
-              <div className="text-3xl font-black text-emerald-600 tracking-tight">
-                {items.filter(i => i.status === 'COMPLETED').length}
-              </div>
-              <p className="text-[11px] font-semibold text-slate-500 mt-1">Completed passes returned</p>
-            </div>
-          </div>
-
-          {/* Control Toolbar */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200/70 shadow-sm space-y-4">
-            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-              {/* Search Bar */}
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search student, roll no, slip #, reason..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
-                />
-                {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Class Filter & Date Filter */}
-              <div className="flex flex-wrap items-center gap-3">
-                <select
-                  value={classFilter}
-                  onChange={(e) => setClassFilter(e.target.value)}
-                  className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-3.5 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
-                >
-                  <option value="">All Classes</option>
-                  {uniqueClassNames.map((name) => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
-                </select>
-
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200/60 dark:border-slate-700/60">
-                  <button
-                    onClick={() => setDateFilter('TODAY')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      dateFilter === 'TODAY' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
-                    }`}
-                  >
-                    Today
-                  </button>
-                  <button
-                    onClick={() => setDateFilter('ALL')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      dateFilter === 'ALL' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
-                    }`}
-                  >
-                    All Records
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Status Filter Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar border-t border-slate-100 dark:border-slate-800">
-              {[
-                { id: 'ALL', label: 'All Passes', count: items.length },
-                { id: 'ACTIVE', label: 'Outside Campus', count: items.filter(i => i.status === 'ACTIVE').length },
-                { id: 'PENDING', label: 'Pending Approval', count: items.filter(i => i.status === 'PENDING').length },
-                { id: 'APPROVED', label: 'Approved', count: items.filter(i => i.status === 'APPROVED').length },
-                { id: 'COMPLETED', label: 'Safely Returned', count: items.filter(i => i.status === 'COMPLETED').length },
-                { id: 'REJECTED', label: 'Rejected', count: items.filter(i => i.status === 'REJECTED').length },
-              ].map((pill) => (
+              {/* Date Range Segmented Toggle */}
+              <div className="inline-flex rounded-xl border border-[#DDD7F3] bg-[#F4F7FC] p-1">
                 <button
-                  key={pill.id}
-                  onClick={() => setStatusFilter(pill.id as any)}
-                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer shrink-0 ${
-                    statusFilter === pill.id
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                  type="button"
+                  onClick={() => setDateFilter('ALL')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    dateFilter === 'ALL'
+                      ? 'bg-[#6D38EA] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <span>{pill.label}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    statusFilter === pill.id ? 'bg-white/20 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600'
-                  }`}>
-                    {pill.count}
-                  </span>
+                  All Records
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setDateFilter('TODAY')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                    dateFilter === 'TODAY'
+                      ? 'bg-[#6D38EA] text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Today
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Records Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200/70 dark:border-slate-800 overflow-hidden">
-            {loading ? (
-              <div className="py-24 flex flex-col items-center justify-center space-y-3">
-                <LoadingSpinner size="lg" />
-                <p className="text-xs font-bold text-slate-400">Loading gate passes...</p>
-              </div>
-            ) : filteredItems.length === 0 ? (
-              <div className="py-20 flex flex-col items-center justify-center text-center px-4">
-                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl mb-3">
-                  <ShieldCheck className="w-12 h-12 text-slate-300" />
-                </div>
-                <h3 className="text-base font-black text-slate-700 dark:text-slate-300">No Gate Passes Found</h3>
-                <p className="text-xs font-semibold text-slate-400 mt-1 max-w-sm">
-                  {searchQuery || statusFilter !== 'ALL' || classFilter
-                    ? 'No passes match your selected filters. Try resetting the search or status filter.'
-                    : 'No gate passes have been issued yet. Click "Issue Gate Pass" to create one.'}
-                </p>
-                {isAdminOrSecurity && (
+          {/* Interactive Status Filter Pills */}
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-slate-100">
+            <div className="flex flex-wrap items-center gap-2">
+              {(
+                [
+                  { key: 'ALL', label: 'All Passes', count: statusCounts.ALL },
+                  { key: 'OUTSIDE', label: 'Outside Campus', count: statusCounts.OUTSIDE },
+                  { key: 'PENDING', label: 'Pending Approval', count: statusCounts.PENDING },
+                  { key: 'APPROVED', label: 'Approved', count: statusCounts.APPROVED },
+                  { key: 'COMPLETED', label: 'Safely Returned', count: statusCounts.COMPLETED },
+                  { key: 'REJECTED', label: 'Rejected', count: statusCounts.REJECTED },
+                ] as { key: StatusFilter; label: string; count: number }[]
+              ).map((pill) => {
+                const active = statusFilter === pill.key;
+                return (
                   <button
-                    onClick={() => setIsIssueModalOpen(true)}
-                    className="mt-5 btn-primary text-xs font-bold px-5 py-2.5 rounded-xl flex items-center gap-2"
+                    key={pill.key}
+                    type="button"
+                    onClick={() => setStatusFilter(pill.key)}
+                    className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+                      active
+                        ? 'bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white border-transparent shadow-sm'
+                        : 'bg-[#F8FAFC] text-slate-600 border-[#E2E8F0] hover:bg-[#F5F3FF] hover:border-[#DDD6FE] hover:text-[#5B21B6]'
+                    }`}
                   >
-                    <PlusCircle className="w-4 h-4" /> Issue Gate Pass
+                    <span>{pill.label}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold ${
+                        active ? 'bg-white/20 text-white' : 'bg-white text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {pill.count}
+                    </span>
                   </button>
-                )}
-              </div>
-            ) : (
+                );
+              })}
+            </div>
+
+            <div className="text-xs font-medium text-slate-500">
+              Showing <span className="font-bold text-slate-800">{filteredItems.length}</span> of{' '}
+              <span className="font-bold text-slate-800">{dateScopedItems.length}</span> passes
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content: Empty State vs Unified Table + Mobile Cards */}
+        {filteredItems.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-sm p-12 text-center">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-[#F5F3FF] border border-[#DDD6FE] text-[#7C3AED] flex items-center justify-center mb-4">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800">No Gate Passes Found</h3>
+            <p className="mt-1.5 text-sm text-slate-500 max-w-md mx-auto">
+              {dateFilter === 'TODAY'
+                ? 'No gate passes have been logged today for the active filters. Try switching to All Records or issue a new gate pass.'
+                : 'No gate passes match your current search or status filters. Clear filters or issue a new gate pass.'}
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+              {(searchTerm || statusFilter !== 'ALL' || classFilter !== 'ALL' || typeFilter !== 'ALL' || dateFilter === 'TODAY') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('ALL');
+                    setClassFilter('ALL');
+                    setTypeFilter('ALL');
+                    setDateFilter('ALL');
+                  }}
+                  className="px-4 py-2 rounded-xl border border-[#DDD7F3] bg-white hover:bg-[#F5F3FF] text-slate-700 text-sm font-semibold transition-all cursor-pointer"
+                >
+                  Reset All Filters
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleOpenIssueModal}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white text-sm font-semibold shadow-sm hover:shadow-md transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Issue Gate Pass</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Desktop ERP Table */}
+            <div className="hidden lg:block bg-white rounded-2xl border border-[#DDD7F3] shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+                <table className="w-full student-grid-table border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 text-slate-400 font-extrabold uppercase tracking-wider text-[11px]">
-                      <th className="py-4 px-6">Pass Details</th>
-                      <th className="py-4 px-6">Person Profile</th>
-                      <th className="py-4 px-6">Reason & Destination</th>
-                      <th className="py-4 px-6">Timings</th>
-                      <th className="py-4 px-6">Status</th>
-                      <th className="py-4 px-6 text-right">Actions</th>
+                    <tr className="bg-gradient-to-r from-[#7D3CEF] via-[#6D38EA] to-[#5B21B6] !text-white">
+                      <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider !text-white whitespace-nowrap">
+                        Slip &amp; Timestamp
+                      </th>
+                      <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider !text-white">
+                        Person &amp; Identity
+                      </th>
+                      <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider !text-white">
+                        Purpose &amp; Schedule
+                      </th>
+                      <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider !text-white whitespace-nowrap">
+                        Status
+                      </th>
+                      <th className="py-3.5 px-4 text-xs font-bold uppercase tracking-wider !text-white text-right whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                  <tbody className="divide-y divide-[#EDE9FE]">
                     {filteredItems.map((item) => {
                       const isTeacher = item.requestType === 'TEACHER';
-                      const personName = isTeacher ? item.requester?.name : item.student?.user?.name;
-                      const rawPhoto = isTeacher ? item.requester?.photoUrl : item.student?.user?.photoUrl;
-                      const photoUrl = rawPhoto ? getPhotoUrl(rawPhoto) : '';
-                      const rollNo = item.student?.rollNo;
-                      const className = item.student?.class ? `${item.student.class.name} - ${item.student.class.section}` : '';
-                      const slipNo = item.slipNumber || `GP-${item.id.substring(0, 6).toUpperCase()}`;
+                      const personName = isTeacher
+                        ? item.requester?.name || 'Staff Member'
+                        : item.student?.user?.name || 'Unknown Student';
+                      const rawPhoto = isTeacher
+                        ? item.requester?.photoUrl
+                        : item.student?.user?.photoUrl;
+                      const photoUrl = getPhotoUrl(rawPhoto);
+                      const statusCfg = getStatusBadgeConfig(item.status);
+                      const isBusy = actionBusyId === item.id;
+                      const canDelete = isAdmin || (item.status === 'PENDING' && item.requesterId === user?.id);
 
                       return (
-                        <tr key={item.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors group">
-                          {/* Col 1: Pass Details */}
-                          <td className="py-4 px-6 align-middle">
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono font-black text-slate-900 dark:text-white text-sm tracking-tight">
-                                #{slipNo}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(slipNo);
-                                  toast.success('Slip number copied');
-                                }}
-                                title="Copy Slip #"
-                                className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-slate-600 transition-opacity"
-                              >
-                                <Copy className="w-3.5 h-3.5" />
-                              </button>
+                        <tr
+                          key={item.id}
+                          className="hover:bg-[#F5F3FF]/60 transition-colors align-middle"
+                        >
+                          {/* Slip & Timestamp */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F5F3FF] border border-[#DDD6FE] text-[#5B21B6] font-mono text-xs font-bold">
+                              <span>{item.slipNumber || `#${item.id.slice(0, 8).toUpperCase()}`}</span>
                             </div>
-                            <div className="text-[11px] font-bold text-slate-400 mt-0.5">
-                              {item.createdAt ? format(new Date(item.createdAt), 'dd MMM yyyy, hh:mm a') : '--'}
+                            <div className="mt-1.5 flex items-center gap-1 text-[11px] text-slate-500 font-medium">
+                              <Calendar className="w-3 h-3 text-slate-400" />
+                              <span>{formatDateTime(item.createdAt || item.requestedDate)}</span>
                             </div>
                           </td>
 
-                          {/* Col 2: Person Profile */}
-                          <td className="py-4 px-6 align-middle">
+                          {/* Person & Identity */}
+                          <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
-                                {photoUrl ? (
-                                  <img src={photoUrl} alt="Photo" className="w-full h-full object-cover" />
-                                ) : (
-                                  <User className="w-4 h-4 text-slate-400" />
-                                )}
-                              </div>
-                              <div>
-                                <div className="font-black text-slate-800 dark:text-slate-100 text-xs">
-                                  {personName || 'N/A'}
+                              {photoUrl ? (
+                                <img
+                                  src={photoUrl}
+                                  alt={personName}
+                                  className="w-10 h-10 rounded-full object-cover border-2 border-[#DDD6FE] shrink-0"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#EDE9FE] to-[#DDD6FE] text-[#5B21B6] font-bold text-sm flex items-center justify-center shrink-0 border border-[#C4B5FD]">
+                                  {personName.charAt(0).toUpperCase()}
                                 </div>
-                                <div className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5 mt-0.5">
-                                  {!isTeacher ? (
+                              )}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-sm text-slate-800 truncate">
+                                    {personName}
+                                  </span>
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide ${
+                                      isTeacher
+                                        ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                    }`}
+                                  >
+                                    {isTeacher ? (
+                                      <>
+                                        <UserCheck className="w-2.5 h-2.5" />
+                                        Staff
+                                      </>
+                                    ) : (
+                                      <>
+                                        <GraduationCap className="w-2.5 h-2.5" />
+                                        Student
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
+
+                                <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-0.5 text-xs text-slate-500">
+                                  {isTeacher ? (
                                     <>
-                                      <span className="bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px] text-slate-700 dark:text-slate-300">
-                                        Class: {className || 'N/A'}
-                                      </span>
-                                      {rollNo && <span>· Roll: {rollNo}</span>}
+                                      <span>{item.requester?.designation || item.requester?.role || 'Faculty'}</span>
+                                      {item.requester?.phone && (
+                                        <span className="inline-flex items-center gap-1">
+                                          <Phone className="w-3 h-3 text-slate-400" />
+                                          {item.requester.phone}
+                                        </span>
+                                      )}
                                     </>
                                   ) : (
-                                    <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-[10px]">Staff Member</span>
+                                    <>
+                                      <span className="font-semibold text-slate-700">
+                                        {item.student?.class
+                                          ? `${item.student.class.name}${
+                                              item.student.class.section ? ` - ${item.student.class.section}` : ''
+                                            }`
+                                          : 'No Class'}
+                                      </span>
+                                      {item.student?.rollNo && <span>Roll: {item.student.rollNo}</span>}
+                                      {(item.student?.mobileNumber || item.student?.user?.phone) && (
+                                        <span className="inline-flex items-center gap-1">
+                                          <Phone className="w-3 h-3 text-slate-400" />
+                                          {item.student?.mobileNumber || item.student?.user?.phone}
+                                        </span>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               </div>
                             </div>
                           </td>
 
-                          {/* Col 3: Reason & Destination */}
-                          <td className="py-4 px-6 align-middle max-w-xs">
-                            <div className="font-bold text-slate-800 dark:text-slate-200 truncate" title={item.reason}>
+                          {/* Purpose & Schedule */}
+                          <td className="py-3.5 px-4 max-w-xs">
+                            <p className="text-sm font-semibold text-slate-800 line-clamp-2">
                               {item.reason}
+                            </p>
+                            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                              {item.destination && (
+                                <span className="inline-flex items-center gap-1">
+                                  <MapPin className="w-3 h-3 text-[#7C3AED]" />
+                                  {item.destination}
+                                </span>
+                              )}
+                              {(item.exitTime || item.returnTime) && (
+                                <span className="inline-flex items-center gap-1 font-medium text-slate-600">
+                                  <Clock className="w-3 h-3 text-slate-400" />
+                                  {item.exitTime || '—'} → {item.returnTime || 'Open'}
+                                </span>
+                              )}
                             </div>
-                            <div className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5 mt-0.5">
-                              <MapPin className="w-3 h-3 text-rose-500 shrink-0" />
-                              <span className="truncate">{item.destination || 'Not Specified'}</span>
-                            </div>
+                            {item.rejectionReason && (
+                              <p className="mt-1 text-[11px] font-medium text-rose-600">
+                                Reason: {item.rejectionReason}
+                              </p>
+                            )}
                           </td>
 
-                          {/* Col 4: Timings */}
-                          <td className="py-4 px-6 align-middle">
-                            <div className="space-y-0.5 font-bold text-[11px]">
-                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                                <span className="text-slate-400 font-semibold w-12">Exit:</span>
-                                <span className="text-rose-600 font-black">{item.exitTime || '--:--'}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
-                                <span className="text-slate-400 font-semibold w-12">Return:</span>
-                                <span className="text-emerald-600 font-black">{item.returnTime || '--:--'}</span>
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* Col 5: Status */}
-                          <td className="py-4 px-6 align-middle">
-                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border ${
-                              item.status === 'APPROVED' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300' :
-                              item.status === 'ACTIVE' ? 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300 animate-pulse' :
-                              item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300' :
-                              item.status === 'REJECTED' ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300' :
-                              'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300'
-                            }`}>
-                              {item.status === 'ACTIVE' ? 'OUTSIDE' : item.status === 'COMPLETED' ? 'RETURNED' : item.status}
+                          {/* Status */}
+                          <td className="py-3.5 px-4 whitespace-nowrap">
+                            <span
+                              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${statusCfg.className}`}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                              {statusCfg.label}
                             </span>
+                            {item.approvedBy?.name && item.status !== 'PENDING' && (
+                              <p className="mt-1 text-[11px] text-slate-500">
+                                By {item.approvedBy.name}
+                              </p>
+                            )}
                           </td>
 
-                          {/* Col 6: Actions */}
-                          <td className="py-4 px-6 align-middle text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              {/* 1. Quick Print Slip */}
-                              <button
-                                onClick={() => printGatePassSlip(item, schoolSettings)}
-                                title="Print Gate Pass (Iframe - 100% Crisp)"
-                                className="p-2 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-xs active:scale-95"
-                              >
-                                <Printer className="w-4 h-4" />
-                              </button>
-
-                              {/* 2. Visual Preview */}
-                              <button
-                                onClick={() => setPreviewItem(item)}
-                                title="Preview Dual-Copy Slip"
-                                className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all border border-slate-200 cursor-pointer shadow-xs active:scale-95"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-
-                              {/* 3. Mark Out / In for Security Desk */}
-                              {isAdminOrSecurity && item.status === 'APPROVED' && (
-                                <button
-                                  onClick={() => handleMarkStatus(item.id, 'EXIT')}
-                                  title="Mark student as EXITED (OUT)"
-                                  className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                                >
-                                  <LogOut className="w-3 h-3" /> OUT
-                                </button>
-                              )}
-
-                              {isAdminOrSecurity && item.status === 'ACTIVE' && (
-                                <button
-                                  onClick={() => handleMarkStatus(item.id, 'RETURN')}
-                                  title="Mark student as RETURNED (IN)"
-                                  className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center gap-1 shadow-sm active:scale-95"
-                                >
-                                  <LogIn className="w-3 h-3" /> IN
-                                </button>
-                              )}
-
-                              {/* 4. Approve / Reject for Pending Passes */}
-                              {isAdminOrSecurity && item.status === 'PENDING' && (
+                          {/* Actions */}
+                          <td className="py-3.5 px-4 whitespace-nowrap text-right">
+                            <div className="inline-flex items-center justify-end gap-1.5">
+                              {canApprove && item.status === 'PENDING' && (
                                 <>
                                   <button
-                                    onClick={() => handleApproveReject(item.id, 'APPROVED')}
-                                    title="Approve Pass"
-                                    className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all border border-emerald-200 cursor-pointer active:scale-95"
+                                    type="button"
+                                    disabled={isBusy}
+                                    onClick={() => handleUpdateStatus(item, 'APPROVED')}
+                                    title="Approve Gate Pass"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                                   >
-                                    <CheckCircle2 className="w-4 h-4" />
+                                    <Check className="w-3.5 h-3.5" />
+                                    <span>Approve</span>
                                   </button>
                                   <button
-                                    onClick={() => handleApproveReject(item.id, 'REJECTED')}
-                                    title="Reject Pass"
-                                    className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl transition-all border border-rose-200 cursor-pointer active:scale-95"
+                                    type="button"
+                                    disabled={isBusy}
+                                    onClick={() => {
+                                      setRejectConfirmItem(item);
+                                      setRejectionReason('');
+                                    }}
+                                    title="Reject Gate Pass"
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
                                   >
-                                    <XCircle className="w-4 h-4" />
+                                    <XCircle className="w-3.5 h-3.5" />
+                                    <span>Reject</span>
                                   </button>
                                 </>
                               )}
 
-                              {/* 5. Delete Pass (Admin / Super Admin) */}
-                              {isSuperAdminOrAdmin && (
+                              {canManage && item.status === 'APPROVED' && (
                                 <button
+                                  type="button"
+                                  disabled={isBusy}
+                                  onClick={() => handleUpdateStatus(item, 'ACTIVE')}
+                                  title="Mark Exited Campus"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                >
+                                  <LogOut className="w-3.5 h-3.5" />
+                                  <span>Mark Out</span>
+                                </button>
+                              )}
+
+                              {canManage && item.status === 'ACTIVE' && (
+                                <button
+                                  type="button"
+                                  disabled={isBusy}
+                                  onClick={() => handleUpdateStatus(item, 'COMPLETED')}
+                                  title="Mark Safely Returned"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition-all cursor-pointer disabled:opacity-50"
+                                >
+                                  <LogIn className="w-3.5 h-3.5" />
+                                  <span>Mark Returned</span>
+                                </button>
+                              )}
+
+                              <button
+                                type="button"
+                                onClick={() => setPreviewItem(item)}
+                                title="Preview Dual-Copy Slip"
+                                className="p-2 rounded-lg bg-[#F5F3FF] hover:bg-[#EDE9FE] text-[#6D28D9] border border-[#DDD6FE] transition-all cursor-pointer"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => printGatePassSlip(item, schoolSettings)}
+                                title="Print Gate Pass Slip"
+                                className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 transition-all cursor-pointer"
+                              >
+                                <Printer className="w-4 h-4" />
+                              </button>
+
+                              {canDelete && (
+                                <button
+                                  type="button"
+                                  disabled={isBusy}
                                   onClick={() => setDeleteConfirmItem(item)}
-                                  title="Delete Gate Pass Record"
-                                  className="p-2 bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all border border-slate-200 hover:border-rose-200 cursor-pointer shadow-xs active:scale-95"
+                                  title="Delete Gate Pass"
+                                  className="p-2 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition-all cursor-pointer disabled:opacity-50"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </button>
@@ -754,284 +1223,547 @@ export const GatePassPage: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
+            </div>
 
-        </div>
+            {/* Mobile Cards View */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+              {filteredItems.map((item) => {
+                const isTeacher = item.requestType === 'TEACHER';
+                const personName = isTeacher
+                  ? item.requester?.name || 'Staff Member'
+                  : item.student?.user?.name || 'Unknown Student';
+                const rawPhoto = isTeacher
+                  ? item.requester?.photoUrl
+                  : item.student?.user?.photoUrl;
+                const photoUrl = getPhotoUrl(rawPhoto);
+                const statusCfg = getStatusBadgeConfig(item.status);
+                const isBusy = actionBusyId === item.id;
+                const canDelete = isAdmin || (item.status === 'PENDING' && item.requesterId === user?.id);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="bg-white rounded-2xl border border-[#DDD7F3] shadow-sm p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#F5F3FF] border border-[#DDD6FE] text-[#5B21B6] font-mono text-xs font-bold">
+                        {item.slipNumber || `#${item.id.slice(0, 8).toUpperCase()}`}
+                      </span>
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${statusCfg.className}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot}`} />
+                        {statusCfg.label}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {photoUrl ? (
+                        <img
+                          src={photoUrl}
+                          alt={personName}
+                          className="w-11 h-11 rounded-full object-cover border-2 border-[#DDD6FE]"
+                        />
+                      ) : (
+                        <div className="w-11 h-11 rounded-full bg-[#EDE9FE] text-[#5B21B6] font-bold flex items-center justify-center border border-[#C4B5FD]">
+                          {personName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-800 text-sm truncate">{personName}</p>
+                        <p className="text-xs text-slate-500">
+                          {isTeacher
+                            ? item.requester?.designation || 'Staff Member'
+                            : `${item.student?.class?.name || 'No Class'}${
+                                item.student?.class?.section ? ` - ${item.student.class.section}` : ''
+                              }${item.student?.rollNo ? ` • Roll: ${item.student.rollNo}` : ''}`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl bg-[#F8FAFC] border border-slate-100 p-3 space-y-1">
+                      <p className="text-xs font-semibold text-slate-800">{item.reason}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+                        {item.destination && (
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="w-3 h-3 text-[#7C3AED]" />
+                            {item.destination}
+                          </span>
+                        )}
+                        <span>{formatDateTime(item.createdAt || item.requestedDate)}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {canApprove && item.status === 'PENDING' && (
+                          <>
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => handleUpdateStatus(item, 'APPROVED')}
+                              className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold cursor-pointer"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isBusy}
+                              onClick={() => {
+                                setRejectConfirmItem(item);
+                                setRejectionReason('');
+                              }}
+                              className="px-2.5 py-1.5 rounded-lg bg-rose-50 text-rose-700 border border-rose-200 text-xs font-bold cursor-pointer"
+                            >
+                              Reject
+                            </button>
+                          </>
+                        )}
+                        {canManage && item.status === 'APPROVED' && (
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => handleUpdateStatus(item, 'ACTIVE')}
+                            className="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold cursor-pointer"
+                          >
+                            Mark Out
+                          </button>
+                        )}
+                        {canManage && item.status === 'ACTIVE' && (
+                          <button
+                            type="button"
+                            disabled={isBusy}
+                            onClick={() => handleUpdateStatus(item, 'COMPLETED')}
+                            className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold cursor-pointer"
+                          >
+                            Mark Returned
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewItem(item)}
+                          className="p-2 rounded-lg bg-[#F5F3FF] text-[#6D28D9] border border-[#DDD6FE] cursor-pointer"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printGatePassSlip(item, schoolSettings)}
+                          className="p-2 rounded-lg bg-slate-50 text-slate-700 border border-slate-200 cursor-pointer"
+                        >
+                          <Printer className="w-4 h-4" />
+                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmItem(item)}
+                            className="p-2 rounded-lg bg-rose-50 text-rose-600 border border-rose-200 cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
-      {/* ══ MODAL 1: ISSUE GATE PASS ══ */}
+      {/* ISSUE GATE PASS MODAL */}
       {isIssueModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[90vh] animate-scale-up">
-            {/* Modal Header */}
-            <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex justify-between items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2E1065]/35 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            {/* Light-ERP Purple Gradient Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-[#5B21B6] via-[#6D38EA] to-[#7C3AED] text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-indigo-500/20 rounded-xl border border-indigo-400/20 text-indigo-300">
-                  <PlusCircle className="w-5 h-5" />
+                <div className="w-10 h-10 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center">
+                  <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black tracking-tight">Issue Official Gate Pass</h3>
-                  <p className="text-xs text-slate-300 font-medium">Record student/staff campus departure with live approval</p>
+                  <h2 className="text-lg font-bold">Issue New Gate Pass</h2>
+                  <p className="text-xs text-violet-100">
+                    {isAdmin
+                      ? 'Admin passes are automatically approved for immediate gate print'
+                      : 'Request will be routed to Principal / Admin for approval'}
+                  </p>
                 </div>
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsIssueModalOpen(false)}
-                className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors cursor-pointer"
+                className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-5 flex-1">
-              {/* Type Switcher */}
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <form onSubmit={handleIssuePass} className="p-6 overflow-y-auto space-y-5">
+              {/* Pass Type Switch */}
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setFormType('STUDENT')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                    formType === 'STUDENT' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                  className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
+                    formType === 'STUDENT'
+                      ? 'bg-[#F5F3FF] border-[#7C3AED] text-[#5B21B6] shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  Student Departure Pass
+                  <GraduationCap className="w-4 h-4" />
+                  <span>Student Gate Pass</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setFormType('TEACHER')}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer ${
-                    formType === 'TEACHER' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-white shadow-xs' : 'text-slate-500'
+                  className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-sm font-bold transition-all cursor-pointer ${
+                    formType === 'TEACHER'
+                      ? 'bg-[#F5F3FF] border-[#7C3AED] text-[#5B21B6] shadow-sm'
+                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  Staff / Teacher Pass
+                  <Users className="w-4 h-4" />
+                  <span>Teacher / Staff Pass</span>
                 </button>
               </div>
 
-              {/* Student Picker */}
-              {formType === 'STUDENT' && (
-                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-3">
-                  <div className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                    <User className="w-4 h-4 text-indigo-600" /> Select Student
+              {/* Person Selector */}
+              {formType === 'STUDENT' ? (
+                <div className="space-y-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-4">
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="relative flex-1">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        placeholder="Search student name, roll no, or phone..."
+                        className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                      />
+                    </div>
+                    <select
+                      value={modalClassFilter}
+                      onChange={(e) => setModalClassFilter(e.target.value)}
+                      className="px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                    >
+                      <option value="ALL">All Classes</option>
+                      {uniqueClassNames.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 block mb-1">Filter Class</label>
-                      <select
-                        value={selectedStudentClass}
-                        onChange={(e) => {
-                          setSelectedStudentClass(e.target.value);
-                          setSelectedStudentId('');
-                        }}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
-                      >
-                        <option value="">All Classes</option>
-                        {uniqueClassNames.map((c) => (
-                          <option key={c} value={c}>{c}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-500 block mb-1">Select Student</label>
-                      <select
-                        value={selectedStudentId}
-                        onChange={(e) => setSelectedStudentId(e.target.value)}
-                        className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
-                      >
-                        <option value="">Choose student...</option>
-                        {modalAvailableStudents.map((s) => (
-                          <option key={s.id} value={s.id}>
-                            {s.user?.name} {s.rollNo ? `(Roll: ${s.rollNo})` : ''} - {s.class?.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                      Select Student *
+                    </label>
+                    <select
+                      required
+                      value={selectedStudentId}
+                      onChange={(e) => setSelectedStudentId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                    >
+                      <option value="">
+                        -- Choose from {filteredStudentsForModal.length} students --
+                      </option>
+                      {filteredStudentsForModal.slice(0, 200).map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.user?.name || 'Unnamed'} (
+                          {s.class ? `${s.class.name}${s.class.section ? `-${s.class.section}` : ''}` : 'No Class'}
+                          {s.rollNo ? ` • Roll ${s.rollNo}` : ''})
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Selected Student Preview Card */}
                   {selectedStudentObj && (
-                    <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-200/70 dark:border-indigo-900/50 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0 border border-slate-200">
-                        {selectedStudentObj.user?.photoUrl ? (
-                          <img src={getPhotoUrl(selectedStudentObj.user.photoUrl)} alt="Photo" className="w-full h-full object-cover" />
-                        ) : (
-                          <User className="w-full h-full p-2 text-slate-400" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-xs font-black text-slate-900 dark:text-white truncate">
+                    <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-white border border-[#DDD6FE]">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">
                           {selectedStudentObj.user?.name}
-                        </div>
-                        <div className="text-[10px] font-bold text-slate-500">
-                          Class: {selectedStudentObj.class?.name}-{selectedStudentObj.class?.section} · Roll: {selectedStudentObj.rollNo || 'N/A'} · Father: {selectedStudentObj.fatherName || 'N/A'}
-                        </div>
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Father: {selectedStudentObj.fatherName || 'N/A'} • Mobile:{' '}
+                          {selectedStudentObj.mobileNumber || selectedStudentObj.user?.phone || 'N/A'}
+                        </p>
                       </div>
+                      <span className="px-2.5 py-1 rounded-lg bg-[#F5F3FF] text-[#5B21B6] text-xs font-bold">
+                        {selectedStudentObj.class?.name || 'Class'}{' '}
+                        {selectedStudentObj.class?.section || ''}
+                      </span>
                     </div>
                   )}
                 </div>
+              ) : isAdmin ? (
+                <div className="space-y-3 rounded-xl bg-[#F8FAFC] border border-[#E2E8F0] p-4">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={teacherSearch}
+                      onChange={(e) => setTeacherSearch(e.target.value)}
+                      placeholder="Search teacher or staff name, employee ID..."
+                      className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                      Select Teacher / Staff Member *
+                    </label>
+                    <select
+                      required
+                      value={selectedStaffUserId}
+                      onChange={(e) => setSelectedStaffUserId(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                    >
+                      <option value="">
+                        -- Choose from {filteredTeachersForModal.length} staff members --
+                      </option>
+                      {filteredTeachersForModal.map((t) => {
+                        const staffUserId = t.user?.id || t.userId || t.id;
+                        return (
+                          <option key={t.id} value={staffUserId}>
+                            {t.user?.name || 'Staff Member'}
+                            {t.designation ? ` • ${t.designation}` : ''}
+                            {t.employeeId ? ` (${t.employeeId})` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  {selectedTeacherObj && (
+                    <div className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-white border border-[#DDD6FE]">
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">
+                          {selectedTeacherObj.user?.name}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {selectedTeacherObj.designation || 'Faculty'} • Phone:{' '}
+                          {selectedTeacherObj.user?.phone || 'N/A'}
+                        </p>
+                      </div>
+                      {selectedTeacherObj.employeeId && (
+                        <span className="px-2.5 py-1 rounded-lg bg-[#F5F3FF] text-[#5B21B6] text-xs font-bold">
+                          {selectedTeacherObj.employeeId}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="rounded-xl bg-[#F5F3FF] border border-[#DDD6FE] p-3.5 text-xs font-medium text-[#5B21B6]">
+                  This staff gate pass will be submitted under your account ({user?.name || 'Current Staff'}).
+                </div>
               )}
 
-              {/* Reason Category Chips */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Quick Reason Template</label>
-                <div className="flex flex-wrap gap-2">
-                  {REASON_CATEGORIES.map((cat) => (
+              {/* Quick Reason Presets */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Reason for Departure *
+                </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {PRESET_REASONS.map((preset) => (
                     <button
-                      key={cat.label}
+                      key={preset}
                       type="button"
-                      onClick={() => setCustomReason(cat.value)}
-                      className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
-                        customReason === cat.value
-                          ? 'bg-indigo-600 text-white shadow-xs'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                      onClick={() => setReason(preset)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                        reason === preset
+                          ? 'bg-[#EDE9FE] border-[#7C3AED] text-[#5B21B6]'
+                          : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-[#F5F3FF]'
                       }`}
                     >
-                      {cat.label}
+                      {preset}
                     </button>
                   ))}
                 </div>
+                <input
+                  type="text"
+                  required
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Specify departure reason..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
+                />
               </div>
 
-              {/* Specific Reason & Destination */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
-                    Specific Reason <span className="text-rose-500">*</span>
+              {/* Destination & Schedule */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                <div className="sm:col-span-1">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Destination / Escort
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="e.g. Severe headache, Dental appointment"
-                    value={customReason}
-                    onChange={(e) => setCustomReason(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Destination</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Home, SVL Hospital, Narasannapeta"
                     value={destination}
                     onChange={(e) => setDestination(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    placeholder="e.g., Home / Hospital"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
                   />
                 </div>
-              </div>
-
-              {/* Times */}
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Departure Time (Exit)</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Exit Time
+                  </label>
                   <input
                     type="time"
                     value={exitTime}
                     onChange={(e) => setExitTime(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
                   />
                 </div>
-
                 <div>
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Expected Return Time</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                    Expected Return
+                  </label>
                   <input
                     type="time"
-                    placeholder="Leave empty if not returning today"
                     value={returnTime}
                     onChange={(e) => setReturnTime(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
                   />
                 </div>
               </div>
 
-              {/* Accompanying Person */}
+              {/* Notes */}
               <div>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">Accompanying Guardian / Escort Name (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Father, Mother, Self"
-                  value={accompanyingPerson}
-                  onChange={(e) => setAccompanyingPerson(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500/20"
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">
+                  Security / Escort Notes (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Parent ID verified, vehicle number, or special gate instructions..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-[#DDD7F3] bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#7C3AED]/25 focus:border-[#7C3AED]"
                 />
               </div>
-            </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setIsIssueModalOpen(false)}
-                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => handleIssuePass(false)}
-                className="btn-secondary text-xs font-black uppercase px-5 py-2.5 rounded-xl cursor-pointer disabled:opacity-50"
-              >
-                {submitting ? 'Issuing...' : 'Issue Pass'}
-              </button>
-
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={() => handleIssuePass(true)}
-                className="btn-primary text-xs font-black uppercase px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
-              >
-                <Printer className="w-4 h-4" />
-                <span>Issue & Print Immediately</span>
-              </button>
-            </div>
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsIssueModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-sm font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#7C3AED] to-[#5B21B6] text-white text-sm font-bold shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-60"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{submitting ? 'Issuing...' : isAdmin ? 'Issue & Approve' : 'Submit Request'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* ══ MODAL 2: PREVIEW DUAL-COPY SLIP ══ */}
+      {/* SLIP PREVIEW MODAL */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] animate-scale-up">
-            <div className="p-5 bg-gradient-to-r from-slate-900 to-indigo-950 text-white flex justify-between items-center">
-              <div className="flex items-center gap-2.5">
-                <Printer className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-black">Gate Pass Slip Preview (A4 2-Copy Layout)</h3>
-              </div>
-              <button onClick={() => setPreviewItem(null)} className="p-2 hover:bg-white/10 rounded-full text-slate-300 hover:text-white cursor-pointer">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-6 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-950">
-              <GatePassPrint
-                gatePass={previewItem}
-                schoolSettings={schoolSettings}
-              />
-            </div>
-
-            <div className="p-4 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-400">
-                Printed format contains Student Copy & Security Copy on 1 single sheet.
-              </span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2E1065]/35 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-[#5B21B6] via-[#6D38EA] to-[#7C3AED] text-white flex items-center justify-between">
               <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center">
+                  <Printer className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold">
+                    Dual-Copy Gate Pass Preview ({previewItem.slipNumber || previewItem.id.slice(0, 8)})
+                  </h3>
+                  <p className="text-xs text-violet-100">
+                    School Office Copy + Gate Security Copy • A4 Landscape Layout
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setPreviewItem(null)}
-                  className="px-4 py-2 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-100 cursor-pointer"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    printGatePassSlip(previewItem, schoolSettings);
-                    setPreviewItem(null);
-                  }}
-                  className="btn-primary text-xs font-black uppercase px-6 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
+                  type="button"
+                  onClick={() => printGatePassSlip(previewItem, schoolSettings)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white text-[#5B21B6] hover:bg-[#F5F3FF] text-xs font-bold shadow-sm cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
-                  <span>Print Slip Now</span>
+                  <span>Print Slip</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewItem(null)}
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/25 text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-5 overflow-auto bg-[#F4F7FC] flex-1">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-3 overflow-x-auto">
+                <GatePassPrint gatePass={previewItem} schoolSettings={schoolSettings} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* REJECT REASON MODAL */}
+      {rejectConfirmItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2E1065]/35 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="px-5 py-4 bg-gradient-to-r from-[#BE123C] to-[#E11D48] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <XCircle className="w-5 h-5" />
+                <h3 className="font-bold text-base">Reject Gate Pass</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRejectConfirmItem(null)}
+                className="p-1 rounded-lg bg-white/15 hover:bg-white/25 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-600">
+                Enter an optional rejection reason for{' '}
+                <span className="font-bold text-slate-800">
+                  {rejectConfirmItem.requestType === 'TEACHER'
+                    ? rejectConfirmItem.requester?.name
+                    : rejectConfirmItem.student?.user?.name}
+                </span>
+                .
+              </p>
+              <textarea
+                rows={3}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Reason for rejecting this gate pass request..."
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-500/25 focus:border-rose-500"
+              />
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setRejectConfirmItem(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={actionBusyId === rejectConfirmItem.id}
+                  onClick={() => handleUpdateStatus(rejectConfirmItem, 'REJECTED', rejectionReason.trim())}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-sm cursor-pointer disabled:opacity-60"
+                >
+                  Confirm Rejection
                 </button>
               </div>
             </div>
@@ -1039,52 +1771,58 @@ export const GatePassPage: React.FC = () => {
         </div>
       )}
 
-      {/* ══ MODAL 3: DELETE CONFIRMATION ══ */}
+      {/* DELETE CONFIRMATION MODAL */}
       {deleteConfirmItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 p-6 space-y-5 animate-scale-up">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-rose-50 dark:bg-rose-900/30 text-rose-600 rounded-2xl">
-                <AlertTriangle className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#2E1065]/35 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl border border-[#DDD7F3] shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="px-5 py-4 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-5 h-5 text-amber-200" />
+                <h3 className="font-bold text-base">Delete Gate Pass</h3>
               </div>
-              <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">Delete Gate Pass?</h3>
-                <p className="text-xs font-semibold text-slate-500">This action cannot be undone.</p>
-              </div>
-            </div>
-
-            <div className="p-4 bg-rose-50/60 dark:bg-rose-950/20 rounded-2xl border border-rose-100 dark:border-rose-900/40 text-xs text-rose-800 dark:text-rose-300 space-y-1">
-              <div>Are you sure you want to permanently delete Gate Pass:</div>
-              <div className="font-mono font-black text-sm text-rose-900 dark:text-rose-200">
-                #{deleteConfirmItem.slipNumber || deleteConfirmItem.id}
-              </div>
-              <div className="text-[11px] text-rose-600 dark:text-rose-400">
-                Person: {deleteConfirmItem.student?.user?.name || deleteConfirmItem.requester?.name || 'N/A'}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => setDeleteConfirmItem(null)}
-                className="px-5 py-2.5 rounded-xl text-xs font-black uppercase text-slate-600 hover:bg-slate-100 cursor-pointer"
+                className="p-1 rounded-lg bg-white/15 hover:bg-white/25 cursor-pointer"
               >
-                Cancel
+                <X className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                disabled={deleting}
-                onClick={handleDeletePass}
-                className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-black uppercase px-6 py-2.5 rounded-xl shadow-md shadow-rose-600/20 cursor-pointer disabled:opacity-50 flex items-center gap-2"
-              >
-                {deleting ? <LoadingSpinner size="sm" /> : <Trash2 className="w-4 h-4" />}
-                <span>Yes, Delete</span>
-              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-600">
+                Are you sure you want to permanently remove slip{' '}
+                <span className="font-bold text-slate-800">
+                  {deleteConfirmItem.slipNumber || deleteConfirmItem.id.slice(0, 8)}
+                </span>{' '}
+                for{' '}
+                <span className="font-bold text-slate-800">
+                  {deleteConfirmItem.requestType === 'TEACHER'
+                    ? deleteConfirmItem.requester?.name
+                    : deleteConfirmItem.student?.user?.name}
+                </span>
+                ? This action cannot be undone.
+              </p>
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmItem(null)}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={actionBusyId === deleteConfirmItem.id}
+                  onClick={handleDeletePass}
+                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-sm cursor-pointer disabled:opacity-60"
+                >
+                  {actionBusyId === deleteConfirmItem.id ? 'Deleting...' : 'Delete Pass'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 };

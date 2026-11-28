@@ -1,8 +1,114 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Gate Pass Command Center Complete ERP Redesign & Bugfixes (`/leave/gate-pass`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Gate Pass (`/leave/gate-pass`) పేజీని ఇతర అప్‌గ్రేడ్ చేసిన ERP పేజీల తరహాలో అత్యుత్తమ ప్రొఫెషనల్ డిజైన్ & లోపరహితమైన వర్కింగ్‌తో రూపొందించాలి.
+- **గుర్తించి పరిష్కరించిన ప్రధాన బగ్స్ ([GatePassPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/gate-pass/GatePassPage.tsx)):**
+  1. **Critical Crash Fix (`format is not defined`):** పాత కోడ్‌లో `date-fns` నుండి `format` ఇంపోర్ట్ చేయకుండానే టేబుల్ లో కాల్ చేయడం వల్ల `All Records` క్లిక్ చేసిన వెంటనే పేజీ క్రాష్ అయ్యేది — సురక్షితమైన `formatDateTime` సహాయక ఫంక్షన్‌తో పరిష్కరించాము.
+  2. **Empty-on-Load Default Filter Fix:** `dateFilter` డీఫాల్ట్‌గా `'TODAY'` ఉండటం వల్ల ఉన్న 5 పాస్‌లు దాగిపోయి `"No Gate Passes Found"` కనిపించేది — డీఫాల్ట్ `'ALL'` కి మార్చాము (`Today` / `All Records` టోగుల్ యథాతథంగా ఉంటుంది).
+  3. **Stats Unwrapping Fix:** `statsRes?.data?.data` బదులు యాక్సియోస్ ఇంటర్‌సెప్టర్‌కు తగినట్టు `statsRes.data?.data ?? statsRes.data` ద్వారా `Currently Outside`, `Pending Approval`, `Safely Returned` లైవ్ స్టాట్స్ సరిదిద్దాము.
+  4. **Admin Staff/Teacher Pass Selection (`staffId`):** బ్యాకెండ్ `createGatePass` సపోర్ట్ ఉన్నా UI లో లేని **Teacher / Staff Pass Selector** (`/api/teachers?limit=500`, Super Admin/Admin కోసం) జతచేశాము.
+  5. **Class Sorting & Dark Theme Cleanup:** `sortClasses` ద్వారా క్లాస్ డ్రాప్‌డౌన్‌లను క్రమబద్ధీకరించాము, అలాగే పాత `dark:` & `bg-slate-900` హెడర్లను పూర్తిగా తొలగించాము.
+- **చేసిన ప్రొఫెషనల్ ERP UI మెరుగుదలలు:**
+  - `<PageHeader>` పైభాగంలోనే `Refresh`, `Export CSV`, `Issue Gate Pass` బటన్లు ఉంచి, డూప్లికేట్ పెద్ద పర్పుల్ హీరో బ్యానర్‌ను తొలగించాము.
+  - **4 క్లిక్ చేయగల గ్లోసీ లైట్ పాస్టెల్ KPI కార్డులు** (`Passes Today`, `Currently Outside`, `Pending Approval`, `Safely Returned`).
+  - సెర్చ్ + టైప్ + క్లాస్ + డేట్ స్కోప్ ఫిల్టర్లతో యూనిఫైడ్ టూల్‌బార్ మరియు లైవ్ కౌంట్ స్టేటస్ పిల్స్.
+  - డెస్క్‌టాప్ **`.student-grid-table`** పర్పుల్-హెడర్ టేబుల్ + మొబైల్ రెస్పాన్సివ్ కార్డులు + 1-క్లిక్ `Approve / Reject (with reason modal) / Mark Out / Mark Returned / Preview / Dual-Copy Print` (`printGatePassSlip` & `GatePassPrint`).
+
+## చివరి సంభాషణ - Leave Management Dashboard, KPI Cards & Real API Integration (`/leave`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Leave Management పేజీకి KPI కార్డులతో కూడిన ప్రొఫెషనల్ ERP డ్యాష్‌బోర్డ్ డిజైన్ చేయాలి.
+- **గుర్తించిన పాత బగ్స్ ([LeaveRequestTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveRequestTab.tsx)):**
+  - `Request Leave` సబ్మిట్ చేస్తే `POST /api/leave/apply` బదులు `localStorage` లో సేవ్ అయ్యేది (రిఫ్రెష్ చేస్తే పోయేది).
+  - `Delete` బటన్ `DELETE /api/leave/:id` కాల్ చేయకపోవడం వల్ల డిలీట్ చేసినా డేటాబేస్‌లో ఉండిపోయేది.
+  - `r.status === 'Approved'` కేస్-సెన్సిటివ్ చెక్ వల్ల బ్యాకెండ్ నుండి వచ్చే `APPROVED` స్టేటస్ పసుపు/Pending రంగులో కనిపించేది.
+- **చేసిన మార్పులు:**
+  - **[LeaveDashboardPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/LeaveDashboardPage.tsx):**
+    - Admin కోసం **4 గ్లోసీ పేస్టల్ KPI కార్డులు** (`Total Requests` + On Leave Today, `Pending Review`, `Approved Leaves`, `Rejected`) — వీటిపై క్లిక్ చేస్తే టేబుల్ ఫిల్టర్ ఆటోమేటిక్‌గా మారుతుంది!
+    - Teacher/Staff/Student లాగిన్‌ల కోసం `GET /api/leave/my-leaves` ద్వారా **Leave Balance KPI కార్డులు** (`Casual Balance`, `Sick Balance`, `Earned Balance`, `My Pending`).
+    - పిల్ ట్యాబ్ నావిగేషన్ బార్ + రిఫ్రెష్ బటన్.
+  - **[LeaveRequestTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveRequestTab.tsx):** రియల్ `POST /api/leave/apply`, `PUT /api/leave/:id/status`, `DELETE /api/leave/:id` ఇంటిగ్రేషన్; సెర్చ్, Status చిప్స్, Leave Type ఫిల్టర్, CSV ఎక్స్‌పోర్ట్, పర్పుల్ `student-grid-table`, మొబైల్ కార్డులు, **Rejection Reason Modal**, మరియు **Duration Days** గణన.
+  - **[LeaveTypeTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveTypeTab.tsx):** లైట్ పేస్టల్ ERP ఫారమ్ & పర్పుల్-హెడర్ టేబుల్ రీడిజైన్.
+
+## చివరి సంభాషణ - Leave Management Dashboard, KPI Cards & Real API Integration (`/leave`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Leave Management పేజీకి KPI కార్డులతో కూడిన ప్రొఫెషనల్ ERP డ్యాష్‌బోర్డ్ డిజైన్ చేయాలి.
+- **గుర్తించిన పాత బగ్స్ ([LeaveRequestTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveRequestTab.tsx)):**
+  - `Request Leave` సబ్మిట్ చేస్తే `POST /api/leave/apply` బదులు `localStorage` లో సేవ్ అయ్యేది (రిఫ్రెష్ చేస్తే పోయేది).
+  - `Delete` బటన్ `DELETE /api/leave/:id` కాల్ చేయకపోవడం వల్ల డిలీట్ చేసినా డేటాబేస్‌లో ఉండిపోయేది.
+  - `r.status === 'Approved'` కేస్-సెన్సిటివ్ చెక్ వల్ల బ్యాకెండ్ నుండి వచ్చే `APPROVED` స్టేటస్ పసుపు/Pending రంగులో కనిపించేది.
+- **చేసిన మార్పులు:**
+  - **[LeaveDashboardPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/LeaveDashboardPage.tsx):**
+    - Admin కోసం **4 గ్లోసీ పేస్టల్ KPI కార్డులు** (`Total Requests` + On Leave Today, `Pending Review`, `Approved Leaves`, `Rejected`) — వీటిపై క్లిక్ చేస్తే టేబుల్ ఫిల్టర్ ఆటోమేటిక్‌గా మారుతుంది!
+    - Teacher/Staff/Student లాగిన్‌ల కోసం `GET /api/leave/my-leaves` ద్వారా **Leave Balance KPI కార్డులు** (`Casual Balance`, `Sick Balance`, `Earned Balance`, `My Pending`).
+    - పిల్ ట్యాబ్ నావిగేషన్ బార్ + రిఫ్రెష్ బటన్.
+  - **[LeaveRequestTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveRequestTab.tsx):** రియల్ `POST /api/leave/apply`, `PUT /api/leave/:id/status`, `DELETE /api/leave/:id` ఇంటిగ్రేషన్; సెర్చ్, Status చిప్స్, Leave Type ఫిల్టర్, CSV ఎక్స్‌పోర్ట్, పర్పుల్ `student-grid-table`, మొబైల్ కార్డులు, **Rejection Reason Modal**, మరియు **Duration Days** గణన.
+  - **[LeaveTypeTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/leave/tabs/LeaveTypeTab.tsx):** లైట్ పేస్టల్ ERP ఫారమ్ & పర్పుల్-హెడర్ టేబుల్ రీడిజైన్.
+
+## చివరి సంభాషణ - Reports & Export Center Redesign + Missing Backend Routes Activation (`/reports`) & Timetable Backend Type Fix (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Reports Generator (`/reports`) పేజీని బెస్ట్ ప్రొఫెషనల్ ERP డిజైన్‌తో రూపొందించాలి మరియు Timetable లో ఇంకేమైనా ఎర్రర్లు ఉన్నాయో డీప్‌గా చెక్ చేసి పూర్తిగా పరిష్కరించాలి.
+- **Timetable అదనపు ఎర్రర్ పరిష్కారం ([timetable.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/timetable.controller.ts#L88-L135)):**
+  - `createSlot` మరియు `updateSlot` లో `periodNumber` స్ట్రింగ్‌గా వస్తే `checkConflict` లో Prisma type error రాకుండా ముందుగానే `parseInt(String(periodNumber), 10)` చేసి వాలిడేషన్ జతచేశాము.
+- **Reports మాడ్యూల్ బగ్ ఫిక్స్‌లు & కొత్త యాక్టివేషన్స్:**
+  - **Marks Report Class Filter Bug Fix ([reports.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L78-L96), [#L362-L435](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L362-L435)):** `getMarksReport` మరియు `getMarksReportPdf` లో `student: { classId }` ఫిల్టర్ లేకపోవడం వల్ల అన్ని క్లాసుల మార్కులు కలిసిపోయే బగ్ ను సరిదిద్దాము (`targetClass` హెడర్ & `maxMarks` సేఫ్టీతో సహా).
+  - **Staff Attendance UTC Date Range Fix ([reports.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L755-L810)):** `getStaffAttendanceReport` / `Pdf` లలో IST లోకల్ టైమ్-షిఫ్ట్ వల్ల నెల 1వ తేదీ రికార్డులు మిస్ అవ్వకుండా `Date.UTC` - 6h బఫర్ పెట్టాము.
+  - **All 9 Live Report Routes Registered ([routes/reports.ts](file:///d:/JY%20School/JY-School-main/backend/src/routes/reports.ts)):** కంట్రోలర్‌లో ఉన్నా రూట్లలో లేకుండా మిగిలిపోయిన `toppers`, `fee-defaulters`, `fee-defaulters/pdf`, `staff-attendance`, `staff-attendance/pdf`, `admissions`, `admissions/pdf`, `gate-pass` ఎండ్‌పాయింట్లను యాక్టివేట్ చేశాము.
+  - **[ReportsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/reports/ReportsPage.tsx):** అన్ని `"COMING SOON"` ప్లేస్‌హోల్డర్లను తొలగించి **9 నిజమైన డౌన్‌లోడ్ రిపోర్టులతో** (Attendance Ledger, Grades Sheet, Class Toppers, Fees Transaction History, Fee Defaulters & Pending Dues, Students Roster, Staff Attendance Ledger, Admissions Summary, Gate Pass Log), సెర్చ్ + కేటగిరీ ఫిల్టర్ పిల్స్, డేట్ రేంజ్ / నెల-సంవత్సరం ఫిల్టర్లు, మరియు `sortClasses` డ్రాప్‌డౌన్‌లతో లైట్ పేస్టల్ ERP UI గా తీర్చిదిద్దాము.
+
+## చివరి సంభాషణ - Reports & Export Center Redesign + Missing Backend Routes Activation (`/reports`) & Timetable Backend Type Fix (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Reports Generator (`/reports`) పేజీని బెస్ట్ ప్రొఫెషనల్ ERP డిజైన్‌తో రూపొందించాలి మరియు Timetable లో ఇంకేమైనా ఎర్రర్లు ఉన్నాయో డీప్‌గా చెక్ చేసి పూర్తిగా పరిష్కరించాలి.
+- **Timetable అదనపు ఎర్రర్ పరిష్కారం ([timetable.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/timetable.controller.ts#L88-L135)):**
+  - `createSlot` మరియు `updateSlot` లో `periodNumber` స్ట్రింగ్‌గా వస్తే `checkConflict` లో Prisma type error రాకుండా ముందుగానే `parseInt(String(periodNumber), 10)` చేసి వాలిడేషన్ జతచేశాము.
+- **Reports మాడ్యూల్ బగ్ ఫిక్స్‌లు & కొత్త యాక్టివేషన్స్:**
+  - **Marks Report Class Filter Bug Fix ([reports.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L78-L96), [#L362-L435](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L362-L435)):** `getMarksReport` మరియు `getMarksReportPdf` లో `student: { classId }` ఫిల్టర్ లేకపోవడం వల్ల అన్ని క్లాసుల మార్కులు కలిసిపోయే బగ్ ను సరిదిద్దాము (`targetClass` హెడర్ & `maxMarks` సేఫ్టీతో సహా).
+  - **Staff Attendance UTC Date Range Fix ([reports.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/reports.controller.ts#L755-L810)):** `getStaffAttendanceReport` / `Pdf` లలో IST లోకల్ టైమ్-షిఫ్ట్ వల్ల నెల 1వ తేదీ రికార్డులు మిస్ అవ్వకుండా `Date.UTC` - 6h బఫర్ పెట్టాము.
+  - **All 9 Live Report Routes Registered ([routes/reports.ts](file:///d:/JY%20School/JY-School-main/backend/src/routes/reports.ts)):** కంట్రోలర్‌లో ఉన్నా రూట్లలో లేకుండా మిగిలిపోయిన `toppers`, `fee-defaulters`, `fee-defaulters/pdf`, `staff-attendance`, `staff-attendance/pdf`, `admissions`, `admissions/pdf`, `gate-pass` ఎండ్‌పాయింట్లను యాక్టివేట్ చేశాము.
+  - **[ReportsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/reports/ReportsPage.tsx):** అన్ని `"COMING SOON"` ప్లేస్‌హోల్డర్లను తొలగించి **9 నిజమైన డౌన్‌లోడ్ రిపోర్టులతో** (Attendance Ledger, Grades Sheet, Class Toppers, Fees Transaction History, Fee Defaulters & Pending Dues, Students Roster, Staff Attendance Ledger, Admissions Summary, Gate Pass Log), సెర్చ్ + కేటగిరీ ఫిల్టర్ పిల్స్, డేట్ రేంజ్ / నెల-సంవత్సరం ఫిల్టర్లు, మరియు `sortClasses` డ్రాప్‌డౌన్‌లతో లైట్ పేస్టల్ ERP UI గా తీర్చిదిద్దాము.
+
+## చివరి సంభాషణ - Timetable Manager Complete Deep Audit, Bugfixes & Best ERP Studio Redesign (`/timetable`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Timetable పేజీని అత్యుత్తమ ERP డిజైన్‌లో రూపొందించాలి మరియు లోతుగా చెక్ చేసి ఉన్న బగ్స్ & కొత్తగా యాడ్ చేయాల్సిన ఫీచర్లను గుర్తించి పరిష్కరించాలి.
+- **గుర్తించిన & పరిష్కరించిన ప్రధాన ఎర్రర్లు / బగ్స్:**
+  1. **`NUR / LKG / UKG` Wrong Category Bug ([TimetablePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/timetable/TimetablePage.tsx#L126-L141) & [timetable.controller.ts](file:///d:/JY%20School/JY-School-main/backend/src/controllers/timetable.controller.ts#L177-L192)):** `parseInt("nur".replace(/\D/g, ""))` `NaN` ఇవ్వడం వల్ల Nursery, LKG, UKG క్లాసులు పొరపాటున `HIGHER` (6th–10th) బెల్ టైమింగ్స్ లోకి వెళ్ళిపోతున్నాయి; రెండింటిలోనూ `resolveClassCategory` / `getClassCategory` సరిదిద్దాము.
+  2. **Broken / Dead Buttons Fix (`Validate`, `Duplicate`, missing `Auto Generate`):** టూల్‌బార్ లో `Validate` మరియు `Duplicate` బటన్లకు అసలు `onClick` లేదు, మరియు `Auto Generate` మోడల్ కోడ్ ఉన్నా ఓపెన్ చేసే బటన్ లేదు — ఇప్పుడు అన్నింటినీ వర్కింగ్ ఫీచర్లుగా కనెక్ట్ చేశాము.
+  3. **Inflated `Free Periods` Math Fix:** పాత కోడ్ `PRIMARY` + `HIGHER` రెంటినీ కలిపి `classes.length * 17 * 6` గా తప్పుగా లెక్కించేది (1981 అని చూపించేది); ఇప్పుడు ప్రతీ క్లాసు తన సొంత కేటగిరీ పీరియడ్ల ప్రకారం ఖచ్చితమైన Free Slots ను చూపుతుంది, మరియు స్లాట్ సేవ్/డిలీట్ తర్వాత `loadAllSlots()` ఆటో-రిఫ్రెష్ అవుతుంది.
+  4. **`Period 7` Break Misconfiguration Alert & Numbering Fix (`Period Settings`):** DB లో `Period 7` పొరపాటున `Break` గా సేవ్ అయినందుకు స్క్రీన్‌షాట్ లో పసుపు రంగు వార్నింగ్ (`⚠ PERIOD 7`) కనిపించింది మరియు `Period 8` తర్వాత `Period 11` జంప్ అయింది — `Period Settings` లో దీన్ని గుర్తించే లైవ్ అలర్ట్ + `Renumber Labels` మరియు డ్యురేషన్ బ్యాడ్జ్ (`40m`) జోడించాము.
+  5. **Class Sorting & Role Sync:** `sortClasses` ద్వారా క్లాసులను `NUR-A` నుండి క్రమంలో అమర్చాము, మరియు `Teacher` / `Student` రోల్స్ కు సరిపోయే టైమ్‌టేబుల్ లోడింగ్ సరిదిద్దాము.
+- **కొత్త ERP ఫీచర్లు & ప్రీమియం లైట్-పేస్టల్ UI:**
+  - **4 లైట్ పేస్టెల్ KPI కార్డులు**, యూనిఫైడ్ ERP ట్యాబ్‌లు (`Class Timetable`, `Teacher Timetable`, `Workload Matrix`, `Period Settings`), పర్పుల్ `student-grid-table` కలర్-కోడెడ్ సబ్జెక్ట్ కార్డులు.
+  - **Live Teacher Availability Indicator** (`Free` vs `Busy: 6th-A`) Assign Slot మోడల్ లోనే, **Clash Validator Modal** (`/api/timetable/clashes`), **Duplicate Schedule Modal** (Copy Class or Copy Day->Day), **Free Teachers Finder** (Substitution lookup), మరియు **CSV Export**.
+
+## చివరి సంభాషణ - Examination Module Complete Professional ERP Redesign (`/exams`, `/exams/create`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Examination Dashboard, Examinations List, Edit/Create Exam Configuration, మరియు Upload Question Paper సహా మొత్తం Examination మాడ్యూల్‌ను బయటి ప్రముఖ ERP సాఫ్ట్‌వేర్లతో పోలిస్తే బెస్ట్ ప్రొఫెషనల్ లుక్‌లో, డార్క్/బ్లాక్ కార్డులు పూర్తిగా తొలగించి లోతుగా రీడిజైన్ చేయాలి.
+- **చేసిన మార్పులు:**
+  - **[ExamListPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ExamListPage.tsx):**
+    - **Examination Hub (Light Pastel Glossy Modules):** డార్క్ స్లేట్ (`Question Papers`) మరియు డార్క్ చార్కోల్ (`Settings`) కార్డులను పూర్తిగా తొలగించి, యూనిఫైడ్ `#F4F7FC` బ్యాక్‌గ్రౌండ్‌పై లైట్ పాస్టెల్ గ్లాసీ ERP మాడ్యూల్ కార్డులు (లైవ్ కౌంట్ బ్యాడ్జ్‌లతో) + **5-Step Examination Workflow Pipeline** స్ట్రిప్ + **Recent Examinations Quick Access** కార్డులను రూపొందించాము.
+    - **Persistent ERP Navigation Bar:** ఏ ట్యాబ్‌లోనైనా పైన `← All Modules` బటన్ మరియు అన్ని మాడ్యూల్స్ మధ్య 1-క్లిక్‌లో మారే హారిజాంటల్ పిల్-నావిగేషన్ బార్ జోడించాము (`tabParam` బ్యాక్-బటన్ సింక్ ఫిక్స్ సహా).
+    - **Examinations Directory (`examination`):** సాదా కార్డులను పూర్తి స్థాయి ERP డైరెక్టరీగా అప్‌గ్రేడ్ చేశాము — లైవ్ సెర్చ్, కేటగిరీ చిప్స్ (`All`, `Board / FA-SA`, `Navodaya`, `JEE Mains`), `Grid / List` (`student-grid-table` పర్పుల్ టేబుల్) టోగుల్, `sortClasses` ద్వారా క్రమమైన క్లాస్ చిప్స్, మరియు కార్డులపైనే నేరుగా `Marks`, `Results`, `Edit`, `Duplicate`, `Sync`, `Delete` యాక్షన్లు అందుబాటులో ఉంచాము.
+    - **Question Papers & Upload Paper Studio:** పాత `dark:` క్లాసులు తొలగించి 5 లైట్ పాస్టెల్ స్టాట్ కార్డులు, సెర్చ్ + స్టేటస్ + క్లాస్ ఫిల్టర్ టూల్‌బార్, మరియు ఫుల్-స్క్రీన్ డార్క్/బ్లాంక్ ఓవర్‌లే బదులు సెంటర్డ్ పర్పుల్-హెడర్ **Upload Question Paper Studio Modal** (`Select All` క్లాస్ టోగుల్, క్రమమైన క్లాస్ & సబ్జెక్ట్ పిల్స్, `File Attached` బ్యాడ్జ్) రూపొందించాము.
+    - **Marks Upload, SMS & Permissions Modals:** అన్ని మోడల్స్ & ట్యాబ్‌లను (`written-exam`, `exam-plan`, `question-group`, `question-bank`, `online-exams`, SMS & Permissions modals) ఒకే లైట్ ERP థీమ్‌లోకి మార్చాము.
+  - **[CreateExamPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/CreateExamPage.tsx):** పాత `dark:` ఐకాన్ బాక్సులను తొలగించి, లైట్ లావెండర్ `#DDD7F3` బోర్డర్లు, స్పష్టమైన `JEE` vs `Board` కేటగిరీ కార్డులు, `Progress Card Branding` అప్‌లోడ్ కార్డులు, శుభ్రమైన `Subjects & Max Marks Matrix` టూల్‌బార్, మరియు సెర్చ్ ఫీల్డ్ + కౌంట్ పిల్ ఉన్న `Assign Classes` స్టిక్కీ ప్యానెల్‌తో అప్‌గ్రేడ్ చేశాము (పాత marks-protection లాజిక్ 100% సురక్షితంగా ఉంది).
+  - **[ExamStatusTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ExamStatusTab.tsx) & [ExamSettingsTab.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/exams/ExamSettingsTab.tsx):** రెండు ట్యాబ్‌లలోని `dark:` క్లాసులు & భారీ రంగు బ్లాక్‌లను తొలగించి లైట్ పాస్టెల్ KPI కార్డులు, పర్పుల్ `student-grid-table` మ్యాట్రిక్స్ గ్రిడ్, మరియు యూనిఫైడ్ `#5B21B6` కంట్రోల్స్‌గా తీర్చిదిద్దాము.
+
+## చివరి సంభాషణ - Subjects & Curriculum Minimal Clean Card Grid (KPI Cards & Clutter Removed) (`/subjects`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Subjects పేజీలో పై KPI కార్డులు తీసేసి, "No teacher assigned yet / Unassigned" వంటి చెత్త అంతా లేకుండా మరింత అందమైన, ప్రొఫెషనల్ కార్డ్ డిజైన్ చేయాలి.
+- **చేసిన మార్పులు ([SubjectPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/subjects/SubjectPage.tsx)):**
+  - పైభాగంలో ఉన్న 4 KPI కార్డులను పూర్తిగా తొలగించాము.
+  - ఫ్రాస్టెడ్ కంట్రోల్ స్ట్రిప్ లో `13 Subjects` బ్యాడ్జ్ + సెర్చ్ + `Grid / List` వ్యూ టోగుల్ మాత్రమే ఉంచాము.
+  - ప్రతీ సబ్జెక్ట్ కార్డులో టాప్ యాక్సెంట్ స్ట్రిప్, కస్టమ్ ఐకాన్ (`Mathematics`, `Science`, `Biology`, `Arts`, `Languages` మొదలైన వాటికి తగ్గ ఐకాన్ & కేటగిరీ లేబుల్), క్లాస్ రేంజ్ (`Nursery – 10th`), సెక్షన్ కౌంట్ పిల్, మరియు క్లీన్ `Open ->` ఫుటర్ మాత్రమే ఉంచి 10/10 ప్రీమియం ERP కార్డులుగా తీర్చిదిద్దాము.
+
+## చివరి సంభాషణ - Address Collection: Remove Top Villages & Top Staff Contributor Cards (`/address-collection/admin`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Address Collection పేజీలో మధ్యలో ఉన్న `TOP VILLAGES` మరియు `TOP STAFF CONTRIBUTORS` కార్డులు రెండింటినీ తొలగించాలి.
+- **చేసిన మార్పు ([AddressCollectionAdminPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/address-collection/AddressCollectionAdminPage.tsx)):** ఆ రెండు కార్డులు & వాటికి సంబంధించిన `topVillages`, `selectedVillage`, `Sparkles` స్టేట్/ఇంపోర్ట్‌లను తొలగించాము — పైన 4 Dashboard KPI కార్డులు, సెర్చ్/ఫిల్టర్ బార్, మరియు పర్పుల్ డైరెక్టరీ టేబుల్ మాత్రమే క్లీన్‌గా ఉంటాయి.
+
+## చివరి సంభాషణ - Teachers Directory Pastel Redesign (`/teachers`) & StudentProfilePage React Error #31 Crash Fix (`/students/:id`) (November 28, 2026)
+- **సమస్యలు:**
+  1. [StudentProfilePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentProfilePage.tsx#L919-L926) లో `completed` & `missing` (ఆబ్జెక్టుల array) ను నేరుగా JSX లో రెండర్ చేయడం వల్ల `/students/:id` ఓపెన్ చేసినప్పుడు **React error #31** క్రాష్ వస్తోంది.
+  2. [TeacherListPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teachers/TeacherListPage.tsx) పాత పర్పుల్ హీరో బ్యానర్ & సాదా టేబుల్‌తో ఉంది; దాన్ని [StudentListPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/students/StudentListPage.tsx) తరహా పేస్టల్ హెడర్ + పర్పుల్ గ్రిడ్ టేబుల్ థీమ్‌లోకి మార్చాలి.
+- **చేసిన మార్పులు:**
+  - **StudentProfilePage Crash Fix:** `completed.length` మరియు `missing.length` గా సరిదిద్దాము.
+  - **TeacherListPage Pastel Redesign:** `StudentListPage` లాగా పేస్టల్ గ్లో బ్యాక్‌గ్రౌండ్, `TOTAL X Teachers` హెడర్ + పిల్ యాక్షన్ బటన్లు (`Staff Attendance`, `Export PDF`, `Add Teacher`), ఫ్రాస్టెడ్ సెర్చ్ & సబ్జెక్ట్ ఫిల్టర్ బార్, Sticky పర్పుల్-హెడర్ `student-grid-table` (అవతార్, ఎంప్లాయీ ఐడీ పిల్, సబ్జెక్ట్ పిల్, క్వాలిఫికేషన్, కాల్ + WhatsApp, View & Delete యాక్షన్లు), మరియు క్లీన్ మొబైల్ కార్డులు రూపొందించాము.
+
 ## చివరి సంభాషణ - Transfer Certificate & Record Sheet Studio Fixes (Remove Telugu UI Text, Remove Header Photo, Exact A4 1-Page Fit) (`/office-tools/transfer-certificate`) (November 28, 2026)
 - **యూజర్ అభ్యర్థన:** TC & Record Sheet పేజీలో తెలుగు టెక్స్ట్ ఉండకూడదు, స్కూల్ హెడర్‌లో స్టూడెంట్ ఇమేజ్ ఉండకూడదు, మరియు A4 Record Sheet పూర్తిగా ఒక పేజీలో పర్ఫెక్ట్‌గా ఫిట్ అవ్వాలి.
 - **చేసిన మార్పులు ([TransferCertificatePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/office-tools/TransferCertificatePage.tsx), [tcTemplates.ts](file:///d:/JY%20School/JY-School-main/frontend/src/pages/office-tools/tcTemplates.ts)):**
+  - **Full-Page Vertical Stretch (Zero Empty Space Above Signatures):** [tcTemplates.ts](file:///d:/JY%20School/JY-School-main/frontend/src/pages/office-tools/tcTemplates.ts) లో `.doc-body-main` & `.clause-table-wrap` లకు `flex: 1` జతచేసి Legal TC (355.6mm) మరియు Record Sheet A4 (297mm) రెండింటిలోనూ సంతకాల పైన ఖాళీ స్థలం రాకుండా పట్టిక వరుసలు పేజీ మొత్తం సమానంగా విస్తరించేలా సరిదిద్దాము.
   - **KPI Cards Removal:** పైభాగంలోని 4 KPI కార్డుల స్ట్రిప్‌ను తొలగించి వర్క్‌స్పేస్ & ప్రివ్యూ ఎత్తును (`calc(100vh-108px)`) పెంచాము.
   - **100% English UI:** ఎడమ ప్యానెల్ లోని తెలుగు నోట్ స్థానంలో స్పష్టమైన ఇంగ్లీష్ టెక్స్ట్ ఉంచాము (`Automatically selects A4 Record Sheet for Nursery–Class V, and Legal Transfer Certificate for Class VI–X.`).
   - **Clean School Header (No Student Photo in Header):** `doc-header` నుండి స్టూడెంట్ ఫోటోను తొలగించి లోగో + స్కూల్ పేరు + రికగ్నిషన్ + అడ్రస్‌ను సెంటర్‌లో ప్రొఫెషనల్‌గా అమర్చాము (`showPhoto` డిఫాల్ట్ `false`; కావాలనుకుంటే ఆన్ చేసినా అది బ్యానర్ కింద ఐడీ స్ట్రిప్ పక్కనే వస్తుంది, హెడర్‌లో రాదు).

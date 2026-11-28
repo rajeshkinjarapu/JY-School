@@ -277,6 +277,8 @@ export const buildDocumentCss = (theme: TcTheme, docKind: DocumentKind): string 
     .doc-watermark img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%); }
 
     .doc-content { position: relative; z-index: 5; height: 100%; display: flex; flex-direction: column; justify-content: space-between; }
+    .doc-body-main { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .clause-table-wrap { flex: 1; min-height: 0; display: flex; flex-direction: column; margin: ${isLegal ? '1.8mm 0' : '1.2mm 0'}; }
 
     /* Pure Institutional School Header (No student photo in header) */
     .doc-header {
@@ -334,15 +336,15 @@ export const buildDocumentCss = (theme: TcTheme, docKind: DocumentKind): string 
     .photo-placeholder { font-family: Arial, sans-serif; font-size: 5.5pt; font-weight: 800; color: #94a3b8; text-align: center; line-height: 1.2; }
 
     .clause-table {
-      width: 100%; border-collapse: collapse; border: 1.2px solid ${theme.primary};
-      background: rgba(255,255,255,0.94);
+      width: 100%; height: 100%; flex: 1; border-collapse: collapse; border: 1.3px solid ${theme.primary};
+      background: rgba(255,255,255,0.95);
     }
     .clause-table td {
       border: 1px solid #cbd5e1;
-      padding: ${isLegal ? '1.5mm 2.3mm' : '1.15mm 2mm'};
+      padding: ${isLegal ? '1.8mm 2.5mm' : '1.35mm 2.1mm'};
       vertical-align: middle;
-      font-size: ${isLegal ? '9pt' : '8.2pt'};
-      line-height: 1.2;
+      font-size: ${isLegal ? '9.6pt' : '8.5pt'};
+      line-height: 1.24;
     }
     .col-sl {
       width: 6.5%; text-align: center; font-family: Arial, sans-serif; font-weight: 900;
@@ -526,27 +528,29 @@ export const generateDocumentInnerHtml = (
         <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
         <div class="doc-watermark"><img src="${esc(logoUrl)}" alt="Watermark" /></div>
         <div class="doc-content">
-          <div>
+          <div class="doc-body-main">
             ${headerHtml}
             <div class="doc-banner">
               <div class="doc-banner-pill">PRIMARY SCHOOL RECORD SHEET</div>
               <div class="doc-banner-sub">Issued for Pre-Primary &amp; Primary Students (Nursery to Class V) &middot; Govt. Approved Proforma</div>
             </div>
             ${metaStripHtml}
-            <table class="clause-table">
-              <tbody>
-                ${rsRows
-                  .map(
-                    ([sl, lbl, val]) => `
-                  <tr>
-                    <td class="col-sl">${sl}</td>
-                    <td class="col-lbl">${lbl}</td>
-                    <td class="col-val">${val}</td>
-                  </tr>`
-                  )
-                  .join('')}
-              </tbody>
-            </table>
+            <div class="clause-table-wrap">
+              <table class="clause-table">
+                <tbody>
+                  ${rsRows
+                    .map(
+                      ([sl, lbl, val]) => `
+                    <tr>
+                      <td class="col-sl">${sl}</td>
+                      <td class="col-lbl">${lbl}</td>
+                      <td class="col-val">${val}</td>
+                    </tr>`
+                    )
+                    .join('')}
+                </tbody>
+              </table>
+            </div>
 
             <div class="mini-history-wrap">
               <div class="mini-history-title">Academic Study Progression in this Institution</div>
@@ -612,27 +616,29 @@ export const generateDocumentInnerHtml = (
       <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
       <div class="doc-watermark"><img src="${esc(logoUrl)}" alt="Watermark" /></div>
       <div class="doc-content">
-        <div>
+        <div class="doc-body-main">
           ${headerHtml}
           <div class="doc-banner">
             <div class="doc-banner-pill">TRANSFER CERTIFICATE (T.C.)</div>
             <div class="doc-banner-sub">${payload.affiliationNo ? `Affiliation / Recog: ${esc(payload.affiliationNo)} &middot; ` : ''}Official Secondary &amp; High School Transfer Certificate (Legal Format)</div>
           </div>
           ${metaStripHtml}
-          <table class="clause-table">
-            <tbody>
-              ${tcRows
-                .map(
-                  ([sl, lbl, val]) => `
-                <tr>
-                  <td class="col-sl">${sl}</td>
-                  <td class="col-lbl">${lbl}</td>
-                  <td class="col-val">${val}</td>
-                </tr>`
-                )
-                .join('')}
-            </tbody>
-          </table>
+          <div class="clause-table-wrap">
+            <table class="clause-table">
+              <tbody>
+                ${tcRows
+                  .map(
+                    ([sl, lbl, val]) => `
+                  <tr>
+                    <td class="col-sl">${sl}</td>
+                    <td class="col-lbl">${lbl}</td>
+                    <td class="col-val">${val}</td>
+                  </tr>`
+                  )
+                  .join('')}
+              </tbody>
+            </table>
+          </div>
 
           <div class="cert-declaration">
             I hereby certify that the above entries match the original School Admission Register. Issued strictly for bonafide academic transfer &amp; higher education admission.

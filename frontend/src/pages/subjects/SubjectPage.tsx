@@ -3,64 +3,95 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../api/axios';
 import { LoadingSpinner } from '../../components/UI/LoadingSpinner';
 import {
-  Plus, School, BookOpen, Users, Search, LayoutGrid, List,
-  ChevronRight, CheckCircle2, AlertCircle, Layers, UserCheck, X
+  Plus, BookOpen, Search, LayoutGrid, List, ArrowUpRight,
+  Calculator, FlaskConical, Globe2, Languages, Palette, Leaf,
+  Atom, Sparkles, GraduationCap, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { PageHeader } from '../../components/UI/PageHeader';
 import { DataCache } from '../../services/dataCache';
 
-const PASTEL_PALETTES = [
+interface SubjectPalette {
+  cardGlow: string;
+  badgeBg: string;
+  softPill: string;
+  accentText: string;
+  hoverBorder: string;
+  barGradient: string;
+}
+
+const SUBJECT_PALETTES: SubjectPalette[] = [
   {
-    headerBg: 'from-[#F2EDFF] to-[#DDD2FF]',
-    border: 'border-[#CEC0FF]',
-    iconBg: 'from-[#8B5CF6] to-[#6D28D9]',
-    title: 'text-[#4C1D95]',
-    pill: 'bg-white/80 text-[#5B21B6] border-[#CEC0FF]',
+    cardGlow: 'from-[#F4F0FF] via-[#FAF8FF] to-white',
+    badgeBg: 'from-[#8B5CF6] to-[#6D28D9]',
+    softPill: 'bg-[#F2EDFF] text-[#5B21B6] border-[#DDD2FF]',
+    accentText: 'text-[#5B21B6]',
+    hoverBorder: 'hover:border-[#C4B5FD]',
+    barGradient: 'from-[#8B5CF6] to-[#6D28D9]',
   },
   {
-    headerBg: 'from-[#EAF2FF] to-[#CBE0FF]',
-    border: 'border-[#B6D2FF]',
-    iconBg: 'from-[#2563EB] to-[#1D4ED8]',
-    title: 'text-[#1E3A8A]',
-    pill: 'bg-white/80 text-[#1D4ED8] border-[#B6D2FF]',
+    cardGlow: 'from-[#EDF4FF] via-[#F6FAFF] to-white',
+    badgeBg: 'from-[#3B82F6] to-[#1D4ED8]',
+    softPill: 'bg-[#EAF2FF] text-[#1D4ED8] border-[#BFDBFE]',
+    accentText: 'text-[#1D4ED8]',
+    hoverBorder: 'hover:border-[#93C5FD]',
+    barGradient: 'from-[#3B82F6] to-[#1D4ED8]',
   },
   {
-    headerBg: 'from-[#E5FAEF] to-[#C2F2D9]',
-    border: 'border-[#ACEAD0]',
-    iconBg: 'from-[#10B981] to-[#059669]',
-    title: 'text-[#065F46]',
-    pill: 'bg-white/80 text-[#059669] border-[#ACEAD0]',
+    cardGlow: 'from-[#E8FBF2] via-[#F4FDF9] to-white',
+    badgeBg: 'from-[#10B981] to-[#059669]',
+    softPill: 'bg-[#E5FAEF] text-[#047857] border-[#A7F3D0]',
+    accentText: 'text-[#047857]',
+    hoverBorder: 'hover:border-[#6EE7B7]',
+    barGradient: 'from-[#10B981] to-[#059669]',
   },
   {
-    headerBg: 'from-[#FFEFEF] to-[#FFD2D7]',
-    border: 'border-[#FFC0C7]',
-    iconBg: 'from-[#EF4444] to-[#DC2626]',
-    title: 'text-[#991B1B]',
-    pill: 'bg-white/80 text-[#DC2626] border-[#FFC0C7]',
+    cardGlow: 'from-[#FFF0F4] via-[#FFF8FA] to-white',
+    badgeBg: 'from-[#F43F5E] to-[#E11D48]',
+    softPill: 'bg-[#FFEFF3] text-[#BE123C] border-[#FECDD3]',
+    accentText: 'text-[#BE123C]',
+    hoverBorder: 'hover:border-[#FDA4AF]',
+    barGradient: 'from-[#F43F5E] to-[#E11D48]',
   },
   {
-    headerBg: 'from-[#FFF6E5] to-[#FFE4B8]',
-    border: 'border-[#FAD79B]',
-    iconBg: 'from-[#F59E0B] to-[#D97706]',
-    title: 'text-[#9A3412]',
-    pill: 'bg-white/80 text-[#B45309] border-[#FAD79B]',
+    cardGlow: 'from-[#FFF6E8] via-[#FFFBF4] to-white',
+    badgeBg: 'from-[#F59E0B] to-[#D97706]',
+    softPill: 'bg-[#FFF5E5] text-[#B45309] border-[#FDE68A]',
+    accentText: 'text-[#B45309]',
+    hoverBorder: 'hover:border-[#FCD34D]',
+    barGradient: 'from-[#F59E0B] to-[#D97706]',
   },
   {
-    headerBg: 'from-[#E6FAFC] to-[#C4F1F9]',
-    border: 'border-[#B0E9F5]',
-    iconBg: 'from-[#06B6D4] to-[#0891B2]',
-    title: 'text-[#155E75]',
-    pill: 'bg-white/80 text-[#0891B2] border-[#B0E9F5]',
-  },
-  {
-    headerBg: 'from-[#FFEBF3] to-[#FFD0E4]',
-    border: 'border-[#FFBDDA]',
-    iconBg: 'from-[#EC4899] to-[#DB2777]',
-    title: 'text-[#9D174D]',
-    pill: 'bg-white/80 text-[#DB2777] border-[#FFBDDA]',
+    cardGlow: 'from-[#E9FAFD] via-[#F5FCFE] to-white',
+    badgeBg: 'from-[#06B6D4] to-[#0891B2]',
+    softPill: 'bg-[#E6FAFC] text-[#0E7490] border-[#A5F3FC]',
+    accentText: 'text-[#0E7490]',
+    hoverBorder: 'hover:border-[#67E8F9]',
+    barGradient: 'from-[#06B6D4] to-[#0891B2]',
   },
 ];
+
+const getClassRank = (clsName: string = ''): number => {
+  const lower = clsName.toLowerCase().trim();
+  if (lower.includes('nur')) return 1;
+  if (lower.includes('pp1') || lower.includes('pp-1') || lower.includes('lkg')) return 2;
+  if (lower.includes('pp2') || lower.includes('pp-2') || lower.includes('ukg')) return 3;
+  const m = lower.match(/(\d+)/);
+  return m ? 10 + parseInt(m[1], 10) : 999;
+};
+
+const getSubjectMeta = (subjectName: string) => {
+  const s = subjectName.toUpperCase();
+  if (s.includes('MATH')) return { icon: Calculator, category: 'Core Mathematics' };
+  if (s.includes('PHYS') && !s.includes('PHYSICAL')) return { icon: Atom, category: 'Physical Science' };
+  if (s.includes('CHEM')) return { icon: FlaskConical, category: 'Chemical Science' };
+  if (s.includes('BIO') || s.includes('EVS')) return { icon: Leaf, category: 'Life & Nature' };
+  if (s.includes('SCI')) return { icon: FlaskConical, category: 'General Science' };
+  if (s.includes('ART') || s.includes('CRAFT') || s.includes('DRAW')) return { icon: Palette, category: 'Creative Arts' };
+  if (s.includes('SOCIAL') || s.includes('GENERAL') || s.includes('GK')) return { icon: Globe2, category: 'Humanities & GK' };
+  if (s.includes('ENG') || s.includes('HINDI') || s.includes('TELUGU')) return { icon: Languages, category: 'Language Arts' };
+  return { icon: BookOpen, category: 'Academic Subject' };
+};
 
 export const SubjectPage: React.FC = () => {
   const navigate = useNavigate();
@@ -69,13 +100,10 @@ export const SubjectPage: React.FC = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'ASSIGNED' | 'UNASSIGNED'>('ALL');
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
   const [saving, setSaving] = useState(false);
 
-  // Form states
   const [name, setName] = useState('');
   const [teacherId, setTeacherId] = useState('');
 
@@ -87,7 +115,7 @@ export const SubjectPage: React.FC = () => {
       ]);
       setSubjects(Array.isArray(subRes) ? subRes : []);
       setTeachers(Array.isArray(teachRes) ? teachRes : []);
-    } catch (e) {
+    } catch {
       toast.error('Failed to load curriculum data');
     } finally {
       setLoading(false);
@@ -110,97 +138,77 @@ export const SubjectPage: React.FC = () => {
       .sort()
       .map((subjectName) => {
         const entries = grouped[subjectName];
-        const classLabels = Array.from(
+
+        // Sort classes cleanly from Nursery -> PP1 -> PP2 -> 1st..10th
+        const sortedClasses = Array.from(
           new Set(
             entries
               .map((e) => (e.class ? `${e.class.name}-${e.class.section}` : null))
               .filter(Boolean) as string[]
           )
-        );
-        const teacherMap = new Map<string, string>();
-        let assignedEntries = 0;
-        entries.forEach((e) => {
-          const cst = e.classSubjectTeachers?.[0];
-          if (cst?.teacherId) {
-            assignedEntries++;
-            teacherMap.set(cst.teacherId, cst.teacher?.user?.name || 'Faculty');
-          }
+        ).sort((a, b) => {
+          const rA = getClassRank(a);
+          const rB = getClassRank(b);
+          if (rA !== rB) return rA - rB;
+          return a.localeCompare(b, undefined, { numeric: true });
         });
-        const teacherNames = Array.from(teacherMap.values());
-        const unassignedEntries = entries.length - assignedEntries;
+
+        const uniqueBaseGrades = Array.from(
+          new Set(entries.map((e) => e.class?.name).filter(Boolean) as string[])
+        ).sort((a, b) => getClassRank(a) - getClassRank(b));
+
+        const gradeRange =
+          uniqueBaseGrades.length === 0
+            ? 'Not Mapped'
+            : uniqueBaseGrades.length === 1
+              ? uniqueBaseGrades[0]
+              : `${uniqueBaseGrades[0]} – ${uniqueBaseGrades[uniqueBaseGrades.length - 1]}`;
+
+        const teacherNames = Array.from(
+          new Set(
+            entries
+              .map((e) => e.classSubjectTeachers?.[0]?.teacher?.user?.name)
+              .filter(Boolean) as string[]
+          )
+        );
+
+        const meta = getSubjectMeta(subjectName);
 
         return {
           subjectName,
           abbr: subjectName.substring(0, 2).toUpperCase(),
-          entries,
           classCount: entries.length,
-          classLabels,
-          assignedEntries,
-          unassignedEntries,
+          sortedClasses,
+          gradeRange,
           teacherNames,
-          teacherCount: teacherNames.length,
-          isFullyAssigned: entries.length > 0 && unassignedEntries === 0,
+          Icon: meta.icon,
+          category: meta.category,
         };
       });
   }, [subjects]);
 
-  const stats = useMemo(() => {
-    const totalSubjects = subjectSummaries.length;
-    const totalClassMappings = subjects.length;
-    const uniqueTeacherIds = new Set<string>();
-    let unassignedCount = 0;
-    subjects.forEach((s) => {
-      const tid = s.classSubjectTeachers?.[0]?.teacherId;
-      if (tid) uniqueTeacherIds.add(tid);
-      else unassignedCount++;
-    });
-    return {
-      totalSubjects,
-      totalClassMappings,
-      assignedTeachers: uniqueTeacherIds.size,
-      unassignedCount,
-    };
-  }, [subjectSummaries, subjects]);
-
   const filteredSummaries = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return subjectSummaries.filter((item) => {
-      const matchesSearch =
-        !q ||
+    if (!q) return subjectSummaries;
+    return subjectSummaries.filter(
+      (item) =>
         item.subjectName.toLowerCase().includes(q) ||
-        item.teacherNames.some((t) => t.toLowerCase().includes(q)) ||
-        item.classLabels.some((c) => c.toLowerCase().includes(q));
-      if (!matchesSearch) return false;
-      if (statusFilter === 'ASSIGNED') return item.assignedEntries > 0 && item.unassignedEntries === 0;
-      if (statusFilter === 'UNASSIGNED') return item.unassignedEntries > 0;
-      return true;
-    });
-  }, [subjectSummaries, searchQuery, statusFilter]);
+        item.category.toLowerCase().includes(q) ||
+        item.sortedClasses.some((c) => c.toLowerCase().includes(q)) ||
+        item.teacherNames.some((t) => t.toLowerCase().includes(q))
+    );
+  }, [subjectSummaries, searchQuery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
     try {
-      if (editingSubject) {
-        await api.put(`/api/subjects/${editingSubject.id}`, { name });
-        if (teacherId) {
-          await api.post('/api/subjects/assign-teacher', {
-            classId: editingSubject.classId,
-            subjectId: editingSubject.id,
-            teacherId,
-          });
-        }
-        toast.success('Subject updated successfully!');
-      } else {
-        await api.post('/api/subjects', { name, teacherId });
-        toast.success('Subject created successfully!');
-      }
-
+      await api.post('/api/subjects', { name: name.trim(), teacherId: teacherId || undefined });
+      toast.success('Subject created successfully!');
       setShowModal(false);
       setName('');
       setTeacherId('');
-      setEditingSubject(null);
       DataCache.invalidate('subjects');
       fetchData(true);
     } catch (error: any) {
@@ -219,7 +227,6 @@ export const SubjectPage: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setEditingSubject(null);
               setName('');
               setTeacherId('');
               setShowModal(true);
@@ -235,242 +242,119 @@ export const SubjectPage: React.FC = () => {
       <div className="flex-1 overflow-auto p-4 sm:p-6">
         <div className="w-full max-w-7xl mx-auto space-y-5 pb-10">
 
-          {/* 4 Dashboard Glossy Pastel KPI Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-            <div className="relative overflow-hidden rounded-[20px] px-4 py-4 border bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF] border-[#CEC0FF] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.10)]">
-              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] flex items-center justify-center text-white shadow-md shrink-0">
-                  <BookOpen className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">Curriculum Subjects</p>
-                  <p className="text-2xl font-black text-[#4C1D95] leading-tight">{stats.totalSubjects}</p>
-                </div>
+          {/* Clean Compact Workspace Control Strip (No KPI Clutter) */}
+          <div className="bg-white/90 backdrop-blur-md border border-[#E2DDF5] rounded-[20px] p-3 sm:p-3.5 shadow-[0_6px_22px_rgba(91,33,182,0.06)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#F4F2FC] border border-[#DDD6FE] text-[#5B21B6] shrink-0">
+                <Sparkles className="w-4 h-4" />
+                <span className="text-xs font-black">{filteredSummaries.length} Subjects</span>
               </div>
-            </div>
 
-            <div className="relative overflow-hidden rounded-[20px] px-4 py-4 border bg-gradient-to-br from-[#EAF2FF] to-[#CBE0FF] border-[#B6D2FF] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.10)]">
-              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2563EB] to-[#1D4ED8] flex items-center justify-center text-white shadow-md shrink-0">
-                  <Layers className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">Class Mappings</p>
-                  <p className="text-2xl font-black text-slate-900 leading-tight">{stats.totalClassMappings}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative overflow-hidden rounded-[20px] px-4 py-4 border bg-gradient-to-br from-[#E5FAEF] to-[#C2F2D9] border-[#ACEAD0] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.10)]">
-              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#10B981] to-[#059669] flex items-center justify-center text-white shadow-md shrink-0">
-                  <UserCheck className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">Active Faculty</p>
-                  <p className="text-2xl font-black text-[#065F46] leading-tight">{stats.assignedTeachers}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative overflow-hidden rounded-[20px] px-4 py-4 border bg-gradient-to-br from-[#FFF6E5] to-[#FFE4B8] border-[#FAD79B] shadow-[0_6px_18px_-6px_rgba(15,23,42,0.10)]">
-              <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none rounded-t-[20px]" />
-              <div className="relative z-10 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F59E0B] to-[#D97706] flex items-center justify-center text-white shadow-md shrink-0">
-                  <AlertCircle className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-600">Unassigned Slots</p>
-                  <p className="text-2xl font-black text-[#9A3412] leading-tight">{stats.unassignedCount}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Search, Filter & View Switcher Toolbar */}
-          <div className="bg-white border border-indigo-100/80 rounded-[18px] p-3 sm:p-4 shadow-[0_6px_22px_-6px_rgba(91,33,182,0.08)] flex flex-col md:flex-row md:items-center justify-between gap-3">
-            <div className="flex flex-wrap items-center gap-2.5 flex-1">
-              <div className="relative flex-1 min-w-[210px] max-w-md">
+              <div className="relative flex-1 max-w-md">
                 <Search className="w-4 h-4 text-indigo-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search subject, class or teacher..."
+                  placeholder="Search subjects, categories or classes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[#F8FAFF] border border-indigo-100 rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  className="w-full bg-[#F8FAFF] border border-[#E7E4F6] rounded-xl pl-10 pr-4 py-2 text-xs sm:text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
                 />
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                {[
-                  { key: 'ALL', label: `All (${subjectSummaries.length})`, active: 'bg-[#5B21B6] text-white', idle: 'bg-[#F8FAFF] text-slate-600 border-indigo-100' },
-                  { key: 'ASSIGNED', label: 'Fully Assigned', active: 'bg-emerald-600 text-white', idle: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-                  { key: 'UNASSIGNED', label: 'Needs Teacher', active: 'bg-amber-600 text-white', idle: 'bg-amber-50 text-amber-700 border-amber-200' },
-                ].map((chip) => (
-                  <button
-                    key={chip.key}
-                    type="button"
-                    onClick={() => setStatusFilter(chip.key as any)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all cursor-pointer ${
-                      statusFilter === chip.key ? `${chip.active} border-transparent shadow-xs` : chip.idle
-                    }`}
-                  >
-                    {chip.label}
-                  </button>
-                ))}
               </div>
             </div>
 
-            {/* Cards vs Table Switcher */}
-            <div className="inline-flex items-center bg-[#F3F5FC] p-1 rounded-xl border border-indigo-100 shrink-0 self-start md:self-auto">
-              <button
-                type="button"
-                onClick={() => setViewMode('cards')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  viewMode === 'cards' ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-xs' : 'text-slate-600 hover:text-[#1E1B4B]'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Cards</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('table')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
-                  viewMode === 'table' ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-xs' : 'text-slate-600 hover:text-[#1E1B4B]'
-                }`}
-              >
-                <List className="w-3.5 h-3.5" />
-                <span>Table</span>
-              </button>
+            <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0">
+              <div className="inline-flex items-center bg-[#F3F5FC] p-1 rounded-xl border border-indigo-100">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('cards')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    viewMode === 'cards' ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-xs' : 'text-slate-600 hover:text-[#1E1B4B]'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Grid</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('table')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    viewMode === 'table' ? 'bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white shadow-xs' : 'text-slate-600 hover:text-[#1E1B4B]'
+                  }`}
+                >
+                  <List className="w-3.5 h-3.5" />
+                  <span>List</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {loading ? (
             <div className="flex flex-col items-center justify-center py-24 bg-white rounded-[22px] border border-indigo-100/80 shadow-xs">
               <LoadingSpinner size="lg" />
-              <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-wider">Loading subjects curriculum...</p>
+              <p className="text-xs font-bold text-slate-400 mt-3 uppercase tracking-wider">Loading curriculum...</p>
             </div>
           ) : filteredSummaries.length === 0 ? (
-            <div className="bg-white border border-[#DDD7F3] rounded-[22px] p-14 text-center shadow-[0_12px_32px_-6px_rgba(91,33,182,0.08)] flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#F2EDFF] to-[#DDD2FF] border border-[#CEC0FF] flex items-center justify-center mb-4">
+            <div className="bg-white border border-[#DDD7F3] rounded-[22px] p-14 text-center shadow-xs flex flex-col items-center justify-center">
+              <div className="w-16 h-16 rounded-2xl bg-[#EFEAFE] border border-[#DDD6FE] flex items-center justify-center mb-4">
                 <BookOpen className="w-8 h-8 text-[#5B21B6]" />
               </div>
-              <h3 className="text-lg font-black text-[#1E1B4B] mb-1">No Matching Subjects Found</h3>
-              <p className="text-xs sm:text-sm text-slate-500 max-w-sm mb-5">
+              <h3 className="text-lg font-black text-[#1E1B4B] mb-1">No Subjects Found</h3>
+              <p className="text-xs sm:text-sm text-slate-500 max-w-sm">
                 {subjects.length === 0
-                  ? 'Click "New Subject" at the top right to configure your school curriculum.'
-                  : 'Try clearing your search query or status filter.'}
+                  ? 'Click "New Subject" above to add your first curriculum subject.'
+                  : 'Try searching with a different keyword.'}
               </p>
-              {subjects.length === 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingSubject(null);
-                    setName('');
-                    setTeacherId('');
-                    setShowModal(true);
-                  }}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] text-white text-xs font-extrabold shadow-sm cursor-pointer flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add First Subject</span>
-                </button>
-              )}
             </div>
           ) : viewMode === 'cards' ? (
-            /* ── DASHBOARD PASTEL SUBJECT CARDS GRID ── */
+            /* ── ULTRA-CLEAN MODERN SUBJECT CARDS ── */
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredSummaries.map((item, idx) => {
-                const pal = PASTEL_PALETTES[idx % PASTEL_PALETTES.length];
+                const pal = SUBJECT_PALETTES[idx % SUBJECT_PALETTES.length];
+                const SubjectIcon = item.Icon;
+
                 return (
                   <div
                     key={item.subjectName}
                     onClick={() => navigate('/subjects/' + encodeURIComponent(item.subjectName))}
-                    className="group bg-white rounded-[20px] border border-[#DDD7F3] shadow-[0_6px_22px_-6px_rgba(91,33,182,0.08)] hover:shadow-[0_14px_30px_-8px_rgba(91,33,182,0.16)] hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer flex flex-col"
+                    className={`group relative bg-gradient-to-b ${pal.cardGlow} rounded-[22px] border border-[#E5E0FA] ${pal.hoverBorder} shadow-[0_6px_22px_-8px_rgba(91,33,182,0.10)] hover:shadow-[0_18px_36px_-10px_rgba(91,33,182,0.18)] hover:-translate-y-1 transition-all duration-200 overflow-hidden cursor-pointer flex flex-col`}
                   >
-                    {/* Glossy Pastel Card Header */}
-                    <div className={`relative overflow-hidden px-4 py-4 bg-gradient-to-br ${pal.headerBg} border-b ${pal.border}`}>
-                      <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/55 to-transparent pointer-events-none" />
-                      <div className="relative z-10 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${pal.iconBg} flex items-center justify-center text-white font-black text-sm shadow-md shrink-0`}>
-                            {item.abbr}
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className={`font-black text-sm sm:text-base tracking-tight truncate ${pal.title}`}>
-                              {item.subjectName}
-                            </h3>
-                            <p className="text-[11px] font-bold text-slate-600">
-                              {item.classCount} {item.classCount === 1 ? 'Class' : 'Classes'}
-                            </p>
-                          </div>
+                    {/* Top Subtle Accent Bar */}
+                    <div className={`h-1.5 w-full bg-gradient-to-r ${pal.barGradient}`} />
+
+                    <div className="p-5 flex-1 flex flex-col justify-between gap-4">
+                      {/* Header: Icon Badge + Category + Arrow */}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${pal.badgeBg} flex items-center justify-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform`}>
+                          <SubjectIcon className="w-6 h-6" />
                         </div>
 
-                        <ChevronRight className={`w-4 h-4 shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:opacity-100 transition-all ${pal.title}`} />
-                      </div>
-                    </div>
-
-                    {/* Clean White Body */}
-                    <div className="p-4 flex-1 flex flex-col justify-between space-y-3.5">
-                      <div className="space-y-2.5">
-                        {/* Classes Preview */}
-                        <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
-                            <School className="w-3 h-3 text-indigo-400" /> Classes Covered
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {item.classLabels.slice(0, 4).map((cls) => (
-                              <span
-                                key={cls}
-                                className="px-2 py-0.5 rounded-md bg-[#F4F2FC] border border-[#E5E0FA] text-[#5B21B6] text-[10px] font-extrabold"
-                              >
-                                {cls}
-                              </span>
-                            ))}
-                            {item.classLabels.length > 4 && (
-                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold">
-                                +{item.classLabels.length - 4} more
-                              </span>
-                            )}
-                            {item.classLabels.length === 0 && (
-                              <span className="text-[11px] text-slate-400 font-medium italic">Not mapped to classes</span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Faculty Preview */}
-                        <div>
-                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1 flex items-center gap-1">
-                            <Users className="w-3 h-3 text-emerald-500" /> Assigned Faculty
-                          </p>
-                          {item.teacherNames.length > 0 ? (
-                            <p className="text-xs font-bold text-slate-700 truncate">
-                              {item.teacherNames.slice(0, 2).join(', ')}
-                              {item.teacherNames.length > 2 ? ` +${item.teacherNames.length - 2}` : ''}
-                            </p>
-                          ) : (
-                            <p className="text-xs font-bold text-amber-600">No teacher assigned yet</p>
-                          )}
-                        </div>
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${pal.softPill}`}>
+                          {item.abbr} &bull; {item.classCount} {item.classCount === 1 ? 'Sec' : 'Secs'}
+                        </span>
                       </div>
 
-                      {/* Footer Status Row */}
-                      <div className="pt-2.5 border-t border-indigo-50 flex items-center justify-between">
-                        {item.unassignedEntries === 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
-                            <CheckCircle2 className="w-3 h-3" /> All Assigned
+                      {/* Subject Title & Category */}
+                      <div>
+                        <p className={`text-[10px] font-extrabold uppercase tracking-wider ${pal.accentText} opacity-80`}>
+                          {item.category}
+                        </p>
+                        <h3 className="text-base sm:text-[17px] font-black text-[#1E1B4B] tracking-tight leading-snug mt-0.5 truncate">
+                          {item.subjectName}
+                        </h3>
+                      </div>
+
+                      {/* Footer: Grade Span + Open Trigger */}
+                      <div className="pt-3 border-t border-indigo-100/70 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <GraduationCap className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="text-xs font-bold text-slate-600 truncate">
+                            {item.gradeRange}
                           </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                            <AlertCircle className="w-3 h-3" /> {item.unassignedEntries} Unassigned
-                          </span>
-                        )}
-                        <span className="text-[11px] font-extrabold text-[#5B21B6] group-hover:underline">
-                          Manage &rarr;
+                        </div>
+
+                        <span className={`inline-flex items-center gap-0.5 text-[11px] font-black ${pal.accentText} group-hover:translate-x-0.5 transition-transform shrink-0`}>
+                          <span>Open</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
                         </span>
                       </div>
                     </div>
@@ -479,7 +363,7 @@ export const SubjectPage: React.FC = () => {
               })}
             </div>
           ) : (
-            /* ── PURPLE GRID DIRECTORY TABLE VIEW ── */
+            /* ── PURPLE GRID LIST TABLE VIEW ── */
             <div className="bg-white border border-[#DDD7F3] rounded-[20px] overflow-hidden shadow-[0_12px_32px_-6px_rgba(91,33,182,0.10)]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs student-grid-table">
@@ -488,10 +372,10 @@ export const SubjectPage: React.FC = () => {
                       <th className="py-3.5 px-3 w-14 text-center border-r border-white/20 !text-white">#</th>
                       <th className="py-3.5 px-4 text-center border-r border-white/20 !text-white">Code</th>
                       <th className="py-3.5 px-5 text-left border-r border-white/20 !text-white">Subject Name</th>
-                      <th className="py-3.5 px-4 text-center border-r border-white/20 !text-white">Classes</th>
-                      <th className="py-3.5 px-5 text-left border-r border-white/20 !text-white">Assigned Teachers</th>
-                      <th className="py-3.5 px-4 text-center border-r border-white/20 !text-white">Coverage</th>
-                      <th className="py-3.5 px-4 text-center !text-white">Action</th>
+                      <th className="py-3.5 px-5 text-left border-r border-white/20 !text-white">Category</th>
+                      <th className="py-3.5 px-4 text-center border-r border-white/20 !text-white">Sections</th>
+                      <th className="py-3.5 px-5 text-left border-r border-white/20 !text-white">Grade Span</th>
+                      <th className="py-3.5 px-4 text-center !text-white">Details</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -514,26 +398,18 @@ export const SubjectPage: React.FC = () => {
                           <td className={`py-3 px-5 font-extrabold text-[#1E1B4B] border-r border-[#EAE7F6] ${rowBorderBottom}`}>
                             {item.subjectName}
                           </td>
-                          <td className={`py-3 px-4 text-center font-black text-slate-700 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                          <td className={`py-3 px-5 font-semibold text-slate-600 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                            {item.category}
+                          </td>
+                          <td className={`py-3 px-4 text-center font-black text-[#5B21B6] border-r border-[#EAE7F6] ${rowBorderBottom}`}>
                             {item.classCount}
                           </td>
-                          <td className={`py-3 px-5 font-semibold text-slate-700 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
-                            {item.teacherNames.length > 0 ? item.teacherNames.join(', ') : <span className="text-amber-600 font-bold">Not Assigned</span>}
-                          </td>
-                          <td className={`py-3 px-4 text-center border-r border-[#EAE7F6] ${rowBorderBottom}`}>
-                            {item.unassignedEntries === 0 ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#DCFCE7] text-[#15803D] border border-[#BBF7D0]">
-                                <CheckCircle2 className="w-3 h-3" /> Complete
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
-                                {item.unassignedEntries} Pending
-                              </span>
-                            )}
+                          <td className={`py-3 px-5 font-bold text-slate-700 border-r border-[#EAE7F6] ${rowBorderBottom}`}>
+                            {item.gradeRange}
                           </td>
                           <td className={`py-3 px-4 text-center ${rowBorderBottom}`}>
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#EFEAFE] text-[#5B21B6] font-extrabold text-[11px] hover:bg-[#5B21B6] hover:text-white transition-colors">
-                              Open <ChevronRight className="w-3.5 h-3.5" />
+                              Open <ArrowUpRight className="w-3.5 h-3.5" />
                             </span>
                           </td>
                         </tr>
@@ -548,7 +424,7 @@ export const SubjectPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Add / Edit Subject Modal (Clean Light Theme) */}
+      {/* Add Subject Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 backdrop-blur-sm p-4 animate-fade-in">
           <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-md overflow-hidden border border-[#DDD7F3]">
@@ -558,12 +434,8 @@ export const SubjectPage: React.FC = () => {
                   <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-[#1E1B4B]">
-                    {editingSubject ? 'Edit Subject' : 'Add New Subject'}
-                  </h3>
-                  <p className="text-[11px] font-semibold text-slate-500">
-                    {editingSubject ? 'Update subject details and teacher.' : 'Create a subject and map it to faculty.'}
-                  </p>
+                  <h3 className="text-base font-black text-[#1E1B4B]">Add New Subject</h3>
+                  <p className="text-[11px] font-semibold text-slate-500">Create a curriculum subject and optionally assign a teacher</p>
                 </div>
               </div>
               <button
@@ -589,20 +461,6 @@ export const SubjectPage: React.FC = () => {
                   className="w-full px-4 py-2.5 bg-[#F8FAFF] border border-indigo-100 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition"
                 />
               </div>
-
-              {editingSubject && (
-                <div>
-                  <label className="block text-[11px] font-extrabold text-[#5B21B6] uppercase tracking-wider mb-1.5">
-                    Class Room
-                  </label>
-                  <input
-                    type="text"
-                    disabled
-                    value={editingSubject.class ? `${editingSubject.class.name}-${editingSubject.class.section}` : 'N/A'}
-                    className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-500 font-bold cursor-not-allowed"
-                  />
-                </div>
-              )}
 
               <div>
                 <label className="block text-[11px] font-extrabold text-[#5B21B6] uppercase tracking-wider mb-1.5">
@@ -635,7 +493,7 @@ export const SubjectPage: React.FC = () => {
                   disabled={saving}
                   className="px-5 py-2 text-xs font-extrabold text-white bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] hover:opacity-95 rounded-xl transition-all cursor-pointer shadow-md disabled:opacity-60"
                 >
-                  {saving ? 'Saving...' : editingSubject ? 'Save Changes' : 'Create Subject'}
+                  {saving ? 'Saving...' : 'Create Subject'}
                 </button>
               </div>
             </form>
