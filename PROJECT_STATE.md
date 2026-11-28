@@ -1,5 +1,26 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Address Data Module Dashboard KPI Cards & Purple Directory Redesign (`/address-collection/admin`, `/address-collection/teacher`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Address Data మాడ్యూల్‌ను Dashboard లైట్-థీమ్‌తో, KPI కార్డులతో, error లేకుండా ప్రొఫెషనల్‌గా డిజైన్ చేయాలి.
+- **చేసిన మార్పులు & బగ్ ఫిక్స్‌లు:**
+  - [AddressCollectionAdminPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/address-collection/AddressCollectionAdminPage.tsx):
+    - యూనిఫైడ్ `PageHeader` (`Export PDF`, `Export Excel`, `Add Entry` బటన్లతో) మరియు **4 Dashboard గ్లోసీ పేస్టల్ KPI కార్డులు** (`Total Survey Leads`, `Unique Villages`, `Mandals Covered`, `Top Staff`).
+    - క్లిక్ చేయగల **Top Villages** & **Top Staff Contributors** అనలిటిక్స్ చిప్స్ + `Mandal` & `Reference Teacher` డ్రాప్‌డౌన్ ఫిల్టర్లు + `student-grid-table` పర్పుల్-హెడర్ టేబుల్.
+    - పాత హార్డ్‌కోడెడ్ `http://66.116.252.191:19998` raw `axios` కాల్స్ మరియు `alert()` లను తొలగించి ఆటో-రిఫ్రెష్ `api` క్లయింట్ + `toast` + `/api/teachers?limit=500` వాడాము.
+  - [AddressCollectionTeacherPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/address-collection/AddressCollectionTeacherPage.tsx): యూనిఫైడ్ `PageHeader`, Dashboard లైట్ థీమ్, `api` క్లయింట్, మరియు ఫారమ్ రీసెట్‌లో `referenceTeacherId: ''` టైప్ ఎర్రర్ ఫిక్స్ చేశాము.
+
+## చివరి సంభాషణ - Subjects & Curriculum & Subject Details Dashboard Pastel Redesign (`/subjects`, `/subjects/:name`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Subjects & Curriculum పేజీని అన్ని ఇతర పేజీలతో సమానంగా Dashboard లైట్-థీమ్‌తో ప్రొఫెషనల్ లుక్‌లోకి అందంగా మార్చాలి.
+- **చేసిన మార్పులు:**
+  - [SubjectPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/subjects/SubjectPage.tsx): పాత గట్టి నియాన్-రంగు బ్లాక్‌లను తొలగించి `bg-[#F4F7FC]` లైట్ థీమ్, 4 గ్లోసీ పేస్టల్ KPI కార్డులు (`Curriculum Subjects`, `Class Mappings`, `Active Faculty`, `Unassigned Slots`), లైవ్ సెర్చ్ + ఫిల్టర్ చిప్స్, **Cards / Table** వ్యూ టోగుల్ (పేస్టల్ కార్డులు + పర్పుల్ `student-grid-table`), క్లీన్ లైట్ మోడల్‌తో రీడిజైన్ చేశాము.
+  - [SubjectDetailsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/subjects/SubjectDetailsPage.tsx): Dashboard పేస్టల్ KPI కార్డులు, `All Subjects` బ్యాక్ బటన్, పర్పుల్/లావెండర్ క్లాస్ అసైన్‌మెంట్ కార్డులు & టైమ్‌టేబుల్ సెక్షన్‌తో అప్‌గ్రేడ్ చేశాము.
+
+## చివరి సంభాషణ - Subjects & Curriculum & Subject Details Dashboard Pastel Redesign (`/subjects`, `/subjects/:name`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Subjects & Curriculum పేజీని అన్ని ఇతర పేజీలతో సమానంగా Dashboard లైట్-థీమ్‌తో ప్రొఫెషనల్ లుక్‌లోకి అందంగా మార్చాలి.
+- **చేసిన మార్పులు:**
+  - [SubjectPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/subjects/SubjectPage.tsx): పాత గట్టి నియాన్-రంగు బ్లాక్‌లను తొలగించి `bg-[#F4F7FC]` లైట్ థీమ్, 4 గ్లోసీ పేస్టల్ KPI కార్డులు (`Curriculum Subjects`, `Class Mappings`, `Active Faculty`, `Unassigned Slots`), లైవ్ సెర్చ్ + ఫిల్టర్ చిప్స్, **Cards / Table** వ్యూ టోగుల్ (పేస్టల్ కార్డులు + పర్పుల్ `student-grid-table`), క్లీన్ లైట్ మోడల్‌తో రీడిజైన్ చేశాము.
+  - [SubjectDetailsPage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/subjects/SubjectDetailsPage.tsx): Dashboard పేస్టల్ KPI కార్డులు, `All Subjects` బ్యాక్ బటన్, పర్పుల్/లావెండర్ క్లాస్ అసైన్‌మెంట్ కార్డులు & టైమ్‌టేబుల్ సెక్షన్‌తో అప్‌గ్రేడ్ చేశాము.
+
 ## చివరి సంభాషణ - Student Attendance Module Complete Unified Dashboard Theme Redesign (November 28, 2026)
 - **యూజర్ అభ్యర్థన:** Attendance మాడ్యూల్‌లోని అన్ని పేజీలు (`/attendance`, `/attendance/mark`, `/attendance/report`, `/attendance/daily-report`) ఒకే Dashboard లైట్-థీమ్‌తో, ఒకే హెడర్ డిజైన్‌తో, స్క్రీన్‌కు ఫిట్‌గా, ప్రొఫెషనల్ లుక్‌లో ఉండేలా తీర్చిదిద్దాలి.
 - **చేసిన మార్పులు:**
