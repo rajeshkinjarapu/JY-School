@@ -1054,32 +1054,16 @@ const PAGE_TEMPLATES = {
     // STAFFS, DOWNLOADS, CONTACT, PAY FEES ONLINE
     // ─────────────────────────────────────────────────────────────────────
     '/staffs': () => `
-        ${pageBanner({
-            category: 'Leadership & Faculty',
-            title: 'Distinguished Faculty & Staff Directory',
-            subtitle: 'Meet our principal, subject mentors, and IIT-JEE/NEET foundation faculty.',
-            ctaHtml: `<a href="http://66.116.252.191:19999/login" class="px-5 py-2.5 rounded-full bg-brandBlue text-white text-xs font-black"><i class="fa-solid fa-right-to-bracket mr-1.5"></i>Staff ERP Login</a>`
-        })}
-        <section class="py-8 sm:py-10">
-            <div class="screen-fit space-y-8">
-                <div class="bg-gradient-to-r from-[#EEF2FF] via-white to-[#FFF7ED] border border-indigo-100 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6">
-                    <img id="page-principal-photo" src="./logo_.png" alt="Principal" class="w-24 h-24 rounded-2xl object-cover border-2 border-white shadow-md shrink-0">
-                    <div class="space-y-2">
-                        <span class="text-[11px] font-black text-brandOrange uppercase tracking-widest">From the Principal's Desk</span>
-                        <h3 id="page-principal-name" class="text-xl font-black text-slate-900">Principal, Sri Venkateswara JY School</h3>
-                        <p id="page-principal-message" class="text-xs sm:text-sm text-slate-600 leading-relaxed italic">"Our faculty pairs deep subject mastery with warm personal mentorship for every child."</p>
+        <section class="py-6 sm:py-8">
+            <div class="screen-fit space-y-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h1>
+                        <p class="text-xs text-slate-500 mt-0.5">Dedicated subject mentors across Pre-Primary, Primary, High School &amp; Foundation Wings</p>
                     </div>
+                    <span class="px-3.5 py-1.5 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">Live Synced from School ERP</span>
                 </div>
-                <div>
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-                        <div>
-                            <h3 class="text-lg sm:text-xl font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h3>
-                            <p class="text-xs text-slate-500 mt-0.5">Dedicated subject mentors across Pre-Primary, Primary, High School &amp; Foundation Wings</p>
-                        </div>
-                        <span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">Live Synced from School ERP</span>
-                    </div>
-                    <div id="page-faculty-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
-                </div>
+                <div id="page-faculty-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
             </div>
         </section>
     `,
