@@ -1072,10 +1072,13 @@ const PAGE_TEMPLATES = {
                 </div>
                 <div>
                     <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
-                        <h3 class="text-lg font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h3>
-                        <span class="text-xs font-bold text-slate-500">Live synced from School ERP</span>
+                        <div>
+                            <h3 class="text-lg sm:text-xl font-black text-slate-900"><i class="fa-solid fa-chalkboard-user text-brandBlue mr-2"></i>Our Teaching Faculty</h3>
+                            <p class="text-xs text-slate-500 mt-0.5">Dedicated subject mentors across Pre-Primary, Primary, High School &amp; Foundation Wings</p>
+                        </div>
+                        <span class="px-3 py-1 rounded-full bg-indigo-50 text-brandBlue text-[11px] font-black">Live Synced from School ERP</span>
                     </div>
-                    <div id="page-faculty-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"></div>
+                    <div id="page-faculty-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"></div>
                 </div>
             </div>
         </section>

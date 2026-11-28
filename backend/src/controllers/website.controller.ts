@@ -261,7 +261,8 @@ export const getWebsiteData = async (_req: Request, res: Response) => {
       prisma.exam.findMany({ orderBy: { examDate: 'desc' }, select: { id: true, name: true, term: true, examDate: true, admitCardPublished: true } }).catch(() => []),
       prisma.teacher.findMany({
         where: { user: { isActive: true } },
-        take: 16,
+        take: 50,
+        orderBy: { user: { name: 'asc' } },
         include: { user: { select: { name: true, photoUrl: true } } },
       }).catch(() => []),
       prisma.student.count().catch(() => 0),

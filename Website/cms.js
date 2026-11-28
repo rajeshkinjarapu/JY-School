@@ -1011,16 +1011,33 @@ window.hydrateAllViews = (route = window.CURRENT_ROUTE, subTab) => {
             }
         }
 
-        // Staffs Faculty Roster
+        // Staffs Faculty Roster (5 cards per row, tall rectangular portrait cards, NO round avatars)
         const facultyGrid = document.getElementById('page-faculty-grid');
         if (facultyGrid) {
             if (Array.isArray(faculty) && faculty.length > 0) {
-                facultyGrid.innerHTML = faculty.map((f) => `
-                    <div class="p-4 rounded-2xl bg-white border border-indigo-100 text-center hover-lift shadow-xs">
-                        ${f.photoUrl ? `<img src="${esc(resolveMediaUrl(f.photoUrl))}" class="w-16 h-16 rounded-full mx-auto object-cover border-2 border-indigo-100 mb-2.5">` : `<div class="w-16 h-16 rounded-full mx-auto bg-brandBlue text-white font-black text-lg flex items-center justify-center mb-2.5">${esc(f.name.charAt(0))}</div>`}
-                        <h4 class="font-black text-slate-900 text-xs truncate">${esc(f.name)}</h4>
-                        <p class="text-[10px] font-bold text-brandBlue truncate mt-0.5">${esc(f.qualification || f.specialization || 'Faculty Mentor')}</p>
-                    </div>`).join('');
+                facultyGrid.innerHTML = faculty.map((f) => {
+                    const dept = f.specialization || f.qualification || 'Faculty Mentor';
+                    const subText = f.qualification && f.specialization && f.qualification !== f.specialization
+                        ? f.qualification
+                        : 'Sri Venkateswara JY School';
+                    return `
+                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs hover-lift flex flex-col justify-between">
+                        <div class="w-full h-56 sm:h-60 bg-gradient-to-br from-indigo-50 via-blue-50 to-slate-100 overflow-hidden relative">
+                            ${f.photoUrl
+                                ? `<img src="${esc(resolveMediaUrl(f.photoUrl))}" alt="${esc(f.name)}" class="w-full h-full object-cover object-top transition-transform duration-300 hover:scale-105">`
+                                : `<div class="w-full h-full flex flex-col items-center justify-center gap-2 text-brandBlue">
+                                        <div class="w-16 h-16 rounded-2xl bg-brandBlue text-white font-black text-2xl flex items-center justify-center shadow-md">${esc(f.name.charAt(0).toUpperCase())}</div>
+                                        <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400">JY Faculty</span>
+                                   </div>`
+                            }
+                        </div>
+                        <div class="p-4 text-center flex-1 flex flex-col justify-center gap-1.5 border-t border-slate-100 bg-white">
+                            <span class="inline-block mx-auto px-2.5 py-0.5 rounded-md bg-indigo-50 text-brandBlue text-[10px] font-black uppercase tracking-wider truncate max-w-full">${esc(dept)}</span>
+                            <h4 class="font-black text-slate-900 text-sm leading-snug line-clamp-1">${esc(f.name)}</h4>
+                            <p class="text-[11px] font-semibold text-slate-500 line-clamp-1">${esc(subText)}</p>
+                        </div>
+                    </div>`;
+                }).join('');
             } else {
                 facultyGrid.innerHTML = `
                     <div class="col-span-full p-6 rounded-2xl bg-indigo-50 border border-indigo-100 text-center text-xs font-bold text-brandBlue">

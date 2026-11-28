@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Website Staffs Page Executive Redesign: 5-Column Tall Portrait Cards (November 28, 2026)
+- **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`)**:
+  - **Staffs Page Grid (`#/staffs`)**: ఒక వరుసలో 6 కార్డుల నుండి ఖచ్చితంగా **5 కార్డులు (`lg:grid-cols-5`)** వచ్చేలా మార్చాము.
+  - **Round Images Removal & 2x Tall Cards**: గుండ్రటి `rounded-full` ఫోటోలను పూర్తిగా తొలగించి, ప్రతి కార్డు పైన **2x ఎత్తు (`h-56 sm:h-60`) గల Rectangular Portrait Photo (`object-cover object-top`)** + కింద Department/Subject Badge, Name & Qualification చూపించే ప్రొఫెషనల్ Faculty కార్డులుగా రీడిజైన్ చేశాము.
+  - **Faculty Limit Increase (`website.controller.ts`)**: 16 నుండి `take: 50` (alphabetical order) కి పెంచాము, తద్వారా మొత్తం active టీచర్లు కనిపిస్తారు.
+- **స్టేటస్**: కోడ్ లోకల్‌లో సిద్ధంగా ఉంది. `git push` (Vercel auto-deploy) + VPS backend build & PM2 restart చేయాల్సి ఉంది.
+
 ## చివరి సంభాషణ - Complete Website Fresh Rebuild: 3 Hero Pages, Benchmark School Modules & Bottom Nav (November 28, 2026)
 - **పూర్తి చేసిన అప్‌గ్రేడ్లు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`)**:
   - **100% Full-Width Executive Light Theme**: `Plus Jakarta Sans` + `Poppins` టైపోగ్రఫీ, Zero Side Gaps, crisp white & soft pastel institutional UI (zero dark/black backgrounds).
