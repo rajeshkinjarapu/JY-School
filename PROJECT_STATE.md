@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Staff Attendance Manager Complete Redesign & All-Teachers Monthly PDF Report (`/teacher-attendance`) (November 28, 2026)
+- **యూజర్ అభ్యర్థన:** Staff Attendance మాడ్యూల్‌ను పూర్తిస్థాయిలో తీర్చిదిద్ది: (1) Notes/Remarks కాలమ్ తొలగించాలి, (2) Employee ID కి ప్రత్యేక కాలమ్ ఇవ్వాలి, (3) స్టాఫ్ పేరు కింద Subject/Specialization తొలగించాలి, (4) అన్ని టీచర్ల Monthly Attendance Report PDF డౌన్‌లోడ్ ఉండాలి.
+- **చేసిన మార్పులు ([TeacherAttendancePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx)):**
+  - **Daily Register Table (`student-grid-table` పర్పుల్ గ్రిడ్ థీమ్):** `#`, **Employee ID** (ప్రత్యేక లావెండర్ పిల్ కాలమ్), **Staff Member** (ఫోటో + పేరు మాత్రమే, Subject తొలగింపు), **Attendance Status** (Present/Absent/Leave/Half Day), **Live Badge** (Notes/Remarks పూర్తిగా తొలగింపు).
+  - **Dashboard Pastel KPI కార్డులు & Monthly Matrix View:** 4 పేస్టల్ KPI కార్డులతో పాటు **Daily Attendance / Monthly Report** ట్యాబ్ స్విచ్చర్ జోడించాము — Monthly Matrix లో 1–31 రోజుల P/A/L/H/S కోడ్స్ & ప్రతీ టీచర్ P/A/L/H/% లెక్కలు కనిపిస్తాయి (ఏ రోజైనా క్లిక్ చేస్తే నేరుగా ఎడిట్ చేయొచ్చు).
+  - **All Teachers Monthly PDF Export (`handleDownloadMonthlyPdf`):** A4 Landscape ఆఫీషియల్ స్కూల్ హెడర్‌తో మొత్తం టీచర్ల నెలవారీ హాజరు రిజిస్టర్ PDF (P/A/L/H/S కలర్ కోడ్‌లు + P/A/L/H/% సమ్మరీ + ప్రిన్సిపాల్ సిగ్నేచర్) 1-క్లిక్ డౌన్‌లోడ్ సదుపాయం.
+
 ## చివరి సంభాషణ - GitHub Actions Shorebird Patch Gradle 9.3.1 Fix (November 28, 2026)
 - **సమస్య:** Flutter 3.50.1 కి అప్‌డేట్ అయిన GitHub Actions రన్నర్‌లో `shorebird patch` రన్ చేసినప్పుడు `Gradle version (9.1.0) is lower than Flutter's minimum supported version of 9.3.1` ఎర్రర్ వచ్చింది (Exit code 70).
 - **చేసిన ఫిక్స్:**
