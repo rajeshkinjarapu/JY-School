@@ -1,7 +1,8 @@
 # JY School Project State
 
 ## చివరి సంభాషణ - Website Staffs Page Executive Redesign: 5-Column Tall Portrait Cards (November 28, 2026)
-- **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`)**:
+- **పూర్తి చేసిన మార్పులు (`Website/index.html`, `Website/pages.js`, `Website/cms.js`, `backend/src/controllers/website.controller.ts`)**:
+  - **Floating Desktop Bottom Pill Removal (`Website/index.html`)**: డెస్క్‌టాప్‌లో కార్డుల అడుగున అడ్డుగా కనిపించిన `#desktop-bottom-nav` ఫ్లోటింగ్ బటన్ బార్ తొలగించాము (మొబైల్ యాప్ బాటమ్ బార్ మరియు డెస్క్‌టాప్ ఫుటర్ నేవిగేషన్ అలాగే ఉన్నాయి).
   - **Clean Top Layout (`#/staffs`)**: పైనున్న Banner మరియు Principal's Desk బ్లాక్‌లను తొలగించి, నేరుగా `Our Teaching Faculty` శీర్షికతో 5-కాలమ్ టీచర్ కార్డులు స్క్రీన్ పై నుండి కనిపించేలా చేశాము.
   - **Staffs Page Grid (`#/staffs`)**: ఒక వరుసలో 6 కార్డుల నుండి ఖచ్చితంగా **5 కార్డులు (`lg:grid-cols-5`)** వచ్చేలా మార్చాము.
   - **Round Images Removal & 2x Tall Cards**: గుండ్రటి `rounded-full` ఫోటోలను పూర్తిగా తొలగించి, ప్రతి కార్డు పైన **2x ఎత్తు (`h-56 sm:h-60`) గల Rectangular Portrait Photo (`object-cover object-top`)** + కింద Department/Subject Badge, Name & Qualification చూపించే ప్రొఫెషనల్ Faculty కార్డులుగా రీడిజైన్ చేశాము.

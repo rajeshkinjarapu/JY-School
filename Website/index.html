@@ -199,12 +199,9 @@
             box-shadow: 0 12px 24px -8px rgba(30, 58, 138, 0.12);
         }
 
-        /* Bottom Navigation Safe Spacing */
+        /* Mobile Bottom Navigation Safe Spacing */
         @media (max-width: 1023px) {
             body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
-        }
-        @media (min-width: 1024px) {
-            body { padding-bottom: 66px; }
         }
         .bnav-item.active {
             color: #1e3a8a;
@@ -941,39 +938,8 @@
     </footer>
 
     <!-- ═══════════════════════════════════════════════════════════════════════
-         BOTTOM NAVIGATION BAR (Desktop Capsule Dock + Mobile App Bottom Bar)
+         MOBILE BOTTOM NAVIGATION BAR (App-Style Dock for Mobile / Tablet)
     ════════════════════════════════════════════════════════════════════════ -->
-    <div id="desktop-bottom-nav" class="hidden lg:flex fixed bottom-3 left-1/2 -translate-x-1/2 z-40 items-center gap-1 bg-white/95 backdrop-blur-md border border-indigo-200 shadow-2xl rounded-full px-3 py-1.5">
-        <a href="#/home" onclick="navigateTo('/home'); return false;" data-bnav="/home"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-house"></i> Home
-        </a>
-        <a href="#/admission/procedure" onclick="navigateTo('/admission/procedure'); return false;" data-bnav="/admission"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-graduation-cap"></i> Admission
-        </a>
-        <a href="#/student-life/academics" onclick="navigateTo('/student-life/academics'); return false;" data-bnav="/student-life"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-book-open"></i> Student Life
-        </a>
-        <a href="#/facilities/laboratory" onclick="navigateTo('/facilities/laboratory'); return false;" data-bnav="/facilities"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-building-columns"></i> Facilities
-        </a>
-        <a href="#/admission/existing-student" onclick="navigateTo('/admission/existing-student'); return false;" data-bnav="/admission/existing-student"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-award"></i> Results / Admit Card
-        </a>
-        <a href="#/downloads" onclick="navigateTo('/downloads'); return false;" data-bnav="/downloads"
-           class="bnav-item px-3.5 py-1.5 rounded-full text-xs font-bold text-slate-700 hover:bg-indigo-50 hover:text-brandBlue transition flex items-center gap-1.5">
-            <i class="fa-solid fa-download"></i> Downloads
-        </a>
-        <a href="#/pay-fees" onclick="navigateTo('/pay-fees'); return false;" data-bnav="/pay-fees"
-           class="px-4 py-1.5 rounded-full text-xs font-black bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm transition flex items-center gap-1.5 ml-1">
-            <i class="fa-solid fa-indian-rupee-sign"></i> Pay Fees
-        </a>
-    </div>
-
     <nav id="mobile-bottom-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 shadow-[0_-6px_24px_rgba(15,23,42,0.08)]"
          style="padding-bottom: env(safe-area-inset-bottom);">
         <div class="grid grid-cols-5 h-[62px] items-center px-1">
