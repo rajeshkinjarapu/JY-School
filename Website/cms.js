@@ -1011,14 +1011,27 @@ window.hydrateAllViews = (route = window.CURRENT_ROUTE, subTab) => {
             }
         }
 
-        // Staffs Faculty Roster (6 per row × 2 rows = 12 per page, fits 100% in single viewport, NO round images)
+        // Staffs Faculty Roster (Custom Priority Row 1 + 6 per row × 2 rows = 12 per page)
         const facultyGrid = document.getElementById('page-faculty-grid');
         if (facultyGrid) {
             if (Array.isArray(faculty) && faculty.length > 0) {
-                const ordered = [
-                    ...faculty.filter((f) => Boolean(f.photoUrl)),
-                    ...faculty.filter((f) => !f.photoUrl),
-                ];
+                const getFacultyPriority = (f) => {
+                    const name = String(f.name || '').toLowerCase().replace(/\s+/g, ' ').trim();
+                    const role = `${f.qualification || ''} ${f.specialization || ''}`.toLowerCase();
+                    if (name.includes('bora') || role.includes('director')) return 0;
+                    if (name.includes('ramana murthy')) return 1;
+                    if (name.includes('venkata ramana')) return 2;
+                    if (name.includes('pradeep')) return 3;
+                    if (name.includes('rajesh')) return 4;
+                    if (name.includes('govind')) return 5;
+                    return f.photoUrl ? 10 : 20;
+                };
+                const ordered = [...faculty].sort((a, b) => {
+                    const pa = getFacultyPriority(a);
+                    const pb = getFacultyPriority(b);
+                    if (pa !== pb) return pa - pb;
+                    return String(a.name || '').localeCompare(String(b.name || ''));
+                });
                 const PAGE_SIZE = 12;
                 const totalPages = Math.max(1, Math.ceil(ordered.length / PAGE_SIZE));
                 window.FACULTY_PAGE = Math.min(window.FACULTY_PAGE || 1, totalPages);

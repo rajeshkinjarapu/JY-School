@@ -1,7 +1,8 @@
 # JY School Project State
 
-## చివరి సంభాషణ - Website Staffs Page: 6x2 (12 Cards) Single-Screen Fit & Pagination (November 28, 2026)
+## చివరి సంభాషణ - Website Staffs Page: 6x2 (12 Cards) Single-Screen Fit & Custom Leadership Order (November 28, 2026)
 - **పూర్తి చేసిన మార్పులు (`Website/pages.js`, `Website/cms.js`)**:
+  - **Custom Row 1 Order (`Website/cms.js`)**: 1. BORA VENKATA RAMANA (Director), 2. P. RAMANA MURTHY, 3. N. VENKATA RAMANA, 4. PRADEEP, 5. RAJESH, 6. GOVIND — ఆ తర్వాత మిగిలిన ఫోటో ఉన్న టీచర్లు Row 2 లో వచ్చేలా ప్రయారిటీ సార్టింగ్ పెట్టాము.
   - **6 × 2 Grid (`lg:grid-cols-6`)**: ఒక వరుసలో **6 మంది**, మొత్తం **2 వరుసలు = 12 కార్డులు** ఒక్క పేజీలో కట్ అవ్వకుండా (`clamp(145px, 25.5vh, 225px)` portrait height తో) కనిపించేలా అమర్చాము.
   - **Photo Priority & Pagination**: ఫోటో ఉన్న టీచర్లను ముందుగా చూపించి, 12 మంది కంటే ఎక్కువ మంది ఉంటే పై హెడర్‌లో `Prev / Next` పేజినేషన్ ఉంచాము.
 
