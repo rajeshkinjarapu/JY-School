@@ -1,5 +1,12 @@
 # JY School Project State
 
+## చివరి సంభాషణ - Staff Attendance Save & Load Bug Fix (`/teacher-attendance`) (November 28, 2026)
+- **సమస్య:** Staff Attendance పేజీలో టీచర్ల హాజరు మార్చి "Save Staff Attendance" క్లిక్ చేసినా సేవ్ అవ్వనట్లు తిరిగి అంతా `Present` గా కనిపిస్తోంది.
+- **మూల కారణం:** [axios.ts](file:///d:/JY%20School/JY-School-main/frontend/src/api/axios.ts) ఇంటర్‌సెప్టర్ `pagination` లేని `/api/teacher-attendance` రెస్పాన్స్‌లో `res.data` ని నేరుగా Array గా అన్‌రాప్ చేస్తుంది (`.data` ప్రాపర్టీ లేకుండా). కానీ [TeacherAttendancePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx) లో `res.data?.data || []` వాడడం వల్ల ప్రతీసారి `[]` వచ్చి సేవ్ చేసిన హాజరు లోడ్ అవ్వకుండా రీసెట్ అయింది.
+- **చేసిన ఫిక్స్ ([TeacherAttendancePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx)):**
+  - `extractArray` హెల్పర్ ద్వారా `res.data` (Array) మరియు `res.data?.data` రెంటినీ సేఫ్‌గా హ్యాండిల్ చేశాము (Admin + Teacher వ్యూలు రెండింటిలోనూ).
+  - `selectedDate` మరియు Month Switcher మధ్య డేట్/నెల సింక్ సమస్య రాకుండా `navigateMonth` & `fetchRecords` ని సరిదిద్దాము.
+
 ## చివరి సంభాషణ - Staff Attendance Manager Complete Redesign & All-Teachers Monthly PDF Report (`/teacher-attendance`) (November 28, 2026)
 - **యూజర్ అభ్యర్థన:** Staff Attendance మాడ్యూల్‌ను పూర్తిస్థాయిలో తీర్చిదిద్ది: (1) Notes/Remarks కాలమ్ తొలగించాలి, (2) Employee ID కి ప్రత్యేక కాలమ్ ఇవ్వాలి, (3) స్టాఫ్ పేరు కింద Subject/Specialization తొలగించాలి, (4) అన్ని టీచర్ల Monthly Attendance Report PDF డౌన్‌లోడ్ ఉండాలి.
 - **చేసిన మార్పులు ([TeacherAttendancePage.tsx](file:///d:/JY%20School/JY-School-main/frontend/src/pages/teacher-attendance/TeacherAttendancePage.tsx)):**

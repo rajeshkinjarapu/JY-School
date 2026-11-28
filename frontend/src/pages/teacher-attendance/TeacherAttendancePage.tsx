@@ -67,6 +67,14 @@ const matchesSelectedDate = (rawDate: string, targetYmd: string): boolean => {
   return formatLocalYMD(new Date(rawDate)) === targetYmd;
 };
 
+// Axios interceptor returns array directly when there is no pagination, or with hidden .data when paginated
+const extractArray = <T = any>(res: any): T[] => {
+  const payload = res?.data;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
 export const TeacherAttendancePage: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
@@ -93,20 +101,25 @@ export const TeacherAttendancePage: React.FC = () => {
   const fetchTeachers = async () => {
     try {
       const res: any = await api.get('/api/teachers', { params: { limit: 500 } });
-      setTeachers(res.data?.data || []);
+      setTeachers(extractArray<Teacher>(res));
     } catch (err) {
       console.error(err);
     }
   };
 
   const fetchRecords = async () => {
+    if (!user) return;
     setLoading(true);
     try {
       if (isAdmin) {
+        const [selY, selM] = selectedDate ? selectedDate.split('-').map(Number) : [0, 0];
+        const queryYear = adminViewTab === 'daily' && selY ? selY : selectedYear;
+        const queryMonth = adminViewTab === 'daily' && selM ? selM : selectedMonth + 1;
+
         const res: any = await api.get('/api/teacher-attendance', {
-          params: { month: selectedMonth + 1, year: selectedYear },
+          params: { month: queryMonth, year: queryYear },
         });
-        const recList = res.data?.data || [];
+        const recList = extractArray<AttRecord>(res);
         setRecords(recList);
 
         const dateRecords = recList.filter((r: AttRecord) => matchesSelectedDate(r.date, selectedDate));
@@ -118,14 +131,14 @@ export const TeacherAttendancePage: React.FC = () => {
       } else {
         const [attRes, leaveRes, gpRes]: any = await Promise.all([
           api.get('/api/teacher-attendance', { params: { month: selectedMonth + 1, year: selectedYear } }),
-          api.get('/api/leave/my?limit=5000').catch(() => ({ data: { data: [] } })),
-          api.get('/api/gate-pass?limit=5000').catch(() => ({ data: { data: [] } })),
+          api.get('/api/leave/my?limit=5000').catch(() => ({ data: [] })),
+          api.get('/api/gate-pass?limit=5000').catch(() => ({ data: [] })),
         ]);
-        const arr = attRes.data?.data || [];
+        const arr = extractArray<AttRecord>(attRes);
         setMyRecords(arr);
 
-        const leaves = (leaveRes.data?.data || []).map((l: any) => ({ ...l, logType: l.type || 'LEAVE' }));
-        const passes = (gpRes.data?.data || []).map((gp: any) => ({ ...gp, logType: 'GATEPASS' }));
+        const leaves = extractArray(leaveRes).map((l: any) => ({ ...l, logType: l.type || 'LEAVE' }));
+        const passes = extractArray(gpRes).map((gp: any) => ({ ...gp, logType: 'GATEPASS' }));
         const combined = [...leaves, ...passes].sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
@@ -156,7 +169,7 @@ export const TeacherAttendancePage: React.FC = () => {
 
   useEffect(() => {
     fetchRecords();
-  }, [selectedMonth, selectedYear, selectedDate, isAdmin]);
+  }, [selectedMonth, selectedYear, selectedDate, isAdmin, user?.id]);
 
   // Admin Daily Statistics
   const adminStats = useMemo(() => {
@@ -318,8 +331,18 @@ export const TeacherAttendancePage: React.FC = () => {
 
   const navigateMonth = (dir: number) => {
     const d = new Date(selectedYear, selectedMonth + dir, 1);
-    setSelectedMonth(d.getMonth());
-    setSelectedYear(d.getFullYear());
+    const newMonth = d.getMonth();
+    const newYear = d.getFullYear();
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+
+    const curDay = selectedDate ? Number(selectedDate.split('-')[2]) || 1 : 1;
+    const maxDayInTarget = new Date(newYear, newMonth + 1, 0).getDate();
+    let clampedDay = Math.min(curDay, maxDayInTarget);
+    if (newYear === today.getFullYear() && newMonth === today.getMonth()) {
+      clampedDay = Math.min(clampedDay, today.getDate());
+    }
+    setSelectedDate(formatLocalYMD(new Date(newYear, newMonth, clampedDay)));
   };
 
   // ── ALL TEACHERS MONTHLY ATTENDANCE REGISTER PDF EXPORT ──
