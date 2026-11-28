@@ -7,6 +7,8 @@ on:
     paths:
       - 'flutter_mobile/lib/**'
       - 'flutter_mobile/pubspec.yaml'
+      - 'flutter_mobile/android/gradle/wrapper/gradle-wrapper.properties'
+      - '.github/workflows/shorebird_patch.yml'
   workflow_dispatch:
     inputs:
       flavor:
@@ -51,24 +53,24 @@ jobs:
 
       - name: Shorebird Patch Universal
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'universal' || github.event_name == 'push'
-        run: shorebird patch android --flavor universal --allow-asset-diffs --allow-native-diffs --target lib/main.dart --no-confirm
+        run: shorebird patch android --flavor universal --release-version=latest --allow-asset-diffs --allow-native-diffs --target lib/main.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Student
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'student' || github.event_name == 'push'
-        run: shorebird patch android --flavor student --allow-asset-diffs --allow-native-diffs --target lib/main_student.dart --no-confirm
+        run: shorebird patch android --flavor student --release-version=latest --allow-asset-diffs --allow-native-diffs --target lib/main_student.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Teacher
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'teacher' || github.event_name == 'push'
-        run: shorebird patch android --flavor teacher --allow-asset-diffs --allow-native-diffs --target lib/main_teacher.dart --no-confirm
+        run: shorebird patch android --flavor teacher --release-version=latest --allow-asset-diffs --allow-native-diffs --target lib/main_teacher.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}
 
       - name: Shorebird Patch Admin
         if: github.event.inputs.flavor == 'all' || github.event.inputs.flavor == 'admin' || github.event_name == 'push'
-        run: shorebird patch android --flavor admin --allow-asset-diffs --allow-native-diffs --target lib/main_admin.dart --no-confirm
+        run: shorebird patch android --flavor admin --release-version=latest --allow-asset-diffs --allow-native-diffs --target lib/main_admin.dart --no-confirm
         env:
           SHOREBIRD_TOKEN: ${{ secrets.SHOREBIRD_TOKEN }}

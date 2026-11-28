@@ -1,5 +1,11 @@
 # JY School Project State
 
+## చివరి సంభాషణ - GitHub Actions Shorebird Patch Gradle 9.3.1 Fix (November 28, 2026)
+- **సమస్య:** Flutter 3.50.1 కి అప్‌డేట్ అయిన GitHub Actions రన్నర్‌లో `shorebird patch` రన్ చేసినప్పుడు `Gradle version (9.1.0) is lower than Flutter's minimum supported version of 9.3.1` ఎర్రర్ వచ్చింది (Exit code 70).
+- **చేసిన ఫిక్స్:**
+  - [gradle-wrapper.properties](file:///d:/JY%20School/JY-School-main/flutter_mobile/android/gradle/wrapper/gradle-wrapper.properties): Gradle ను `9.1.0` నుండి `9.3.1` (`gradle-9.3.1-all.zip`) కి అప్‌గ్రేడ్ చేశాము.
+  - [shorebird_patch.yml](file:///d:/JY%20School/JY-School-main/.github/workflows/shorebird_patch.yml): అన్ని ఫ్లేవర్లకు `--release-version=latest` యాడ్ చేసి ఎక్స్‌ట్రా రిలీజ్-గెస్ బిల్డ్ వార్నింగ్‌ను తొలగించాము.
+
 ## చివరి సంభాషణ - Flutter Admin Auto-Logout Fix (403 Prevention, Refresh Token & Role Fix) (November 28, 2026)
 - **సమస్య:** Flutter Admin యాప్‌లో లాగిన్ అయిన వెంటనే హోమ్/డ్యాష్‌బోర్డ్ ఓపెన్ అయి మళ్లీ లాగౌట్ అయి Login/Welcome పేజీకి వెళ్లిపోతోంది.
 - **చేసిన ఫిక్స్ ([api_service.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/services/api_service.dart), [login_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/login_screen.dart), [finance_screen.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/screens/finance_screen.dart), [app_config.dart](file:///d:/JY%20School/JY-School-main/flutter_mobile/lib/config/app_config.dart)):**
